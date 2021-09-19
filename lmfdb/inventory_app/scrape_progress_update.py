@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import inventory_db_core as idc
 
 def update_scrape_progress_helper(db_id, coll_id, uid, complete=None, running=None):
@@ -14,7 +14,7 @@ def update_scrape_progress_helper(db_id, coll_id, uid, complete=None, running=No
             rec_set['running'] = running
         if rec_set:
             idc.update_ops(rec_find, rec_set)
-    except:
+    except Exception:
         pass
 
 def update_scrape_progress(db_name, coll, uid, complete=None, running=None):
@@ -24,5 +24,5 @@ def update_scrape_progress(db_name, coll, uid, complete=None, running=None):
         db_id = idc.get_db_id(db_name)
         coll_id = idc.get_coll_id(db_id['id'], coll)
         update_scrape_progress_helper(db_id['id'], coll_id['id'], uid, complete=complete, running=running)
-    except:
+    except Exception:
         return False

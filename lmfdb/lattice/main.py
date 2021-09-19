@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, request, url_for, redirect, make_response, send_file
@@ -258,7 +258,7 @@ def render_lattice_webpage(**args):
             if info['dim']*info['kissing']<100:
                 info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
             else:
-                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
+                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1)
                 info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
                 info['all_shortest']="no"
         info['download_shortest'] = [
@@ -285,7 +285,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
         if info['dim']*info['class_number']<50:
             info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
         else:
-            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
+            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number'])
             info['all_genus_rep']="no"
             info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
     info['download_genus_reps'] = [
@@ -341,7 +341,7 @@ def vect_to_sym(v):
 def theta_display(label, number):
     try:
         number = int(number)
-    except:
+    except Exception:
         number = 20
     if number < 20:
         number = 30

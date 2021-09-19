@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-from __future__ import print_function
-from __future__ import absolute_import
-from six import string_types
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -77,7 +74,7 @@ class PostgresUserTable(PostgresBase):
                 existing_hash = bcrypt.gensalt().decode('utf-8')
             return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8')).decode('utf-8')
         except Exception:
-            logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
+            logger.warning("Failed to return bchash, perhaps bcrypt is not installed")
             return None
 
     def new_user(self, uid, pwd=None, full_name=None, about=None, url=None):
@@ -169,7 +166,7 @@ class PostgresUserTable(PostgresBase):
     def save(self, data):
         if not self._rw_userdb:
             logger.info("no attempt to save, not enough privileges")
-            return;
+            return
 
         data = dict(data) # copy
         uid = data.pop("username",None)
@@ -200,7 +197,7 @@ class PostgresUserTable(PostgresBase):
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
-            return;
+            return
 
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
         now = datetime.utcnow()
@@ -211,7 +208,7 @@ class PostgresUserTable(PostgresBase):
     def token_exists(self, token):
         if not self._rw_userdb:
             logger.info("no attempt to check if token exists, not enough privileges")
-            return False;
+            return False
         selecter = SQL("SELECT 1 FROM userdb.tokens WHERE id = %s")
         cur = self._execute(selecter, [token])
         return cur.rowcount == 1
@@ -219,7 +216,7 @@ class PostgresUserTable(PostgresBase):
     def delete_old_tokens(self):
         if not self._rw_userdb:
             logger.info("no attempt to delete old tokens, not enough privileges")
-            return;
+            return
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
         now = datetime.utcnow()
         tdelta = timedelta(days=8)
@@ -228,7 +225,7 @@ class PostgresUserTable(PostgresBase):
 
     def delete_token(self, token):
         if not self._rw_userdb:
-            return;
+            return
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         self._execute(deletor, [token])
 
@@ -238,6 +235,7 @@ class PostgresUserTable(PostgresBase):
 
 userdb = PostgresUserTable()
 
+
 class LmfdbUser(UserMixin):
     """
     The User Object
@@ -245,7 +243,7 @@ class LmfdbUser(UserMixin):
     properties = ('full_name', 'url', 'about')
 
     def __init__(self, uid):
-        if not isinstance(uid, string_types):
+        if not isinstance(uid, str):
             raise Exception("Username is not a string")
 
         self._uid = uid
@@ -253,7 +251,8 @@ class LmfdbUser(UserMixin):
         self._dirty = False  # flag if we have to save
         self._data = dict([(_, None) for _ in LmfdbUser.properties])
 
-        if userdb.user_exists(uid):
+        self.exists = userdb.user_exists(uid)
+        if self.exists:
             self._data.update(userdb.lookup(uid))
 
     @property
@@ -319,7 +318,7 @@ class LmfdbUser(UserMixin):
         checks if the given password for the user is valid.
         @return: True: OK, False: wrong password.
         """
-        if not 'password' in self._data and not 'bcpassword' in self._data:
+        if 'password' not in self._data and 'bcpassword' not in self._data:
             logger.warning("no password data in db for '%s'!" % self._uid)
             return False
         self._authenticated = userdb.authenticate(self._uid, pwd)

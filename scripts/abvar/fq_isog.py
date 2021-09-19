@@ -28,7 +28,7 @@ This file will coordinate uploading among multiple processes.
 As processes begin uploading, they will claim g and q, changing
 the yaml file, and eventually marking them as completed.
 """
-from __future__ import print_function
+
 
 import os
 import sys, time, datetime

@@ -6,13 +6,15 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
-ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+RZB_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
@@ -49,18 +51,57 @@ def class_cremona_label(conductor, iso_class):
 
 logger = make_logger("ec")
 
-def split_galois_image_code(s):
-    """Each code starts with a prime (1-3 digits but we allow for more)
-    followed by an image code or that prime.  This function returns
-    two substrings, the prefix number and the rest.
-    """
-    p = re.findall(r'\d+', s)[0]
-    return p, s[len(p):]
+def gl2_subgroup_data(label):
+    try:
+        data = db.gps_gl2zhat.lookup(label)
+    except ValueError:
+        return "Invalid label for subgroup of GL(2,Zhat): %s" % label
+    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
+    info = '<table>\n'
+    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += "<tr><td></td><td></td></tr>\n"
+    info += row_wrap('Level', data['level'])
+    info += row_wrap('Index', data['index'])
+    info += row_wrap('Genus', data['genus'])
+    def ratcusps(c,r):
+        if not c:
+            return ""
+        if not r:
+            return " (none of which are rational)"
+        if r == c:
+            return " (all of which are rational)"
+        if r == 1:
+            return " (one of which is rational)"
+        else:
+            return " (of which %s are rational)" % r
 
-def trim_galois_image_code(s):
-    """Return the image code with the prime prefix removed.
-    """
-    return split_galois_image_code(s)[1]
+    info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
+    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
+    if data.get('CPlabel'):
+        info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
+    if data.get('RZBlabel'):
+        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+    if data.get('SZlabel'):
+        info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
+    N = ZZ(data['level'])
+    ell = N.prime_divisors()[0]
+    e = N.valuation(ell)
+    if e == 1:
+        info += row_wrap("Cyclic %s-isogeny field degree" % (ell), min([r[1] for r in data['isogeny_orbits'] if r[0] == ell]))
+        info += row_wrap("Cyclic %s-torsion field degree" % (ell), min([r[1] for r in data['orbits'] if r[0] == ell]))
+        info += row_wrap("Full %s-torsion field degree" % (ell), ell*(ell-1)*(ell-1)*(ell+1) // data['index'])
+    else:
+        info += row_wrap("Cyclic %s${}^n$-isogeny field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['isogeny_orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
+        info += row_wrap("Cyclic %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
+        info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%(ell*(ell-1)*(ell-1)*(ell+1)*ell**(4*n) // data['index']) for n in range(1,e+1)]))
+    if data['genus'] > 0:
+        info += row_wrap('Newforms', ''.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
+        info += row_wrap('Analytic rank', data['rank'])
+        if data['genus'] == 1 and data['model']:
+            info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('ec.by_ec_label',label=data['model']), data['model']))
+    info += "</table>\n"
+    return info
 
 def weighted_proj_to_affine_point(P):
     r""" Converts a triple of integers representing a point in weighted
@@ -222,8 +263,6 @@ class WebEC(object):
         # mod-p Galois images:
         
         data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
-        for gd in data['galois_data']: # remove the prime prefix from each image code
-            gd['image'] = trim_galois_image_code(gd['image'])
         
         # CM and Endo ring:
         
@@ -231,7 +270,7 @@ class WebEC(object):
         data['CM'] = "no"
         data['EndE'] = r"\(\Z\)"
         if self.cm:
-            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.nonmax_primes]
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if p not in self.nonmax_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
             if data['cm_nramp']==1:
                 data['cm_ramp'] = data['cm_ramp'][0]
@@ -259,9 +298,6 @@ class WebEC(object):
             data['isogeny_degrees'] = " and ".join(isodegs)
         else:
             data['isogeny_degrees'] = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
-
-
-        self.make_twoadic_data()
 
         # Optimality
 
@@ -453,15 +489,18 @@ class WebEC(object):
         # Integral points
 
         xintcoords = mwbsd['xcoord_integral_points']
-        a1, _, a3, _, _ = ainvs = self.ainvs
-        if a1 or a3:
-            int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
-            mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts), ', '.join(web_latex(P) for P in int_pts))
+        if xintcoords:
+            a1, _, a3, _, _ = ainvs = self.ainvs
+            if a1 or a3:
+                int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
+                mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts), ', '.join(web_latex(P) for P in int_pts))
+            else:
+                int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in xintcoords]
+                raw_form = sum([[P, (P[0],-P[1])] if P[1] else [P]for P in int_pts], [])
+                raw_form = ', '.join(str(P) for P in raw_form)
+                mwbsd['int_points'] = raw_typeset(raw_form, ', '.join(pm_pt(P) for P in int_pts))
         else:
-            int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in xintcoords]
-            raw_form = sum([[P, (P[0],-P[1])] if P[1] else [P]for P in int_pts], [])
-            raw_form = ', '.join(str(P) for P in raw_form)
-            mwbsd['int_points'] = raw_typeset(raw_form, ', '.join(pm_pt(P) for P in int_pts))
+            mwbsd['int_points'] = "None"
 
         # Generators (mod torsion) and heights:
         mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
@@ -484,20 +523,15 @@ class WebEC(object):
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
-
-    def make_twoadic_data(self):
-        if not self.cm:
-            self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.lmfdb_label)
-            from sage.matrix.all import Matrix
-            twoadicdata['gen_matrices'] = ','.join(latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens'])
-            twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
+    def display_elladic_image(self,label):
+        return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
 
     def make_iwasawa(self):
         iw = self.iw = {}
         iwasawadata = db.ec_iwasawa.lookup(self.lmfdb_label)
         if not iwasawadata: # For curves with no Iwasawa data
             return
-        if not 'iwp0' in iwasawadata: # For curves with no Iwasawa data
+        if 'iwp0' not in iwasawadata: # For curves with no Iwasawa data
             return
 
         iw['p0'] = iwasawadata['iwp0'] # could be None
@@ -566,7 +600,7 @@ class WebEC(object):
                 tg['fields_missing'] = True
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \times '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = next((lab  for lab, pol in zip(bcs, bc_pols) if pol==F), None)
+            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:
                    from lmfdb.ecnf.main import split_full_label
                    F, NN, I, C = split_full_label(bcc)

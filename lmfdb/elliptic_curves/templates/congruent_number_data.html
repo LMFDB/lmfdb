@@ -1,0 +1,272 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>
+  Data for the first 1,000,000 {{ KNOWL('ec.congruent_number_curve',
+  'congruent number curves') }} is available, provided by
+  Randall L. Rathbun.  For each of the first 1,000,000 positive
+  integers $n$, this includes information about the $n$th {{
+  KNOWL('ec.congruent_number_curve', 'congruent number curve') }}
+  $E_n$, from which it can be determined whether or not $n$ is a {{
+  KNOWL('ec.congruent_number', 'congruent number') }}, and a solution
+  to the {{ KNOWL('ec.congruent_number_problem', 'congruent number
+  problem') }} when it is.
+</p>
+
+<h2>Congruence property of specific integers</h2>
+
+<p>
+Enter an integer between 1 and 1,000,000 to see if it is a {{
+  KNOWL('ec.congruent_number', 'congruent number') }} or not:
+<form>
+<input type='text' name='lookup' placeholder='6' size='6'>
+<span class="formexample">e.g. 6</span>
+<button type='submit'>Look up $n$</button>
+</form>
+</p>
+
+{#
+
+<h2>Congruent numbers, the congruent number problem, and congruent number curves</h2>
+
+<p>
+{{ KNOWL_INC('ec.congruent_number') }}
+</p>
+
+<p>
+{{ KNOWL_INC('ec.congruent_number_problem') }}
+</p>
+
+<p>
+{{ KNOWL_INC('ec.congruent_number_curve') }}
+</p>
+
+#}
+
+<h2>Data files</h2>
+
+<p>
+Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and tab delimited.
+</p>
+
+<table>
+  <tr>
+    <th align=left>Download</th>
+    <th align=left>File contents</th>
+    <th align=left>Sample line</th>
+    <th align=left>Notes</th>
+  </tr>
+
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.conductor"
+		onclick="$('#infomessage').text('hello?');return true">Download file (20M)</button>
+      </form>
+    </td>
+    <td>
+      {{ KNOWL('ec.q.conductor', title='Conductor') }}
+    </td>
+    <td>
+    <pre>000137    60608</pre>
+    </td>
+  <td>
+    For squarefree $n$, the conductor of $E_n$ is $32n^2$ or $16n^2$, for $n$ odd and even respectively.
+  </td>
+  </tr>
+
+  <tr>
+  <td>  
+  <form>
+    <button type="submit" name="filename" value="CN.rank"
+            onclick="$('#infomessage').text('');return true">Download file (8.6M)</button>
+  </form>
+  </td>
+  <td>
+    {{ KNOWL('ec.rank', 'Rank') }}
+  </td>
+  <td>
+    <pre>000137    2</pre>
+  </td>
+  <td>
+    &nbsp;
+  </td>
+  </tr>
+
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.MWgroup"
+		onclick="$('#infomessage').text('');return true">Download file (765M)</button>
+      </form>
+    </td>
+    <td>
+      {{ KNOWL('ec.mw_generators', title='Generators') }}
+    </td>
+    <td>
+    <pre>000137    [[-3136/25,77112/125],[-38025/289,2151240/4913]]</pre>
+    </td>
+    <td>
+      For eight rank 2 curves, the second generator is not known and given as [?,?]
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.height"
+		onclick="$('#infomessage').text('');return true">Download file (33M)</button>
+      </form>
+    </td>
+    <td>
+      {{ KNOWL('ec.q.canonical_height', 'Heights') }}
+    </td>
+    <td>
+    <pre>000137    [8.4621365965410101565417149184287484305,10.575571190572966907642306531966335545]</pre>
+    </td>
+    <td>
+      Given to 38 decimal digit precision
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.regulator"
+		onclick="$('#infomessage').text('');return true">Download file (29M)</button>
+      </form>
+    </td>
+    <td>
+      {{ KNOWL('ec.q.regulator', 'Regulator') }}
+    </td>
+    <td>
+      <pre>000137    84.158316595868123199826622496651245358</pre>
+    </td>
+    <td>
+      Given to 38 decimal digit precision
+    </td>
+
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.root.number"
+		onclick="$('#infomessage').text('');return true">Download file (9.6M)</button>
+      </form>
+    </td>
+    <td>
+      {{ KNOWL('lfunction.sign', title='Root number') }}
+    </td>
+    <td>
+      <pre>000137    +1</pre>
+    </td>
+    <td>
+      &nbsp;
+    </td>
+  </tr>
+    
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.Tate-Sha"
+		onclick="$('#infomessage').text('');return true">Download file (8.9M)</button>
+      </form>
+    </td>
+    <td>
+      {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}
+    </td>
+    <td>
+      <pre>000137    1</pre>
+    </td>
+    <td>
+      Rounded value
+    </td>
+  </tr>
+    
+  <tr>
+    <td>
+      <form>
+	<button type="submit" name="filename" value="CN.classes"
+		onclick="$('#infomessage').text('');return true">Download file (19M)</button>
+      </form>
+    </td>
+    <td>
+      Class counts
+    </td>
+    <td>
+      <pre>000137    137   1   8</pre>
+    </td>
+    <td>
+      ($n$, $n_0$, $n_0\mod 8$, Heegner class number)
+    </td>
+  </tr>
+    
+</table>
+
+<h2>Additional statistics</h2>
+<h3>Distribution of rank</h3>
+<p>
+  The distribution of ranks over the first 1,000,000 congruent number curves is as follows:
+  <table>
+    <tr><th>rank<th align=left>count</tr>
+    <tr><td>$0$<td align=right>  446,823</tr>
+    <tr><td>$1$<td align=right>  497,599</tr>
+    <tr><td>$2$<td align=right>   53,153</tr>
+    <tr><td>$3$<td align=right>    2,394</tr>
+    <tr><td>$4$<td align=right>       31</tr>
+    <tr><td>$1\dots4$<td align=right>553,177</tr>
+  </table>
+</p>
+
+<p>
+  The rank is even (root number $+1$) in $500,007$ cases, and odd
+  (root number $-1$) in $499,993$ cases. It is positive in $553,177$
+  cases, and hence approximately $55.3\%$ of the first million
+  integers are congruent numbers.
+</p>
+
+<p>
+  There are no curves of rank 5 or greater in this range. It has been
+  shown (see Number Theory List Server
+  postings <a href="https://listserv.nodak.edu/cgi-bin/wa.exe?A2=NMBRTHRY;16b991d8.1108&S=">#004175</a>
+  and
+  <a href="https://listserv.nodak.edu/cgi-bin/wa.exe?A2=NMBRTHRY;90748741.1109&S=">#004177</a>
+  from 2011) that the first two rank 5 congruent number curves are at
+  $n = 48,272,239$ and $n = 51,604,646$, both outside the range of
+  this data.
+</p>
+
+<p>
+  In eight cases ($n = 378953, 462073, 548953, 764593, 799657, 822722,
+  937121$, and $998617$), all of rank $2$, only one generator is
+  known, and hence neither the regulator nor &#1064; are known.
+</p>
+
+<h3>Large regulators</h3>
+<p>
+  The largest regulators are the following, both for curves of rank 2:
+  <table>
+    <tr><th>$n$<th align=left>regulator (to 38 digits)</tr>
+    <tr><td>894097<td>111327.01853534395558512966201243653950</tr>
+    <tr><td>856417<td>111192.73058837910329021633303899432936</tr>
+  </table>
+</p>
+
+<h3>Distribution of &#1064;</h3>
+<p>
+  Over half the curves ($574,290$) have trivial &#1064;.  The largest value seen is $719057$, for $n=7396$.
+</p>
+
+<h2>Credit and acknowledgements</h2> 
+
+<p>
+The data files were created by Randall L. Rathbun on February 14, 2013
+with updates on May 18, 2014.  Some data was provided by Allan J
+MacLeod, the rest computed by Rathbun using <tt>PARI/GP</tt>
+and <tt>eclib</tt> (in particular <tt>mwrank</tt>).
+</p>
+
+<div id='infomessage'>
+{{ info.message }}
+</div>
+
+{% endblock %}

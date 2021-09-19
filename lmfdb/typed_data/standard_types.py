@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .type_generation import String, Array, Int
 
 def PolynomialAsString(convention):

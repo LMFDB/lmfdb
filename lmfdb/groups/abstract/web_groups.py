@@ -342,6 +342,13 @@ class WebAbstractGroup(WebObj):
         return str1
         #return ".".join(map(str, sm_list))
 
+
+    @lazy_attribute
+    def irrep_stats(self):
+        return sorted(Counter([rep.dim for rep in self.characters]).items())
+
+        
+
     @lazy_attribute
     def G(self):
         # Reconstruct the group from the data stored above

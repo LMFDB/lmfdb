@@ -1,8 +1,6 @@
 # -*- encoding: utf-8 -*-
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
-from six.moves import range
-
 import re
 import sys
 from collections import Counter
@@ -25,6 +23,7 @@ BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[[1-9]\d*(,[1-9]\d*)*\]$')
 BRACKETED_NN_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 BRACKETED_RAT_RE = re.compile(r'^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
+QQ_LIST_RE = re.compile(r'^-?\d+(/\d+)?(,-?\d+(/\d+)?)*$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
 QQ_DEC_RE = re.compile(r'^\d+((\.\d+)|(/\d+))?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
@@ -47,13 +46,14 @@ class PowMulNodeVisitor(ast.NodeTransformer):
         if isinstance(node.op, ast.Pow):
             if log2(self.visit(node.left)) * self.visit(node.right) > 3000:
                 raise ValueError('output will be too large')
-            return  self.visit(node.left) ** self.visit(node.right)
+            return self.visit(node.left) ** self.visit(node.right)
         elif isinstance(node.op, ast.Mult):
-            return  self.visit(node.left) * self.visit(node.right)
+            return self.visit(node.left) * self.visit(node.right)
+
     def visit_Constant(self, node):
         return ast.literal_eval(node)
-    if sys.version_info < (3,8):
-        def visit_Num(self, node): # deprecated for python >= 3.8
+    if sys.version_info < (3, 8):
+        def visit_Num(self, node):  # deprecated for python >= 3.8
             return self.visit_Constant(node)
 
 class SearchParser(object):
@@ -91,12 +91,22 @@ class SearchParser(object):
                 inp = prep_ranges(inp)
             if self.prep_plus:
                 inp = inp.replace('+','')
-            if self.pass_name:
-                rval = self.f(inp, query, name, qfield, *args, **kwds)
-            else:
-                rval = self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
+            negated = inp.startswith("~")
+            if negated:
+                tmp = {}
+                inp = inp[1:]
+            else:
+                tmp = query
+            if self.pass_name:
+                rval = self.f(inp, tmp, name, qfield, *args, **kwds)
+            else:
+                rval = self.f(inp, tmp, qfield, *args, **kwds)
+            if negated:
+                copied = dict(query)
+                query.clear()
+                query["$and"] = [{"$not": tmp}, copied]
             return rval
         except (ValueError, AttributeError, TypeError) as err:
             if self.error_is_safe:
@@ -104,7 +114,7 @@ class SearchParser(object):
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
-            raise		
+            raise
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
@@ -402,16 +412,22 @@ def collapse_ors(parsed, query):
 def parse_rational(inp, query, qfield):
     if QQ_RE.match(inp):
         query[qfield] = str(QQ(inp))
+    elif QQ_LIST_RE.match(inp):
+        opts = [{qfield: str(QQ(x))} for x in inp.split(",")]
+        collapse_ors(['$or', opts], query)
     else:
-        raise SearchParsingError("It needs to be a rational number.")
+        raise SearchParsingError("It needs to be a rational number or comma separated list of rationals.")
 
 @search_parser(clean_info=True, prep_plus=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_rational_to_list(inp, query, qfield):
     if QQ_RE.match(inp):
         qinp = QQ(inp)
         query[qfield] = [qinp.numerator(), qinp.denominator()]
+    elif QQ_LIST_RE.match(inp):
+        opts = [{qfield: [QQ(x).numerator(), QQ(x).denominator()]} for x in inp.split(",")]
+        collapse_ors(['$or', opts], query)
     else:
-        raise SearchParsingError("It needs to be a rational number.")
+        raise SearchParsingError("It needs to be a rational number or comma separated list of rationals.")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints(inp, query, qfield, parse_singleton=int):
@@ -801,7 +817,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                     # If used more generally we should check every modifier
                     # value -1 is used to force empty search results
                     if isinstance(query[qf], dict):
-                        if (('$in' in query[qf] and not v in query[qf]['$in'])
+                        if (('$in' in query[qf] and v not in query[qf]['$in'])
                            or ('$gt' in query[qf] and not v > query[qf]['$gt'])
                            or ('$gte' in query[qf] and not v >= query[qf]['$gte'])
                            or ('$lt' in query[qf] and not v < query[qf]['$lt'])
@@ -1083,7 +1099,7 @@ def input_to_subfield(inp):
             raise SearchParsingError("You may only specify one subfield.")
         try:
             pol = PolynomialRing(QQ,'x')(str(F1))
-        except:
+        except Exception:
             raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():
@@ -1170,11 +1186,39 @@ def pol_string_to_list(pol, deg=None, var=None):
     return [str(c) for c in pol.coefficients(sparse=False)] + ['0']*fill
 
 @search_parser(pass_name=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_nf_elt(inp, query, name, qfield, field_label='field_label'):
-    if field_label not in query:
+def parse_nf_elt(inp, query, name, qfield, field_label):
+    if field_label is None:
         raise SearchParsingError("You must specify a field when searching by %s"%name)
-    deg = int(query[field_label].split('.')[0])
-    query[qfield] = pol_string_to_list(inp, deg=deg)
+    deg = int(field_label.split('.')[0])
+    if ',' in inp:
+        collapse_ors(['$or', [{qfield: pol_string_to_list(f, deg=deg)} for f in inp.split(',')]], query)
+    else:
+        query[qfield] = pol_string_to_list(inp, deg=deg)
+
+@search_parser(pass_name=True, clean_info=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_nf_jinv(inp, query, name, qfield, field_label):
+    if field_label is not None:
+        field_label = field_label.strip()
+    if field_label == '2.2.5.1':
+        inp = inp.replace('phi', 'a')
+    elif field_label == '2.0.4.1':
+        inp = inp.replace('i', 'a')
+    if 'a' not in inp and field_label is None:
+        if QQ_RE.match(inp):
+            query[qfield] = {'$regex': '^%s(,0)*$' % QQ(inp)}
+        elif QQ_LIST_RE.match(inp):
+            opts = [{qfield: {'$regex': '^%s(,0)*$' % QQ(x)}} for x in inp.split(",")]
+            collapse_ors(['$or', opts], query)
+        else:
+            raise SearchParsingError("With no field specified, it needs to be a rational number or comma separated list of rationals.")
+    elif field_label is None:
+        raise SearchParsingError("You must specify a field when searching by %s"%name)
+    else:
+        deg = int(field_label.split('.')[0])
+        if ',' in inp:
+            collapse_ors(['$or', [{qfield: ','.join(pol_string_to_list(f, deg=deg))} for f in inp.split(',')]], query)
+        else:
+            query[qfield] = ",".join(pol_string_to_list(inp, deg=deg))
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_container(inp, query, qfield):
@@ -1349,12 +1393,14 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             parsed_values = list(sub_query.values())
             # asking for each value to be in the array
             if parse_singleton is str:
-                all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
+                all_operand = [val for val in parsed_values
+                               if type(val) == parse_singleton and '-' not in val and ',' not in val]
             else:
-                all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
+                all_operand = [val for val in parsed_values
+                               if type(val) == parse_singleton]
 
             if all_operand:
-                sub_query[qfield] = {'$all' : all_operand}
+                sub_query[qfield] = {'$all': all_operand}
 
             # if there are other condition, we can add the first of those
             # conditions the query, in the hope of reducing the search space

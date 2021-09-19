@@ -33,13 +33,14 @@ def use_split_ors(info, query, split_ors, offset, table):
 
 
 class Wrapper(object):
-    def __init__(self, f, template, table, title, err_title, postprocess=None, **kwds):
+    def __init__(self, f, template, table, title, err_title, postprocess=None, one_per=None, **kwds):
         self.f = f
         self.template = template
         self.table = table
         self.title = title
         self.err_title = err_title
         self.postprocess = postprocess
+        self.one_per = one_per
         self.kwds = kwds
 
     def make_query(self, info, random=False):
@@ -62,7 +63,10 @@ class Wrapper(object):
         title = query.pop("__title__", self.title)
         title = info.get("title", title)
         template = query.pop("__template__", self.template)
-        return query, sort, table, title, err_title, template
+        one_per = query.pop("__one_per__", self.one_per)
+        if isinstance(one_per, str):
+            one_per = [one_per]
+        return query, sort, table, title, err_title, template, one_per
 
     def query_cancelled_error(
         self, info, query, err, err_title, template, template_kwds
@@ -148,17 +152,20 @@ class SearchWrapper(Wrapper):
         data = self.make_query(info, random)
         if not isinstance(data, tuple):
             return data
-        query, sort, table, title, err_title, template = data
+        query, sort, table, title, err_title, template, one_per = data
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
         if "result_count" in info:
-            nres = table.count(query)
+            if one_per:
+                nres = table.count_distinct(one_per, query)
+            else:
+                nres = table.count(query)
             return jsonify({"nres": str(nres)})
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
-            split_ors = use_split_ors(info, query, self.split_ors, start, table)
+            split_ors = not one_per and use_split_ors(info, query, self.split_ors, start, table)
             if random:
                 # Ignore __projection__: it's intended for searches
                 if split_ors:
@@ -197,6 +204,7 @@ class SearchWrapper(Wrapper):
                     offset=start,
                     sort=sort,
                     info=info,
+                    one_per=one_per,
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
@@ -261,7 +269,7 @@ class CountWrapper(Wrapper):
         data = self.make_query(info)
         if not isinstance(data, tuple):
             return data  # error page
-        query, sort, table, title, err_title, template = data
+        query, sort, table, title, err_title, template, one_per = data
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import render_template, request, url_for, make_response, jsonify, send_from_directory
 from flask_login import login_required
 from lmfdb.users import admin_required
@@ -17,7 +17,7 @@ class CustomEncoder(json.JSONEncoder):
         try:
             u = obj.__str__()
             return u
-        except:
+        except Exception:
             return json.JSONEncoder.default(self, obj)
 
 
@@ -240,7 +240,7 @@ def edit_failure(request=request):
     try:
         errcode = int(request.args.get('code'))
         errstr = str(inventory_viewer.err_registry[errcode])
-    except:
+    except Exception:
         if get_lockout_state():
             errcode = 16
             errstr = str(inventory_viewer.err_registry[errcode])

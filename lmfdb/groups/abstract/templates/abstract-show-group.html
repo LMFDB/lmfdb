@@ -70,13 +70,13 @@
 <h2>Group Statistics</h2>
 {% if gp.order_stats is defined %}
    <table class="ntdata">
- <tbody>
-             <tr><td>Order of elements</td>
+ <thead>
+   <tr><th>Orders of elements</th>
             {% for c in gp.order_stats %}
-            <td>{{ c[0] | safe }} </td>
+            <th>{{ c[0] | safe }} </th>
             {% endfor %}
-	     </tr>
-             <tr><td>Number of elements</td>
+	     </tr> </thead><tbody>
+       <tr><td>Number of each order</td>
             {% for c in gp.order_stats %}
             <td>{{ c[1] | safe }} </td>
             {% endfor %}
@@ -85,22 +85,22 @@
       </table>
      {% endif %}   
 <br>     
-<!--{% if gp.characters is defined %}
+{% if gp.irrep_stats is defined %}
    <table class="ntdata">
- <tbody>
-             <tr><td>Irreducible complex rep</td>
-            {% for char in gp.characters %}
-            <td>{{ char.label }} </td>
+ <thead>
+             <tr><th>Dimensions of irreducible complex representations</th>
+            {% for char in gp.irrep_stats %}
+            <th>{{ char[0] | safe}} </th>
             {% endfor %}
-             </tr>
-             <tr><td>Dimension</td>
-            {% for char in gp.characters %}
-            <td>{{ char.dim}} </td>
+             </tr></thead><tbody>
+   <tr><td>Number of each dimension</td>
+            {% for char in gp.irrep_stats %}
+            <td>{{ char[1] | safe }} </td>
             {% endfor %}
              </tr>
          </tbody>
       </table>
-     {% endif %} -->
+     {% endif %} 
 
 
 <h2>Constructions</h2>

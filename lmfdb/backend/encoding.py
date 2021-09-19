@@ -3,9 +3,6 @@
 This module provides functions for encoding data for storage in Postgres
 and decoding the results.
 """
-from six import string_types
-from six import integer_types as six_integers
-
 import binascii
 import json
 import datetime
@@ -49,7 +46,7 @@ else:
         """
 
         def __init__(self, parent, x=0, base=10):
-            if not isinstance(x, string_types):
+            if not isinstance(x, str):
                 x = str(x)
             RealLiteral.__init__(self, parent, x, base)
 
@@ -189,7 +186,7 @@ class Json(pgJson):
                         for k, v in obj.items()
                     ],
                 }
-            elif all(isinstance(k, string_types) for k in obj):
+            elif all(isinstance(k, str) for k in obj):
                 return {k: cls.prep(v, escape_backslashes) for k, v in obj.items()}
             else:
                 raise TypeError("keys must be strings or integers")
@@ -277,7 +274,7 @@ class Json(pgJson):
                 "prec": "inf" if obj.prec() is infinity else int(obj.prec()),
                 "data": data,
             }
-        elif escape_backslashes and isinstance(obj, string_types):
+        elif escape_backslashes and isinstance(obj, str):
             # For use in copy_dumps below
             return (
                 obj.replace("\\", "\\\\")
@@ -294,7 +291,7 @@ class Json(pgJson):
             return {"__time__": 0, "data": "%s" % (obj)}
         elif isinstance(obj, datetime.datetime):
             return {"__datetime__": 0, "data": "%s" % (obj)}
-        elif isinstance(obj, (string_types, bool, float) + six_integers):
+        elif isinstance(obj, (str, bool, float, int)):
             return obj
         else:
             raise ValueError("Unsupported type: %s" % (type(obj)))
@@ -407,7 +404,7 @@ def copy_dumps(inp, typ, recursing=False):
     if inp is None:
         return u"\\N"
     elif typ in ("text", "char", "varchar"):
-        if not isinstance(inp, string_types):
+        if not isinstance(inp, str):
             inp = str(inp)
         inp = (
             inp.replace("\\", "\\\\")
@@ -445,7 +442,7 @@ def copy_dumps(inp, typ, recursing=False):
         return "{" + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + "}"
     elif SAGE_MODE and isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (float,) + six_integers) or SAGE_MODE and isinstance(inp, (Integer, RealNumber)):
+    elif isinstance(inp, (float, int)) or SAGE_MODE and isinstance(inp, (Integer, RealNumber)):
         return str(inp).replace("L", "")
     elif typ == "boolean":
         return "t" if inp else "f"

@@ -1,8 +1,6 @@
-from six.moves import range
-
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import make_response, send_file, request, render_template, redirect, url_for
@@ -18,6 +16,7 @@ from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
 # utilitary functions for displays
+
 
 def my_latex(s):
     # This code was copy pasted and should be refactored
@@ -196,7 +195,7 @@ def render_rep_galois_modl_webpage(**args):
         try:
             pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
             info['field_str']=str(r'$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
-        except:
+        except Exception:
             info['field_str']=""
 
 
@@ -205,14 +204,14 @@ def render_rep_galois_modl_webpage(**args):
     for n in data['bad_prime_list']:
         try:
             n1=[int(n[0]), str(n[1]), str(n[2]), int(n[3]), int(n[4])]
-        except:
+        except Exception:
             n1=[int(n[0]), str(n[1]), str(n[2]), str(n[3]), str(n[4])]
         info['bad_prime_list'].append(n1)
     info['len_good']=[int(i+1) for i in range(len(data['good_prime_list'][0][1]))]
     for n in data['good_prime_list']:
         try:
             n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), int(n[3]), int(n[4])]
-        except:
+        except Exception:
             n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), str(n[3]), str(n[4])]
         info['good_prime_list'].append(n1)
 

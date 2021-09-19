@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import ast
+import os
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
@@ -19,12 +20,13 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, CREMONA_BOUND
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
+from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
+
 q = ZZ['x'].gen()
 the_ECstats = None
-
 
 #########################
 #   Utility functions
@@ -57,7 +59,8 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Elliptic curve labels', url_for(".labels_page"))]
+            ('Elliptic curve labels', url_for(".labels_page")),
+            ('Congruent number curves', url_for(".render_congruent_number_data"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -208,6 +211,10 @@ class ECstats(StatsDisplay):
 @app.context_processor
 def ctx_elliptic_curve_summary():
     return {'elliptic_curve_summary': lambda: ECstats().summary}
+
+@app.context_processor
+def ctx_gl2_subgroup():
+    return {'gl2_subgroup_data': gl2_subgroup_data}
 
 @ec_page.route("/stats")
 def statistics():
@@ -380,7 +387,7 @@ def elliptic_curve_search(info, query):
     # minimal Faltings heights, which is conjecturally the
     # Gamma_1(N)-optimal curve.
     if 'optimal' in info and info['optimal'] == 'on':
-        query.update({'lmfdb_number':1})
+        query["__one_per__"] = "lmfdb_iso"
 
     info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
@@ -634,6 +641,35 @@ def ec_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@ec_page.route("/CongruentNumbers")
+def render_congruent_number_data():
+    info = to_dict(request.args)
+    if 'lookup' in info:
+        return redirect(url_for(".render_single_congruent_number", n=info['lookup']))
+    learnmore = learnmore_list_remove('Congruent numbers and curves')
+    t = 'Congruent numbers and congruent number curves'
+    bread = get_bread(t)
+    if 'filename' in info:
+        filepath = os.path.join(congruent_number_data_directory,info['filename'])
+        if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+            return send_file(filepath, as_attachment=True, add_etags=False)
+        else:
+            flash_error('File {} not found'.format(info['filename']))
+            return redirect(url_for(".rational_elliptic_curves"))
+
+    return render_template("congruent_number_data.html", info=info, title=t, bread=bread, learnmore=learnmore)
+
+@ec_page.route("/CongruentNumber/<int:n>")
+def render_single_congruent_number(n):
+    if 0 < n and n <= 1000000:
+        info = get_congruent_number_data(n)
+    else:
+        info = {'n': n, 'error': 'out of range'}
+    t = "Is {} a congruent number?".format(n)
+    bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
+    return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
+
+
 sorted_code_names = ['curve', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'qexp', 'moddeg', 'L1', 'localdata', 'galrep', 'padicreg']
 
 code_names = {'curve': 'Define the curve',
@@ -673,7 +709,7 @@ def ec_code(**args):
     for k in sorted_code_names:
         if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
+            code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
     return code
 
 def tor_struct_search_Q(prefill="any"):
@@ -732,7 +768,7 @@ class ECSearchArray(SearchArray):
         surj_primes = TextBox(
             name="surj_primes",
             label="Maximal primes",
-            knowl="ec.maximal_galois_rep",
+            knowl="ec.maximal_ladic_galois_rep",
             example="2,3")
         isodeg = TextBox(
             name="isogeny_degrees",
@@ -787,7 +823,7 @@ class ECSearchArray(SearchArray):
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
             label="Nonmax $p$",
-            knowl="ec.maximal_galois_rep",
+            knowl="ec.maximal_ladic_galois_rep",
             example="2,3",
             select_box=surj_quant)
         bad_quant = SubsetBox(

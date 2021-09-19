@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint, request, redirect
@@ -16,7 +15,7 @@ def body_class():
 from . import main
 assert main
 
-from six.moves.urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 @local_fields_page.before_request
 def redirect_local():
         urlparts = urlparse(request.url)

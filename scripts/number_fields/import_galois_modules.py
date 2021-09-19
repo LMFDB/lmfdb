@@ -22,7 +22,7 @@ argument 1=complete, 0=incomplete (inf many), -1 =incomplete (just partial
 list)
 
 """
-from __future__ import print_function
+
 import sys
 import re
 import json

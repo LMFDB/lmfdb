@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 from lmfdb.lmdfb_database import LMFDBDatabase
 from sage.parallel.decorate import parallel
@@ -26,7 +26,7 @@ class CMFTest(LmfdbTest):
                 assert label in page.get_data(as_text=True)
                 if dim <= 80:
                     assert 'L-function %s' % label in page.get_data(as_text=True)
-                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.get_data(as_text=True)
+                assert 'L-function %s.%s' % tuple(label.split('.')[:2]) in page.get_data(as_text=True)
                 assert 'Analytic rank' in page.get_data(as_text=True)
             if dim == 1:
                 assert 'Satake parameters' in page.get_data(as_text=True)
@@ -192,10 +192,10 @@ class CMFTest(LmfdbTest):
             for e in errors:
                 print(e)
 
-        broken_urls = [ u for l, u in res  if u is None ]
-        working_urls = [ (l, u) for l, u in res if u is not None]
-        working_urls.sort(key= lambda elt: elt[0])
-        just_times = [ l for l, u in working_urls]
+        broken_urls = [u for l, u in res if u is None]
+        working_urls = [(l, u) for l, u in res if u is not None]
+        working_urls.sort(key=lambda elt: elt[0])
+        just_times = [l for l, u in working_urls]
         total = len(working_urls)
         if not broken_urls:
             print("All the pages passed the tests")
@@ -210,7 +210,7 @@ class CMFTest(LmfdbTest):
                 print("Histogram")
                 h = 0.5
                 nbins = (just_times[-1] - just_times[0])/h
-                while  nbins < 50:
+                while nbins < 50:
                     h *= 0.5
                     nbins = (just_times[-1] - just_times[0])/h
                 nbins = ceil(nbins)

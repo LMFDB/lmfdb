@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from six import string_types
 from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset)
@@ -321,7 +319,7 @@ class ArtinRepresentation(object):
         p = 2
         hard_primes = self.hard_primes()
         while len(artfull)>1:
-            if not p in hard_primes:
+            if p not in hard_primes:
               k=0
               while k<len(artfull):
                   if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
@@ -427,14 +425,14 @@ class ArtinRepresentation(object):
             return "An Artin representation of conductor " +\
                 str(self.conductor()) + " and dimension " + str(self.dimension())
             #+", "+str(self.index())
-        except:
+        except Exception:
             return "An Artin representation"
 
     def title(self):
         try:
             return "An Artin representation of conductor $" +\
                 str(self.conductor()) + "$ and dimension $" + str(self.dimension()) + "$"
-        except:
+        except Exception:
             return "An Artin representation"
 
     def url_for(self):
@@ -569,12 +567,12 @@ class ArtinRepresentation(object):
         # Index in the conjugacy classes, but starts at 1
         try:
             i = self.hard_primes().index(p)
-        except:
+        except Exception:
             raise IndexError("Not a 'hard' prime")
         return self.hard_factors()[i]
 
     def nf(self):
-        if not 'nf' in self._data:
+        if 'nf' not in self._data:
             self._data['nf']= self.number_field_galois_group()
         return self._data['nf']
 
@@ -654,7 +652,7 @@ class ConjugacyClass(object):
     def __str__(self):
         try:
             return "A conjugacy class in the group %s, of order %s and with representative %s" % (self._G, self.order(), self.representative())
-        except:
+        except Exception:
             return "A conjugacy class"
 
 
@@ -671,7 +669,7 @@ class NumberFieldGaloisGroup(object):
         elif len(x) > 1:
             raise ValueError("Only one positional argument allowed")
         else:
-            if isinstance(x[0], string_types):
+            if isinstance(x[0], str):
                 if x[0]:
                     coeffs = x[0].split(',')
                 else:
@@ -867,7 +865,7 @@ class NumberFieldGaloisGroup(object):
     # def Frobenius_fn(self):
     #    try:
     #        return self._Frobenius
-    #    except:
+    #    except Exception:
     #        tmp = self._data["Frobs"]
 
     def Frobenius_resolvents(self):
@@ -936,7 +934,7 @@ class NumberFieldGaloisGroup(object):
     def frobenius_cycle_type(self, p):
         try:
             assert p not in self.all_bad_primes()
-        except:
+        except Exception:
             raise AssertionError("Expecting a prime not dividing the discriminant")
         return tuple(self.residue_field_degrees(p))
         # tuple allows me to use this for indexing of a dictionary
@@ -944,7 +942,7 @@ class NumberFieldGaloisGroup(object):
     # def increasing_frobenius_cycle_type(self, p):
     #    try:
     #        assert not self.discriminant() % p == 0
-    #    except:
+    #    except Exception:
     #        raise AssertionError, "Expecting a prime not dividing the discriminant", p
     #    return tuple(sorted(self.residue_field_degrees(p), reverse = True))
     def residue_field_degrees(self, p):
@@ -962,7 +960,7 @@ class NumberFieldGaloisGroup(object):
     def __str__(self):
         try:
             tmp = "The Galois group of the number field  Q[x]/(%s)" % [str(m) for m in self.polynomial()]
-        except:
+        except Exception:
             tmp = "The Galois group of a number field"
         return tmp
 

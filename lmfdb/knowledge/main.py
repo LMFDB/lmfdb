@@ -11,7 +11,7 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
-from __future__ import absolute_import
+
 import string
 import re
 import json
@@ -250,6 +250,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+  {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
   %(content)s
   """
@@ -700,9 +701,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # If we are rendering a reviewed knowl on nonbeta,
         # we always include the timestamp
         if timestamp is None and k.status == 1 and not is_beta():
-            kwargs['timestamp'] = k.ms_timestamp;
-
-
+            kwargs['timestamp'] = k.ms_timestamp
 
     # kw_params is inserted *verbatim* into the url_for(...) function inside the template
     # the idea is to pass the keyword arguments of the knowl further along the chain
@@ -732,6 +731,7 @@ def render_knowl(ID, footer=None, kwargs=None,
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+  {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
   <div class="knowl">"""
     if foot == "1":

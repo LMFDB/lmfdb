@@ -1,6 +1,5 @@
-from __future__ import print_function
 from flask import url_for
-from six.moves.urllib_parse import quote
+from urllib.parse import quote
 from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
@@ -10,30 +9,6 @@ from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
-
-# For backwards compatibility of labels of conductors (ideals) over
-# imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
-# 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF
-# 2. N.c.d
-# 3. N.i with N=norm and i the index in the standard list of ideals of norm N (per field).
-#
-# Converting 1->2 is trivial and 2->3 is done via a stored lookup
-# table, which contains entries for the five Euclidean imaginary
-# quadratic fields 2.0.d.1 for d in [4,8,3,7,11] and all N<=10000.
-#
-
-def convert_IQF_label(fld, lab):
-    if fld.split(".")[:2] != ['2','0']:
-        return lab
-    newlab = lab
-    if lab[0]=='[':
-        newlab = lab[1:-1].replace(",",".")
-    if len(newlab.split("."))!=3:
-        return newlab
-    newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
-    # if newlab and newlab!=lab:
-    #     print("Converted label {} to {} over {}".format(lab, newlab, fld))
-    return newlab if newlab else lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -198,7 +173,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         elif n1==7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
         return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + r" \mapsto$ " + str(S[i].im_gens()[0].n(20)) + r"$\dots$") for i in range(n1)])
-    except:
+    except Exception:
         return text("Unable to plot", (1, 1), fontsize=36)
 
 def ec_disc(ainvs):
@@ -304,15 +279,15 @@ class ECNF(object):
         self.disc = pretty_ideal(Kgen, self.disc)
 
         local_data = self.local_data
-        local_data.sort(key = lambda ld:ld['normp'])
+        local_data.sort(key=lambda ld: ld['normp'])
 
-        badprimes    = [pretty_ideal(Kgen, ld['p'], enclose=False) for ld in local_data]
-        badnorms     = [ld['normp']     for ld in local_data]
-        disc_ords    = [ld['ord_disc']  for ld in local_data]
-        mindisc_ords = [ld['ord_disc']  for ld in local_data]
-        cond_ords    = [ld['ord_cond']  for ld in local_data]
+        badprimes = [pretty_ideal(Kgen, ld['p'], enclose=False) for ld in local_data]
+        badnorms = [ld['normp'] for ld in local_data]
+        disc_ords = [ld['ord_disc'] for ld in local_data]
+        mindisc_ords = [ld['ord_disc'] for ld in local_data]
+        cond_ords = [ld['ord_cond'] for ld in local_data]
 
-        if self.conductor_norm==1:
+        if self.conductor_norm == 1:
             self.cond = r"\((1)\)"
             self.fact_cond = self.cond
             self.fact_cond_norm = '1'
@@ -409,7 +384,7 @@ class ECNF(object):
 
         # Galois images in CM case:
         if self.cm and self.galois_images != '?':
-            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if p not in self.non_surjective_primes]
             self.cm_nramp = len(self.cm_ramp)
             if self.cm_nramp==1:
                 self.cm_ramp = self.cm_ramp[0]
@@ -494,7 +469,8 @@ class ECNF(object):
             self.ar = "not available"
 
         # for debugging:
-        assert self.rk=="not available" or (self.rk_lb==self.rank          and self.rank         ==self.rk_ub)
+        assert self.rk == "not available" or (self.rk_lb == self.rank and
+                                              self.rank == self.rk_ub)
         assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
 
         self.bsd_status = "incomplete"
@@ -621,13 +597,13 @@ class ECNF(object):
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
-        if totally_real and not 'Lfunction' in self.urls:
+        if totally_real and 'Lfunction' not in self.urls:
             self.friends += [('Hilbert modular form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
                 self.friends += [('Bianchi modular form is not cuspidal', '')]
-            elif not 'Lfunction' in self.urls:
+            elif 'Lfunction' not in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
                     self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
                 else:
@@ -651,6 +627,7 @@ class ECNF(object):
             ('CM', self.cm_bool)]
 
         if self.base_change:
+            self.base_change = [lab for lab in self.base_change if '?' not in lab]
             self.properties += [('Base change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []

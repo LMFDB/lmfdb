@@ -29,7 +29,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_subset', 'parse_submultiset', 'parse_list',
            'parse_list_start', 'parse_string_start', 'parse_restricted', 'parse_regex_restricted',
            'parse_noop', 'parse_equality_constraints', 'parse_gap_id',
-           'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt',
+           'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt', 'parse_nf_jinv',
            'parse_container', 'parse_hmf_weight', 'parse_count',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
            'nf_string_to_label', 'clean_input', 'prep_ranges',
@@ -72,13 +72,13 @@ from .utilities import (
     datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (
-    parse_ints, parse_signed_ints, parse_floats, parse_mod1, parse_rational, 
+    parse_ints, parse_signed_ints, parse_floats, parse_mod1, parse_rational,
     parse_rational_to_list, parse_padicfields, parse_rats, parse_inertia,
     parse_bracketed_posints, parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
     parse_element_of, parse_not_element_of, parse_subset, parse_submultiset, parse_list,
     parse_list_start, parse_string_start, parse_restricted, parse_regex_restricted, parse_noop,
     parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string,
-    parse_nf_elt, parse_container, parse_hmf_weight, parse_count, parse_start,
+    parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     parse_subfield,
     clean_input, prep_ranges, input_string_to_poly)

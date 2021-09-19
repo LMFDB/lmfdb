@@ -1,14 +1,22 @@
 {% extends 'homepage.html' %}
-{% block content %}  
+{% block content %}
 
 <div>
  <ul>
    <li>ID: <a href="{{ url_for('.profile', userid=user.get_id()) }}">{{ user.get_id()}}</a></li>
+   {% if user.url is not none %}
    <li>URL: {% with url = user.url %}<a href="{{url}}">{{url}}</a>{% endwith %} </li>
+   {% endif %}
+   {% if user_is_authenticated %}
    <li>Admin: {{ user.is_admin() }}</li>
+   {% endif %}
+   {% if user.about is not none %}
    <li>About: {{ user.about }}</li>
+   {% endif %}
   </ul>
 </div>
+
+{% if userknowls %}
 
 <h2>Knowls</h2>
 <div>{{ user.name }} has contributed to these Knowls:
@@ -17,5 +25,7 @@
   {{ k['title'] }}</a>{% if not loop.last -%},{%- endif %}
  {% endfor %}
 </div>
+
+{% endif %}
 
 {% endblock %}

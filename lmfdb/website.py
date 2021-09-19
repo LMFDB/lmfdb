@@ -10,7 +10,7 @@
 start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
-from __future__ import print_function, absolute_import
+
 import os
 # Needs to be done first so that other modules and gunicorn can use logging
 from .logger import info

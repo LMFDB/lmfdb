@@ -3,7 +3,6 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
-from __future__ import absolute_import
 import flask
 from functools import wraps
 from lmfdb.app import app
@@ -99,7 +98,6 @@ def base_bread():
 
 
 @login_page.route("/")
-@login_required
 def list():
     COLS = 5
     users = userdb.get_user_list()
@@ -144,17 +142,19 @@ def info():
 @login_required
 def set_info():
     for k, v in request.form.items():
-        setattr(current_user, k, v)
+        if v:
+            setattr(current_user, k, v)
     current_user.save()
     flask.flash(Markup("Thank you for updating your details!"))
     return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/profile/<userid>")
-@login_required
 def profile(userid):
-    # See issue #1169
     user = LmfdbUser(userid)
+    if not user.exists:
+        flash_error("User %s does not exist", userid)
+        return flask.redirect(url_for(".list"))
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
     from lmfdb.knowledge.knowl import knowldb
     userknowls = knowldb.search(author=userid, sort=['title'])
@@ -242,7 +242,7 @@ def register(N=10):
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
     if not userdb._rw_userdb:
-        flask.abort(401, "no attempt to create user, not enough privileges");
+        flask.abort(401, "no attempt to create user, not enough privileges")
     userdb.delete_old_tokens()
     if not userdb.token_exists(token):
         flask.abort(401)
@@ -325,11 +325,11 @@ def admin():
 def restart():
     import sys
     from subprocess import Popen, PIPE
-    from six.moves.urllib.parse import urlparse
+    from urllib.parse import urlparse
     urlparts = urlparse(request.url)
     if urlparts.netloc == "beta.lmfdb.org":
         command = ['bash', '/home/lmfdb/restart-dev']
-    elif urlparts.netloc in  ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
+    elif urlparts.netloc in ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
         command = ['bash', '/home/lmfdb/restart-web']
     else:
         command = None

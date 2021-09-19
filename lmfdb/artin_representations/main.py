@@ -75,7 +75,7 @@ def parse_artin_orbit_label(label, safe=False):
             newlabel = db.artin_old2new_labels.lookup(label)['new']
             if newlabel:
                 return newlabel
-    except:
+    except Exception:
         if safe:
             return ''
     raise ValueError
@@ -89,7 +89,7 @@ def parse_artin_label(label, safe=False):
             newlabel = db.artin_old2new_labels.lookup(label)['new']
         if newlabel:
             return newlabel
-    except:
+    except Exception:
         if safe:
             return ''
     raise ValueError
@@ -106,11 +106,11 @@ def parse_any(label):
     try:
         newlabel = parse_artin_label(label)
         return ['rep', newlabel]
-    except:
+    except Exception:
         try:
             newlabel = parse_artin_orbit_label(label)
             return ['orbit', newlabel]
-        except:
+        except Exception:
             return ['malformed', label]
 
 
@@ -190,7 +190,7 @@ def parse_projective_group(inp, query, qfield):
         try:
             mycode = complete_group_code(inp.upper())[0]
             query['Proj_nTj'] = [mycode[0],mycode[1]]
-        except:
+        except Exception:
             raise ValueError("Allowed values are A4, S4, A5, or Dn for an integer n>1, a GAP id, such as [4,1] or [12,5], a transitive group in nTj notation, such as 5T1, or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>.")
 
 @search_parser(clean_info=True)
@@ -280,7 +280,7 @@ def render_artin_representation_webpage(label):
     if case[0] == 'malformed':
         try:
             raise ValueError
-        except:
+        except Exception:
             flash_error("%s is not in a valid form for the label for an Artin representation or a Galois orbit of Artin representations", label)
             return redirect(url_for(".index"))
     # Do this twice to customize error messages
@@ -289,14 +289,14 @@ def render_artin_representation_webpage(label):
     if case == 'rep':
         try:
             the_rep = ArtinRepresentation(newlabel)
-        except:
+        except Exception:
             newlabel = parse_artin_label(label)
             flash_error("Artin representation %s is not in database", label)
             return redirect(url_for(".index"))
     else: # it is an orbit
         try:
             the_rep = ArtinRepresentation(newlabel+'.a')
-        except:
+        except Exception:
             newlabel = parse_artin_orbit_label(newlabel)
             flash_error("Galois orbit of Artin representations %s is not in database", label)
             return redirect(url_for(".index"))

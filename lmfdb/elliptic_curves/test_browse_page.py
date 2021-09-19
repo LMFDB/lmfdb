@@ -57,13 +57,10 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the link to a specific curve works.
         """
-        self.check_args("/EllipticCurve/Q/?jump=11.a2",
-                        r'\(y^2+y=x^3-x^2-10x-20\)')
-        self.check_args("/EllipticCurve/Q/?jump=389.a",
-                        'Elliptic curves in class 389.a')
-        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", '\\(\\Z^2\\)')
-        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+",
-                        '\\(\\Z^2\\)')
+        self.check_args("/EllipticCurve/Q/?jump=11.a2", r'y^2+y=x^3-x^2-10x-20')
+        self.check_args("/EllipticCurve/Q/?jump=389.a", 'Elliptic curves in class 389.a')
+        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", r'\Z^2')
+        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+", r'\Z^2')
 
     #
     # Various search combinations
@@ -86,5 +83,5 @@ class HomePageTest(LmfdbTest):
         self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
                         '990h1')
         L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13&search_type=List")
-        assert '[0, 0, 1, -849658625, 9532675710156]' in  L.get_data(as_text=True)
+        assert '[0, 0, 1, -849658625, 9532675710156]' in L.get_data(as_text=True)
         assert '[0, -1, 1, -10, -20]' not in L.get_data(as_text=True)
