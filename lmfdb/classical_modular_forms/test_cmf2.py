@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 
 from . import cmf_logger
@@ -54,7 +54,7 @@ class CmfTest(LmfdbTest):
         assert 'Invalid label' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.mz', follow_redirects=True)
-        assert 'Label not found:'
+        assert 'Label not found:' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.c', follow_redirects=True)
         assert 'We have not computed traces for' in page.get_data(as_text=True)
@@ -99,7 +99,7 @@ class CmfTest(LmfdbTest):
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
-            assert makenewform  in page.get_data(as_text=True)
+            assert makenewform in page.get_data(as_text=True)
             magma_code = page.get_data(as_text=True) + '\n' + '%s();\n' % makenewform
             self.assert_if_magma(expected, magma_code, mode='equal')
 
@@ -118,7 +118,7 @@ class CmfTest(LmfdbTest):
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
-            assert makenewform  in page.get_data(as_text=True)
+            assert makenewform in page.get_data(as_text=True)
             magma_code = page.get_data(as_text=True) + '\n' + '%s();\n' % makenewform
             self.assert_if_magma(expected, magma_code, mode='equal')
 
@@ -244,7 +244,7 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-4000&weight=1&nf_label=9.9.16983563041.1&prime_quantifier=subsets&projective_image=D19&search_type=List')
         assert r"Q(\zeta_{38})^+" in page.get_data(as_text=True)
-        assert "Results (32 matches)"
+        assert "Results (32 matches)" in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets&search_type=List')
         assert 'Results (7 matches)' in page.get_data(as_text=True)

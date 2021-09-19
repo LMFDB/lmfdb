@@ -27,7 +27,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-from __future__ import absolute_import
+
 from .utils import DelayCommit
 
 assert DelayCommit

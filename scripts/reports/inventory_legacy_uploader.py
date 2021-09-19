@@ -133,13 +133,13 @@ def upload_collection_description(db, db_name, coll_name, data, fresh=False):
             notes_data = split_data[inv.STR_NOTES]
             notes_data = ih.blank_all_empty_fields(notes_data)
             inv.log_dest.debug(notes_data)
-        except:
+        except Exception:
             notes_data = None
         try:
             info_data = split_data[inv.STR_INFO]
             info_data = ih.blank_all_empty_fields(info_data)
             inv.log_dest.debug(info_data)
-        except:
+        except Exception:
             info_data = None
         _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name, notes_data, info_data)
     except Exception as e:
@@ -157,11 +157,11 @@ def upload_collection_description(db, db_name, coll_name, data, fresh=False):
                 rec_set = {'hash':field}
                 try:
                     rec_set['name'] = dat['name']
-                except:
+                except Exception:
                     pass
                 try:
                     rec_set['description'] = dat['description']
-                except:
+                except Exception:
                     pass
                 invc.set_record(db, _c_id['id'], rec_set, type='human')
 

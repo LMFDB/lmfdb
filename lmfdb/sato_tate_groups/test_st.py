@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -9,7 +9,7 @@ class SatoTateGroupTest(LmfdbTest):
     #
     def test_main(self):
         L = self.tc.get('/SatoTateGroup/')
-        assert 'Browse' in L.get_data(as_text=True) and 'U(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True)  and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
+        assert 'Browse' in L.get_data(as_text=True) and 'U(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True) and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
         
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/?label=1.4.A.1.1a', follow_redirects=True)
@@ -93,16 +93,16 @@ class SatoTateGroupTest(LmfdbTest):
             L = self.tc.get('/SatoTateGroup/' + label)
             assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?components=999999999&include_irrational=yes')
-        assert 'unique match'  in L.get_data(as_text=True) and 'mu(999999999)' in L.get_data(as_text=True)
+        assert 'unique match' in L.get_data(as_text=True) and 'mu(999999999)' in L.get_data(as_text=True)
 
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
-        assert '0 matches'
+        assert 'No matches' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1/4')
         assert '1.4.E.4.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=19/24')
         assert '1.4.F.24.14a' in L.get_data(as_text=True)
-        
+
     def test_favourites(self):
         for label in [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]:
             L = self.tc.get('/SatoTateGroup/'+label, follow_redirects=True)

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from sage.all import prime_pi, mod, euler_phi, prime_range
 
 from lmfdb.lmfdb_database import db, SQL

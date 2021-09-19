@@ -3,7 +3,7 @@
 import ast
 import os
 import re
-from six import BytesIO
+from io import BytesIO
 
 import time
 
@@ -23,7 +23,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
-    group_phrase, galois_group_data,
+    group_phrase, galois_group_data, group_display_knowl,
     group_cclasses_knowl_guts, group_pretty_and_nTj,
     group_character_table_knowl_guts, group_alias_table)
 from lmfdb.number_fields import nf_page, nf_logger
@@ -457,25 +457,38 @@ def render_field_webpage(args):
         loc_alg = ''
         for j in range(npr):
             if ramified_algebras_data[j] is None:
-                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
+                loc_alg += '<tr><td>$%s$</td><td colspan="7">Data not computed</td></tr>'%str(ram_primes[j]).rstrip('L')
             else:
                 from lmfdb.local_fields.main import show_slope_content
+                primefirstline=True
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
-                mm = mydat[0]
-                myurl = url_for('local_fields.by_label', label=mm[0])
-                lab = mm[0]
-                if mm[3]*mm[2] == 1:
-                    lab = r'$\Q_{%s}$'%str(p)
-                loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
-                for mm in mydat[1:]:
-                    lab = mm[0]
-                    myurl = url_for('local_fields.by_label', label=lab)
-                    if mm[3]*mm[2] == 1:
-                        lab = r'$\Q_{%s}$'%str(p)
-                    loc_alg += '<tr><td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
-        loc_alg += '</tbody></table>'
+                for mm in mydat:
+                    if primefirstline:
+                        primefirstline=False
+                    else:
+                        loc_alg += '<tr>'
+                    if len(mm)==4:         # not in database
+                        if mm[1]*mm[2]==1: # Q_p
+                            loc_alg += '<td>$\\Q_{%d}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(p,group_display_knowl(1,1), show_slope_content([],1,1))
+                        elif mm[1]*mm[2]==2: # quadratic
+                            loc_alg += '<td></td><td>Deg $2$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1],mm[2],mm[3],group_display_knowl(2,1), show_slope_content([],mm[1],mm[2]))
+                        elif mm[1]==1: # unramified
+                            # nT1 is cyclic except for n = 32
+                            cyc = 33 if mm[2] == 32 else 1
+                            loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1]*mm[2],mm[1],mm[2],mm[3],group_display_knowl(mm[2],cyc), show_slope_content([],mm[1],mm[2]))
+                        else:
+                            loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td></td><td></td>'.format(
+                                mm[1]*mm[2], mm[1], mm[2], mm[3])
+                    else:
+                        lab = mm[0]
+                        myurl = url_for('local_fields.by_label', label=lab)
+                        if mm[3]*mm[2] == 1:
+                            lab = r'$\Q_{%s}$'%str(p)
+                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>$%s$</td>'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+            loc_alg += '</tr>\n'
+        loc_alg += '</tbody></table>\n'
 
     ram_primes = str(ram_primes)[1:-1]
     # Get rid of python L for big numbers
@@ -753,13 +766,15 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
+
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info, query, 'jump',name="Label", qfield='label')
+        parse_nf_string(info, query, 'jump', name="Label", qfield='label')
         # we end up parsing the string twice, but that is okay
         F1, _, _ = input_string_to_poly(info['jump'])
-        if F1 and F1.list() != db.nf_fields.lookup(query['label'], 'coeffs'):
+        # we only use the output of input_string_to_poly with single-letter variable names
+        if F1 and len(str(F1.parent().gen())) == 1 and F1.list() != db.nf_fields.lookup(query['label'], 'coeffs'):
             flash_info(r"The requested field $\Q[{}]/\langle {}\rangle$ is isomorphic to the field below, but uses a different defining polynomial.".format(str(F1.parent().gen()), latex(F1)))
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:

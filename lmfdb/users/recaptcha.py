@@ -7,8 +7,8 @@ remoteip (required)     The IP address of the user who solved the CAPTCHA.
 challenge (required)    The value of "recaptcha_challenge_field" sent via the form
 response (required)     The value of "recaptcha_response_field" sent via the form
 """
-from six.moves.urllib.request import urlopen, Request
-from six.moves.urllib.parse import urlencode
+from urllib.request import urlopen, Request
+from urllib.parse import urlencode
 
 
 # Public Key:

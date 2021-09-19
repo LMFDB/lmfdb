@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 
@@ -176,7 +176,7 @@ class LfunctionTest(LmfdbTest):
         assert '1.51472556377341264746894823521' in L.get_data(as_text=True) # first zero
         assert 'Origins of factors' in L.get_data(as_text=True)
         for i in range(1,6):
-            assert 'Modular form 13.12.a.a.1.%d' % i  in L.get_data(as_text=True)
+            assert 'Modular form 13.12.a.a.1.%d' % i in L.get_data(as_text=True)
         assert '371293' in L.get_data(as_text=True) # L_3 root
         assert '2.54e3' in L.get_data(as_text=True) # a_13
 

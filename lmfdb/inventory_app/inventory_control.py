@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import json
 from . import inventory_live_data as ild
 from . import inventory_consistency as ic

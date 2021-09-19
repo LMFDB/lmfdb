@@ -26,7 +26,7 @@ from lmfdb.groups.abstract.web_groups import(
     group_names_pretty, group_pretty_image)
 from lmfdb.number_fields.web_number_field import formatfield
 
-credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
+#credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
@@ -63,10 +63,10 @@ def abstract_group_summary():
     return r'This database contains {} <a title="group" knowl="group">groups</a> of <a title="order" knowl="group.order">order</a> $n\leq {}$.  <p>This portion of the LMFDB is in alpha status.  The data is not claimed to be complete, and may grow or shrink at any time.'.format(comma(ngroups),max_order)
 
 def learnmore_list():
-    return [ ('Completeness of the data', url_for(".completeness_page")),
-             ('Source of the data', url_for(".how_computed_page")),
+    return [ ('Source and acknowledgements', url_for(".how_computed_page")),
+             ('Completeness of the data', url_for(".completeness_page")),
              ('Reliability of the data', url_for(".reliability_page")),
-             ('Labeling convention', url_for(".labels_page")) ]
+             ('Abstract  group labeling', url_for(".labels_page")) ]
 
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
@@ -77,11 +77,19 @@ def subgroup_label_is_valid(lab):
 def label_is_valid(lab):
     return abstract_group_label_regex.match(lab)
 
-def get_bread(breads=[]):
-    bc = [("Groups", url_for(".index")),("Abstract", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
-    return bc
+#def get_bread(breads=[]):
+#    bc = [("Groups", url_for(".index")),("Abstract", url_for(".index"))]
+#    for b in breads:
+#        bc.append(b)
+#    return bc
+
+def get_bread(tail=[]):
+    base = [("Groups", url_for(".index")), ('Abstract', url_for(".index"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
+
+
 
 #function to create string of group characteristics
 def create_boolean_string(gp, short_string=False):
@@ -319,7 +327,7 @@ def index():
     info['nilp_list']= range(1,5)
     info['maxgrp']= db.gps_groups.max('order')
 
-    return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list())
 
 
 
@@ -389,8 +397,7 @@ def char_table(label):
                            gp=gp,
                            title="Character table for %s" % label,
                            bread=get_bread([("Character table", " ")]),
-                           learnmore=learnmore_list(),
-                           credit=credit_string)
+                           learnmore=learnmore_list())
 
 @abstract_page.route("/Qchar_table/<label>")
 def Qchar_table(label):
@@ -403,8 +410,7 @@ def Qchar_table(label):
                            gp=gp,
                            title="Rational character table for %s" % label,
                            bread=get_bread([("Rational character table", " ")]),
-                           learnmore=learnmore_list(),
-                           credit=credit_string)
+                           learnmore=learnmore_list())
 
 @abstract_page.route("/diagram/<label>")
 def sub_diagram(label):
@@ -424,8 +430,7 @@ def sub_diagram(label):
         info=info,
         title="Rational character table for %s" % label,
         bread=get_bread([("Subgroup diagram", " ")]),
-        learnmore=learnmore_list(),
-        credit=credit_string)
+        learnmore=learnmore_list())
 
 def show_type(label):
     wag = WebAbstractGroup(label)
@@ -446,8 +451,7 @@ def group_download(info):
     bread = get_bread([("Jump", '')])
     return render_template("single.html", kid='rcs.groups.abstract.source',
                            title=t, bread=bread,
-                           learnmore=learnmore_list_remove('Source'),
-                           credit=credit_string)
+                           learnmore=learnmore_list_remove('Source'))
 
 
 @search_wrap(template="abstract-search.html",
@@ -719,8 +723,7 @@ def render_abstract_group(label):
                            properties=properties,
                            friends=friends,
                            learnmore=learnmore_list(),
-                           downloads=downloads,
-                           credit=credit_string)
+                           downloads=downloads)
 
 def render_abstract_subgroup(label):
     info = {}
@@ -750,9 +753,7 @@ def render_abstract_subgroup(label):
                            seq=seq,
                            properties=properties,
                            #friends=friends,
-                           learnmore=learnmore_list(),
-                           #downloads=downloads,
-                           credit=credit_string)
+                           learnmore=learnmore_list())
 
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
@@ -804,40 +805,37 @@ def shortsubinfo(label):
 @abstract_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the abstract groups data'
-    bread = get_bread([("Completeness", '')])
-    return render_template("single.html", kid='rcs.groups.abstract.extent',
+    bread = get_bread("Completeness")
+    return render_template("single.html", kid='rcs.cande.groups.abstract',
                             title=t, bread=bread,
-                            learnmore=learnmore_list_remove('Complete'), 
-                            credit=credit_string)
+                            learnmore=learnmore_list_remove('Complete'))
 
 
 @abstract_page.route("/Labels")
 def labels_page():
     t = 'Labels for abstract groups'
-    bread = get_bread([("Labels", '')])
-    return render_template("single.html", kid='rcs.groups.abstract.label',
+    bread = get_bread("Labels")
+    return render_template("single.html", kid='rcs.label.groups.abstract',
                            learnmore=learnmore_list_remove('label'), 
-                           title=t, bread=bread, credit=credit_string)
+                           title=t, bread=bread)
 
 
 @abstract_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of the abstract groups data'
-    bread = get_bread([("Reliability", '')])
-    return render_template("single.html", kid='rcs.groups.abstract.reliability',
+    bread = get_bread("Reliability")
+    return render_template("single.html", kid='rcs.rigor.groups.abstract',
                            title=t, bread=bread, 
-                           learnmore=learnmore_list_remove('Reliability'), 
-                           credit=credit_string)
+                           learnmore=learnmore_list_remove('Reliability'))
 
 
 @abstract_page.route("/Source")
 def how_computed_page():
     t = 'Source of the abstract group data'
-    bread = get_bread([("Source", '')])
-    return render_template("single.html", kid='rcs.groups.abstract.source',
+    bread = get_bread("Source")
+    return render_template("double.html", kid='rcs.source.groups.abstract', kid2='rcs.ack.groups.abstract',
                            title=t, bread=bread, 
-                           learnmore=learnmore_list_remove('Source'),
-                           credit=credit_string)
+                           learnmore=learnmore_list_remove('Source'))
 
 
 @abstract_page.route("/<label>/download/<download_type>")

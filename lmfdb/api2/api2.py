@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from lmfdb.api2 import api2_page
 from flask import render_template, request, Response, make_response
 from lmfdb.api2.searchers import searchers, singletons

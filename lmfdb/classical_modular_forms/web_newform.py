@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
-from __future__ import absolute_import
-from six import string_types
 from collections import defaultdict
 import bisect
 import re
@@ -1057,7 +1055,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in  sorted(self.twists, key = lambda x : [x['conductor'],x['twisting_char_orbit'],x['target_level'],x['target_char_orbit'],x['target_hecke_orbit']]):
+        for r in sorted(self.twists, key=lambda x: [x['conductor'], x['twisting_char_orbit'], x['target_level'], x['target_char_orbit'], x['target_hecke_orbit']]):
             minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
@@ -1257,7 +1255,7 @@ function switch_basis(btype) {
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
-        if not isinstance(elabel, string_types): # match object
+        if not isinstance(elabel, str):  # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:

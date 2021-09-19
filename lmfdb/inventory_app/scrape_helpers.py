@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import inventory_db_core as idc
 import datetime
 from .scrape_frontend import get_scrape_progress
@@ -19,7 +19,7 @@ def check_scrapes_on(spec=None):
                 spec_ids['coll'] = coll_id['id']
         result = check_if_scraping(spec_ids) or check_if_scraping_queued(spec_ids)
         return result
-    except:
+    except Exception:
         return False
 
 def check_scrapes_by_coll_id(coll_id):
@@ -28,7 +28,7 @@ def check_scrapes_by_coll_id(coll_id):
         spec_ids = {'table':coll_id}
         result = check_if_scraping(spec_ids) or check_if_scraping_queued(spec_ids)
         return result
-    except:
+    except Exception:
         return False
 
 def register_scrape(db, coll, uid):
@@ -53,7 +53,7 @@ def register_scrape(db, coll, uid):
             inprog = tmp['inprog'] and inprog
             had_err = tmp['err'] and had_err
 
-    except:
+    except Exception:
         #Either failed to connect etc, or are already scraping
         return {'err':True, 'inprog':False}
 
@@ -95,7 +95,7 @@ def check_and_insert_scrape_record(db_id, coll_id, uid):
     try:
         insert_scrape_record({'isa':'scrape', 'content':record})
         result = {'err':False, 'inprog':False, 'ok':True}
-    except:
+    except Exception:
         result = {'err':True, 'inprog':False, 'ok':False}
     return result
 
@@ -120,7 +120,7 @@ def null_all_scrapes(db, coll):
     #     rec_set['running'] = False
     #
     #     # TODO fix this inv_db['ops'].update_many(rec_find, {"$set":rec_set})
-    # except:
+    # except Exception:
     #     return False
 
 def null_old_scrapes(time=DEFAULT_MAX_TIME):
@@ -154,7 +154,7 @@ def get_live_scrapes_older_than(min_hours_old=DEFAULT_MAX_TIME, db_id=None, coll
         if coll_id: rec_test['coll'] = coll_id
         curs = idc.search_ops_table(rec_test)
         return list(curs)
-    except:
+    except Exception:
         return []
 
 def check_scrapes_running(scrape_list):
@@ -169,7 +169,7 @@ def check_scrapes_running(scrape_list):
             prog = get_scrape_progress(db_name, coll_name)
             if prog == (-1, -1):
                 new_list.append(item)
-        except:
+        except Exception:
             pass
     return new_list
 
@@ -180,7 +180,7 @@ def null_scrapes_by_list(scrape_list):
     try:
         for item in scrape_list:
             idc.update_ops({'_id':item['_id']}, {"$set": {'running':False, 'complete':True}}, upsert=False)
-    except:
+    except Exception:
         pass
 
 def get_completed_scrapes(n_days=7):
@@ -193,5 +193,5 @@ def get_completed_scrapes(n_days=7):
         rec_test = {'time':{"$gt":start}, 'complete':True}
         curs = idc.search_ops_table(rec_test)
         return list(curs)
-    except:
+    except Exception:
         return []

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
-
-from __future__ import absolute_import
-from six import BytesIO
+from io import BytesIO
 
 from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set
@@ -154,7 +152,7 @@ def Sp4Z_j():
 
 def render_main_page(bread):
     fams = get_smf_families()
-    fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    fam_list = [c for c in fams if c.computes_dimensions() and c.name not in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
     info = { 'family_list': fam_list, 'args': {}, 'number_of_samples': db.smf_samples.count()}
     return render_template('ModularForm_GSp4_Q_index.html', title='Siegel modular forms', bread=bread, info=info)
 
@@ -224,7 +222,7 @@ def render_search_results_page(args, bread):
 
 def render_dimension_table_page(args, bread):
     fams = get_smf_families()
-    fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    fam_list = [c for c in fams if c.computes_dimensions() and c.name not in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
     info = { 'family_list': fam_list, 'args': to_dict(args) }
     family = get_smf_family(args.get('family'))
     if not family:
@@ -235,9 +233,9 @@ def render_dimension_table_page(args, bread):
         info['family'] = family
         if 'j' in family.latex_name:
             # if j is not specified (but could be) set it to zero for consistency (overrides defaults in json files)
-            if not 'j' in info['args'] or not info['args']['j']:
+            if 'j' not in info['args'] or not info['args']['j']:
                 info['args']['j'] = '0'
-        if not 'j' in family.latex_name and 'j' in info['args'] and  info['args']['j'] != '0':
+        if 'j' not in family.latex_name and 'j' in info['args'] and info['args']['j'] != '0':
             flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
         else:
             build_dimension_table (info, family, info['args'])

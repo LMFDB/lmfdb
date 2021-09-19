@@ -1,13 +1,11 @@
-from __future__ import absolute_import
 # Different helper functions.
-from six import string_types
 import math
 import re
 
 from flask import url_for
 from sage.all import (
     ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
-    LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part,
+    PowerSeriesRing, Integer, primes, CDF, I, real_part, imag_part,
     latex, factor, exp, pi, prod, floor, is_prime, prime_range)
 
 from lmfdb.utils import (
@@ -69,7 +67,7 @@ def string2number(s):
             return float(strs)
         else:
             return Integer(strs)
-    except:
+    except Exception:
         return s
 
 
@@ -81,7 +79,7 @@ def styleTheSign(sign):
         if sign == 0:
             return "unknown"
         return seriescoeff(sign, 0, "literal", "", 3)
-    except:
+    except Exception:
         logger.debug("no styling of sign")
         return str(sign)
 
@@ -89,7 +87,7 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
     # seriescoefftype can be: series, serieshtml, signed, literal, factor
     try:
-        if isinstance(coeff, string_types):
+        if isinstance(coeff, str):
             if coeff == "I":
                 rp = 0
                 ip = 1
@@ -352,9 +350,9 @@ def lfuncEPhtml(L, fmt):
     good_primes = [p for p in prime_range(100) if p not in bad_primes]
     p_index = {p: i for i, p in enumerate(prime_range(100))}
 
-    #decide if we display galois
+    # decide if we display galois
     display_galois = True
-    if L.degree <= 2  or L.degree >= 12:
+    if L.degree <= 2 or L.degree >= 12:
         display_galois = False
     elif L.coefficient_field == "CDF":
         display_galois = False
@@ -580,7 +578,7 @@ def lfuncFEtex(L, fmt):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
         def mu_fe_prec(x):
-            if  not L.algebraic:
+            if not L.algebraic:
                 return real_digits(imag_part(x))
             else:
                 return 3
@@ -693,7 +691,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     else:
         lfunction_value_tex_analytic = ''
 
-    if isinstance(val, string_types):
+    if isinstance(val, str):
         Lval = val
     else:
         ccval = CDF(val)
@@ -748,10 +746,10 @@ def euler_p_factor(root_list, PREC):
     '''
     PREC = floor(PREC)
     # return satake_list
-    R = LaurentSeriesRing(CF, 'x')
-    x = R.gens()[0]
-    ep = prod([1 / (1 - a * x) for a in root_list])
-    return ep + O(x ** (PREC + 1))
+    R = PowerSeriesRing(CF, 'x')
+    x = R.gen()
+    ep = ~R.prod([1 - a * x for a in root_list])
+    return ep.O(PREC + 1)
 
 
 def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
@@ -765,7 +763,7 @@ def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
 
         try:
             ev2[p] = (ev[p], ev[p * p])
-        except:
+        except Exception:
             break
 
     logger.debug(str(ev2))
@@ -853,7 +851,7 @@ def getConductorIsogenyFromLabel(label):
             iso = iso[:-1]
         return cond, iso
 
-    except:
+    except Exception:
         return None, None
 
 

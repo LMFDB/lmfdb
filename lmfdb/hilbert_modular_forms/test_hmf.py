@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 
 class HMFTest(LmfdbTest):
@@ -80,7 +80,7 @@ class HMFTest(LmfdbTest):
 
     def test_Lfun_link(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a')
-        assert         'L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a' in L.get_data(as_text=True)
+        assert 'L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a' in L.get_data(as_text=True)
 
     def test_browse(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/')
@@ -154,7 +154,7 @@ class HMFTest(LmfdbTest):
         ]:
             page = self.tc.get('/ModularForm/GL2/TotallyReal/{}/holomorphic/{}/download/magma'.format(field, label)).get_data(as_text=True)
             assert expected in page
-            assert  'make_newform'  in page
+            assert 'make_newform' in page
 
             magma_code = page + '\n'
             magma_code += 'f, iso := Explode(make_newform());\n'

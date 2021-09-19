@@ -50,12 +50,12 @@
       </tr>
       <tr>
         <td>URL:</td>
-        <td><input name="url" id="url" value="{{info.user.url}}" size="50" tabindex="3" /></td>
+        <td><input name="url" id="url" value="{{info.user.url if info.user.url is not none else ''}}" size="50" tabindex="3" /></td>
         <td id="urltest" />
       </td>
       <tr>
         <td>About You:</td>
-        <td><textarea name="about" rows="4" cols="50" tabindex="4">{{info.user.about}}</textarea></td>
+        <td><textarea name="about" rows="4" cols="50" tabindex="4">{{info.user.about if info.user.about is not none else ''}}</textarea></td>
         <td/>
       </tr>
         <tr><td colspan="3" class="spacing" /></tr>

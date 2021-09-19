@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 #from bson import SON
 from . import lmfdb_inventory as inv
@@ -23,7 +23,7 @@ def get_latest_report():
 
     try:
         return rept
-    except:
+    except Exception:
         return {'scan_date':'NaN'}
 
 def generate_report_threaded():
@@ -94,7 +94,7 @@ def report_fields_tables(colls):
                     try:
                         name=field['data'][key]
                         assert(name or not name)
-                    except:
+                    except Exception:
                         key_list.append((field, key))
         if len(key_list) > 0 : bad_items.append((item['name'], item['_id'], key_list))
     return {'table_match':{'num':len(patch), 'items':patch}, 'human_missing':{'num':len(bad_items), 'items':bad_items}}

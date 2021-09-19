@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import csv
 import logging
 import re
@@ -425,7 +423,7 @@ class PostgresBase(object):
         A list of pairs (locktype, pid) where locktype is a string as above,
         and pid is the process id of the postgres transaction holding the lock.
         """
-        if isinstance(types, string_types):
+        if isinstance(types, str):
             if types in ["update", "delete", "insert"]:
                 types = [
                     "ShareLock",
@@ -460,7 +458,7 @@ class PostgresBase(object):
         return [
             (locktype, pid)
             for (name, locktype, pid, t) in self._get_locks()
-            if name == tablename and (types == "all" or locktype in types)
+            if name == tablename and (types == "all" or locktype in types) and pid != self.conn.info.backend_pid
         ]
 
     def _index_exists(self, indexname, tablename=None):
@@ -680,7 +678,7 @@ class PostgresBase(object):
         """
         L = []
         for col in sort_list:
-            if isinstance(col, string_types):
+            if isinstance(col, str):
                 L.append(Identifier(col))
             elif col[1] == 1:
                 L.append(Identifier(col[0]))
@@ -726,7 +724,7 @@ class PostgresBase(object):
         has_id = False
         col_list = []
         col_type = {}
-        if isinstance(table_name, string_types):
+        if isinstance(table_name, str):
             table_name = [table_name]
         for tname in table_name:
             if data_types is None or tname not in data_types:
@@ -1156,9 +1154,9 @@ class PostgresBase(object):
             for line in lines:
                 if line[table_name_idx] != search_table:
                     raise RuntimeError(
-                        "in %s column %d (= %s) in the file "
-                        "doesn't match the search table name %s"
-                        % (filename, table_name_idx, line[table_name_idx], search_table)
+                        f"column {table_name_idx} (= {line[table_name_idx]}) "
+                        f"in the file {filename} doesn't match "
+                        f"the search table name {search_table}"
                     )
 
         with DelayCommit(self, silence=True):

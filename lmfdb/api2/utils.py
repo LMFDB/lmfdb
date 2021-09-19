@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import datetime
 from lmfdb.api2 import __version__
 import json
@@ -22,10 +22,10 @@ class APIEncoder(json.JSONEncoder):
     def default(self, obj):
       try:
         return obj._toJSON()
-      except:
+      except Exception:
           try:
               return str(obj)
-          except:
+          except Exception:
               return json.JSONEncoder.default(self, obj)
 
 def create_search_dict(table='', query=None, view_start=0, request = None):
@@ -252,10 +252,10 @@ def default_projection(request, cnames=None):
         exclude = False
         try:
             if request.args.get('_exclude'): exclude = True
-        except:
+        except Exception:
             pass
         project = build_query_projection(fields, exclude = exclude)
-    except:
+    except Exception:
         project = None
     return project
 
@@ -336,7 +336,7 @@ def interpret(query, qkey, qval, type_info):
             elif type_info == 'integer':
                 try:
                     qval = int(qval)
-                except:
+                except Exception:
                     qval = [int(_) for _ in qval.split(DELIM)]
             elif type_info == 'real':
                 qval = float(qval)
@@ -353,7 +353,7 @@ def interpret(query, qkey, qval, type_info):
 
             if not user_infer and comparator: qval = {comparator:qval}
 
-        except:
+        except Exception:
           user_infer = True
     else:
         if qval.startswith("|"): qval = qval[1:]
@@ -386,7 +386,7 @@ def interpret(query, qkey, qval, type_info):
                 qval = { "$in" : [float(qval[2:])] }
             elif qval.startswith("cpy"):
                 qval = { "$in" : [literal_eval(qval[3:])] }
-        except:
+        except Exception:
             # no suitable conversion for the value, keep it as string
             return
     query[qkey] = qval
