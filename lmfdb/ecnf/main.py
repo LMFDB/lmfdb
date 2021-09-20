@@ -483,8 +483,20 @@ def elliptic_curve_search(info, query):
     parse_nf_string(info,query,'field',name="base number field",qfield='field_label')
     if query.get('field_label') == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
-
     parse_ints(info,query,'conductor_norm')
+    if info.get('conductor_type'):
+        if info['conductor_type'] == 'prime':
+            query['num_bad_primes'] = 1
+            query['semistable'] = True
+        elif info['conductor_type'] == 'prime_power':
+            query['num_bad_primes'] = 1
+        elif info['conductor_type'] == 'squarefree':
+            query['semistable'] = True
+        elif info['conductor_type'] == 'divides':
+            if not isinstance(query.get('conductor_norm'), int):
+                raise ValueError("You must specify a single level")
+            else:
+                query['conductor_norm'] = {'$in': ZZ(query['conductor_norm']).divisors()}
     parse_noop(info,query,'conductor_label')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
@@ -731,9 +743,19 @@ class ECNFSearchArray(SearchArray):
             name="include_Q_curves",
             label=r"\(\Q\)-curves",
             knowl="ec.q_curve")
+        cond_quantifier = SelectBox(
+            name='conductor_type',
+            options=[('', ''),
+                     ('prime', 'prime'),
+                     ('prime_power', 'p-power'),
+                     ('squarefree', 'sq-free'),
+                     ('divides','divides'),
+                     ],
+            min_width=85)
         conductor_norm = TextBox(
             name="conductor_norm",
             label="Conductor norm",
+            short_label="Cond norm",
             knowl="ec.conductor",
             example="31",
             example_span="31 or 1-100")
@@ -760,7 +782,7 @@ class ECNFSearchArray(SearchArray):
             name="jinv",
             label="j-invariant",
             knowl="ec.j_invariant",
-            width=675,
+            width=685,
             short_width=160,
             colspan=(1, 4, 1),
             example_span_colspan=2,
