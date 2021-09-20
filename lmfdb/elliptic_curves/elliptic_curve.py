@@ -756,7 +756,7 @@ class ECSearchArray(SearchArray):
             options=[('', ''),
                      ('prime', 'prime'),
                      ('prime_power', 'p-power'),
-                     ('squarefree', 'sqfree'),
+                     ('squarefree', 'sq-free'),
                      ('divides','divides'),
                      ],
             min_width=85)
