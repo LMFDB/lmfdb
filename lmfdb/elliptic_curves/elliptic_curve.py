@@ -350,6 +350,19 @@ def url_for_label(label):
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
+    if info.get('conductor_type'):
+        if info['conductor_type'] == 'prime':
+            query['num_bad_primes'] = 1
+            query['semistable'] = True
+        elif info['conductor_type'] == 'prime_power':
+            query['num_bad_primes'] = 1
+        elif info['conductor_type'] == 'squarefree':
+            query['semistable'] = True
+        elif info['conductor_type'] == 'divides':
+            if not isinstance(query.get('conductor'), int):
+                raise ValueError("You must specify a single level")
+            else:
+                query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
@@ -738,12 +751,22 @@ class ECSearchArray(SearchArray):
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
     def __init__(self):
-        cond = TextBox(
+        cond_quantifier = SelectBox(
+            name='conductor_type',
+            options=[('', ''),
+                     ('prime', 'prime'),
+                     ('prime_power', 'prime power'),
+                     ('squarefree', 'squarefree'),
+                     ('divides','divides'),
+                     ],
+            min_width=110)
+        cond = TextBoxWithSelect(
             name="conductor",
             label="Conductor",
             knowl="ec.q.conductor",
             example="389",
-            example_span="389 or 100-200")
+            example_span="389 or 100-200",
+            select_box=cond_quantifier)
         disc = TextBox(
             name="discriminant",
             label="Discriminant",
