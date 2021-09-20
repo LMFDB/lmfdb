@@ -759,7 +759,7 @@ class ECSearchArray(SearchArray):
                      ('squarefree', 'sqfree'),
                      ('divides','divides'),
                      ],
-            min_width=110)
+            min_width=70)
         cond = TextBoxWithSelect(
             name="conductor",
             label="Conductor",
