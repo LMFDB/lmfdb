@@ -755,8 +755,8 @@ class ECSearchArray(SearchArray):
             name='conductor_type',
             options=[('', ''),
                      ('prime', 'prime'),
-                     ('prime_power', 'prime power'),
-                     ('squarefree', 'squarefree'),
+                     ('prime_power', 'p-power'),
+                     ('squarefree', 'sqfree'),
                      ('divides','divides'),
                      ],
             min_width=110)
