@@ -751,7 +751,7 @@ class ECSearchArray(SearchArray):
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
     def __init__(self):
-        cond_quantifier = SelectBox(
+        conductor_quantifier = SelectBox(
             name='conductor_type',
             options=[('', ''),
                      ('prime', 'prime'),
@@ -766,7 +766,7 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.conductor",
             example="389",
             example_span="389 or 100-200",
-            select_box=cond_quantifier)
+            select_box=conductor_quantifier)
         disc = TextBox(
             name="discriminant",
             label="Discriminant",
