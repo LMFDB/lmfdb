@@ -755,11 +755,11 @@ class ECSearchArray(SearchArray):
             name='conductor_type',
             options=[('', ''),
                      ('prime', 'prime'),
-                     ('prime_power', 'prime power'),
-                     ('squarefree', 'squarefree'),
+                     ('prime_power', 'p-power'),
+                     ('squarefree', 'sq-free'),
                      ('divides','divides'),
                      ],
-            min_width=110)
+            min_width=85)
         cond = TextBoxWithSelect(
             name="conductor",
             label="Conductor",
