@@ -496,6 +496,7 @@ def elliptic_curve_search(info, query):
             if not isinstance(query.get('conductor_norm'), int):
                 raise ValueError("You must specify a single level")
             else:
+                from sage.all import ZZ
                 query['conductor_norm'] = {'$in': ZZ(query['conductor_norm']).divisors()}
     parse_noop(info,query,'conductor_label')
     parse_ints(info,query,'rank')
@@ -743,7 +744,7 @@ class ECNFSearchArray(SearchArray):
             name="include_Q_curves",
             label=r"\(\Q\)-curves",
             knowl="ec.q_curve")
-        cond_quantifier = SelectBox(
+        conductor_norm_quantifier = SelectBox(
             name='conductor_type',
             options=[('', ''),
                      ('prime', 'prime'),
@@ -752,13 +753,14 @@ class ECNFSearchArray(SearchArray):
                      ('divides','divides'),
                      ],
             min_width=85)
-        conductor_norm = TextBox(
+        conductor_norm = TextBoxWithSelect(
             name="conductor_norm",
             label="Conductor norm",
             short_label="Cond norm",
             knowl="ec.conductor",
             example="31",
-            example_span="31 or 1-100")
+            example_span="31 or 1-100",
+            select_box=conductor_norm_quantifier)
         one = SelectBox(
             name="one",
             label="Curves per isogeny class",
