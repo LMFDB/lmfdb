@@ -55,9 +55,9 @@
         {% if sub.normal %}
         <td> <a href="{{info.group_url(sub.quotient)}}">${{sub.quotient_tex}}$</a> </td>
         <td> {{info.show_factor(sub.quotient_order)}} </td>
-        <td> {{('&#x2713;' if sub.cyclic_quotient else '')|safe}} </td>
-        <td> {{('&#x2713;' if sub.abelian_quotient else '')|safe}} </td>
-        <td> {{('&#x2713;' if sub.solvable_quotient else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.quotient_cyclic else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.quotient_abelian else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.quotient_solvable else '')|safe}} </td>
         <td> {{('&#x2713;' if sub.minimal_normal else '')|safe}} </td>
         {% else %}
         <td></td><td> {{info.show_factor(sub.quotient_order)}} </td><td></td><td></td><td></td><td></td>

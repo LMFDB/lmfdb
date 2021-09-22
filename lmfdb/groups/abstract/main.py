@@ -513,7 +513,7 @@ def group_search(info, query):
              title='Subgroup search results',
              err_title='Subgroup search input error',
              projection=['label', 'cyclic', 'abelian', 'solvable',
-                         'cyclic_quotient', 'abelian_quotient', 'solvable_quotient',
+                         'quotient_cyclic', 'quotient_abelian', 'quotient_solvable',
                          'normal', 'characteristic', 'perfect', 'maximal', 'minimal_normal',
                          'central', 'direct', 'split', 'hall', 'sylow',
                          'subgroup_order', 'ambient_order', 'quotient_order',
@@ -533,9 +533,9 @@ def subgroup_search(info, query):
     parse_bool(info, query, 'abelian')
     parse_bool(info, query, 'cyclic')
     parse_bool(info, query, 'solvable')
-    parse_bool(info, query, 'abelian_quotient')
-    parse_bool(info, query, 'cyclic_quotient')
-    parse_bool(info, query, 'solvable_quotient')
+    parse_bool(info, query, 'quotient_abelian')
+    parse_bool(info, query, 'quotient_cyclic')
+    parse_bool(info, query, 'quotient_solvable')
     parse_bool(info, query, 'perfect')
     parse_bool(info, query, 'normal')
     parse_bool(info, query, 'characteristic')
@@ -1186,16 +1186,16 @@ class SubgroupSearchArray(SearchArray):
             name="solvable",
             label="Solvable",
             knowl="group.solvable")
-        abelian_quotient = YesNoBox(
-            name="abelian_quotient",
+        quotient_abelian = YesNoBox(
+            name="quotient_abelian",
             label="Abelian quotient",
             knowl="group.abelian")
-        cyclic_quotient = YesNoBox(
-            name="cyclic_quotient",
+        quotient_cyclic = YesNoBox(
+            name="quotient_cyclic",
             label="Cyclic quotient",
             knowl="group.cyclic")
-        solvable_quotient = YesNoBox(
-            name="solvable_quotient",
+        quotient_solvable = YesNoBox(
+            name="quotient_solvable",
             label="Solvable quotient",
             knowl="group.solvable")
         perfect = YesNoBox(
@@ -1282,7 +1282,7 @@ class SubgroupSearchArray(SearchArray):
             [subgroup, subgroup_order, cyclic, abelian, solvable],
             [normal, characteristic, perfect, maximal, central, proper],
             [ambient, ambient_order, direct, split, hall, sylow],
-            [quotient, quotient_order, cyclic_quotient, abelian_quotient, solvable_quotient, minimal_normal]]
+            [quotient, quotient_order, quotient_cyclic, quotient_abelian, quotient_solvable, minimal_normal]]
 
     def search_types(self, info):
         if info is None:
