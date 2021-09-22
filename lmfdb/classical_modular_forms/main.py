@@ -740,7 +740,7 @@ def newform_parse(info, query):
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
     parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
-    parse_subset(info, query, 'self_twist_discs', name="CM/RM discriminant", parse_singleton=lambda d: parse_discriminant(d))
+    parse_subset(info, query, 'self_twist_discs', name="CM/RM discriminant", parse_singleton=parse_discriminant)
     parse_bool(info, query, 'is_twist_minimal')
     parse_ints(info, query, 'inner_twist_count')
     parse_ints(info, query, 'analytic_rank')

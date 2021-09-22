@@ -589,10 +589,11 @@ def url_for_label(label):
     learnmore=learnmore_list,
 )
 
+
 def belyi_search(info, query):
     info["geometry_types_list"] = geometry_types_list
     info["geometry_types_dict"] = geometry_types_dict
-    info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
+    info["belyi_galmap_url"] = url_for_belyi_galmap_label
     if "group" in query:
         info["group"] = query["group"]
     parse_bracketed_posints(info, query, "abc_list", "a, b, c", maxlength=3)

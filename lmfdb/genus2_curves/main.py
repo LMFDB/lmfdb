@@ -416,13 +416,14 @@ def genus2_curve_search(info, query):
     for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'end_alg', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
     parse_primes(info, query, 'bad_primes', name='bad primes',qfield='bad_primes',mode=info.get('bad_quantifier'))
-    info["curve_url"] = lambda label: url_for_curve_label(label)
-    info["class_url"] = lambda label: url_for_isogeny_class_label(label)
+    info["curve_url"] = url_for_curve_label
+    info["class_url"] = url_for_isogeny_class_label
     parse_sort(info, query)
 
 ################################################################################
 # Statistics
 ################################################################################
+
 
 class G2C_stats(StatsDisplay):
     """
