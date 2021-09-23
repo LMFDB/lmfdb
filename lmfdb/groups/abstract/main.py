@@ -559,7 +559,7 @@ def factor_latex(n):
     return '$%s$' % web_latex(factor(n), False)
 
 def diagram_js(gp, layers):
-    ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+    ll = [[["%s"%str(grp.subgroup), grp.short_label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
     subs = gp.subgroups
     orders = list(set(sub.subgroup_order for sub in subs.values()))
     orders.sort()
