@@ -89,8 +89,6 @@ from . import hecke_algebras
 assert hecke_algebras
 from . import groups
 assert groups
-from .groups import abstract
-assert groups.abstract
 from . import cluster_pictures
 assert cluster_pictures
 from . import inventory_app
@@ -100,9 +98,9 @@ assert groups
 from .groups import abstract
 assert groups.abstract
 from .groups import glnQ
-assert groups.glnQ
+assert glnQ
 from .groups import glnC
-assert groups.glnC
+assert glnC
 from . import maass_forms
 assert maass_forms
 from .homepage import random

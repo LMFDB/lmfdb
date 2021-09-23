@@ -3,15 +3,15 @@
 import re #, StringIO, yaml, ast, os
 
 from flask import render_template, request, url_for, redirect #, send_file, abort
-from sage.all import ZZ, latex #, Permutation
+#from sage.all import ZZ, latex, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, display_knowl, SearchArray, TextBox, CountBox,
-    parse_ints, parse_bool, clean_input, to_dict,
-    # parse_gap_id, parse_bracketed_posints, 
-    search_wrap, web_latex)
-from lmfdb.groups.abstract.web_groups import WebAbstractGroup, group_names_pretty
+    flash_error, SearchArray, TextBox, CountBox,
+    parse_ints, clean_input, to_dict,
+    # parse_gap_id, parse_bracketed_posints,
+    search_wrap)
+from lmfdb.groups.abstract.web_groups import group_names_pretty
 from lmfdb.groups.abstract.main import group_display_knowl
 
 from lmfdb.groups.glnQ import glnQ_page
@@ -86,7 +86,7 @@ def group_download(info):
     t = 'Stub'
     bread = get_bread([("Jump", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.source',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
@@ -156,7 +156,7 @@ def completeness_page():
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.extent',
                             title=t, bread=bread,
-                            learnmore=learnmore_list_remove('Complete'), 
+                            learnmore=learnmore_list_remove('Complete'),
                             credit=credit_string)
 
 
@@ -165,7 +165,7 @@ def labels_page():
     t = r'Labels for finite subgroups of $\GL(n,\Q)$'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.label',
-                           learnmore=learnmore_list_remove('label'), 
+                           learnmore=learnmore_list_remove('label'),
                            title=t, bread=bread, credit=credit_string)
 
 
@@ -174,8 +174,8 @@ def reliability_page():
     t = r'Reliability of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.reliability',
-                           title=t, bread=bread, 
-                           learnmore=learnmore_list_remove('Reliability'), 
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Reliability'),
                            credit=credit_string)
 
 
@@ -184,7 +184,7 @@ def how_computed_page():
     t = r'Source of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.source',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
@@ -209,8 +209,9 @@ class GLnQSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-             [order],
-             [dim]]
+            [order],
+            [dim],
+            [count]]
         self.refine_array = [
-             [order, dim]]
+            [order, dim]]
 

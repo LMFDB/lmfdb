@@ -3,7 +3,6 @@ import re
 
 from lmfdb import db
 
-from lmfdb.groups.abstract import abstract_logger
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
 from sage.libs.gap.libgap import libgap
 from collections import Counter
@@ -163,6 +162,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_class_divisions(self):
         cl = self.conjugacy_classes # creates divisions
+        assert cl
         return self.conjugacy_class_divisions
 
     @lazy_attribute
@@ -709,7 +709,6 @@ class WebAbstractRationalCharacter(WebObj):
     table = db.gps_qchar
     def display_knowl(self, name=None):
         label = self.label
-        imagelabel = self.image
         if not name:
             name = label
         return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=rchar_data&args=%s">%s</a>' % (name, label, name)

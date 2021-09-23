@@ -14,11 +14,11 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     flash_error, to_dict, display_knowl,
-    SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
+    SearchArray, TextBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
     dispZmat, dispcyclomat,
     search_wrap, web_latex)
-from lmfdb.utils.search_parsing import (search_parser, collapse_ors, parse_multiset)
+from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.groups.abstract import abstract_page, abstract_logger
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
@@ -606,7 +606,7 @@ def render_abstract_group(label):
 
     abstract_logger.info("D0")
 
-    s = r",\ "
+    #s = r",\ "
 
     info['max_sub_cnt'] = db.gps_subgroups.count_distinct('ambient', {'subgroup': label, 'maximal': True})
     info['max_quo_cnt'] = db.gps_subgroups.count_distinct('ambient', {'quotient': label, 'minimal_normal': True})
@@ -763,7 +763,6 @@ def shortsubinfo(label):
         # Should only come from code, so return nothing if label is bad
         return ''
     wsg = WebAbstractSubgroup(label)
-    ambientlabel = str(wsg.ambient)
     # helper function
     def subinfo_getsub(title, knowlid, lab):
         h = WebAbstractSubgroup(lab)
@@ -783,7 +782,6 @@ def shortsubinfo(label):
         ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
 
-    h = WebAbstractSubgroup(str(wsg.normalizer))
     ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
     ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
     ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
@@ -824,7 +822,7 @@ def reliability_page():
     t = 'Reliability of the abstract groups data'
     bread = get_bread("Reliability")
     return render_template("single.html", kid='rcs.rigor.groups.abstract',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
 
@@ -833,7 +831,7 @@ def how_computed_page():
     t = 'Source of the abstract group data'
     bread = get_bread("Source")
     return render_template("double.html", kid='rcs.source.groups.abstract', kid2='rcs.ack.groups.abstract',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
 
@@ -841,13 +839,12 @@ def how_computed_page():
 def download_group(**args):
     dltype = args['download_type']
     label = args['label']
-    delim = "bracket"
     com = "#"  # single line comment start
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
-    gp_data = db.gps_groups.lucky({"label": label}) 
-    
+    gp_data = db.gps_groups.lucky({"label": label})
+
     filename = "group" +  label
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
@@ -856,7 +853,6 @@ def download_group(**args):
         com = ""
         com1 = "/*"
         com2 = "*/"
-        delim = "magma"
         filename += ".m"
     s = com1 + "\n"
     s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
@@ -880,9 +876,9 @@ def download_group(**args):
         gen_index = gp_data['gens_used']
         num_gens = len(gen_index)
         for i in range(num_gens):
-            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n" 
+            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
 
-    #otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??       
+    #otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
     else:
         d = -gp_data['elt_rep_type']
         s += "d:=" +str(d) + "; \n"
