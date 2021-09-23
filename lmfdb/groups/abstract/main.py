@@ -351,7 +351,6 @@ def by_label(label):
 AB_LABEL_RE = re.compile(r"\d+(_\d+)?(\.\d+(_\d+)?)*")
 @abstract_page.route("/ab/<label>")
 def by_abelian_label(label):
-    print("ABELIAN")
     # For convenience, we provide redirects for abelian groups:
     # m1_e1.m2_e2... represents C_{m1}^e1 x C_{m2}^e2 x ...
     if not AB_LABEL_RE.match(label):

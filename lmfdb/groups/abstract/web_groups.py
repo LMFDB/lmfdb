@@ -67,18 +67,14 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroups(self):
-        # Should join with gps_groups to get pretty names for subgroup and quotient
-        abstract_logger.info("subgroups start")
-        X = db.gps_subgroups.search({'ambient': self.label})
-        abstract_logger.info("search done")
-        D = {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in X}
-        abstract_logger.info("subgroups end")
-        return D
-
+        return {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata)
+                for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
     # special subgroups
     def special_search(self, sp):
+        print("Searching for", sp)
         for lab, gp in self.subgroups.items():
+            print(lab, gp.special_labels)
             if sp in gp.special_labels:
                 return lab # is label what we want to return?
                 #H = subs['lab']
@@ -312,38 +308,26 @@ class WebAbstractGroup(WebObj):
         return data
 
     def schur_multiplier_text(self):
-        sm_list = self.schur_multiplier 
-        elements_count = {}
+        if not self.schur_multiplier:
+            return "C_1"
         entries = []
-        if len(sm_list)==0:
-    	    entries.append("C_1")
-        for element in sm_list:
-            if element in elements_count:
-                elements_count[element] += 1
-            else:
-                elements_count[element] = 1
-        for key, value in elements_count.items():
-            entry = ""
-            if key != 1:
-                entry = entry + "C_{" + str(key) + "}"
-                if value != 1:
-                    entry = entry + "^{" + str(value) + "}" 
+        for key, value in Counter(self.schur_multiplier).items():
+            entry = "C_{%s}" % key
+            if value != 1:
+                entry += "^{%s}" % value
             entries.append(entry)
-        prod = "\\times ".join(entries)
-        return prod
-        #return "trivial" if self.schur_multiplier == [] else self.schur_multiplier
+        return r" \times ".join(entries)
+
     def schur_multiplier_label(self):
-        sm_list = self.schur_multiplier
-        str1 = '.'.join(str(e) for e in sm_list)
-        return str1
-        #return ".".join(map(str, sm_list))
+        if self.schur_multiplier:
+            return '.'.join(str(e) for e in self.schur_multiplier)
+        else: # trivial group has to be handled separately
+            return '1'
 
 
     @lazy_attribute
     def irrep_stats(self):
         return sorted(Counter([rep.dim for rep in self.characters]).items())
-
-        
 
     @lazy_attribute
     def G(self):
