@@ -72,9 +72,7 @@ class WebAbstractGroup(WebObj):
 
     # special subgroups
     def special_search(self, sp):
-        print("Searching for", sp)
         for lab, gp in self.subgroups.items():
-            print(lab, gp.special_labels)
             if sp in gp.special_labels:
                 return lab # is label what we want to return?
                 #H = subs['lab']
