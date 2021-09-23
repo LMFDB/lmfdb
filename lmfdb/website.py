@@ -96,7 +96,7 @@ assert inventory_app
 from . import groups
 assert groups
 from .groups import abstract
-assert groups.abstract
+assert abstract
 from .groups import glnQ
 assert glnQ
 from .groups import glnC
