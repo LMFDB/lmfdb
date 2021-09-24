@@ -768,7 +768,7 @@ class PostgresSearchTable(PostgresTable):
             search_cols = search_cols + sort_only
         cols = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
-        nres = None if limit is None else self.stats.quick_count(query)
+        nres = None if (one_per or limit is None) else self.stats.quick_count(query)
 
         def run_one_query(Q, lim, off):
             if lim is None:
