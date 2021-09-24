@@ -179,18 +179,18 @@ class ECstats(StatsDisplay):
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
-               'sha': 'ec.q.analytic_sha_order',
-               'torsion_structure' : 'ec.torsion_order'}
+              'sha': 'ec.q.analytic_sha_order',
+              'torsion_structure': 'ec.torsion_order'}
 
     top_titles = {'rank': 'rank',
-                   'sha': 'analytic order of &#1064;',
-                   'torsion_structure': 'torsion subgroups'}
+                  'sha': 'analytic order of &#1064;',
+                  'torsion_structure': 'torsion subgroups'}
 
     formatters = {'torsion_structure': latex_tor,
-                    'sha': latex_sha }
+                  'sha': latex_sha}
 
-    query_formatters = {'torsion_structure': lambda x : 'torsion_structure={}'.format(x),
-                        'sha': lambda x : 'sha={}'.format(x) }
+    query_formatters = {'torsion_structure': 'torsion_structure={}'.format,
+                        'sha': 'sha={}'.format}
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
