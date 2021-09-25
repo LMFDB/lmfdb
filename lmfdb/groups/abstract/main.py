@@ -812,7 +812,7 @@ def completeness_page():
 def labels_page():
     t = 'Labels for abstract groups'
     bread = get_bread("Labels")
-    return render_template("single.html", kid='rcs.label.groups.abstract',
+    return render_template("single.html", kid='group.label',
                            learnmore=learnmore_list_remove('label'), 
                            title=t, bread=bread)
 
