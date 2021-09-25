@@ -563,6 +563,8 @@ class WebAbstractSubgroup(WebObj):
         raw = [x.split('.')[-1] for x in self.special_labels]
         specials = []
         for x in raw:
+            if x == "N" or x == "M": # labels for normal subgroups and maximal subgroups
+                continue
             if x == 'Z':
                 specials.append(display_knowl('group.center', 'center'))
             elif x == 'D':

@@ -29,7 +29,7 @@ from lmfdb.number_fields.web_number_field import formatfield
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
+abstract_subgroup_label_regex = re.compile(r'^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)\.[a-z]+\d+$')
 #order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 ngroups = None
@@ -427,7 +427,7 @@ def sub_diagram(label):
     info = {'dojs': diagram_js(gp,layers), 'w': w, 'h': h}
     return render_template("diagram_page.html", 
         info=info,
-        title="Rational character table for %s" % label,
+        title="Subgroup diagram for %s" % label,
         bread=get_bread([("Subgroup diagram", " ")]),
         learnmore=learnmore_list())
 
@@ -757,15 +757,17 @@ def render_abstract_subgroup(label):
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
 
-@abstract_page.route("/subinfo/<label>")
-def shortsubinfo(label):
+@abstract_page.route("/subinfo/<ambient>/<short_label>")
+def shortsubinfo(ambient, short_label):
+    label = "%s.%s" % (ambient, short_label)
     if not subgroup_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
         return ''
     wsg = WebAbstractSubgroup(label)
     # helper function
     def subinfo_getsub(title, knowlid, lab):
-        h = WebAbstractSubgroup(lab)
+        full_lab = "%s.%s" % (ambient, lab)
+        h = WebAbstractSubgroup(full_lab)
         prop = make_knowl(title, knowlid)
         return '<tr><td>%s<td>%s\n' % (
             prop, h.make_span())
