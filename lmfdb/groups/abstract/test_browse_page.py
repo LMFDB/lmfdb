@@ -222,7 +222,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?semidirect_product=no", "31.1")
         self.check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.7")
         self.not_check_args("/Groups/Abstract/?semidirect_product=no", "10.1")
-        self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "4.2")
+        self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "6.2")
 
 
 

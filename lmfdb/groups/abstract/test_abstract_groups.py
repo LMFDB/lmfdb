@@ -1,7 +1,7 @@
 from lmfdb.tests import LmfdbTest
 
 
-class AVTest(LmfdbTest):
+class AbGpsTest(LmfdbTest):
     # All tests should pass
 
     def test_is_solvable(self):
@@ -11,7 +11,12 @@ class AVTest(LmfdbTest):
         self.check_args("/Groups/Abstract/60.5", "nonsolvable")
         self.check_args("/Groups/Abstract/32.51", "solvable")
 
-##JP BELOW
+
+# To do:  Test a lot more data,  also test downloads and property box
+# (sample code from abvar/fq below for property box and downloads)  
+
+
+        
 #    def test_property_box(self):
 #        r"""
 #        Check that the property box displays.
@@ -22,7 +27,6 @@ class AVTest(LmfdbTest):
 #        self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
 
-# To do:  Test a lot more data,  also test downloads (sample code below) 
 
 #    def test_av_download(self):
 #        r"""
