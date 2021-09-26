@@ -133,7 +133,7 @@ def create_boolean_string(gp, short_string=False):
 
             if gp.perfect:
                 strng+= " and " + perfect_str
-    else:           
+    else:
 
     #nilpotent implies supersolvable for finite groups
     #supersolvable imples monomial for finite groups

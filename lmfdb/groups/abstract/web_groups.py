@@ -537,12 +537,6 @@ class WebAbstractSubgroup(WebObj):
             q = self.quotient_tex
             self.quotient_tex_parened = q if self._is_atomic(q) else "(%s)" % q
 
-    @classmethod
-    def from_label(cls, label):
-        ambientlabel = re.sub(r'^(\d+\.[a-z0-9]+)\.\d+$', r'\1', label)
-        ambient = WebAbstractGroup(ambientlabel)
-        return cls(ambient, label)
-
     def spanclass(self):
         s = "subgp"
         if self.characteristic:
@@ -594,6 +588,8 @@ class WebAbstractSubgroup(WebObj):
         for rec in data:
             if rec['label'] == label:
                 return Wtype(label, rec)
+            elif rec.get('short_label') == label:
+                return Wtype(rec['label'], rec)
 
     @lazy_attribute
     def _full(self):
@@ -623,12 +619,16 @@ class WebAbstractSubgroup(WebObj):
         Get information from gps_subgroups for each of the other subgroups referred to (centralizer, complements, contained_in, contains, core, normal_closure, normalizer)
         """
         labels = []
+        def make_full(label):
+            if label.count('.') == 2:
+                label = "%s.%s" % (self.ambient, label)
+            return label
         for label in [self.centralizer, self.core, self.normal_closure, self.normalizer]:
             if label:
-                labels.append(label)
+                labels.append(make_full(label))
         for llist in [self.complements, self.contained_in, self.contains]:
             if llist:
-                labels.extend(llist)
+                labels.extend([make_full(label) for label in llist])
         return list(db.gps_subgroups.search({'label': {'$in': labels}}))
 
     @lazy_attribute
