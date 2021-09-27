@@ -330,6 +330,7 @@ class PostgresStatsTable(PostgresBase):
         else:
             if count == 0:
                 updater = SQL("DELETE FROM {0} WHERE cols = %s AND values = %s AND split = %s")
+                data = [cols, vals, split_list]
             else:
                 updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:

@@ -760,7 +760,7 @@ class ECNFSearchArray(SearchArray):
             name="jinv",
             label="j-invariant",
             knowl="ec.j_invariant",
-            width=675,
+            width=685,
             short_width=160,
             colspan=(1, 4, 1),
             example_span_colspan=2,

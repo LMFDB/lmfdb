@@ -26,7 +26,7 @@ from lmfdb.groups.abstract.web_groups import(
     group_names_pretty, group_pretty_image)
 from lmfdb.number_fields.web_number_field import formatfield
 
-credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
+#credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)\.[a-z]+\d+$')
@@ -467,7 +467,7 @@ def group_download(info):
              #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
              bread=lambda:get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
-             credit=lambda:credit_string,
+           #  credit=lambda:credit_string,
              url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
@@ -519,8 +519,9 @@ def group_search(info, query):
                          'subgroup', 'ambient', 'quotient',
                          'subgroup_tex', 'ambient_tex', 'quotient_tex'],
              bread=lambda:get_bread([('Search Results', '')]),
-             learnmore=learnmore_list,
-             credit=lambda:credit_string)
+             learnmore=learnmore_list)
+
+
 def subgroup_search(info, query):
     info['group_url'] = get_url
     info['subgroup_url'] = get_sub_url
@@ -934,8 +935,8 @@ class GroupsSearchArray(SearchArray):
             name="exponent",
             label="Exponent",
             knowl="group.exponent",
-            example="2, 4, 6",
-            example_span="list of integers?")
+            example="2, 3, 7",
+            example_span="2, or list of integers like 2, 3, 7")
         nilpclass = TextBox(
             name="nilpotency_class",
             label="Nilpotency class",

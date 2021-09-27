@@ -387,7 +387,7 @@ class ArtinRepresentation(object):
 
     def coefficients_list(self, upperbound=100):
         from lmfdb.utils import an_list
-        return an_list(lambda p: self.euler_polynomial(p), upperbound=upperbound, base_field=ComplexField())
+        return an_list(self.euler_polynomial, upperbound=upperbound, base_field=ComplexField())
 
     def character(self):
         return CharacterValues(self._data["Character"])

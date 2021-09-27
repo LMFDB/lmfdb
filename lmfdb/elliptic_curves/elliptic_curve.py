@@ -179,18 +179,18 @@ class ECstats(StatsDisplay):
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
-               'sha': 'ec.q.analytic_sha_order',
-               'torsion_structure' : 'ec.torsion_order'}
+              'sha': 'ec.q.analytic_sha_order',
+              'torsion_structure': 'ec.torsion_order'}
 
     top_titles = {'rank': 'rank',
-                   'sha': 'analytic order of &#1064;',
-                   'torsion_structure': 'torsion subgroups'}
+                  'sha': 'analytic order of &#1064;',
+                  'torsion_structure': 'torsion subgroups'}
 
     formatters = {'torsion_structure': latex_tor,
-                    'sha': latex_sha }
+                  'sha': latex_sha}
 
-    query_formatters = {'torsion_structure': lambda x : 'torsion_structure={}'.format(x),
-                        'sha': lambda x : 'sha={}'.format(x) }
+    query_formatters = {'torsion_structure': 'torsion_structure={}'.format,
+                        'sha': 'sha={}'.format}
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
@@ -350,6 +350,19 @@ def url_for_label(label):
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
+    if info.get('conductor_type'):
+        if info['conductor_type'] == 'prime':
+            query['num_bad_primes'] = 1
+            query['semistable'] = True
+        elif info['conductor_type'] == 'prime_power':
+            query['num_bad_primes'] = 1
+        elif info['conductor_type'] == 'squarefree':
+            query['semistable'] = True
+        elif info['conductor_type'] == 'divides':
+            if not isinstance(query.get('conductor'), int):
+                raise ValueError("You must specify a single level")
+            else:
+                query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
@@ -738,12 +751,22 @@ class ECSearchArray(SearchArray):
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
     def __init__(self):
-        cond = TextBox(
+        conductor_quantifier = SelectBox(
+            name='conductor_type',
+            options=[('', ''),
+                     ('prime', 'prime'),
+                     ('prime_power', 'p-power'),
+                     ('squarefree', 'sq-free'),
+                     ('divides','divides'),
+                     ],
+            min_width=85)
+        cond = TextBoxWithSelect(
             name="conductor",
             label="Conductor",
             knowl="ec.q.conductor",
             example="389",
-            example_span="389 or 100-200")
+            example_span="389 or 100-200",
+            select_box=conductor_quantifier)
         disc = TextBox(
             name="discriminant",
             label="Discriminant",
