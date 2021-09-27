@@ -218,17 +218,17 @@ def find_touching_centers(C1, C2, r, o):
         r1S = C1.r + r
         r2S = C2.r - r
         rS = r2S - r1S
-        if d < rS:
+        if d < rS - eps:
             return []
     else:
         d = C1.center_distance(C2)
         r1S = C1.r + r
         r2S = C2.r + r
         rS = r1S + r2S
-        if d > rS:
+        if d > rS + eps:
             return []
     # we solve for a point c3 that has distance r1S from the center of C1 and r2S from the center of C2
-    if d == rS:
+    if (d - rS).abs() < eps:
         x = C1.x * r2S / rS + C2.x * r1S / rS
         y = C1.y * r2S / rS + C2.y * r1S / rS
         return [Circle(r, o, x=x, y=y, touching=[C1, C2])]
