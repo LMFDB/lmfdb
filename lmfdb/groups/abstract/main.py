@@ -29,7 +29,7 @@ from lmfdb.number_fields.web_number_field import formatfield
 #credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)\.[a-z]+\d+$')
+abstract_subgroup_label_regex = re.compile(r'^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$')
 #order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 ngroups = None
@@ -1401,7 +1401,8 @@ def qrep_data(label):
     return Markup(ans)
 
 def sub_data(label):
-    return Markup(shortsubinfo(label))
+    label = label.split(".")
+    return Markup(shortsubinfo(".".join(label[:2]), ".".join(label[2:])))
 
 def group_data(label):
     gp = WebAbstractGroup(label)
