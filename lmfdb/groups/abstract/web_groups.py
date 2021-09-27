@@ -3,7 +3,8 @@ import re
 
 from lmfdb import db
 
-from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
+from flask import url_for
+from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod, latex
 from sage.libs.gap.libgap import libgap
 from collections import Counter
 from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex
@@ -459,27 +460,43 @@ class WebAbstractGroup(WebObj):
     ###automorphism group
     def show_aut_group(self):
         if self.aut_group is None:
-            return r'\textrm{Not computed}'
+            if self.aut_order is None:
+                return r'$\textrm{Not computed}$'
+            else:
+                return f'Group of order ${self.aut_order_factor()}$'
         else:
-            return group_names_pretty(self.aut_group)
+            url = url_for(".by_label", label=self.aut_group)
+            return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order ${self.aut_order_factor()}$'
 
     #TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
-        return factor(int(self._data['aut_order']))
+        return latex(factor(self.aut_order))
 
     ###outer automorphism group
     def show_outer_group(self):
         if self.outer_group is None:
-            return r'\textrm{Not computed}'
+            if self.outer_order is None:
+                return r'$\textrm{Not computed}$'
+            else:
+                return f'Group of order ${self.out_order_factor()}$'
         else:
-            return group_names_pretty(self.outer_group)
-
-    def out_order(self):
-        return int(self._data['outer_order'])
+            url = url_for(".by_label", label=self.outer_group)
+            return f'<a href="{url}">${group_names_pretty(self.outer_group)}$</a>, of order ${self.out_order_factor()}$'
 
     #TODO if prime factors get large, use factors in database
     def out_order_factor(self):
-        return factor(int(self._data['outer_order']))
+        return latex(factor(self.outer_order))
+
+    def show_composition_factors(self):
+        CF = Counter(self.composition_factors)
+        display = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in": list(set(CF))}}, ["label", "tex_name"])}
+        from .main import url_for_label
+        def exp(n):
+            if n == 1:
+                return ""
+            else:
+                return "^{%s}" % n
+        return ", ".join(f'<a href="{url_for_label(label)}">${display[label]}{exp(e)}$</a>' for (label, e) in CF.items())
 
     ###special subgroups
     def cent(self):
@@ -503,6 +520,12 @@ class WebAbstractGroup(WebObj):
     def abelian_quot(self):
         return self.subgroups[self.comm()].quotient_tex
 
+    def abelian_quot_primary(self):
+        return r' \times '.join(f'C_{q}^{e}' for (q, e) in Counter(self.primary_abelian_invariants).items())
+
+    def abelianization_label(self):
+        return '.'.join(str(m) for m in self.smith_abelian_invariants)
+
     def Gab_order_factor(self):
         return ZZ(self._data['abelian_quotient'].split('.')[0]).factor()
 
@@ -514,6 +537,18 @@ class WebAbstractGroup(WebObj):
 
     def frattini_quot(self):
         return self.subgroups[self.fratt()].quotient_tex
+
+    def gen_noun(self):
+        if self.rank == 1:
+            return "generators"
+        elif self.rank == 2:
+            return "generating pairs"
+        elif self.rank == 3:
+            return "generating triples"
+        elif self.rank == 4:
+            return "generating quadruples"
+        else:
+            return f"generating {self.rank}-tuples"
 
     @lazy_attribute
     def max_sub_cnt(self):

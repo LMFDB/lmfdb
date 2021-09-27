@@ -54,10 +54,12 @@
     <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
-<tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
-    <tr><td>Outer Automorphisms:</td><td>${{gp.show_outer_group()}}$</td></tr>
+    <tr><td>Automorphism Group:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
+    <tr><td>Outer Automorphisms:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
     <tr><td>Minimal degree of permutation representation:</td><td>{{gp.transitive_degree}}</td></tr>
-    <tr><td>Schur multiplier:</td><td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td><tr>
+    {% if not (gp.solvable or gp.simple) %}
+    <tr><td>Composition factors:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
+    {% endif %}
   </table>
 </p>
 
@@ -68,38 +70,48 @@
 
 <h2>Group Statistics</h2>
 {% if gp.order_stats is defined %}
-   <table class="ntdata">
- <thead>
-   <tr><th>Orders of elements</th>
-            {% for c in gp.order_stats %}
-            <th>{{ c[0] | safe }} </th>
-            {% endfor %}
-	     </tr> </thead><tbody>
-       <tr><td>Number of each order</td>
-            {% for c in gp.order_stats %}
-            <td>{{ c[1] | safe }} </td>
-            {% endfor %}
-             </tr>
-         </tbody>
-      </table>
-     {% endif %}   
-<br>     
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+        <th>Element order</th>
+        {% for c in (gp.order_stats | sort) %}
+          <th>{{ c[0] | safe }} </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.element_order', 'Number of elements')}}</td>
+        {% for c in (gp.order_stats | sort) %}
+        <td>{{ c[1] | safe }} </td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</p>
+{% endif %}
 {% if gp.irrep_stats is defined %}
-   <table class="ntdata">
- <thead>
-             <tr><th>Dimensions of irreducible complex representations</th>
-            {% for char in gp.irrep_stats %}
-            <th>{{ char[0] | safe}} </th>
-            {% endfor %}
-             </tr></thead><tbody>
-   <tr><td>Number of each dimension</td>
-            {% for char in gp.irrep_stats %}
-            <td>{{ char[1] | safe }} </td>
-            {% endfor %}
-             </tr>
-         </tbody>
-      </table>
-     {% endif %} 
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr><th>Dimension</th>
+        {% for char in (gp.irrep_stats | sort) %}
+          <th>{{ char[0] | safe}} </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.representation.irrep', 'Number of irreps')}}</td>
+        {% for char in (gp.irrep_stats | sort) %}
+          <td>{{ char[1] | safe }} </td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</p>
+{% endif %}
 
 
 <h2>Constructions</h2>
@@ -117,7 +129,7 @@
   {% endif %}
   {% if gp.semidirect_products %}
     <tr>
-      <td >{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
+      <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
       {% for sub, count in gp.semidirect_products %}
         {% if loop.index == 5 %}
           <td width=auto, class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
@@ -137,7 +149,35 @@
     {% endfor %}
   </tr>
   {% endif %}
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    <td>${{gp.rank}}$</td>
+  </tr>
+  {% if gp.order > 1 and gp.eulerian_function is defined %}
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+    <td>${{gp.eulerian_function}}$</td>
+  </tr>
+  {% endif %}
 </table>
+
+<h2> Homology </h2>
+
+<table>
+  <tr>
+    <td>{{KNOWL('group.abelianization', 'Abelianization')}}:</td>
+    <td> <a href="{{url_for('.by_abelian_label', label=gp.abelianization_label())}}">${{gp.abelian_quot()}} {% if gp.smith_abelian_invariants != gp.primary_abelian_invariants %} \simeq {{gp.abelian_quot_primary()}}{% endif %}$</a></td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.schur_multiplier', 'Schur multiplier')}}:</td>
+    <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
+    <td>${{gp.commutator_count}}$</td>
+  </tr>
+</table>
+
 
 <h2> Subgroups </h2>
 
