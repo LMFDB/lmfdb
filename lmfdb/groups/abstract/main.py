@@ -572,7 +572,6 @@ def diagram_js(gp, layers):
 
 #Writes individual pages
 def render_abstract_group(label):
-    abstract_logger.info("A")
     info = {}
     label = clean_input(label)
     gp = WebAbstractGroup(label)
@@ -604,8 +603,6 @@ def render_abstract_group(label):
     #z_order = factor_latex(gp.cent_order())
     #abstract_logger.info("B4")
     #Gab_order = factor_latex(gp.Gab_order())
-
-    abstract_logger.info("D0")
 
     #s = r",\ "
 
@@ -665,6 +662,7 @@ def render_abstract_group(label):
     properties = [
         ('Label', label),
         ('Order', '$%s$' % factored_order),
+        (None, gp.image()),
         (abelian_property_string, ' '),
         (solvable_property_string, ' '),
         #('#$\operatorname{Aut}(G)$', '$%s$' % aut_order),
@@ -714,8 +712,6 @@ def render_abstract_group(label):
     
     
     bread = get_bread([(label, '')])
-
-    abstract_logger.info("Z")
 
     return render_template("abstract-show-group.html",
                            title=title, bread=bread, info=info,

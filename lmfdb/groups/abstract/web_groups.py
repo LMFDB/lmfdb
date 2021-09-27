@@ -7,6 +7,7 @@ from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, p
 from sage.libs.gap.libgap import libgap
 from collections import Counter
 from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex
+from .circles import find_packing
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
@@ -526,6 +527,12 @@ class WebAbstractGroup(WebObj):
     def sparse_cyclotomic_to_latex(n, dat):
         # The indirection is because we want to make this a staticmethod
         return sparse_cyclotomic_to_latex(n, dat)
+
+    def image(self):
+        circles, R = find_packing([(c.size, c.order) for c in self.conjugacy_classes])
+        R = R.ceiling()
+        circles = "\n".join(f'<circle cx="{x}" cy="{y}" r="{rad}" fill="rgb({r},{g},{b})" />' for (x, y, rad, (r, g, b)) in circles)
+        return f'<img><svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
