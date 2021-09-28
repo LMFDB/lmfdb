@@ -16,8 +16,10 @@
 /*--------------------------------------------------------------------------*/
 
 /* Make some parts global variables 
-   These are needed for code which gets positions, but will need to
-   be returned by make_sdiagram
+
+   These are needed for code which gets positions
+   We still need to adjust this bit to the difference between regular
+   and aut diagrams.
 */
 var ourg;
 var ambientlabel;
@@ -763,18 +765,21 @@ function isleftclick(e) {
 }
 
 function showsubinfo(node, ambient) {
-  var mydiv = document.getElementById("selectedsub");
   $.get(`/Groups/Abstract/subinfo/${ambient}/${node.value}`, 
         function(data){
-          mydiv.innerHTML = data; 
-          renderMathInElement(mydiv, katexOpts);
+          $(".selectedsub").map(function() { 
+            this.innerHTML= data; 
+            renderMathInElement(this, katexOpts);
+            return;
+            });
           $(".subgp").hover(highlight_group, unhighlight_group);
         });
 }
 
 function clearsubinfo() {
-  var mydiv = document.getElementById("selectedsub");
-  mydiv.innerHTML = 'Click on a subgroup in the diagram to see information about it.';
+  $(".selectedsub").map(function() { 
+    return this.innerHTML='Click on a subgroup in the diagram to see information about it.';
+    });
 }
 
 

@@ -283,7 +283,7 @@
 {% endif %}
 <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 <h4>Subgroup information</h4>
-<div id="selectedsub">
+<div class="selectedsub">
 Click on a subgroup in the diagram to see information about it.
 </div>
 {% else %}
@@ -297,7 +297,7 @@ Click on a subgroup in the diagram to see information about it.
 {{ info.dojs|safe }}
 </script>
 <h4>Subgroup information</h4>
-<div id="selectedsub">
+<div class="selectedsub">
 Click on a subgroup in the diagram to see information about it.
 </div>
 </table>
@@ -344,7 +344,7 @@ There are too many classes of subgroups to display.
           {{ info.doautjs|safe }}
         </script>
         <h4>Subgroup information</h4>
-          <div id="selectedsub">
+          <div class="selectedsub">
             Click on a subgroup in the diagram to see information about it.
           </div>
     </table>

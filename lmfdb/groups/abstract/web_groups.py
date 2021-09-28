@@ -276,9 +276,9 @@ class WebAbstractGroup(WebObj):
         return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
 
-    # Subgroups up to conjugacy
+    # Subgroups up to conjugacy -- this one is no longer used
     @lazy_attribute
-    def subgroup_layersold(self):
+    def subgroup_layers(self):
         # Need to update to account for possibility of not having all inclusions
         subs = self.subgroups
         topord = max(sub.subgroup_order for sub in subs.values())
@@ -306,7 +306,7 @@ class WebAbstractGroup(WebObj):
 
     # Subgroups up to conjugacy
     @lazy_attribute
-    def subgroup_layers(self):
+    def subgroup_lattice(self):
         # Need to update to account for possibility of not having all inclusions
         subs = self.subgroups
         nodes = [z for z in subs.values()]
@@ -318,7 +318,7 @@ class WebAbstractGroup(WebObj):
 
     # Subgroups up to autjugacy
     @lazy_attribute
-    def subgroup_layers_aut(self):
+    def subgroup_lattice_aut(self):
         # Need to update to account for possibility of not having all inclusions
         # Make a dictionary to translate aut_label to short_label
         subs = self.subgroups_up_to_aut
