@@ -24,24 +24,32 @@
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
 <script>
+  function button_on(who) {
+      $('button.'+who).css('background', '{{color.lf_an_button_bkg}}');
+      $('button.'+who).css('border', '2px solid {{color.lf_an_button_brd}}');
+  }
+  function other_buttons_off(keep) {
+    var styles=['diagram', 'profile', 'autdiagram', 'autprofile'];
+    for (var i = 0; i< styles.length; i++) {
+      if(styles[i] != keep) {
+        $('button.'+styles[i]).css('background', '{{color.lf_ar_button_bkg}}');
+        $('button.'+styles[i]).css('border', '1px solid {{color.lf_ar_button_brd}}');
+      }
+    }
+  }
+
   function show_info(style) {
     $('#subgroup_diagram').hide();
     $('#subgroup_profile').hide();
+    $('#subgroup_autdiagram').hide();
+    $('#subgroup_autprofile').hide();
     $('#subgroup_'+style).show();
     $('button.diagram').show();
     $('button.profile').show();
-    if (style == 'diagram') {
-      $('button.diagram').css('background', '{{color.lf_an_button_bkg}}');
-      $('button.diagram').css('border', '2px solid {{color.lf_an_button_brd}}');
-      $('button.profile').css('background', '{{color.lf_ar_button_bkg}}');
-      $('button.profile').css('border', '1px solid {{color.lf_ar_button_brd}}');
-    }
-    if (style == 'profile') {
-      $('button.profile').css('background', '{{color.lf_an_button_bkg}}');
-      $('button.profile').css('border', '2px solid {{color.lf_an_button_brd}}');
-      $('button.diagram').css('background', '{{color.lf_ar_button_bkg}}');
-      $('button.diagram').css('border', '1px solid {{color.lf_ar_button_brd}}');
-    }
+    $('button.autdiagram').show();
+    $('button.autprofile').show();
+    button_on(style);
+    other_buttons_off(style);
   }
 
 </script>
@@ -246,10 +254,14 @@
 <p>
 <div>
 <button class='diagram inactive' onclick="show_info('diagram'); return false">diagram</button>
+<button class='autdiagram inactive' onclick="show_info('autdiagram'); return false">aut diagram</button>
 <button class='profile inactive' onclick="show_info('profile'); return false">profile</button>
+<button class='autprofile inactive' onclick="show_info('autprofile'); return false">aut profile</button>
 </div>
+
 <p>
 <div id="subgroup_diagram" style="display: block">
+  <h4>Classes of subgroups up to conjugation</h4>
 {% if gp.diagram_ok %}
 <script>
   show_info("diagram");
@@ -303,16 +315,66 @@ There are too many classes of subgroups to display.
 <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 {% endif %}
 </div>
+
+
+{% if not gp.diagram_ok %}
+  <script>
+    show_info("profile");
+  </script>
+{% endif %}
+
+<div id="subgroup_autdiagram" style="display: none">
+  <h4>Classes of subgroups up to automorphism</h4>
+  {% if info.autwide %}
+    <canvas id="autdiagram" width="1000" height="300" style="border: 0px solid black">
+      Sorry, your browser does not support the subgroup diagram.
+    </canvas>
+
+    <script type="text/javascript">
+      {{ info.doautjs|safe }}
+    </script>
+  {% else %}
+    <table>
+      <tr><td>
+        <canvas id="autdiagram" width="500" height="300" style="border: 0px solid black">
+            Sorry, your browser does not support the subgroup diagram.
+        </canvas>
+      <td valign="top">
+        <script type="text/javascript">
+          {{ info.doautjs|safe }}
+        </script>
+        <h4>Subgroup information</h4>
+          <div id="selectedsub">
+            Click on a subgroup in the diagram to see information about it.
+          </div>
+    </table>
+    {% if user_is_authenticated and BETA %}
+      <button onclick="getpositions()">Get positions</button>
+      <br>
+      <p>
+      <div id="positions">
+      </div>
+    {% endif %}
+    <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+  {% endif %}
+  <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+
+  Aut diagram
+</div>
+
 <div id="subgroup_profile" style="display: none">
+  <h4>Classes of subgroups up to conjugation</h4>
 {% for ordline in info.subgroup_profile %}
 Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 {% endfor %}
 </div>
-{% if not gp.diagram_ok %}
-<script>
-  show_info("profile");
-</script>
-{% endif %}
+
+<div id="subgroup_autprofile" style="display: none">
+  <h4>Classes of subgroups up to automorphism</h4>
+  {% for ordline in info.subgroup_autprofile %}
+    Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+  {% endfor %}
+</div>
 
 <h3>Series</h3>
 <table>

@@ -379,6 +379,7 @@ def by_abelian_label(label):
 
 @abstract_page.route("/sub/<label>")
 def by_subgroup_label(label):
+    print ("SUB " + label)
     if subgroup_label_is_valid(label):
         return render_abstract_subgroup(label)
     else:
@@ -560,7 +561,7 @@ def factor_latex(n):
     return '$%s$' % web_latex(factor(n), False)
 
 def diagram_js(gp, layers):
-    ll = [[["%s"%str(grp.subgroup), grp.short_label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+    ll = [["%s"%str(grp.subgroup), grp.short_label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layers[0]]
     subs = gp.subgroups
     orders = list(set(sub.subgroup_order for sub in subs.values()))
     orders.sort()
@@ -568,6 +569,20 @@ def diagram_js(gp, layers):
     myjs = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(gp.label)
     myjs += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
     myjs += ');'
+    return myjs
+
+def diagram_jsaut(gp, layers):
+    ll = [["%s"%str(grp.subgroup), grp.short_label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layers[0]]
+    subs = gp.subgroups
+    orders = list(set(sub.subgroup_order for sub in subs.values()))
+    orders.sort()
+
+    myjs = 'var sautdiagram = make_sdiagram("autdiagram", "%s",'% str(gp.label)
+    myjs += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
+    myjs += ');'
+    print("*********************")
+    print("*********************")
+    print(myjs)
     return myjs
 
 #Writes individual pages
@@ -585,14 +600,20 @@ def render_abstract_group(label):
     prof = list(gp.subgroup_profile.items())
     prof.sort(key=lambda z: - z[0]) # largest to smallest
     info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
+    autprof = list(gp.subgroup_autprofile.items())
+    autprof.sort(key=lambda z: - z[0]) # largest to smallest
+    info['subgroup_autprofile'] = [(z[0], display_profile_line(z[1])) for z in autprof]
     # prepare for javascript call to make the diagram
     if gp.diagram_ok:
         layers = gp.subgroup_layers
         info['dojs'] = diagram_js(gp, layers)
         totsubs = len(gp.subgroups)
-        info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
+        info['wide'] = totsubs > 20; # boolean
     else:
         info['dojs'] = ''
+
+    layers_aut = gp.subgroup_layers_aut
+    info['doautjs'] = diagram_jsaut(gp, layers_aut)
 
     factored_order = factor_latex(gp.order)
     #abstract_logger.info("B1")

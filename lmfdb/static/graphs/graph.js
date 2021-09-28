@@ -15,6 +15,16 @@
  *
 /*--------------------------------------------------------------------------*/
 
+/* Make some parts global variables 
+   These are needed for code which gets positions, but will need to
+   be returned by make_sdiagram
+*/
+var ourg;
+var ambientlabel;
+
+/* The rest of the global variables are for debugging or page colors,
+   so they should be ok when 2 diagrams are on the page */
+
 /* For debugging, it can hold a value to be inspected in the console */
 var dbug = '';
 var dbug2 = '';
@@ -75,10 +85,8 @@ Graph = class {
 
     addNodes(values, orders) {
         for(var j=0, item; item = values[j]; j++) {
-            for(var k=0, item2; item2 = item[k]; k++) {
-                var myx = Math.max(k, item2[6]);
-                this.addNode(item2, myx, orders, {});
-            }
+                var myx = Math.max(j, item[6]);
+                this.addNode(item, myx, orders, {});
         }
     }
 
@@ -768,10 +776,6 @@ function clearsubinfo() {
   var mydiv = document.getElementById("selectedsub");
   mydiv.innerHTML = 'Click on a subgroup in the diagram to see information about it.';
 }
-
-/* Make some parts global variables */
-var ourg;
-var ambientlabel;
 
 
 function make_sdiagram(canv, ambient, nodes, edges, orders) {

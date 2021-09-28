@@ -43,6 +43,9 @@ def product_sort_key(sub):
         v.append(-s.count(c))
     return len(s), v
 
+def short_to_aut_label(short):
+    return re.sub(r'\.[a-zA-Z0-9]+$', '', short)
+
 class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
@@ -70,6 +73,11 @@ class WebAbstractGroup(WebObj):
     def subgroups(self):
         return {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata)
                 for subdata in db.gps_subgroups.search({'ambient': self.label})}
+
+    @lazy_attribute
+    def subgroups_up_to_aut(self):
+        return {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata)
+                for subdata in db.gps_subgroups.search({'ambient': self.label}, one_per=["aut_label"])}
 
     # special subgroups
     def special_search(self, sp):
@@ -138,6 +146,19 @@ class WebAbstractGroup(WebObj):
             cntr = by_order.get(s['subgroup_order'], Counter())
             cntr.update({s['subgroup']:1})
             by_order[s['subgroup_order']] = cntr
+        return by_order
+
+    @lazy_attribute
+    def subgroup_autprofile(self):
+        subs = db.gps_subgroups.search({'ambient': self.label})
+        seen = set([])
+        by_order = {}  # a dictionary of Counters
+        for s in subs:
+            if s['aut_label'] not in seen:
+                cntr = by_order.get(s['subgroup_order'], Counter())
+                cntr.update({s['subgroup']:1})
+                by_order[s['subgroup_order']] = cntr
+                seen.add(s['aut_label'])
         return by_order
 
     @lazy_attribute
@@ -255,8 +276,9 @@ class WebAbstractGroup(WebObj):
         return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
 
+    # Subgroups up to conjugacy
     @lazy_attribute
-    def subgroup_layers(self):
+    def subgroup_layersold(self):
         # Need to update to account for possibility of not having all inclusions
         subs = self.subgroups
         topord = max(sub.subgroup_order for sub in subs.values())
@@ -281,6 +303,34 @@ class WebAbstractGroup(WebObj):
             for h in subs[g].contains:
                 edges.append([h, g])
         return [layers, edges]
+
+    # Subgroups up to conjugacy
+    @lazy_attribute
+    def subgroup_layers(self):
+        # Need to update to account for possibility of not having all inclusions
+        subs = self.subgroups
+        nodes = [z for z in subs.values()]
+        edges = []
+        for g in subs:
+            for h in subs[g].contains:
+                edges.append([h, g])
+        return [nodes, edges]
+
+    # Subgroups up to autjugacy
+    @lazy_attribute
+    def subgroup_layers_aut(self):
+        # Need to update to account for possibility of not having all inclusions
+        # Make a dictionary to translate aut_label to short_label
+        subs = self.subgroups_up_to_aut
+        nodes = [z for z in subs.values()]
+        labeldict = {subs[z].aut_label: subs[z].short_label for z in subs}
+
+        edges = []
+        for g in subs:
+            for h in subs[g].contains:
+                haut = short_to_aut_label(h)
+                edges.append([labeldict[haut], g])
+        return [nodes, edges]
 
     def sylow_subgroups(self):
         """
