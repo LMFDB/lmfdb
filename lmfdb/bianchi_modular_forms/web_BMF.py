@@ -3,7 +3,7 @@ from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
-from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
+from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label, prime_key
 from lmfdb.utils import web_latex, names_and_urls, prop_int_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
         get_instances_by_Lhash_and_trace_hash)
@@ -153,6 +153,7 @@ class WebBMF(object):
         self.level = ideal_from_label(K,self.level_label)
         self.level_ideal2 = web_latex(self.level)
         badp = self.level.prime_factors()
+        badp.sort(key=prime_key)
 
         self.nap = len(self.hecke_eigs)
         self.nap0 = min(nap0, self.nap)
