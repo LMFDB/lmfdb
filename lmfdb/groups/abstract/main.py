@@ -141,7 +141,7 @@ def create_boolean_string(gp, short_string=False):
         else:
             hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
     elif gp.is_elementary: # Now elementary is a top level implication
-        elementaryp = ' for $p = {elementaryp}$'
+        elementaryp = f' for $p = {elementaryp}$'
         if gp.elementary == gp.hyperelementary:
             hyperelementaryp = ""
         else:
