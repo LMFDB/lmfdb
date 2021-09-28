@@ -93,212 +93,143 @@ def get_bread(tail=[]):
 
 #function to create string of group characteristics
 def create_boolean_string(gp, short_string=False):
-    cyclic_str = display_knowl('group.cyclic', 'cyclic') 
-    abelian_str = display_knowl('group.abelian','abelian')
-    nonabelian_str =  display_knowl('group.abelian', "nonabelian")
-    nilpotent_str = display_knowl('group.nilpotent', "nilpotent")
-    supersolvable_str = display_knowl('group.supersolvable', "supersolvable")
-    monomial_str = display_knowl('group.monomial', "monomial")
-    solvable_str = display_knowl('group.solvable', "solvable")
-    nonsolvable_str = display_knowl('group.solvable', "nonsolvable")
-    zgroup_str = display_knowl('group.z_group', "Z-group")
-    agroup_str = display_knowl('group.a_group', "A-group")
-    metacyclic_str = display_knowl('group.metacyclic', "metacyclic")
-    metabelian_str = display_knowl('group.metabelian', "metabelian")
-    quasisimple_str = display_knowl('group.quasisimple', "quasisimple")
-    almostsimple_str = display_knowl('group.almost_simple', "almost simple")
-    simple_str = display_knowl('group.simple', "simple")
-    perfect_str = display_knowl('group.perfect', "perfect")
-    rational_str= display_knowl('group.rational_group', "rational")
+    # We totally order the properties in two ways: by the order that they should be listed overall,
+    # and by the order they should be listed in implications
+    # For the first order, it's important that A come before B whenever A => B
+    overall_order = ["cyclic", "abelian", "nonabelian", "pgroup", "is_elementary", "nilpotent",
+                     "Zgroup", "metacyclic", "supersolvable", "is_hyperelementary", "monomial", "metabelian",
+                     "solvable", "nonsolvable", "Agroup", "rational", "ab_simple",
+                     "nab_simple", "quasisimple", "perfect", "almost_simple"]
+    # Only things that are implied need to be included here, and there are no constraints on the order
+    impl_order = ["abelian", "nilpotent", "solvable", "supersolvable", "monomial",
+                  "nonsolvable", "is_elementary", "is_hyperelementary", "metacyclic",
+                  "metabelian", "Zgroup", "Agroup", "perfect", "quasisimple", "almost_simple"]
+
+    # Implications should give edges of a DAG, and should be listed in the group.properties_interdependencies knowl
+    implications = {"cyclic": ["abelian", "is_elementary", "Zgroup"],
+                    "abelian": ["nilpotent", "Agroup", "metabelian"],
+                    "pgroup": ["nilpotent", "is_elementary"],
+                    "is_elementary": ["nilpotent", "is_hyperelementary"],
+                    "nilpotent": ["supersolvable"], # for finite groups
+                    "Zgroup": ["Agroup", "metacyclic"], # metacyclic for finite groups
+                    "metacyclic": ["metabelian", "supersolvable"],
+                    "supersolvable": ["monomial"], # for finite groups
+                    "is_hyperelementary": ["monomial"],
+                    "monomial": ["solvable"],
+                    "metabelian": ["solvable"],
+                    "nab_simple": ["quasisimple", "almost_simple"],
+                    "quasisimple": ["perfect"],
+                    }
+    for A, L in implications.items():
+        for B in L:
+            assert A in overall_order and B in overall_order
+            assert overall_order.index(A) < overall_order.index(B)
+            assert B in impl_order
+
+    # We want elementary and hyperelementary to display which primes, but only once
+    elementaryp = ','.join(str(p) for (p, e) in ZZ(gp.elementary).factor())
+    hyperelementaryp = ','.join(str(p) for (p, e) in ZZ(gp.hyperelementary).factor() if not p.divides(gp.elementary))
+    if gp.order == 1: # here it will be implied from cyclic, so both are in the implication list
+        elementaryp = " (for every $p$)"
+        hyperelementaryp = ""
+    elif gp.pgroup: # We don't display p since there's only one in play
+        elementaryp = hyperelementaryp = ""
+    elif gp.cyclic: # both are in the implication list
+        elementaryp = f' ($p = {elementaryp}$)'
+        if gp.elementary == gp.hyperelementary:
+            hyperelementary = ""
+        else:
+            hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
+    elif gp.is_elementary: # Now elementary is a top level implication
+        elementaryp = f' for $p = {elementaryp}$'
+        if gp.elementary == gp.hyperelementary:
+            hyperelementaryp = ""
+        else:
+            hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
+    elif gp.hyperelementary: # Now hyperelementary is a top level implication
+        hyperelementaryp = f" for $p = {hyperelementaryp}$"
+    # otherwise the strings above are a bit messed up, but won't be used.
+    D = overall_display = {
+        "cyclic": display_knowl('group.cyclic', 'cyclic'),
+        "abelian": display_knowl('group.abelian','abelian'),
+        "nonabelian": display_knowl('group.abelian', "nonabelian"),
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} of class {gp.nilpotency_class}",
+        "supersolvable": display_knowl('group.supersolvable', "supersolvable"),
+        "monomial": display_knowl('group.monomial', "monomial"),
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {gp.derived_length}",
+        "nonsolvable": display_knowl('group.solvable', "nonsolvable"),
+        "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
+        "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
+        "metacyclic": display_knowl('group.metacyclic', "metacyclic"),
+        "metabelian": display_knowl('group.metabelian', "metabelian"),
+        "quasisimple": display_knowl('group.quasisimple', "quasisimple"),
+        "almost_simple": display_knowl('group.almost_simple', "almost simple"),
+        "ab_simple": display_knowl('group.simple', "simple"),
+        "nab_simple": display_knowl('group.simple', "simple"),
+        "perfect": display_knowl('group.perfect', "perfect"),
+        "rational": display_knowl('group.rational_group', "rational"),
+        "pgroup": f"a {display_knowl('group.pgroup', '$p$-group')}",
+        "is_elementary": display_knowl('group.elementary', 'elementary') + elementaryp,
+        "is_hyperelementary": display_knowl('group.hyperelementary', "hyperelementary") + hyperelementaryp,
+    }
+    # We display a few things differently for trivial groups
+    if gp.order == 1:
+        overall_display["pgroup"] += " (for every $p$)"
+    # Mostly we display things the same in implication lists, but there are a few extra parentheses
+    impl_display = dict(overall_display)
+    impl_display["nilpotent"] = f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})"
+    impl_display["solvable"] = f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})"
+    assert set(overall_display) == set(impl_display) == set(overall_order)
 
     hence_str = display_knowl('group.properties_interdependencies', 'hence')
-
+    def display_props(proplist):
+        if len(proplist) == 1:
+            return proplist[0]
+        elif len(proplist) == 2:
+            return " and ".join(proplist)
+        else:
+            return ", ".join(proplist[:-1]) + f", and {proplist[-1]}"
 
     if short_string:
         if gp.cyclic:
             if gp.simple:
-                strng = cyclic_str + ", " +  solvable_str + ", and " + simple_str
+                strng = f"{D['cyclic']}, {D['solvable']}, and {D['ab_simple']}"
             else:
-                strng = cyclic_str + " and " + solvable_str
+                strng = f"{D['cyclic']} and {D['solvable']}"
 
         elif gp.abelian:
-            strng = abelian_str + " and " + solvable_str
+            strng = "{D['abelian']} and {D['solvable']}"
 
         else:
-            strng = nonabelian_str
-            if gp.solvable:
-                strng+= " and " + solvable_str
-            else:
-                strng+= " and " + nonsolvable_str
-
-            if gp.perfect:
-                strng+= " and " + perfect_str
-    else:
-
-    #nilpotent implies supersolvable for finite groups
-    #supersolvable imples monomial for finite groups
-    #Zgroup implies metacyclic for finite groups
-    
-        if gp.cyclic:
-            if gp.rational:
-                strng = "This group is " + cyclic_str + " (" + hence_str + " " + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", a " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ") and " + rational_str +"."
-            else:
-                 strng = "This group is " +  cyclic_str + " (" + hence_str + " " + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", a " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")."
-            
-            if gp.simple:
-                strng += "<br> It is also " + simple_str + "."
-                
-
-        elif gp.abelian:
-            if gp.rational:
-                strng = "This group is " + abelian_str + " (" + hence_str + " " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ",  " + solvable_str +  ", " +  metabelian_str + ", and an " + agroup_str +  ") and " + rational_str + "."
-            else:
-                strng = "This group is " + abelian_str + " (" + hence_str + " " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ",  " + solvable_str +  ", " +  metabelian_str + ", and an " + agroup_str +  ")."
-            if gp.Zgroup:
-                strng += "It is also a " + zgroup_str + " (" + hence_str + " " +  metacyclic_str + ")."
-
-            
-#rest will assume non-abelian            
-        else:
-            strng = "This group is " + nonabelian_str 
-
-        #finite nilpotent is Agroup iff group is abelian (so can't be Zgroup/Agroup)
-            if gp.nilpotent:
-                strng += ". It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
-                if gp.rational:
-                    if gp.metacyclic:
-                        strng += ", "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ") and " + rational_str + "."
-                    elif gp.metabelian:
-                        strng += ", " + metabelian_str + " and " + rational_str +"."
-                else:
-                    if gp.metacyclic:
-                        strng += "and "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ")."
-                    elif gp.metabelian:
-                        strng += ", and " + metabelian_str + "."
-                        
-
-            elif gp.Zgroup:
-                if gp.rational:
-                    strng += ". It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
-                else:
-                    strng += ". It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
-
-
-            elif gp.metacyclic:   
-                if gp.rational and gp.Agroup:
-                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
-                elif gp.rational:
-                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
-                elif gp.Agroup:
-                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
-                else:
-                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
-
-
-
-                    
-            elif gp.supersolvable:
-                strng += ". It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
-                if gp.metabelian:
-                    if gp.rational and gp.Agroup:
-                        strng += ", " + metabelian_str + ", an " + agroup_str + ", and " + rational_str + "."
-                    elif gp.rational:
-                         strng += ", " + metabelian_str + ", and " + rational_str + "."
-                    elif gp.Agroup:
-                         strng += ", " + metabelian_str + ", and an " + agroup_str + "."
-
-                else: #not metabelian
-                    if gp.rational and gp.Agroup:
-                        strng += ",  an " + agroup_str + ", and " + rational_str + "."
-                    elif gp.rational:
-                         strng += "and " + rational_str + "."
-                    elif gp.Agroup:
-                         strng += "and an " + agroup_str + "."
-                    else:
-                        strng +="."
-
-
-                    
-            elif gp.metabelian:
-                strng += ". It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
-                if gp.monomial:
-                    if gp.rational and gp.Agroup:
-                        strng += ", " + monomial_str + ", an " + agroup_str + ", and " + rational_str + "."
-                    elif gp.rational:
-                         strng += ", " + monomial_str + ", and " + rational_str + "."
-                    elif gp.Agroup:
-                         strng += ", " + monomial_str + ", and an " + agroup_str + "."
-
-                else: #not metabelian
-                    if gp.rational and gp.Agroup:
-                        strng += ",  an " + agroup_str + ", and " + rational_str + "."
-                    elif gp.rational:
-                         strng += "and " + rational_str + "."
-                    elif gp.Agroup:
-                         strng += "and an " + agroup_str + "."
-                    else:
-                        strng +="."
-
-
-            elif gp.monomial:
-                strng += ". It is " + monomial_str + " (" + hence_str + solvable_str + ")"
-                if gp.rational:
-                    if gp.Agroup:
-                        strng += ", an " + agroup_str + " and  " + rational_str
-                    else:
-                        strng += " and  " + rational_str
-                strng += "."
-
-                
+            strng = D['nonabelian']
+            if gp.solvable and gp.perfect:
+                strng += f", {D['solvable']}, and {D['perfect']}"
             elif gp.solvable:
-                if gp.rational:
-                    if gp.Agroup:
-                        strng += ", " + solvable_str + ",  an " + agroup_str + " and  " + rational_str
-                    else:
-                        strng += ", " + solvable_str + ", and  " + rational_str
-                elif gp.Agroup:  #agroup but not rational
-                    strng += ", " + solvable_str + ", and  an " + agroup_str
-                else:  # only solvable
-                    strng += " and " + solvable_str
-                strng += "."
-
-            else:
-                if gp.rational:
-                    if gp.Agroup:
-                        strng += ", " + nonsolvable_str + ", an " + agroup_str + " and  " + rational_str
-                    else:
-                        strng += ", " + nonsolvable_str + " and  " + rational_str
-                elif gp.Agroup:  #agroup but not rational
-                    strng += ", " + nonsolvable_str + ", and  an " + agroup_str
-                else:  # only solvable
-                    strng += " and " + nonsolvable_str
-                strng += "."
-
-                
-        #nonabelian only here so QS and perfect and AS too        
-            if gp.simple:
-                strng += "<br> It is also " + simple_str + " (" + hence_str + " "  + quasisimple_str + ", " + perfect_str + ", and " + almostsimple_str + ")."
-
-
-            elif gp.quasisimple:
-                strng += "<br> It is also " + quasisimple_str + " (" + hence_str  + " " + perfect_str + ")"
-                if gp.almost_simple:
-                    strng += " and " + almostsimple_str
-                strng += "."
-
-                
+                strng += f" and {D['solvable']}"
             elif gp.perfect:
-                strng += "<br> It is also " + perfect_str
-                if gp.almost_simple:
-                    strng += "and " +  almostsimple_str
-                strng += "."
-      
-            elif  gp.almost_simple:
-                strng += "It is " +  almostsimple_str + "."
-
-            
-    return strng
-
+                strng += f", {D['nonsolvable']}, and {D['perfect']}"
+            else:
+                strng += f" and {D['nonsolvable']}"
+    else:
+        props = []
+        noted = set()
+        for prop in overall_order:
+            if not getattr(gp, prop) or prop in noted:
+                continue
+            noted.add(prop)
+            impl = [B for B in implications.get(prop, []) if B not in noted]
+            cur = 0
+            while cur < len(impl):
+                impl.extend([B for B in implications.get(impl[cur], []) if B not in impl and B not in noted])
+                cur += 1
+            noted.update(impl)
+            impl = [impl_display[B] for B in impl_order if B in impl]
+            if impl:
+                props.append(f"{overall_display[prop]} ({hence_str} {display_props(impl)})")
+            else:
+                props.append(overall_display[prop])
+            print(noted)
+        return f"This group is {display_props(props)}."
 
 
 def url_for_label(label):
