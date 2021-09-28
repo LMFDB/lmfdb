@@ -54,7 +54,6 @@ class AbGpsHomeTest(LmfdbTest):
 
         
     # Various searches
-    # Many things are checked twice: Once from main index/browse page, and once from the refining search page
 
     def test_bad_label(self):
         r"""
@@ -212,8 +211,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?direct_product=yes", "8.1")
         self.not_check_args("/Groups/Abstract/?direct_product=no", "8.2")
 
-
-
                
     def test_semidirect_product_search(self):
         r"""
@@ -226,7 +223,31 @@ class AbGpsHomeTest(LmfdbTest):
 
 
 
+    def test_subgroups_search(self):
+        r"""
+        Check that subgroup search page is working
+        """
+        self.check_args("/Groups/Abstract/?search_type=Subgroups", "1.1.1.a1.a1")
+        self.check_args("/Groups/Abstract/sub/7.1.1.a1.a1","Ambient group information")
+
+    def test_subgrouplabel_search(self):
+        r"""
+        Check that subgroup search by label is working
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&subgroup=168.42", "504.157.3.a1.a1")
+
+
+        
+    def test_subgrouporder_search(self):
+        r"""
+        Check that subgroup search by label is working
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&subgroup_order=15", "45.2.3.a1.b1")
+
+
+        
+
     ## TO DO
-    ## Test sbugroup pages and subgroup searches
+    ## Test more subgroup searches
     ## Test searches: order statistics, all the advanced searches
-    ## Test diagram and character table displays?
+    ## Test diagram and character table displays and picture?
