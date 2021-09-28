@@ -12,36 +12,34 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/32.51", "solvable")
 
 
-# To do:  Test a lot more data,  also test downloads and property box
-# (sample code from abvar/fq below for property box and downloads)  
+# To do:  Test a lot more data,  also more property box tests
+
 
 
         
-#    def test_property_box(self):
-#        r"""
-#        Check that the property box displays.
-#        """
-#        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True).replace("\n", "").replace(" ", "")
-#        assert r'<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>' in page
-#        assert r'<tdclass="label">Basefield</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
-#        self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
+    def test_property_box(self):
+        r"""
+        Check that the property box displays.
+        """
+        page = self.tc.get("/Groups/Abstract/256.14916").get_data(as_text=True).replace("\n", "").replace(" ", "")
+        assert r'<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>256.14916</td></tr><tr>' in page
+ #       assert r'<tdclass="label">Order</td><td>${2^{8}}$</td></tr>' in page
+       # self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
 
 
-#    def test_av_download(self):
+    def test_abstract_group_download(self):
 #        r"""
 #        Test downloading on search results page.
-#        """
-#        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-#        self.assertTrue("Below is a list" in response.get_data(as_text=True))
-#        self.assertTrue("32*x^10" in response.get_data(as_text=True))
-#        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-#        self.assertTrue("Below is a list" in response.get_data(as_text=True))
-#        self.assertTrue("32*x^10" in response.get_data(as_text=True))
-#        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-#        self.assertTrue("Below is a list" in response.get_data(as_text=True))
-#        self.assertTrue("32*x^10" in response.get_data(as_text=True))
+        response = self.tc.get("/Groups/Abstract/384.5458/download/gap")
+        self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
+        self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
+        response = self.tc.get("/Groups/Abstract/384.5458/download/magma")
+        self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
+        self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
 
+
+        
 #    def test_download_all(self):
 #        r"""
 #        Test downloading all stored data to text
