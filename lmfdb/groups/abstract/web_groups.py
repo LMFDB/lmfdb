@@ -542,11 +542,8 @@ class WebAbstractGroup(WebObj):
         display = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in": list(set(CF))}}, ["label", "tex_name"])}
         from .main import url_for_label
         def exp(n):
-            if n == 1:
-                return ""
-            else:
-                return "^{%s}" % n
-        return ", ".join(f'<a href="{url_for_label(label)}">${display[label]}{exp(e)}$</a>' for (label, e) in CF.items())
+            return "" if n==1 else f" ({n})"
+        return ", ".join(f'<a href="{url_for_label(label)}">${display[label]}$</a>{exp(e)}' for (label, e) in CF.items())
 
     ###special subgroups
     def cent(self):
@@ -618,6 +615,32 @@ class WebAbstractGroup(WebObj):
         R = R.ceiling()
         circles = "\n".join(f'<circle cx="{x}" cy="{y}" r="{rad}" fill="rgb({r},{g},{b})" />' for (x, y, rad, (r, g, b)) in circles)
         return f'<img><svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
+
+    # The following attributes are used in create_boolean_string
+    @property
+    def nonabelian(self):
+        return not self.abelian
+
+    @property
+    def nonsolvable(self):
+        # We only show non-solvable when not simple
+        return not self.simple and not self.solvable
+
+    @property
+    def ab_simple(self):
+        return self.simple and self.abelian
+
+    @property
+    def nab_simple(self):
+        return self.simple and not self.abelian
+
+    @property
+    def is_elementary(self):
+        return self.elementary > 1
+
+    @property
+    def is_hyperelementary(self):
+        return self.hyperelementary > 1
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
