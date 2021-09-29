@@ -6,7 +6,7 @@ from lmfdb import db
 from flask import url_for
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod, latex
 from sage.libs.gap.libgap import libgap
-from collections import Counter
+from collections import Counter, defaultdict
 from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex, web_latex
 from .circles import find_packing
 
@@ -70,24 +70,29 @@ class WebAbstractGroup(WebObj):
         WebObj.__init__(self, label, data)
 
     def properties(self):
-        ab_str = "Yes" if self.abelian else f"No, with abelianization of order {prod(self.smith_abelian_invariants)}"
         nilp_str = f"Yes, of class {self.nilpotency_class}" if self.nilpotent else "No"
         solv_str = f"Yes, of length {self.derived_length}" if self.solvable else "No"
-        return [
+        props = [
             ('Label', self.label),
             ('Order', web_latex(factor(self.order))),
             ('Exponent', web_latex(factor(self.exponent))),
             (None, self.image()),
-            ('Abelian', ab_str), # should maybe also say something about the center
+            ('Abelian', "Yes" if self.abelian else "No"),
             ('Nilpotent', nilp_str),
             ('Solvable', solv_str),
             ('Simple', "Yes" if self.simple else "No"),
-            (r'#$\operatorname{Aut}(G)$', str(self.aut_order)),
-            (r'#$\operatorname{Out}(G)$', str(self.outer_order)),
-            ('Rank', str(self.rank)),
-            ('Perm deg.', str(self.transitive_degree)),
+            (r'#$\operatorname{Aut}(G)$', web_latex(factor(self.aut_order))),
+            (r'#$\operatorname{Out}(G)$', web_latex(factor(self.outer_order))),
+            ('Rank', f'${self.rank}$'),
+            ('Perm deg.', f'${self.transitive_degree}$'),
             #('Faith. dim.', str(self.faithful_reps[0][0])),
         ]
+        if not self.abelian:
+            props[8:8] = [
+                (r'#$G^{\mathrm{ab}}$', web_latex(self.Gab_order_factor())),
+                ('#$Z(G)$', web_latex(self.cent_order_factor()))
+            ]
+        return props
 
     @lazy_attribute
     def subgroups(self):
@@ -184,13 +189,12 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_classes(self):
         cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
-        divs = {}
+        divs = defaultdict(list)
+        autjs = defaultdict(list)
         for c in cl:
             divkey = re.sub(r'([^\d])-?\d+?$',r'\1', c.label)
-            if divkey in divs:
-                divs[divkey].append(c)
-            else:
-                divs[divkey] = [c]
+            divs[divkey].append(c)
+            autjs[c.aut_label].append(c)
         ccdivs = []
         for divkey, ccs in divs.items():
             div = WebAbstractDivision(self.label, divkey, ccs)
@@ -199,6 +203,14 @@ class WebAbstractGroup(WebObj):
             ccdivs.append(div)
         ccdivs.sort(key=lambda x: x.classes[0].counter)
         self.conjugacy_class_divisions = ccdivs
+        autccs = []
+        for autkey, ccs in autjs.items():
+            autj = WebAbstractAutjClass(self.label, autkey, ccs)
+            for c in ccs:
+                c.autjugacy_class = autj
+            autccs.append(autj)
+        autccs.sort(key=lambda x: x.classes[0].counter)
+        self.autjugacy_classes = autccs
         return sorted(cl, key=lambda x:x.counter)
 
     #These are the power-conjugacy classes
@@ -207,6 +219,12 @@ class WebAbstractGroup(WebObj):
         cl = self.conjugacy_classes # creates divisions
         assert cl
         return self.conjugacy_class_divisions
+
+    @lazy_attribute
+    def autjugacy_classes(self):
+        cl = self.conjugacy_classes # creates autjugacy classes
+        assert cl
+        return self.autjugacy_classes
 
     @lazy_attribute
     def sorted_cc_divisions(self):
@@ -394,10 +412,31 @@ class WebAbstractGroup(WebObj):
         else: # trivial group has to be handled separately
             return '1'
 
+    @lazy_attribute
+    def rep_dims(self):
+        return sorted(set([rep.dim for rep in self.characters] + [rep.qdim for rep in self.rational_characters]))
 
     @lazy_attribute
     def irrep_stats(self):
-        return sorted(Counter([rep.dim for rep in self.characters]).items())
+        D = Counter([rep.dim for rep in self.characters])
+        return [D[d] for d in self.rep_dims]
+
+    @lazy_attribute
+    def ratrep_stats(self):
+        D = Counter([rep.qdim for rep in self.rational_characters])
+        return [D[d] for d in self.rep_dims]
+
+    @lazy_attribute
+    def cc_stats(self):
+        return sorted(Counter([cc.order for cc in self.conjugacy_classes]).items())
+
+    @lazy_attribute
+    def division_stats(self):
+        return sorted(Counter([div.order for div in self.conjugacy_class_divisions]).items())
+
+    @lazy_attribute
+    def autc_stats(self):
+        return sorted(Counter([cc.order for cc in self.autjugacy_classes]).items())
 
     @lazy_attribute
     def G(self):
@@ -576,7 +615,7 @@ class WebAbstractGroup(WebObj):
         return self.subgroups[self.cent()].quotient_tex
 
     def cent_order_factor(self):
-        return (self.order // ZZ(self.comm().split('.')[2])).factor()
+        return (self.order // ZZ(self.comm().split('.')[0])).factor()
 
     def comm(self):
         return self.special_search('D')
@@ -818,11 +857,19 @@ class WebAbstractDivision(object):
         self.ambient_gp = ambient_gp
         self.label = label
         self.classes = classes
+        self.order = classes[0].order
 
     def display_knowl(self, name=None):
         if not name:
             name = self.label
         return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7Crational">{}</a>'.format(name, self.ambient_gp, self.label, name)
+
+class WebAbstractAutjClass(object):
+    def __init__(self, ambient_gp, label, classes):
+        self.ambient_gp = ambient_gp
+        self.label = label
+        self.classes = classes
+        self.order = classes[0].order
 
 class WebAbstractCharacter(WebObj):
     table = db.gps_char

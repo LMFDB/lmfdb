@@ -62,11 +62,11 @@
     <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
-    <tr><td>Outer Automorphisms:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
-    <tr><td>Minimal degree of permutation representation:</td><td>{{gp.transitive_degree}}</td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism Group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.outer_aut', 'Outer Automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
     {% if not (gp.solvable or gp.simple) %}
-    <tr><td>Composition factors:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
     {% endif %}
   </table>
 </p>
@@ -75,52 +75,6 @@
   {{info.boolean_characteristics_string | safe}}
 
 </p>
-
-<h2>Group Statistics</h2>
-{% if gp.order_stats is defined %}
-<p>
-  <table class="ntdata" style="margin-left:0;">
-    <thead>
-      <tr>
-        <th>Element order</th>
-        {% for c in (gp.order_stats | sort) %}
-          <th>{{ c[0] | safe }} </th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="border-bottom:none;">
-        <td>{{KNOWL('group.element_order', 'Number of elements')}}</td>
-        {% for c in (gp.order_stats | sort) %}
-        <td>{{ c[1] | safe }} </td>
-        {% endfor %}
-      </tr>
-    </tbody>
-  </table>
-</p>
-{% endif %}
-{% if gp.irrep_stats is defined %}
-<p>
-  <table class="ntdata" style="margin-left:0;">
-    <thead>
-      <tr><th>Dimension</th>
-        {% for char in (gp.irrep_stats | sort) %}
-          <th>{{ char[0] | safe}} </th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="border-bottom:none;">
-        <td>{{KNOWL('group.representation.irrep', 'Number of irreps')}}</td>
-        {% for char in (gp.irrep_stats | sort) %}
-          <td>{{ char[1] | safe }} </td>
-        {% endfor %}
-      </tr>
-    </tbody>
-  </table>
-</p>
-{% endif %}
-
 
 <h2>Constructions</h2>
 
@@ -168,6 +122,82 @@
   </tr>
   {% endif %}
 </table>
+
+<h2>Group Statistics</h2>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+        <th>{{KNOWL('group.element_order', 'Order')}}</th>
+        {% for c in (gp.order_stats | sort) %}
+          <th>{{ c[0] }} </th>
+        {% endfor %}
+      <td></td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Number of elements</td>
+        {% for c in (gp.order_stats | sort) %}
+          <td>{{ c[1] }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.order }}</td>
+      </tr>
+      <tr>
+        <td>Number of {{KNOWL('group.conjugacy_class', 'conjugacy classes')}}</td>
+        {% for c in gp.cc_stats %}
+          <td>{{ c[1] }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
+      </tr>
+      <tr>
+        <td>Number of {{KNOWL('group.division', 'divisions')}}</td>
+        {% for c in gp.division_stats %}
+          <td>{{ c[1] }}</td>
+        {% endfor %}
+        <td class="border-left">{{ gp.number_divisions }}</td>
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>Number of {{KNOWL('group.autjugacy_class', 'autjugacy classes')}}</td>
+        {% for c in gp.autc_stats %}
+          <td>{{ c[1] }}</td>
+        {% endfor %}
+        <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
+      </tr>
+    </tbody>
+  </table>
+</p>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr><th>Dimension</th>
+        {% for d in (gp.rep_dims) %}
+          <th>{{ d }} </th>
+        {% endfor %}
+        <td></td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Number of {{KNOWL('group.representation.character', 'irr. complex chars.')}}</td>
+        {% for n in gp.irrep_stats %}
+          <td>{{ n }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.irrep_stats | sum }}</td>
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>Number of {{KNOWL('group.representation.rational_character', 'irr. rational chars.')}}</td>
+        {% for n in gp.ratrep_stats %}
+          <td>{{ n }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.ratrep_stats | sum }}</td>
+      </tr>
+    </tbody>
+  </table>
+</p>
+
 
 <h2> Homology </h2>
 

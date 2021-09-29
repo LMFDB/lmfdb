@@ -228,7 +228,6 @@ def create_boolean_string(gp, short_string=False):
                 props.append(f"{overall_display[prop]} ({hence_str} {display_props(impl)})")
             else:
                 props.append(overall_display[prop])
-            print(noted)
         return f"This group is {display_props(props)}."
 
 

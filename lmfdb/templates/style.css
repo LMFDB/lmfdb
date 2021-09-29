@@ -1032,6 +1032,9 @@ table.ntdata tr.first {
 table.ntdata .border-right {
   border-right: 2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata .border-left {
+  border-left: 2px solid {{ color.table_ntdata_border }};
+}
 table.ntdata .border-bottom {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
