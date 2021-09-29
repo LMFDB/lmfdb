@@ -286,7 +286,7 @@ def find_touching_ontheta(C1, theta, r, o):
 
 def place_segment(segment, R0, R1, thetamin, placed, last):
     o, radii = segment
-    print("place_segment", R0, R1, radii)
+    #print("place_segment", R0, R1, radii)
     zero = RR(0)
     # Make a copy of radii since we'll be modifying it
     radii = Counter(radii)
@@ -326,7 +326,7 @@ def place_segment(segment, R0, R1, thetamin, placed, last):
             if tophd is None or C.hd > tophd + eps:
                 tophd = C.hd
                 best = C
-        print(f"Placed at R={best.R}, theta={best.theta}")
+        #print(f"Placed at R={best.R}, theta={best.theta}")
         fixed.append(best)
         constructive.append(best)
         avoid.append(best)
@@ -371,7 +371,7 @@ def pack(rdata, R0, rmax):
     # If there are few enough circles, we space them out around the annulus with uniform gaps
     # We approximate the intersections as happening at radius R0+rmax, then check that this doesn't cause problems
     rdata = sorted(rdata, key=lambda pair: (-pair[1].valuation(2), -pair[1].valuation(3), pair[1], -pair[0]))
-    print("Packing", R0, rmax, rdata)
+    #print("Packing", R0, rmax, rdata)
     radii = [r for (r, o) in rdata]
     Rc = R0 + rmax
     thetasum = sum(2*r / Rc for r in radii)
@@ -396,7 +396,7 @@ def pack(rdata, R0, rmax):
         squeezed = (R1 < R0 + 2*rmax)
         if squeezed:
             R1 = R0 + 2*rmax # 4*R0*rmax + 4*rmax^2 = area/density
-        print("Looping", density, R1, R0+2*rmax)
+        #print("Looping", density, R1, R0+2*rmax)
         placed = []
         thetamin = RR(0)
         for sctr, segment in enumerate(segments):
@@ -439,3 +439,7 @@ def find_packing(ccdata):
         new_circles, R = pack(annulus, R, r0)
         circles.extend(new_circles)
     return circles, R
+
+#def find_arrangement(ccdata):
+    # Same goal as find_packing, but a slightly different approach.
+    # Rather than trying to pack circles as densely as possible, we aim to put them in rings.
