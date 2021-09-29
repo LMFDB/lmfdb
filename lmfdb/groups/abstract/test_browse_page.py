@@ -319,6 +319,40 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "128.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "1.1.1.a1.a1")
 
+    def test_subgroup_ambient_order_search(self):
+        r"""
+        Check that we can search by ambient order 
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "128.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "1.1.1.a1.a1")
+
+    def test_subgroup_direct_search(self):
+        r"""
+        Check that we can restrict to subgroups that are direct products
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&direct=yes&search_type=Subgroups", "4.2.2.a1.c1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&direct=no&search_type=Subgroups", "4.1.2.a1.a1")
+
+    def test_subgroup_semidirect_search(self):
+        r"""
+        Check that we can restrict to subgroups that are semidirect products
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&split=yes&search_type=Subgroups", "4.2.2.a1.c1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&split=no&search_type=Subgroups", "4.1.2.a1.a1")
+
+    def test_subgroup_hall_search(self):
+        r"""
+        Check that we can restrict to subgroups that are Hall subgroups
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "1.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "4.1.2.a1.a1")
+
+    def test_subgroup_sylow_search(self):
+        r"""
+        Check that we can restrict to subgroups that are Sylow subgroups
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&sylow=yes&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("https://groups.lmfdb.xyz/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "4.1.2.a1.a1")
 
 
     ## TO DO
