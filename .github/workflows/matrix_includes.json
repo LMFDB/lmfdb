@@ -98,5 +98,15 @@
         "files": "lmfdb/lfunctions/test_lfunctions.py", 
         "folders": "lfunctions", 
         "server": "devmirror"
+    }, 
+    {
+        "files": "lmfdb/groups/abstract/test_browser_page.py lmfdb/groups/abstract/test_abstract_groups.py", 
+        "folders": "groups/abstract", 
+        "server": "proddb"
+    }, 
+    {
+        "files": "lmfdb/groups/abstract/test_browser_page.py lmfdb/groups/abstract/test_abstract_groups.py", 
+        "folders": "groups/abstract", 
+        "server": "devmirror"
     }
 ]
