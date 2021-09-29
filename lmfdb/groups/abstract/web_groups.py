@@ -43,7 +43,9 @@ def product_sort_key(sub):
         v.append(-s.count(c))
     return len(s), v
 
-def short_to_aut_label(short):
+def short_to_aut_label(short, outer_e):
+    if outer_e:
+        return short
     return re.sub(r'\.[a-zA-Z0-9]+$', '', short)
 
 class WebObj(object):
@@ -366,7 +368,7 @@ class WebAbstractGroup(WebObj):
         edges = []
         for g in subs:
             for h in subs[g].contains:
-                haut = short_to_aut_label(h)
+                haut = short_to_aut_label(h, self.outer_equivalence)
                 edges.append([labeldict[haut], g])
         return [nodes, edges]
 

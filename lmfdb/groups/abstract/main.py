@@ -530,7 +530,7 @@ def render_abstract_group(label):
     autprof.sort(key=lambda z: - z[0]) # largest to smallest
     info['subgroup_autprofile'] = [(z[0], display_profile_line(z[1])) for z in autprof]
     # prepare for javascript call to make the diagram
-    if gp.diagram_ok:
+    if gp.diagram_ok and not gp.outer_equivalence:
         layers = gp.subgroup_lattice
         info['dojs'] = diagram_js(gp, layers)
         totsubs = len(gp.subgroups)
