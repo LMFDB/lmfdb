@@ -143,7 +143,24 @@ class PostgresDatabase(PostgresBase):
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
-        self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
+
+        if self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]:
+            self._read_only = True
+        else:
+            # Check if there is a table where we can insert/update
+            privileges = ["INSERT", "UPDATE"]
+            cur = self._execute(
+                SQL(
+                    "SELECT count(*) FROM information_schema.role_table_grants "
+                    + "WHERE grantee = %s AND table_schema = %s "
+                    + "AND privilege_type IN ("
+                    + ",".join(["%s"] * len(privileges))
+                    + ")"
+                ),
+                [self._user, "public"] + privileges,
+            )
+            self._read_only = cur.fetchone()[0] ==0
+
         self._super_user = (self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0] == "on")
 
         if self._read_only:
