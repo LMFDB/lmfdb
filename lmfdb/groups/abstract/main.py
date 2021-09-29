@@ -137,7 +137,7 @@ def create_boolean_string(gp, short_string=False):
     elif gp.cyclic: # both are in the implication list
         elementaryp = f' ($p = {elementaryp}$)'
         if gp.elementary == gp.hyperelementary:
-            hyperelementary = ""
+            hyperelementaryp = ""
         else:
             hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
     elif gp.is_elementary: # Now elementary is a top level implication
@@ -542,84 +542,19 @@ def render_abstract_group(label):
     layers_aut = gp.subgroup_lattice_aut
     info['doautjs'] = diagram_jsaut(gp, layers_aut)
 
-    factored_order = factor_latex(gp.order)
-    #abstract_logger.info("B1")
-    #aut_order = factor_latex(gp.aut_order)
-    #abstract_logger.info("B2")
-    #out_order = factor_latex(gp.outer_order)
-    #abstract_logger.info("B3")
-    #z_order = factor_latex(gp.cent_order())
-    #abstract_logger.info("B4")
-    #Gab_order = factor_latex(gp.Gab_order())
-
-    #s = r",\ "
-
     info['max_sub_cnt'] = db.gps_subgroups.count_distinct('ambient', {'subgroup': label, 'maximal': True})
     info['max_quo_cnt'] = db.gps_subgroups.count_distinct('ambient', {'quotient': label, 'minimal_normal': True})
-    #def sortkey(x):
-    #    if x[0] is None:
-    #        return (0, 0)
-    #    return tuple(int(m) for m in x[0].split("."))
-    #def show_cnt(x, cnt):
-    #    if cnt == 1:
-    #        return x
-    #    else:
-    #        return x + " (%s)" % cnt
-    #max_subs = defaultdict(lambda: defaultdict(int))
-    #for sup in gp.maximal_subgroup_of:
-    #    if sup.normal:
-    #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.quotient, sup.quotient_tex] += 1
-    #    else:
-    #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][None, None] += 1
-    #max_subs = [A + (", ".join(
-    #    show_cnt("Non-normal" if quo is None else '<a href="%s">$%s$</a>' % (quo, quo_tex),
-    #             max_subs[A][quo, quo_tex])
-    #    for (quo, quo_tex) in sorted(max_subs[A], key=sortkey)),)
-    #            for A in sorted(max_subs, key=sortkey)]
-    #abstract_logger.info("D1")
-    #max_quot = defaultdict(lambda: defaultdict(int))
-    #for sup in gp.maximal_quotient_of:
-    #    print(sup.ambient, sup.ambient_tex, sup.ambient_order)
-    #    max_quot[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.subgroup, sup.subgroup_tex] += 1
-    #print("LEN", len(max_quot))
-    #max_quot = [A + (", ".join(
-    #    show_cnt('<a href="%s">$%s$</a>' % (sub, sub_tex),
-    #             max_quot[A][sub, sub_tex])
-    #    for (sub, sub_tex) in sorted(max_quot[A], key=sortkey)),)
-    #            for A in sorted(max_quot, key=sortkey)]
-    #abstract_logger.info("D2")
-    #info['max_subs'] = max_subs
-    #info['max_quot'] = max_quot
 
     title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
-
-    if gp.cyclic:
-        abelian_property_string = "cyclic"
-    elif gp.abelian:
-        abelian_property_string = "abelian"
-    else:
-        abelian_property_string ="nonabelian"
-
-    if gp.solvable:
-        solvable_property_string = "solvable"
-    else:
-        solvable_property_string ="nonsolvable"
-
     downloads = [('Code for Magma', url_for(".download_group",  label=label, download_type='magma')),
                      ('Code for Gap', url_for(".download_group", label=label, download_type='gap'))]
-
-
-
 
     #"internal" friends
     sbgp_of_url=" /Groups/Abstract/?hst=Subgroups&subgroup="+label+"&search_type=Subgroups"
     sbgp_url = "/Groups/Abstract/?hst=Subgroups&ambient="+label+"&search_type=Subgroups"
     quot_url ="/Groups/Abstract/?hst=Subgroups&quotient="+label+"&search_type=Subgroups"
 
-
-    
-    
     friends =  [("Subgroups", sbgp_url),("Extensions",quot_url),("Supergroups",sbgp_of_url)]
 
     #"external" friends
@@ -643,8 +578,7 @@ def render_abstract_group(label):
     if db.gps_st.count({'component_group': label}) > 0:
         st_url='/SatoTateGroup/?hst=List&component_group=%5B'+  str(gap_ints[0])+ '%2C' +   str(gap_ints[1]) + '%5D&search_type=List'
         friends += [("As the component group of a Sato-Tate group", st_url)]
-    
-    
+
     bread = get_bread([(label, '')])
 
     return render_template("abstract-show-group.html",
