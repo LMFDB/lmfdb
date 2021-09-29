@@ -605,20 +605,6 @@ def render_abstract_group(label):
         solvable_property_string = "solvable"
     else:
         solvable_property_string ="nonsolvable"
-       
-    
-    properties = [
-        ('Label', label),
-        ('Order', '$%s$' % factored_order),
-        (None, gp.image()),
-        (abelian_property_string, ' '),
-        (solvable_property_string, ' '),
-        #('#$\operatorname{Aut}(G)$', '$%s$' % aut_order),
-        #('#$\operatorname{Out}(G)$', '$%s$' % out_order),
-        #('#$Z(G)$', '$%s$' % z_order),
-        #(r'#$G^{\mathrm{ab}}$', '$%s$' % Gab_order),
-    ]
-
 
     downloads = [('Code for Magma', url_for(".download_group",  label=label, download_type='magma')),
                      ('Code for Gap', url_for(".download_group", label=label, download_type='gap'))]
@@ -664,7 +650,7 @@ def render_abstract_group(label):
     return render_template("abstract-show-group.html",
                            title=title, bread=bread, info=info,
                            gp=gp,
-                           properties=properties,
+                           properties=gp.properties(),
                            friends=friends,
                            learnmore=learnmore_list(),
                            downloads=downloads)

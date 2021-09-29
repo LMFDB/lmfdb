@@ -7,7 +7,7 @@ from flask import url_for
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod, latex
 from sage.libs.gap.libgap import libgap
 from collections import Counter
-from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex
+from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex, web_latex
 from .circles import find_packing
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
@@ -68,6 +68,26 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
+
+    def properties(self):
+        ab_str = "Yes" if self.abelian else f"No, with abelianization of order {prod(self.smith_abelian_invariants)}"
+        nilp_str = f"Yes, of class {self.nilpotency_class}" if self.nilpotent else "No"
+        solv_str = f"Yes, of length {self.derived_length}" if self.solvable else "No"
+        return [
+            ('Label', self.label),
+            ('Order', web_latex(factor(self.order))),
+            ('Exponent', web_latex(factor(self.exponent))),
+            (None, self.image()),
+            ('Abelian', ab_str), # should maybe also say something about the center
+            ('Nilpotent', nilp_str),
+            ('Solvable', solv_str),
+            ('Simple', "Yes" if self.simple else "No"),
+            (r'#$\operatorname{Aut}(G)$', str(self.aut_order)),
+            (r'#$\operatorname{Out}(G)$', str(self.outer_order)),
+            ('Rank', str(self.rank)),
+            ('Perm deg.', str(self.transitive_degree)),
+            #('Faith. dim.', str(self.faithful_reps[0][0])),
+        ]
 
     @lazy_attribute
     def subgroups(self):
