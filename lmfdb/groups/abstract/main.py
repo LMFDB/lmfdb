@@ -475,7 +475,6 @@ def subgroup_search(info, query):
     parse_bool(info, query, 'central')
     parse_bool(info, query, 'split')
     parse_bool(info, query, 'direct')
-    parse_bool(info, query, 'sylow')
     parse_bool(info, query, 'proper')
     parse_regex_restricted(info, query, 'subgroup', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'ambient', regex=abstract_group_label_regex)
@@ -485,6 +484,11 @@ def subgroup_search(info, query):
             query['hall'] = {'$ne' : 0}
         else:
             query['hall'] = 0
+    if 'sylow' in info:
+        if info['sylow'] == 'yes':
+            query['sylow'] = {'$ne' : 0}
+        else:
+            query['sylow'] = 0
 
 def get_url(label):
     return url_for(".by_label", label=label)
