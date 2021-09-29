@@ -314,14 +314,7 @@ class AbGpsHomeTest(LmfdbTest):
 
     def test_subgroup_ambient_order_search(self):
         r"""
-        Check that we can search by ambient order 
-        """
-        self.check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "128.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "1.1.1.a1.a1")
-
-    def test_subgroup_ambient_order_search(self):
-        r"""
-        Check that we can search by ambient order 
+        Check that we can search by ambient order
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "128.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?hst=Subgroups&ambient_order=128&search_type=Subgroups", "1.1.1.a1.a1")
