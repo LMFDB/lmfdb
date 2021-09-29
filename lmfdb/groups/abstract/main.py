@@ -98,8 +98,8 @@ def create_boolean_string(gp, short_string=False):
     # For the first order, it's important that A come before B whenever A => B
     overall_order = ["cyclic", "abelian", "nonabelian", "pgroup", "is_elementary", "nilpotent",
                      "Zgroup", "metacyclic", "supersolvable", "is_hyperelementary", "monomial", "metabelian",
-                     "solvable", "nonsolvable", "Agroup", "rational", "ab_simple",
-                     "nab_simple", "quasisimple", "perfect", "almost_simple"]
+                     "solvable", "nab_simple", "ab_simple", "nonsolvable", "Agroup", "rational",
+                     "quasisimple", "perfect", "almost_simple"]
     # Only things that are implied need to be included here, and there are no constraints on the order
     impl_order = ["abelian", "nilpotent", "solvable", "supersolvable", "monomial",
                   "nonsolvable", "is_elementary", "is_hyperelementary", "metacyclic",
@@ -117,7 +117,7 @@ def create_boolean_string(gp, short_string=False):
                     "is_hyperelementary": ["monomial"],
                     "monomial": ["solvable"],
                     "metabelian": ["solvable"],
-                    "nab_simple": ["quasisimple", "almost_simple"],
+                    "nab_simple": ["quasisimple", "almost_simple", "nonsolvable"],
                     "quasisimple": ["perfect"],
                     }
     for A, L in implications.items():
@@ -475,7 +475,7 @@ def subgroup_search(info, query):
     parse_bool(info, query, 'central')
     parse_bool(info, query, 'split')
     parse_bool(info, query, 'direct')
-    parse_bool(info, query, 'sylow')
+    parse_bool(info, query, 'sylow', process=lambda x: ({"$gt": 1} if x else {"$lte": 1}))
     parse_bool(info, query, 'proper')
     parse_regex_restricted(info, query, 'subgroup', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'ambient', regex=abstract_group_label_regex)

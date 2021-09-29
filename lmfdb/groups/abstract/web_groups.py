@@ -643,8 +643,7 @@ class WebAbstractGroup(WebObj):
 
     @property
     def nonsolvable(self):
-        # We only show non-solvable when not simple
-        return not self.simple and not self.solvable
+        return not self.solvable
 
     @property
     def ab_simple(self):
