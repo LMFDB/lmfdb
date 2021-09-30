@@ -348,13 +348,6 @@
     {% endif %}
 </div>
 
-
-{% if not gp.diagram_ok %}
-  <script>
-    show_info("profile");
-  </script>
-{% endif %}
-
 <div id="subgroup_autdiagram" style="display: none">
   <h4>Classes of subgroups up to automorphism</h4>
   {% if info.autwide %}
@@ -404,6 +397,13 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
     Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
   {% endfor %}
 </div>
+
+{% if not gp.diagram_ok or gp.outer_equivalence %}
+  <script>
+    show_info("profile");
+  </script>
+{% endif %}
+
 
 <h3>Series</h3>
 <table>
