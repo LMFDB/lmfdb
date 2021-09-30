@@ -155,9 +155,9 @@ class AbGpsHomeTest(LmfdbTest):
         Check that we can restrict to cyclic or non-cyclic groups only
         """
         self.check_args("/Groups/Abstract/?order=24&cyclic=yes", "24.2")
-        self.check_args("/Groups/Abstract/?order=24&cylic=no", "24.3")
-        self.not_check_args("/Groups/Abstract/?order=24&cyclic=no", "24.2")
+        self.check_args("/Groups/Abstract/?order=24&cyclic=no", "24.3")
         self.not_check_args("/Groups/Abstract/?order=24&cyclic=yes", "24.4")
+        self.not_check_args("/Groups/Abstract/?order=24&cyclic=no", "24.2")
 
 
     def test_simple_search(self):
@@ -221,7 +221,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?semidirect_product=no", "10.1")
         self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "6.2")
 
-    ### subgroup searches
+    ##################### subgroup searches #########################
 
     def test_subgroups_search(self):
         r"""
@@ -248,62 +248,80 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&cyclic=yes&search_type=Subgroups", "2.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?hst=Subgroups&cyclic=yes&search_type=Subgroups", "4.2.1.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&cyclic=no&search_type=Subgroups", "4.2.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&cyclic=no&search_type=Subgroups", "8.5.4.a1.b1")
 
     def test_subgroup_abelian_search(self):
         r"""
         Check that we can restrict to abelian or non-abelian subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&abelian=yes&search_type=Subgroups", "6.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&abelian=no&search_type=Subgroups", "6.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&abelian=yes&search_type=Subgroups", "6.1.1.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&abelian=no&search_type=Subgroups", "6.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&abelian=no&search_type=Subgroups", "6.1.2.a1.a1")
 
     def test_subgroup_solvable_search(self):
         r"""
         Check that we can restrict to solvable or non-solvable subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&solvable=yes&search_type=Subgroups", "3.1.3.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&solvable=yes&search_type=Subgroups", "60.5.1.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
 
     def test_subgroup_normal_search(self):
         r"""
         Check that we can restrict to normal or non-normal subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&normal=yes&search_type=Subgroups", "4.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&normal=no&search_type=Subgroups", "6.1.3.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&normal=yes&search_type=Subgroups", "6.1.3.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&normal=no&search_type=Subgroups", "6.1.3.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&normal=no&search_type=Subgroups", "4.1.2.a1.a1")
 
     def test_subgroup_characteristic_search(self):
         r"""
         Check that we can restrict to characteristic or non-characteristic subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&characteristic=yes&search_type=Subgroups", "3.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&characteristic=no&search_type=Subgroups", "4.2.2.a1.b1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&characteristic=yes&search_type=Subgroups", "4.2.2.a1.b1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&characteristic=no&search_type=Subgroups", "4.2.2.a1.b1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&characteristic=no&search_type=Subgroups", "3.1.1.a1.a1")
 
     def test_subgroup_perfect_search(self):
         r"""
         Check that we can restrict to perfect or non-perfect subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&perfect=yes&search_type=Subgroups", "4.1.4.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&perfect=no&search_type=Subgroups", "4.2.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&perfect=yes&search_type=Subgroups", "4.2.1.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&perfect=no&search_type=Subgroups", "4.2.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&perfect=no&search_type=Subgroups", "4.1.4.a1.a1")
 
     def test_subgroup_maximal_search(self):
         r"""
         Check that we can restrict to maximal or non-maximal subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&maximal=yes&search_type=Subgroups", "2.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&maximal=no&search_type=Subgroups", "8.2.4.b1.b1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&maximal=yes&search_type=Subgroups", "8.2.4.b1.b1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&maximal=no&search_type=Subgroups", "8.2.4.b1.b1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&maximal=no&search_type=Subgroups", "2.1.2.a1.a1")
 
     def test_subgroup_central_search(self):
         r"""
         Check that we can restrict to central or non-central subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&central=yes&search_type=Subgroups", "3.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&central=no&search_type=Subgroups", "6.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&central=yes&search_type=Subgroups", "6.1.2.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&central=no&search_type=Subgroups", "6.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&central=no&search_type=Subgroups", "3.1.1.a1.a1")
 
     def test_subgroup_proper_search(self):
         r"""
         Check that we can restrict to proper or non-proper subgroups only
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&proper=yes&search_type=Subgroups", "4.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&proper=no&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&proper=yes&search_type=Subgroups", "2.1.1.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&proper=no&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&proper=no&search_type=Subgroups", "4.1.2.a1.a1")
 
     def test_subgroup_ambient_label_search(self):
         r"""
@@ -324,28 +342,86 @@ class AbGpsHomeTest(LmfdbTest):
         Check that we can restrict to subgroups that are direct products
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&direct=yes&search_type=Subgroups", "4.2.2.a1.c1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&direct=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&direct=yes&search_type=Subgroups", "4.1.2.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&direct=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&direct=no&search_type=Subgroups", "4.2.2.a1.c1")
 
     def test_subgroup_semidirect_search(self):
         r"""
         Check that we can restrict to subgroups that are semidirect products
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&split=yes&search_type=Subgroups", "4.2.2.a1.c1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&split=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&split=yes&search_type=Subgroups", "4.1.2.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&split=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&split=no&search_type=Subgroups", "4.2.2.a1.c1")
 
     def test_subgroup_hall_search(self):
         r"""
         Check that we can restrict to subgroups that are Hall subgroups
         """
-        self.check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "1.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "8.5.2.a1.b1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "2.1.1.a1.a1")
 
     def test_subgroup_sylow_search(self):
         r"""
         Check that we can restrict to subgroups that are Sylow subgroups
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&sylow=yes&search_type=Subgroups", "2.1.1.a1.a1")
-        self.not_check_args("https://groups.lmfdb.xyz/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&sylow=yes&search_type=Subgroups", "8.5.2.a1.f1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "8.5.1.a1.a1")
+
+    def test_subgroup_quotient_label_search(self):
+        r"""
+        Check that we can search by quotient label
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient=16.5&search_type=Subgroups", "32.12.16.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient=16.5&search_type=Subgroups", "1.1.1.a1.a1")
+
+    def test_subgroup_index_search(self):
+        r"""
+        Check that we can search by subgroup index
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_order=17&search_type=Subgroups", "34.1.17.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_order=17&search_type=Subgroups", "1.1.1.a1.a1")
+
+    def test_subgroup_cyclic_quotient_search(self):
+        r"""
+        Check that we can restrict to subgroups with cyclic quotients
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_cyclic=yes&search_type=Subgroups", "6.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_cyclic=yes&search_type=Subgroups", "4.2.4.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_cyclic=no&search_type=Subgroups", "4.2.4.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_cyclic=no&search_type=Subgroups", "6.1.2.a1.a1")
+
+    def test_subgroup_abelian_quotient_search(self):
+        r"""
+        Check that we can restrict to subgroups with abelian quotients
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_abelian=yes&search_type=Subgroups", "1.1.1.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_abelian=no&search_type=Subgroups", "6.1.3.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_abelian=yes&search_type=Subgroups", "6.1.3.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_abelian=no&search_type=Subgroups", "1.1.1.a1.a1")
+
+    def test_subgroup_solvable_quotient_search(self):
+        r"""
+        Check that we can restrict to subgroups with solvable quotients
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_solvable=yes&search_type=Subgroups", "1.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_solvable=yes&search_type=Subgroups", "6.1.3.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&quotient_solvable=no&search_type=Subgroups", "6.1.3.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
+
+    def test_subgroup_maximal_quotient_search(self):
+        r"""
+        Check that we can restrict to subgroups with maximal quotients
+        """
+        self.check_args("/Groups/Abstract/?hst=Subgroups&minimal_normal=yes&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&minimal_normal=yes&search_type=Subgroups", "4.2.4.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&minimal_normal=no&search_type=Subgroups", "4.2.4.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&minimal_normal=no&search_type=Subgroups", "2.1.1.a1.a1")
 
 
     ## TO DO
