@@ -498,7 +498,6 @@ def arrange_ring(radii, colors, R0, rmax):
 
 def arrange_rings(radii, colors, R0, rmax):
     Rc = R0 + rmax
-    thetasum = sum(2*r*cnt / Rc for r, cnt in radii.items())
     rmax0 = rmax
     num_rings = 1
     thetaleft = 2*pi
@@ -570,7 +569,6 @@ def arrange_rings(radii, colors, R0, rmax):
             utilization += 0.1
 
 def arrange(rdata, R0, rmax):
-    Rc = R0 + rmax
     radii = Counter([r for (r, o) in rdata])
     colors = {r : Counter() for r in radii}
     for (r, o) in rdata:
@@ -578,7 +576,7 @@ def arrange(rdata, R0, rmax):
     circles, R1 = arrange_ring(radii, colors, R0, rmax)
     if circles:
         return circles, R1
-    rmin = min(radii)
+    #rmin = min(radii)
     if True: #rmax < 3 * rmin:
         # the circles are close to the same size.  We divide them up into concentric rings greedily
         return arrange_rings(radii, colors, R0, rmax)

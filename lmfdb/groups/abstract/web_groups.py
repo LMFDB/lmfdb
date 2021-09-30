@@ -42,11 +42,6 @@ def product_sort_key(sub):
         v.append(-s.count(c))
     return len(s), v
 
-def short_to_aut_label(short, outer_e):
-    if outer_e:
-        return short
-    return re.sub(r'\.[a-zA-Z0-9]+$', '', short)
-
 class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
@@ -360,7 +355,7 @@ class WebAbstractGroup(WebObj):
                     edges.append([h, g])
         else:
             nodes = []
-            edges = set()
+            edges = set() # avoid multiedges; this may not be the desired behavior
             for g in subs.values():
                 if g.short_label.endswith(".a1"):
                     nodes.append(g)

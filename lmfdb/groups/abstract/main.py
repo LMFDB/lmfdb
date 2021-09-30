@@ -23,7 +23,7 @@ from lmfdb.groups.abstract import abstract_page #, abstract_logger
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
     WebAbstractRationalCharacter, WebAbstractCharacter,
-    group_names_pretty, group_pretty_image)
+    group_names_pretty)
 from lmfdb.number_fields.web_number_field import formatfield
 
 #credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
@@ -633,7 +633,7 @@ def shortsubinfo(ambient, short_label):
     ans += '<tr><td>%s<td>' % make_knowl('Normal', 'group.subgroup.normal')
     if wsg.normal:
         ans += 'True with quotient group '
-        ans +=  '$'+group_names_pretty(wsg.quotient)+'$\n'
+        ans +=  '$'+wsg.quotient_tex+'$\n'
     else:
         ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
@@ -1142,6 +1142,7 @@ class SubgroupSearchArray(SearchArray):
             return [("Subgroups", "Search again"), ("Random", "Random subgroup")]
 
 def group_display_knowl(label, name=None, pretty=False):
+    # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
     if pretty:
         name = '$'+group_names_pretty(label)+'$'
     if not name:
