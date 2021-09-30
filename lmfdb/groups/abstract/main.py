@@ -531,8 +531,8 @@ def render_abstract_group(label):
     layers_aut = gp.subgroup_lattice_aut
     info['doautjs'] = diagram_jsaut(gp, layers_aut)
 
-    info['max_sub_cnt'] = db.gps_subgroups.count_distinct('ambient', {'subgroup': label, 'maximal': True})
-    info['max_quo_cnt'] = db.gps_subgroups.count_distinct('ambient', {'quotient': label, 'minimal_normal': True})
+    info['max_sub_cnt'] = gp.max_sub_cnt
+    info['max_quo_cnt'] = gp.max_quo_cnt
 
     title = 'Abstract group '  + '$' + gp.tex_name + '$'
 

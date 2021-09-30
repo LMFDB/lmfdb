@@ -9,7 +9,7 @@ files = [
 "lmfdb/artin_representations/test_artin_representation.py lmfdb/genus2_curves/test_genus2_curves.py",
 "lmfdb/classical_modular_forms/test_cmf.py lmfdb/classical_modular_forms/test_cmf2.py",
     "lmfdb/lfunctions/test_lfunctions.py",
-    "lmfdb/groups/abstract/test_browser_page.py lmfdb/groups/abstract/test_abstract_groups.py",
+    "lmfdb/groups/abstract/test_browse_page.py lmfdb/groups/abstract/test_abstract_groups.py",
 ]
 
 server = ["proddb", "devmirror"]
