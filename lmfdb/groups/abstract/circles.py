@@ -2,9 +2,11 @@
 
 from collections import defaultdict, Counter
 from colorsys import hsv_to_rgb
-from sage.all import RR, ZZ
+from sage.all import RR, ZZ, QQ
 from sage.misc.lazy_attribute import lazy_attribute
+from sage.misc.cachefunc import cached_function
 from itertools import combinations
+import heapq
 
 eps = RR(0.00001) # tolerance
 pi = RR.pi()
@@ -148,6 +150,7 @@ class Circle:
                 return 2 # anything bigger than 1 will delete the circle
         return 1 - dmin / self.r
 
+@cached_function
 def get_color(order):
     """
     Associate a rgb triple to a given order
@@ -410,6 +413,178 @@ def pack(rdata, R0, rmax):
             density = area / (4 * rmax * (R0 + rmax))
         density -= 0.01
 
+def arrange_ring(radii, colors, R0, rmax):
+    Rc = R0 + rmax
+    thetasum = sum(2*r*cnt / Rc for r, cnt in radii.items())
+    if thetasum > 2*pi:
+        return False, None
+    # Probably possible to put all the discs in one ring
+    # First attempt: arrange the discs with equally spaced centers
+    n = sum(radii.values())
+    thetadiff = (2*pi / n)
+    dist = Rc*(2 - 2*thetadiff.cos()).sqrt() # distance between centers in equal space case
+    if len(radii) == 1:
+        r = next(iter(radii))
+        placed = [r for i in range(n)]
+    else:
+        invcnt = {r: QQ(1) / radii[r] for r in radii}
+        # We assign radii greedily, by keeping track of the radius with the highest
+        # proportion not yet placed.  We start by alternating between big and small
+        # and smaller circles.
+        srad = sorted(radii, reverse=True)
+        srad = [srad[(-1)**i * ((i+1)//2)] for i in range(len(srad))]
+        placed = list(srad)
+        remaining = [(QQ(-1) + invcnt[srad[i]], i) for i in range(len(srad))]
+        print("Initial", remaining)
+        heapq.heapify(remaining)
+        cur = heapq.heappop(remaining)
+        while len(placed) < n:
+            print(cur, remaining)
+            placed.append(srad[cur[1]])
+            cur = heapq.heappushpop(remaining, (cur[0] + invcnt[srad[cur[1]]], cur[1]))
+    print("radii", radii)
+    print("colors", colors)
+    print(placed)
+    # Now assign colors in a similar way
+    color_placed = {}
+    for r in radii:
+        col = next(iter(colors[r]))
+        if len(colors[r]) == 1:
+            color_placed[r] = [col for i in range(radii[r])]
+        else:
+            invcnt = {c: QQ(1) / colors[r][c] for c in colors[r]}
+            color_placed[r] = [col]
+            remaining = [(QQ(-1), c) for c in colors[r] if c != col]
+            cur = (QQ(-1), col)
+            heapq.heapify(remaining)
+            while len(color_placed[r]) < radii[r]:
+                cur = heapq.heappushpop(remaining, (cur[0] + invcnt[cur[1]], cur[1]))
+                color_placed[r].append(cur[1])
+    print(color_placed)
+    if len(radii) == 1 or len(radii) == 2 and len(set(radii.values())) == 2:
+        # There will be two circles of max radii adjacent
+        equal_centers = (2*rmax < dist + eps)
+    else:
+        equal_centers = True
+        for i in range(len(placed)):
+            if placed[i] + placed[(i+1)%len(placed)] > dist + eps:
+                equal_centers = False
+                break
+    if not equal_centers:
+        theta_diffs = []
+        for i, r in enumerate(placed):
+            nextr = placed[(i+1)%len(placed)]
+            theta_diffs.append((1 - (r + nextr)**2 / (2*Rc**2)).arccos())
+        thetasum = sum(theta_diffs)
+        if thetasum > 2*pi + eps:
+            return False, None
+        thetaspace = (2*pi - thetasum) / n
+    theta = RR(0)
+    circles = []
+    for i, r in enumerate(placed):
+        c = color_placed[r].pop(0)
+        circles.append((Rc * theta.cos(), Rc * theta.sin(), r, c))
+        if not equal_centers:
+            thetadiff = theta_diffs[i] + thetaspace
+            #nextr = placed[(i+1)%len(placed)]
+            #thetadiff = (r + nextr)/Rc + thetaspace
+            ## d^2 = 2Rc^2(1-cos(thetadiff))
+            #if 2 * Rc**2 * (1 - thetadiff.cos()) > (r + nextr)**2 + eps:
+            #    # need to use more than one ring
+            #    print(f"{i}/{len(placed)}", thetaspace, thetadiff, 2 * Rc**2 * (1 - thetadiff.cos()), (r + nextr)**2)
+            #    return False, None
+        theta += thetadiff
+    return circles, Rc + rmax
+
+def arrange_rings(radii, colors, R0, rmax):
+    Rc = R0 + rmax
+    thetasum = sum(2*r*cnt / Rc for r, cnt in radii.items())
+    rmax0 = rmax
+    num_rings = 1
+    thetaleft = 2*pi
+    # We first need to get a count of how many rings to use.  We greedily assign discs to annuli
+    for r, cnt in sorted(radii.items(), reverse=True):
+        # (2*r)^2 = 2*R^2*(1-cos(theta))
+        thetaneeded = (1 - 2*r**2 / Rc**2).arccos()
+        while thetaneeded * cnt > thetaleft:
+            cnt -= (thetaleft / thetaneeded).floor()
+            num_rings += 1
+            thetaleft = 2*pi
+            Rc += rmax + r
+            rmax = r
+            thetaneeded = (1 - 2*r**2 / Rc**2).arccos()
+        thetaleft -= thetaneeded * cnt
+    utilization = min((num_rings - thetaleft/(2*pi)) / num_rings, 1)
+    while True:
+        rmax = rmax0
+        rings = [(Counter(), defaultdict(Counter), R0, rmax)]
+        Rc = R0 + rmax
+        thetaleft = 2*pi * utilization
+        for r, cnt in sorted(radii.items(), reverse=True):
+            thetaneeded = (1 - 2*r**2 / Rc**2).arccos()
+            rcolors = Counter(colors[r])
+            #orderlist = [o for (o, ocnt) in sorted(orders.items(), reverse=True) for j in range(ocnt)]
+            while thetaneeded * cnt > thetaleft:
+                this_ring = (thetaleft / thetaneeded).floor()
+                if this_ring > 0:
+                    cnt -= this_ring
+                    rings[-1][0][r] += this_ring
+                    for c, ccnt in sorted(rcolors.items(), reverse=True):
+                        if ccnt <= this_ring:
+                            rings[-1][1][r][c] += ccnt
+                            rcolors.pop(c)
+                        else:
+                            rings[-1][1][r][c] += this_ring
+                            rcolors[c] -= this_ring
+                            break
+                        this_ring -= ccnt
+                R0 += 2*rmax
+                rings.append((Counter(), defaultdict(Counter), R0, r))
+                thetaleft = 2*pi * (1 if len(rings) == num_rings else utilization)
+                Rc += rmax + r
+                rmax = r
+                thetaneeded = (1 - 2*r**2 / Rc**2).arccos()
+            rings[-1][0][r] += cnt
+            rings[-1][1][r].update(rcolors)
+            thetaleft -= thetaneeded * cnt
+        print("rings", num_rings, utilization, rings)
+        if len(rings) == num_rings or utilization == 1:
+            rings = [arrange_ring(*ring)[0] for ring in rings]
+            print("rings2", rings)
+            if all(isinstance(ring, list) for ring in rings): # all succeeded
+                return sum(rings, []), Rc + rmax
+        # If we require inner rings to not be fully utilized,
+        # that might not leave enough space in outer rings
+        print("num_rings", num_rings, utilization)
+        raise RuntimeError
+        if utilization == 1:
+            # This can happen because we were packing equal size circles together in estimating
+            # utilization, but when calling arrange_ring we alternate which is less space
+            # efficient.
+            num_rings += 1
+            utilization = 0.7
+        elif utilization > 0.9:
+            # just use all the space we have
+            utilization = 1
+        else:
+            utilization += 0.1
+
+def arrange(rdata, R0, rmax):
+    Rc = R0 + rmax
+    radii = Counter([r for (r, o) in rdata])
+    colors = {r : Counter() for r in radii}
+    for (r, o) in rdata:
+        colors[r][get_color(o)] += 1
+    circles, R1 = arrange_ring(radii, colors, R0, rmax)
+    if circles:
+        return circles, R1
+    rmin = min(radii)
+    if True: #rmax < 3 * rmin:
+        # the circles are close to the same size.  We divide them up into concentric rings greedily
+        return arrange_rings(radii, colors, R0, rmax)
+    # Fall back for now
+    return pack(rdata, R0, rmax)
+
 def find_packing(ccdata):
     """
     INPUT:
@@ -421,11 +596,9 @@ def find_packing(ccdata):
     - a list of tuples `(x, y, r, rgb)` giving centers `(x, y)`, radii `r` and color triple `rgb` for the image associated to this conjugacy class data
     - a real number `R` so that all circles will be contained within the box [-R, R] x [-R, R]
     """
-    total = 0
     by_pcount = defaultdict(list)
     for (n, o) in ccdata:
         n, o = ZZ(n), ZZ(o)
-        total += n
         if o != 1:
             by_pcount[sum(e for (p, e) in o.factor())].append((get_radius(n), o))
     r0 = R = get_radius(1)
@@ -436,10 +609,6 @@ def find_packing(ccdata):
         r1 = max(r for (r, o) in annulus)
         R += max(r0, r1)
         r0 = r1
-        new_circles, R = pack(annulus, R, r0)
+        new_circles, R = arrange(annulus, R, r0)
         circles.extend(new_circles)
     return circles, R
-
-#def find_arrangement(ccdata):
-    # Same goal as find_packing, but a slightly different approach.
-    # Rather than trying to pack circles as densely as possible, we aim to put them in rings.

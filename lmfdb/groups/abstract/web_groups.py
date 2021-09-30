@@ -615,7 +615,7 @@ class WebAbstractGroup(WebObj):
         return self.subgroups[self.cent()].quotient_tex
 
     def cent_order_factor(self):
-        return (self.order // ZZ(self.comm().split('.')[0])).factor()
+        return (self.order // ZZ(self.cent().split('.')[0])).factor()
 
     def comm(self):
         return self.special_search('D')
