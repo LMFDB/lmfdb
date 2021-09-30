@@ -155,9 +155,9 @@ class AbGpsHomeTest(LmfdbTest):
         Check that we can restrict to cyclic or non-cyclic groups only
         """
         self.check_args("/Groups/Abstract/?order=24&cyclic=yes", "24.2")
-        self.check_args("/Groups/Abstract/?order=24&cylic=no", "24.3")
-        self.not_check_args("/Groups/Abstract/?order=24&cyclic=no", "24.2")
+        self.check_args("/Groups/Abstract/?order=24&cyclic=no", "24.3")
         self.not_check_args("/Groups/Abstract/?order=24&cyclic=yes", "24.4")
+        self.not_check_args("/Groups/Abstract/?order=24&cyclic=no", "24.2")
 
 
     def test_simple_search(self):
@@ -249,7 +249,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?hst=Subgroups&cyclic=yes&search_type=Subgroups", "2.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?hst=Subgroups&cyclic=yes&search_type=Subgroups", "4.2.1.a1.a1")
         self.check_args("/Groups/Abstract/?hst=Subgroups&cyclic=no&search_type=Subgroups", "4.2.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&cyclic=no&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&cyclic=no&search_type=Subgroups", "8.5.4.a1.b1")
 
     def test_subgroup_abelian_search(self):
         r"""
@@ -359,19 +359,19 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to subgroups that are Hall subgroups
         """
-        self.check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "1.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "4.1.2.a1.a1")
+        self.check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=yes&search_type=Subgroups", "8.5.2.a1.b1")
         self.check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "4.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "1.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&hall=no&search_type=Subgroups", "2.1.1.a1.a1")
 
     def test_subgroup_sylow_search(self):
         r"""
         Check that we can restrict to subgroups that are Sylow subgroups
         """
         self.check_args("/Groups/Abstract/?hst=Subgroups&sylow=yes&search_type=Subgroups", "2.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&sylow=yes&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&sylow=yes&search_type=Subgroups", "8.5.2.a1.f1")
         self.check_args("/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "4.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?hst=Subgroups&sylow=no&search_type=Subgroups", "8.5.1.a1.a1")
 
     def test_subgroup_quotient_label_search(self):
         r"""
