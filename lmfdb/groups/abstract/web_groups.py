@@ -163,7 +163,7 @@ class WebAbstractGroup(WebObj):
     def subgroup_profile(self):
         by_order = defaultdict(Counter)
         for s in self.subgroups.values():
-            by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += 1
+            by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += s.conjugacy_class_count
         return by_order
 
     @lazy_attribute
