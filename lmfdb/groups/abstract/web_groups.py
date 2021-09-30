@@ -31,8 +31,7 @@ def group_pretty_image(label):
     img = db.gps_images.lookup('?', 'image')
     if img:
         return str(img)
-    else: # we should not get here
-        return None
+    # we should not get here
 
 def product_sort_key(sub):
     s = sub.subgroup_tex_parened + sub.quotient_tex_parened
@@ -101,11 +100,6 @@ class WebAbstractGroup(WebObj):
         return {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata)
                 for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
-    @lazy_attribute
-    def subgroups_up_to_aut(self):
-        return {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata)
-                for subdata in db.gps_subgroups.search({'ambient': self.label}, one_per=["aut_label"])}
-
     # special subgroups
     def special_search(self, sp):
         for lab, gp in self.subgroups.items():
@@ -167,25 +161,19 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroup_profile(self):
-        subs = db.gps_subgroups.search({'ambient': self.label})
-        by_order = {}  # a dictionary of Counters
-        for s in subs:
-            cntr = by_order.get(s['subgroup_order'], Counter())
-            cntr.update({s['subgroup']:1})
-            by_order[s['subgroup_order']] = cntr
+        by_order = defaultdict(Counter)
+        for s in self.subgroups.values():
+            by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += 1
         return by_order
 
     @lazy_attribute
     def subgroup_autprofile(self):
-        subs = db.gps_subgroups.search({'ambient': self.label})
-        seen = set([])
-        by_order = {}  # a dictionary of Counters
-        for s in subs:
-            if s['aut_label'] not in seen:
-                cntr = by_order.get(s['subgroup_order'], Counter())
-                cntr.update({s['subgroup']:1})
-                by_order[s['subgroup_order']] = cntr
-                seen.add(s['aut_label'])
+        seen = set()
+        by_order = defaultdict(Counter)
+        for s in self.subgroups.values():
+            if s.aut_label not in seen:
+                by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += 1
+                seen.add(s.aut_label)
         return by_order
 
     @lazy_attribute
@@ -348,8 +336,10 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def subgroup_lattice(self):
         # Need to update to account for possibility of not having all inclusions
+        if self.outer_equivalence:
+            raise RuntimeError("Subgroups not known up to conjugacy")
         subs = self.subgroups
-        nodes = [z for z in subs.values()]
+        nodes = list(subs.values())
         edges = []
         for g in subs:
             for h in subs[g].contains:
@@ -360,17 +350,31 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def subgroup_lattice_aut(self):
         # Need to update to account for possibility of not having all inclusions
-        # Make a dictionary to translate aut_label to short_label
-        subs = self.subgroups_up_to_aut
-        nodes = [z for z in subs.values()]
-        labeldict = {subs[z].aut_label: subs[z].short_label for z in subs}
-
-        edges = []
-        for g in subs:
-            for h in subs[g].contains:
-                haut = short_to_aut_label(h, self.outer_equivalence)
-                edges.append([labeldict[haut], g])
+        # It would be better to add pages for subgroups up to automorphism with links to the conjugacy classes within
+        subs = self.subgroups
+        if self.outer_equivalence:
+            nodes = list(subs.values())
+            edges = []
+            for g in subs:
+                for h in subs[g].contains:
+                    edges.append([h, g])
+        else:
+            nodes = []
+            edges = set()
+            for g in subs.values():
+                if g.short_label.endswith(".a1"):
+                    nodes.append(g)
+                glabel = g.aut_label + ".a1"
+                for h in g.contains:
+                    hlabel = ".".join(h.split(".")[:-1]) + ".a1"
+                    edges.add((hlabel, glabel))
+            edges = [list(edge) for edge in edges]
         return [nodes, edges]
+
+    @lazy_attribute
+    def tex_images(self):
+        all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
+        return {rec["label"]: rec["image"] for rec in db.gps_images.search({"label": {"$in": all_tex}}, ["label", "image"])}
 
     def sylow_subgroups(self):
         """
@@ -660,11 +664,11 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def max_sub_cnt(self):
-        return db.gps_subgroups.count_distinct('ambient', {'subgroup': self.label, 'maximal': True})
+        return db.gps_subgroups.count_distinct('ambient', {'subgroup': self.label, 'maximal': True}, record=False)
 
     @lazy_attribute
     def max_quo_cnt(self):
-        return db.gps_subgroups.count_distinct('ambient', {'quotient': self.label, 'minimal_normal': True})
+        return db.gps_subgroups.count_distinct('ambient', {'quotient': self.label, 'minimal_normal': True}, record=False)
 
     @staticmethod
     def sparse_cyclotomic_to_latex(n, dat):

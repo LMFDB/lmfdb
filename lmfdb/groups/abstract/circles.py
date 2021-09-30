@@ -435,16 +435,16 @@ def arrange_ring(radii, colors, R0, rmax):
         srad = [srad[(-1)**i * ((i+1)//2)] for i in range(len(srad))]
         placed = list(srad)
         remaining = [(QQ(-1) + invcnt[srad[i]], i) for i in range(len(srad))]
-        print("Initial", remaining)
+        #print("Initial", remaining)
         heapq.heapify(remaining)
         cur = heapq.heappop(remaining)
         while len(placed) < n:
-            print(cur, remaining)
+            #print(cur, remaining)
             placed.append(srad[cur[1]])
             cur = heapq.heappushpop(remaining, (cur[0] + invcnt[srad[cur[1]]], cur[1]))
-    print("radii", radii)
-    print("colors", colors)
-    print(placed)
+    #print("radii", radii)
+    #print("colors", colors)
+    #print(placed)
     # Now assign colors in a similar way
     color_placed = {}
     for r in radii:
@@ -460,7 +460,7 @@ def arrange_ring(radii, colors, R0, rmax):
             while len(color_placed[r]) < radii[r]:
                 cur = heapq.heappushpop(remaining, (cur[0] + invcnt[cur[1]], cur[1]))
                 color_placed[r].append(cur[1])
-    print(color_placed)
+    #print(color_placed)
     if len(radii) == 1 or len(radii) == 2 and len(set(radii.values())) == 2:
         # There will be two circles of max radii adjacent
         equal_centers = (2*rmax < dist + eps)
@@ -547,15 +547,15 @@ def arrange_rings(radii, colors, R0, rmax):
             rings[-1][0][r] += cnt
             rings[-1][1][r].update(rcolors)
             thetaleft -= thetaneeded * cnt
-        print("rings", num_rings, utilization, rings)
+        #print("rings", num_rings, utilization, rings)
         if len(rings) == num_rings or utilization == 1:
             rings = [arrange_ring(*ring)[0] for ring in rings]
-            print("rings2", rings)
+            #print("rings2", rings)
             if all(isinstance(ring, list) for ring in rings): # all succeeded
                 return sum(rings, []), Rc + rmax
         # If we require inner rings to not be fully utilized,
         # that might not leave enough space in outer rings
-        print("num_rings", num_rings, utilization)
+        #print("num_rings", num_rings, utilization)
         raise RuntimeError
         if utilization == 1:
             # This can happen because we were packing equal size circles together in estimating
@@ -582,7 +582,7 @@ def arrange(rdata, R0, rmax):
     if True: #rmax < 3 * rmin:
         # the circles are close to the same size.  We divide them up into concentric rings greedily
         return arrange_rings(radii, colors, R0, rmax)
-    # Fall back for now
+    # Fall back for now; look at 310.4 for an example
     return pack(rdata, R0, rmax)
 
 def find_packing(ccdata):

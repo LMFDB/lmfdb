@@ -490,26 +490,16 @@ def factor_latex(n):
     return '$%s$' % web_latex(factor(n), False)
 
 def diagram_js(gp, layers):
-    ll = [["%s"%str(grp.subgroup), grp.short_label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layers[0]]
-    subs = gp.subgroups
-    orders = list(set(sub.subgroup_order for sub in subs.values()))
-    orders.sort()
+    ll = [[grp.subgroup, grp.short_label, grp.subgroup_tex, grp.count, grp.subgroup_order, gp.tex_images.get(grp.subgroup_tex, gp.tex_images['?']), grp.diagram_x] for grp in layers[0]]
+    orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
 
-    myjs = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(gp.label)
-    myjs += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-    myjs += ');'
-    return myjs
+    return f'var sdiagram = make_sdiagram("subdiagram", "{gp.label}",{ll},{layers[1]},{orders});'
 
 def diagram_jsaut(gp, layers):
-    ll = [["%s"%str(grp.subgroup), grp.short_label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layers[0]]
-    subs = gp.subgroups
-    orders = list(set(sub.subgroup_order for sub in subs.values()))
-    orders.sort()
+    ll = [[grp.subgroup, grp.short_label, grp.subgroup_tex, grp.count, grp.subgroup_order, gp.tex_images.get(grp.subgroup_tex, gp.tex_images['?']), grp.diagram_aut_x] for grp in layers[0]]
+    orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
 
-    myjs = 'var sautdiagram = make_sdiagram("autdiagram", "%s",'% str(gp.label)
-    myjs += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-    myjs += ');'
-    return myjs
+    return f'var sautdiagram = make_sdiagram("autdiagram", "{gp.label}",{ll},{layers[1]},{orders});'
 
 #Writes individual pages
 def render_abstract_group(label):
@@ -524,10 +514,10 @@ def render_abstract_group(label):
     info['boolean_characteristics_string']=create_boolean_string(gp)
 
     prof = list(gp.subgroup_profile.items())
-    prof.sort(key=lambda z: - z[0]) # largest to smallest
+    prof.sort(key=lambda z: -z[0]) # largest to smallest
     info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
     autprof = list(gp.subgroup_autprofile.items())
-    autprof.sort(key=lambda z: - z[0]) # largest to smallest
+    autprof.sort(key=lambda z: -z[0]) # largest to smallest
     info['subgroup_autprofile'] = [(z[0], display_profile_line(z[1])) for z in autprof]
     # prepare for javascript call to make the diagram
     if gp.diagram_ok and not gp.outer_equivalence:
@@ -776,10 +766,10 @@ def download_group(**args):
 
 
 def display_profile_line(data):
-    datad = dict(data)
     l = []
-    for ky in sorted(datad, key=datad.get, reverse=True):
-        l.append(group_display_knowl(ky, pretty=True)+ (' x '+str(datad[ky]) if datad[ky]>1 else '' ))
+    for label, tex in sorted(data, key=data.get, reverse=True):
+        cnt = data[label, tex]
+        l.append(group_display_knowl(label, name=f'${tex}$') + (' x ' + str(cnt) if cnt > 1 else '' ))
     return ', '.join(l)
 
 class GroupsSearchArray(SearchArray):
