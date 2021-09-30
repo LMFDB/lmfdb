@@ -92,7 +92,7 @@ def get_bread(tail=[]):
 
 
 #function to create string of group characteristics
-def create_boolean_string(gp, short_string=False):
+def create_boolean_string(gp, type="normal"):
     # We totally order the properties in two ways: by the order that they should be listed overall,
     # and by the order they should be listed in implications
     # For the first order, it's important that A come before B whenever A => B
@@ -104,6 +104,8 @@ def create_boolean_string(gp, short_string=False):
     impl_order = ["abelian", "nilpotent", "solvable", "supersolvable", "monomial",
                   "nonsolvable", "is_elementary", "is_hyperelementary", "metacyclic",
                   "metabelian", "Zgroup", "Agroup", "perfect", "quasisimple", "almost_simple"]
+    short_shows = set(["cyclic", "abelian", "nonabelian", "nilpotent", "solvable", "nab_simple", "nonsolvable", "perfect"])
+    short_string = (type != "normal")
 
     # Implications should give edges of a DAG, and should be listed in the group.properties_interdependencies knowl
     implications = {"cyclic": ["abelian", "is_elementary", "Zgroup"],
@@ -149,7 +151,7 @@ def create_boolean_string(gp, short_string=False):
     elif gp.hyperelementary: # Now hyperelementary is a top level implication
         hyperelementaryp = f" for $p = {hyperelementaryp}$"
     # otherwise the strings above are a bit messed up, but won't be used.
-    D = overall_display = {
+    overall_display = {
         "cyclic": display_knowl('group.cyclic', 'cyclic'),
         "abelian": display_knowl('group.abelian','abelian'),
         "nonabelian": display_knowl('group.abelian', "nonabelian"),
@@ -176,7 +178,7 @@ def create_boolean_string(gp, short_string=False):
     if gp.order == 1:
         overall_display["pgroup"] += " (for every $p$)"
     # Mostly we display things the same in implication lists, but there are a few extra parentheses
-    impl_display = dict(overall_display)
+    D = impl_display = dict(overall_display)
     impl_display["nilpotent"] = f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})"
     impl_display["solvable"] = f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})"
     assert set(overall_display) == set(impl_display) == set(overall_order)
@@ -190,46 +192,54 @@ def create_boolean_string(gp, short_string=False):
         else:
             return ", ".join(proplist[:-1]) + f", and {proplist[-1]}"
 
-    if short_string:
+    if False: #short_string:
         if gp.cyclic:
             if gp.simple:
-                strng = f"{D['cyclic']}, {D['solvable']}, and {D['ab_simple']}"
+                return f"{D['cyclic']}, {D['solvable']}, and {D['ab_simple']}"
             else:
-                strng = f"{D['cyclic']} and {D['solvable']}"
+                return f"{D['cyclic']} and {D['solvable']}"
 
         elif gp.abelian:
-            strng = "{D['abelian']} and {D['solvable']}"
+            return f"{D['abelian']} and {D['solvable']}"
 
         else:
             strng = D['nonabelian']
             if gp.solvable and gp.perfect:
-                strng += f", {D['solvable']}, and {D['perfect']}"
+                return strng + f", {D['solvable']}, and {D['perfect']}"
             elif gp.solvable:
-                strng += f" and {D['solvable']}"
+                return strng + f" and {D['solvable']}"
             elif gp.perfect:
-                strng += f", {D['nonsolvable']}, and {D['perfect']}"
+                return strng + f", {D['nonsolvable']}, and {D['perfect']}"
             else:
-                strng += f" and {D['nonsolvable']}"
+                return strng + f" and {D['nonsolvable']}"
     else:
         props = []
         noted = set()
         for prop in overall_order:
-            if not getattr(gp, prop) or prop in noted:
+            if not getattr(gp, prop) or prop in noted or short_string and prop not in short_shows:
                 continue
             noted.add(prop)
             impl = [B for B in implications.get(prop, []) if B not in noted]
             cur = 0
             while cur < len(impl):
-                impl.extend([B for B in implications.get(impl[cur], []) if B not in impl and B not in noted])
+                impl.extend([B for B in implications.get(impl[cur], [])
+                             if B not in impl and
+                             B not in noted])
                 cur += 1
             noted.update(impl)
-            impl = [impl_display[B] for B in impl_order if B in impl]
+            impl = [impl_display[B] for B in impl_order if B in impl and (not short_string or B in short_shows)]
             if impl:
                 props.append(f"{overall_display[prop]} ({hence_str} {display_props(impl)})")
             else:
                 props.append(overall_display[prop])
-        return f"This group is {display_props(props)}."
-
+        if type == "ambient":
+            return f"The ambient group is {display_props(props)}."
+        elif type == "subgroup":
+            return f"The subgroup is {display_props(props)}"
+        elif type == "quotient":
+            return f"The quotient is {display_props(props)}"
+        else:
+            return f"This group is {display_props(props)}."
 
 def url_for_label(label):
     if label == "random":
@@ -1265,7 +1275,7 @@ def sub_data(label):
 def group_data(label):
     gp = WebAbstractGroup(label)
     ans = 'Group ${}$: '.format(gp.tex_name)
-    ans += create_boolean_string(gp, short_string=True)
+    ans += create_boolean_string(gp, type="knowl")
     ans += '<br />Order: {}<br />'.format(gp.order)
     ans += 'Gap small group number: {}<br />'.format(gp.counter)
     ans += 'Exponent: {}<br />'.format(gp.exponent)
