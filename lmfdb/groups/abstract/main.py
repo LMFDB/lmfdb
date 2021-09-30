@@ -358,13 +358,13 @@ def sub_diagram(label):
     if gp.is_null():
         flash_error( "No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    layers = gp.subgroup_lattice
-    maxw = max([len(z) for z in layers[0]])
-    h = 160*(len(layers[0])-1)
+    
+    maxw = max(len(z) for z in gp.subgroup_profile.values())
+    h = 160*len(gp.subgroup_profile)
     h = min(h, 1000)
     w = 200*maxw
     w = min(w,1500)
-    info = {'dojs': diagram_js(gp,layers), 'w': w, 'h': h}
+    info = {'dojs': diagram_js(gp, gp.subgroup_lattice), 'w': w, 'h': h}
     return render_template("diagram_page.html", 
         info=info,
         title="Subgroup diagram for %s" % label,
