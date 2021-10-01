@@ -236,12 +236,13 @@ class Renderer {
         var ctxt = this.ctx;
         var img = node.image;
 
+        var textwidth = ctxt.measureText(node.ccsize).width;
         if(! node.ready) {
           img.onload = function() {
             node.ready=true;
             ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
             if(node.ccsize>1) {
-              ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
+              ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-textwidth, 12+node.center[1]);
             };
           };
         } else {
@@ -261,7 +262,7 @@ class Renderer {
         this.ctx.strokeStyle = 'black';
         this.ctx.fillStyle = 'black';
         if(node.ccsize>1) {
-          ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
+          ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-textwidth, 12+node.center[1]);
         }
       }
     }
