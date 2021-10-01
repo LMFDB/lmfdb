@@ -3,39 +3,45 @@
 
 {% block content %}
 
-<h2> Subgroup Information</h2>
+<h2> Subgroup ($H$) information</h2>
 <p>
   <table>
     <tr><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.subgroup_order)}} </td></tr>
     <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.sub.exponent)}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>{{seq.sub.show_aut_group()|safe}}</td></tr>
-    <tr><td>Outer Automorphisms:</td><td>{{seq.sub.show_outer_group()|safe}}</td></tr>
-    {# <tr><td>{{KNOWL('group.weyl_group',title='Weyl Group:')}}</td><td>${{seq.weyl_group_.tex_name}}$</td></tr> #}
+{# Bug in generator Magma code, so hiding for now
+    <tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td> ${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>
+#}
   </table>
 </p>
 
 
 <p>
-  {{info.create_boolean_string(seq.sub, type="subgroup") | safe}}
+  {{info.create_boolean_subgroup_string(seq) | safe}}
 </p>
+{# Special subgroups are now shown in the boolean string; we omit the series
 {% set spec_lab = seq.show_special_labels() %}
 {% if spec_lab %}
 <p>
   {{spec_lab | safe}}
 </p>
 {% endif %}
+#}
 
-<h2> {{KNOWL('group.ambient', 'Ambient group information')}} </h2>
+<h2> {{KNOWL('group.ambient', 'Ambient group ($G$) information')}} </h2>
 
 <p>
   <table>
     <tr><td><a href="{{url_for('.by_label', label=seq.ambient)}}">${{seq.ambient_tex}}$</a></td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.ambient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.amb.exponent)}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>{{seq.amb.show_aut_group()|safe}}</td></tr>
-    <tr><td>Outer Automorphisms:</td><td>{{seq.amb.show_outer_group()|safe}}</td></tr>
+{# Bug in generator Magma code, so hiding for now
+    <tr>
+      <td>{% if seq.amb.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
+      <td>{% if seq.amb.abelian and not seq.amb.cyclic %}Abelian group {% endif %}${{seq.amb.presentation()}}$</td>
+    </tr>
+#}
   </table>
 </p>
 
@@ -44,14 +50,14 @@
 </p>
 
 {% if seq.normal %}
-<h2> Quotient group structure </h2>
+<h2> Quotient group ($Q$) structure </h2>
 
 <p>
   <table>
     <tr><td><a href="{{url_for('.by_label', label=seq.quotient)}}">${{seq.quotient_tex}}$</a></td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.quo.exponent)}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>{{seq.quo.show_aut_group()|safe}}</td></tr>
+    <tr><td>Automorphism Group:</td>
     <tr><td>Outer Automorphisms:</td><td>{{seq.quo.show_outer_group()|safe}}</td></tr>
   </table>
 </p>
@@ -59,7 +65,41 @@
 <p>
   {{info.create_boolean_string(seq.quo, type="quotient") | safe}}
 </p>
+{% elif seq.coset_action_label is not none %}
+<h2> Quotient set structure </h2>
+<p>
+  Since this subgroup has trivial {{KNOWL('group.core', 'core')}}, the ambient group $G$ acts faithfully and transitively on the set of cosets of $H$.  The resulting permutation representation is isomorphic to <a href="{{url_for('galois_groups.by_label', label=seq.coset_action_label)}}">{{seq.coset_action_label}}</a>.
+</p>
 {% endif %}
+
+<h2> Automorphism information </h2>
+
+<p>
+  {% if seq.characteristic %}
+  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the Weyl group $W = G / Z_G(H)$: the quotient by the centralizer of $H$.
+  {% set S = "\operatorname{Aut}(G)" %}
+  {% else %}
+  While the subgroup $H$ is not {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the stabilizer $S$ of $H$ in the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : S \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphisms')}} $\operatorname{Inn}(G) \cap S$ is the Weyl group $W = N_G(H) / Z_G(H)$: the quotient of the {{KNOWL('group.subgroup.normalizer', 'normalizer')}} of $H$ by its {{KNOWL('group.centralizer', 'centralizer')}}.
+  {% set S = "S" %}
+  {% endif %}
+  <table>
+    <tr><td>$\operatorname{Aut}(G)$</td><td>{{seq.amb.show_aut_group()|safe}}</td></tr>
+    <tr><td>$\operatorname{Aut}(H)$</td><td>{{seq.sub.show_aut_group()|safe}}</td></tr>
+    {% if seq.aut_weyl_group is not none %}
+      <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order ${{seq.aut_weyl.order_factor()}}$</td></tr>
+    {% elif seq.aut_weyl_index is not none %}
+      <tr><td>#$\operatorname{res}({{S}})$</td><td>{{seq.sub.aut_order / seq.aut_weyl_index}}</td></tr>
+    {% endif %}
+    {% if seq.aut_centralizer_order is not none %}
+      <tr><td>#$\operatorname{ker}(\operatorname{res})$</td><td>${{seq.aut_centralizer_order}}$</td></tr>
+    {% endif %}
+    {% if seq.weyl_group is not none %}
+      <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order ${{seq.weyl.order_factor()}}$</td></tr>
+    {% else %}
+      <tr><td>#$W$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
+    {% endif %}
+  </table>
+</p>
 
 <h2> Related subgroups </h2>
 
@@ -75,10 +115,33 @@
     <tr><td>{{KNOWL('group.subgroup.complement', 'Complements:')}}</td><td>{% for comp in seq.complements_ %}<a href="{{url_for('.by_subgroup_label', label=comp.label)}}">${{comp.subgroup_tex}}$</a> {% endfor %}</td></tr>
     {% endif %}
     {% if seq.contained_in %}
-    <tr><td>{{KNOWL('group.over_subgroup', 'Minimal over-subgroups:')}}</td><td>{% for H in seq.contained_in_ %}<a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a> {% endfor %}</td></tr>
+    <tr><td>{{KNOWL('group.over_subgroup', 'Minimal over-subgroups:')}}</td>{% for H in seq.contained_in_ %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a></td>{% endfor %}</tr>
     {% endif %}
     {% if seq.contains %}
-    <tr><td>{{KNOWL('group.under_subgroup', 'Maximal under-subgroups:')}}</td><td>{% for H in seq.contains_ %}<a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a> {% endfor %}</td></tr>
+    <tr><td>{{KNOWL('group.under_subgroup', 'Maximal under-subgroups:')}}</td>{% for H in seq.contains_ %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a></td>{% endfor %}</tr>
+    {% endif %}
+    {% if not seq.outer_equivalence %}
+      {% set others = seq.autjugate_subgroups() %}
+      {% if others %}
+        <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}</td>{% for H in others %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">{{H.label}}</a></td>{% endfor %}</tr>
+      {% endif %}
+    {% endif %}
+  </table>
+</p>
+
+<h2> Other information </h2>
+
+<p>
+  <table>
+    {% if seq.count != 1 %}
+    <tr><td>Number of subgroups in this {% if seq.outer_equivalence %}{{KNOWL('group.autjugate_subgroups', 'autjugacy class')}}{% else %}conjugacy class{% endif %}</td><td>${{seq.count}}$</td></tr>
+    {% endif %}
+    {% if seq.outer_equivalence %}
+      <tr><td>Number of conjugacy classes in this autjugacy class</td><td>${{seq.conjugacy_class_count}}$</td></tr>
+    {% endif %}
+    <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td>${{seq.mobius_function}}$</td></tr>
+    {% if seq.projective_image is not none %}
+    <tr><td>{{KNOWL('group.subgroup.projective_image', 'Projective image')}}</td><td><a href="{{url_for('.by_label', label=seq.projective_image)}}">${{seq.proj_img.tex_name}}$</a></td></tr>
     {% endif %}
   </table>
 </p>

@@ -107,10 +107,84 @@ def find_props(gp, overall_order, impl_order, overall_display, impl_display, imp
             props.append(overall_display[prop])
     return props
 
-def create_boolean_subgroup_string(sgp):
+group_prop_implications = {
+    "cyclic": ["abelian", "is_elementary", "Zgroup"],
+    "abelian": ["nilpotent", "Agroup", "metabelian"],
+    "pgroup": ["nilpotent", "is_elementary"],
+    "is_elementary": ["nilpotent", "is_hyperelementary"],
+    "nilpotent": ["supersolvable"], # for finite groups
+    "Zgroup": ["Agroup", "metacyclic"], # metacyclic for finite groups
+    "metacyclic": ["metabelian", "supersolvable"],
+    "supersolvable": ["monomial"], # for finite groups
+    "is_hyperelementary": ["monomial"],
+    "monomial": ["solvable"],
+    "metabelian": ["solvable"],
+    "nab_simple": ["quasisimple", "almost_simple"],
+    "quasisimple": ["nab_perfect"],
+    "nab_perfect": ["nonsolvable"],
+}
+
+def get_group_prop_display(gp):
+    # We want elementary and hyperelementary to display which primes, but only once
+    elementaryp = ','.join(str(p) for (p, e) in ZZ(gp.elementary).factor())
+    hyperelementaryp = ','.join(str(p) for (p, e) in ZZ(gp.hyperelementary).factor() if not p.divides(gp.elementary))
+    if gp.order == 1: # here it will be implied from cyclic, so both are in the implication list
+        elementaryp = " (for every $p$)"
+        hyperelementaryp = ""
+    elif gp.pgroup: # We don't display p since there's only one in play
+        elementaryp = hyperelementaryp = ""
+    elif gp.cyclic: # both are in the implication list
+        elementaryp = f' ($p = {elementaryp}$)'
+        if gp.elementary == gp.hyperelementary:
+            hyperelementaryp = ""
+        else:
+            hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
+    elif gp.is_elementary: # Now elementary is a top level implication
+        elementaryp = f' for $p = {elementaryp}$'
+        if gp.elementary == gp.hyperelementary:
+            hyperelementaryp = ""
+        else:
+            hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
+    elif gp.hyperelementary: # Now hyperelementary is a top level implication
+        hyperelementaryp = f" for $p = {hyperelementaryp}$"
+    overall_display = {
+        "cyclic": display_knowl('group.cyclic', 'cyclic'),
+        "abelian": display_knowl('group.abelian','abelian'),
+        "nonabelian": display_knowl('group.abelian', "nonabelian"),
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} of class {gp.nilpotency_class}",
+        "supersolvable": display_knowl('group.supersolvable', "supersolvable"),
+        "monomial": display_knowl('group.monomial', "monomial"),
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {gp.derived_length}",
+        "nonsolvable": display_knowl('group.solvable', "nonsolvable"),
+        "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
+        "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
+        "metacyclic": display_knowl('group.metacyclic', "metacyclic"),
+        "metabelian": display_knowl('group.metabelian', "metabelian"),
+        "quasisimple": display_knowl('group.quasisimple', "quasisimple"),
+        "almost_simple": display_knowl('group.almost_simple', "almost simple"),
+        "ab_simple": display_knowl('group.simple', "simple"),
+        "nab_simple": display_knowl('group.simple', "simple"),
+        "ab_perfect": display_knowl('group.perfect', "perfect"),
+        "nab_perfect": display_knowl('group.perfect', "perfect"),
+        "rational": display_knowl('group.rational_group', "rational"),
+        "pgroup": f"a {display_knowl('group.pgroup', '$p$-group')}",
+        "is_elementary": display_knowl('group.elementary', 'elementary') + elementaryp,
+        "is_hyperelementary": display_knowl('group.hyperelementary', "hyperelementary") + hyperelementaryp,
+    }
+    # We display a few things differently for trivial groups
+    if gp.order == 1:
+        overall_display["pgroup"] += " (for every $p$)"
+    return overall_display
+
+def get_group_impl_display(gp):
+    # Mostly we display things the same in implication lists, but there are a few extra parentheses
+    return {
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})",
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})"
+    }
+
+def create_boolean_subgroup_string(sgp, type="normal"):
     # We put direct and semidirect after normal since (hence normal) seems weird there, even if correct
-    overall_order = ["thecenter", "thecommutator", "thefrattini", "thefitting", "theradical", "thesocle", "characteristic", "normal", "maximal", "direct", "semidirect", "cyclic", "stem", "central", "abelian", "nonabelian", "is_sylow", "is_hall", "nilpotent", "solvable", "nab_perfect", "nonsolvable"]
-    impl_order = ["characteristic", "normal", "abelian", "central", "nilpotent", "solvable", "is_hall"]
     implications = {
         "thecenter": ["characteristic", "central"],
         "thecommutator": ["characteristic"],
@@ -126,8 +200,33 @@ def create_boolean_subgroup_string(sgp):
         "is_sylow": ["is_hall", "nilpotent"],
         "nilpotent": ["solvable"],
     }
+    if type == "normal":
+        overall_order = [
+            "thecenter", "thecommutator", "thefrattini", "thefitting", "theradical", "thesocle",
+            "characteristic", "normal", "maximal", "direct", "semidirect", "cyclic", "stem",
+            "central", "abelian", "nonabelian", "is_sylow", "is_hall", "pgroup", "is_elementary",
+            "nilpotent", "Zgroup", "metacyclic", "supersolvable", "is_hyperelementary", "monomial",
+            "metabelian", "solvable", "nab_simple", "ab_simple", "Agroup", "quasisimple",
+            "nab_perfect", "ab_perfect", "almost_simple", "nonsolvable", "rational",
+        ]
+        impl_order = [
+            "characteristic", "normal", "abelian", "central", "nilpotent", "solvable",
+            "supersolvable", "is_hall", "monomial", "nonsolvable", "is_elementary",
+            "is_hyperelementary", "metacyclic", "metabelian", "Zgroup", "Agroup",
+            "nab_perfect", "quasisimple", "almost_simple"
+        ]
+        implications.update(group_prop_implications)
+    else:
+        overall_order = [
+            "thecenter", "thecommutator", "thefrattini", "thefitting", "theradical", "thesocle",
+            "characteristic", "normal", "maximal", "direct", "semidirect", "cyclic", "stem",
+            "central", "abelian", "nonabelian", "is_sylow", "is_hall",
+            "nilpotent", "solvable", "nab_perfect", "nonsolvable"
+        ]
+        impl_order = ["characteristic", "normal", "abelian", "central", "nilpotent", "solvable", "is_hall"]
     for A, L in implications.items():
         for B in L:
+            print(type, A, B)
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
@@ -156,10 +255,19 @@ def create_boolean_subgroup_string(sgp):
         "nab_perfect": display_knowl('group.perfect', "perfect"),
         "nonsolvable": display_knowl('group.solvable', "nonsolvable"),
     }
+    if type == "normal":
+        overall_display.update(get_group_prop_display(sgp.sub))
+        impl_display = get_group_impl_display(sgp.sub)
+    else:
+        impl_display = {}
+
     assert set(overall_display) == set(overall_order)
-    hence_str = display_knowl('group.subgroup_properties_interdependencies', 'hence')
-    props = find_props(sgp, overall_order, impl_order, overall_display, {}, implications, hence_str, show=overall_display)
-    return f"This subgroup is {display_props(props)}."
+    hence_str = display_knowl('group.subgroup_properties_interdependencies', 'hence') # This needs to contain both kind of implications....
+    props = find_props(sgp, overall_order, impl_order, overall_display, impl_display, implications, hence_str, show=overall_display)
+    if type == "normal":
+        return f"The subgroup is {display_props(props)}."
+    else:
+        return f"This subgroup is {display_props(props)}."
 
 #function to create string of group characteristics
 def create_boolean_string(gp, type="normal"):
@@ -175,93 +283,24 @@ def create_boolean_string(gp, type="normal"):
                   "nonsolvable", "is_elementary", "is_hyperelementary", "metacyclic",
                   "metabelian", "Zgroup", "Agroup", "nab_perfect", "quasisimple", "almost_simple"]
     short_show = set(["cyclic", "abelian", "nonabelian", "nilpotent", "solvable", "nab_simple", "nonsolvable", "nab_perfect"])
-    short_string = (type != "normal")
+    short_string = (type == "knowl")
 
     # Implications should give edges of a DAG, and should be listed in the group.properties_interdependencies knowl
-    implications = {"cyclic": ["abelian", "is_elementary", "Zgroup"],
-                    "abelian": ["nilpotent", "Agroup", "metabelian"],
-                    "pgroup": ["nilpotent", "is_elementary"],
-                    "is_elementary": ["nilpotent", "is_hyperelementary"],
-                    "nilpotent": ["supersolvable"], # for finite groups
-                    "Zgroup": ["Agroup", "metacyclic"], # metacyclic for finite groups
-                    "metacyclic": ["metabelian", "supersolvable"],
-                    "supersolvable": ["monomial"], # for finite groups
-                    "is_hyperelementary": ["monomial"],
-                    "monomial": ["solvable"],
-                    "metabelian": ["solvable"],
-                    "nab_simple": ["quasisimple", "almost_simple"],
-                    "quasisimple": ["nab_perfect"],
-                    "nab_perfect": ["nonsolvable"],
-                    }
+    implications = group_prop_implications
     for A, L in implications.items():
         for B in L:
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
 
-    # We want elementary and hyperelementary to display which primes, but only once
-    elementaryp = ','.join(str(p) for (p, e) in ZZ(gp.elementary).factor())
-    hyperelementaryp = ','.join(str(p) for (p, e) in ZZ(gp.hyperelementary).factor() if not p.divides(gp.elementary))
-    if gp.order == 1: # here it will be implied from cyclic, so both are in the implication list
-        elementaryp = " (for every $p$)"
-        hyperelementaryp = ""
-    elif gp.pgroup: # We don't display p since there's only one in play
-        elementaryp = hyperelementaryp = ""
-    elif gp.cyclic: # both are in the implication list
-        elementaryp = f' ($p = {elementaryp}$)'
-        if gp.elementary == gp.hyperelementary:
-            hyperelementaryp = ""
-        else:
-            hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
-    elif gp.is_elementary: # Now elementary is a top level implication
-        elementaryp = f' for $p = {elementaryp}$'
-        if gp.elementary == gp.hyperelementary:
-            hyperelementaryp = ""
-        else:
-            hyperelementaryp = f' (also for $p = {hyperelementaryp}$)'
-    elif gp.hyperelementary: # Now hyperelementary is a top level implication
-        hyperelementaryp = f" for $p = {hyperelementaryp}$"
-    # otherwise the strings above are a bit messed up, but won't be used.
-    overall_display = {
-        "cyclic": display_knowl('group.cyclic', 'cyclic'),
-        "abelian": display_knowl('group.abelian','abelian'),
-        "nonabelian": display_knowl('group.abelian', "nonabelian"),
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} of class {gp.nilpotency_class}",
-        "supersolvable": display_knowl('group.supersolvable', "supersolvable"),
-        "monomial": display_knowl('group.monomial', "monomial"),
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {gp.derived_length}",
-        "nonsolvable": display_knowl('group.solvable', "nonsolvable"),
-        "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
-        "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
-        "metacyclic": display_knowl('group.metacyclic', "metacyclic"),
-        "metabelian": display_knowl('group.metabelian', "metabelian"),
-        "quasisimple": display_knowl('group.quasisimple', "quasisimple"),
-        "almost_simple": display_knowl('group.almost_simple', "almost simple"),
-        "ab_simple": display_knowl('group.simple', "simple"),
-        "nab_simple": display_knowl('group.simple', "simple"),
-        "ab_perfect": display_knowl('group.perfect', "perfect"),
-        "nab_perfect": display_knowl('group.perfect', "perfect"),
-        "rational": display_knowl('group.rational_group', "rational"),
-        "pgroup": f"a {display_knowl('group.pgroup', '$p$-group')}",
-        "is_elementary": display_knowl('group.elementary', 'elementary') + elementaryp,
-        "is_hyperelementary": display_knowl('group.hyperelementary', "hyperelementary") + hyperelementaryp,
-    }
-    # We display a few things differently for trivial groups
-    if gp.order == 1:
-        overall_display["pgroup"] += " (for every $p$)"
-    # Mostly we display things the same in implication lists, but there are a few extra parentheses
-    impl_display = {
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})",
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})"
-    }
+    overall_display = get_group_prop_display(gp)
+    impl_display = get_group_impl_display(gp)
     assert set(overall_display) == set(overall_order)
 
     hence_str = display_knowl('group.properties_interdependencies', 'hence')
     props = find_props(gp, overall_order, impl_order, overall_display, impl_display, implications, hence_str, show=(short_show if short_string else overall_display))
     if type == "ambient":
         return f"The ambient group is {display_props(props)}."
-    elif type == "subgroup":
-        return f"The subgroup is {display_props(props)}"
     elif type == "quotient":
         return f"The quotient is {display_props(props)}"
     elif type == "knowl":
@@ -645,6 +684,7 @@ def render_abstract_subgroup(label):
     seq = WebAbstractSubgroup(label)
 
     info['create_boolean_string'] = create_boolean_string
+    info['create_boolean_subgroup_string'] = create_boolean_subgroup_string
     info['factor_latex'] = factor_latex
 
     if seq.normal:
@@ -688,7 +728,7 @@ def shortsubinfo(ambient, short_label):
         return f'<tr><td>{prop}</td><td>{h.make_span()}</td></tr>\n'
 
     ans = 'Information on the subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
-    ans += f"<p>{create_boolean_subgroup_string(wsg)}</p>"
+    ans += f"<p>{create_boolean_subgroup_string(wsg, type='knowl')}</p>"
     ans += '<table>'
     if wsg.normal:
         ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>${wsg.quotient_tex}$</td></tr>"
@@ -699,8 +739,9 @@ def shortsubinfo(ambient, short_label):
     ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
     ans += subinfo_getsub('Core', 'group.core', wsg.core)
     #ans += '<tr><td>Coset action</td><td>%s</td></tr>\n' % wsg.coset_action_label
-    if wsg.subgroup_order > 1:
-        ans += f"<tr><td>{display_knowl('group.generators', 'Generators')}</td><td>${gp.show_subgroup_generators(wsg)}$</td></tr>"
+    ## There was a bug in the Magma code computing generators, so we disable this for the moment
+    #if wsg.subgroup_order > 1:
+    #    ans += f"<tr><td>{display_knowl('group.generators', 'Generators')}</td><td>${gp.show_subgroup_generators(wsg)}$</td></tr>"
     #if not wsg.characteristic:
     #    ans += f"<tr><td>Number of autjugates</td><td>{wsg.conjugacy_class_count}</td></tr>"
     ans += '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ subgroup homepage</a></td>' % (url_for_subgroup_label(wsg.label), wsg.subgroup_tex)

@@ -595,13 +595,9 @@ class WebAbstractGroup(WebObj):
     def is_null(self):
         return self._data is None
 
-
-    def order(self):
-        return int(self._data['order'])
-
     #TODO if prime factors get large, use factors in database
     def order_factor(self):
-        return factor(int(self._data['order']))
+        return latex(factor(self.order))
 
     ###automorphism group
     def show_aut_group(self):
@@ -664,7 +660,7 @@ class WebAbstractGroup(WebObj):
         return self.subgroups[self.comm()].quotient_tex
 
     def abelian_quot_primary(self):
-        return r' \times '.join(f'C_{q}^{e}' for (q, e) in Counter(self.primary_abelian_invariants).items())
+        return r' \times '.join(('C_{%s}^{%s}'%(q, e) if e > 1 else 'C_{%s}'%q) for (q, e) in Counter(self.primary_abelian_invariants).items())
 
     def abelianization_label(self):
         return '.'.join(str(m) for m in self.smith_abelian_invariants)
@@ -817,11 +813,24 @@ class WebAbstractSubgroup(WebObj):
         labels = [self.subgroup, self.ambient]
         if self.normal:
             labels.append(self.quotient)
-        return list(db.gps_groups.search({'label': {'$in': labels}}))
+        if self.weyl_group is not None:
+            labels.append(self.weyl_group)
+        if self.aut_weyl_group is not None:
+            labels.append(self.aut_weyl_group)
+        if self.projective_image is not None:
+            labels.append(self.projective_image)
+        return list(db.gps_groups.search({'label': {'$in': labels}})) # should maybe project and just retrieve needed cols
 
     @lazy_attribute
     def sub(self):
-        return self._lookup(self.subgroup, self._full, WebAbstractGroup)
+        S = self._lookup(self.subgroup, self._full, WebAbstractGroup)
+        # We set various properties from S for create_boolean_subgroup_string
+        for prop in ["pgroup", "is_elementary", "Zgroup", "metacyclic", "supersolvable",
+                     "is_hyperelementary", "monomial", "metabelian", "nab_simple",
+                     "ab_simple", "Agroup", "quasisimple",
+                     "ab_perfect", "almost_simple", "rational"]:
+            setattr(self, prop, getattr(S, prop))
+        return S
 
     @lazy_attribute
     def amb(self):
@@ -832,15 +841,28 @@ class WebAbstractSubgroup(WebObj):
         return self._lookup(self.quotient, self._full, WebAbstractGroup)
 
     @lazy_attribute
+    def weyl(self):
+        if self.weyl_group is not None:
+            return self._lookup(self.weyl_group, self._full, WebAbstractGroup)
+
+    @lazy_attribute
+    def aut_weyl(self):
+        if self.aut_weyl_group is not None:
+            return self._lookup(self.aut_weyl_group, self._full, WebAbstractGroup)
+
+    @lazy_attribute
+    def proj_img(self):
+        if self.projective_image is not None:
+            return self._lookup(self.projective_image, self._full, WebAbstractGroup)
+
+    @lazy_attribute
     def _others(self):
         """
         Get information from gps_subgroups for each of the other subgroups referred to (centralizer, complements, contained_in, contains, core, normal_closure, normalizer)
         """
         labels = []
         def make_full(label):
-            if label.count('.') == 2:
-                label = "%s.%s" % (self.ambient, label)
-            return label
+            return "%s.%s" % (self.ambient, label)
         for label in [self.centralizer, self.core, self.normal_closure, self.normalizer]:
             if label:
                 labels.append(make_full(label))
@@ -848,6 +870,9 @@ class WebAbstractSubgroup(WebObj):
             if llist:
                 labels.extend([make_full(label) for label in llist])
         return list(db.gps_subgroups.search({'label': {'$in': labels}}))
+
+    def autjugate_subgroups(self):
+        return [H for H in self.amb.subgroups.values() if H.aut_label == self.aut_label and H.label != self.label]
 
     @lazy_attribute
     def centralizer_(self):
