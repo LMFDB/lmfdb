@@ -32,21 +32,10 @@ abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$')
 #order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
-ngroups = None
-max_order = None
-init_absgrp_flag = False
-
 def yesno(val):
     if val:
         return 'yes'
     return 'no'
-
-def init_grp_count():
-    global ngroups, init_absgrp_flag, max_order
-    if not init_absgrp_flag or True : # Always recalculate for now
-        ngroups = db.gps_groups.count()
-        max_order = db.gps_groups.max('order')
-        init_absgrp_flag = True
 
 # For dynamic knowls
 @app.context_processor
@@ -59,8 +48,7 @@ def ctx_abstract_groups():
             'dyn_gen': dyn_gen}
 
 def abstract_group_summary():
-    init_grp_count()
-    return r'This database contains {} <a title="group" knowl="group">groups</a> of <a title="order" knowl="group.order">order</a> $n\leq {}$.  <p>This portion of the LMFDB is in alpha status.  The data is not claimed to be complete, and may grow or shrink at any time.'.format(comma(ngroups),max_order)
+    return fr'This database contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} of {display_knowl("group.order", "order")} $n\leq {db.gps_groups.max("order")}$ together with {comma(db.gps_subgroups.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.'
 
 def learnmore_list():
     return [ ('Source and acknowledgements', url_for(".how_computed_page")),
@@ -89,7 +77,89 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
+def display_props(proplist):
+    if len(proplist) == 1:
+        return proplist[0]
+    elif len(proplist) == 2:
+        return " and ".join(proplist)
+    else:
+        return ", ".join(proplist[:-1]) + f", and {proplist[-1]}"
 
+def find_props(gp, overall_order, impl_order, overall_display, impl_display, implications, hence_str, show):
+    props = []
+    noted = set()
+    for prop in overall_order:
+        if not getattr(gp, prop) or prop in noted or prop not in show:
+            continue
+        noted.add(prop)
+        impl = [B for B in implications.get(prop, []) if B not in noted]
+        cur = 0
+        while cur < len(impl):
+            impl.extend([B for B in implications.get(impl[cur], [])
+                         if B not in impl and
+                         B not in noted])
+            cur += 1
+        noted.update(impl)
+        impl = [impl_display.get(B, overall_display.get(B)) for B in impl_order if B in impl and B in show]
+        if impl:
+            props.append(f"{overall_display[prop]} ({hence_str} {display_props(impl)})")
+        else:
+            props.append(overall_display[prop])
+    return props
+
+def create_boolean_subgroup_string(sgp):
+    # We put direct and semidirect after normal since (hence normal) seems weird there, even if correct
+    overall_order = ["thecenter", "thecommutator", "thefrattini", "thefitting", "theradical", "thesocle", "characteristic", "normal", "maximal", "direct", "semidirect", "cyclic", "stem", "central", "abelian", "nonabelian", "is_sylow", "is_hall", "nilpotent", "solvable", "nab_perfect", "nonsolvable"]
+    impl_order = ["characteristic", "normal", "abelian", "central", "nilpotent", "solvable", "is_hall"]
+    implications = {
+        "thecenter": ["characteristic", "central"],
+        "thecommutator": ["characteristic"],
+        "thefrattini": ["characteristic"],
+        "thefitting": ["characteristic", "nilpotent"],
+        "theradical": ["characteristic", "solvable"],
+        "thesocle": ["characteristic"],
+        "characteristic": ["normal"],
+        "cyclic": ["abelian"],
+        "abelian": ["nilpotent"],
+        "stem": ["central"],
+        "central": ["abelian"],
+        "is_sylow": ["is_hall", "nilpotent"],
+        "nilpotent": ["solvable"],
+    }
+    for A, L in implications.items():
+        for B in L:
+            assert A in overall_order and B in overall_order
+            assert overall_order.index(A) < overall_order.index(B)
+            assert B in impl_order
+
+    overall_display = {
+        "thecenter": display_knowl('group.center', 'the center'),
+        "thecommutator": display_knowl('group.commutator_subgroup', 'the commutator subgroup'),
+        "thefrattini": display_knowl('group.frattini_subgroup', 'the Frattini subgroup'),
+        "thefitting": display_knowl('group.frattini_subgroup', 'the Fitting subgroup'),
+        "theradical": display_knowl('group.radical', 'the radical'),
+        "thesocle": display_knowl('group.socle', 'the socle'),
+        "characteristic": display_knowl('group.characteristic_subgroup', 'characteristic'),
+        "normal": display_knowl('group.subgroup.normal', 'normal'),
+        "maximal": display_knowl('group.maximal_subgroup', 'maximal'),
+        "direct": f"a {display_knowl('group.direct_product', 'direct factor')}",
+        "semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}",
+        "cyclic": display_knowl('group.cyclic', 'cyclic'),
+        "stem": display_knowl('group.stem_extension', 'stem'),
+        "central": display_knowl('group.central', 'central'),
+        "abelian": display_knowl('group.abelian','abelian'),
+        "nonabelian": display_knowl('group.abelian', "nonabelian"),
+        "is_sylow": f"a {display_knowl('group.sylow_subgroup', '$'+str(sgp.sylow)+'$-Sylow subgroup')}",
+        "is_hall": f"a {display_knowl('group.subgroup.hall', 'Hall subgroup')}",
+        "nilpotent": display_knowl('group.nilpotent', 'nilpotent'),
+        "solvable": display_knowl('group.solvable', 'solvable'),
+        "nab_perfect": display_knowl('group.perfect', "perfect"),
+        "nonsolvable": display_knowl('group.solvable', "nonsolvable"),
+    }
+    assert set(overall_display) == set(overall_order)
+    hence_str = display_knowl('group.subgroup_properties_interdependencies', 'hence')
+    props = find_props(sgp, overall_order, impl_order, overall_display, {}, implications, hence_str, show=overall_display)
+    return f"This subgroup is {display_props(props)}."
 
 #function to create string of group characteristics
 def create_boolean_string(gp, type="normal"):
@@ -98,13 +168,13 @@ def create_boolean_string(gp, type="normal"):
     # For the first order, it's important that A come before B whenever A => B
     overall_order = ["cyclic", "abelian", "nonabelian", "pgroup", "is_elementary", "nilpotent",
                      "Zgroup", "metacyclic", "supersolvable", "is_hyperelementary", "monomial", "metabelian",
-                     "solvable", "nab_simple", "ab_simple", "nonsolvable", "Agroup", "rational",
-                     "quasisimple", "perfect", "almost_simple"]
+                     "solvable", "nab_simple", "ab_simple", "Agroup", "quasisimple",
+                     "nab_perfect", "ab_perfect", "almost_simple", "nonsolvable", "rational"]
     # Only things that are implied need to be included here, and there are no constraints on the order
     impl_order = ["abelian", "nilpotent", "solvable", "supersolvable", "monomial",
                   "nonsolvable", "is_elementary", "is_hyperelementary", "metacyclic",
-                  "metabelian", "Zgroup", "Agroup", "perfect", "quasisimple", "almost_simple"]
-    short_shows = set(["cyclic", "abelian", "nonabelian", "nilpotent", "solvable", "nab_simple", "nonsolvable", "perfect"])
+                  "metabelian", "Zgroup", "Agroup", "nab_perfect", "quasisimple", "almost_simple"]
+    short_show = set(["cyclic", "abelian", "nonabelian", "nilpotent", "solvable", "nab_simple", "nonsolvable", "nab_perfect"])
     short_string = (type != "normal")
 
     # Implications should give edges of a DAG, and should be listed in the group.properties_interdependencies knowl
@@ -119,8 +189,9 @@ def create_boolean_string(gp, type="normal"):
                     "is_hyperelementary": ["monomial"],
                     "monomial": ["solvable"],
                     "metabelian": ["solvable"],
-                    "nab_simple": ["quasisimple", "almost_simple", "nonsolvable"],
-                    "quasisimple": ["perfect"],
+                    "nab_simple": ["quasisimple", "almost_simple"],
+                    "quasisimple": ["nab_perfect"],
+                    "nab_perfect": ["nonsolvable"],
                     }
     for A, L in implications.items():
         for B in L:
@@ -168,7 +239,8 @@ def create_boolean_string(gp, type="normal"):
         "almost_simple": display_knowl('group.almost_simple', "almost simple"),
         "ab_simple": display_knowl('group.simple', "simple"),
         "nab_simple": display_knowl('group.simple', "simple"),
-        "perfect": display_knowl('group.perfect', "perfect"),
+        "ab_perfect": display_knowl('group.perfect', "perfect"),
+        "nab_perfect": display_knowl('group.perfect', "perfect"),
         "rational": display_knowl('group.rational_group', "rational"),
         "pgroup": f"a {display_knowl('group.pgroup', '$p$-group')}",
         "is_elementary": display_knowl('group.elementary', 'elementary') + elementaryp,
@@ -178,68 +250,24 @@ def create_boolean_string(gp, type="normal"):
     if gp.order == 1:
         overall_display["pgroup"] += " (for every $p$)"
     # Mostly we display things the same in implication lists, but there are a few extra parentheses
-    D = impl_display = dict(overall_display)
-    impl_display["nilpotent"] = f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})"
-    impl_display["solvable"] = f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})"
-    assert set(overall_display) == set(impl_display) == set(overall_order)
+    impl_display = {
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})",
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})"
+    }
+    assert set(overall_display) == set(overall_order)
 
     hence_str = display_knowl('group.properties_interdependencies', 'hence')
-    def display_props(proplist):
-        if len(proplist) == 1:
-            return proplist[0]
-        elif len(proplist) == 2:
-            return " and ".join(proplist)
-        else:
-            return ", ".join(proplist[:-1]) + f", and {proplist[-1]}"
-
-    if False: #short_string:
-        if gp.cyclic:
-            if gp.simple:
-                return f"{D['cyclic']}, {D['solvable']}, and {D['ab_simple']}"
-            else:
-                return f"{D['cyclic']} and {D['solvable']}"
-
-        elif gp.abelian:
-            return f"{D['abelian']} and {D['solvable']}"
-
-        else:
-            strng = D['nonabelian']
-            if gp.solvable and gp.perfect:
-                return strng + f", {D['solvable']}, and {D['perfect']}"
-            elif gp.solvable:
-                return strng + f" and {D['solvable']}"
-            elif gp.perfect:
-                return strng + f", {D['nonsolvable']}, and {D['perfect']}"
-            else:
-                return strng + f" and {D['nonsolvable']}"
+    props = find_props(gp, overall_order, impl_order, overall_display, impl_display, implications, hence_str, show=(short_show if short_string else overall_display))
+    if type == "ambient":
+        return f"The ambient group is {display_props(props)}."
+    elif type == "subgroup":
+        return f"The subgroup is {display_props(props)}"
+    elif type == "quotient":
+        return f"The quotient is {display_props(props)}"
+    elif type == "knowl":
+        return f"{display_props(props)}."
     else:
-        props = []
-        noted = set()
-        for prop in overall_order:
-            if not getattr(gp, prop) or prop in noted or short_string and prop not in short_shows:
-                continue
-            noted.add(prop)
-            impl = [B for B in implications.get(prop, []) if B not in noted]
-            cur = 0
-            while cur < len(impl):
-                impl.extend([B for B in implications.get(impl[cur], [])
-                             if B not in impl and
-                             B not in noted])
-                cur += 1
-            noted.update(impl)
-            impl = [impl_display[B] for B in impl_order if B in impl and (not short_string or B in short_shows)]
-            if impl:
-                props.append(f"{overall_display[prop]} ({hence_str} {display_props(impl)})")
-            else:
-                props.append(overall_display[prop])
-        if type == "ambient":
-            return f"The ambient group is {display_props(props)}."
-        elif type == "subgroup":
-            return f"The subgroup is {display_props(props)}"
-        elif type == "quotient":
-            return f"The quotient is {display_props(props)}"
-        else:
-            return f"This group is {display_props(props)}."
+        return f"This group is {display_props(props)}."
 
 def url_for_label(label):
     if label == "random":
@@ -263,8 +291,32 @@ def index():
             info['search_array'] = SubgroupSearchArray()
             return subgroup_search(info)
     info['count']= 50
-    info['order_list']= ['1-10', '20-100', '101-200']
-    info['nilp_list']= range(1,5)
+    info['order_list']= ['1-63', '64-127', '128-255', '256-383', '384-511']
+    info['nilp_list']= range(1,8)
+    info['prop_browse_list'] = [
+        ('abelian=yes', 'abelian'),
+        ('abelian=no', 'nonabelian'),
+        ('solvable=yes', 'solvable'),
+        ('solvable=no', 'nonsolvable'),
+        ('simple=yes', 'simple'),
+        ('perfect=yes', 'perfect'),
+        ('rational=yes', 'rational'),
+    ]
+    info['prop_but_not'] = [
+        [
+            ('almost_simple=yes&quasisimple=no', 'almost simple but not quasisimple'),
+            ('quasisimple=yes&almost_simple=no', 'quasisimple but not almost simple'),
+            ('Zgroup=yes&cyclic=no', 'Z-group but not cyclic'),
+        ], [
+            ('metacyclic=yes&Zgroup=no', 'metacyclic but not a Z-group'),
+            ('Agroup=yes&Zgroup=no', 'A-group but not a Z-group'),
+            ('metabelian=yes&metacyclic=no', 'metabelian but not metacyclic'),
+        ], [
+            ('supersolvable=yes&nilpotent=no', 'supersolvable but not nilpotent'),
+            ('monomial=yes&supersolvable=no', 'monomial but not supersolvable'),
+            ('solvable=yes&monomial=no', 'solvable but not monomial'),
+        ]
+    ]
     info['maxgrp']= db.gps_groups.max('order')
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list())
@@ -358,14 +410,13 @@ def sub_diagram(label):
     if gp.is_null():
         flash_error( "No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    
     maxw = max(len(z) for z in gp.subgroup_profile.values())
     h = 160*len(gp.subgroup_profile)
     h = min(h, 1000)
     w = 200*maxw
     w = min(w,1500)
     info = {'dojs': diagram_js(gp, gp.subgroup_lattice), 'w': w, 'h': h}
-    return render_template("diagram_page.html", 
+    return render_template("diagram_page.html",
         info=info,
         title="Subgroup diagram for %s" % label,
         bread=get_bread([("Subgroup diagram", " ")]),
@@ -627,38 +678,33 @@ def shortsubinfo(ambient, short_label):
     if not subgroup_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
         return ''
+    gp = WebAbstractGroup(ambient) # needed for generators
     wsg = WebAbstractSubgroup(label)
     # helper function
     def subinfo_getsub(title, knowlid, lab):
         full_lab = "%s.%s" % (ambient, lab)
         h = WebAbstractSubgroup(full_lab)
-        prop = make_knowl(title, knowlid)
-        return '<tr><td>%s<td>%s\n' % (
-            prop, h.make_span())
+        prop = display_knowl(knowlid, title)
+        return f'<tr><td>{prop}</td><td>{h.make_span()}</td></tr>\n'
 
-    ans = 'Information on subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
+    ans = 'Information on the subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
+    ans += f"<p>{create_boolean_subgroup_string(wsg)}</p>"
     ans += '<table>'
-    ans += '<tr><td>%s <td> %s\n' % (
-        make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
-    ans += '<tr><td>%s<td>' % make_knowl('Normal', 'group.subgroup.normal')
     if wsg.normal:
-        ans += 'True with quotient group '
-        ans +=  '$'+wsg.quotient_tex+'$\n'
+        ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>${wsg.quotient_tex}$</td></tr>"
     else:
-        ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
-
+        ans += f"<tr><td>Number of conjugates</td><td>{wsg.count}</td></tr>"
     ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
     ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
     ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
     ans += subinfo_getsub('Core', 'group.core', wsg.core)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Central', 'group.central'), wsg.central)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall>0)
-    #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
-    p = wsg.sylow
-    nt = 'Yes for $p$ = %d' % p if p>1 else 'No'
-    ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
-    ans += '<tr><td><td style="text-align: right"><a href="%s">$%s$ home page</a>' % (url_for_subgroup_label(wsg.label), wsg.subgroup_tex)
+    #ans += '<tr><td>Coset action</td><td>%s</td></tr>\n' % wsg.coset_action_label
+    if wsg.subgroup_order > 1:
+        ans += f"<tr><td>{display_knowl('group.generators', 'Generators')}</td><td>${gp.show_subgroup_generators(wsg)}$</td></tr>"
+    #if not wsg.characteristic:
+    #    ans += f"<tr><td>Number of autjugates</td><td>{wsg.conjugacy_class_count}</td></tr>"
+    ans += '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ subgroup homepage</a></td>' % (url_for_subgroup_label(wsg.label), wsg.subgroup_tex)
+    ans += '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>' % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
     #print ""
     #print ans
     ans += '</table>'
@@ -1274,13 +1320,13 @@ def sub_data(label):
 
 def group_data(label):
     gp = WebAbstractGroup(label)
-    ans = 'Group ${}$: '.format(gp.tex_name)
+    ans = f'Group ${gp.tex_name}$: '
     ans += create_boolean_string(gp, type="knowl")
-    ans += '<br />Order: {}<br />'.format(gp.order)
-    ans += 'Gap small group number: {}<br />'.format(gp.counter)
-    ans += 'Exponent: {}<br />'.format(gp.exponent)
+    ans += f'<br />Label: {gp.label}<br />'
+    ans += f'Order: {gp.order}<br />'
+    ans += f'Exponent: {gp.exponent}<br />'
 
-    ans += 'There are {} subgroups'.format(gp.number_subgroups)
+    ans += 'It has {} subgroups'.format(gp.number_subgroups)
     if gp.number_normal_subgroups < gp.number_subgroups:
         ans += ' in {} conjugacy classes, {} normal, '.format(gp.number_subgroup_classes, gp.number_normal_subgroups)
     else:

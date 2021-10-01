@@ -76,53 +76,6 @@
 
 </p>
 
-<h2>Constructions</h2>
-
-<table class=nowrap>
-  <tr>
-    <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
-    <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
-  </tr>
-  {% if gp.direct_product %}
-    <tr>
-      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
-      <td>${{ gp.display_direct_product }}$</td>
-    </tr>
-  {% endif %}
-  {% if gp.semidirect_products %}
-    <tr>
-      <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
-      {% for sub, count in gp.semidirect_products %}
-        {% if loop.index == 5 %}
-          <td width=auto, class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
-        {% endif %}
-        <td{% if loop.index >= 5 %} class="hidden_semidirect nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
-      {% endfor %}
-    </tr>
-  {% endif %}
-  {% if gp.nonsplit_products %}
-    <tr>
-      <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
-      {% for sub, count in gp.nonsplit_products %}
-        {% if loop.index == 5 %}
-          <td class="show_nonsplit_container"><a href="#" class="show_nonsplit">Show all {{ gp.nonsplit_products | length }}</a></td>
-        {% endif %}
-        <td{% if loop.index >= 5 %} class="hidden_nonsplit nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
-    {% endfor %}
-  </tr>
-  {% endif %}
-  <tr>
-    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
-    <td>${{gp.rank}}$</td>
-  </tr>
-  {% if gp.order > 1 and gp.eulerian_function is defined %}
-  <tr>
-    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
-    <td>${{gp.eulerian_function}}$</td>
-  </tr>
-  {% endif %}
-</table>
-
 <h2>Group Statistics</h2>
 
 <p>
@@ -199,6 +152,53 @@
 </p>
 
 
+<h2>Constructions</h2>
+
+<table class=nowrap>
+  <tr>
+    <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
+    <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
+  </tr>
+  {% if gp.direct_product %}
+    <tr>
+      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
+      <td>${{ gp.display_direct_product }}$</td>
+    </tr>
+  {% endif %}
+  {% if gp.semidirect_products %}
+    <tr>
+      <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
+      {% for sub, count in gp.semidirect_products %}
+        {% if loop.index == 5 %}
+          <td width=auto, class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
+        {% endif %}
+        <td{% if loop.index >= 5 %} class="hidden_semidirect nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+      {% endfor %}
+    </tr>
+  {% endif %}
+  {% if gp.nonsplit_products %}
+    <tr>
+      <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
+      {% for sub, count in gp.nonsplit_products %}
+        {% if loop.index == 5 %}
+          <td class="show_nonsplit_container"><a href="#" class="show_nonsplit">Show all {{ gp.nonsplit_products | length }}</a></td>
+        {% endif %}
+        <td{% if loop.index >= 5 %} class="hidden_nonsplit nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
+    {% endfor %}
+  </tr>
+  {% endif %}
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    <td>${{gp.rank}}$</td>
+  </tr>
+  {% if gp.order > 1 and gp.eulerian_function is defined %}
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+    <td>${{gp.eulerian_function}}$</td>
+  </tr>
+  {% endif %}
+</table>
+
 <h2> Homology </h2>
 
 <table>
@@ -254,12 +254,14 @@
     <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
     <td>$G/\operatorname{soc} \simeq {{gp.subgroups[gp.socle].quotient_tex}}$</td>
   </tr>
-  {% for p, subgp in gp.sylow_subgroups() %}
-  <tr>
-    <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
-    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{{p}} \simeq {{subgp.subgroup_tex}}$</span></td>
-  </tr>
-  {% endfor %}
+  {% if gp.pgroup == 0 %}
+    {% for p, subgp in gp.sylow_subgroups() %}
+      <tr>
+        <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
+        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{{p}} \simeq {{subgp.subgroup_tex}}$</span></td>
+      </tr>
+    {% endfor %}
+  {% endif %}
 </table>
 
 

@@ -456,7 +456,10 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def pcgs(self):
         return self.G.Pcgs()
-    def decode_as_pcgs(self, code):
+    @lazy_attribute
+    def pcgs_relative_orders(self):
+        return [ZZ(c) for c in self.pcgs.RelativeOrders()]
+    def decode_as_pcgs(self, code, getvec=False):
         # Decode an element
         vec = []
         if code < 0 or code >= self.order:
@@ -465,11 +468,44 @@ class WebAbstractGroup(WebObj):
             c = code % m
             vec.insert(0, c)
             code = code // m
-        return self.pcgs.PcElementByExponents(vec)
+        if getvec:
+            # Need to combine some generators
+            w = []
+            e = 0
+            for i, (c, m) in reversed(list(enumerate(zip(vec, self.pcgs_relative_orders)))):
+                e += c
+                if i+1 in self.gens_used:
+                    w.append(e)
+                    e = 0
+                else:
+                    e *= m
+            w.reverse()
+            return w
+        else:
+            return self.pcgs.PcElementByExponents(vec)
+    def decode_as_pcgs_str(self, code):
+        vec = self.decode_as_pcgs(code, getvec=True)
+        s = ""
+        for i, c in enumerate(vec):
+            if c == 1:
+                s += chr(97+i) # breaks if we have more than 26 generators...
+            elif c != 0:
+                s += "%s^{%s}" % (chr(97+i), c)
+        return s
     def decode_as_perm(self, code):
         # code should be an integer with 0 <= m < factorial(n)
         n = -self.elt_rep_type
         return str(SymmetricGroup(n)(Permutations(n).unrank(code)))
+
+    def show_subgroup_generators(self, H):
+        if H.subgroup_order == 1:
+            return ""
+        if self.elt_rep_type == 0: # PC group
+            return ", ".join(self.decode_as_pcgs_str(g) for g in H.generators)
+        elif self.elt_rep_type < 0: # permutation group
+            return ", ".join(self.decode_as_perm(g) for g in H.generators)
+        else: # matrix groups
+            raise NotImplementedError
 
     #@lazy_attribute
     #def fp_isom(self):
@@ -686,12 +722,20 @@ class WebAbstractGroup(WebObj):
         return not self.solvable
 
     @property
-    def ab_simple(self):
+    def ab_simple(self): # prime cyclic
         return self.simple and self.abelian
 
     @property
     def nab_simple(self):
         return self.simple and not self.abelian
+
+    @property
+    def ab_perfect(self): # trivial
+        return self.perfect and self.abelian
+
+    @property
+    def nab_perfect(self):
+        return self.perfect and not self.abelian
 
     @property
     def is_elementary(self):
@@ -838,6 +882,55 @@ class WebAbstractSubgroup(WebObj):
         if self.contains is None:
             return None
         return [self._lookup(H, self._others, WebAbstractSubgroup) for H in self.contains]
+
+    # The following attributes are used in create_subgroup_boolean_string
+    @lazy_attribute
+    def semidirect(self):
+        return self.split and not self.direct
+
+    @lazy_attribute
+    def nab_perfect(self):
+        return self.perfect and not self.abelian
+
+    @lazy_attribute
+    def nonabelian(self):
+        return not self.abelian
+
+    @lazy_attribute
+    def nonsolvable(self):
+        return not self.solvable
+
+    @lazy_attribute
+    def is_sylow(self):
+        return self.sylow > 1
+
+    @lazy_attribute
+    def is_hall(self):
+        return self.hall > 1
+
+    @lazy_attribute
+    def thecenter(self):
+        return any(x.split('.')[-1] == 'Z' for x in self.special_labels)
+
+    @lazy_attribute
+    def thecommutator(self):
+        return any(x.split('.')[-1] == 'D' for x in self.special_labels)
+
+    @lazy_attribute
+    def thefrattini(self):
+        return any(x.split('.')[-1] == 'Phi' for x in self.special_labels)
+
+    @lazy_attribute
+    def thefitting(self):
+        return any(x.split('.')[-1] == 'F' for x in self.special_labels)
+
+    @lazy_attribute
+    def theradical(self):
+        return any(x.split('.')[-1] == 'R' for x in self.special_labels)
+
+    @lazy_attribute
+    def thesocle(self):
+        return any(x.split('.')[-1] == 'S' for x in self.special_labels)
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
