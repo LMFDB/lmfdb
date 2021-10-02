@@ -718,7 +718,6 @@ def shortsubinfo(ambient, short_label):
     if not subgroup_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
         return ''
-    gp = WebAbstractGroup(ambient) # needed for generators
     wsg = WebAbstractSubgroup(label)
     # helper function
     def subinfo_getsub(title, knowlid, lab):
@@ -740,6 +739,7 @@ def shortsubinfo(ambient, short_label):
     ans += subinfo_getsub('Core', 'group.core', wsg.core)
     #ans += '<tr><td>Coset action</td><td>%s</td></tr>\n' % wsg.coset_action_label
     ## There was a bug in the Magma code computing generators, so we disable this for the moment
+    #gp = WebAbstractGroup(ambient) # needed for generators
     #if wsg.subgroup_order > 1:
     #    ans += f"<tr><td>{display_knowl('group.generators', 'Generators')}</td><td>${gp.show_subgroup_generators(wsg)}$</td></tr>"
     #if not wsg.characteristic:
