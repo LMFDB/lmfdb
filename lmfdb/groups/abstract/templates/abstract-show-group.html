@@ -258,7 +258,7 @@
     {% for p, subgp in gp.sylow_subgroups() %}
       <tr>
         <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
-        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{{p}} \simeq {{subgp.subgroup_tex}}$</span></td>
+        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{ {{p}} } \simeq {{subgp.subgroup_tex}}$</span></td>
       </tr>
     {% endfor %}
   {% endif %}
