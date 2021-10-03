@@ -51,7 +51,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that Groups/Abstract/ab/ works
         """
-        self.check_args("/Groups/Abstract/ab/2.2.2.6", "48.52")        
+        self.check_args("/Groups/Abstract/ab/2.2.2.6", "48.52")
 
     def test_random(self):
         r"""
@@ -60,7 +60,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/random", "Group Information")
         self.check_args("/Groups/Abstract/random", "Order:")
 
-        
     # Various searches
 
     def test_bad_label(self):
@@ -73,7 +72,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can search by order
         """
-        # check that 8.1 and  8.3 show up 
+        # check that 8.1 and  8.3 show up
         self.check_args("/Groups/Abstract/?order=8", "8.1")
         self.check_args("/Groups/Abstract/?order=8", "8.3")
 
@@ -93,7 +92,6 @@ class AbGpsHomeTest(LmfdbTest):
         # check that 64.30 and 64.94 show up in first 50 results
         self.check_args("/Groups/Abstract/?nilpotency_class=3", "64.30")
         self.check_args("/Groups/Abstract/?nilpotency_class=3", "64.94")
-        
 
     def test_search_autgroup(self):
         r"""
@@ -147,7 +145,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?abelian_quotient=8.1", "72.19")
         self.check_args("/Groups/Abstract/?abelian_quotient=8.1", "96.65")
 
-        
     def test_abelian_search(self):
         r"""
         Check that we can restrict to abelian or non-abelian groups only
@@ -179,7 +176,7 @@ class AbGpsHomeTest(LmfdbTest):
 
 
      #when the test was first written 60.5 was only perfect and
-     # only non-solvable group in db so next two are quite restrictive 
+     # only non-solvable group in db so next two are quite restrictive
     def test_perfect_search(self):
         r"""
         Check that we can restrict to perfect or non-perfect groups only
@@ -188,7 +185,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?order=60&perfect=no", "60.3")
         self.not_check_args("/Groups/Abstract/?order=60&perfect=no", "60.5")
         self.not_check_args("/Groups/Abstract/?order=60&perfect=yes", "60.12")
-        
+
     def test_solvable_search(self):
         r"""
         Check that we can restrict to solvable or non-solvbable groups only
@@ -198,7 +195,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?order=60&solvable=yes", "60.5")
         self.not_check_args("/Groups/Abstract/?order=60&solvable=no", "60.12")
 
-        
     def test_nilpotent_search(self):
         r"""
         Check that we can restrict to nilpotent or non-nilpotent groups only
@@ -208,8 +204,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?order=18&nilpotent=yes", "18.3")
         self.not_check_args("/Groups/Abstract/?order=18&nilpotent=no", "18.2")
 
-
-        
     def test_direct_product_search(self):
         r"""
         Check that we can restrict to direct product or not only
@@ -219,7 +213,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?direct_product=yes", "8.1")
         self.not_check_args("/Groups/Abstract/?direct_product=no", "8.2")
 
-               
     def test_semidirect_product_search(self):
         r"""
         Check that we can restrict to semidirect product or not only
@@ -371,13 +364,13 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that subgroup search by label is working
         """
-        self.check_args("/Groups/Abstract/?hst=Subgroups&subgroup=168.42", "504.157.3.a1.a1")
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&subgroup=168.42", "504.157.3.a1.a1")
 
     def test_subgroup_order_search(self):
         r"""
         Check that subgroup search by label is working
         """
-        self.check_args("/Groups/Abstract/?hst=Subgroups&subgroup_order=15", "45.2.3.a1.b1")
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&subgroup_order=15", "45.2.3.a1.b1")
 
     def test_subgroup_cyclic_search(self):
         r"""
