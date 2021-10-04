@@ -1101,7 +1101,6 @@ class GroupsSearchArray(SearchArray):
             [cyclic, semidirect_product],
             [nilpotent, perfect],
             [simple, solvable],
-            [],
             [almost_simple, derived_length,],
             [quasisimple, supersolvable,],
             [outer_group, metabelian],
