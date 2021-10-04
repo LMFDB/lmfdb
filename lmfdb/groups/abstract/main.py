@@ -1094,9 +1094,9 @@ class GroupsSearchArray(SearchArray):
         self.browse_array = [
             [order, exponent],
             [aut_group, nilpclass],
-            [aut_order,],
-            [center_label, commutator_label],
-            [central_quotient, abelian_quotient],
+            [aut_order,commutator_label],
+            [center_label, abelian_quotient],
+            [central_quotient, frattini_label],
             [abelian, direct_product],
             [cyclic, semidirect_product],
             [nilpotent, perfect],
@@ -1107,8 +1107,7 @@ class GroupsSearchArray(SearchArray):
             [outer_order, metacyclic],
             [Agroup, monomial],
             [Zgroup, rational],
-            [rank, frattini_label],
-            [order_stats],
+            [order_stats, rank],
             [count]
         ]
 
