@@ -613,10 +613,10 @@ def render_abstract_group(label):
 
     prof = list(gp.subgroup_profile.items())
     prof.sort(key=lambda z: -z[0]) # largest to smallest
-    info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
+    info['subgroup_profile'] = [(z[0], display_profile_line(z[1], ambient=label, aut=False)) for z in prof]
     autprof = list(gp.subgroup_autprofile.items())
     autprof.sort(key=lambda z: -z[0]) # largest to smallest
-    info['subgroup_autprofile'] = [(z[0], display_profile_line(z[1])) for z in autprof]
+    info['subgroup_autprofile'] = [(z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof]
     # prepare for javascript call to make the diagram
     if gp.diagram_ok and not gp.outer_equivalence:
         layers = gp.subgroup_lattice
@@ -860,11 +860,11 @@ def download_group(**args):
 
 
 
-def display_profile_line(data):
+def display_profile_line(data, ambient, aut):
     l = []
     for label, tex in sorted(data, key=data.get, reverse=True):
         cnt = data[label, tex]
-        l.append(group_display_knowl(label, name=f'${tex}$') + (' x ' + str(cnt) if cnt > 1 else '' ))
+        l.append(group_display_knowl(label, name=f'${tex}$', ambient=ambient, aut=aut) + (' x ' + str(cnt) if cnt > 1 else '' ))
     return ', '.join(l)
 
 class GroupsSearchArray(SearchArray):
@@ -1236,18 +1236,22 @@ class SubgroupSearchArray(SearchArray):
         else:
             return [("Subgroups", "Search again"), ("Random", "Random subgroup")]
 
-def group_display_knowl(label, name=None, pretty=False):
+def group_display_knowl(label, name=None, pretty=False, ambient=None, aut=False):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
     if pretty:
         name = '$'+group_names_pretty(label)+'$'
     if not name:
         name = 'Group {}'.format(label)
-    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=group_data">%s</a>' % (name, label, name)
+    if ambient is None:
+        args = label
+    else:
+        args = f'{label}%7C{ambient}%7C{aut}'
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 def sub_display_knowl(label, name=None):
     if not name:
-        name = 'Subgroup {}'.format(label)
-    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=sub_data">%s</a>' % (name, label, name)
+        name = f'Subgroup {label}'
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=sub_data">{name}</a>'
 
 def cc_data(gp, label, typ='complex'):
     if typ == 'rational':
@@ -1357,7 +1361,7 @@ def sub_data(label):
     label = label.split(".")
     return Markup(shortsubinfo(".".join(label[:2]), ".".join(label[2:])))
 
-def group_data(label):
+def group_data(label, ambient=None, aut=False):
     gp = WebAbstractGroup(label)
     ans = f'Group ${gp.tex_name}$: '
     ans += create_boolean_string(gp, type="knowl")
@@ -1365,16 +1369,28 @@ def group_data(label):
     ans += f'Order: {gp.order}<br />'
     ans += f'Exponent: {gp.exponent}<br />'
 
-    ans += 'It has {} subgroups'.format(gp.number_subgroups)
-    if gp.number_normal_subgroups < gp.number_subgroups:
-        ans += ' in {} conjugacy classes, {} normal, '.format(gp.number_subgroup_classes, gp.number_normal_subgroups)
+    if ambient is None:
+        ans += 'It has {} subgroups'.format(gp.number_subgroups)
+        if gp.number_normal_subgroups < gp.number_subgroups:
+            ans += ' in {} conjugacy classes, {} normal, '.format(gp.number_subgroup_classes, gp.number_normal_subgroups)
+        else:
+            ans += ', all normal, '
+        if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
+            ans += str(gp.number_characteristic_subgroups)
+        else:
+            ans += 'all'
+        ans += ' characteristic.<br />'
     else:
-        ans += ', all normal, '
-    if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
-        ans += str(gp.number_characteristic_subgroups)
-    else:
-        ans += 'all'
-    ans += ' characteristic.<br />'
+        ambient = WebAbstractGroup(ambient)
+        subs = [H for H in ambient.subgroups.values() if H.subgroup == label]
+        if aut and not ambient.outer_equivalence:
+            subs = [H for H in subs if H.label.split('.')[-1] == 'a1']
+        subs.sort(key=lambda H: H.label) # It would be better to split the label apart and sort numerically, but that's too much work
+        ans += '<div align="right">'
+        ans += 'Subgroups with this isomorphism type: '
+        for H in subs:
+            ans += '<a href="{}">{}</a>&nbsp;'.format(url_for('abstract.by_subgroup_label', label=H.label), H.label)
+        ans += '</div><br />'
     ans += '<div align="right"><a href="{}">{} home page</a></div>'.format(url_for('abstract.by_label',label=label), label)
     return Markup(ans)
 
@@ -1390,7 +1406,7 @@ def dyn_gen(f,args):
     arglist = args.split('|')
     return func(*arglist)
 
-#list if legal dynamic knowl functions
+#list of legal dynamic knowl functions
 flist= {'cc_data': cc_data,
         'sub_data': sub_data,
         'rchar_data': rchar_data,

@@ -91,28 +91,28 @@
     </thead>
     <tbody>
       <tr>
-        <td>Number of elements</td>
+        <td>Elements</td>
         {% for c in (gp.order_stats | sort) %}
           <td>{{ c[1] }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.order }}</td>
       </tr>
       <tr>
-        <td>Number of {{KNOWL('group.conjugacy_class', 'conjugacy classes')}}</td>
+        <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes')}}</td>
         {% for c in gp.cc_stats %}
           <td>{{ c[1] }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
       </tr>
       <tr>
-        <td>Number of {{KNOWL('group.division', 'divisions')}}</td>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
         {% for c in gp.division_stats %}
           <td>{{ c[1] }}</td>
         {% endfor %}
         <td class="border-left">{{ gp.number_divisions }}</td>
       </tr>
       <tr style="border-bottom:none;">
-        <td>Number of {{KNOWL('group.autjugacy_class', 'autjugacy classes')}}</td>
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
         {% for c in gp.autc_stats %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -134,14 +134,14 @@
     </thead>
     <tbody>
       <tr>
-        <td>Number of {{KNOWL('group.representation.character', 'irr. complex chars.')}}</td>
+        <td>{{KNOWL('group.representation.character', 'Irr. complex chars.')}}</td>
         {% for n in gp.irrep_stats %}
           <td>{{ n }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.irrep_stats | sum }}</td>
       </tr>
       <tr style="border-bottom:none;">
-        <td>Number of {{KNOWL('group.representation.rational_character', 'irr. rational chars.')}}</td>
+        <td>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
         {% for n in gp.ratrep_stats %}
           <td>{{ n }} </td>
         {% endfor %}
@@ -493,6 +493,14 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 
 {% endif %}
 
+{% if gp.number_divisions == gp.number_conjugacy_classes %}
+
+  <p>
+    Every character has rational values, so the {{KNOWL('group.rational_character_table','rational character table')}} is the same as the complex character table.
+  </p>
+
+{% else %}
+
 <h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 
 {% if gp.number_divisions <= 16 %}
@@ -505,6 +513,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
     See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>.
   </p>
 
+{% endif %}
 {% endif %}
 
 {% endblock %}
