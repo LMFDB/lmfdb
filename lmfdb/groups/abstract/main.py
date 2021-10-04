@@ -960,75 +960,86 @@ class GroupsSearchArray(SearchArray):
         cyclic = YesNoBox(
             name="cyclic",
             label="Cyclic",
-            knowl="group.cyclic")
+            knowl="group.cyclic",
+            example_col=True,
+        )
         metacyclic = YesNoBox(
             name="metacyclic",
             label="Metacyclic",
             knowl="group.metacyclic",
-            advanced=True
+            advanced=True,
+            example_col=True,
             )
         solvable = YesNoBox(
             name="solvable",
             label="Solvable",
             knowl="group.solvable",
-            example_col=True
+            example_col=True,
             )
         supersolvable = YesNoBox(
             name="supersolvable",
             label="Supersolvable",
             knowl="group.supersolvable",
             advanced=True,
-            example_col=True
+            example_col=True,
             )
         nilpotent = YesNoBox(
             name="nilpotent",
             label="Nilpotent",
-            knowl="group.nilpotent")
+            knowl="group.nilpotent",
+            example_col=True,
+        )
         simple = YesNoBox(
             name="simple",
             label="Simple",
             knowl="group.simple",
-            example_col=True
+            example_col=True,
             )
         almost_simple= YesNoBox(
             name="almost_simple",
             label="Almost simple",
             knowl="group.almost_simple",
             example_col=True,
-            advanced=True
+            advanced=True,
             )
         quasisimple= YesNoBox(
             name="quasisimple",
             label="Quasisimple",
             knowl="group.quasisimple",
-            advanced=True
+            advanced=True,
+            example_col=True,
             )
         perfect = YesNoBox(
             name="perfect",
             label="Perfect",
-            knowl="group.perfect")
+            knowl="group.perfect",
+            example_col=True,
+        )
         direct_product = YesNoBox(
             name="direct_product",
             label="Direct product",
             knowl="group.direct_product",
-            example_col=True
+            example_col=True,
             )
         semidirect_product = YesNoBox(
             name="semidirect_product",
             label="Semidirect product",
-            knowl="group.semidirect_product")
+            knowl="group.semidirect_product",
+            example_col=True,
+        )
         Agroup = YesNoBox(
             name="Agroup",
             label="A-group",
             knowl="group.a_group",
             advanced=True,
-            example_col=True
+            example_col=True,
             )
         Zgroup = YesNoBox(
             name="Zgroup",
             label="Z-group",
             knowl="group.z_group",
             advanced=True,
+            example_col=True,
             )
         monomial = YesNoBox(
             name="monomial",
@@ -1041,7 +1052,7 @@ class GroupsSearchArray(SearchArray):
             label="Rational",
             knowl="group.rational_group",
             advanced=True,
-            example_col=True
+            example_col=True,
             )
         center_label = TextBox(
             name="center_label",
@@ -1082,21 +1093,21 @@ class GroupsSearchArray(SearchArray):
 
         self.browse_array = [
             [order, exponent],
-            [nilpclass],
-            [aut_group, aut_order],
+            [aut_group, nilpclass],
+            [aut_order,],
             [center_label, commutator_label],
             [central_quotient, abelian_quotient],
-            [abelian, cyclic],
-            [simple, perfect],
-            [solvable, nilpotent],
-            [direct_product, semidirect_product],
-            [outer_group, outer_order],
-            [metabelian, metacyclic],
-            [almost_simple, quasisimple],
-            [Agroup, Zgroup],
-            [derived_length, frattini_label],
-            [supersolvable, monomial],
-            [rational, rank],
+            [abelian, direct_product],
+            [cyclic, semidirect_product],
+            [simple, solvable],
+            [almost_simple, derived_length,],
+            [quasisimple, supersolvable,],
+            [nilpotent, perfect],
+            [outer_group, metabelian],
+            [outer_order, metacyclic],
+            [Agroup, monomial],
+            [Zgroup, rational],
+            [rank, frattini_label],
             [order_stats],
             [count]
         ]
