@@ -922,7 +922,7 @@ class GroupsSearchArray(SearchArray):
             )
         outer_group = TextBox(
             name="outer_group",
-            label="Outer automorphism group",
+            label="Outer aut. group",
             knowl="group.outer_aut",
             example="4.2",
             example_span="4.2",
@@ -930,7 +930,7 @@ class GroupsSearchArray(SearchArray):
             )
         outer_order = TextBox(
             name="outer_order",
-            label="Outer automorphism group order",
+            label="Outer aut. group order",
             knowl="group.outer_aut",
             example="3",
             example_span="4, or a range like 3..5",
