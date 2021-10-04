@@ -226,7 +226,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         impl_order = ["characteristic", "normal", "abelian", "central", "nilpotent", "solvable", "is_hall"]
     for A, L in implications.items():
         for B in L:
-            print(type, A, B)
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
@@ -398,7 +397,6 @@ def by_abelian_label(label):
             parts[p].extend([p**e] * exp)
     for v in parts.values():
         v.sort()
-    print(parts)
     primary = sum((parts[p] for p in sorted(parts)), [])
     label = db.gps_groups.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
     if label is None:
@@ -461,15 +459,15 @@ def sub_diagram(label):
         bread=get_bread([("Subgroup diagram", " ")]),
         learnmore=learnmore_list())
 
-def show_type(label):
-    wag = WebAbstractGroup(label)
-    if wag.abelian:
-        return 'Abelian - '+str(len(wag.smith_abelian_invariants))
-    if wag.nilpotent:
-        return 'Nilpotent - '+str(wag.nilpotency_class)
-    if wag.solvable:
-        return 'Solvable - '+str(wag.derived_length)
-    return 'Non-Solvable - '+str(wag.composition_length)
+def show_type(rec):
+    if rec['abelian']:
+        return f'Abelian - {len(rec["smith_abelian_invariants"])}'
+    elif rec['nilpotent']:
+        return f'Nilpotent - {rec["nilpotency_class"]}'
+    elif rec['solvable']:
+        return 'Solvable - {rec["derived_length"]}'
+    else:
+        return 'Non-Solvable - {rec["composition_length"]}'
 
 #### Searching
 def group_jump(info):
@@ -482,7 +480,6 @@ def group_download(info):
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
-
 @search_wrap(template="abstract-search.html",
              table=db.gps_groups,
              title='Abstract group search results',
@@ -490,8 +487,9 @@ def group_download(info):
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','abelian','exponent','solvable',
-                        'nilpotent','center_label','outer_order', 'tex_name',
-                        'nilpotency_class','number_conjugacy_classes'],
+                         'nilpotent','center_label','outer_order', 'tex_name',
+                         'nilpotency_class','number_conjugacy_classes',
+                         'smith_abelian_invariants','derived_length','composition_length'],
              #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
              #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
              #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
