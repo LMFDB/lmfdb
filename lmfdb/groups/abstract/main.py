@@ -396,7 +396,7 @@ def interesting():
         db.gps_groups,
         url_for_label,
         title="Some interesting groups",
-        bread=get_bread([("Interesting", " ")])
+        bread=get_bread([("Interesting", " ")]),
         learnmore=learnmore_list()
     )
 
