@@ -150,34 +150,42 @@ class Circle:
                 return 2 # anything bigger than 1 will delete the circle
         return 1 - dmin / self.r
 
+# Most common orders below 512: 4 (2384226 ccs), 2, 8, 12, 6, 24, 1, 16, 20, 28, 3, 10, 14, 56, 30, 18, 40, 9, 48, 60, 5, 36, 15, 7, 26, 52, 32, 22, 44, 42, 21, 120, 27 (5046 ccs)
+# We color based on 2-adic valuation and odd part.  Generally, a higher valuation is coded as darker, and we use the odd part to select a hue.
+# The HSV color coordiantes are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
+hsv = {
+    1: (0, 95, [None, 100, 82, 66, 52, 40, 30, 22, 16]), # red; 1 is handled separately
+    3: (220, 90, [90, 80, 70, 60, 50, 40, 30, 20]), # blue
+    5: (30, 100, [100, 90, 80, 70, 60, 50, 40]), # orange
+    7: (150, 65, [90, 80, 70, 60, 50, 40, 30]), # muddy green
+    9: (280, 90, [90, 80, 70, 60, 50, 40, 30]), # violet
+    11: (320, 90, [100, 82, 66, 52, 40, 30]), # purple
+    13: (60, 80, [80, 70, 60, 50, 40, 30]), # yellow
+    15: (175, 90, [90, 80, 70, 60, 50, 40]), # teal
+    21: (90, 50, [80, 70, 60, 50, 40]), # chartreuse
+}
+
 @cached_function
 def get_color(order):
     """
     Associate a rgb triple to a given order
     """
-    r, b, g = 0, 0, 0
-    for p, e in order.factor():
-        if p == 2: r += e
-        elif p == 3: b += e
-        else: g += e
-    # For now we use a very simple method, of adding hsv together.  We should improve this to avoid ugly greys
-    if r > 10: r = 10
-    if b > 10: b = 10
-    if g > 10: g = 10
-    k = min(r, b, g)
-    r -= k
-    b -= k
-    g -= k
-    if r == b == g == 0:
-        return (255 - 25*k, 255 - 25*k, 255 - 25*k)
-    T = max(r, b, g)
-    if T > 11: T = 11
-    if g == 0:
-        # Need to use h=1.0 rather than h=0.0 for red
-        hue = (2*b + 3*r)/(3*r+3*b)
+    if order == 1:
+        return 255, 255, 255
+    k, odd = order.val_unit(2)
+    if odd in hsv:
+        h, s, v = hsv[odd]
     else:
-        hue = (g + 2*b)/(3*r + 3*g + 3*b)
-    rgb = hsv_to_rgb(hue, 1 - k/10, 1 - (T-1)/10)
+        h = (43*odd) % 360
+        s = 60 + ((odd * 17) % 31)
+        v = [90, 80, 70, 60, 50, 40, 30]
+    def delist(comp):
+        if isinstance(comp, list):
+            i = k if k < len(comp) else -1
+            comp = comp[i]
+        return comp
+    h, s, v = delist(h), delist(s), delist(v)
+    rgb = hsv_to_rgb(h / 360.0, s / 100.0, v / 100.0)
     return round(255*rgb[0]), round(255*rgb[1]), round(255*rgb[2])
 
 def get_radius(n):
@@ -413,7 +421,17 @@ def pack(rdata, R0, rmax):
             density = area / (4 * rmax * (R0 + rmax))
         density -= 0.01
 
+def clear_zeros(D):
+    """
+    Removes 0 values from the dictionary
+    """
+    for k, v in list(D.items()):
+        if v == 0:
+            del D[k]
+
 def arrange_ring(radii, colors, R0, rmax):
+    clear_zeros(radii)
+    clear_zeros(colors)
     Rc = R0 + rmax
     thetasum = sum(2*r*cnt / Rc for r, cnt in radii.items())
     if thetasum > 2*pi:
