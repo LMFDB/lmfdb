@@ -19,11 +19,13 @@ from lmfdb.utils import (
     dispZmat, dispcyclomat,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import parse_multiset
-from lmfdb.groups.abstract import abstract_page #, abstract_logger
-from lmfdb.groups.abstract.web_groups import(
+from lmfdb.utils.interesting import interesting_knowls
+from . import abstract_page #, abstract_logger
+from .web_groups import (
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
     WebAbstractRationalCharacter, WebAbstractCharacter,
     group_names_pretty)
+from .stats import GroupStats
 from lmfdb.number_fields.web_number_field import formatfield
 
 #credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
@@ -44,11 +46,7 @@ def ctx_abstract_groups():
             'sub_data': sub_data,
             'rchar_data': rchar_data,
             'cchar_data': cchar_data,
-            'abstract_group_summary': abstract_group_summary,
             'dyn_gen': dyn_gen}
-
-def abstract_group_summary():
-    return fr'This database contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} of {display_knowl("group.order", "order")} $n\leq {db.gps_groups.max("order")}$ together with {comma(db.gps_subgroups.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.'
 
 def learnmore_list():
     return [ ('Source and acknowledgements', url_for(".how_computed_page")),
@@ -328,6 +326,7 @@ def index():
         elif search_type in ['Subgroups', 'RandomSubgroup']:
             info['search_array'] = SubgroupSearchArray()
             return subgroup_search(info)
+    info['stats'] = GroupStats()
     info['count']= 50
     info['order_list']= ['1-63', '64-127', '128-255', '256-383', '384-511']
     info['nilp_list']= range(1,8)
@@ -359,7 +358,29 @@ def index():
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list())
 
+@abstract_page.route("/stats")
+def statistics():
+    title = "Abstract groups: Statistics"
+    return render_template(
+        "display_stats.html",
+        info=GroupStats(),
+        title=title,
+        bread=get_bread([("Statistics", " ")]),
+        learnmore=learnmore_list(),
+    )
 
+@abstract_page.route("/dynamic_stats")
+def dynamic_statistics():
+    info = to_dict(request.args, search_array=GroupsSearchArray())
+    GroupStats().dynamic_setup(info)
+    title = "Abstract groups: Dynamic statistics"
+    return render_template(
+        "dynamic_stats.html",
+        info=info,
+        title=title,
+        bread=get_bread([("Dynamic Statistics", " ")]),
+        learnmore=learnmore_list(),
+    )
 
 @abstract_page.route("/random")
 def random_abstract_group():
@@ -368,7 +389,16 @@ def random_abstract_group():
     response.headers['Cache-Control'] = 'no-cache, no-store'
     return response
 
-
+@abstract_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "group.abstract",
+        db.gps_groups,
+        url_for_label,
+        title="Some interesting groups",
+        bread=get_bread([("Interesting", " ")])
+        learnmore=learnmore_list()
+    )
 
 @abstract_page.route("/<label>")
 def by_label(label):
@@ -501,6 +531,9 @@ def group_search(info, query):
     info['group_url'] = get_url
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
     info['show_type'] = show_type
+    group_parse(info, query)
+
+def group_parse(info, query):
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'exponent', 'exponent')
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
@@ -674,6 +707,7 @@ def render_abstract_group(label):
                            properties=gp.properties(),
                            friends=friends,
                            learnmore=learnmore_list(),
+                           KNOWL_ID=f'group.abstract.{label}',
                            downloads=downloads)
 
 def render_abstract_subgroup(label):
