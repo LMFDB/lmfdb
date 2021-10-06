@@ -495,9 +495,9 @@ def show_type(rec):
     elif rec['nilpotent']:
         return f'Nilpotent - {rec["nilpotency_class"]}'
     elif rec['solvable']:
-        return 'Solvable - {rec["derived_length"]}'
+        return f'Solvable - {rec["derived_length"]}'
     else:
-        return 'Non-Solvable - {rec["composition_length"]}'
+        return f'Non-Solvable - {rec["composition_length"]}'
 
 #### Searching
 def group_jump(info):
