@@ -16,7 +16,7 @@ from lmfdb.utils import (
     flash_error, to_dict, display_knowl,
     SearchArray, TextBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
-    dispZmat, dispcyclomat,
+    parse_bracketed_posints, dispZmat, dispcyclomat,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
@@ -495,9 +495,9 @@ def show_type(rec):
     elif rec['nilpotent']:
         return f'Nilpotent - {rec["nilpotency_class"]}'
     elif rec['solvable']:
-        return 'Solvable - {rec["derived_length"]}'
+        return f'Solvable - {rec["derived_length"]}'
     else:
-        return 'Non-Solvable - {rec["composition_length"]}'
+        return f'Non-Solvable - {rec["composition_length"]}'
 
 #### Searching
 def group_jump(info):
@@ -560,6 +560,7 @@ def group_parse(info, query):
     parse_bool(info, query, 'Zgroup', 'is Z-group')
     parse_bool(info, query, 'monomial', 'is monomial')
     parse_bool(info, query, 'rational', 'is rational')
+    parse_bracketed_posints(info, query, 'exponents_of_order', 'exponents_of_order')
     parse_regex_restricted(info, query, 'center_label', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'aut_group', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'commutator_label', regex=abstract_group_label_regex)
@@ -912,32 +913,36 @@ class GroupsSearchArray(SearchArray):
             label="Order",
             knowl="group.order",
             example="3",
-            example_span="4, or a range like 3..5")
+            example_span="4, or a range like 3..5",
+        )
         exponent = TextBox(
             name="exponent",
             label="Exponent",
             knowl="group.exponent",
             example="2, 3, 7",
-            example_span="2, or list of integers like 2, 3, 7")
+            example_span="2, or list of integers like 2, 3, 7",
+        )
         nilpclass = TextBox(
             name="nilpotency_class",
             label="Nilpotency class",
             knowl="group.nilpotent",
             example="3",
-            example_span="4, or a range like 3..5")
+            example_span="4, or a range like 3..5",
+        )
         aut_group = TextBox(
             name="aut_group",
             label="Automorphism group",
             knowl="group.automorphism",
             example="4.2",
-            example_span="4.2"
-            )
+            example_span="4.2",
+        )
         aut_order = TextBox(
             name="aut_order",
             label="Automorphism group order",
             knowl="group.automorphism",
             example="3",
-            example_span="4, or a range like 3..5")
+            example_span="4, or a range like 3..5",
+        )
         derived_length = TextBox(
             name="derived_length",
             label="Derived length",
@@ -945,7 +950,7 @@ class GroupsSearchArray(SearchArray):
             example="3",
             example_span="4, or a range like 3..5",
             advanced=True
-            )
+        )
         frattini_label= TextBox(
             name="frattini_label",
             label="Frattini subgroup",
@@ -953,7 +958,7 @@ class GroupsSearchArray(SearchArray):
             example="4.2",
             example_span="4.2",
             advanced=True
-            )
+        )
         outer_group = TextBox(
             name="outer_group",
             label="Outer aut. group",
@@ -961,7 +966,7 @@ class GroupsSearchArray(SearchArray):
             example="4.2",
             example_span="4.2",
             advanced=True
-            )
+        )
         outer_order = TextBox(
             name="outer_order",
             label="Outer aut. group order",
@@ -969,7 +974,7 @@ class GroupsSearchArray(SearchArray):
             example="3",
             example_span="4, or a range like 3..5",
             advanced=True
-            )
+        )
         rank = TextBox(
             name="rank",
             label="Rank",
@@ -977,20 +982,20 @@ class GroupsSearchArray(SearchArray):
             example="3",
             example_span="4, or a range like 3..5",
             advanced=True
-            )
+        )
         abelian = YesNoBox(
             name="abelian",
             label="Abelian",
             knowl="group.abelian",
             example_col=True
-            )
+        )
         metabelian = YesNoBox(
             name="metabelian",
             label="Metabelian",
             knowl="group.metabelian",
             advanced=True,
             example_col=True
-            )
+        )
         cyclic = YesNoBox(
             name="cyclic",
             label="Cyclic",
@@ -1003,20 +1008,20 @@ class GroupsSearchArray(SearchArray):
             knowl="group.metacyclic",
             advanced=True,
             example_col=True,
-            )
+        )
         solvable = YesNoBox(
             name="solvable",
             label="Solvable",
             knowl="group.solvable",
             example_col=True,
-            )
+        )
         supersolvable = YesNoBox(
             name="supersolvable",
             label="Supersolvable",
             knowl="group.supersolvable",
             advanced=True,
             example_col=True,
-            )
+        )
         nilpotent = YesNoBox(
             name="nilpotent",
             label="Nilpotent",
@@ -1028,21 +1033,21 @@ class GroupsSearchArray(SearchArray):
             label="Simple",
             knowl="group.simple",
             example_col=True,
-            )
+        )
         almost_simple= YesNoBox(
             name="almost_simple",
             label="Almost simple",
             knowl="group.almost_simple",
             example_col=True,
             advanced=True,
-            )
+        )
         quasisimple= YesNoBox(
             name="quasisimple",
             label="Quasisimple",
             knowl="group.quasisimple",
             advanced=True,
             example_col=True,
-            )
+        )
         perfect = YesNoBox(
             name="perfect",
             label="Perfect",
@@ -1054,7 +1059,7 @@ class GroupsSearchArray(SearchArray):
             label="Direct product",
             knowl="group.direct_product",
             example_col=True,
-            )
+        )
         semidirect_product = YesNoBox(
             name="semidirect_product",
             label="Semidirect product",
@@ -1067,62 +1072,69 @@ class GroupsSearchArray(SearchArray):
             knowl="group.a_group",
             advanced=True,
             example_col=True,
-            )
+        )
         Zgroup = YesNoBox(
             name="Zgroup",
             label="Z-group",
             knowl="group.z_group",
             advanced=True,
             example_col=True,
-            )
+        )
         monomial = YesNoBox(
             name="monomial",
             label="Monomial",
             knowl="group.monomial",
             advanced=True,
-            )
+        )
         rational = YesNoBox(
             name="rational",
             label="Rational",
             knowl="group.rational_group",
             advanced=True,
             example_col=True,
-            )
+        )
         center_label = TextBox(
             name="center_label",
             label="Center",
             knowl="group.center_isolabel",
             example="4.2",
             example_span="4.2"
-            )
+        )
         commutator_label = TextBox(
             name="commutator_label",
             label="Commutator",
             knowl="group.commutator_isolabel",
             example="4.2",
             example_span="4.2"
-            )
+        )
         abelian_quotient = TextBox(
             name="abelian_quotient",
             label="Abelianization",
             knowl="group.abelianization_isolabel",
             example="4.2",
             example_span="4.2"
-            )
+        )
         central_quotient = TextBox(
             name="central_quotient",
             label="Central quotient",
             knowl="group.central_quotient_isolabel",
             example="4.2",
             example_span="4.2"
-            )
+        )
         order_stats = TextBox(
             name="order_stats",
             label="Order statistics",
             knowl="group.order_stats",
             example="1^1, 2^3, 3^2",
             example_span="1^1, 2^3, 3^2"
-            )
+        )
+        exponents_of_order = TextBox(
+            name="exponents_of_order",
+            label="Order factorization",
+            knowl="group.order_factorization",
+            example="[2,1]",
+            example_span="",
+        )
         count = CountBox()
 
         self.browse_array = [
