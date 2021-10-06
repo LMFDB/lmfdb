@@ -14,7 +14,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     flash_error, to_dict, display_knowl,
-    SearchArray, TextBox, CountBox, YesNoBox, comma,
+    SearchArray, TextBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
     parse_bracketed_posints, dispZmat, dispcyclomat,
     search_wrap, web_latex)
@@ -542,6 +542,7 @@ def group_parse(info, query):
     parse_ints(info, query, 'outer_order', 'outer_order')
     parse_ints(info, query, 'derived_length', 'derived_length')
     parse_ints(info, query, 'rank', 'rank')
+    parse_ints(info, query, 'commutator_count', 'commutator length')
     parse_multiset(info, query, 'order_stats', 'order_stats')
     parse_bool(info, query, 'abelian', 'is abelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
@@ -560,6 +561,7 @@ def group_parse(info, query):
     parse_bool(info, query, 'Zgroup', 'is Z-group')
     parse_bool(info, query, 'monomial', 'is monomial')
     parse_bool(info, query, 'rational', 'is rational')
+    parse_bool(info, query, 'wreath_product', 'is wreath product')
     parse_bracketed_posints(info, query, 'exponents_of_order', 'exponents_of_order')
     parse_regex_restricted(info, query, 'center_label', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'aut_group', regex=abstract_group_label_regex)
@@ -1133,7 +1135,22 @@ class GroupsSearchArray(SearchArray):
             label="Order factorization",
             knowl="group.order_factorization",
             example="[2,1]",
-            example_span="",
+            example_span="[2,1] or [8]",
+            advanced=True,
+        )
+        commutator_count = TextBox(
+            name="commutator_count",
+            label="Commutator length",
+            knowl="group.commutator_length",
+            example="2-",
+            example_span="1 or 2-4",
+            advanced=True,
+        )
+        wreath_product = YesNoBox(
+            name="wreath_product",
+            label="Wreath product",
+            knowl="group.wreath_product",
+            advanced=True,
         )
         count = CountBox()
 
@@ -1153,7 +1170,9 @@ class GroupsSearchArray(SearchArray):
             [outer_order, metacyclic],
             [Agroup, monomial],
             [Zgroup, rational],
+            [wreath_product],
             [order_stats, rank],
+            [exponents_of_order, commutator_count],
             [count]
         ]
 
@@ -1166,7 +1185,7 @@ class GroupsSearchArray(SearchArray):
             [metabelian, metacyclic, almost_simple, quasisimple],
             [Agroup, Zgroup, derived_length, frattini_label],
             [supersolvable, monomial, rational, rank],
-            [order_stats]
+            [order_stats, exponents_of_order, commutator_count, wreath_product]
         ]
 
     sort_knowl = "group.sort_order"

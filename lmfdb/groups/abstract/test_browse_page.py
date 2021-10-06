@@ -12,7 +12,7 @@ class AbGpsHomeTest(LmfdbTest):
         Check that the Groups/Abstract index page works
         """
         homepage = self.tc.get("/Groups/Abstract/").get_data(as_text=True)
-        assert "from the database" in homepage
+        assert "database currently contains" in homepage
 
     # TODO test stats once we have them
     #  def test_stats_page(self):
