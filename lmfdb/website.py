@@ -87,8 +87,6 @@ from . import rep_galois_modl
 assert rep_galois_modl
 from . import hecke_algebras
 assert hecke_algebras
-from . import groups
-assert groups
 from . import cluster_pictures
 assert cluster_pictures
 from . import inventory_app
@@ -105,7 +103,6 @@ from . import maass_forms
 assert maass_forms
 from .homepage import random
 assert random
-
 
 from .lmfdb_database import db
 if db.is_verifying:

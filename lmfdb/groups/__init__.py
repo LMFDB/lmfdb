@@ -7,7 +7,4 @@ groups_page = Blueprint("groups", __name__, template_folder='templates', static_
 groups = groups_page
 groups_logger = make_logger(groups_page)
 
-#import main
-#assert main # silence pyflakes
-
 app.register_blueprint(groups_page, url_prefix="/Groups")
