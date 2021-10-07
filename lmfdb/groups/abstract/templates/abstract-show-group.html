@@ -265,18 +265,6 @@
 </table>
 
 
-{#		
- <table>		
-   {% for layer in gp.subgroup_layers[0] %}		
-   <tr>		
-     {% for subgp in layer %}		
-     <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>		
-     {% endfor %}		
-   </tr>		
-   {% endfor %}		
- </table>		
-#}
-
 {# An invisible span to get the select color in the diagram into the DOM #}
 <div>
 <span id="group-diagram-selected" style="display:none;">Hi</span>

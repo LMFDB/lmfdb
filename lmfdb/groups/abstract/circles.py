@@ -431,7 +431,8 @@ def clear_zeros(D):
 
 def arrange_ring(radii, colors, R0, rmax):
     clear_zeros(radii)
-    clear_zeros(colors)
+    for D in colors.values():
+        clear_zeros(D)
     Rc = R0 + rmax
     thetasum = sum(2*r*cnt / Rc for r, cnt in radii.items())
     if thetasum > 2*pi:
@@ -585,6 +586,7 @@ def arrange_rings(radii, colors, R0, rmax):
             utilization = 1
         else:
             utilization += 0.1
+
 
 def arrange(rdata, R0, rmax):
     radii = Counter([r for (r, o) in rdata])
