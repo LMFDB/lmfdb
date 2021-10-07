@@ -4,16 +4,16 @@ function highlight_group(evt) {
     var subid = $(this).attr("data-sgid");
     if (subseries == null) {
         $(`span[data-sgid="${subid}"]`).addClass("activesubgp");
-        sdiagram.highlight(subid);
-        sautdiagram.highlight(subid);
+        if (typeof sdiagram !== "undefined") {sdiagram.highlight(subid);}
+        if (typeof sautdiagram !== "undefined") {sautdiagram.highlight(subid);}
     } else {
         $(`span[data-sgseries="${subseries}"]`).addClass("activesubgp");
         subids = subseries.split("-");
         for (i = 0; i < subids.length; i++) {
             sid = subids[i];
             $(`span[data-sgid="${sid}"]`).not('.series').addClass("activesubgp");
-            sdiagram.highlight(sid);
-            sautdiagram.highlight(sid);
+            if (typeof sdiagram !== "undefined") {sdiagram.highlight(subid);}
+            if (typeof sautdiagram !== "undefined") {sautdiagram.highlight(subid);}
         }
     }
 }
@@ -23,16 +23,16 @@ function unhighlight_group(evt) {
     var subid = $(this).attr("data-sgid");
     if (subseries == null) {
         $(`span[data-sgid="${subid}"]`).removeClass("activesubgp");
-        sdiagram.unhighlight(subid);
-        sautdiagram.unhighlight(subid);
+        if (typeof sdiagram !== "undefined") {sdiagram.unhighlight(subid);}
+        if (typeof sautdiagram !== "undefined") {sautdiagram.unhighlight(subid);}
     } else {
         $(`span[data-sgseries="${subseries}"]`).removeClass("activesubgp");
         subids = subseries.split("-");
         for (i = 0; i < subids.length; i++) {
             sid = subids[i];
             $(`span[data-sgid="${sid}"]`).not('.series').removeClass("activesubgp");
-            sdiagram.unhighlight(sid);
-            sautdiagram.unhighlight(sid);
+            if (typeof sdiagram !== "undefined") {sdiagram.unhighlight(subid);}
+            if (typeof sautdiagram !== "undefined") {sautdiagram.unhighlight(subid);}
         }
     }
 }
