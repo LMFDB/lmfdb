@@ -4,17 +4,22 @@ from lmfdb import db
 
 from flask import url_for
 from sage.all import (
-    factor,
-    lazy_attribute,
     Permutations,
     SymmetricGroup,
     ZZ,
-    prod,
+    factor,
     latex,
+    lazy_attribute,
+    prod,
 )
 from sage.libs.gap.libgap import libgap
 from collections import Counter, defaultdict
-from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex, web_latex
+from lmfdb.utils import (
+    display_knowl,
+    sparse_cyclotomic_to_latex,
+    to_ordinal,
+    web_latex,
+)
 from .circles import find_packing
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
