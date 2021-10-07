@@ -636,7 +636,7 @@ class WebAbstractGroup(WebObj):
         # Given a decoded element or free group lift, return a latex form for printing on the webpage.
         if self.elt_rep_type == 0:
             s = str(elt)
-            assert len(self.ngens) <= 26, "we are assuming that we have at most 26 generators"
+            assert self.ngens <= 26, "we are assuming that we have at most 26 generators"
             # reversed so that we don't replace f1 in f10.
             for i in reversed(range(self.ngens)):
                 s = s.replace("f%s" % (i + 1), chr(97 + i))
