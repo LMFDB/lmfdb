@@ -1162,7 +1162,7 @@ class WebAbstractConjClass(WebObj):
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.ambient_gp}%7C{self.labe}%7Ccomplex">{name}</a>'
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.ambient_gp}%7C{self.label}%7Ccomplex">{name}</a>'
 
 class WebAbstractDivision(object):
     def __init__(self, ambient_gp, label, classes):
