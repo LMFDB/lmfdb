@@ -95,6 +95,27 @@ class WebAbstractGroup(WebObj):
         return {subdata['short_label']: WebAbstractSubgroup(subdata['label'], subdata)
                 for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
+    def add_layers(self):
+        subs = self.subgroups
+        topord = max(sub.subgroup_order for sub in subs.values())
+        top = [z.short_label for z in subs.values() if z.subgroup_order == topord][0]
+        top.layer = 0
+        seen = set()
+        layer = [subs[top]]
+        added_something = True # prevent data error from causing infinite loop
+        while len(seen) < len(subs) and added_something:
+            new_layer = []
+            added_something = False
+            for H in layer:
+                for new in H.contains:
+                    if new not in seen:
+                        seen.add(new)
+                        added_something = True
+                        K = subs[new]
+                        new_layer.append(K)
+                        K.layer = H.layer + 1
+            layer = new_layer
+
     # special subgroups
     def special_search(self, sp):
         for lab, gp in self.subgroups.items():
