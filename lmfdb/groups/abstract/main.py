@@ -792,7 +792,7 @@ def group_download(info):
     #  credit=lambda:credit_string,
     url_for_label=url_for_label,
 )
-def group_search(info, query):
+def group_search(info, query={}):
     info["group_url"] = get_url
     info["show_factor"] = lambda num: "$" + latex(ZZ(num).factor()) + "$"
     info["show_type"] = show_type
@@ -884,7 +884,7 @@ def group_parse(info, query):
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
 )
-def subgroup_search(info, query):
+def subgroup_search(info, query={}):
     info["group_url"] = get_url
     info["subgroup_url"] = get_sub_url
     info["show_factor"] = lambda num: "$" + latex(ZZ(num).factor()) + "$"
