@@ -675,7 +675,7 @@ class WebAbstractGroup(WebObj):
                 return s
 
             ngens = len(used)
-            assert len(ngens) <= 26, "we are assuming that we have at most 26 generators"
+            assert ngens <= 26, "we are assuming that we have at most 26 generators"
             for i in range(ngens):
                 a = used[i]
                 e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a : used[i + 1]])
