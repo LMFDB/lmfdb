@@ -28,7 +28,6 @@ from .web_groups import (
 from .stats import GroupStats
 from lmfdb.number_fields.web_number_field import formatfield
 
-#credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$')
@@ -62,12 +61,6 @@ def subgroup_label_is_valid(lab):
 
 def label_is_valid(lab):
     return abstract_group_label_regex.match(lab)
-
-#def get_bread(breads=[]):
-#    bc = [("Groups", url_for(".index")),("Abstract", url_for(".index"))]
-#    for b in breads:
-#        bc.append(b)
-#    return bc
 
 def get_bread(tail=[]):
     base = [("Groups", url_for(".index")), ('Abstract', url_for(".index"))]
@@ -801,7 +794,7 @@ def labels_page():
     t = 'Labels for abstract groups'
     bread = get_bread("Labels")
     return render_template("single.html", kid='group.label',
-                           learnmore=learnmore_list_remove('label'), 
+                           learnmore=learnmore_list_remove('label'),
                            title=t, bread=bread)
 
 
@@ -886,7 +879,7 @@ def download_group(**args):
             s +="LGens:=[]; \n"
             s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
             s += "G:=Subgroup(Sd,LGens);"
-      
+
 
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
