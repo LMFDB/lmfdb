@@ -747,8 +747,24 @@ def show_type(rec):
 
 #### Searching
 def group_jump(info):
-    return redirect(url_for(".by_label", label=info["jump"]))
-
+    # by label
+    print(info["jump"])
+    if abstract_group_label_regex.match(info["jump"]):
+        return redirect(url_for(".by_label", label=info["jump"]))
+    else:
+        # by special name
+        for family in db.gps_families.search():
+            print(family["family"])
+            m = re.match(family["input"], info["jump"])
+            if m:
+                print(m)
+                m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
+                lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")
+                if lab:
+                    return redirect(url_for(".by_label", label=lab))
+                else:
+                    raise RuntimeError("The group %s has not yet been added to the database." % info["jump"])
+        raise ValueError("%s is not a valid name for a group; see blah for a list of possible names" % info["jump"])
 
 def group_download(info):
     t = "Stub"
