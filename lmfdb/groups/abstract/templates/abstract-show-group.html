@@ -56,14 +56,14 @@
 
 
 
-<h2> Group Information</h2>
+<h2> Group information</h2>
 <p>
   <table>
     <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
-    <tr><td>{{KNOWL('group.automorphism', 'Automorphism Group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
-    <tr><td>{{KNOWL('group.outer_aut', 'Outer Automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
     {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
@@ -76,7 +76,7 @@
 
 </p>
 
-<h2>Group Statistics</h2>
+<h2>Group statistics</h2>
 
 <p>
   <table class="ntdata" style="margin-left:0;">
@@ -475,7 +475,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 #}
 {% endif %}
 
-<h2> Character Theory </h2>
+<h2> Character theory </h2>
 <p>
 
 <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>

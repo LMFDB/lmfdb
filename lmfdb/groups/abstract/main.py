@@ -1255,7 +1255,7 @@ def download_group(**args):
     filename = "group" + label
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
-        filename += ".gp"
+        filename += ".g"
     if dltype == "magma":
         com = ""
         com1 = "/*"
