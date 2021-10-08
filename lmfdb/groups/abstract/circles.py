@@ -585,6 +585,71 @@ def arrange_rings(radii, colors, R0, rmax):
             utilization = 1
         else:
             utilization += 0.1
+            
+def arrange_rings2(radii, colors, R0, rmax):
+    Rc = R0 + rmax
+    rmin = min(radii)
+    rratio = (rmax / rmin).floor()
+    nratio = (max(radii.values()) / min(radii.values())).floor()
+    n = sum(radii.values())
+    thetadiff = (2*pi / n)
+    dist = Rc*(2 - 2*thetadiff.cos()).sqrt() # distance between centers in equal space case
+    for subrings in range(1, rratio + 1):
+        # subrings is the maximum number of smaller rings we allow ourselves to use.
+        # this is useful when there is a large disparity in circle size: we let
+        # ourselves place multiple small circles on the same theta ray
+        if len(radii) == 1:
+            r = next(iter(radii))
+            placed = [r for i in range(n)]
+        else:
+            invcnt = {r: min(subrings, (rmax / r).floor()) / radii[r] for r in radii}
+            # We assign radii greedily, by keeping track of the radius with the highest
+            # proportion not yet placed.  We start by placing the largest
+            # (this creates a visual line along the positive x-axis), then we
+            # set the values in a heap to the proportion remaining *after the next placement*
+            # adjusted for using a heap that pops the smallest value
+            placed = [rmax]
+            place_count = Counter(radii)
+            place_count[rmax] -= 1
+            remaining = [(QQ(-1) + invcnt[r] + (1/radii[r] if r == rmax else 0), r) for r in radii]
+            heapq.heapify(remaining)
+            cur = heapq.heappop(remaining)
+            while len(placed) < n:
+                cnt = min(place_count.get(cur[1]), subrings, (rmax / cur[1]).floor())
+                while cnt == 0:
+                    cur = heapq.heappop(remaining)
+                    cnt = min(place_count.get(cur[1]), subrings, (rmax / cur[1]).floor())
+                for i in range(cnt):
+                    placed.append(cur[1])
+                cur = heapq.heappushpop(remaining, (cur[0] + invcnt[cur[1]], cur[1]))
+            # Now we figure out if the ordering is legal
+            if subrings == 1: # only in this case is equal_centers possible
+                equal_centers = True
+                for i in range(len(placed)):
+                    if placed[i] + placed[(i+1)%len(placed)] > dist + eps:
+                        equal_centers = False
+                        break
+            else:
+                equal_centers = False
+        if not equal_centers:
+            positions = [(rmax, Rc, RR(0))]
+            groups = [[rmax, 1]]
+            for r in placed[1:]:
+                if r == groups[-1][0]:
+                    groups[-1][1] += 1
+                else:
+                    groups.append([r, 1])
+            for i, (r, cnt) in enumerate(groups):
+                if subrings == 1:
+                    # Finding the angles is simpler here
+                    thetadiff = (1 - (r + prevr)**2 / (2*Rc**2)).arccos()
+                    
+                tracks = (rmax / r).floor()
+                nextr = placed[(i+1)%len(placed)]
+            thetasum = sum(theta_diffs)
+            if thetasum > 2*pi + eps:
+                continue
+            thetaspace = (2*pi - thetasum) / n
 
 def arrange(rdata, R0, rmax):
     radii = Counter([r for (r, o) in rdata])

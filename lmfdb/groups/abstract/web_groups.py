@@ -108,23 +108,21 @@ class WebAbstractGroup(WebObj):
                 props.append((r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))))
         else:
             if self.simple:
-                props[4:4] = [("Simple", "yes")]
-                n = 5
+                props.append(("Simple", "yes"))
             else:
-                props[4:4] = [("Nilpotent", nilp_str),
-                              ("Solvable", solv_str)]
-                n = 6
-            props[6:6] = [
+                props.extend([("Nilpotent", nilp_str),
+                              ("Solvable", solv_str)])
+            props.extend([
                 (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
                 ("#$Z(G)$", web_latex(self.cent_order_factor())),
-                (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order)))]
-            (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
-            ]
+                (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
+                (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
+            ])
         props.extend([
             ("Rank", f"${self.rank}$"),
             ("Perm deg.", f"${self.transitive_degree}$"),
             # ("Faith. dim.", str(self.faithful_reps[0][0])),
-        ]
+        ])
         return props
 
     @lazy_attribute
