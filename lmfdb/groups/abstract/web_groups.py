@@ -100,7 +100,7 @@ class WebAbstractGroup(WebObj):
             (None, self.image()),
         ]
         if self.abelian:
-            prop.append(("Abelian", "yes"))
+            props.append(("Abelian", "yes"))
             if self.simple:
                 props.extend([("Simple", "yes"),
                               (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order)))])
