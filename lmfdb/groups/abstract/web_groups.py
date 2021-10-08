@@ -91,17 +91,17 @@ class WebAbstractGroup(WebObj):
         WebObj.__init__(self, label, data)
 
     def properties(self):
-        nilp_str = f"Yes, of class {self.nilpotency_class}" if self.nilpotent else "No"
-        solv_str = f"Yes, of length {self.derived_length}" if self.solvable else "No"
+        nilp_str = f"yes, of class {self.nilpotency_class}" if self.nilpotent else "no"
+        solv_str = f"yes, of length {self.derived_length}" if self.solvable else "no"
         props = [
             ("Label", self.label),
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
             (None, self.image()),
-            ("Abelian", "Yes" if self.abelian else "No"),
+            ("Abelian", "yes" if self.abelian else "no"),
             ("Nilpotent", nilp_str),
             ("Solvable", solv_str),
-            ("Simple", "Yes" if self.simple else "No"),
+            ("Simple", "yes" if self.simple else "no"),
             (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
             (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
             ("Rank", f"${self.rank}$"),
