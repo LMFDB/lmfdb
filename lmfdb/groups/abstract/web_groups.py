@@ -116,18 +116,19 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroups(self):
-        return {
+        subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
             for subdata in db.gps_subgroups.search({"ambient": self.label})
         }
+        self.add_layers(subs)
+        return subs
 
-    def add_layers(self):
-        subs = self.subgroups
+    def add_layers(self, subs):
         topord = max(sub.subgroup_order for sub in subs.values())
-        top = [z.short_label for z in subs.values() if z.subgroup_order == topord][0]
+        top = [z for z in subs.values() if z.subgroup_order == topord][0]
         top.layer = 0
         seen = set()
-        layer = [subs[top]]
+        layer = [top]
         added_something = True # prevent data error from causing infinite loop
         while len(seen) < len(subs) and added_something:
             new_layer = []
@@ -264,15 +265,6 @@ class WebAbstractGroup(WebObj):
         return self.autjugacy_classes
 
     @lazy_attribute
-    def sorted_cc_divisions(self):
-        ccdivs = [
-            {"label": k, "classes": v}
-            for k, v in self.conjugacy_class_divisions.items()
-        ]
-        ccdivs.sort(key=lambda x: x["classes"][0].counter)
-        return ccdivs
-
-    @lazy_attribute
     def cc_to_div(self):
         # Need to map cc's to their divisions
         ctor = {}
@@ -325,7 +317,7 @@ class WebAbstractGroup(WebObj):
         ]
 
     def most_product_expressions(self):
-        return max(1, len(self.semidirect_products), len(self.nonsplit_products))
+        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.as_aut_gp))
 
     @lazy_attribute
     def display_direct_product(self):
@@ -380,6 +372,10 @@ class WebAbstractGroup(WebObj):
                 count[pair] += 1
         nonsplit.sort(key=product_sort_key)
         return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
+
+    @lazy_attribute
+    def as_aut_gp(self):
+        return [(rec['label'], f"\Aut({rec['tex_name']})") for rec in db.gps_groups.search({"aut_group": self.label}, ["label", "tex_name"]) if rec['label'] != self.label]
 
     # Subgroups up to conjugacy -- this one is no longer used
     @lazy_attribute

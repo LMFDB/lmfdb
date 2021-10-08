@@ -178,14 +178,25 @@
   {% endif %}
   {% if gp.nonsplit_products %}
     <tr>
-      <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
+      <td>{{KNOWL('group.nonsplit_product', 'Non-split product')}}:</td>
       {% for sub, count in gp.nonsplit_products %}
         {% if loop.index == 5 %}
           <td class="show_nonsplit_container"><a href="#" class="show_nonsplit">Show all {{ gp.nonsplit_products | length }}</a></td>
         {% endif %}
         <td{% if loop.index >= 5 %} class="hidden_nonsplit nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
-    {% endfor %}
-  </tr>
+      {% endfor %}
+    </tr>
+  {% endif %}
+  {% if gp.as_aut_gp %}
+    <tr>
+      <td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td>
+      {% for label, disp in gp.as_aut_gp %}
+        {% if loop.index == 5 %}
+          <td class="show_aut_container"><a href="#" class="show_auts">Show all {{ gp.as_aut_gp | length }}</a></td>
+        {% endif %}
+        <td{% if loop.index >= 5 %} class="hidden_auts nodisplay"{% endif %}><a href="{{url_for('.by_label', label=label)}}">${{disp}}$</a></td>
+      {% endfor %}
+    </tr>
   {% endif %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
