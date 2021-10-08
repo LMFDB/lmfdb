@@ -98,7 +98,6 @@ class WebAbstractGroup(WebObj):
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
             (None, self.image()),
-            ("Abelian", "yes" if self.abelian else "no"),
             ("Nilpotent", nilp_str),
             ("Solvable", solv_str),
             ("Simple", "yes" if self.simple else "no"),
@@ -108,8 +107,10 @@ class WebAbstractGroup(WebObj):
             ("Perm deg.", f"${self.transitive_degree}$"),
             # ("Faith. dim.", str(self.faithful_reps[0][0])),
         ]
-        if not self.abelian:
-            props[8:8] = [
+        if self.abelian:
+            props[7:7] = [("Abelian", "yes")]
+        else:
+            props[7:7] = [
                 (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
                 ("#$Z(G)$", web_latex(self.cent_order_factor())),
             ]
