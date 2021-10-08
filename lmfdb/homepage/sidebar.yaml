@@ -200,7 +200,7 @@
     url_for: "lattice.lattice_render_webpage"
     status: beta
     colspan: onecolumn
-  - title: Small groups
+  - title: Abstract groups
     url_for: "abstract.index"
     status: beta
     colspan: onecolumn
