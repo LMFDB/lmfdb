@@ -98,22 +98,33 @@ class WebAbstractGroup(WebObj):
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
             (None, self.image()),
-            ("Nilpotent", nilp_str),
-            ("Solvable", solv_str),
-            ("Simple", "yes" if self.simple else "no"),
-            (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
+        ]
+        if self.abelian:
+            prop.append(("Abelian", "yes"))
+            if self.simple:
+                props.extend([("Simple", "yes"),
+                              (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order)))])
+            else:
+                props.append((r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))))
+        else:
+            if self.simple:
+                props[4:4] = [("Simple", "yes")]
+                n = 5
+            else:
+                props[4:4] = [("Nilpotent", nilp_str),
+                              ("Solvable", solv_str)]
+                n = 6
+            props[6:6] = [
+                (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
+                ("#$Z(G)$", web_latex(self.cent_order_factor())),
+                (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order)))]
             (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
+            ]
+        props.extend([
             ("Rank", f"${self.rank}$"),
             ("Perm deg.", f"${self.transitive_degree}$"),
             # ("Faith. dim.", str(self.faithful_reps[0][0])),
         ]
-        if self.abelian:
-            props[7:7] = [("Abelian", "yes")]
-        else:
-            props[7:7] = [
-                (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
-                ("#$Z(G)$", web_latex(self.cent_order_factor())),
-            ]
         return props
 
     @lazy_attribute

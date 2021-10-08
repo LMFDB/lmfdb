@@ -1688,20 +1688,20 @@ class SubgroupSearchArray(SearchArray):
         )
         subgroup_order = TextBox(
             name="subgroup_order",
-            label="Subgroup Order",
+            label="Subgroup order",
             knowl="group.order",
             example="8",
             example_span="4, or a range like 3..5",
         )
         quotient_order = TextBox(
             name="quotient_order",
-            label="Subgroup Index",
+            label="Subgroup index",
             knowl="group.subgroup.index",
             example="16",
         )
         ambient_order = TextBox(
             name="ambient_order",
-            label="Ambient Order",
+            label="Ambient order",
             knowl="group.order",
             example="128",
         )
