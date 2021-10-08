@@ -79,6 +79,7 @@ class WebObj(object):
         return cls(data["label"], data)
 
     def _get_dbdata(self):
+        # self.table must be defined in subclasses
         return self.table.lookup(self.label)
 
 
@@ -1149,20 +1150,19 @@ class WebAbstractSubgroup(WebObj):
 class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
 
-    def __init__(self, ambient_gp, label, data=None):
-        self.ambient_gp = ambient_gp
+    def __init__(self, group, label, data=None):
         if data is None:
-            data = db.gps_groups_cc.lucky({"group": ambient_gp, "label": label})
+            data = db.gps_groups_cc.lucky({"group": group, "label": label})
         WebObj.__init__(self, label, data)
 
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.ambient_gp}%7C{self.label}%7Ccomplex">{name}</a>'
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
 
 class WebAbstractDivision(object):
-    def __init__(self, ambient_gp, label, classes):
-        self.ambient_gp = ambient_gp
+    def __init__(self, group, label, classes):
+        self.group = group
         self.label = label
         self.classes = classes
         self.order = classes[0].order
@@ -1170,11 +1170,11 @@ class WebAbstractDivision(object):
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.ambient_gp}%7C{self.label}%7Crational">{name}</a>'
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Crational">{name}</a>'
 
 class WebAbstractAutjClass(object):
-    def __init__(self, ambient_gp, label, classes):
-        self.ambient_gp = ambient_gp
+    def __init__(self, group, label, classes):
+        self.group = group
         self.label = label
         self.classes = classes
         self.order = classes[0].order
