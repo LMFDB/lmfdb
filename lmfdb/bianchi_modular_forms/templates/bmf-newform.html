@@ -54,7 +54,7 @@
 {% for entry in data.AL_table: %}
 <tr>
 <td>{{entry[0]}}</td>
-<td>{{entry[1]}} = ({{entry[2]}})</td>
+<td>{{entry[1]}} = {{entry[2]}}</td>
 <td align=right>{{entry[3]}}</td>
 </tr>
 {% endfor %}
@@ -95,7 +95,7 @@ We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which 
 {% for entry in data.hecke_table: %}
 <tr>
 <td>{{entry[0]}}</td>
-<td>{{entry[1]}} = ({{entry[2]}})</td>
+<td>{{entry[1]}} = {{entry[2]}}</td>
 <td align=right>{{entry[3]}}</td>
 </tr>
 {% endfor %}
