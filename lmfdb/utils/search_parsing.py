@@ -38,6 +38,7 @@ FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 PREC_RE = re.compile(r'^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$')
 LF_LABEL_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
+MULTISET_RE = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)(\^(\d+))?)*$')
 
 import ast
 class PowMulNodeVisitor(ast.NodeTransformer):
@@ -233,6 +234,24 @@ def parse_list(inp, query, qfield, process=None):
         query[qfield] = process(out)
     else:
         query[qfield] = out
+
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_multiset(inp, query, qfield):
+    """
+    Parses a string representing a multiset of integers, written in the form, e.g., '1^1,2^4,4^1', and converts it to a list of pairs, e.g., [[1,1], [2,4], [4,1]]
+    """
+    if not MULTISET_RE.match(inp):
+        raise SearchParsingError("Multisets must be given as comma-separated strings with entries of the form <element>^<multiplicity>.")
+    spl = inp.split(',')
+    o_list = []
+    for s in spl:
+        s_spl = s.split('^') # add no caret option
+        if len(s_spl) == 1:
+            o_list.append([ZZ(s_spl[0]), ZZ(1)])
+        else:
+            o_list.append([ZZ(s_spl[0]), ZZ(s_spl[1])])
+    o_list.sort()
+    query[qfield] = o_list
 
 def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors
@@ -1266,6 +1285,25 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
             allowed_str = ", ".join(allowed[:-1]) + " or " + allowed[-1]
         raise SearchParsingError("It must be %s"%allowed_str)
     query[qfield] = process(inp)
+
+@search_parser
+def parse_regex_restricted(inp, query, qfield, regex, err=None, errknowl=None, errtitle=None, comma_split=True):
+    if comma_split:
+        inps = inp.split(",")
+    else:
+        inps = [inp]
+    if all(regex.match(x) for x in inps):
+        if len(inps) == 1:
+            query[qfield] = inps[0]
+        else:
+            query[qfield] = {"$in": inps}
+    else:
+        if err is not None:
+            raise SearchParsingError(err)
+        elif errknowl is not None and errtitle is not None:
+            raise SearchParsingError('It needs to be a <a title = "{0}" knowl="{1}">{0}</a> or a list of {0}s'.format(errtitle, errknowl))
+        else:
+            raise SearchParsingError('It does not match the required form')
 
 @search_parser
 def parse_noop(inp, query, qfield, func=None):

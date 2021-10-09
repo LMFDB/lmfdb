@@ -8,7 +8,8 @@ files = [
 "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py",
 "lmfdb/artin_representations/test_artin_representation.py lmfdb/genus2_curves/test_genus2_curves.py",
 "lmfdb/classical_modular_forms/test_cmf.py lmfdb/classical_modular_forms/test_cmf2.py",
-"lmfdb/lfunctions/test_lfunctions.py",
+    "lmfdb/lfunctions/test_lfunctions.py",
+    "lmfdb/groups/abstract/test_browse_page.py lmfdb/groups/abstract/test_abstract_groups.py",
 ]
 
 server = ["proddb", "devmirror"]
