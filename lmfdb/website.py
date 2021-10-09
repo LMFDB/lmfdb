@@ -91,6 +91,14 @@ from . import cluster_pictures
 assert cluster_pictures
 from . import inventory_app
 assert inventory_app
+from . import groups
+assert groups
+from .groups import abstract
+assert abstract
+from .groups import glnQ
+assert glnQ
+from .groups import glnC
+assert glnC
 from . import maass_forms
 assert maass_forms
 from .homepage import random

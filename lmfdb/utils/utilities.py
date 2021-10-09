@@ -1315,6 +1315,41 @@ def add_space_if_positive(texified_pol):
         return texified_pol
     return r"\phantom{-}" + texified_pol
 
+
+def sparse_cyclotomic_to_latex(n, dat):
+    r"""
+    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
+    and return sum_{j=1}^k cj zeta_n^ej in latex form as it is given
+    (converting to sage will rewrite the element in terms of a basis)
+    """
+
+    dat.sort(key=lambda p: p[1])
+    ans=''
+    z = r'\zeta_{%d}' % n
+    for p in dat:
+        if p[0] == 0:
+            continue
+        if p[1]==0:
+            if p[0] == 1 or p[0] == -1:
+                zpart = '1'
+            else:
+                zpart = ''
+        elif p[1]==1:
+            zpart = z
+        else:
+            zpart = z+r'^{'+str(p[1])+'}'
+        # Now the coefficient
+
+        if p[0] == 1:
+            ans += '+'  + zpart
+        elif p[0] == -1:
+            ans += '-'  + zpart
+        else:
+            ans += '{:+d}'.format(p[0])  + zpart
+    ans= re.compile(r'^\+').sub('', ans)
+    if ans == '':
+        return '0'
+    return ans
 raw_count = 0
 
 def raw_typeset(raw, tset='', extra=''):
@@ -1344,4 +1379,36 @@ def raw_typeset(raw, tset='', extra=''):
     out += extra
     out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
     return out
+
+def to_ordinal(n):
+    a = (n % 100) // 10
+    if a == 1:
+        return '%sth' % n
+    b = n % 10
+    if b == 1:
+        return '%sst' % n
+    elif b == 2:
+        return '%snd' % n
+    elif b == 3:
+        return '%srd' % n
+    else:
+        return '%sth' % n
+
+def dispZmat(mat):
+    r""" Display a matrix with integer entries
+    """
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([str(z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
+
+def dispcyclomat(n,mat):
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
 

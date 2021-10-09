@@ -90,7 +90,7 @@ jobs:
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
       # If this fails you need to update the file list above and file count
-      run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 37
+      run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 39
 
     - name: Config LMFDB to run tests against proddb
       if: matrix.files != 'lint' && matrix.server == 'proddb'

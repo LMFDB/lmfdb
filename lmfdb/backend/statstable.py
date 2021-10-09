@@ -1230,6 +1230,9 @@ class PostgresStatsTable(PostgresBase):
 
         Returns a boolean: whether any counts were stored.
         """
+        if self._db._read_only:
+            self.logger.info("Read only mode, not recording stats")
+            return
         from sage.all import cartesian_product_iterator
         if split_list and threshold is not None:
             raise ValueError("split_list and threshold not simultaneously supported")

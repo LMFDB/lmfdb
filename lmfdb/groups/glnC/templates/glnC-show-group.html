@@ -1,0 +1,28 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+<h2> Group information</h2>
+<p>
+  <table>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.order}} </td></tr>
+    <tr><td>Abstract group</td><td> {{info.groupknowl | safe}} </td></tr>
+    <tr><td>Group name</td><td> {{info.groupname}} </td></tr>
+  </table>
+</p>
+
+<h2> Representation information</h2>
+<p>
+  <table>
+    <tr><td>Dimension</td><td> {{info.dim}} </td></tr>
+    <tr><td>Irreducible</td><td> {{info.irreducible}} </td></tr>
+  </table>
+</p>
+<h2>Generators</h2>
+<p>
+{% for gen in info.gens %}
+ ${{ info.dispmat(gen)|safe }}$ <br>
+{% endfor %}
+
+{% endblock %}
