@@ -160,13 +160,13 @@ class WebBMF(object):
         self.neigs = self.nap0 + len(badp)
         self.hecke_table = [[web_latex(p.norm()),
                              ideal_label(p),
-                             web_latex(p.gens_reduced()[0]),
+                             web_latex(p.gens_reduced()),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if p not in badp]
         self.have_AL = self.AL_eigs[0]!='?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),
                              ideal_label(p),
-                              web_latex(p.gens_reduced()[0]),
+                              web_latex(p.gens_reduced()),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
             # The following helps to create Sage download data
             self.AL_table_data = [[p.gens_reduced(),ap] for p,ap in zip(badp, self.AL_eigs)]
