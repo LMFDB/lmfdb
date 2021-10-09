@@ -19,11 +19,23 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_latex,
     to_ordinal,
     web_latex,
+    letters2num,
 )
 from .circles import find_packing
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
+def label_sortkey(label):
+    L = []
+    for piece in label.split("."):
+        for i, x in enumerate(re.split(r"(\D+)", piece)):
+            if x:
+                if i%2:
+                    x = letters2num(x)
+                else:
+                    x = int(x)
+                L.append(x)
+    return L
 
 def group_names_pretty(label):
     if isinstance(label, str):
@@ -361,28 +373,32 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def semidirect_products(self):
         semis = []
-        count = Counter()
+        subs = defaultdict(list)
         for sub in self.subgroups.values():
             if sub.normal and sub.split and not sub.direct:
                 pair = (sub.subgroup, sub.quotient)
-                if pair not in count:
+                if pair not in subs:
                     semis.append(sub)
-                count[pair] += 1
+                subs[pair].append(sub.short_label)
         semis.sort(key=product_sort_key)
-        return [(sub, count[sub.subgroup, sub.quotient]) for sub in semis]
+        for V in subs.values():
+            V.sort(key=label_sortkey)
+        return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in semis]
 
     @lazy_attribute
     def nonsplit_products(self):
         nonsplit = []
-        count = Counter()
+        subs = defaultdict(list)
         for sub in self.subgroups.values():
             if sub.normal and not sub.split:
                 pair = (sub.subgroup, sub.quotient)
-                if pair not in count:
+                if pair not in subs:
                     nonsplit.append(sub)
-                count[pair] += 1
+                subs[pair].append(sub.short_label)
         nonsplit.sort(key=product_sort_key)
-        return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
+        for V in subs.values():
+            V.sort(key=label_sortkey)
+        return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
     @lazy_attribute
     def as_aut_gp(self):
