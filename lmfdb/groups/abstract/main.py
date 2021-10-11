@@ -25,6 +25,7 @@ from lmfdb.utils import (
     display_knowl,
     SearchArray,
     TextBox,
+    SneakyTextBox,
     CountBox,
     YesNoBox,
     parse_ints,
@@ -32,6 +33,7 @@ from lmfdb.utils import (
     clean_input,
     parse_regex_restricted,
     parse_bracketed_posints,
+    parse_noop,
     dispZmat,
     dispcyclomat,
     search_wrap,
@@ -550,23 +552,6 @@ def index():
         ("perfect=yes", "perfect"),
         ("rational=yes", "rational"),
     ]
-    info["prop_but_not"] = [
-        [
-            ("almost_simple=yes&quasisimple=no", "almost simple but not quasisimple"),
-            ("quasisimple=yes&almost_simple=no", "quasisimple but not almost simple"),
-            ("Zgroup=yes&cyclic=no", "Z-group but not cyclic"),
-        ],
-        [
-            ("metacyclic=yes&Zgroup=no", "metacyclic but not a Z-group"),
-            ("Agroup=yes&Zgroup=no", "A-group but not a Z-group"),
-            ("metabelian=yes&metacyclic=no", "metabelian but not metacyclic"),
-        ],
-        [
-            ("supersolvable=yes&nilpotent=no", "supersolvable but not nilpotent"),
-            ("monomial=yes&supersolvable=no", "monomial but not supersolvable"),
-            ("solvable=yes&monomial=no", "solvable but not monomial"),
-        ],
-    ]
     info["maxgrp"] = db.gps_groups.max("order")
 
     return render_template(
@@ -756,9 +741,11 @@ def group_jump(info):
     if abstract_group_label_regex.match(info["jump"]):
         return redirect(url_for(".by_label", label=info["jump"]))
     # by name
-    lab = db.gps_groups.lucky({"name":info["jump"]}, projection="label")
-    if lab:
-        return redirect(url_for(".by_label", label=lab))
+    labs = db.gps_groups.search({"name":info["jump"]}, projection="label", limit=2)
+    if len(labs) == 1:
+        return redirect(url_for(".by_label", label=labs[0]))
+    elif len(labs) == 2:
+        return redirect(url_for(".index", name=info["jump"]))
     # by special name
     for family in db.gps_families.search():
         m = re.match(family["input"], info["jump"])
@@ -867,7 +854,7 @@ def group_parse(info, query):
         info, query, "frattini_label", regex=abstract_group_label_regex
     )
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
-
+    parse_noop(info, query, "name")
 
 @search_wrap(
     template="subgroup-search.html",
@@ -1599,6 +1586,12 @@ class GroupsSearchArray(SearchArray):
             knowl="group.wreath_product",
             advanced=True,
         )
+        name = SneakyTextBox(
+            name="name",
+            label="Name",
+            knowl="group.find_input",
+            example="C16.D4",
+        )
         count = CountBox()
 
         self.browse_array = [
@@ -1639,6 +1632,7 @@ class GroupsSearchArray(SearchArray):
             [Agroup, Zgroup, derived_length, frattini_label],
             [supersolvable, monomial, rational, rank],
             [order_stats, exponents_of_order, commutator_count, wreath_product],
+            [name],
         ]
 
     sort_knowl = "group.sort_order"

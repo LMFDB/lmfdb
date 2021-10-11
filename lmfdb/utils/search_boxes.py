@@ -366,6 +366,14 @@ class CheckBox(SearchBox):
             keys.append("checked")
         return '<input type="checkbox" %s>' % (" ".join(keys),)
 
+class SneakyBox(SearchBox):
+    """
+    Only displayed in result refinement if the corresponding input is present.
+    Intended for use in displaying statistics and jump boxes
+    """
+
+class SneakyTextBox(TextBox, SneakyBox):
+    pass
 
 class SkipBox(TextBox):
     def _input(self, info=None):
@@ -563,11 +571,13 @@ class SearchArray(UniqueRepresentation):
                 if any(box.has_label(info) for box in row):
                     labels = [box.label_html(info) for box in row]
                     lines.append("".join("\n      " + label for label in labels))
-                inputs = [box.input_html(info) for box in row]
+                inputs = [box.input_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                 lines.append("".join("\n      " + inp for inp in inputs))
             elif layout_type == 'horizontal':
                 cols = []
                 for box in row:
+                    if isinstance(box, SneakyBox) and info is not None and box.name not in info:
+                        continue
                     cols.append(box.label_html(info))
                     cols.append(box.input_html(info))
                     ex = box.example_html(info)
@@ -578,6 +588,8 @@ class SearchArray(UniqueRepresentation):
                 top_cols = []
                 bot_cols = []
                 for box in row:
+                    if isinstance(box, SneakyBox) and info is not None and box.name not in info:
+                        continue
                     top_cols.append(box.label_html(info))
                     bot_cols.append(box.input_html(info))
                     ex = box.example_html(info)

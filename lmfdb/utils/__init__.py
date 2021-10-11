@@ -39,6 +39,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SearchButton', 'SearchButtonWithSelect', 'RowSpacer',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
+           'SneakyTextBox',
            'Downloader',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
            'Configuration',
@@ -89,6 +90,7 @@ from .search_boxes import (
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
     SelectBox, YesNoBox, YesNoMaybeBox, ExcludeOnlyBox,
     ParityBox, ParityMod, SubsetBox, SubsetNoExcludeBox, SelectBoxNoEg, CountBox,
+    SneakyTextBox,
     SearchButton, SearchButtonWithSelect, RowSpacer)
 from .downloader import Downloader
 from .display_stats import formatters, proportioners, totaler, StatsDisplay
