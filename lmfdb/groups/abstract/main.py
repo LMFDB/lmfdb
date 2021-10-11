@@ -769,7 +769,7 @@ def group_jump(info):
                 return redirect(url_for(".by_label", label=lab))
             else:
                 raise RuntimeError("The group %s has not yet been added to the database." % info["jump"])
-    raise ValueError("%s is not a valid name for a group; see blah for a list of possible names" % info["jump"])
+    raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (info["jump"], display_knowl('group.families', 'here')))
 
 def group_download(info):
     t = "Stub"
@@ -1355,7 +1355,9 @@ class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3 or 16.1"
+    jump_egspan = "e.g. 8.3 or GL(2,3)"
+    jump_prompt = "Label or name"
+    jump_knowl = "group.find_input"
 
     def __init__(self):
         order = TextBox(
