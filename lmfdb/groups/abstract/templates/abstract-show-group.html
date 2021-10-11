@@ -9,16 +9,6 @@
     function() {
     $(".subgp").hover(highlight_group, unhighlight_group);
     $(".subgp").on('touchstart', highlight_group);
-    $(".show_semidirect").on("click", function() {
-      $(".show_semidirect_container").hide();
-      $(".hidden_semidirect").show();
-      return false;
-    });
-    $(".show_nonsplit").on("click", function() {
-      $(".show_nonsplit_container").hide();
-      $(".hidden_nonsplit").show();
-      return false;
-    });
   });
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
@@ -56,14 +46,14 @@
 
 
 
-<h2> Group Information</h2>
+<h2> Group information</h2>
 <p>
   <table>
     <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
-    <tr><td>{{KNOWL('group.automorphism', 'Automorphism Group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
-    <tr><td>{{KNOWL('group.outer_aut', 'Outer Automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
     {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
@@ -76,7 +66,7 @@
 
 </p>
 
-<h2>Group Statistics</h2>
+<h2>Group statistics</h2>
 
 <p>
   <table class="ntdata" style="margin-left:0;">
@@ -157,7 +147,7 @@
 <table class=nowrap>
   <tr>
     <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
-    <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
+    <td colspan="5">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
   </tr>
   {% if gp.direct_product %}
     <tr>
@@ -168,34 +158,39 @@
   {% if gp.semidirect_products %}
     <tr>
       <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
-      {% for sub, count in gp.semidirect_products %}
-        {% if loop.index == 5 %}
-          <td width=auto, class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
-        {% endif %}
-        <td{% if loop.index >= 5 %} class="hidden_semidirect nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+      {% for sub, count, labels in gp.semidirect_products[:4] %}
+        <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
       {% endfor %}
+      {% for i in range(4 - (gp.semidirect_products|length)) %}
+      <td></td>
+      {% endfor %}
+      <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
     </tr>
   {% endif %}
   {% if gp.nonsplit_products %}
     <tr>
       <td>{{KNOWL('group.nonsplit_product', 'Non-split product')}}:</td>
-      {% for sub, count in gp.nonsplit_products %}
-        {% if loop.index == 5 %}
-          <td class="show_nonsplit_container"><a href="#" class="show_nonsplit">Show all {{ gp.nonsplit_products | length }}</a></td>
-        {% endif %}
-        <td{% if loop.index >= 5 %} class="hidden_nonsplit nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
+      {% for sub, count, labels in gp.nonsplit_products[:4] %}
+        <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
       {% endfor %}
+      {% for i in range(4 - (gp.nonsplit_products|length)) %}
+      <td></td>
+      {% endfor %}
+      <td>{{nonsplit_expressions_knowl(gp.label, "all " + (gp.nonsplit_products | length | string) if (gp.nonsplit_products|length > 4) else "more information") | safe}}</td>
     </tr>
   {% endif %}
   {% if gp.as_aut_gp %}
     <tr>
       <td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td>
-      {% for label, disp in gp.as_aut_gp %}
-        {% if loop.index == 5 %}
-          <td class="show_aut_container"><a href="#" class="show_auts">Show all {{ gp.as_aut_gp | length }}</a></td>
-        {% endif %}
-        <td{% if loop.index >= 5 %} class="hidden_auts nodisplay"{% endif %}><a href="{{url_for('.by_label', label=label)}}">${{disp}}$</a></td>
+      {% for label, disp in gp.as_aut_gp[:4] %}
+        <td><a href="{{url_for('.by_label', label=label)}}">${{disp}}$</a></td>
       {% endfor %}
+      {% for i in range(4 - (gp.as_aut_gp|length)) %}
+      <td></td>
+      {% endfor %}
+      {% if (gp.as_aut_gp | length) > 4 %}
+        <td>{{autgp_expressions_knowl(gp.label, "all " + (gp.as_aut_gp | length | string)) | safe}}</td>
+      {% endif %}
     </tr>
   {% endif %}
   <tr>
@@ -475,7 +470,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 #}
 {% endif %}
 
-<h2> Character Theory </h2>
+<h2> Character theory </h2>
 <p>
 
 <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>

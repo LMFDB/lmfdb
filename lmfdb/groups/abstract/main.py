@@ -72,6 +72,12 @@ def ctx_abstract_groups():
         "rchar_data": rchar_data,
         "cchar_data": cchar_data,
         "dyn_gen": dyn_gen,
+        "semidirect_expressions_knowl": semidirect_expressions_knowl,
+        "semidirect_data": semidirect_data,
+        "nonsplit_expressions_knowl": nonsplit_expressions_knowl,
+        "nonsplit_data": nonsplit_data,
+        "autgp_expressions_knowl": autgp_expressions_knowl,
+        "aut_data": aut_data,
     }
 
 
@@ -101,7 +107,6 @@ def get_bread(tail=[]):
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
-
 
 def display_props(proplist):
     if len(proplist) == 1:
@@ -1271,7 +1276,7 @@ def download_group(**args):
     filename = "group" + label
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
-        filename += ".gp"
+        filename += ".g"
     if dltype == "magma":
         com = ""
         com1 = "/*"
@@ -1704,20 +1709,20 @@ class SubgroupSearchArray(SearchArray):
         )
         subgroup_order = TextBox(
             name="subgroup_order",
-            label="Subgroup Order",
+            label="Subgroup order",
             knowl="group.order",
             example="8",
             example_span="4, or a range like 3..5",
         )
         quotient_order = TextBox(
             name="quotient_order",
-            label="Subgroup Index",
+            label="Subgroup index",
             knowl="group.subgroup.index",
             example="16",
         )
         ambient_order = TextBox(
             name="ambient_order",
-            label="Ambient Order",
+            label="Ambient order",
             knowl="group.order",
             example="128",
         )
@@ -1762,6 +1767,20 @@ def sub_display_knowl(label, name=None):
         name = f"Subgroup {label}"
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=sub_data">{name}</a>'
 
+def semidirect_expressions_knowl(label, name=None):
+    if not name:
+        name = f"Semidirect product expressions for {label}"
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=semidirect_data">{name}</a>'
+
+def nonsplit_expressions_knowl(label, name=None):
+    if not name:
+        name = f"Nonsplit product expressions for {label}"
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=nonsplit_data">{name}</a>'
+
+def autgp_expressions_knowl(label, name=None):
+    if not name:
+        name = f"Expressions for {label} as an automorphism group"
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=aut_data">{name}</a>'
 
 def cc_data(gp, label, typ="complex"):
     if typ == "rational":
@@ -1932,6 +1951,39 @@ def group_data(label, ambient=None, aut=False):
     )
     return Markup(ans)
 
+def semidirect_data(label):
+    gp = WebAbstractGroup(label)
+    ans = f"Semidirect product expressions for ${gp.tex_name}$:<br />\n"
+    for sub, cnt, labels in gp.semidirect_products:
+        ans += fr"${sub.subgroup_tex_parened}~\rtimes~{sub.quotient_tex_parened}$"
+        if cnt > 1:
+            ans += f" in {cnt} ways"
+        ans += ' via '
+        ans += ", ".join([f'<a href="{url_for("abstract.by_subgroup_label", label=label+"."+sublabel)}">{sublabel}</a>' for sublabel in labels])
+        ans += "<br />\n"
+    return Markup(ans)
+
+def nonsplit_data(label):
+    gp = WebAbstractGroup(label)
+    print(label, len(gp.nonsplit_products))
+    ans = f"Nonsplit product expressions for ${gp.tex_name}$:<br />\n"
+    ans += "<table>\n"
+    for sub, cnt, labels in gp.nonsplit_products:
+        ans += f"<tr><td>${sub.subgroup_tex_parened}~.~{sub.quotient_tex_parened}$</td><td>"
+        if cnt > 1:
+            ans += f" in {cnt} ways"
+        ans += ' via </td>'
+        ans += "".join([f'<td><a href="{url_for("abstract.by_subgroup_label", label=label+"."+sublabel)}">{sublabel}</a></td>' for sublabel in labels])
+        ans += "</tr>\n"
+    ans += "</table>"
+    return Markup(ans)
+
+def aut_data(label):
+    gp = WebAbstractGroup(label)
+    ans = f"${gp.tex_name}$ as an automorphism group:<br />\n"
+    for aut, disp in gp.as_aut_gp:
+        ans += f'<a href="{url_for("abstract.by_label", label=aut)}">${disp}$</a><br />\n'
+    return Markup(ans)
 
 def dyn_gen(f, args):
     r"""
@@ -1955,6 +2007,9 @@ flist = {
     "group_data": group_data,
     "crep_data": crep_data,
     "qrep_data": qrep_data,
+    "semidirect_data": semidirect_data,
+    "nonsplit_data": nonsplit_data,
+    "aut_data": aut_data,
 }
 
 

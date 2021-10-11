@@ -574,7 +574,6 @@ def arrange_rings(radii, colors, R0, rmax):
         # If we require inner rings to not be fully utilized,
         # that might not leave enough space in outer rings
         #print("num_rings", num_rings, utilization)
-        raise RuntimeError
         if utilization == 1:
             # This can happen because we were packing equal size circles together in estimating
             # utilization, but when calling arrange_ring we alternate which is less space
@@ -586,7 +585,6 @@ def arrange_rings(radii, colors, R0, rmax):
             utilization = 1
         else:
             utilization += 0.1
-
 
 def arrange(rdata, R0, rmax):
     radii = Counter([r for (r, o) in rdata])

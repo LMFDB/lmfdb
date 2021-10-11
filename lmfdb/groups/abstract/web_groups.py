@@ -19,11 +19,23 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_latex,
     to_ordinal,
     web_latex,
+    letters2num,
 )
 from .circles import find_packing
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
+def label_sortkey(label):
+    L = []
+    for piece in label.split("."):
+        for i, x in enumerate(re.split(r"(\D+)", piece)):
+            if x:
+                if i%2:
+                    x = letters2num(x)
+                else:
+                    x = int(x)
+                L.append(x)
+    return L
 
 def group_names_pretty(label):
     if isinstance(label, str):
@@ -79,6 +91,7 @@ class WebObj(object):
         return cls(data["label"], data)
 
     def _get_dbdata(self):
+        # self.table must be defined in subclasses
         return self.table.lookup(self.label)
 
 
@@ -90,28 +103,38 @@ class WebAbstractGroup(WebObj):
         WebObj.__init__(self, label, data)
 
     def properties(self):
-        nilp_str = f"Yes, of class {self.nilpotency_class}" if self.nilpotent else "No"
-        solv_str = f"Yes, of length {self.derived_length}" if self.solvable else "No"
+        nilp_str = f"yes, of class {self.nilpotency_class}" if self.nilpotent else "no"
+        solv_str = f"yes, of length {self.derived_length}" if self.solvable else "no"
         props = [
             ("Label", self.label),
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
             (None, self.image()),
-            ("Abelian", "Yes" if self.abelian else "No"),
-            ("Nilpotent", nilp_str),
-            ("Solvable", solv_str),
-            ("Simple", "Yes" if self.simple else "No"),
-            (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
-            (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
+        ]
+        if self.abelian:
+            props.append(("Abelian", "yes"))
+            if self.simple:
+                props.extend([("Simple", "yes"),
+                              (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order)))])
+            else:
+                props.append((r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))))
+        else:
+            if self.simple:
+                props.append(("Simple", "yes"))
+            else:
+                props.extend([("Nilpotent", nilp_str),
+                              ("Solvable", solv_str)])
+            props.extend([
+                (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
+                ("#$Z(G)$", web_latex(self.cent_order_factor())),
+                (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
+                (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
+            ])
+        props.extend([
             ("Rank", f"${self.rank}$"),
             ("Perm deg.", f"${self.transitive_degree}$"),
             # ("Faith. dim.", str(self.faithful_reps[0][0])),
-        ]
-        if not self.abelian:
-            props[8:8] = [
-                (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
-                ("#$Z(G)$", web_latex(self.cent_order_factor())),
-            ]
+        ])
         return props
 
     @lazy_attribute
@@ -350,28 +373,32 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def semidirect_products(self):
         semis = []
-        count = Counter()
+        subs = defaultdict(list)
         for sub in self.subgroups.values():
             if sub.normal and sub.split and not sub.direct:
                 pair = (sub.subgroup, sub.quotient)
-                if pair not in count:
+                if pair not in subs:
                     semis.append(sub)
-                count[pair] += 1
+                subs[pair].append(sub.short_label)
         semis.sort(key=product_sort_key)
-        return [(sub, count[sub.subgroup, sub.quotient]) for sub in semis]
+        for V in subs.values():
+            V.sort(key=label_sortkey)
+        return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in semis]
 
     @lazy_attribute
     def nonsplit_products(self):
         nonsplit = []
-        count = Counter()
+        subs = defaultdict(list)
         for sub in self.subgroups.values():
             if sub.normal and not sub.split:
                 pair = (sub.subgroup, sub.quotient)
-                if pair not in count:
+                if pair not in subs:
                     nonsplit.append(sub)
-                count[pair] += 1
+                subs[pair].append(sub.short_label)
         nonsplit.sort(key=product_sort_key)
-        return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
+        for V in subs.values():
+            V.sort(key=label_sortkey)
+        return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
     @lazy_attribute
     def as_aut_gp(self):
@@ -1149,20 +1176,19 @@ class WebAbstractSubgroup(WebObj):
 class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
 
-    def __init__(self, ambient_gp, label, data=None):
-        self.ambient_gp = ambient_gp
+    def __init__(self, group, label, data=None):
         if data is None:
-            data = db.gps_groups_cc.lucky({"group": ambient_gp, "label": label})
+            data = db.gps_groups_cc.lucky({"group": group, "label": label})
         WebObj.__init__(self, label, data)
 
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.ambient_gp}%7C{self.label}%7Ccomplex">{name}</a>'
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
 
 class WebAbstractDivision(object):
-    def __init__(self, ambient_gp, label, classes):
-        self.ambient_gp = ambient_gp
+    def __init__(self, group, label, classes):
+        self.group = group
         self.label = label
         self.classes = classes
         self.order = classes[0].order
@@ -1170,11 +1196,11 @@ class WebAbstractDivision(object):
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.ambient_gp}%7C{self.label}%7Crational">{name}</a>'
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Crational">{name}</a>'
 
 class WebAbstractAutjClass(object):
-    def __init__(self, ambient_gp, label, classes):
-        self.ambient_gp = ambient_gp
+    def __init__(self, group, label, classes):
+        self.group = group
         self.label = label
         self.classes = classes
         self.order = classes[0].order

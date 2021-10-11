@@ -21,20 +21,11 @@
   {% endfor %}
   (and <a href="?nilpotent=no">not nilpotent</a>)
 </p>
-  <p>By property:
+<p>By property:
   {% for searchstr, display in info.prop_browse_list %}
     <a href="?{{searchstr}}">{{display}}</a>&nbsp;
   {% endfor %}
-  <table>
-    {% for row in info.prop_but_not %}
-      <tr>
-        {% for searchstr, display in row %}
-          <td><a href="?{{searchstr}}">{{display}}</a></td>
-        {% endfor %}
-      </tr>
-    {% endfor %}
-  </table>
-  </p>
+</p>
 <p>Some <a href="{{url_for('.interesting')}}">interesting groups</a> or a <a href="{{url_for('.random_abstract_group')}}">random group</a></p>
 
 <p>Search for <a href="{{url_for('.index', search_type='Subgroups')}}">subgroups</a></p>

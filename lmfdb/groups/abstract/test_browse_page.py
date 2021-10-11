@@ -57,7 +57,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that the random link works
         """
-        self.check_args("/Groups/Abstract/random", "Group Information")
+        self.check_args("/Groups/Abstract/random", "Group information")
         self.check_args("/Groups/Abstract/random", "Order:")
 
     # Various searches
