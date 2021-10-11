@@ -741,11 +741,11 @@ def group_jump(info):
     if abstract_group_label_regex.match(info["jump"]):
         return redirect(url_for(".by_label", label=info["jump"]))
     # by name
-    labs = db.gps_groups.search({"name":info["jump"]}, projection="label", limit=2)
+    labs = db.gps_groups.search({"name":info["jump"].replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
         return redirect(url_for(".by_label", label=labs[0]))
     elif len(labs) == 2:
-        return redirect(url_for(".index", name=info["jump"]))
+        return redirect(url_for(".index", name=info["jump"].replace(" ", "")))
     # by special name
     for family in db.gps_families.search():
         m = re.match(family["input"], info["jump"])
@@ -1342,7 +1342,7 @@ class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3 or GL(2,3)"
+    jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
