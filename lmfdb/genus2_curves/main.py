@@ -206,6 +206,8 @@ def by_conductor(cond):
 @g2c_page.route("/Q/<label>")
 def by_label(label):
     # handles curve, isogeny class, and Lhash labels
+    if not label.strip(): # just spaces
+        return redirect(url_for(".index"))
     return genus2_curve_search({'jump':label})
 
 def render_curve_webpage(label):
