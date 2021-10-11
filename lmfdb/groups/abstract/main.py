@@ -752,8 +752,24 @@ def show_type(rec):
 
 #### Searching
 def group_jump(info):
-    return redirect(url_for(".by_label", label=info["jump"]))
-
+    # by label
+    if abstract_group_label_regex.match(info["jump"]):
+        return redirect(url_for(".by_label", label=info["jump"]))
+    # by name
+    lab = db.gps_groups.lucky({"name":info["jump"]}, projection="label")
+    if lab:
+        return redirect(url_for(".by_label", label=lab))
+    # by special name
+    for family in db.gps_families.search():
+        m = re.match(family["input"], info["jump"])
+        if m:
+            m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
+            lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")
+            if lab:
+                return redirect(url_for(".by_label", label=lab))
+            else:
+                raise RuntimeError("The group %s has not yet been added to the database." % info["jump"])
+    raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (info["jump"], display_knowl('group.families', 'here')))
 
 def group_download(info):
     t = "Stub"
@@ -1339,7 +1355,9 @@ class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3 or 16.1"
+    jump_egspan = "e.g. 8.3 or GL(2,3)"
+    jump_prompt = "Label or name"
+    jump_knowl = "group.find_input"
 
     def __init__(self):
         order = TextBox(
