@@ -962,7 +962,7 @@ class PostgresSearchTable(PostgresTable):
                 raise ValueError("Lookup method not supported for tables with no label column")
         return self.exists({label_col: label})
 
-    def random(self, query={}, projection=0):
+    def random(self, query={}, projection=0, pick_first=None):
         """
         Return a random label or record from this table.
 
@@ -973,6 +973,11 @@ class PostgresSearchTable(PostgresTable):
         - ``projection`` -- which columns are requested
           (default 0, meaning just the label).
           See ``_parse_projection`` for more details.
+        - ``pick_first`` -- a column name.  If provided, a value is chosen uniformly
+          from the distinct values (subject to the given query), then a random
+          element is chosen with that value.  Note that the set of distinct values
+          is computed and stored, so be careful not to choose a column that takes
+          on too many values.
 
         OUTPUT:
 
@@ -991,6 +996,11 @@ class PostgresSearchTable(PostgresTable):
             sage: nf.random()
             u'2.0.294787.1'
         """
+        if pick_first:
+            colvals = self.distinct(pick_first, query)
+            query = dict(query)
+            query[pick_first] = random.choice(colvals)
+            return self.random(query, projection)
         if query:
             # See if we know how many results there are
             cnt = self.stats.quick_count(query)
