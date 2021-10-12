@@ -99,13 +99,13 @@ class GroupsTest(LmfdbTest):
         while nbins < 50:
             h *= 0.5
             nbins = (times[-1] - times[0]) / h
-            nbins = ceil(nbins)
-            bins = [0]*nbins
-            i = 0
-            for t in times:
-                while t > (i+1)*h + times[0]:
-                    i += 1
-                bins[i] += 1
-            for i, b in enumerate(bins):
-                d = 100*float(b)/total
-                print('%.2f\t|' %((i + 0.5)*h +  times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
+        nbins = ceil(nbins)
+        bins = [0]*nbins
+        i = 0
+        for t in times:
+            while t > (i+1)*h + times[0]:
+                i += 1
+            bins[i] += 1
+        for i, b in enumerate(bins):
+            d = 100*float(b)/total
+            print('%.2f\t|' %((i + 0.5)*h +  times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
