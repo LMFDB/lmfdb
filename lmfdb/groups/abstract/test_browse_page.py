@@ -44,7 +44,9 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that Groups/Abstract/?jump works
         """
-        self.check_args("/Groups/Abstract/?jump=10.1", "10.1")
+        self.check_args("/Groups/Abstract/?jump=10.1", "10.1") # by label
+        self.check_args("/Groups/Abstract/?jump=SL(2,7)", "336.114") # by family name
+        self.check_args("/Groups/Abstract/?jump=F5", "20.3") # by name
 
     # test that abelian group redirect works
     def test_abelian_lookup(self):
