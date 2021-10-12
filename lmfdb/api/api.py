@@ -339,9 +339,9 @@ def api_query(table, id = None):
         description = coll.description()
         if description:
             title += " (%s)" % description
-        search_schema = [(col, coll.col_type[col], coll.column_description(col))
+        search_schema = [(col, coll.col_type[col])
                          for col in sorted(coll.search_cols)]
-        extra_schema = [(col, coll.col_type[col], coll.column_description(col))
+        extra_schema = [(col, coll.col_type[col])
                         for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,

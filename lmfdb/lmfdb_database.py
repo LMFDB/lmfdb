@@ -33,6 +33,41 @@ class LMFDBSearchTable(PostgresSearchTable):
         PostgresSearchTable.__init__(self, *args, **kwds)
         self._verifier = None  # set when importing lmfdb.verify
 
+    def column_description(self, col=None, description=None, drop=False):
+        """
+        We use knowls to store column descriptions rather than meta_tables.
+        """
+        from lmfdb.knowledge.knowl import knowldb
+        allcols = self.search_cols + self.extra_cols
+        current = knowldb.get_column_descriptions(self.search_table)
+        current = {col: kwl.content for col, kwl in current.items()}
+        if not drop and description is None:
+            # We want to allow the set of columns to be out of date temporarily, on prod for example
+            if col is None:
+                for col in allcols:
+                    if col not in current:
+                        current[col] = "(description not yet updated on this server)"
+                return current
+            return current.get(col, "(description not yet updated on this server)")
+        else:
+            if not (drop or col is None or col in allcols):
+                raise ValueError(f"{col} is not a column of this table")
+            if drop:
+                if col is None:
+                    raise ValueError("Must specify column name to drop")
+                knowldb.drop_column(self.search_table, col)
+            elif col is None:
+                assert isinstance(description, dict)
+                for col in description:
+                    if col not in allcols:
+                        raise ValueError(f"{col} is not a column of this table")
+                    assert isinstance(description[col], str)
+                    knowldb.set_column_description(self.search_table, col, description[col])
+            else:
+                assert isinstance(description, str)
+                knowldb.set_column_description(self.search_table, col, description)
+
+
     def _check_verifications_enabled(self):
         """
         Check whether verifications have been enabled in this session (by importing db from lmfdb.verify and implementing an appropriate file).
