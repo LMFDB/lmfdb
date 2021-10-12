@@ -64,6 +64,7 @@ class GroupsTest(LmfdbTest):
     def all_abstract_groups(self, maxord=None, chunksize=1000):
         inputs = []
         if maxord is None:
+            from lmfdb import db
             maxord = db.gps_groups.max("order")
         for n in range(1, maxord+1):
             numgps = ZZ(libgap.NrSmallGroups(n))
