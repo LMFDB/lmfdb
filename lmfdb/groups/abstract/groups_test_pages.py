@@ -11,7 +11,7 @@ from sage.libs.gap.libgap import libgap
 ncpus = min(multiprocessing.cpu_count(), 10)
 
 class GroupsTest(LmfdbTest):
-    def runTest():
+    def runTest(self):
         pass
 
     def setUp(self):
