@@ -89,8 +89,6 @@ from . import hecke_algebras
 assert hecke_algebras
 from . import cluster_pictures
 assert cluster_pictures
-from . import inventory_app
-assert inventory_app
 from . import groups
 assert groups
 from .groups import abstract

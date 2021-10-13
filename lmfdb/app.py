@@ -802,7 +802,6 @@ def WhiteListedRoutes():
         'humans.txt',
         'info',
         'intro',
-        'inventory',
         'knowledge',
         'lucant',
         'management',
