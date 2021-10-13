@@ -585,11 +585,12 @@ def orphans():
 def columns():
     from lmfdb import db
     bad_cat = knowldb.search(category="columns", types=["normal", "top", "bottom"])
-    knowls = defaultdict(list)
-    for k in knowldb.search(types=["column"], projection=['id', 'cat']):
+    knowls = defaultdict(dict)
+    for k in knowldb.search(types=["column"], projection=['id', 'cat', 'content']):
         if k['cat'] == "columns" and k['id'].count('.') == 2:
             pieces = k['id'].split('.')
-            knowls[pieces[1]].append(pieces[2])
+            if k['content'].strip():
+                knowls[pieces[1]][pieces[2]] = k['content']
         else:
             bad_cat.append(k)
     missing_tables = {tbl: sorted(db[tbl].search_cols) + sorted(db[tbl].extra_cols) for tbl in db.tablenames if tbl not in knowls}
@@ -608,7 +609,8 @@ def columns():
                            missing_knowls=missing_knowls,
                            missing_tables=missing_tables,
                            bad_tables=bad_tables,
-                           bad_cat=bad_cat)
+                           bad_cat=bad_cat,
+                           knowls=knowls)
 
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):

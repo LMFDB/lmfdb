@@ -46,5 +46,18 @@
   </ul>
 {% endfor %}
 {% endif %}
+<h2>Current content</h2>
+<p>Here are the existing column descriptions.</p>
+{% for tbl, coldict in knowls.items() %}
+  <h3>{{ tbl }}</h3>
+  <table>
+    {% for col, content in coldict.items() %}
+      <tr>
+        <td><a href="{{url_for('.edit', ID='columns.' + tbl + '.' + col)}}">{{ col }}</a></td>
+        <td>{{ content|safe }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endfor %}
 
 {% endblock %}
