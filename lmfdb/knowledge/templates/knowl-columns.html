@@ -1,0 +1,50 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+{% if bad_cat %}
+<h2>Bad category</h2>
+<p>The following knowls are miscategorized, either with type set to column but without the right category, or with category columns but without the right type.  This likely results from a bug in the knowl editing code.</p>
+<ul>
+  {% for k in bad_cat %}
+    <li>{{ KNOWL(k.id, k.id) }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if bad_tables %}
+<h2>Defunct tables</h2>
+<p>The following knowls are associated to tables that no longer exist and should be either deleted or renamed using the db.tablename.port_column_knowls command line function.</p>
+{% for tbl, collist in bad_tables.items() %}
+  <h3>{{ tbl }}</h3>
+  <ul>
+    {% for col in collist %}
+      <li>{{ KNOWL('columns.' + tbl + '.' + col, col) }}</li>
+    {% endfor %}
+  </ul>
+{% endfor %}
+{% endif %}
+{% if missing_knowls %}
+<h2>Missing columns</h2>
+<p>The following columns do not have knowls written.</p>
+{% for tbl, collist in missing_knowls.items() %}
+  <h3>{{ tbl }}</h3>
+  <ul>
+    {% for col in collist %}
+      <li>{{ KNOWL('columns.' + tbl + '.' + col, col) }}</li>
+    {% endfor %}
+  </ul>
+{% endfor %}
+{% endif %}
+{% if missing_tables %}
+<h2>Missing tables</h2>
+<p>The following tables do not have any knowls written.</p>
+{% for tbl, collist in missing_tables.items() %}
+  <h3>{{ tbl }}</h3>
+  <ul>
+    {% for col in collist %}
+      <li>{{ KNOWL('columns.' + tbl + '.' + col, col) }}</li>
+    {% endfor %}
+  </ul>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
