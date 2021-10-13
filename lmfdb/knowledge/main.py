@@ -610,7 +610,8 @@ def columns():
                            missing_tables=missing_tables,
                            bad_tables=bad_tables,
                            bad_cat=bad_cat,
-                           knowls=knowls)
+                           knowls=knowls,
+                           bread=b)
 
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
