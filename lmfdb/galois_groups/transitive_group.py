@@ -6,10 +6,11 @@ from lmfdb import db
 from sage.all import ZZ, gap, cached_function
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
+from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 
 def knowl_cache(galois_labels):
     """
-    Returns a dictionary for use in small_group_display_knowl and
+    Returns a dictionary for use in abstract_group_display_knowl and
     group_pretty_and_nTj as the cache argument.
 
     INPUT:
@@ -18,100 +19,39 @@ def knowl_cache(galois_labels):
 
     OUTPUT:
 
-    A dictionary with keys labels from gps_transitive and gps_small;
+    A dictionary with keys labels from gps_transitive and gps_groups;
     the associated value is a dictionary that can be used instead of
     the result of a database lookup from these tables.
     """
     cache = {}
     reverse = defaultdict(list)
-    gap_labels = []
+    gp_labels = []
     for rec in db.gps_transitive.search({"label": {"$in": galois_labels}}, ["label", "order", "gapid", "pretty"]):
         label = rec["label"]
         cache[label] = rec
-        gapid = "%d.%d" % (rec["order"], rec["gapid"])
-        gap_labels.append(gapid)
-        reverse[gapid].append(label)
-    smallgroup_cache(gap_labels, cache, reverse)
-    return cache
-
-def smallgroup_cache(gap_labels, cache=None, reverse=None):
-    if cache is None:
-        cache = {}
-    for rec in db.gps_small.search({"label": {"$in": gap_labels}}, ["label", "pretty"]):
-        label = rec["label"]
-        cache[label] = rec
-        if reverse is not None:
-            pretty = rec.get("pretty")
-            for nTj in reverse[label]:
-                if "pretty" in cache[nTj]:
-                    continue
-                cache[nTj]["pretty"] = ("$%s$" % pretty) if pretty else ""
-    return cache
-
-@cached_function(key=lambda n,k,name,cache: (n,k,name))
-def small_group_display_knowl(n, k, name=None, cache=None):
-    label = '%s.%s' % (n, k)
-    if not name:
-        myname = 'GAP id $[%d, %d]$'%(n,k)
-    else:
-        myname = name
-    if cache:
-        group = cache.get(label)
-    else:
-        group = db.gps_small.lookup(label)
-    if group is None:
-        return myname
-    if not name:
-        myname = '$%s$'%group['pretty']
-    return '<a title = "' + myname + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + myname + '</a>'
-
-@cached_function
-def small_group_label_display_knowl(label, name=None):
-    if not name:
-        group = db.gps_small.lookup(label)
-        name = '$%s$'%group['pretty']
-    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
-
-
-@cached_function
-def small_group_data(gapid):
-    parts = gapid.split('.')
-    n = int(parts[0])
-    k = int(parts[1])
-    group = db.gps_small.lookup(str(gapid))
-    inf = "Group $%s$" % str(group['pretty'])
-    inf += " &nbsp; &nbsp; &mdash; &nbsp; &nbsp;  "
-    inf += ('' if group['cyclic'] else 'not')+' cyclic, '
-    inf += ('' if group['abelian'] else 'non-')+'abelian, '
-    inf += ('' if group['solvable'] else 'not')+' solvable'
-    inf += '<p>Order: '+str(n)
-    inf += '<br>GAP small group number: '+str(k)
-    inf += '<br>Exponent: '+str(group['exponent'])
-    inf += '<br>Perfect: '+str(group['perfect'])
-    inf += '<br>Simple: '+str(group['simple'])
-    inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl)
-    inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl)
-    inf += '<br>Center: '+small_group_label_display_knowl(str(group['center']))
-    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(str(group['derived_group']))
-    inf += '<br>Abelianization: '+small_group_label_display_knowl(str(group['abelian_quotient']))
-    inf += '<br>Conjugacy class information: <table style="text-align: center;"><tr><th>Element Order<th>Size<th>Multiplicity'
-    for row in group['clases']:
-        inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
-    inf += '</table></p>'
-    return inf
+        gp_label = f'{rec["order"]}.{rec["gapid"]}'
+        gp_labels.append(gp_label)
+        reverse[gp_label].append(label)
+    # calling abstract_group_namecache has the effect of filling in the "pretty" attribute when possible.
+    # The resulting cache will have two types of records: abstract group ones with keys
+    # "label", "order" and "tex_name", and transitive group ones with keys
+    # "label", "order", "gapid" and "pretty".  The labels will be of different kinds (6.1 vs 3T2),
+    # and serve as keys for the cache dictionary.
+    return abstract_group_namecache(gp_labels, cache, reverse)
 
 # Input is a list [[[n1, t1], mult1], [[n2,t2],mult2], ...]
 def list_with_mult(lis, names=True):
     ans = ''
-    for k in lis:
+    for label, cnt in lis:
         if ans != '':
             ans += ', '
+        label = base_label(*label)
         if names:
-            ans += group_display_knowl(k[0][0], k[0][1])
+            ans += transitive_group_display_knowl(label)
         else:
-            ans += group_display_knowl(k[0][0], k[0][1], base_label(k[0][0],k[0][1]))
-        if k[1]>1:
-            ans += "<span style='font-size: small'> x %d</span>"% k[1]
+            ans += transitive_group_display_knowl(label, label)
+        if cnt > 1:
+            ans += f"<span style='font-size: small'> x {cnt}</span>"
     return ans
 
 # Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
@@ -172,10 +112,10 @@ class WebGaloisGroup:
     def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty') is not None:
             return self._data['pretty']
-        gapid = "%d.%d"%(self.order(),self.gapid())
-        gapgroup = db.gps_small.lookup(gapid)
-        if gapgroup and 'pretty' in gapgroup:
-            return "$%s$" % gapgroup['pretty']
+        gp_label = f"{self.order()}.{self.gapid()}"
+        group = db.gps_groups.lookup(gp_label)
+        if group and group.get('tex_name'):
+            return "${group['tex_name']}$"
         if emptyifnotpretty:
             return ""
         return self._data['name']
@@ -258,7 +198,7 @@ def group_display_short(n, t, emptyifnotpretty=False):
     return WebGaloisGroup.from_nt(n,t).display_short(emptyifnotpretty)
 
 @cached_function(key=lambda n,t,useknowls,skip_nTj,cache: (n,t,useknowls,skip_nTj))
-def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache=None):
+def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
     label = base_label(n, t)
     string = label
     if cache:
@@ -274,13 +214,8 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache=None):
     if pretty != '':
         # modify if we use knowls and have the gap id
         if useknowls:
-            gapid = "%d.%d"%(group['order'],group['gapid'])
-            if cache:
-                gapgroup = cache.get(gapid)
-            else:
-                gapgroup = db.gps_small.lookup(gapid)
-            if gapgroup is not None:
-                pretty = small_group_display_knowl(group['order'], group['gapid'], name='$'+gapgroup['pretty']+'$', cache=cache)
+            gp_label = f"{group['order']}.{group['gapid']}"
+            pretty = abstract_group_display_knowl(gp_label, pretty=True, cache=cache)
         if skip_nTj:
             # This is used for statistics where we want to display the abstract group, but we still need to be able to get back to the nTj label for searching
             if useknowls and group is not None and gapgroup is None:
@@ -311,11 +246,10 @@ def galunformatter(gal):
         return "%dT%d" % (n, t)
 
 @cached_function
-def group_display_knowl(n, t, name=None):
-    label = base_label(n, t)
+def transitive_group_display_knowl(label, name=None):
     group = db.gps_transitive.lookup(label)
     if not name:
-        if group is not None and group.get('pretty', None) is not None:
+        if group is not None and group.get('pretty') is not None:
             name = group['pretty']
         else:
             name = label
@@ -323,11 +257,11 @@ def group_display_knowl(n, t, name=None):
         return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
-def group_display_knowl_C1_as_trivial(n, t):
-    if [n, t] == [1, 1]:
-        return group_display_knowl(n, t, '$C_1$')
+def transitive_group_display_knowl_C1_as_trivial(label):
+    if label == "1T1":
+        return transitive_group_display_knowl(label, '$C_1$')
     else:
-        return group_display_knowl(n, t)
+        return transitive_group_display_knowl(label)
 
 
 @cached_function
@@ -494,9 +428,10 @@ def galois_module_knowl_guts(n, t, index):
     if mymod is None:
         return 'Database call failed'
     name = mymod['name']
+    label = base_label(n, t)
     out = "$\\Z[G]$ module %s with $G=$ " % str(name)
-    out += group_display_knowl(n, t)
-    out += " = %sT%s " %(n, t)
+    out += transitive_group_display_knowl(label)
+    out += f" = {label} "
     out += "<blockquote>"
     out += "Dimension: %s" % str(mymod['dim'])
     out += r"<br>Action: $$\begin{aligned}"
@@ -516,17 +451,16 @@ def subfield_display(n, subs):
     if len(degs) == 0:
         return 'Prime degree - none'
     ans = ''
-    substrs = {}
+    substrs = defaultdict(str)
+    for (n, t), cnt in subs:
+        label = base_label(n, t)
+        if substrs[n] != '':
+            substrs[n] += ', '
+        substrs[n] += transitive_group_display_knowl(label)
+        if cnt > 1:
+            substrs[n] += f'<span style="font-size: small"> x {cnt}</span>'
     for deg in degs:
-        substrs[deg] = ''
-    for k in subs:
-        if substrs[k[0][0]] != '':
-            substrs[k[0][0]] += ', '
-        substrs[k[0][0]] += group_display_knowl(k[0][0], k[0][1])
-        if k[1]>1:
-            substrs[k[0][0]] += '<span style="font-size: small"> x %d</span>'%k[1]
-    for deg in degs:
-        ans += '<p>Degree ' + str(deg) + ': '
+        ans += f'<p>Degree {deg}: '
         if substrs[deg] == '':
             substrs[deg] = 'None'
         ans += substrs[deg] + '</p>'
@@ -544,18 +478,18 @@ def otherrep_display(n, t, reps):
             ans += ', '
         cnt = reps.count(k)
         start = 'a'
-        name = "%dT%d" % (k[0], k[1])
+        name = base_label(*k)
         if k == me:
             start = chr(ord(start) + 1)
         if cnt == 1:
-            ans += group_display_knowl(k[0], k[1], name)
+            ans += transitive_group_display_knowl(name, name)
             if k == me:
                 ans += 'b'
         else:
             for j in range(cnt):
                 if j > 0:
                     ans += ', '
-                ans += "%s%s" % (group_display_knowl(k[0], k[1], name), start)
+                ans += "%s%s" % (transitive_group_display_knowl(name, name), start)
                 start = chr(ord(start) + 1)
 
     if ans == '':
@@ -566,24 +500,23 @@ def otherrep_display(n, t, reps):
 def resolve_display(resolves):
     ans = ''
     old_deg = -1
-    for j in resolves:
-        if j[0] != old_deg:
+    for deg, (n, t), cnt in resolves:
+        if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
                 ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
-            old_deg = j[0]
-            ans += '<tr><td align="right">$' + str(j[0]) + '$:&nbsp; </td><td>'
+            old_deg = deg
+            ans += f'<tr><td align="right">${deg}$:&nbsp; </td><td>'
         else:
             ans += ', '
-        k = j[1]
-        if k[1] == -1:
-            ans += group_display_knowl(k[0], k[1], '%dT?' % k[0])
+        if t == -1:
+            ans += f'{n}T?'
         else:
-            ans += group_display_knowl(k[0], k[1])
-        if j[2]>1:
-            ans += '<span style="font-size: small"> x %d</span>'% j[2]
+            ans += transitive_group_display_knowl(base_label(n, t))
+        if cnt > 1:
+            ans += f'<span style="font-size: small"> x {cnt}</span>'
     if ans != '':
         ans += '</td></tr></table>'
     else:
@@ -592,10 +525,10 @@ def resolve_display(resolves):
 
 def group_display_inertia(code):
     if str(code[0]) == "t":
-        return group_display_knowl(code[1][0], code[1][1])
+        return transitive_group_display_knowl(base_label(*code[1]))
     if code[1] == [1,1]:
         return "trivial"
-    ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
+    ans = "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
     return ans
 
 def cclasses(n, t):

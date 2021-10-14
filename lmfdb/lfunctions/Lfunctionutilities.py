@@ -11,7 +11,7 @@ from sage.all import (
 from lmfdb.utils import (
     display_complex, list_to_factored_poly_otherorder, make_bigint,
     list_factored_to_factored_poly_otherorder)
-from lmfdb.galois_groups.transitive_group import group_display_knowl_C1_as_trivial
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from lmfdb.lfunctions import logger
 
 ###############################################################
@@ -401,7 +401,7 @@ def lfuncEPhtml(L, fmt):
                 if gal_groups[0]==[0,0]:
                     pass   # do nothing, because the local factor is 1
                 else:
-                    out += r"$\times$".join( [group_display_knowl_C1_as_trivial(n,k) for n, k in gal_groups] )
+                    out += r"$\times$".join( [transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups] )
                 out += "</td>"
             out += "<td> %s </td>" % factors
             out += "</tr>"

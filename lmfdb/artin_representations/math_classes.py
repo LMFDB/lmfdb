@@ -3,8 +3,9 @@ from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, group_display_short, small_group_display_knowl)
+    transitive_group_display_knowl, group_display_short)
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 import re
@@ -215,14 +216,15 @@ class ArtinRepresentation(object):
         gapid = self._data['Proj_GAP']
         smallg = None
         if gapid[0]:
-            smallg = db.gps_small.lookup('%s.%s' % (gapid[0], gapid[1]))
-            if smallg:
-                return small_group_display_knowl(gapid[0], gapid[1])
+            label = f"{gapid[0]}.{gapid[1]}"
+            name = db.gps_groups.lookup(label, "tex_name")
+            if name:
+                return abstract_group_display_knowl(label, name)
         ntj = self._data['Proj_nTj']
         if ntj[1]:
-            return group_display_knowl(ntj[0], ntj[1])
-        if smallg:
-            return 'Group with GAP id [%s, %s]' % (gapid[0],gapid[1])
+            return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}")
+        if gapid:
+            return f'Group({gapid[0]}.{gapid[1]})'
         return 'data not computed'
 
     def projective_field(self):
@@ -258,7 +260,7 @@ class ArtinRepresentation(object):
         galnt = self.smallest_gal_t()
         if len(galnt)==1:
             return galnt[0]
-        return group_display_knowl(galnt[0],galnt[1])
+        return transitive_group_display_knowl(f"{galnt[0]}T{galnt[1]}")
 
     def is_ramified(self, p):
         return self.is_bad_prime(p)
@@ -417,8 +419,7 @@ class ArtinRepresentation(object):
         return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
-        return group_display_knowl(n,t)
+        return transitive_group_display_knowl(self._data['GaloisLabel'])
 
     def __str__(self):
         try:

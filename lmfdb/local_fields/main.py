@@ -13,14 +13,15 @@ from lmfdb.utils import (
     parse_inertia,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, group_display_inertia,
-    knowl_cache, galdata, galunformatter, small_group_display_knowl,
-    group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+    transitive_group_display_knowl, group_display_inertia,
+    knowl_cache, galdata, galunformatter,
+    group_pretty_and_nTj, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
@@ -73,8 +74,7 @@ def local_algebra_data(labels):
         ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        galnt = [int(z) for z in f['galois_label'].split('T')]
-        ans += group_display_knowl(galnt[0],galnt[1])
+        ans += transitive_group_display_knowl(f['galois_label'])
         ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
@@ -112,7 +112,6 @@ def local_algebra_display_knowl(labels):
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_data,
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
@@ -285,8 +284,7 @@ def render_field_webpage(args):
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
         if 'wild_gap' in data:
-            wild_inertia = small_group_display_knowl(data['wild_gap'][0],
-                data['wild_gap'][1])
+            wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
             wild_inertia = 'data not computed'
 

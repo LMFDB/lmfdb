@@ -13,7 +13,8 @@ from lmfdb import db
 from lmfdb.utils import (
     encode_plot, list_to_factored_poly_otherorder,
     make_bigint, web_latex)
-from lmfdb.galois_groups.transitive_group import small_group_display_knowl, group_display_knowl_C1_as_trivial
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
@@ -216,7 +217,7 @@ class WebHyperGeometricFamily(object):
                 two = mnew.split(',')
                 two = [int(j) for j in two]
                 try:
-                    m1[2] = small_group_display_knowl(two[0],two[1])
+                    m1[2] = abstract_group_display_knowl(f"{two[0]}.{two[1]}")
                 except TypeError:
                     m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
             else:
@@ -232,7 +233,7 @@ class WebHyperGeometricFamily(object):
             myA = m1[3][0]
             myB = m1[3][1]
             if not myA and not myB:  # myA = myB = []
-                return [small_group_display_knowl(1, 1), 1]
+                return [abstract_group_display_knowl("1.1", "$C_1$"), 1]
             mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
             if mono is None:
                 return ['??', 1]
@@ -348,7 +349,7 @@ class WebHyperGeometricFamily(object):
                     gal_groups = ""
                 else:
                     gal_groups = r"$\times$".join(
-                            [group_display_knowl_C1_as_trivial(n, t)
+                            [transitive_group_display_knowl_C1_as_trivial(f"{n}T{t}")
                                 for n, t in gal_groups])
             return [gal_groups, factors, self.ordinary(f, p)]
         return process_euler

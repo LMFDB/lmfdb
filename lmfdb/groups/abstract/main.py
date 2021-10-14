@@ -16,6 +16,7 @@ from flask import (
 from six import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, Permutations
+from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
 from lmfdb.app import app
@@ -51,7 +52,6 @@ from .web_groups import (
     group_names_pretty,
 )
 from .stats import GroupStats
-from lmfdb.number_fields.web_number_field import formatfield
 
 
 abstract_group_label_regex = re.compile(r"^(\d+)\.(([a-z]+)|(\d+))$")
@@ -1332,7 +1332,7 @@ def display_profile_line(data, ambient, aut):
     for label, tex in sorted(data, key=data.get, reverse=True):
         cnt = data[label, tex]
         l.append(
-            group_display_knowl(label, name=f"${tex}$", ambient=ambient, aut=aut)
+            abstract_group_display_knowl(label, name=f"${tex}$", ambient=ambient, aut=aut)
             + (" x " + str(cnt) if cnt > 1 else "")
         )
     return ", ".join(l)
@@ -1744,13 +1744,33 @@ class SubgroupSearchArray(SearchArray):
         else:
             return [("Subgroups", "Search again"), ("Random", "Random subgroup")]
 
+def abstract_group_namecache(labels, cache=None, reverse=None):
+    # Note that, when called by knowl_cache from transitive_group.py,
+    # the resulting cache will have two types of records: abstract group ones with keys
+    # "label", "order" and "tex_name", and transitive group ones with keys
+    # "label", "order", "gapid" and "pretty".  The labels will be of different kinds (6.1 vs 3T2),
+    # and serve as keys for the cache dictionary.
+    if cache is None:
+        cache = {}
+    for rec in db.gps_groups.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
+        label = rec["label"]
+        cache[label] = rec
+        if reverse is not None:
+            tex_name = rec.get("tex_name")
+            for nTj in reverse[label]:
+                if "pretty" in cache[nTj]:
+                    continue
+                cache[nTj]["pretty"] = f"${tex_name}$" if tex_name else ""
+    return cache
 
-def group_display_knowl(label, name=None, pretty=False, ambient=None, aut=False):
+@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
+def abstract_group_display_knowl(label, name=None, pretty=False, ambient=None, aut=False, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
-    if pretty:
-        name = "$" + group_names_pretty(label) + "$"
     if not name:
-        name = "Group {}".format(label)
+        if pretty:
+            name = cache.get(label, {}).get("tex_name", f"${group_names_pretty(label)}$")
+        else:
+            name = "Group {}".format(label)
     if ambient is None:
         args = label
     else:
@@ -1841,6 +1861,7 @@ def rchar_data(label):
 
 
 def cchar_data(label):
+    from lmfdb.number_fields.web_number_field import formatfield
     mychar = WebAbstractCharacter(label)
     ans = "<h3>Complex character {}</h3>".format(label)
     ans += "<br>Degree: {}".format(mychar.dim)
@@ -1871,7 +1892,7 @@ def crep_data(label):
     ans = r"<h3>Subgroup of $\GL_{{ {}  }}(\C)$: {}</h3>".format(info["dim"], label)
     ans += "<br>Order: ${}$".format(info["order"])
     ans += "<br>Abstract group: {}".format(
-        group_display_knowl(info["group"], info["group"])
+        abstract_group_display_knowl(info["group"], info["group"])
     )
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
@@ -1889,7 +1910,7 @@ def qrep_data(label):
     ans = r"<h3>Subgroup of $\GL_{{ {}  }}(\Q)$: {}</h3>".format(info["dim"], label)
     ans += "<br>Order: ${}$".format(info["order"])
     ans += "<br>Abstract group: {}".format(
-        group_display_knowl(info["group"], info["group"])
+        abstract_group_display_knowl(info["group"], info["group"])
     )
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
