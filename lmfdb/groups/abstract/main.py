@@ -1850,8 +1850,7 @@ def rchar_data(label):
     if mychar._data.get("image"):
         txt = "Image"
         imageknowl = (
-            '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>'
-            % (mychar.image, mychar.image, mychar.image)
+            '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(my_char.image)
         )
         if mychar.schur_index > 1:
             txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
