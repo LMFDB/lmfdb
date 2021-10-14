@@ -5,7 +5,7 @@ from lmfdb import db
 
 from sage.all import ZZ, gap, cached_function
 
-from lmfdb.utils import list_to_latex_matrix, display_multiset
+from lmfdb.utils import list_to_latex_matrix
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 
 def knowl_cache(galois_labels):
@@ -218,7 +218,7 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
             pretty = abstract_group_display_knowl(gp_label, pretty=True, cache=cache)
         if skip_nTj:
             # This is used for statistics where we want to display the abstract group, but we still need to be able to get back to the nTj label for searching
-            if useknowls and group is not None and gapgroup is None:
+            if useknowls and pretty.startswith('<a title = "Group'):
                 # Use the nTj knowl
                 string = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + pretty + '</a>'
             else:
@@ -247,6 +247,7 @@ def galunformatter(gal):
 
 @cached_function
 def transitive_group_display_knowl(label, name=None):
+    n, t = label.split("T")
     group = db.gps_transitive.lookup(label)
     if not name:
         if group is not None and group.get('pretty') is not None:
@@ -255,7 +256,7 @@ def transitive_group_display_knowl(label, name=None):
             name = label
     if group is None:
         return name
-    return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return f'<a title = "{name} [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n={n}&t={t}">{name}</a>'
 
 def transitive_group_display_knowl_C1_as_trivial(label):
     if label == "1T1":

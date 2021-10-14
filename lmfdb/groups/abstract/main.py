@@ -1768,9 +1768,16 @@ def abstract_group_display_knowl(label, name=None, pretty=False, ambient=None, a
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
     if not name:
         if pretty:
-            name = cache.get(label, {}).get("tex_name", f"${group_names_pretty(label)}$")
+            if label in cache and "tex_name" in cache[label]:
+                name = cache[label]["tex_name"]
+            else:
+                name = db.gps_groups.lookup(label, "tex_name")
+            if name is None:
+                name = f"Group {label}"
+            else:
+                name = f"${name}$"
         else:
-            name = "Group {}".format(label)
+            name = f"Group {label}"
     if ambient is None:
         args = label
     else:

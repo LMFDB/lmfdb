@@ -214,7 +214,6 @@ class ArtinRepresentation(object):
 
     def projective_group(self):
         gapid = self._data['Proj_GAP']
-        smallg = None
         if gapid[0]:
             label = f"{gapid[0]}.{gapid[1]}"
             name = db.gps_groups.lookup(label, "tex_name")
