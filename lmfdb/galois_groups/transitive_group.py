@@ -215,7 +215,7 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
         # modify if we use knowls and have the gap id
         if useknowls:
             gp_label = f"{group['order']}.{group['gapid']}"
-            pretty = abstract_group_display_knowl(gp_label, pretty=True, cache=cache)
+            pretty = abstract_group_display_knowl(gp_label, cache=cache)
         if skip_nTj:
             # This is used for statistics where we want to display the abstract group, but we still need to be able to get back to the nTj label for searching
             if useknowls and pretty.startswith('<a title = "Group'):

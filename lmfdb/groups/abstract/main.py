@@ -1042,14 +1042,8 @@ def render_abstract_group(label):
     # "external" friends
     gap_ints = [int(y) for y in label.split(".")]
     gap_str = str(gap_ints).replace(" ", "")
-    if db.g2c_curves.count({"aut_grp_id": gap_str}) > 0:
-        g2c_url = (
-            "/Genus2Curve/Q/?hst=List&aut_grp_id=%5B"
-            + str(gap_ints[0])
-            + "%2C"
-            + str(gap_ints[1])
-            + "%5D&search_type=List"
-        )
+    if db.g2c_curves.count({"aut_grp_label": label}) > 0:
+        g2c_url = f"/Genus2Curve/Q/?aut_grp_label={label}"
         friends += [("As the automorphism of a genus 2 curve", g2c_url)]
         if db.hgcwa_passports.count({"group": gap_str}) > 0:
             auto_url = (
@@ -1764,7 +1758,7 @@ def abstract_group_namecache(labels, cache=None, reverse=None):
     return cache
 
 @cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
-def abstract_group_display_knowl(label, name=None, pretty=False, ambient=None, aut=False, cache={}):
+def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
     if not name:
         if pretty:

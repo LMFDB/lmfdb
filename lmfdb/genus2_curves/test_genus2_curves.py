@@ -119,11 +119,11 @@ class Genus2Test(LmfdbTest):
         assert '448.a.448.1' in L.get_data(as_text=True)
 
     def test_automorphism_group_search(self):
-        L = self.tc.get('/Genus2Curve/Q/?aut_grp_id=[12,4]')
+        L = self.tc.get('/Genus2Curve/Q/?aut_grp_label=12.4')
         assert '196.a.21952.1' in L.get_data(as_text=True)
 
     def test_geometric_automorphism_group_search(self):
-        L = self.tc.get('/Genus2Curve/Q/?geom_aut_grp_id=[48,29]')
+        L = self.tc.get('/Genus2Curve/Q/?geom_aut_grp_label=48.29')
         assert '4096.b.65536.1' in L.get_data(as_text=True)
 
     def test_locally_solvable_serach(self):
