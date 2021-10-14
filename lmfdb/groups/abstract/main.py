@@ -1680,7 +1680,7 @@ class SubgroupSearchArray(SearchArray):
         # stem = YesNoBox(
         #    name="stem",
         #    label="Stem",
-        #    knowl="group.stem")
+        #    knowl="group.stem_extension")
         hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall")
         sylow = YesNoBox(
             name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup"

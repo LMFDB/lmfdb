@@ -646,7 +646,7 @@ class KnowlBackend(PostgresBase):
 
         A list of pairs ``kid``, ``links``, where ``links`` is a list of broken links on the knowl with id ``kid``.
         """
-        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0")
+        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0")
         results = defaultdict(list)
         for kid, link in self._execute(selecter):
             results[kid].append(link)
