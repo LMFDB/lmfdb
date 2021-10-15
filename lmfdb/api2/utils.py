@@ -4,7 +4,6 @@ from lmfdb.api2 import __version__
 import json
 #from bson.objectid import ObjectId
 from lmfdb import db
-import lmfdb.inventory_app.inventory_viewer as inventory
 
 api_version = __version__
 
@@ -200,12 +199,13 @@ def get_filtered_fields(coll_pair):
     Get a list of fields on which searching is possible
     coll_pair -- Two element list or tuple (prefix, name)
     """
+    return None
 
-    data = inventory.retrieve_description(coll_pair[0], coll_pair[1])
-    field_list = data['data']
-    if not field_list : return None
+    #data = inventory.retrieve_description(coll_pair[0], coll_pair[1])
+    #field_list = data['data']
+    #if not field_list : return None
 
-    return field_list
+    #return field_list
 
 def get_cname_list(info):
     """

@@ -22,6 +22,7 @@ import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
+coldesc_knowl_re = re.compile(r"columns.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
     (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
@@ -82,6 +83,9 @@ def extract_typ(kid):
         typ = -2
         source = m.group(1)
         return typ, source, None
+    m = coldesc_knowl_re.match(kid)
+    if m:
+        return 2, m.group(1), m.group(2)
     m = top_knowl_re.match(kid)
     if m:
         prelabel = m.group(1)
@@ -104,7 +108,7 @@ def extract_typ(kid):
     return typ, url, name
 
 def extract_links(content):
-    return sorted(set(x[2] for x in link_finder_re.findall(content)))
+    return sorted(set(x[2] for x in link_finder_re.findall(content) if x[2]))
 
 def normalize_define(term):
     m = define_fixer.search(term)
@@ -175,7 +179,7 @@ class KnowlBackend(PostgresBase):
         if cur.rowcount > 0:
             return {k:v for k,v in zip(fields, cur.fetchone())}
 
-    def get_all_knowls(self, fields=None, types=[1,0,-1,-2]):
+    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2]):
         if fields is None:
             fields = ['id'] + self._default_fields
         selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
@@ -280,7 +284,10 @@ class KnowlBackend(PostgresBase):
         else:
             typ, source, name = extract_typ(knowl.id)
         links = extract_links(knowl.content)
-        defines = extract_defines(knowl.content)
+        if typ == 2: # column description
+            defines = [knowl.id.split(".")[-1]]
+        else:
+            defines = extract_defines(knowl.content)
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
         values = (knowl.id, authors, cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, search_keywords)
         with DelayCommit(self):
@@ -317,6 +324,31 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT id, last_author, timestamp FROM (SELECT DISTINCT ON (id) id, last_author, timestamp FROM kwl_knowls WHERE type = %s AND source = %s AND status >= 0 ORDER BY id, timestamp) knowls ORDER BY timestamp DESC")
         cur = self._execute(selecter, [-2, ID])
         return list(cur)
+
+    def get_column_descriptions(self, table):
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [f"columns.{table}.%", 2, 0])
+        return {rec[0].split(".")[-1]: Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur}
+
+    def set_column_description(self, table, col, description):
+        from lmfdb import db
+        uid = db.login()
+        kid = f"columns.{table}.{col}"
+        data = {
+            'content': description,
+            'defines': col,
+        }
+        kwl = Knowl(kid, data=data)
+        old = self.get_knowl(kid, beta=True)
+        if old is None:
+            old = {'authors': []}
+        self.save(kwl, uid, most_recent=old)
+
+    def drop_column(self, table, col):
+        kid = f"columns.{table}.{col}"
+        kwl = Knowl(kid)
+        self.delete(kwl)
 
     def delete(self, knowl):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
@@ -356,8 +388,8 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time, 0, -2])
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND (type = 1 OR type = -1) ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time, 0])
         knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
 
         kids = [k.id for k in knowls]
@@ -468,7 +500,7 @@ class KnowlBackend(PostgresBase):
         filename = None
         code = []
         for line in match.split('\n'):
-            if not line.strip():
+            if not line.strip() or line.startswith("Binary file "):
                 continue
             m = grep_extractor.match(line)
             if not m:
@@ -613,7 +645,7 @@ class KnowlBackend(PostgresBase):
 
         A list of pairs ``kid``, ``links``, where ``links`` is a list of broken links on the knowl with id ``kid``.
         """
-        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0")
+        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0")
         results = defaultdict(list)
         for kid, link in self._execute(selecter):
             results[kid].append(link)
@@ -689,9 +721,8 @@ class KnowlBackend(PostgresBase):
         kt = self.knowl_title(kid)
         if kt is not None:
             return True
-        if allow_deleted:
-            return self.get_knowl(kid, ['id'], beta=True, allow_deleted=True) is not None
-        return False
+        k = self.get_knowl(kid, ['id'], beta=True, allow_deleted=allow_deleted)
+        return k is not None
 
     def get_categories(self):
         """
@@ -730,7 +761,7 @@ def knowl_url_prefix():
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
 reverse_status_code = {v:k for k,v in knowl_status_code.items()}
-knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1}
+knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2}
 
 class Knowl(object):
     """
@@ -788,8 +819,19 @@ class Knowl(object):
                 self.type = 1
             elif bottom_knowl_re.match(ID):
                 self.type = -1
+            elif coldesc_knowl_re.match(ID):
+                self.type = 2
             else:
                 self.type = 0
+        if self.type == 2:
+            pieces = ID.split(".")
+            # Ignore the title passed in
+            self.title = f"Column {pieces[2]} of table {pieces[1]}"
+            from lmfdb import db
+            if pieces[1] in db.tablenames:
+                self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+            else:
+                self.coltype = "DEFUNCT"
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
         #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 

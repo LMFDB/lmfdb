@@ -134,7 +134,7 @@
 <p>
   <table>
     {% if seq.count != 1 %}
-    <tr><td>Number of subgroups in this {% if seq.outer_equivalence %}{{KNOWL('group.autjugate_subgroups', 'autjugacy class')}}{% else %}conjugacy class{% endif %}</td><td>${{seq.count}}$</td></tr>
+    <tr><td>Number of subgroups in this {% if seq.outer_equivalence %}{{KNOWL('group.autjugate_subgroup', 'autjugacy class')}}{% else %}conjugacy class{% endif %}</td><td>${{seq.count}}$</td></tr>
     {% endif %}
     {% if seq.outer_equivalence %}
       <tr><td>Number of conjugacy classes in this autjugacy class</td><td>${{seq.conjugacy_class_count}}$</td></tr>
@@ -157,7 +157,7 @@
     <td>${{seq.amb.presentation()}}$</td>
   </tr>
   <tr>
-    <td>{{KNOWL('group.subgroup_generators', 'Generators of Subgroup:')}}</td>
+    <td>{{KNOWL('group.generators', 'Generators of Subgroup:')}}</td>
     <td>${{seq.subgroup_gens()}}$</td>
   </tr>
 </table>
@@ -168,7 +168,7 @@
     <td>${{seq.amb.presentation()}}$</td>
   </tr>
   <tr>
-    <td>{{KNOWL('group.subgroup_generators', 'Generators of Subgroup:')}}</td>
+    <td>{{KNOWL('group.generators', 'Generators of Subgroup:')}}</td>
     <td>${{seq.sub.presentation()}}$</td> this isn't right since subgroup may be solvable
   </tr>
 </table>
