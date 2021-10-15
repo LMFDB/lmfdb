@@ -812,18 +812,7 @@ class Knowl(object):
         self.editing = editing
         # We need to have the source available on comments being created
         if self.type is None:
-            match = comment_knowl_re.match(ID)
-            if match:
-                self.source = match.group(1)
-                self.type = -2
-            elif top_knowl_re.match(ID):
-                self.type = 1
-            elif bottom_knowl_re.match(ID):
-                self.type = -1
-            elif coldesc_knowl_re.match(ID):
-                self.type = 2
-            else:
-                self.type = 0
+            self.type, self.source, self.source_name = extract_typ(ID)
         if self.type == 2:
             pieces = ID.split(".")
             # Ignore the title passed in
