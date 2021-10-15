@@ -223,7 +223,7 @@
   type: single
   status: beta
   heading:
-    title: API
+    title: Database
     url_for: "API.index"
     type: knowl
 

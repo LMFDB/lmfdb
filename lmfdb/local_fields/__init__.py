@@ -2,7 +2,6 @@
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint, request, redirect
-from lmfdb.api2.searchers import register_search_function
 
 local_fields_page = Blueprint("local_fields", __name__, template_folder='templates', static_folder="static")
 logger = make_logger(local_fields_page)
@@ -28,9 +27,11 @@ def redirect_local():
 app.register_blueprint(local_fields_page, url_prefix="/padicField")
 app.register_blueprint(local_fields_page, url_prefix="/LocalNumberField")
 
-register_search_function(
-    "$p$-adic_fields",
-    "$p$-adic fields",
-    "Search over $p$-adic fields",
-    auto_search = 'lf_fields'
-)
+# API2 has been disabled for now
+#from lmfdb.api2.searchers import register_search_function
+#register_search_function(
+#    "$p$-adic_fields",
+#    "$p$-adic fields",
+#    "Search over $p$-adic fields",
+#    auto_search = 'lf_fields'
+#)

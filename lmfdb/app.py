@@ -789,7 +789,7 @@ def WhiteListedRoutes():
         'acknowledgment',
         'alive',
         'api',
-        'api2',
+        #'api2',
         'bigpicture',
         'callback_ajax',
         'citation',

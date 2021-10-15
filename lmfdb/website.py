@@ -21,8 +21,8 @@ from .app import app, set_running  # So that we can set it running below
 # Note that this necessarily includes everything, even code in still in an alpha state
 from . import api
 assert api
-from . import api2
-assert api2
+#from . import api2
+#assert api2
 from . import belyi
 assert belyi
 from . import bianchi_modular_forms
