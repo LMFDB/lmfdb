@@ -4,6 +4,11 @@
 {% from "knowl-defs.html" import knowlbar with context %}
 {{ knowlbar(show_kid=True) }}
 
+{% if k.type == 2 %}
+  <p>
+    Postgres column type: {{ k.coltype }}
+  </p>
+{% endif %}
 {{ render|safe }}
 
 {% if user_is_authenticated and type != -2 %}
