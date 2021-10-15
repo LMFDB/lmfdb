@@ -60,7 +60,7 @@ def get_database_info(show_hidden=False):
 @api_page.route("/")
 def index(show_hidden=False):
     databases = get_database_info(show_hidden)
-    title = "API"
+    title = "Database"
     return render_template("api.html", **locals())
 
 @api_page.route("/all")
@@ -333,8 +333,8 @@ def api_query(table, id = None):
         # sort displayed records by key (as jsonify and yaml_dump do)
         data["pretty"] = pretty_document
         location = table
-        title = "API - " + location
-        bc = [("API", url_for(".index")), (table,)]
+        title = "Database - " + location
+        bc = [("Database", url_for(".index")), (table,)]
         query_unquote = unquote(data["query"])
         description = coll.description()
         if description:

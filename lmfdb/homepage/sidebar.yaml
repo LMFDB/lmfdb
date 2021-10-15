@@ -219,12 +219,12 @@
     status: future
     colspan: onecolumn
 
-8Inv:
+9API:
   type: single
   status: beta
   heading:
-    title: Inventory
-    url_for: "inventory_app.show_edit_root"
+    title: Database
+    url_for: "API.index"
     type: knowl
 
 ...

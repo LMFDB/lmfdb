@@ -21,8 +21,8 @@ from .app import app, set_running  # So that we can set it running below
 # Note that this necessarily includes everything, even code in still in an alpha state
 from . import api
 assert api
-from . import api2
-assert api2
+#from . import api2
+#assert api2
 from . import belyi
 assert belyi
 from . import bianchi_modular_forms
@@ -89,8 +89,6 @@ from . import hecke_algebras
 assert hecke_algebras
 from . import cluster_pictures
 assert cluster_pictures
-from . import inventory_app
-assert inventory_app
 from . import groups
 assert groups
 from .groups import abstract
