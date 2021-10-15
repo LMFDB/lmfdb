@@ -736,8 +736,8 @@ class WebG2C(object):
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
             data['igusa_clebsch_factor_latex'] = [web_latex_factored_integer(i) for i in data['igusa_clebsch']]
             data['igusa_factor_latex'] = [ web_latex_factored_integer(j) for j in data['igusa'] ]
-            data['aut_grp'] = abstract_group_display_knowl(curve['aut_grp_label'], curve['aut_grp_tex'])
-            data['geom_aut_grp'] = abstract_group_display_knowl(curve['geom_aut_grp_label'], curve['geom_aut_grp_tex'])
+            data['aut_grp'] = abstract_group_display_knowl(curve['aut_grp_label'], f"${curve['aut_grp_tex']}$")
+            data['geom_aut_grp'] = abstract_group_display_knowl(curve['geom_aut_grp_label'], f"${curve['geom_aut_grp_tex']}$")
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             P = curve['non_solvable_places']
