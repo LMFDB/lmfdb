@@ -1734,6 +1734,7 @@ class PostgresTable(PostgresBase):
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
 
+           self.restore_pkeys(suffix=suffix)
 
             # update the indexes
             # these are needed before reindexing
@@ -1784,8 +1785,6 @@ class PostgresTable(PostgresBase):
                 # tracks the success of resort
                 ordered = self.resort(suffix=suffix)
             else:
-               # We still need to build primary keys
-               self.restore_pkeys(suffix=suffix)
                ordered = False
 
 
