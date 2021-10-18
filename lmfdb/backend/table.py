@@ -1734,7 +1734,7 @@ class PostgresTable(PostgresBase):
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
 
-           self.restore_pkeys(suffix=suffix)
+            self.restore_pkeys(suffix=suffix)
 
             # update the indexes
             # these are needed before reindexing
