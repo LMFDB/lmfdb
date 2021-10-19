@@ -348,7 +348,7 @@ class KnowlBackend(PostgresBase):
 
     def drop_column(self, table, col):
         kid = f"columns.{table}.{col}"
-        kwl = Knowl(kid)
+        kwl = Knowl(kid, data=self.get_knowl(kid, beta=True))
         self.delete(kwl)
 
     def delete(self, knowl):
