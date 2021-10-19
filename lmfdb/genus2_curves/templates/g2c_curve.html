@@ -139,11 +139,10 @@ function show_eqns(invstyle) {
 
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
-<table>
-	<tr class='min_eqn'><td>{{ data.rat_pts_table | safe }}</td></tr>
-	<tr class='proj_eqn nodisplay'><td>{{ data.rat_pts_table | safe }}</td></tr>
-	<tr class='simp_eqn nodisplay'><td>{{ data.rat_pts_simple_table | safe }}</td></tr>
-</table>
+<div class='min_eqn'>{{ data.rat_pts_table | safe }}</div>
+<div class='proj_eqn nodisplay'><td>{{ data.rat_pts_table | safe }}</div>
+<div class='simp_eqn nodisplay'><td>{{ data.rat_pts_simple_table | safe }}</div>
+
 <p>{{place_code('rat_pts')}}{{place_code('rat_pts_simp')}}</p>
 
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', 'Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
