@@ -40,6 +40,7 @@ url_from_knowl = [
     (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke algebra {0}'),
     (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois representation {0}'),
     (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l modular form {0}'),
+    (re.compile(r'group\.abstract\.(.*)'), 'Groups/Abstract/{0}', 'Abstract group {0}'),
 ]
 grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
@@ -347,7 +348,7 @@ class KnowlBackend(PostgresBase):
 
     def drop_column(self, table, col):
         kid = f"columns.{table}.{col}"
-        kwl = Knowl(kid)
+        kwl = Knowl(kid, data=self.get_knowl(kid, beta=True))
         self.delete(kwl)
 
     def delete(self, knowl):
@@ -811,18 +812,7 @@ class Knowl(object):
         self.editing = editing
         # We need to have the source available on comments being created
         if self.type is None:
-            match = comment_knowl_re.match(ID)
-            if match:
-                self.source = match.group(1)
-                self.type = -2
-            elif top_knowl_re.match(ID):
-                self.type = 1
-            elif bottom_knowl_re.match(ID):
-                self.type = -1
-            elif coldesc_knowl_re.match(ID):
-                self.type = 2
-            else:
-                self.type = 0
+            self.type, self.source, self.source_name = extract_typ(ID)
         if self.type == 2:
             pieces = ID.split(".")
             # Ignore the title passed in

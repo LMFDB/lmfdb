@@ -1785,8 +1785,6 @@ class PostgresTable(PostgresBase):
                 # tracks the success of resort
                 ordered = self.resort(suffix=suffix)
             else:
-               # We still need to build primary keys
-               self.restore_pkeys(suffix=suffix)
                ordered = False
 
 
