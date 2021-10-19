@@ -654,7 +654,7 @@ def random_l_function():
     return url_for_lfunction(label)
 
 
-@l_function_page.route("/degree<degree>/")
+@l_function_page.route("/degree<int:degree>/")
 def by_old_degree(degree):
     return redirect(url_for(".by_url_degree_conductor_character_spectral", degree=degree))
 

@@ -1,0 +1,513 @@
+{% extends "homepage.html" %}
+
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='groups.js') }}"></script>
+<script type="text/javascript">
+  $(document).ready(
+    function() {
+    $(".subgp").hover(highlight_group, unhighlight_group);
+    $(".subgp").on('touchstart', highlight_group);
+  });
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+
+<script>
+  function button_on(who) {
+      $('button.'+who).css('background', '{{color.lf_an_button_bkg}}');
+      $('button.'+who).css('border', '2px solid {{color.lf_an_button_brd}}');
+  }
+  function other_buttons_off(keep) {
+    var styles=['diagram', 'profile', 'autdiagram', 'autprofile'];
+    for (var i = 0; i< styles.length; i++) {
+      if(styles[i] != keep) {
+        $('button.'+styles[i]).css('background', '{{color.lf_ar_button_bkg}}');
+        $('button.'+styles[i]).css('border', '1px solid {{color.lf_ar_button_brd}}');
+      }
+    }
+  }
+
+  function show_info(style) {
+    $('#subgroup_diagram').hide();
+    $('#subgroup_profile').hide();
+    $('#subgroup_autdiagram').hide();
+    $('#subgroup_autprofile').hide();
+    $('#subgroup_'+style).show();
+    $('button.diagram').show();
+    $('button.profile').show();
+    $('button.autdiagram').show();
+    $('button.autprofile').show();
+    button_on(style);
+    other_buttons_off(style);
+  }
+
+</script>
+
+
+
+<h2> Group information</h2>
+<p>
+  <table>
+    <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
+    {% if not (gp.solvable or gp.simple) %}
+    <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
+    {% endif %}
+  </table>
+</p>
+
+<p>
+  {{info.boolean_characteristics_string | safe}}
+
+</p>
+
+<h2>Group statistics</h2>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+        <th>{{KNOWL('group.element_order', 'Order')}}</th>
+        {% for c in (gp.order_stats | sort) %}
+          <th>{{ c[0] }} </th>
+        {% endfor %}
+      <td></td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Elements</td>
+        {% for c in (gp.order_stats | sort) %}
+          <td>{{ c[1] }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.order }}</td>
+      </tr>
+      <tr>
+        <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes')}}</td>
+        {% for c in gp.cc_stats %}
+          <td>{{ c[1] }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
+      </tr>
+      <tr>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
+        {% for c in gp.division_stats %}
+          <td>{{ c[1] }}</td>
+        {% endfor %}
+        <td class="border-left">{{ gp.number_divisions }}</td>
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+        {% for c in gp.autc_stats %}
+          <td>{{ c[1] }}</td>
+        {% endfor %}
+        <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
+      </tr>
+    </tbody>
+  </table>
+</p>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr><th>Dimension</th>
+        {% for d in (gp.rep_dims) %}
+          <th>{{ d }} </th>
+        {% endfor %}
+        <td></td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{KNOWL('group.representation.character', 'Irr. complex chars.')}}</td>
+        {% for n in gp.irrep_stats %}
+          <td>{{ n }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.irrep_stats | sum }}</td>
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
+        {% for n in gp.ratrep_stats %}
+          <td>{{ n }} </td>
+        {% endfor %}
+        <td class="border-left">{{ gp.ratrep_stats | sum }}</td>
+      </tr>
+    </tbody>
+  </table>
+</p>
+
+
+<h2>Constructions</h2>
+
+<table class=nowrap>
+  <tr>
+    <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
+    <td colspan="5">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
+  </tr>
+  {% if gp.direct_product %}
+    <tr>
+      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
+      <td>${{ gp.display_direct_product }}$</td>
+    </tr>
+  {% endif %}
+  {% if gp.semidirect_products %}
+    <tr>
+      <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
+      {% for sub, count, labels in gp.semidirect_products[:4] %}
+        <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+      {% endfor %}
+      {% for i in range(4 - (gp.semidirect_products|length)) %}
+      <td></td>
+      {% endfor %}
+      <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
+    </tr>
+  {% endif %}
+  {% if gp.nonsplit_products %}
+    <tr>
+      <td>{{KNOWL('group.nonsplit_product', 'Non-split product')}}:</td>
+      {% for sub, count, labels in gp.nonsplit_products[:4] %}
+        <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+      {% endfor %}
+      {% for i in range(4 - (gp.nonsplit_products|length)) %}
+      <td></td>
+      {% endfor %}
+      <td>{{nonsplit_expressions_knowl(gp.label, "all " + (gp.nonsplit_products | length | string) if (gp.nonsplit_products|length > 4) else "more information") | safe}}</td>
+    </tr>
+  {% endif %}
+  {% if gp.as_aut_gp %}
+    <tr>
+      <td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td>
+      {% for label, disp in gp.as_aut_gp[:4] %}
+        <td><a href="{{url_for('.by_label', label=label)}}">${{disp}}$</a></td>
+      {% endfor %}
+      {% for i in range(4 - (gp.as_aut_gp|length)) %}
+      <td></td>
+      {% endfor %}
+      {% if (gp.as_aut_gp | length) > 4 %}
+        <td>{{autgp_expressions_knowl(gp.label, "all " + (gp.as_aut_gp | length | string)) | safe}}</td>
+      {% endif %}
+    </tr>
+  {% endif %}
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    <td>${{gp.rank}}$</td>
+  </tr>
+  {% if gp.order > 1 and gp.eulerian_function is defined %}
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+    <td>${{gp.eulerian_function}}$</td>
+  </tr>
+  {% endif %}
+</table>
+
+<h2> Homology </h2>
+
+<table>
+  <tr>
+    <td>{{KNOWL('group.abelianization', 'Abelianization')}}:</td>
+    <td> <a href="{{url_for('.by_abelian_label', label=gp.abelianization_label())}}">${{gp.abelian_quot()}} {% if gp.smith_abelian_invariants != gp.primary_abelian_invariants %} \simeq {{gp.abelian_quot_primary()}}{% endif %}$</a></td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.schur_multiplier', 'Schur multiplier')}}:</td>
+    <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
+    <td>${{gp.commutator_count}}$</td>
+  </tr>
+</table>
+
+
+<h2> Subgroups </h2>
+
+<p>There are {% if gp.number_normal_subgroups < gp.number_subgroups %}{{gp.number_subgroups}} subgroups in <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroup_classes}} conjugacy classes</a>, <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, normal='yes')}}">{{ gp.number_normal_subgroups }} normal</a>{% else %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroups}} subgroups</a>, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, characteristic='yes')}}">{{ gp.number_characteristic_subgroups }} characteristic</a>{% else %}all characteristic{% endif %}).
+</p>
+
+<table>
+  <tr>
+    <td>{{KNOWL('group.center',title='Center')}}:</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
+    <td>$G/Z \simeq {{gp.central_quot()}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span>
+ </td>
+    <td> $G/G' \simeq {{gp.abelian_quot()}}$ </td>
+  </tr>
+    <tr>
+    <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
+    <td>$G/\Phi \simeq {{gp.frattini_quot()}}$ </td>
+  </tr>
+ <tr>
+    <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
+    <td>$G/\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.radical',title='Radical')}}:</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
+    <td>$G/R \simeq {{gp.subgroups[gp.radical].quotient_tex}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.socle',title='Socle')}}:</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
+    <td>$G/\operatorname{soc} \simeq {{gp.subgroups[gp.socle].quotient_tex}}$</td>
+  </tr>
+  {% if gp.pgroup == 0 %}
+    {% for p, subgp in gp.sylow_subgroups() %}
+      <tr>
+        <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
+        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{ {{p}} } \simeq {{subgp.subgroup_tex}}$</span></td>
+      </tr>
+    {% endfor %}
+  {% endif %}
+</table>
+
+
+{# An invisible span to get the select color in the diagram into the DOM #}
+<div>
+<span id="group-diagram-selected" style="display:none;">Hi</span>
+</div>
+
+<h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}} and profile</h3>
+<p>
+<div>
+<button class='diagram inactive' onclick="show_info('diagram'); return false">diagram</button>
+<button class='autdiagram inactive' onclick="show_info('autdiagram'); return false">aut diagram</button>
+<button class='profile inactive' onclick="show_info('profile'); return false">profile</button>
+<button class='autprofile inactive' onclick="show_info('autprofile'); return false">aut profile</button>
+</div>
+
+<p>
+<div id="subgroup_diagram" style="display: block">
+  <h4>Classes of subgroups up to conjugation</h4>
+    {% if gp.diagram_ok and not gp.outer_equivalence%}
+      <script>
+        show_info("diagram");
+      </script>
+      {% if info.wide %}
+        <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+           Sorry, your browser does not support the subgroup diagram.
+        </canvas>
+
+        <script type="text/javascript">
+          {{ info.dojs|safe }}
+        </script>
+        {% if user_is_authenticated and BETA %}
+          <button onclick="getpositions()">Get positions</button>
+          <br>
+          <p>
+          <div id="positions">
+          </div>
+        {% endif %}
+        <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+        <h4>Subgroup information</h4>
+        <div class="selectedsub">
+          Click on a subgroup in the diagram to see information about it.
+        </div>
+      {% else %}
+        <table>
+        <tr><td>
+          <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+            Sorry, your browser does not support the subgroup diagram.
+          </canvas>
+        <td valign="top">
+          <script type="text/javascript">
+            {{ info.dojs|safe }}
+          </script>
+          <h4>Subgroup information</h4>
+            <div class="selectedsub">
+              Click on a subgroup in the diagram to see information about it.
+            </div>
+        </table>
+        {% if user_is_authenticated and BETA %}
+          <button onclick="getpositions()">Get positions</button>
+          <br>
+          <p>
+          <div id="positions">
+          </div>
+        {% endif %}
+        <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+      {% endif %}
+    {% else %}
+      There are too many classes of subgroups to display.
+      {% if not gp.outer_equivalence %}
+        <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+      {% endif %}
+    {% endif %}
+</div>
+
+<div id="subgroup_autdiagram" style="display: none">
+  <h4>Classes of subgroups up to automorphism</h4>
+  {% if info.autwide %}
+    <canvas id="autdiagram" width="1000" height="300" style="border: 0px solid black">
+      Sorry, your browser does not support the subgroup diagram.
+    </canvas>
+
+    <script type="text/javascript">
+      {{ info.doautjs|safe }}
+    </script>
+  {% else %}
+    <table>
+      <tr><td>
+        <canvas id="autdiagram" width="500" height="300" style="border: 0px solid black">
+            Sorry, your browser does not support the subgroup diagram.
+        </canvas>
+      <td valign="top">
+        <script type="text/javascript">
+          {{ info.doautjs|safe }}
+        </script>
+        <h4>Subgroup information</h4>
+          <div class="selectedsub">
+            Click on a subgroup in the diagram to see information about it.
+          </div>
+    </table>
+    {% if user_is_authenticated and BETA %}
+      <button onclick="getpositions()">Get positions</button>
+      <br>
+      <p>
+      <div id="positions">
+      </div>
+    {% endif %}
+  {% endif %}
+  <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+</div>
+
+<div id="subgroup_profile" style="display: none">
+  <h4>Classes of subgroups up to conjugation</h4>
+{% for ordline in info.subgroup_profile %}
+Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+{% endfor %}
+</div>
+
+<div id="subgroup_autprofile" style="display: none">
+  <h4>Classes of subgroups up to automorphism</h4>
+  {% for ordline in info.subgroup_autprofile %}
+    Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+  {% endfor %}
+</div>
+
+{% if not gp.diagram_ok or gp.outer_equivalence %}
+  <script>
+    show_info("profile");
+  </script>
+{% endif %}
+
+
+<h3>Series</h3>
+<table>
+  {% for kwl, name, subs, spandata, symb in gp.series() %}
+  <tr>
+    <td>{{KNOWL(kwl, name)}}</td>
+    {% for sub in subs %}
+    <td>
+      {% if not loop.first %}
+        ${{symb}}$</td><td>
+      {% endif %}
+      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.label}}">${{sub.subgroup_tex}}$</span></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+{% if gp.max_sub_cnt or gp.max_quo_cnt %}
+<h2> Supergroups </h2>
+
+{% if gp.max_sub_cnt %}
+<p>This group is a {{KNOWL('group.maximal_subgroup', "maximal subgroup")}} of <a href="{{url_for('.index', search_type='Subgroups', maximal='yes', subgroup=gp.label)}}">{{gp.max_sub_cnt}} larger groups</a> in the database.</p>
+{% endif %}
+{% if gp.max_sub_cnt %}
+<p>This group is a {{KNOWL('group.maximal_quotient', "maximal quotient")}} of <a href="{{url_for('.index', search_type='Subgroups', minimal_normal='yes', quotient=gp.label)}}">{{gp.max_quo_cnt}} larger groups</a> in the database.</p>
+{% endif %}
+
+{#
+{% if gp.maximal_subgroup_of %}
+
+<table>
+  <tr>
+    <td colspan=3>{{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of {{info.max_subs | length }} groups in the database</td>
+  </tr>
+  <tr>
+    <th>Subgroup of</th>
+    <th>Order</th>
+    <th>Quotient</th>
+  </tr>
+  {% for suplab, suptex, supord, quos in info.max_subs %}
+    <tr>
+      <td><a href="{{ url_for('.by_label', label=suplab) }}">${{suptex}}$</a></td>
+      <td>${{supord}}$</td>
+      <td>{{quos | safe }}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% if gp.maximal_quotient_of %}
+<table>
+  <tr>
+    <td colspan=3>{{KNOWL('group.maximal_quotient', "Maximal quotient")}} of {{info.max_quot | length }} groups in the database</td>
+  </tr>
+  <tr>
+    <th>Quotient of</th>
+    <th>Order</th>
+    <th>By</th>
+  </tr>
+  {% for suplab, suptex, supord, subs in info.max_quot %}
+    <tr>
+      <td><a href="{{ url_for('.by_label', label=suplab) }}">${{suptex}}$</a></td>
+      <td>${{supord}}$</td>
+      <td>{{subs | safe}}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endif %}
+#}
+{% endif %}
+
+<h2> Character theory </h2>
+<p>
+
+<h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
+
+{% if gp.number_conjugacy_classes <= 16 %}
+
+  {% include 'character_table.html' %}
+
+{% else %}
+
+  <p>
+    See the <a href="{{url_for('.char_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>.
+  </p>
+
+{% endif %}
+
+{% if gp.number_divisions == gp.number_conjugacy_classes %}
+
+  <p>
+    Every character has rational values, so the {{KNOWL('group.rational_character_table','rational character table')}} is the same as the complex character table.
+  </p>
+
+{% else %}
+
+<h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
+
+{% if gp.number_divisions <= 16 %}
+
+  {% include 'rational_character_table.html' %}
+
+{% else %}
+
+  <p>
+    See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>.
+  </p>
+
+{% endif %}
+{% endif %}
+
+{% endblock %}

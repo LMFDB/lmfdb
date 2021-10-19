@@ -12,6 +12,10 @@ class formatters(object):
         return 'True' if value else 'False'
 
     @classmethod
+    def yesno(cls, value):
+        return 'yes' if value else 'no'
+
+    @classmethod
     def boolean_unknown(cls, value):
         if value == 1:
             return 'True'
@@ -296,7 +300,7 @@ class totaler(object):
                 if not corner_count and i == num_cols:
                     break
                 total = sum(elt['count'] for elt in col)
-                query = self.common_link([elt['query'] for elt in col]) if include_links else '?'
+                query = self.common_link([elt['query'] for elt in col if elt['count'] > 0]) if include_links else '?'
                 if query[-1] == '?': # no common search queries
                     query = None
                 if recursive_prop:

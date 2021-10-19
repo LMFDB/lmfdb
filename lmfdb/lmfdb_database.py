@@ -33,6 +33,63 @@ class LMFDBSearchTable(PostgresSearchTable):
         PostgresSearchTable.__init__(self, *args, **kwds)
         self._verifier = None  # set when importing lmfdb.verify
 
+    def column_description(self, col=None, description=None, drop=False):
+        """
+        We use knowls to store column descriptions rather than meta_tables.
+        """
+        from lmfdb.knowledge.knowl import knowldb
+        allcols = self.search_cols + self.extra_cols
+        current = knowldb.get_column_descriptions(self.search_table)
+        current = {col: kwl.content for col, kwl in current.items()}
+        if not drop and description is None:
+            # We want to allow the set of columns to be out of date temporarily, on prod for example
+            if col is None:
+                for col in allcols:
+                    if col not in current:
+                        current[col] = "(description not yet updated on this server)"
+                return current
+            return current.get(col, "(description not yet updated on this server)")
+        else:
+            if not (drop or col is None or col in allcols):
+                raise ValueError(f"{col} is not a column of this table")
+            if drop:
+                if col is None:
+                    raise ValueError("Must specify column name to drop")
+                knowldb.drop_column(self.search_table, col)
+            elif col is None:
+                assert isinstance(description, dict)
+                for col in description:
+                    if col not in allcols:
+                        raise ValueError(f"{col} is not a column of this table")
+                    assert isinstance(description[col], str)
+                    knowldb.set_column_description(self.search_table, col, description[col])
+            else:
+                assert isinstance(description, str)
+                knowldb.set_column_description(self.search_table, col, description)
+
+    def port_column_knowls(self, other_table, keep_old=True):
+        """
+        This function either copies column knowls from another table or change the ids to this table's.
+
+        INPUT:
+
+        - ``other_table`` -- a string, the name of the other table.
+        - ``keep_old`` -- if true, new knowls for this table will be created from the column knowls for the old table.  Otherwise, the old knowls will be renamed, or deleted if they are not columns of this table.
+        """
+        from lmfdb.knowledge.knowl import knowldb
+        knowls = knowldb.get_column_description(other_table)
+        with DelayCommit(self):
+            for col, knowl in knowls.items():
+                if col in self.col_type:
+                    if keep_old:
+                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=datetime.datetime.utcnow())
+                        who = self._db.login()
+                        new_knowl.save(who, most_recent=knowl, minor=True)
+                    else:
+                        knowldb.actually_rename(knowl, new_name=f'columns.{self.search_table}.{col}')
+                elif not keep_old:
+                    knowldb.delete(knowl)
+
     def _check_verifications_enabled(self):
         """
         Check whether verifications have been enabled in this session (by importing db from lmfdb.verify and implementing an appropriate file).

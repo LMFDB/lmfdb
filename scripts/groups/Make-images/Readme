@@ -1,0 +1,19 @@
+Process for making png images of group names for subgroup diagrams:
+
+ - run dump-pretty.py  It produces eqguts.tex which has the latex and prettyindex to 
+   be uploaded to the db
+
+ - copy eqguts and eq.tex to a machine with latex and dvipng
+
+ - latex eq.tex
+
+ - run dvipng -bg Transparent eq.dvi
+
+ - tar up the pngs with ./mytar (also on that machine)
+
+ - cp alleqns.tar back to legendre
+
+ - untar it into the images directory
+
+ - run load-img.py
+

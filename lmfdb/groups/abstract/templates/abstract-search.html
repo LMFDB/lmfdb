@@ -1,0 +1,45 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+<thead>
+  <tr>
+    <th>{{ KNOWL('group.label', title='Label') }}</th>
+    <th>{{ KNOWL('group.name', title='Name') }}</th>
+    <th>{{ KNOWL('group.order', title='Order') }}</th>
+    <th>{{ KNOWL('group.exponent', title='Exponent') }}</th>
+    <th>{{ KNOWL('gg.conjugacy_classes', title='$|\mathrm{conj}(G)|$') }}</th>
+    <th>{{ KNOWL('group.center', title='Center') }}</th>
+    <th>{{ KNOWL('group.outer_aut', title='$|\mathrm{Out}(G)|$') }}</th>
+    <th>{{ KNOWL('group.type', title='Type - length') }}</th>
+  </tr>
+</thead>
+<tbody>
+{% for group in info.results: %}
+<tr>
+    <td align=center> <a href="{{info.group_url(group.label)}}">{{group.label}}</a></td>
+    <td align=center> ${{group.tex_name}}$</td>
+    <td align=center> {{info.show_factor(group.order)}}</td>
+    <td align=center> {{info.show_factor(group.exponent)}}</td>
+    <td align=center> {{group.number_conjugacy_classes}}</td>
+    <td align=center> {{group.center_label}}</td>
+    <td align=center> {{info.show_factor(group.outer_order)}}</td>
+    <td align=center> {{info.show_type(group)}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% include 'forward_back.html' %}
+{#
+   {% include 'download_search_results.html' %}
+#}
+{% endif %}
+{% include 'debug_info.html' %}
+
+
+{% endblock %}

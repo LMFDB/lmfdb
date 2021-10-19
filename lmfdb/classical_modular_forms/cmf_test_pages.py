@@ -12,7 +12,7 @@ import time
 ncpus = min(multiprocessing.cpu_count(), 10)
 
 class CMFTest(LmfdbTest):
-    def runTest():
+    def runTest(self):
         pass
 
     def newform(self, label, dim):

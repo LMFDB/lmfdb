@@ -1,0 +1,34 @@
+
+{% set ccs = gp.conjugacy_classes %}
+
+<table class="nowrap">
+  <tr>
+    <td></td><td></td>
+    {% for c in ccs %}
+      <td class="right">{{ c.display_knowl() | safe }}</td>
+    {% endfor %}
+  </tr>
+  {% for p in gp.factors_of_order %}
+    {% set ploop = loop %}
+    <tr>
+      <td></td><td class="right">{{p}}P</td>
+      {% for c in ccs %}
+        <td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  <tr>
+    <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
+  </tr>
+  {% set dispv = gp.sparse_cyclotomic_to_latex %}
+  {% for chtr in gp.characters %}
+    <tr>
+      <td> {{ chtr.display_knowl() | safe }}</td>
+      <td class="center">{{chtr.type()}}</td>
+      {% set cond = chtr.cyclotomic_n %}
+      {% for val in chtr['values'] %}
+        <td class="right">${{ dispv(cond, val) }}$</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>

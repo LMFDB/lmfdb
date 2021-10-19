@@ -1032,6 +1032,9 @@ table.ntdata tr.first {
 table.ntdata .border-right {
   border-right: 2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata .border-left {
+  border-left: 2px solid {{ color.table_ntdata_border }};
+}
 table.ntdata .border-bottom {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
@@ -1046,6 +1049,9 @@ table.ntdata .right {
 }
 td.right {
     text-align: right;
+}
+td.center {
+    text-align: center;
 }
 table.ntdata .middle {
     vertical-align: middle;
@@ -1077,6 +1083,7 @@ table.knowl_review tr:first-child td {
 table.knowl_review tr:nth-child(even) {
     background: {{ color.table_ntdata_background_2 }};
 }
+
 table.euler {
     margin-left:auto;
     margin-right:auto;
@@ -2259,6 +2266,9 @@ div.table-scroll-wrapper thead > tr:last-child > th {
     position: sticky; left: 0; top: 0;
     z-index:3;
 }
+table.nowrap td {
+    white-space:nowrap;
+}
 td.nowrap {
     white-space:nowrap;
 }
@@ -2399,6 +2409,17 @@ input.color_selecter {
     margin: 10px;
 }
 
+span.chargp {
+    color: {{color.col_main}};
+}
+
+span.normgp {
+    color: #BB1188;
+}
+
+span.activesubgp {
+    background: {{color.col_main_ll}};
+    }
 /* the button to show advanced search options */
 #advancedtoggle {
     margin-left: 20px;
@@ -2409,6 +2430,17 @@ input.color_selecter {
     display: none;
 }
 
+span.chargp {
+    color: {{color.col_main}};
+}
+
+span.normgp {
+    color: #BB1188;
+}
+
+span.activesubgp {
+    background: {{color.col_main_ll}};
+}
 .tset-icon {
   visibility: hidden;
 }
@@ -2416,3 +2448,9 @@ input.color_selecter {
 .tset-container:hover .tset-icon {
   visibility: visible;
 }
+
+#group-diagram-selected {
+    color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+    background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+}
+

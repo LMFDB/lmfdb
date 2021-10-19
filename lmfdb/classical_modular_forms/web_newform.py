@@ -1112,7 +1112,7 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.order', 'Ord'),
                   th_wrap('cmf.self_twist_field', 'Type'),
                   th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimality', 'Min'),
+                  th_wrap('cmf.twist_minimal', 'Min'),
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
@@ -1129,7 +1129,7 @@ function switch_basis(btype) {
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisted newform'), '<tr>',
                   th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimality', 'Min'),
+                  th_wrap('cmf.twist_minimal', 'Min'),
                   th_wrap('cmf.dimension', 'Dim'),
                   th_wrap('character.dirichlet.conrey', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),

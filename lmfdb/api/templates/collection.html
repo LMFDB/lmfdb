@@ -50,21 +50,18 @@ Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
       <tr>
         <th>Column</th>
         <th>Type</th>
-        <th>Description</th>
       </tr>
-      {% for col, typ, desc in search_schema %}
+      {% for col, typ in search_schema %}
         <tr>
-          <td>{{col}}</td>
+          <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
           <td>{{typ}}</td>
-          <td style="white-space: normal; max-width: 600px;">{{desc}}</td>
         </tr>
       {% endfor %}
       {% if extra_schema %}
-        {% for col, typ, desc in extra_schema %}
+        {% for col, typ in extra_schema %}
           <tr{% if loop.index == 1 %} class="toplined"{% endif %}>
-            <td>{{col}}</td>
+            <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
             <td>{{typ}}</td>
-            <td style="white-space: normal; max-width: 600px;">{{desc}}</td>
           </tr>
         {% endfor %}
       {% endif %}
