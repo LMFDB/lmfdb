@@ -961,7 +961,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.tablenames.remove(old_name)
             self.tablenames.sort()
 
-    def copy_to(self, search_tables, data_folder, **kwds):
+    def copy_to(self, search_tables, data_folder, fail_on_error=True, **kwds):
         """
         Copy a set of search tables to a folder on the disk.
 
@@ -971,6 +971,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``data_folder`` -- a path to a folder to save the data.  The folder must not currently exist.
         - ``**kwds`` -- other arguments are passed on to the ``copy_to`` method of each table.
         """
+        if fail_on_error:
+            for tablename in search_tables:
+                if tablename not in self.tablenames:
+                    raise ValueError(f"{tablename} is not in tablenames")
+
         if os.path.exists(data_folder):
             raise ValueError("The path {} already exists".format(data_folder))
         os.makedirs(data_folder)
@@ -1003,7 +1008,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if failures:
             print("Failed to copy %s (not in tablenames)" % (", ".join(failures)))
 
-    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, **kwds):
+    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, fail_on_error=True, **kwds):
         """
         Copy data to a folder from a postgres instance on another server.
 
@@ -1020,7 +1025,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         source = PostgresDatabase(**remote_opts)
 
         # copy all the data
-        source.copy_to(search_tables, data_folder, **kwds)
+        source.copy_to(search_tables, data_folder, fail_on_error=fail_on_error, **kwds)
 
     def reload_all(
         self,
