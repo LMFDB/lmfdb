@@ -511,8 +511,11 @@ def add_friend(friends, friend):
             return
     friends.append(friend)
 
-def th_wrap(kwl, title):
-    return ' <th>%s</th>' % display_knowl(kwl, title=title)
+def th_wrap(kwl, title, colspan=1):
+    if colspan > 1:
+        return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+    else:
+        return ' <th>%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
     return r' <td align="left">\(%s\)</td>' % val
 def td_wrapr(val):
@@ -611,8 +614,7 @@ def ratpts_table(pts,pts_v):
     tabcols = 6
     if len(pts) <= tabcols+1:
         return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
-    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption)]
-    ptstab.extend(['<th></th>' for i in range(tabcols-1)])
+    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption, colspan=tabcols)]
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
