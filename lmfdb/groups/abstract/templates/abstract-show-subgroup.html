@@ -57,7 +57,7 @@
     <tr><td><a href="{{url_for('.by_label', label=seq.quotient)}}">${{seq.quotient_tex}}$</a></td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.quo.exponent)}} </td></tr>
-    <tr><td>Automorphism Group:</td>
+    <tr><td>Automorphism Group:</td><td>{{seq.quo.show_aut_group()|safe}}</td></tr>
     <tr><td>Outer Automorphisms:</td><td>{{seq.quo.show_outer_group()|safe}}</td></tr>
   </table>
 </p>
