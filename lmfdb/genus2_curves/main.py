@@ -5,9 +5,7 @@ from ast import literal_eval
 from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ, QQ, PolynomialRing
-from sage.all import magma # doing from sage.interfaces.magma import magma leads to some bugs
-from sage.misc.cachefunc import cached_function
+from sage.all import ZZ, QQ, PolynomialRing, cached_function, magma, prod
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -261,6 +259,7 @@ def has_magma():
         return True
     except (TypeError, RuntimeError):
         return False
+
 def genus2_lookup_equation(f):
     if not has_magma():
         return None
@@ -289,6 +288,45 @@ def genus2_lookup_equation(f):
         if str(magma.IsIsomorphic(C,D)) == 'true':
             return r['label']
     return None
+
+
+def geom_inv_to_G2(inv):
+    def igusa_clebsch_to_G2(Ilist):
+        # first to Igusa
+        I2, I4, I6, I10 = Ilist
+        J2 = I2/8
+        J4 = (4*J2**2 - I4)/96
+        J6 = (8*J2**3 - 160*J2*J4 - I6)/576
+        J8 = (J2*J6 - J4*2)/4 # we won't use this one at all
+        J10 = I10/4096
+        return igusa_to_G2([J2, J4, J6, J8, J10])
+
+    def igusa_to_G2(Jlist):
+        monomials = [
+            [5, 0, 0, 0, -1], # g1
+            [3, 1, 0, 0, -1], # g2
+            [2, 0, 1, 0, -1], # g3
+            [0, 5, 0, 0, -2], # g2'
+            [0, 1, 1, 0, -1], # g3'
+            [0, 0, 5, 0, -3]] # g3''
+        # the affine invariants defining g2
+        inv = tuple(prod(j**w for j, w in zip(Jlist, m)) for m in monomials)
+        if inv[0] != 0:
+            return inv[:3]
+        else:
+            assert inv[1] == inv[2] == 0
+            if inv[4] != 0:
+                return inv[3:6]
+            else:
+                assert inv[5] == 0
+                return inv[4:7] # the last 3
+
+    if len(inv)  == 3:
+        return inv
+    elif len(inv) == 4:
+        return igusa_clebsch_to_G2(inv)
+    else: # len(inv) == 5
+        return igusa_to_G2(inv)
 
 TERM_RE=r'(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?'
 STERM_RE=r'(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?'
@@ -354,6 +392,8 @@ def parse_sort(info, query):
         ))
     query['__sort__'] = d[info.get('sort_order')]
 
+
+
 @search_wrap(
     template="g2c_search_results.html",
     table=db.g2c_curves,
@@ -400,14 +440,9 @@ def genus2_curve_search(info, query):
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
-    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch_inv')
-    if geom_inv_type == 'igusa_clebsch_inv':
-        invlength = 4
-    elif geom_inv_type == 'igusa_inv':
-        invlength = 5
-    else:
-        invlength = 3
-    parse_bracketed_rats(info,query,'geometric_invariants',qfield=geom_inv_type,exactlength=invlength,split=False,keepbrackets=True)
+    parse_bracketed_rats(info, query, 'geometric_invariants', qfield='g2_inv', minlength=3, maxlength=5, listprocess=geom_inv_to_G2, split=False, keepbrackets=True)
+
+
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
@@ -552,22 +587,16 @@ class G2CSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
     def __init__(self):
-        geometric_invariants_type = SelectBox(
-            name="geometric_invariants_type",
-            min_width=115,
-            options=[("", "Igusa-Clebsh"), ("igusa_inv", "Igusa"), ("g2_inv", "G2")],
-        )
-
-        geometric_invariants = TextBoxWithSelect(
+        geometric_invariants = TextBox(
             name="geometric_invariants",
             knowl="g2c.geometric_invariants",
             label=r"\(\overline{\Q}\)-invariants",
-            example="[8,3172,30056,-692224]",
-            select_box=geometric_invariants_type,
+            example="[8,3172,30056,-692224] or [-1/169,33/169,43/169]",
             width=689,
-            colspan=(1, 4, 1),
+            short_width=190*3-10*3,
+            colspan=(1, 4, 3),
             example_span="",
-        )  # the last 1 is irrelevant
+        )
 
         bad_quantifier = SubsetBox(
             name="bad_quantifier",
@@ -783,6 +812,7 @@ class G2CSearchArray(SearchArray):
                 locally_solvable,
                 is_gl2_type,
             ],
+            [geometric_invariants],
         ]
 
     sort_knowl = 'g2c.sort_order'

@@ -836,9 +836,20 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, keepbrackets=False, extractor=None):
+def parse_bracketed_rats(inp,
+                         query,
+                         qfield,
+                         minlength=None,
+                         maxlength=None,
+                         exactlength=None,
+                         split=True,
+                         process=None,
+                         listprocess=None,
+                         keepbrackets=False,
+                         extractor=None):
     if (not BRACKETED_RAT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
+        (minlength is not None and inp.count(',') < minlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
         (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
@@ -850,6 +861,12 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
         elif exactlength is not None:
             lstr = "list of %s rational numbers" % exactlength
             example = str(list(range(2,exactlength+2))).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
+        elif minlength is not None and maxlength is not None:
+            lstr = f"list of rational numbers with length between {minlength} and {maxlength}"
+            example = str(list(range(2,minlength+2))).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
+        elif minlength is not None:
+            lstr = "list of at least %s rational numbers" % minlenght
+            example = str(list(range(2,minlength+2))).replace(", ","/13,") + " or " + str([2]*max(1, minlength-2)).replace(", ","/41,")
         elif maxlength is not None:
             lstr = "list of at most %s rational numbers" % maxlength
             example = str(list(range(2,maxlength+2))).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
@@ -885,7 +902,7 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
                 query[qfield] = inp[1:-1]
 
 def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
-    parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
+    parse_bracketed_posints(info, query, field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
