@@ -426,21 +426,20 @@ def geom_inv_to_G2(inv):
             [5, 0, 0, 0, -1],  # g1
             [3, 1, 0, 0, -1],  # g2
             [2, 0, 1, 0, -1],  # g3
+            # if J2 = 0
             [0, 5, 0, 0, -2],  # g2'
             [0, 1, 1, 0, -1],  # g3'
+            # if J2 = J4 = 0
             [0, 0, 5, 0, -3],  # g3''
         ]
         # the affine invariants defining G2
-        inv = tuple(prod(j ** w for j, w in zip(Jlist, m)) for m in monomials)
-        if inv[0] != 0:
-            return inv[:3]
-        else:
-            assert inv[1] == inv[2] == 0
-            if inv[4] != 0:
-                return inv[3:6]
-            else:
-                assert inv[5] == 0
-                return inv[4:7]  # the last 3
+        g1, g2, g3, g2a, g3a, g3b = tuple(prod(j ** w for j, w in zip(Jlist, m)) for m in monomials)
+        if g1 != 0: # if J2 != 0
+            return (g1, g2, g3)
+        elif g2a != 0: # ie J2 = 0 and J4 !=0
+            return (0, g2a, g3a)
+        else: # if J2 = J4 = 0
+            return (0, 0, g3b)
 
     if len(inv) == 3:
         return inv
