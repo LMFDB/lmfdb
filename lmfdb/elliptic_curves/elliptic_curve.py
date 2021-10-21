@@ -892,8 +892,9 @@ class ECSearchArray(SearchArray):
             knowl="ec.potential_good_reduction")
         nonmaximal_image = TextBox(
             name="nonmaximal_image",
+            lable=r"Nonmaximal $\ell$-adic imaage"
             example="13.91.3.2",
-            knowl="ec.maximal_elladic_galois_rep")
+            knowl="ec.galois_rep_elladic_image")
         cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
                         ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
                         ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
