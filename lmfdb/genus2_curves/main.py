@@ -417,7 +417,7 @@ def geom_inv_to_G2(inv):
         J2 = I2 / 8
         J4 = (4 * J2 ** 2 - I4) / 96
         J6 = (8 * J2 ** 3 - 160 * J2 * J4 - I6) / 576
-        J8 = (J2 * J6 - J4 * 2) / 4  # we won't use this one at all
+        J8 = (J2 * J6 - J4 ** 2) / 4  # we won't use this one at all
         J10 = I10 / 4096
         return igusa_to_G2([J2, J4, J6, J8, J10])
 
