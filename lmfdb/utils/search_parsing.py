@@ -1099,7 +1099,7 @@ def parse_bracketed_rats(
                 + str([2] * max(1, maxlength - 2)).replace(", ", "/41,")
             )
         elif minlength is not None:
-            lstr = "list of at least %s rational numbers" % minlenght
+            lstr = "list of at least %s rational numbers" % minlength
             example = (
                 str(list(range(2, minlength + 2))).replace(", ", "/13,")
                 + " or "
