@@ -393,6 +393,10 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
+    if info.get("nonmaximal_image"):
+        query['elladic_images'] = {'$contains': info['nonmaximal_image'].strip() }
+        if not 'cm' in query:
+            query['cm'] = 0
     # The button which used to be labelled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
@@ -845,7 +849,7 @@ class ECSearchArray(SearchArray):
             name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
-            label="Nonmax $p$",
+            label="Nonmaximal $p$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=surj_quant)
@@ -853,7 +857,7 @@ class ECSearchArray(SearchArray):
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad $p$",
+            label="Bad primes",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -886,6 +890,10 @@ class ECSearchArray(SearchArray):
             label="Potential good reduction",
             example="Yes",
             knowl="ec.potential_good_reduction")
+        nonmaximal_image = TextBox(
+            name="nonmaximal_image",
+            example="13.91.3.2",
+            knowl="ec.maximal_elladic_galois_rep")
         cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
                         ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
                         ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
@@ -911,7 +919,7 @@ class ECSearchArray(SearchArray):
             [class_size, num_int_pts],
             [class_deg, semistable],
             [optimal, potentially_good],
-            [count]
+            [count, nonmaximal_image]
             ]
 
         self.refine_array = [
@@ -919,5 +927,5 @@ class ECSearchArray(SearchArray):
             [rank, regulator, torsion, torsion_struct],
             [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
             [num_int_pts, cm, cm_disc, semistable, potentially_good],
-            [optimal, isodeg, class_size, class_deg]
+            [optimal, isodeg, class_size, class_deg, nonmaximal_image]
             ]
