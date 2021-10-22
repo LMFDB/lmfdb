@@ -369,7 +369,6 @@ def elliptic_curve_search(info, query):
             else:
                 query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
-    parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
@@ -383,8 +382,12 @@ def elliptic_curve_search(info, query):
     parse_floats(info,query,'regulator','regulator')
     parse_floats(info, query, 'faltings_height', 'faltings_height')
     parse_bool(info,query,'semistable','semistable')
+    if info.get('torsion'):
+        if info['torsion'][0] == '[':
+            parse_bracketed_posints(info,query,'torsion',qfield='torsion_structure',maxlength=2,check_divisibility='increasing')
+        else:
+            parse_ints(info,query,'torsion')
     parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
-    parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
     #    query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
