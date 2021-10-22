@@ -905,15 +905,15 @@ class ECSearchArray(SearchArray):
             short_label=r"Galois image",
             example="13.91.3.2",
             knowl="ec.galois_rep_elladic_image")
-        nonmax_quant = SubsetBox(
-            name="nonmax_quantifier")
-        nonmax_primes = TextBoxWithSelect(
-            name="nonmax_primes",
+        nonmaximal_quant = SubsetBox(
+            name="nonmaximal_quantifier")
+        nonmaximal_primes = TextBoxWithSelect(
+            name="nonmaximal_primes",
             label=r"Nonmaximal $\ell$",
             short_label=r"Nonmax $\ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
-            select_box=nonmax_quant)
+            select_box=nonmaximal_quant)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
                    [('-3,-12,-27', 'CM field Q(zeta_3)'), ('-4,-16', 'CM field Q(i)'), ('-7,-28', 'CM field Q(sqrt(7))')] +
                    [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
