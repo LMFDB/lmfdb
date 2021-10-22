@@ -248,34 +248,23 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
     clabel = str(cond) + "." + alpha
     # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
     if not db.g2c_curves.exists({"class": clabel}):
-        return abort(404, "Genus 2 isogeny class %s not found in database." % clabel)
-    data["title"] = "Genus 2 curves in isogeny class %s of discriminant %s" % (
-        clabel,
-        disc,
-    )
-    data["bread"] = get_bread(
-        [
-            ("%s" % cond, url_for(".by_conductor", cond=cond)),
-            (
-                "%s" % alpha,
-                url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha),
-            ),
-            (
-                "%s" % disc,
-                url_for(
-                    ".by_url_isogeny_class_discriminant",
-                    cond=cond,
-                    alpha=alpha,
-                    disc=disc,
-                ),
-            ),
-        ]
-    )
+        return abort(404, f"Genus 2 isogeny class {clabel} not found in database.")
+    data["title"] = f"Genus 2 curves in isogeny class {clabel} of discriminant {disc}"
+    data["bread"] = get_bread([
+        (f"{cond}", url_for(".by_conductor", cond=cond)),
+        (f"{alpha}", url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha),),
+        (
+            f"{disc}",
+            url_for(
+                ".by_url_isogeny_class_discriminant",
+                cond=cond,
+                alpha=alpha,
+                disc=disc,
+            ))])
     if len(request.args) > 0:
         # if conductor or discriminant changed, fall back to a general search
-        if ("cond" in request.args and request.args["cond"] != str(cond)) or (
-            "abs_disc" in request.args and request.args["abs_disc"] != str(disc)
-        ):
+        if ("cond" in request.args and request.args["cond"] != str(cond)) or
+            ("abs_disc" in request.args and request.args["abs_disc"] != str(disc)):
             return redirect(url_for(".index", **request.args), 307)
         data["title"] += " Search results"
         data["bread"].append(("Search results", ""))
@@ -293,8 +282,8 @@ def by_url_isogeny_class_label(cond, alpha):
 @g2c_page.route("/Q/<int:cond>/")
 def by_conductor(cond):
     data = to_dict(request.args, search_array=G2CSearchArray())
-    data["title"] = "Genus 2 curves of conductor %s" % cond
-    data["bread"] = get_bread([("%s" % cond, url_for(".by_conductor", cond=cond))])
+    data["title"] = f"Genus 2 curves of conductor {cond}"
+    data["bread"] = get_bread([(f"{cond}", url_for(".by_conductor", cond=cond))])
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if "cond" in request.args and request.args["cond"] != str(cond):
@@ -514,8 +503,7 @@ class G2C_download(Downloader):
 def parse_sort(info, query):
     default = ["cond", "class", "abs_disc", "disc_sign", "label"]
     d = defaultdict(
-        lambda: default,
-        (
+        lambda: default, (
             ("", default),
             ("abs_disc", ["abs_disc"] + default),
             ("num_rat_pts1", [("num_rat_pts", 1)] + default),
@@ -526,8 +514,7 @@ def parse_sort(info, query):
             ("torsion_order-1", [("torsion_order", -1)] + default),
             ("analytic_sha1", [("analytic_sha", 1)] + default),
             ("analytic_sha-1", [("analytic_sha", -1)] + default),
-        ),
-    )
+        ))
     query["__sort__"] = d[info.get("sort_order")]
 
 

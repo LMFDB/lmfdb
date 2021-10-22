@@ -491,8 +491,7 @@ class SearchButton(SearchBox):
             width=self.width,
             val=self.value,
             desc=self.description,
-            onclick=onclick,
-        )
+            onclick=onclick)
 
 class SearchButtonWithSelect(SearchButton):
     def __init__(self, value, description, select_box, **kwds):
@@ -502,15 +501,13 @@ class SearchButtonWithSelect(SearchButton):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return (
-            self.td(colspan)
-            + '<div style="display: flex; justify-content: space-between;">'
-            + self._label(info)
-            + '<span style="margin-left: 5px;"></span>'
-            + self.select_box._input(info)
-            + "</div>"
-            + "</td>"
-        )
+        return (self.td(colspan)
+                + '<div style="display: flex; justify-content: space-between;">'
+                + self._label(info)
+                + '<span style="margin-left: 5px;"></span>'
+                + self.select_box._input(info)
+                + "</div>"
+                + "</td>")
 
 class SearchArray(UniqueRepresentation):
     """
