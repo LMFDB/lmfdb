@@ -16,7 +16,7 @@ from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
+    StatsDisplay, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -879,11 +879,6 @@ class ECSearchArray(SearchArray):
             example="semistable",
             knowl="ec.reduction",
             options=reduction_opts)
-        potentially_good = YesNoBox(
-            name="potential_good_reduction",
-            label="Potential good reduction",
-            example="Yes",
-            knowl="ec.potential_good_reduction")
         maximal_primes = TextBox(
             name="max_primes",
             label=r"Maximal primes $\ell$",
