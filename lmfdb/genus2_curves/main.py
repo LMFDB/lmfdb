@@ -109,42 +109,42 @@ geom_end_alg_list = [
 ]
 geom_end_alg_dict = {x: x for x in geom_end_alg_list}
 
-aut_grp_list = ["[2,1]", "[4,1]", "[4,2]", "[6,2]", "[8,3]", "[12,4]"]
+aut_grp_list = ["2.1", "4.1", "4.2", "6.2", "8.3", "12.4"]
 aut_grp_dict = {
-    "[2,1]": "C2",
-    "[4,1]": "C4",
-    "[4,2]": "V4",
-    "[6,2]": "C6",
-    "[8,3]": "D4",
-    "[12,4]": "D6",
+    "2.1": "C2",
+    "4.1": "C4",
+    "4.2": "V4",
+    "6.2": "C6",
+    "8.3": "D4",
+    "12.4": "D6",
 }
 aut_grp_dict_pretty = {
-    "[2,1]": "$C_2$",
-    "[4,1]": "$C_4$",
-    "[4,2]": "$C_2^2$",
-    "[6,2]": "$C_6$",
-    "[8,3]": "$D_4$",
-    "[12,4]": "$D_6$",
+    "2.1": "$C_2$",
+    "4.1": "$C_4$",
+    "4.2": "$C_2^2$",
+    "6.2": "$C_6$",
+    "8.3": "$D_4$",
+    "12.4": "$D_6$",
 }
 
-geom_aut_grp_list = ["[2,1]", "[4,2]", "[8,3]", "[10,2]", "[12,4]", "[24,8]", "[48,29]"]
+geom_aut_grp_list = ["2.1", "4.2", "8.3", "10.2", "12.4", "24.8", "48.29"]
 geom_aut_grp_dict = {
-    "[2,1]": "C2",
-    "[4,2]": "V4",
-    "[8,3]": "D4",
-    "[10,2]": "C10",
-    "[12,4]": "D6",
-    "[24,8]": "C3:D4",
-    "[48,29]": "GL(2,3)",
+    "2.1": "C2",
+    "4.2": "V4",
+    "8.3": "D4",
+    "10.2": "C10",
+    "12.4": "D6",
+    "24.8": "C3:D4",
+    "48.29": "GL(2,3)",
 }
 geom_aut_grp_dict_pretty = {
-    "[2,1]": "$C_2$",
-    "[4,2]": "$C_2^2$",
-    "[8,3]": "$D_4$",
-    "[10,2]": "$C_{10}$",
-    "[12,4]": "$D_6$",
-    "[24,8]": "$C_3:D_4$",
-    "[48,29]": r"$\GL(2,3)$",
+    "2.1": "$C_2$",
+    "4.2": "$C_2^2$",
+    "8.3": "$D_4$",
+    "10.2": "$C_{10}$",
+    "12.4": "$D_6$",
+    "24.8": "$C_3:D_4$",
+    "48.29": r"$\GL(2,3)$",
 }
 
 ###############################################################################
@@ -433,12 +433,14 @@ def geom_inv_to_G2(inv):
             [0, 0, 5, 0, -3],  # g3''
         ]
         # the affine invariants defining G2
-        g1, g2, g3, g2a, g3a, g3b = tuple(prod(j ** w for j, w in zip(Jlist, m)) for m in monomials)
-        if g1 != 0: # if J2 != 0
+        g1, g2, g3, g2a, g3a, g3b = tuple(
+            prod(j ** w for j, w in zip(Jlist, m)) for m in monomials
+        )
+        if g1 != 0:  # if J2 != 0
             return (g1, g2, g3)
-        elif g2a != 0: # ie J2 = 0 and J4 !=0
+        elif g2a != 0:  # ie J2 = 0 and J4 !=0
             return (0, g2a, g3a)
-        else: # if J2 = J4 = 0
+        else:  # if J2 = J4 = 0
             return (0, 0, g3b)
 
     if len(inv) == 3:
@@ -600,11 +602,16 @@ def genus2_curve_search(info, query):
         query["g2_inv"] = "['%s','%s','%s']" % (info["g20"], info["g21"], info["g22"])
     if "class" in info:
         query["class"] = info["class"]
+    # Support legacy aut_grp_id
+    if info.get("aut_grp_id"):
+        info["aut_grp_label"] = ".".join(info.pop("aut_grp_id")[1:-1].split(","))
+    if info.get("geom_aut_grp_id"):
+        info["geom_aut_grp_label"] = ".".join(info.pop("aut_grp_id")[1:-1].split(","))
     for fld in (
         "st_group",
         "real_geom_end_alg",
-        "aut_grp_id",
-        "geom_aut_grp_id",
+        "aut_grp_label",
+        "geom_aut_grp_label",
         "end_alg",
         "geom_end_alg",
     ):
@@ -662,8 +669,8 @@ class G2C_stats(StatsDisplay):
     knowls = {
         "num_rat_pts": "g2c.num_rat_pts",
         "num_rat_wpts": "g2c.num_rat_wpts",
-        "aut_grp_id": "g2c.aut_grp",
-        "geom_aut_grp_id": "g2c.geom_aut_grp",
+        "aut_grp_label": "g2c.aut_grp",
+        "geom_aut_grp_label": "g2c.geom_aut_grp",
         "analytic_rank": "g2c.analytic_rank",
         "two_selmer_rank": "g2c.two_selmer_rank",
         "analytic_sha": "g2c.analytic_sha",
@@ -677,8 +684,8 @@ class G2C_stats(StatsDisplay):
     short_display = {
         "num_rat_pts": "rational points",
         "num_rat_wpts": "Weierstrass points",
-        "aut_grp_id": "automorphism group",
-        "geom_aut_grp_id": "automorphism group",
+        "aut_grp_label": "automorphism group",
+        "geom_aut_grp_label": "automorphism group",
         "two_selmer_rank": "2-Selmer rank",
         "analytic_sha": "analytic order of &#1064;",
         "has_square_sha": "has square &#1064;",
@@ -690,8 +697,8 @@ class G2C_stats(StatsDisplay):
     top_titles = {
         "num_rat_pts": "rational points",
         "num_rat_wpts": "rational Weierstrass points",
-        "aut_grp_id": r"$\mathrm{Aut}(X)$",
-        "geom_aut_grp_id": r"$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$",
+        "aut_grp_label": r"$\mathrm{Aut}(X)$",
+        "geom_aut_grp_label": r"$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$",
         "analytic_sha": "analytic order of &#1064;",
         "has_square_sha": "squareness of &#1064;",
         "locally_solvable": "local solvability",
@@ -701,16 +708,16 @@ class G2C_stats(StatsDisplay):
         "torsion_order": "torsion subgroup orders",
     }
     formatters = {
-        "aut_grp_id": lambda x: aut_grp_dict_pretty.get(x, x),
-        "geom_aut_grp_id": lambda x: geom_aut_grp_dict_pretty[x],
+        "aut_grp_label": lambda x: aut_grp_dict_pretty.get(x, x),
+        "geom_aut_grp_label": lambda x: geom_aut_grp_dict_pretty[x],
         "has_square_sha": formatters.boolean,
         "is_gl2_type": formatters.boolean,
         "real_geom_end_alg": lambda x: "\\(" + st0_group_name(x) + "\\)",
         "st_group": lambda x: st_link_by_name(1, 4, x),
     }
     query_formatters = {
-        "aut_grp_id": lambda x: "aut_grp_id=%s" % x,
-        "geom_aut_grp_id": lambda x: "geom_aut_grp_id=%s" % x,
+        "aut_grp_label": lambda x: "aut_grp_label=%s" % x,
+        "geom_aut_grp_label": lambda x: "geom_aut_grp_label=%s" % x,
         "real_geom_end_alg": lambda x: "real_geom_end_alg=%s" % x,
         "st_group": lambda x: "st_group=%s" % x,
     }
@@ -718,8 +725,8 @@ class G2C_stats(StatsDisplay):
     stat_list = [
         {"cols": "num_rat_pts", "totaler": {"avg": True}},
         {"cols": "num_rat_wpts", "totaler": {"avg": True}},
-        {"cols": "aut_grp_id"},
-        {"cols": "geom_aut_grp_id"},
+        {"cols": "aut_grp_label"},
+        {"cols": "geom_aut_grp_label"},
         {"cols": "analytic_rank", "totaler": {"avg": True}},
         {"cols": "two_selmer_rank", "totaler": {"avg": True}},
         {"cols": "has_square_sha"},
@@ -929,7 +936,7 @@ class G2CSearchArray(SearchArray):
         )
 
         Q_automorphism = SelectBox(
-            name="aut_grp_id",
+            name="aut_grp_label",
             knowl="g2c.aut_grp",
             label=r"\(\Q\)-automorphism group",
             short_label=r"\(\mathrm{Aut}(X)\)",
@@ -937,7 +944,7 @@ class G2CSearchArray(SearchArray):
         )
 
         geometric_automorphism = SelectBox(
-            name="geom_aut_grp_id",
+            name="geom_aut_grp_label",
             knowl="g2c.aut_grp",
             label=r"\(\overline{\Q}\)-automorphism group",
             short_label=r"\(\mathrm{Aut}(X_{\overline{\Q}})\)",

@@ -25,7 +25,7 @@ from sage.misc.cachefunc import cached_method
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
 
 def maxq(g, p):
@@ -278,8 +278,7 @@ class AbvarFq_isoclass(object):
             # the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
-            group = (self.galois_groups[0]).split("T")
-            return group_display_knowl(group[0], group[1])
+            return transitive_group_display_knowl(self.galois_groups[0])
 
     def decomposition_display_search(self):
         if self.is_simple:

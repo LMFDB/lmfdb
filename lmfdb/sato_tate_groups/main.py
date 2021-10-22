@@ -16,7 +16,7 @@ from lmfdb.utils import (
     parse_ints_to_list_flash, clean_input, redirect_no_cache)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.galois_groups.transitive_group import smallgroup_cache, small_group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.sato_tate_groups import st_page
 
 ###############################################################################
@@ -239,9 +239,9 @@ def st0_pretty(st0_name):
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
-    data = db.gps_small.lookup(sg_label)
-    if data and 'pretty' in data:
-        return data['pretty']
+    data = db.gps_groups.lookup(sg_label)
+    if data and data.get('tex_name'):
+        return data['tex_name']
     return sg_label
 
 def st_pretty(st_name):
@@ -487,7 +487,7 @@ def search(info):
             else:
                 gps = [gps]
             if not ratonly:
-                cyclic_labels = set(db.gps_small.search({"cyclic": True}, "label"))
+                cyclic_labels = set(db.gps_groups.search({"cyclic": True}, "label"))
             irrat = []
             for code in gps:
                 if code in cyclics:
@@ -781,11 +781,11 @@ def render_by_label(label):
     info['st0_name']=st0['name']
     info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
-    G = db.gps_small.lookup(data['component_group'])
+    G = db.gps_groups.lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))
-    info['component_group']=G['pretty']
+    info['component_group']=G['tex_name']
     info['cyclic']=boolean_name(G['cyclic'])
     info['abelian']=boolean_name(G['abelian'])
     info['solvable']=boolean_name(G['solvable'])
@@ -1017,13 +1017,13 @@ class STSearchArray(SearchArray):
 
 @cached_function
 def compcache():
-    return smallgroup_cache(db.gps_st.distinct("component_group"))
+    return abstract_group_namecache(db.gps_st.distinct("component_group"))
 gapidre = re.compile(r"(\d+)\.(\d+)")
 def compdata(comp):
     return [int(x) for x in gapidre.findall(comp)[0]]
 def compformatter(comp):
     n, k = compdata(comp)
-    return small_group_display_knowl(n, k, cache=compcache())
+    return abstract_group_display_knowl(f"{n}.{k}", cache=compcache())
 def compunformatter(comp):
     n, k = compdata(comp)
     return "%d.%d" % (n, k)

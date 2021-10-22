@@ -11,7 +11,8 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
-from lmfdb.galois_groups.transitive_group import group_display_knowl, small_group_label_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
@@ -737,8 +738,8 @@ class WebG2C(object):
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
             data['igusa_clebsch_factor_latex'] = [web_latex_factored_integer(i) for i in data['igusa_clebsch']]
             data['igusa_factor_latex'] = [ web_latex_factored_integer(j) for j in data['igusa'] ]
-            data['aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['aut_grp_id'])))
-            data['geom_aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['geom_aut_grp_id'])))
+            data['aut_grp'] = abstract_group_display_knowl(curve['aut_grp_label'], f"${curve['aut_grp_tex']}$")
+            data['geom_aut_grp'] = abstract_group_display_knowl(curve['geom_aut_grp_label'], f"${curve['geom_aut_grp_tex']}$")
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             P = curve['non_solvable_places']
@@ -787,7 +788,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
-                data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+                data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),transitive_group_display_knowl(f"{t[2][0]}T{t[2][1]}"))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'],clus)

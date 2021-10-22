@@ -12,7 +12,7 @@ from lmfdb.utils import (
     # parse_gap_id, parse_bracketed_posints,
     search_wrap)
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 from lmfdb.groups.glnC import glnC_page
 
@@ -126,7 +126,7 @@ def render_glnC_group(args):
         label = clean_input(args['label'])
         info = db.gps_crep.lucky({'label': label})
         info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
-        info['groupknowl'] = group_display_knowl(info['group'], info['group'])
+        info['groupknowl'] = abstract_group_display_knowl(info['group'], info['groupname'])
         N=info['cyc_order_mat']
         info['dispmat'] = lambda z: dispmat(N,z)
 
