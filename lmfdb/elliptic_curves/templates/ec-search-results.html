@@ -37,14 +37,17 @@ table td.params {
 {% endif %}
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
   <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion') }}</th>
-{% if info.nonmax_primes %}
-  <th class="center">{{KNOWL('ec.maximal_elladic_galois_rep', title='Non-maximal primes')}}</th>
-{% endif %}
 {% if info.cm %}
   <th class="center">{{KNOWL('ec.complex_multiplication', title='CM discriminant')}}</th>
 {% endif %}
+{% if info.nonmax_primes %}
+  <th class="center">{{KNOWL('ec.maximal_elladic_galois_rep', title='Non-maximal primes')}}</th>
+{% endif %}
+{% if info.nonmax_primes %}
+  <th class="center">{{KNOWL('ec.galois_rep_elladic_image', title='Galois images')}}</th>
+{% endif %}
 {% if info.num_int_pts %}
-  <th class="center">{{KNOWL('ec.q.integral_points', title='integral points')}}</th>
+  <th class="center">{{KNOWL('ec.q.integral_points', title='Integral points')}}</th>
 {% endif %}
 </tr>
 </thead>
@@ -76,10 +79,13 @@ table td.params {
 <td class="center">${{curve.rank}}$</td>
 <td class="center">{% if (curve.torsion_structure|length) == 0 %}trivial{% else %}${{curve.torsion_structure}}${% endif %}</td>
 {% if info.cm %}
-<td class="center">{{curve.cm_disc}}</td>
+<td class="center">{{curve.cm}}</td>
 {% endif %}
 {% if info.nonmax_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
+{% endif %}
+{% if info.galois_images %}
+<td class="center">{{curve.elladic_images}}</td>
 {% endif %}
 {% if info.num_int_pts %}
 <td class="center">{{curve.num_int_pts}}</td>
