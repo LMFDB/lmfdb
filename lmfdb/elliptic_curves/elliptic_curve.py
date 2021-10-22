@@ -902,9 +902,9 @@ class ECSearchArray(SearchArray):
         self.browse_array = [
             [cond, bad_primes],
             [disc,  jinv],
-            [cm, torsion],
-            [rank, regulator],
-            [sha, sha_primes],
+            [torsion, cm],
+            [rank, shar],
+            [regulator, sha_primes],
             [galois_image, nonmax_primes],
             [class_size, class_deg],
             [num_int_pts, isodeg],
