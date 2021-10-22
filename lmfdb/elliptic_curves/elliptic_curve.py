@@ -411,8 +411,8 @@ def elliptic_curve_search(info, query):
         elif all([modell_image_label_regex.fullmatch(a) for a in labels]):
             query['modell_images'] = { '$contains': labels }
         else:
-            err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as 13.91.3.1, the label of a subgroup of GL(2,F_ell), such as 13S4."
-            flash_error(err)
+            err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s."
+            flash_error(err, "13.91.3.1", "13S4")
             raise ValueError(err)
         if not 'cm' in query:
             query['cm'] = 0
