@@ -13,9 +13,9 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, parse_regex_restricted,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
+    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, SearchParsingError,
     StatsDisplay, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -336,6 +336,9 @@ def url_for_label(label):
         return url_for(".random_curve")
     return url_for(".by_ec_label", label=label)
 
+elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
+modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
+
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curvedata,
              title='Elliptic curve search results',
@@ -369,7 +372,10 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_ints(info,query,'class_size','class_size')
-    parse_ints(info,query,'class_deg','class_deg')
+    if info.get('class_deg'):
+        if not isinstance(query.get('class_deg'), int):
+            raise ValueError("You must specify a single degree")
+        parse_ints(info,query,'class_deg','class_deg')
     parse_floats(info,query,'regulator','regulator')
     parse_floats(info, query, 'faltings_height', 'faltings_height')
     parse_bool(info,query,'semistable','semistable')
@@ -394,8 +400,14 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
-    if info.get("nonmaximal_image"):
-        query['elladic_images'] = {'$contains': info['nonmaximal_image'].strip() }
+    if info.get("galois_image"):
+        try:
+            parse_regex_restricted (info, query, "elladic_images", elladic_image_label_regex)
+        except SearchParsingError:
+            try:
+                parse_regex_restricted (info, query, "modell_images", elladic_image_label_regex)
+            except SearchParsingError:
+                raise ValueError("Unrecognized Galois image label, it should be the label of a {{KNOWL('ec.galois_rep_modell_image','subgroup of GL(2,F_ell)')}} or a {{KNOWL('ec.galois_rep_elladic_image','subgroup of GL(2,Z_ell)')}}")
         if not 'cm' in query:
             query['cm'] = 0
     # The button which used to be labelled Optimal only no/yes"
