@@ -913,8 +913,8 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, jinv, disc, torsion, cm],
-            [rank, regulator, bad_primes, sha, galois_image],
+            [cond, bad_primes, disc, torsion, cm],
+            [jinv, rank, regulator, sha, galois_image],
             [class_size, class_deg, isodeg, sha_primes, nonmax_primes],
             [optimal, reduction, num_int_pts, faltings_height]
             ]
