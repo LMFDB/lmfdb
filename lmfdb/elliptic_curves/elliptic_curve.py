@@ -13,9 +13,9 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, parse_regex_restricted,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, SearchParsingError,
+    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
     StatsDisplay, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
