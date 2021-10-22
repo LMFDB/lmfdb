@@ -816,9 +816,9 @@ class ECSearchArray(SearchArray):
             example="1728",
             example_span="1728 or -4096/11")
         torsion_opts = ([("", ""),("[]", "trivial")] +
+                        [("%s"%n, "order %s"%n) for  n in range(4,16,4)] +
                         [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
-                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)] +
-                        [("%s"%n, "order %s"%n) for  n in range(4,16,4)])
+                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
         torsion = SelectBox(
             name="torsion",
             label="Torsion",
@@ -891,9 +891,9 @@ class ECSearchArray(SearchArray):
             short_label=r"Nonmax $\ell$-adic image",
             example="13.91.3.2",
             knowl="ec.maximal_elladic_galois_rep")
-        cm_opts = [('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM'), ('-3', 'CM discriminant -3'), ('-4', 'CM discriminant -4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
-                        ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
-                        ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
+                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38.43.67.163]] +
+                   [('-3,-12,-27', 'potential CM by Q(zeta_3)'), ('-4,-16', 'potential CM by Q(i)'), ('-7,-28', 'potential CM by Q(sqrt(7))')]
         cm = SelectBox(
             name="cm_disc",
             label="Complex multiplication",
