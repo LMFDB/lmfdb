@@ -887,7 +887,7 @@ class ECSearchArray(SearchArray):
             knowl="ec.reduction",
             options=reduction_opts)
         galois_image = TextBox(
-            name="nonmaximal_image",
+            name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
             example="13.91.3.2",
