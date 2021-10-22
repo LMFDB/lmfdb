@@ -569,7 +569,7 @@ class SearchArray(UniqueRepresentation):
                 lines.append("\n      " + row.html(info))
             elif layout_type == 'vertical':
                 if any(box.has_label(info) for box in row):
-                    labels = [box.label_html(info) for box in row]
+                    labels = [box.label_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                     lines.append("".join("\n      " + label for label in labels))
                 inputs = [box.input_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                 lines.append("".join("\n      " + inp for inp in inputs))
