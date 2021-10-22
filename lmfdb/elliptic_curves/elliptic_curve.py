@@ -363,7 +363,8 @@ def elliptic_curve_search(info, query):
             query['semistable'] = True
         elif info['conductor_type'] == 'divides':
             if not isinstance(query.get('conductor'), int):
-                raise ValueError("You must specify a single level")
+                flash_error("You must specify a single conductor")
+                raise ValueError("You must specify a single conductor")
             else:
                 query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
@@ -374,7 +375,9 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_size','class_size')
     if info.get('class_deg'):
         if not isinstance(query.get('class_deg'), int):
-            raise ValueError("You must specify a single degree")
+            err = "You must specify a single isogeny class degree"
+            flash_error(err)
+            raise ValueError(err)
         parse_ints(info,query,'class_deg','class_deg')
     parse_floats(info,query,'regulator','regulator')
     parse_floats(info, query, 'faltings_height', 'faltings_height')
