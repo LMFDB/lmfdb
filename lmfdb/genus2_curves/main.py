@@ -263,8 +263,8 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
             ))])
     if len(request.args) > 0:
         # if conductor or discriminant changed, fall back to a general search
-        if ("cond" in request.args and request.args["cond"] != str(cond)) or
-            ("abs_disc" in request.args and request.args["abs_disc"] != str(disc)):
+        if ("cond" in request.args and request.args["cond"] != str(cond)) or (
+            "abs_disc" in request.args and request.args["abs_disc"] != str(disc)):
             return redirect(url_for(".index", **request.args), 307)
         data["title"] += " Search results"
         data["bread"].append(("Search results", ""))
