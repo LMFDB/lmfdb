@@ -907,8 +907,8 @@ class ECSearchArray(SearchArray):
             [sha, sha_primes],
             [galois_image, nonmax_primes],
             [class_size, class_deg],
-            [optimal, isodeg],
-            [num_int_pts, reduction],
+            [num_int_pts, isodeg],
+            [optimal, reduction],
             [count, faltings_height]
             ]
 
