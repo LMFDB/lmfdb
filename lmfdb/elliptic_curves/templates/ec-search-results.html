@@ -78,11 +78,11 @@ table td.params {
 {% endif %}
 <td class="center">${{curve.rank}}$</td>
 <td class="center">{% if (curve.torsion_structure|length) == 0 %}trivial{% else %}${{curve.torsion_structure}}${% endif %}</td>
-{% if info.cm %}
+{% if info.cm == "CM" or "," in info.cm %}
 <td class="center">{{curve.cm}}</td>
 {% endif %}
 {% if info.nonmax_primes %}
-<td class="center">{{curve.nonmax_primes}}</td>
+<td class="center">{%if (curve.nonmax_primes|length) == 0 %}none{% else %}${{curve.nonmax_primes[1:-1]}}${%endif %}</td>
 {% endif %}
 {% if info.galois_images %}
 <td class="center">{{curve.elladic_images}}</td>
