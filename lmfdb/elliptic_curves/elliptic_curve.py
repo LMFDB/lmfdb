@@ -384,7 +384,7 @@ def elliptic_curve_search(info, query):
     if info.get('reduction'):
         if info['reduction'] == 'semistable':
             query['semistable'] = True
-        ellif info['reduction'] == 'not semistable':
+        elif info['reduction'] == 'not semistable':
             query['semistable'] = False
         elif info['reduction'] == 'potentially good':
             query['potential_good_reduction'] = True
