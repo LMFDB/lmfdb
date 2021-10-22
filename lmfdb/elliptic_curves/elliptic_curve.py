@@ -385,10 +385,10 @@ def elliptic_curve_search(info, query):
             query['cm'] = {'$ne' : 0}
     parse_ints(info,query,field='cm_disc',qfield='cm')
     parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
-    parse_primes(info, query, 'surj_primes', name='maximal primes',
-                 qfield='nonmax_primes', mode='exclude')
-    parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
-                 qfield='nonmax_primes',mode=info.get('surj_quantifier'), radical='nonmax_rad')
+    parse_primes(info, query, 'maximal_primes', name='maximal primes',
+                 qfield='nonmaximal_primes', mode='exclude')
+    parse_primes(info, query, 'nonmaximal_primes', name='non-maximal primes',
+                 qfield='nonmaximal_primes',mode=info.get('max_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
@@ -792,11 +792,6 @@ class ECSearchArray(SearchArray):
             label="Analytic order of &#1064;",
             knowl="ec.analytic_sha_order",
             example="4")
-        surj_primes = TextBox(
-            name="surj_primes",
-            label=r"Maximal primes $\ell$",
-            knowl="ec.maximal_elladic_galois_rep",
-            example="2,3")
         isodeg = TextBox(
             name="isogeny_degrees",
             label="Cyclic isogeny degree",
@@ -882,6 +877,11 @@ class ECSearchArray(SearchArray):
             label="Potential good reduction",
             example="Yes",
             knowl="ec.potential_good_reduction")
+        maximal_primes = TextBox(
+            name="max_primes",
+            label=r"Maximal primes $\ell$",
+            knowl="ec.maximal_elladic_galois_rep",
+            example="2,3")
         nonmaximal_quant = SubsetNoExcludeBox(
             name="nonmax_quantifier")
         nonmaximal_primes = TextBoxWithSelect(
@@ -915,7 +915,7 @@ class ECSearchArray(SearchArray):
             [torsion, torsion_struct],
             [sha, sha_primes],
             [cm_disc, cm],
-            [max_primes, nonmax_primes],
+            [maximal_primes, nonmaximal_primes],
             [semistable, bad_primes],
             [num_int_pts, nonmaximal_image],
             [class_size, class_deg],
@@ -926,7 +926,7 @@ class ECSearchArray(SearchArray):
         self.refine_array = [
             [cond, disc, jinv, faltings_height],
             [rank, regulator, torsion, torsion_struct],
-            [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
+            [sha, sha_primes, maximal_primes, nonmaximal_primes, bad_primes],
             [num_int_pts, cm, cm_disc, semistable, potentially_good],
             [optimal, isodeg, class_size, class_deg, nonmaximal_image]
             ]
