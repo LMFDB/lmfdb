@@ -903,7 +903,7 @@ class ECSearchArray(SearchArray):
             [cond, bad_primes],
             [disc,  jinv],
             [torsion, cm],
-            [rank, shar],
+            [rank, sha],
             [regulator, sha_primes],
             [galois_image, nonmax_primes],
             [class_size, class_deg],
