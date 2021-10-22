@@ -877,15 +877,15 @@ class ECSearchArray(SearchArray):
             short_label=r"Galois image",
             example="13.91.3.2",
             knowl="ec.galois_rep_elladic_image")
-        nonmaximal_quant = SubsetBox(
+        nonmax_quant = SubsetBox(
             name="nonmax_quantifier")
-        nonmaximal_primes = TextBoxWithSelect(
-            name="nonmaximal_primes",
+        nonmax_primes = TextBoxWithSelect(
+            name="nonmax_primes",
             label=r"Nonmaximal $\ell$",
             short_label=r"Nonmax $\ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
-            select_box=nonmaximal_quant)
+            select_box=nonmax_quant)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
                    [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]] +
                    [('-3,-12,-27', 'potential CM by Q(zeta_3)'), ('-4,-16', 'potential CM by Q(i)'), ('-7,-28', 'potential CM by Q(sqrt(7))')])
@@ -905,7 +905,7 @@ class ECSearchArray(SearchArray):
             [cm, torsion],
             [rank, regulator],
             [sha, sha_primes],
-            [galois_image, nonmaximal_primes],
+            [galois_image, nonmax_primes],
             [class_size, class_deg],
             [optimal, isodeg],
             [num_int_pts, reduction],
@@ -913,8 +913,8 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, disc, cm, rank, sha],
-            [jinv, bad_primes, torsion, regulator, sha_primes],
-            [galois_image, class_size, optimal, num_int_pts, faltings_height],
-            [nonmaximal_primes, class_deg, isodeg, reduction]
+            [cond, jinv, disc, torsion, cm],
+            [rank, regulator, bad_primes, sha_primes, nonmax_primes],
+            [class_size, class_deg isodeg, sha, galois_image],
+            [optimal, reduction, num_int_pts, faltings_height]
             ]
