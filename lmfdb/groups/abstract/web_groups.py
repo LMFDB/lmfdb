@@ -38,6 +38,7 @@ def label_sortkey(label):
     return L
 
 def group_names_pretty(label):
+    # Avoid using this function if you have the tex_name available without a database lookup
     if isinstance(label, str):
         pretty = db.gps_groups.lookup(label, "tex_name")
     else:
@@ -49,6 +50,7 @@ def group_names_pretty(label):
 
 
 def group_pretty_image(label):
+    # Avoid using this function if you have the tex_name available without a database lookup
     pretty = group_names_pretty(label)
     img = db.gps_images.lookup(pretty, "image")
     if img:

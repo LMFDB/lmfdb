@@ -17,7 +17,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.galois_groups.transitive_group import small_group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
 
@@ -48,9 +48,9 @@ def dogapthing(m1):
         two = mnew.split(',')
         two = [int(j) for j in two]
         try:
-            m1[2] = small_group_display_knowl(two[0],two[1])
+            m1[2] = abstract_group_display_knowl(f"{two[0]}.{two[1]}")
         except TypeError:
-            m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
+            m1[2] = f'Group({two[0]}.{two[1]})'
     else:
         # Fix multiple backslashes
         m1[2] = re.sub(r'\\+', r'\\', m1[2])
@@ -64,7 +64,7 @@ def getgroup(m1, ell):
     myA = m1[3][0]
     myB = m1[3][1]
     if not myA and not myB:  # myA = myB = []
-        return [small_group_display_knowl(1, 1), 1]
+        return [abstract_group_display_knowl("1.1", "$C_1$"), 1]
     mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
     if mono is None:
         return ['??', 1]

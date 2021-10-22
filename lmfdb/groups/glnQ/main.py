@@ -12,7 +12,7 @@ from lmfdb.utils import (
     # parse_gap_id, parse_bracketed_posints,
     search_wrap)
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 from lmfdb.groups.glnQ import glnQ_page
 
@@ -126,7 +126,7 @@ def render_glnQ_group(args):
         info = db.gps_qrep.lucky({'label': label})
         info['dispmat'] = dispmat
         info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
-        info['groupknowl'] = group_display_knowl(info['group'], info['group'])
+        info['groupknowl'] = abstract_group_display_knowl(info['group'], info['groupname'])
 
         title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
 

@@ -20,7 +20,7 @@ from lmfdb.utils import (
     list_factored_to_factored_poly_otherorder)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link, get_name
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
@@ -530,9 +530,9 @@ class WebNewform(object):
     def projective_image_knowl(self):
         if self.projective_image:
             gp_name = "C2^2" if self.projective_image == "D2" else ( "S3" if self.projective_image == "D3" else self.projective_image )
-            gp_label = db.gps_small.lucky({'name':gp_name},'label')
-            gp_display = '\\(' + self.projective_image_latex + '\\)'
-            return gp_display if gp_label is None else small_group_label_display_knowl(gp_label,gp_display)
+            gp_label = db.gps_groups.lucky({'name':gp_name}, 'label')
+            gp_display = fr'\({self.projective_image_latex}\)'
+            return gp_display if gp_label is None else abstract_group_display_knowl(gp_label, gp_display)
 
     def field_display(self):
         """
@@ -577,12 +577,11 @@ class WebNewform(object):
     @property
     def artin_image_display(self):
         if self.artin_image:
-            pretty = db.gps_small.lookup(self.artin_image, projection = 'pretty')
+            pretty = db.gps_groups.lookup(self.artin_image, 'tex_name')
             return pretty if pretty else self.artin_image
-        return None
 
     def artin_image_knowl(self):
-        return small_group_label_display_knowl(self.artin_image)
+        return abstract_group_display_knowl(self.artin_image)
 
     def rm_and_cm_field_knowl(self, sign=1):
         if self.self_twist_discs:
