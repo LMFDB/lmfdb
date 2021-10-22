@@ -16,7 +16,7 @@ from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -933,7 +933,7 @@ class ECSearchArray(SearchArray):
             [torsion, cm],
             [rank, sha],
             [regulator, sha_primes],
-            [galois_image, nonmax_primes],
+            [galois_image, nonmaximal_primes],
             [class_size, class_deg],
             [num_int_pts, isodeg],
             [optimal, reduction],
@@ -943,6 +943,6 @@ class ECSearchArray(SearchArray):
         self.refine_array = [
             [cond, jinv, rank, torsion, cm],
             [bad_primes, disc, regulator, sha, galois_image],
-            [class_size, class_deg, isodeg, sha_primes, nonmax_primes],
+            [class_size, class_deg, isodeg, sha_primes, nonmaximal_primes],
             [optimal, reduction, num_int_pts, faltings_height]
             ]
