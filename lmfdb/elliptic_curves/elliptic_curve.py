@@ -809,10 +809,10 @@ class ECSearchArray(SearchArray):
             example="16")
         num_int_pts = TextBox(
             name="num_int_pts",
-            label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            label="Integral points",
+            knowl="ec.q.integral_points",
             example="2",
             example_span="2 or 4-15")
-
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
@@ -845,6 +845,7 @@ class ECSearchArray(SearchArray):
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad primes $p$",
+            short_label="Bad $p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -867,11 +868,17 @@ class ECSearchArray(SearchArray):
             label="Faltings height",
             knowl="ec.q.faltings_height",
             example="-1-2")
-        semistable = YesNoBox(
-            name="semistable",
-            label="Semistable",
-            example="Yes",
-            knowl="ec.semistable")
+        reduction_opts = ([("", ""),
+                           ("semistable",  "semistable"),
+                           ("not semistable",  "not semistable"),
+                           ("potentially good", "potentially good"),
+                           ("not potentially good", "not potentially good")])
+        reduction = SelectBox(
+            name="reduction",
+            label="Reduction",
+            example="semistable",
+            knowl="ec.reduction",
+            options=reduction_opts)
         potentially_good = YesNoBox(
             name="potential_good_reduction",
             label="Potential good reduction",
@@ -887,12 +894,14 @@ class ECSearchArray(SearchArray):
         nonmaximal_primes = TextBoxWithSelect(
             name="nonmaximal_primes",
             label=r"Nonmaximal $\ell$",
+            short_label=r"Nonmax $\ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=nonmaximal_quant)
         nonmaximal_image = TextBox(
             name="nonmaximal_image",
             label=r"Nonmaximal $\ell$-adic image",
+            short_label=r"Nonmax $\ell$-adic image",
             example="13.91.3.2",
             knowl="ec.maximal_elladic_galois_rep")
         cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
@@ -910,13 +919,13 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
-            [disc, potentially_good],
+            [disc, reduction],
             [rank, regulator],
             [torsion, torsion_struct],
             [sha, sha_primes],
             [cm_disc, cm],
             [maximal_primes, nonmaximal_primes],
-            [semistable, bad_primes],
+            [bad_primes],
             [num_int_pts, nonmaximal_image],
             [class_size, class_deg],
             [optimal, isodeg],
