@@ -892,8 +892,8 @@ class ECSearchArray(SearchArray):
             example="13.91.3.2",
             knowl="ec.maximal_elladic_galois_rep")
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38.43.67.163]] +
-                   [('-3,-12,-27', 'potential CM by Q(zeta_3)'), ('-4,-16', 'potential CM by Q(i)'), ('-7,-28', 'potential CM by Q(sqrt(7))')]
+                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]] +
+                   [('-3,-12,-27', 'potential CM by Q(zeta_3)'), ('-4,-16', 'potential CM by Q(i)'), ('-7,-28', 'potential CM by Q(sqrt(7))')])
         cm = SelectBox(
             name="cm_disc",
             label="Complex multiplication",
