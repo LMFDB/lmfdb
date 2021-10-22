@@ -900,8 +900,8 @@ class ECSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [cond, jinv],
-            [disc, bad_primes],
+            [cond, bad_primes],
+            [disc,  jinv],
             [cm, torsion],
             [rank, regulator],
             [sha, sha_primes],
