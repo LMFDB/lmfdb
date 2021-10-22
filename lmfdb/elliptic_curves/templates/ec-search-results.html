@@ -36,12 +36,15 @@ table td.params {
   <th class="center">{{ KNOWL('ec.q.faltings_height',  title='Faltings height') }}</th>
 {% endif %}
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
-  <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
-{% if info.surj_primes or info.nonsurj_primes  %}
+  <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion') }}</th>
+{% if info.nonmax_primes %}
   <th class="center">{{KNOWL('ec.maximal_elladic_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
+{% if info.cm %}
+  <th class="center">{{KNOWL('ec.complex_multiplication', title='CM discriminant')}}</th>
+{% endif %}
 {% if info.num_int_pts %}
-  <th class="center">Number of {{KNOWL('ec.q.integral_points', title='integral points')}}</th>
+  <th class="center">{{KNOWL('ec.q.integral_points', title='integral points')}}</th>
 {% endif %}
 </tr>
 </thead>
@@ -72,7 +75,10 @@ table td.params {
 {% endif %}
 <td class="center">${{curve.rank}}$</td>
 <td class="center">{% if (curve.torsion_structure|length) == 0 %}trivial{% else %}${{curve.torsion_structure}}${% endif %}</td>
-{% if info.surj_primes or info.nonsurj_primes %}
+{% if info.cm %}
+<td class="center">{{curve.cm_disc}}</td>
+{% endif %}
+{% if info.nonmax_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
 {% endif %}
 {% if info.num_int_pts %}
