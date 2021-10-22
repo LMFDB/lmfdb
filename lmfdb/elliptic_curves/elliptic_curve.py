@@ -403,10 +403,10 @@ def elliptic_curve_search(info, query):
     if info.get("galois_image"):
         print(info["galois_image"])
         try:
-            parse_regex_restricted (info, query, "elladic_images", elladic_image_label_regex)
+            parse_regex_restricted (info, query, field='galois_image', qfield='elladic_images', regex=elladic_image_label_regex)
         except SearchParsingError:
             try:
-                parse_regex_restricted (info, query, "modell_images", elladic_image_label_regex)
+                parse_regex_restricted (info, query, field='galois_image', qfield='modell_images', regex=elladic_image_label_regex)
             except SearchParsingError:
                 raise ValueError("Unrecognized Galois image label, it should be the label of a {{KNOWL('ec.galois_rep_modell_image','subgroup of GL(2,F_ell)')}} or a {{KNOWL('ec.galois_rep_elladic_image','subgroup of GL(2,Z_ell)')}}")
         if not 'cm' in query:
