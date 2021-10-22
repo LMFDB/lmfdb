@@ -381,13 +381,20 @@ def elliptic_curve_search(info, query):
             raise ValueError(err)
     parse_floats(info,query,'regulator','regulator')
     parse_floats(info, query, 'faltings_height', 'faltings_height')
-    parse_bool(info,query,'semistable','semistable')
+    if info.get('reduction'):
+        if info['reduction'] == 'semistable':
+            query['semistable'] = True
+        ellif info['reduction'] == 'not semistable':
+            query['semistable'] = False
+        elif info['reduction'] == 'potentially good':
+            query['potential_good_reduction'] = True
+        elif info['reduction'] == 'not potentially good':
+            query['potential_good_reduction'] = False
     if info.get('torsion'):
         if info['torsion'][0] == '[':
             parse_bracketed_posints(info,query,'torsion',qfield='torsion_structure',maxlength=2,check_divisibility='increasing')
         else:
             parse_ints(info,query,'torsion')
-    parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
     #    query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
@@ -399,8 +406,6 @@ def elliptic_curve_search(info, query):
         else:
             parse_ints(info,query,field='cm',qfield='cm')
     parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
-    parse_primes(info, query, 'maximal_primes', name='maximal primes',
-                 qfield='nonmaximal_primes', mode='exclude')
     parse_primes(info, query, 'nonmaximal_primes', name='non-maximal primes',
                  qfield='nonmaximal_primes',mode=info.get('max_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
@@ -910,8 +915,8 @@ class ECSearchArray(SearchArray):
             example="2,3",
             select_box=nonmax_quant)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]] +
-                   [('-3,-12,-27', 'potential CM by Q(zeta_3)'), ('-4,-16', 'potential CM by Q(i)'), ('-7,-28', 'potential CM by Q(sqrt(7))')])
+                   [('-3,-12,-27', 'CM field Q(zeta_3)'), ('-4,-16', 'CM field Q(i)'), ('-7,-28', 'CM field Q(sqrt(7))')] +
+                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",
