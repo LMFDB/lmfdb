@@ -83,6 +83,7 @@ from .search_parsing import (
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     parse_subfield,
     clean_input, prep_ranges, input_string_to_poly)
+from .backend.utils import SearchParsingError
 
 from .search_wrapper import search_wrap, count_wrap
 from .search_boxes import (
