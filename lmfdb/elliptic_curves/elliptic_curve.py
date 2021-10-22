@@ -378,12 +378,13 @@ def elliptic_curve_search(info, query):
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
     #    query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-    if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
+    if 'cm' in info:
+        if info['cm'] == 'noCM':
             query['cm'] = 0
-        elif info['include_cm'] == 'only':
+        elif info['cm'] == 'CM':
             query['cm'] = {'$ne' : 0}
-    parse_ints(info,query,field='cm_disc',qfield='cm')
+        else:
+            parse_ints(info,query,field='cm',qfield='cm')
     parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
     parse_primes(info, query, 'maximal_primes', name='maximal primes',
                  qfield='nonmaximal_primes', mode='exclude')
@@ -782,11 +783,6 @@ class ECSearchArray(SearchArray):
             label="Rank",
             knowl="ec.rank",
             example="0")
-        torsion = TextBox(
-            name="torsion",
-            label="Torsion order",
-            knowl="ec.torsion_order",
-            example="2")
         sha = TextBox(
             name="sha",
             label="Analytic order of &#1064;",
@@ -819,20 +815,16 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = SelectBox(
-            name="include_cm",
-            label="CM",
-            knowl="ec.complex_multiplication",
-            options=[('', ''), ('only', 'potential CM'), ('exclude', 'no potential CM')])
-        tor_opts = ([("", ""),
-                     ("[]", "trivial")] +
-                    [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
-                    [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
-        torsion_struct = SelectBox(
-            name="torsion_structure",
-            label="Torsion structure",
+        torsion_opts = ([("", ""),("[]", "trivial")] +
+                        [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
+                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)] +
+                        [("%s"%n, "order %s"%n) for  n in range(4,16,4)])
+        torsion = SelectBox(
+            name="torsion",
+            label="Torsion",
             knowl="ec.torsion_subgroup",
-            options=tor_opts)
+            example="C3",
+            options=torsion_opts)
         optimal = SelectBox(
             name="optimal",
             label="Curves per isogeny class",
@@ -899,13 +891,13 @@ class ECSearchArray(SearchArray):
             short_label=r"Nonmax $\ell$-adic image",
             example="13.91.3.2",
             knowl="ec.maximal_elladic_galois_rep")
-        cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
+        cm_opts = [('', ''), ('CM', 'potential CM'),('noCM', 'no potential CM'), ('-3', 'potential CM by Z[zeta_-3]'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
                         ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
                         ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
-        cm_disc = SelectBox(
+        cm = SelectBox(
             name="cm_disc",
-            label="CM discriminant",
-            example="-3",
+            label="Complex multiplication",
+            example="potential CM by Q(i)",
             knowl="ec.complex_multiplication",
             options=cm_opts
             )
@@ -914,23 +906,22 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
-            [disc, reduction],
+            [disc, torsion],
+            [cm, reduction],
             [rank, regulator],
-            [torsion, torsion_struct],
             [sha, sha_primes],
-            [cm_disc, cm],
             [maximal_primes, nonmaximal_primes],
-            [bad_primes],
-            [num_int_pts, nonmaximal_image],
+            [nonmaximal_image, bad_primes],
             [class_size, class_deg],
             [optimal, isodeg],
-            [count, faltings_height]
+            [num_int_pts, faltings_height],
+            [count]
             ]
 
         self.refine_array = [
             [cond, disc, jinv, faltings_height],
-            [rank, regulator, torsion, torsion_struct],
+            [rank, regulator, torsion],
             [sha, sha_primes, maximal_primes, nonmaximal_primes, bad_primes],
-            [num_int_pts, cm, cm_disc, reduction],
+            [num_int_pts, cm, reduction],
             [optimal, isodeg, class_size, class_deg, nonmaximal_image]
             ]
