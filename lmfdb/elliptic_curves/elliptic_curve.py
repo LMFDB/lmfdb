@@ -409,8 +409,8 @@ def elliptic_curve_search(info, query):
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
     if info.get("galois_image"):
         labels = [a.strip() for a in info['galois_image'].split(',')]
-        elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a)]
-        modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a)]
+        elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime(elladic_image_label_regex.match(a)[1])]
+        modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a) and is_prime(modell_image_label_regex.match(a)[1])]
         if len(elladic_labels)+len(modell_labels) != len(labels):
             err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
             flash_error(err, "13.91.3.1", "13S4")
