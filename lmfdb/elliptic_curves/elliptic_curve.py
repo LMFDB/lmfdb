@@ -891,7 +891,7 @@ class ECSearchArray(SearchArray):
             short_label=r"Nonmax $\ell$-adic image",
             example="13.91.3.2",
             knowl="ec.maximal_elladic_galois_rep")
-        cm_opts = [('', ''), ('CM', 'potential CM'),('noCM', 'no potential CM'), ('-3', 'potential CM by Z[zeta_-3]'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
+        cm_opts = [('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM'), ('-3', 'CM discriminant -3'), ('-4', 'CM discriminant -4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
                         ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
                         ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
         cm = SelectBox(
