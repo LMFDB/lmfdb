@@ -13,6 +13,7 @@ from lmfdb.utils import (
     Downloader,
     SearchArray,
     SelectBox,
+    SneakyTextBox,
     StatsDisplay,
     SubsetBox,
     TextBox,
@@ -810,7 +811,7 @@ class G2CSearchArray(SearchArray):
     plural_noun = "curves"
 
     def __init__(self):
-        geometric_invariants = TextBox(
+        geometric_invariants = SneakyTextBox(
             name="geometric_invariants",
             knowl="g2c.geometric_invariants",
             label=r"\(\overline{\Q}\)-invariants",
