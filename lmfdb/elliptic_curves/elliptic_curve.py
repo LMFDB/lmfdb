@@ -15,7 +15,7 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
+    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
     StatsDisplay, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -871,12 +871,13 @@ class ECSearchArray(SearchArray):
             example="semistable",
             knowl="ec.reduction",
             options=reduction_opts)
-        maximal_primes = TextBox(
-            name="max_primes",
-            label=r"Maximal primes $\ell$",
-            knowl="ec.maximal_elladic_galois_rep",
-            example="2,3")
-        nonmaximal_quant = SubsetNoExcludeBox(
+        galois_image = TextBox(
+            name="nonmaximal_image",
+            label=r"Galois image",
+            short_label=r"Galois image",
+            example="13.91.3.2",
+            knowl="ec.galois_rep_elladic_image")
+        nonmaximal_quant = SubsetBox(
             name="nonmax_quantifier")
         nonmaximal_primes = TextBoxWithSelect(
             name="nonmaximal_primes",
@@ -885,12 +886,6 @@ class ECSearchArray(SearchArray):
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=nonmaximal_quant)
-        nonmaximal_image = TextBox(
-            name="nonmaximal_image",
-            label=r"Nonmaximal $\ell$-adic image",
-            short_label=r"Nonmax $\ell$-adic image",
-            example="13.91.3.2",
-            knowl="ec.maximal_elladic_galois_rep")
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
                    [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]] +
                    [('-3,-12,-27', 'potential CM by Q(zeta_3)'), ('-4,-16', 'potential CM by Q(i)'), ('-7,-28', 'potential CM by Q(sqrt(7))')])
@@ -906,22 +901,20 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
-            [disc, torsion],
-            [cm, reduction],
+            [disc, bad_primes],
+            [cm, torsion],
             [rank, regulator],
             [sha, sha_primes],
-            [maximal_primes, nonmaximal_primes],
-            [nonmaximal_image, bad_primes],
+            [galois_image, nonmaximal_primes],
             [class_size, class_deg],
             [optimal, isodeg],
-            [num_int_pts, faltings_height],
-            [count]
+            [num_int_pts, reduction],
+            [count, faltings_height]
             ]
 
         self.refine_array = [
-            [cond, disc, jinv, faltings_height],
-            [rank, regulator, torsion],
-            [sha, sha_primes, maximal_primes, nonmaximal_primes, bad_primes],
-            [num_int_pts, cm, reduction],
-            [optimal, isodeg, class_size, class_deg, nonmaximal_image]
+            [cond, disc, cm, rank, sha],
+            [jinv, bad_primes, torsion, regulator, sha_primes],
+            [galois_image, class_size, optimal, num_int_pts, faltings_height],
+            [nonmaximal_primes, class_deg, isodeg, reduction]
             ]
