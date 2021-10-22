@@ -406,14 +406,16 @@ def elliptic_curve_search(info, query):
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
     if info.get("galois_image"):
         labels = [a.strip() for a in info['galois_image'].split(',')]
-        if all([elladic_image_label_regex.fullmatch(a) for a in labels]):
-            query['elladic_images'] = { '$contains': labels }
-        elif all([modell_image_label_regex.fullmatch(a) for a in labels]):
-            query['modell_images'] = { '$contains': labels }
-        else:
-            err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s."
+        elladic_labels = [a for a in label if elladic_image_label_regex.fullmatch(a)]
+        moddell_labels = [a for a in label if modell_image_label_regex.fullmatch(a)]
+        if len(elladic_labels)+len(modell_labels) ne len(labels):
+            err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
             flash_error(err, "13.91.3.1", "13S4")
             raise ValueError(err)
+        if elladic_labels:
+            query['elladic_images'] = { '$contains': elladic_labels }
+        if modell_labels:
+            query['modell_images'] = { '$contains': modell_labels }
         if not 'cm' in query:
             query['cm'] = 0
     # The button which used to be labelled Optimal only no/yes"
