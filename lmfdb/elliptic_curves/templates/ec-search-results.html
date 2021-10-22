@@ -37,13 +37,13 @@ table td.params {
 {% endif %}
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
   <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion') }}</th>
-{% if info.cm %}
-  <th class="center">{{KNOWL('ec.complex_multiplication', title='CM discriminant')}}</th>
+{% if info.cm == "CM" or "," in info.cm %}
+  <th class="center">{{KNOWL('ec.complex_multiplication', title='CM disc')}}</th>
 {% endif %}
 {% if info.nonmax_primes %}
-  <th class="center">{{KNOWL('ec.maximal_elladic_galois_rep', title='Non-maximal primes')}}</th>
+  <th class="center">{{KNOWL('ec.maximal_elladic_galois_rep', title='Nonmax primes')}}</th>
 {% endif %}
-{% if info.nonmax_primes %}
+{% if info.galois_image %}
   <th class="center">{{KNOWL('ec.galois_rep_elladic_image', title='Galois images')}}</th>
 {% endif %}
 {% if info.num_int_pts %}
