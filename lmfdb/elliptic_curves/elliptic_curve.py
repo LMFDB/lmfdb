@@ -6,7 +6,7 @@ from io import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
