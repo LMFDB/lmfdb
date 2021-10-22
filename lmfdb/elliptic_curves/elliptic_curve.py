@@ -794,7 +794,7 @@ class ECSearchArray(SearchArray):
             example="4")
         surj_primes = TextBox(
             name="surj_primes",
-            label="Maximal primes",
+            label=r"Maximal primes $\ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3")
         isodeg = TextBox(
@@ -805,12 +805,12 @@ class ECSearchArray(SearchArray):
         class_size = TextBox(
             name="class_size",
             label="Isogeny class size",
-            knowl="ec.isogeny",
+            knowl="ec.isogeny_class",
             example="4")
         class_deg = TextBox(
             name="class_deg",
             label="Isogeny class degree",
-            knowl="ec.isogeny",
+            knowl="ec.isogeny_class_degree",
             example="16")
         num_int_pts = TextBox(
             name="num_int_pts",
@@ -845,19 +845,11 @@ class ECSearchArray(SearchArray):
             example="all, one",
             options=[("", "all"),
                      ("on", "one")])
-        surj_quant = SubsetNoExcludeBox(
-            name="surj_quantifier")
-        nonsurj_primes = TextBoxWithSelect(
-            name="nonsurj_primes",
-            label="Nonmaximal $p$",
-            knowl="ec.maximal_elladic_galois_rep",
-            example="2,3",
-            select_box=surj_quant)
         bad_quant = SubsetBox(
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad primes",
+            label="Bad primes $p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -890,11 +882,19 @@ class ECSearchArray(SearchArray):
             label="Potential good reduction",
             example="Yes",
             knowl="ec.potential_good_reduction")
+        nonmaximal_quant = SubsetNoExcludeBox(
+            name="nonmax_quantifier")
+        nonmaximal_primes = TextBoxWithSelect(
+            name="nonmaximal_primes",
+            label=r"Nonmaximal $\ell$",
+            knowl="ec.maximal_elladic_galois_rep",
+            example="2,3",
+            select_box=nonmaximal_quant)
         nonmaximal_image = TextBox(
             name="nonmaximal_image",
-            label=r"Nonmaximal $\ell$-adic imaage",
+            label=r"Nonmaximal $\ell$-adic image",
             example="13.91.3.2",
-            knowl="ec.galois_rep_elladic_image")
+            knowl="ec.maximal_elladic_galois_rep")
         cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
                         ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
                         ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
@@ -910,17 +910,17 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
-            [disc, faltings_height],
+            [disc, potentially_good],
             [rank, regulator],
             [torsion, torsion_struct],
-            [cm_disc, cm],
             [sha, sha_primes],
-            [surj_primes, nonsurj_primes],
-            [isodeg, bad_primes],
-            [class_size, num_int_pts],
-            [class_deg, semistable],
-            [optimal, potentially_good],
-            [count, nonmaximal_image]
+            [cm_disc, cm],
+            [max_primes, nonmax_primes],
+            [semistable, bad_primes],
+            [num_int_pts, nonmaximal_image],
+            [class_size, class_deg],
+            [optimal, isodeg],
+            [count, faltings_height]
             ]
 
         self.refine_array = [
