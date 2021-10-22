@@ -936,6 +936,6 @@ class ECSearchArray(SearchArray):
             [cond, disc, jinv, faltings_height],
             [rank, regulator, torsion, torsion_struct],
             [sha, sha_primes, maximal_primes, nonmaximal_primes, bad_primes],
-            [num_int_pts, cm, cm_disc, semistable, potentially_good],
+            [num_int_pts, cm, cm_disc, reduction],
             [optimal, isodeg, class_size, class_deg, nonmaximal_image]
             ]
