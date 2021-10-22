@@ -406,8 +406,8 @@ def elliptic_curve_search(info, query):
         else:
             parse_ints(info,query,field='cm',qfield='cm')
     parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
-    parse_primes(info, query, 'nonmaximal_primes', name='non-maximal primes',
-                 qfield='nonmaximal_primes',mode=info.get('max_quantifier'), radical='nonmax_rad')
+    parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                 qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
@@ -905,15 +905,15 @@ class ECSearchArray(SearchArray):
             short_label=r"Galois image",
             example="13.91.3.2",
             knowl="ec.galois_rep_elladic_image")
-        nonmaximal_quant = SubsetBox(
-            name="nonmaximal_quantifier")
-        nonmaximal_primes = TextBoxWithSelect(
-            name="nonmaximal_primes",
+        nonmax_quant = SubsetBox(
+            name="nonmax_quantifier")
+        nonmax_primes = TextBoxWithSelect(
+            name="nonmax_primes",
             label=r"Nonmaximal $\ell$",
             short_label=r"Nonmax $\ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
-            select_box=nonmaximal_quant)
+            select_box=nonmax_quant)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
                    [('-3,-12,-27', 'CM field Q(zeta_3)'), ('-4,-16', 'CM field Q(i)'), ('-7,-28', 'CM field Q(sqrt(7))')] +
                    [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
@@ -933,7 +933,7 @@ class ECSearchArray(SearchArray):
             [torsion, cm],
             [rank, sha],
             [regulator, sha_primes],
-            [galois_image, nonmaximal_primes],
+            [galois_image, nonmax_primes],
             [class_size, class_deg],
             [num_int_pts, isodeg],
             [optimal, reduction],
@@ -943,6 +943,6 @@ class ECSearchArray(SearchArray):
         self.refine_array = [
             [cond, jinv, rank, torsion, cm],
             [bad_primes, disc, regulator, sha, galois_image],
-            [class_size, class_deg, isodeg, sha_primes, nonmaximal_primes],
+            [class_size, class_deg, isodeg, sha_primes, nonmax_primes],
             [optimal, reduction, num_int_pts, faltings_height]
             ]
