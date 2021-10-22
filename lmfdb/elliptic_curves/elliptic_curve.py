@@ -401,13 +401,13 @@ def elliptic_curve_search(info, query):
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
     if info.get("galois_image"):
-        try:
-            parse_regex_restricted (info, query, field='galois_image', qfield='elladic_images', regex=elladic_image_label_regex)
-        except SearchParsingError:
-            try:
-                parse_regex_restricted (info, query, field='galois_image', qfield='modell_images', regex=elladic_image_label_regex)
-            except SearchParsingError:
-                raise ValueError("Unrecognized Galois image label, it should be the label of a {{KNOWL('ec.galois_rep_modell_image','subgroup of GL(2,F_ell)')}} or a {{KNOWL('ec.galois_rep_elladic_image','subgroup of GL(2,Z_ell)')}}")
+        labels = [a.strip() for a in info['galois_image'].split(',')]
+        if all([elladic_image_label_regex.fullmatch(a) for a in labels]):
+            query['elladic_images'] = { '$contains': labels }
+        elif all([modell_image_label_regex.fullmatch(a) for a in labels]):
+            query['modell_images'] = { '$contains': labels }
+        else:
+            raise ValueError("Unrecognized Galois image label, it should be the label of a {{KNOWL('ec.galois_rep_modell_image','subgroup of GL(2,F_ell)')}} or a {{KNOWL('ec.galois_rep_elladic_image','subgroup of GL(2,Z_ell)')}}")
         if not 'cm' in query:
             query['cm'] = 0
     # The button which used to be labelled Optimal only no/yes"
