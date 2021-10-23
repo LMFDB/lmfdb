@@ -443,7 +443,8 @@ def elliptic_curve_search(info, query):
                     raise ValueError(err)
                 else:
                     modell_labels = [a for a in modell_labels if not a in max_labels]
-                    info['nonmax_primes'] = ','.join(max_labels)
+                    max_primes = [int(modell_image_label_regex.match(a)[1]) for a in max_labels]
+                    info['nonmax_primes'] = ','.join(max_primes)
                     info['nanmax_quantifier'] = 'exclude'
                     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
