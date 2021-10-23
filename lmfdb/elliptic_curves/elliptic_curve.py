@@ -427,6 +427,18 @@ def elliptic_curve_search(info, query):
         if not 'cm' in query:
             query['cm'] = 0
             info['cm'] = "noCM"
+            # try to help the user out if they specify a maximal group
+            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
+                err = "To search for maximal images, exclude non-maximal primes"
+                flash_error(err)
+                raise ValueError(err)
+        else:
+            # try to help the user out if they specify a maximal group
+            if any([a.endswith("G") and modell_image_label_regex.match(a)[0] > 3 for a in modell_labels]):
+                err = "To search for maximal images, exclude non-maximal primes"
+                flash_error(err)
+                raise ValueError(err)
+
     # The button which used to be labelled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
@@ -905,7 +917,7 @@ class ECSearchArray(SearchArray):
             label=r"Galois image",
             short_label=r"Galois image",
             example="13S4 or 13.91.3.2",
-            knowl="ec.galois_rep_elladic_image")
+            knowl="ec.galois_image_search")
         nonmax_quant = SubsetBox(
             name="nonmax_quantifier")
         nonmax_primes = TextBoxWithSelect(
