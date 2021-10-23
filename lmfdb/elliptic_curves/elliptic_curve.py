@@ -450,7 +450,7 @@ def elliptic_curve_search(info, query):
                     info['nonmax_quantifier'] = 'exclude'
                     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
-                    info['galois__image'] = ','.join(modell_labels + elladic_labels)
+                    info['galois_image'] = ','.join(modell_labels + elladic_labels)
                 query['modell_images'] = { '$contains': modell_labels }
 
     # The button which used to be labelled Optimal only no/yes"
