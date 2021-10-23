@@ -427,17 +427,27 @@ def elliptic_curve_search(info, query):
         if not 'cm' in query:
             query['cm'] = 0
             info['cm'] = "noCM"
-        # try to help the user out if they specify a maximal group
         if query['cm']:
+            # try to help the user out if they specify the normalizer of a Cartan in the CM case (these are either maximal or impossible
             if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
                 err = "To search for maximal images, exclude non-maximal primes"
                 flash_error(err)
                 raise ValueError(err)
         else:
-            if any([a.endswith("G") and int(modell_image_label_regex.match(a)[1]) > 3 for a in modell_labels]):
-                err = "To search for maximal images, exclude non-maximal primes"
-                flash_error(err)
-                raise ValueError(err)
+            # if the user specifies full mod-ell image with ell > 3, automatically exclude nonmax primes (if possible)
+            max_labels = [a.endswith("G") and int(modell_image_label_regex.match(a)[1]) > 3 for a in modell_labels]
+            if max_labels:
+                if query['nonmax_primes'] then:
+                    err = "To search for maximal images, exclude non-maximal primes"
+                    flash_error(err)
+                    raise ValueError(err)
+                else:
+                    modell_labels = [a for a in modell_labels if not a in max_labels]
+                    info['nonmax_primes'] = max_labels.join(",")
+                    info['nanmax_quantifier'] = 'exclude'
+                    parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                                 qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
+                query['modell_images'] = { '$contains': modell_labels }
 
     # The button which used to be labelled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
