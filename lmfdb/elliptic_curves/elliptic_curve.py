@@ -437,13 +437,15 @@ def elliptic_curve_search(info, query):
             # if the user specifies full mod-ell image with ell > 3, automatically exclude nonmax primes (if possible)
             max_labels = [a for a in modell_labels if a.endswith("G") and int(modell_image_label_regex.match(a)[1]) > 3]
             if max_labels:
-                if query.get('nonmax_primes'):
+                if info.get('nonmax_primes') and info['nonmax_quantifier'] != 'exclude':
                     err = "To search for maximal images, exclude non-maximal primes"
                     flash_error(err)
                     raise ValueError(err)
                 else:
                     modell_labels = [a for a in modell_labels if not a in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
+                    if info['nonmax_primes']:
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'
                     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
