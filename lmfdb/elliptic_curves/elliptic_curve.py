@@ -446,7 +446,7 @@ def elliptic_curve_search(info, query):
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
                         max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
-                    max_primes.sort(key=lambda x: int(x))
+                    max_primes.sort(key=int)
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'
                     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
