@@ -82,7 +82,7 @@ table td.params {
 <td class="center">{{curve.cm}}</td>
 {% endif %}
 {% if info.nonmax_primes %}
-<td class="center">{%if curve.nonmax_primes %}${{curve.nonmax_primes}}${%endif %}</td>
+<td class="center">{%if curve.nonmax_primes %}${{curve.nonmax_primes|join(",")}}${%endif %}</td>
 {% endif %}
 {% if info.galois_image %}
 <td class="center">{{curve.elladic_images}}</td>
