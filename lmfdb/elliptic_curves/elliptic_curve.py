@@ -426,7 +426,7 @@ def elliptic_curve_search(info, query):
             query['modell_images'] = { '$contains': modell_labels }
         if not 'cm' in query:
             query['cm'] = 0
-            info['cm'] = 0
+            info['cm'] = "0"
     # The button which used to be labelled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
