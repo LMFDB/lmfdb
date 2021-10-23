@@ -904,7 +904,7 @@ class ECSearchArray(SearchArray):
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
-            example="13.91.3.2",
+            example="13S4 or 13.91.3.2",
             knowl="ec.galois_rep_elladic_image")
         nonmax_quant = SubsetBox(
             name="nonmax_quantifier")
