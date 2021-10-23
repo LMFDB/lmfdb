@@ -428,15 +428,13 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
             info['cm'] = "noCM"
             # try to help the user out if they specify a maximal group
-            print(modell_labels)
-            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
+            if any([a.endswith("G") and int(modell_image_label_regex.match(a)[0]) > 3 for a in modell_labels]):
                 err = "To search for maximal images, exclude non-maximal primes"
                 flash_error(err)
                 raise ValueError(err)
         else:
             # try to help the user out if they specify a maximal group
-            print(modell_labels)
-            if any([a.endswith("G") and int(modell_image_label_regex.match(a)[0]) > 3 for a in modell_labels]):
+            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
                 err = "To search for maximal images, exclude non-maximal primes"
                 flash_error(err)
                 raise ValueError(err)
