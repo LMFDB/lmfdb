@@ -129,7 +129,7 @@ class EllCurveTest(LmfdbTest):
         assert '[1, -1, 1, -3, 3]' in L.get_data(as_text=True)
 
     def test_sha(self):
-        L = self.tc.get('EllipticCurve/Q/?start=0&sha=2-&count=100')
+        L = self.tc.get('EllipticCurve/Q/?start=0&rank=2&sha=2-&count=100')
         assert '[0, 1, 0, -73824640, -244170894880]' in L.get_data(as_text=True)
         assert '226920.h1' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/Q/?start=0&sha=81&count=100')
