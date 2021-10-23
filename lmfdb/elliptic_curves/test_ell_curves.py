@@ -78,7 +78,7 @@ class EllCurveTest(LmfdbTest):
         assert 'rational number' in L.get_data(as_text=True)
 
     def test_tors_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&torsion_structure=[7]&count=100')
+        L = self.tc.get('/EllipticCurve/Q/?start=0&torsion=[7]&count=100')
         assert '858.k1' in L.get_data(as_text=True)
         assert '[1, -1, 1, 9588, 2333199]' in L.get_data(as_text=True)
 
@@ -109,8 +109,8 @@ class EllCurveTest(LmfdbTest):
         assert not('11.a1' in L.get_data(as_text=True))
 
     def test_cm_disc_search(self):
-        self.check_args('EllipticCurve/Q/?cm_disc=-4', '32.a3')
-        self.not_check_args('EllipticCurve/Q/?cm_disc=-4', '11.a1')
+        self.check_args('EllipticCurve/Q/?cm=-4', '32.a3')
+        self.not_check_args('EllipticCurve/Q/?cm=-4', '11.a1')
 
     def test_one_per_search(self):
         # Test that we correctly fixed issue 4678
@@ -129,7 +129,7 @@ class EllCurveTest(LmfdbTest):
         assert '[1, -1, 1, -3, 3]' in L.get_data(as_text=True)
 
     def test_sha(self):
-        L = self.tc.get('EllipticCurve/Q/?start=0&&sha=2-&count=100')
+        L = self.tc.get('EllipticCurve/Q/?start=0&sha=2-&count=100')
         assert '[0, 1, 0, -73824640, -244170894880]' in L.get_data(as_text=True)
         assert '226920.h1' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/Q/?start=0&sha=81&count=100')

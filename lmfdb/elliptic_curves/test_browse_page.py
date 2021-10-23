@@ -74,7 +74,7 @@ class HomePageTest(LmfdbTest):
                         '[0, -1, 0, -10560, -414180]')
         self.check_args("/EllipticCurve/Q/?conductor=&jinv=-4096%2F11&count=100",
                         '169136.i3')
-        self.check_args("/EllipticCurve/Q/?torsion_structure=%5B2%2C4%5D&sha=&count=100",
+        self.check_args("/EllipticCurve/Q/?torsion=%5B2%2C4%5D&sha=&count=100",
                         '[0, 1, 0, -1664, -9804]')
         self.check_args_with_timeout("/EllipticCurve/Q/?nonmax_quantifier=include&nonmax_primes=2,3&count=100",
                         '[1, -1, 1, -24575, 1488935]')
