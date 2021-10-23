@@ -412,7 +412,7 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
-    if info.get("galois_image"):
+    if info.get('galois_image'):
         labels = [a.strip() for a in info['galois_image'].split(',')]
         elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
         modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a) and is_prime(modell_image_label_regex.match(a)[1])]
@@ -450,6 +450,7 @@ def elliptic_curve_search(info, query):
                     info['nonmax_quantifier'] = 'exclude'
                     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
+                    info['galois__image'] = ','.join(modell_labels + elladic_labels)
                 query['modell_images'] = { '$contains': modell_labels }
 
     # The button which used to be labelled Optimal only no/yes"
