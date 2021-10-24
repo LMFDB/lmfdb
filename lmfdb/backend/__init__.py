@@ -17,8 +17,8 @@ EXAMPLES::
 
 You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
-    sage: G = db.gps_small.lookup('8.2')
-    sage: G['Exponent']
+    sage: G = db.gps_groups.lookup('8.2')
+    sage: G['exponent']
     4
 
 - ``extra_table`` -- a string or None.  If provided, gives the name of a table that is linked to the search table by an ``id`` column and provides more data that cannot be searched on.  The reason to separate the data into two tables is to reduce the size of the search table.  For large tables this speeds up some queries.
