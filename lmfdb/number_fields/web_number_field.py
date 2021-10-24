@@ -13,7 +13,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         raw_typeset, display_multiset, factor_base_factor, 
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
 wnflog = make_logger("WNF")
 
@@ -890,7 +890,7 @@ class WebNumberField:
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
                 thisdat = [lab, f, LF['e'], LF['f'], LF['c'], 
-                    group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
+                    transitive_group_display_knowl(LF['galois_label']),
                     LF['t'], LF['u'], LF['slopes']]
                 if str(p) not in local_algebra_dict:
                     local_algebra_dict[str(p)] = [thisdat]

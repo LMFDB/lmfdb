@@ -23,7 +23,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
-    group_phrase, galois_group_data, group_display_knowl,
+    group_phrase, galois_group_data, transitive_group_display_knowl,
     group_cclasses_knowl_guts, group_pretty_and_nTj,
     group_character_table_knowl_guts, group_alias_table)
 from lmfdb.number_fields import nf_page, nf_logger
@@ -471,13 +471,13 @@ def render_field_webpage(args):
                         loc_alg += '<tr>'
                     if len(mm)==4:         # not in database
                         if mm[1]*mm[2]==1: # Q_p
-                            loc_alg += '<td>$\\Q_{%d}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(p,group_display_knowl(1,1), show_slope_content([],1,1))
+                            loc_alg += '<td>$\\Q_{%d}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(p,transitive_group_display_knowl("1T1", "Trivial"), show_slope_content([],1,1))
                         elif mm[1]*mm[2]==2: # quadratic
-                            loc_alg += '<td></td><td>Deg $2$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1],mm[2],mm[3],group_display_knowl(2,1), show_slope_content([],mm[1],mm[2]))
+                            loc_alg += '<td></td><td>Deg $2$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1],mm[2],mm[3],transitive_group_display_knowl("2T1", "$C_2$"), show_slope_content([],mm[1],mm[2]))
                         elif mm[1]==1: # unramified
                             # nT1 is cyclic except for n = 32
                             cyc = 33 if mm[2] == 32 else 1
-                            loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1]*mm[2],mm[1],mm[2],mm[3],group_display_knowl(mm[2],cyc), show_slope_content([],mm[1],mm[2]))
+                            loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1]*mm[2],mm[1],mm[2],mm[3],transitive_group_display_knowl(f"{mm[2]}T{cyc}"), show_slope_content([],mm[1],mm[2]))
                         else:
                             loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td></td><td></td>'.format(
                                 mm[1]*mm[2], mm[1], mm[2], mm[3])

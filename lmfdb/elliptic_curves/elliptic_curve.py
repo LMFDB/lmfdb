@@ -6,7 +6,7 @@ from io import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
@@ -15,8 +15,8 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
+    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -336,6 +336,9 @@ def url_for_label(label):
         return url_for(".random_curve")
     return url_for(".by_ec_label", label=label)
 
+elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
+modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
+
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curvedata,
              title='Elliptic curve search results',
@@ -360,39 +363,97 @@ def elliptic_curve_search(info, query):
             query['semistable'] = True
         elif info['conductor_type'] == 'divides':
             if not isinstance(query.get('conductor'), int):
-                raise ValueError("You must specify a single level")
+                err = "You must specify a single conductor"
+                flash_error(err)
+                raise ValueError(err)
             else:
                 query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
-    parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_ints(info,query,'class_size','class_size')
-    parse_ints(info,query,'class_deg','class_deg')
+    if info.get('class_deg'):
+        parse_ints(info,query,'class_deg','class_deg')
+        if not isinstance(query.get('class_deg'), int):
+            err = "You must specify a single isogeny class degree"
+            flash_error(err)
+            raise ValueError(err)
     parse_floats(info,query,'regulator','regulator')
     parse_floats(info, query, 'faltings_height', 'faltings_height')
-    parse_bool(info,query,'semistable','semistable')
-    parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
-    parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
+    if info.get('reduction'):
+        if info['reduction'] == 'semistable':
+            query['semistable'] = True
+        elif info['reduction'] == 'not semistable':
+            query['semistable'] = False
+        elif info['reduction'] == 'potentially good':
+            query['potential_good_reduction'] = True
+        elif info['reduction'] == 'not potentially good':
+            query['potential_good_reduction'] = False
+    if info.get('torsion'):
+        if info['torsion'][0] == '[':
+            parse_bracketed_posints(info,query,'torsion',qfield='torsion_structure',maxlength=2,check_divisibility='increasing')
+        else:
+            parse_ints(info,query,'torsion')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
     #    query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-    if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
+    if 'cm' in info:
+        if info['cm'] == 'noCM':
             query['cm'] = 0
-        elif info['include_cm'] == 'only':
+        elif info['cm'] == 'CM':
             query['cm'] = {'$ne' : 0}
-    parse_ints(info,query,field='cm_disc',qfield='cm')
+        else:
+            parse_ints(info,query,field='cm',qfield='cm')
     parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
-    parse_primes(info, query, 'surj_primes', name='maximal primes',
-                 qfield='nonmax_primes', mode='exclude')
-    parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
-                 qfield='nonmax_primes',mode=info.get('surj_quantifier'), radical='nonmax_rad')
+    parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                 qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
+    if info.get('galois_image'):
+        labels = [a.strip() for a in info['galois_image'].split(',')]
+        elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
+        modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a) and is_prime(modell_image_label_regex.match(a)[1])]
+        if len(elladic_labels)+len(modell_labels) != len(labels):
+            err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
+            flash_error(err, "13.91.3.1", "13S4")
+            raise ValueError(err)
+        if elladic_labels:
+            query['elladic_images'] = { '$contains': elladic_labels }
+        if modell_labels:
+            query['modell_images'] = { '$contains': modell_labels }
+        if not 'cm' in query:
+            query['cm'] = 0
+            info['cm'] = "noCM"
+        if query['cm']:
+            # try to help the user out if they specify the normalizer of a Cartan in the CM case (these are either maximal or impossible
+            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
+                err = "To search for maximal images, exclude non-maximal primes"
+                flash_error(err)
+                raise ValueError(err)
+        else:
+            # if the user specifies full mod-ell image with ell > 3, automatically exclude nonmax primes (if possible)
+            max_labels = [a for a in modell_labels if a.endswith("G") and int(modell_image_label_regex.match(a)[1]) > 3]
+            if max_labels:
+                if info.get('nonmax_primes') and info['nonmax_quantifier'] != 'exclude':
+                    err = "To search for maximal images, exclude non-maximal primes"
+                    flash_error(err)
+                    raise ValueError(err)
+                else:
+                    modell_labels = [a for a in modell_labels if not a in max_labels]
+                    max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
+                    if info.get('nonmax_primes'):
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                    max_primes.sort(key=int)
+                    info['nonmax_primes'] = ','.join(max_primes)
+                    info['nonmax_quantifier'] = 'exclude'
+                    parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                                 qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
+                    info['galois_image'] = ','.join(modell_labels + elladic_labels)
+                query['modell_images'] = { '$contains': modell_labels }
+
     # The button which used to be labelled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
@@ -778,21 +839,11 @@ class ECSearchArray(SearchArray):
             label="Rank",
             knowl="ec.rank",
             example="0")
-        torsion = TextBox(
-            name="torsion",
-            label="Torsion order",
-            knowl="ec.torsion_order",
-            example="2")
         sha = TextBox(
             name="sha",
             label="Analytic order of &#1064;",
             knowl="ec.analytic_sha_order",
             example="4")
-        surj_primes = TextBox(
-            name="surj_primes",
-            label="Maximal primes",
-            knowl="ec.maximal_elladic_galois_rep",
-            example="2,3")
         isodeg = TextBox(
             name="isogeny_degrees",
             label="Cyclic isogeny degree",
@@ -801,39 +852,35 @@ class ECSearchArray(SearchArray):
         class_size = TextBox(
             name="class_size",
             label="Isogeny class size",
-            knowl="ec.isogeny",
+            knowl="ec.isogeny_class",
             example="4")
         class_deg = TextBox(
             name="class_deg",
             label="Isogeny class degree",
-            knowl="ec.isogeny",
+            knowl="ec.isogeny_class_degree",
             example="16")
         num_int_pts = TextBox(
             name="num_int_pts",
-            label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            label="Integral points",
+            knowl="ec.q.integral_points",
             example="2",
             example_span="2 or 4-15")
-
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = SelectBox(
-            name="include_cm",
-            label="CM",
-            knowl="ec.complex_multiplication",
-            options=[('', ''), ('only', 'potential CM'), ('exclude', 'no potential CM')])
-        tor_opts = ([("", ""),
-                     ("[]", "trivial")] +
-                    [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
-                    [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
-        torsion_struct = SelectBox(
-            name="torsion_structure",
-            label="Torsion structure",
+        torsion_opts = ([("", ""),("[]", "trivial")] +
+                        [("%s"%n, "order %s"%n) for  n in range(4,16,4)] +
+                        [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
+                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+        torsion = SelectBox(
+            name="torsion",
+            label="Torsion",
             knowl="ec.torsion_subgroup",
-            options=tor_opts)
+            example="C3",
+            options=torsion_opts)
         optimal = SelectBox(
             name="optimal",
             label="Curves per isogeny class",
@@ -841,19 +888,12 @@ class ECSearchArray(SearchArray):
             example="all, one",
             options=[("", "all"),
                      ("on", "one")])
-        surj_quant = SubsetNoExcludeBox(
-            name="surj_quantifier")
-        nonsurj_primes = TextBoxWithSelect(
-            name="nonsurj_primes",
-            label="Nonmax $p$",
-            knowl="ec.maximal_elladic_galois_rep",
-            example="2,3",
-            select_box=surj_quant)
         bad_quant = SubsetBox(
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad $p$",
+            label="Bad primes $p$",
+            short_label="Bad $p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -876,23 +916,39 @@ class ECSearchArray(SearchArray):
             label="Faltings height",
             knowl="ec.q.faltings_height",
             example="-1-2")
-        semistable = YesNoBox(
-            name="semistable",
-            label="Semistable",
-            example="Yes",
-            knowl="ec.semistable")
-        potentially_good = YesNoBox(
-            name="potential_good_reduction",
-            label="Potential good reduction",
-            example="Yes",
-            knowl="ec.potential_good_reduction")
-        cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
-                        ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
-                        ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
-        cm_disc = SelectBox(
-            name="cm_disc",
-            label="CM discriminant",
-            example="-3",
+        reduction_opts = ([("", ""),
+                           ("semistable",  "semistable"),
+                           ("not semistable",  "not semistable"),
+                           ("potentially good", "potentially good"),
+                           ("not potentially good", "not potentially good")])
+        reduction = SelectBox(
+            name="reduction",
+            label="Reduction",
+            example="semistable",
+            knowl="ec.reduction",
+            options=reduction_opts)
+        galois_image = TextBox(
+            name="galois_image",
+            label=r"Galois image",
+            short_label=r"Galois image",
+            example="13S4 or 13.91.3.2",
+            knowl="ec.galois_image_search")
+        nonmax_quant = SubsetBox(
+            name="nonmax_quantifier")
+        nonmax_primes = TextBoxWithSelect(
+            name="nonmax_primes",
+            label=r"Nonmaximal $\ell$",
+            short_label=r"Nonmax $\ell$",
+            knowl="ec.maximal_elladic_galois_rep",
+            example="2,3",
+            select_box=nonmax_quant)
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
+                   [('-3,-12,-27', 'CM field Q(zeta_3)'), ('-4,-16', 'CM field Q(i)'), ('-7,-28', 'CM field Q(sqrt(7))')] +
+                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm = SelectBox(
+            name="cm",
+            label="Complex multiplication",
+            example="potential CM by Q(i)",
             knowl="ec.complex_multiplication",
             options=cm_opts
             )
@@ -900,24 +956,21 @@ class ECSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [cond, jinv],
-            [disc, faltings_height],
-            [rank, regulator],
-            [torsion, torsion_struct],
-            [cm_disc, cm],
-            [sha, sha_primes],
-            [surj_primes, nonsurj_primes],
-            [isodeg, bad_primes],
-            [class_size, num_int_pts],
-            [class_deg, semistable],
-            [optimal, potentially_good],
-            [count]
+            [cond, bad_primes],
+            [disc,  jinv],
+            [torsion, cm],
+            [rank, sha],
+            [regulator, sha_primes],
+            [galois_image, nonmax_primes],
+            [class_size, class_deg],
+            [num_int_pts, isodeg],
+            [optimal, reduction],
+            [count, faltings_height]
             ]
 
         self.refine_array = [
-            [cond, disc, jinv, faltings_height],
-            [rank, regulator, torsion, torsion_struct],
-            [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, cm, cm_disc, semistable, potentially_good],
-            [optimal, isodeg, class_size, class_deg]
+            [cond, jinv, rank, torsion, cm],
+            [bad_primes, disc, regulator, sha, galois_image],
+            [class_size, class_deg, isodeg, sha_primes, nonmax_primes],
+            [optimal, reduction, num_int_pts, faltings_height]
             ]

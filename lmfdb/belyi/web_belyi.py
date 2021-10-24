@@ -2,7 +2,7 @@
 
 from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from flask import url_for
@@ -175,8 +175,7 @@ class WebBelyiGalmap(object):
         if triple:
             data["label"] += '-' + (triple).replace(' ', '')
             data["triple"] = triple
-        nt = galmap["group"].split("T")
-        data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))
+        data["group"] = transitive_group_display_knowl(galmap["group"])
 
         data["geomtype"] = geomtypelet_to_geomtypename_dict[galmap["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
@@ -387,8 +386,7 @@ class WebBelyiPassport(object):
         for elt in ("plabel", "abc", "num_orbits", "g", "abc", "deg", "maxdegbf", "is_primitive", "primitivization"):
             data[elt] = passport[elt]
 
-        nt = passport["group"].split("T")
-        data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))
+        data["group"] = transitive_group_display_knowl(passport["group"])
 
         data["geomtype"] = geomtypelet_to_geomtypename_dict[passport["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in passport["lambdas"]]
