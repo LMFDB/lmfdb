@@ -1689,7 +1689,7 @@ def parse_regex_restricted(
         inps = inp.split(",")
     else:
         inps = [inp]
-    if all(regex.match(x) for x in inps):
+    if all(regex.fullmatch(x) for x in inps):
         if len(inps) == 1:
             query[qfield] = inps[0]
         else:
