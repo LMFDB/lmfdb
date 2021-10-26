@@ -759,6 +759,8 @@ def parse_element_of(
         options = integer_options(
             inp, max_opts=split_interval, contained_in=contained_in
         )
+        if contained_in and len(options) == 0:
+            options = integer_options(inp,max_opts=split_interval)
         if len(options) == 1:
             query[qfield] = {"$contains": options}
         elif len(options) > 1:
