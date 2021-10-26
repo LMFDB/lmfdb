@@ -893,7 +893,7 @@ class ECSearchArray(SearchArray):
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad primes $p$",
-            short_label=r"Bad$\,\,\,p$",
+            short_label=r"Bad$\ p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -902,7 +902,7 @@ class ECSearchArray(SearchArray):
         sha_primes = TextBoxWithSelect(
             name="sha_primes",
             label="$p$ dividing |&#1064;|",
-            short_label="$p\,\,$div$\,\,$|&#1064;|",
+            short_label="$p\ $div$\ $|&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
             select_box=sha_quant)
@@ -938,7 +938,7 @@ class ECSearchArray(SearchArray):
         nonmax_primes = TextBoxWithSelect(
             name="nonmax_primes",
             label=r"Nonmaximal $\ell$",
-            short_label=r"Nonmax $\ell$",
+            short_label=r"Nonmax$\ \ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=nonmax_quant)
