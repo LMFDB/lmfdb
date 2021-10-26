@@ -893,7 +893,7 @@ class ECSearchArray(SearchArray):
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad primes $p$",
-            short_label=r"Bad$p$",
+            short_label=r"Bad$\medspace p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
