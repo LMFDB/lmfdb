@@ -765,7 +765,7 @@ def parse_element_of(
             query[qfield] = {"$overlaps": options}
         else:
             # element of the empty set should return no results (this can easily happen if contained_in is specified, or for empty intervals like [2,1])
-            query[qfield] = {"$contains": [parse_singleton("0")], "$notcontains": [parse_singleon("0")]}
+            query[qfield] = {"$contains": [parse_singleton("0")], "$notcontains": [parse_singleton("0")]}
     else:
         query[qfield] = {"$contains": [parse_singleton(inp)]}
 
