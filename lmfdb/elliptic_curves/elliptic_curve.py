@@ -405,8 +405,7 @@ def elliptic_curve_search(info, query):
             query['cm'] = {'$ne' : 0}
         else:
             parse_ints(info,query,field='cm',qfield='cm')
-    parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
-    print(query['isogeny_degrees'])
+    parse_element_of(info,query,'isogeny_degrees',split_interval=200,contained_in=get_stats().isogeny_degrees)
     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
@@ -894,7 +893,7 @@ class ECSearchArray(SearchArray):
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad primes $p$",
-            short_label="Bad primes",
+            short_label="Bad *p*",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
