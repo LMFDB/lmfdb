@@ -675,13 +675,13 @@ def parse_mod1(inp, query, qfield, exact_den=4, exact_prec=10):
 def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int, contained_in=None):
     if split_interval:
         options = integer_options(inp, max_opts=split_interval, contained_in=contained_in)
-        if contained_in and len(options) == 0:
-            options = integer_options(inp,max_opts=split_interval)
         if len(options) == 1:
             query[qfield] = {"$contains": options}
         elif len(options) > 1:
             query[qfield] = {"$overlaps": options}
-            # query[qfield] = {'$or': [{'$contains': [n]} for n in options]}
+        else:
+            # element of the empty set should return no results (this can easily happen if contained_in is specified, or for empty intervals like [2,1])
+            query[qfield] = {"$and": [{"$exists": True}, {"$exists": False}]}
     else:
         query[qfield] = {"$contains": [parse_singleton(inp)]}
 
