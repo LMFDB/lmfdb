@@ -893,7 +893,7 @@ class ECSearchArray(SearchArray):
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad primes $p$",
-            short_label=r"Bad$\medspace p$",
+            short_label=r"Bad$\,\,\,p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -902,7 +902,7 @@ class ECSearchArray(SearchArray):
         sha_primes = TextBoxWithSelect(
             name="sha_primes",
             label="$p$ dividing |&#1064;|",
-            short_label="$p$ div |&#1064;|",
+            short_label="$p\,\,$div$\,\,$|&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
             select_box=sha_quant)
