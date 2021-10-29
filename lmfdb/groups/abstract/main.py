@@ -937,8 +937,7 @@ def get_sub_url(label):
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
-
-def diagram_js(gp, layers):
+def diagram_js(gp, layers, aut=False):
     ll = [
         [
             grp.subgroup,
@@ -947,32 +946,23 @@ def diagram_js(gp, layers):
             grp.count,
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagram_x,
+            grp.diagram_aut_x if aut else grp.diagram_aut_x,
         ]
         for grp in layers[0]
     ]
     orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
 
-    return f'var sdiagram = make_sdiagram("subdiagram", "{gp.label}",{ll},{layers[1]},{orders});'
+    return [ll, layers[1], orders]
 
+    return f'var [sautdiagram,gautlist] = make_sdiagram("autdiagram", "{gp.label}",[[{ll},{layers[1]},{orders}]]);'
 
-def diagram_jsaut(gp, layers):
-    ll = [
-        [
-            grp.subgroup,
-            grp.short_label,
-            grp.subgroup_tex,
-            grp.count,
-            grp.subgroup_order,
-            gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagram_aut_x,
-        ]
-        for grp in layers[0]
-    ]
-    orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
+def diagram_js_string(gp):
+    glist = [[],[]]
+    if gp.diagram_ok and not gp.outer_equivalence:
+        glist[0] = diagram_js(gp, gp.subgroup_lattice)
 
-    return f'var sautdiagram = make_sdiagram("autdiagram", "{gp.label}",{ll},{layers[1]},{orders});'
-
+    glist[1] = diagram_js(gp, gp.subgroup_lattice_aut,aut=True)
+    return f'var [sdiagram,glist] = make_sdiagram("autdiagram", "{gp.label}",{glist});'
 
 # Writes individual pages
 def render_abstract_group(label):
@@ -996,18 +986,9 @@ def render_abstract_group(label):
     info["subgroup_autprofile"] = [
         (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
     ]
-    # prepare for javascript call to make the diagram
-    if gp.diagram_ok and not gp.outer_equivalence:
-        layers = gp.subgroup_lattice
-        info["dojs"] = diagram_js(gp, layers)
-        totsubs = len(gp.subgroups)
-        info["wide"] = totsubs > 20
-        # boolean
-    else:
-        info["dojs"] = ""
 
-    layers_aut = gp.subgroup_lattice_aut
-    info["doautjs"] = diagram_jsaut(gp, layers_aut)
+    info["dojs"] = diagram_js_string(gp)
+    info["wide"] = len(gp.subgroups) > 20 # boolean
 
     info["max_sub_cnt"] = gp.max_sub_cnt
     info["max_quo_cnt"] = gp.max_quo_cnt

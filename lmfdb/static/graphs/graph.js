@@ -75,7 +75,6 @@ Graph = class {
             node.level = orders.indexOf(value[4]);
             node.image = new Image();
             node.image.src = value[5];
-            node.ready = false;
             node.key = key;
 
             node.posn = posnx;
@@ -171,7 +170,7 @@ class Renderer {
     }
   }
 
-    translate(point) {
+  translate(point) {
         return [
           (point[0] - this.graph.layoutMinX) * this.factorX + this.radius,
           (point[1] - this.graph.layoutMinY) * this.factorY + this.radius
@@ -208,6 +207,12 @@ class Renderer {
         return [point[0]+dx, point[1]+dy];
     }
 
+    newgraph(g) {
+      this.graph = g;
+      this.reposition();
+      this.draw();
+    }
+
     clear() {
         this.ctx.clearRect(0,0, this.element.width, this.element.height);
     }
@@ -237,9 +242,8 @@ class Renderer {
         var img = node.image;
 
         var textwidth = ctxt.measureText(node.ccsize).width;
-        if(! node.ready) {
+        if(! img.complete) {
           img.onload = function() {
-            node.ready=true;
             ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
             if(node.ccsize>1) {
               ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-textwidth, 12+node.center[1]);
@@ -784,22 +788,28 @@ function clearsubinfo() {
 }
 
 
-function make_sdiagram(canv, ambient, nodes, edges, orders) {
-  g = new Graph(ambient);
-  //dbug2=nodes;
-  g.addNodes(nodes, orders);
-  ourg = g;
+//function make_sdiagram(canv, ambient, nodes, edges, orders) {
+function make_sdiagram(canv, ambient, gdatalist) {
+  // gdatalist is a list of [nodes, edges, orders]
+  // Now make a list of graphs
+  var glist = Array(gdatalist.length);
+  for(var j=0; j<glist.length; j++) {
+    var nodes, edges, orders;
+    [nodes, edges, orders] = gdatalist[j]
+    glist[j] = new Graph(ambient);
+    glist[j].addNodes(nodes, orders);
+    dbug=edges;
+    for(var k=0, edge; edge=edges[k]; k++) {
+      glist[j].addEdge(edge[0],edge[1]);
+    }
+    var layout = new Layout(glist[j]);
+    layout.setiter(nodes[0][0][7]==0);
+    layout.layout();
+  }
+  //ourg = g;
   ambientlabel=ambient;
 
-  for(var j=0, edge; edge=edges[j]; j++) {
-    g.addEdge(edge[0],edge[1]);
-  }
-
-  var layout = new Layout(g);
-  layout.setiter(nodes[0][0][7]==0);
-  layout.layout();
-
-  renderer = new Renderer(document.getElementById(canv),g);
+  renderer = new Renderer(document.getElementById(canv),glist[glist.length-1]);
   renderer.draw();
 
   // Need to call Event.Handler here
@@ -809,7 +819,7 @@ function make_sdiagram(canv, ambient, nodes, edges, orders) {
       }
   });
   // The renderer is stored in sdiagram by the web page
-  return renderer;
+  return [renderer,glist];
 }
 
 function redraw() {

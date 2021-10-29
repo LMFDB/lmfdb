@@ -346,37 +346,6 @@
 
 <div id="subgroup_autdiagram" style="display: none">
   <h4>Classes of subgroups up to automorphism</h4>
-  {% if info.autwide %}
-    <canvas id="autdiagram" width="1000" height="300" style="border: 0px solid black">
-      Sorry, your browser does not support the subgroup diagram.
-    </canvas>
-
-    <script type="text/javascript">
-      {{ info.doautjs|safe }}
-    </script>
-  {% else %}
-    <table>
-      <tr><td>
-        <canvas id="autdiagram" width="500" height="300" style="border: 0px solid black">
-            Sorry, your browser does not support the subgroup diagram.
-        </canvas>
-      <td valign="top">
-        <script type="text/javascript">
-          {{ info.doautjs|safe }}
-        </script>
-        <h4>Subgroup information</h4>
-          <div class="selectedsub">
-            Click on a subgroup in the diagram to see information about it.
-          </div>
-    </table>
-    {% if user_is_authenticated and BETA %}
-      <button onclick="getpositions()">Get positions</button>
-      <br>
-      <p>
-      <div id="positions">
-      </div>
-    {% endif %}
-  {% endif %}
   <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 </div>
 
