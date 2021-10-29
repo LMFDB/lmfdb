@@ -101,6 +101,12 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
         assert '11.1-a1' not in L.get_data(as_text=True)
 
+    def test_browse(self):
+        r"""
+        Check that degree browse pages display correctly
+        """
+        for n, cnt in [(2, 77095), (3, 4416), (4, 4064), (5, 792), (6, 537)]:
+            self.check_args(f"/EllipticCurve/browse/{n}", str(cnt))
 
     def test_isodeg(self):
         r"""

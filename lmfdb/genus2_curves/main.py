@@ -594,7 +594,7 @@ def genus2_curve_search(info, query):
     if info.get("aut_grp_id"):
         info["aut_grp_label"] = ".".join(info.pop("aut_grp_id")[1:-1].split(","))
     if info.get("geom_aut_grp_id"):
-        info["geom_aut_grp_label"] = ".".join(info.pop("aut_grp_id")[1:-1].split(","))
+        info["geom_aut_grp_label"] = ".".join(info.pop("geom_aut_grp_id")[1:-1].split(","))
     for fld in (
         "st_group",
         "real_geom_end_alg",
