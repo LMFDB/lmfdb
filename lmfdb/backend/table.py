@@ -2126,6 +2126,8 @@ class PostgresTable(PostgresBase):
                     cols = ["id"] + cols
                 if psycopg2_version < (2, 9, 0):
                     cols_wquotes = ['"' + col + '"' for col in cols]
+                else:
+                    cols_wquotes = cols
                 cur = self._db.cursor()
                 with open(filename, "w") as F:
                     try:
