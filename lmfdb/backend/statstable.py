@@ -216,7 +216,7 @@ class PostgresStatsTable(PostgresBase):
                 total = self._slow_count({}, extra=False)
         self.total = total
 
-    def _has_stats(self, jcols, ccols, cvals, threshold, split_list=False, threshold_inequality=False):
+    def _has_stats(self, jcols, ccols, cvals, threshold, split_list=False, threshold_inequality=False, suffix=""):
         """
         Checks whether statistics have been recorded for a given set of columns.
         It just checks whether the "total" stat has been computed.
@@ -248,7 +248,7 @@ class PostgresStatsTable(PostgresBase):
             else:
                 threshold = "threshold = %s"
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
-        selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
+        selecter = selecter.format(Identifier(self.stats + suffix), SQL(ccols), SQL(cvals), SQL(threshold))
         cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
@@ -431,7 +431,7 @@ class PostgresStatsTable(PostgresBase):
         qstr, values = self.table._parse_dict(query)
         selecter = SQL("SELECT COUNT(*) FROM (SELECT DISTINCT {0} FROM {1}{2}) AS temp").format(
             SQL(", ").join(map(Identifier, cols)),
-            Identifier(self.search_table),
+            Identifier(self.search_table + suffix),
             SQL("") if qstr is None else SQL(" WHERE {0}").format(qstr))
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
@@ -943,7 +943,7 @@ class PostgresStatsTable(PostgresBase):
         where, values, constraint, ccols, cvals, _ = self._process_constraint([col], constraint)
         jcol = Json([col])
         jcgcols = Json(sorted(ccols.adapted + grouping))
-        if self._has_numstats(jcol, jcgcols, cvals, threshold):
+        if self._has_numstats(jcol, jcgcols, cvals, threshold, suffix=suffix):
             self.logger.info("Numstats already exist")
             return
         now = time.time()
@@ -997,7 +997,7 @@ class PostgresStatsTable(PostgresBase):
             )
         self.logger.info("Added numstats in %.3f secs" % (time.time() - now))
 
-    def _has_numstats(self, jcol, cgcols, cvals, threshold):
+    def _has_numstats(self, jcol, cgcols, cvals, threshold, suffix=""):
         """
         Checks whether statistics have been recorded for a given set of columns.
         It just checks whether the "ntotal" stat has been added.
@@ -1018,7 +1018,7 @@ class PostgresStatsTable(PostgresBase):
             values.append(threshold)
             threshold = "threshold = %s"
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND constraint_cols = %s AND constraint_values = %s AND {1}")
-        selecter = selecter.format(Identifier(self.stats), SQL(threshold))
+        selecter = selecter.format(Identifier(self.stats + suffix), SQL(threshold))
         cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
@@ -1238,7 +1238,7 @@ class PostgresStatsTable(PostgresBase):
             raise ValueError("split_list and threshold not simultaneously supported")
         cols = sorted(cols)
         where, values, constraint, ccols, cvals, allcols = self._process_constraint(cols, constraint)
-        if self._has_stats(Json(cols), ccols, cvals, threshold, split_list):
+        if self._has_stats(Json(cols), ccols, cvals, threshold, split_list, suffix=suffix):
             self.logger.info("Statistics already exist")
             return
         now = time.time()
@@ -1386,7 +1386,7 @@ ORDER BY v.ord LIMIT %s"""
                 common_cols.append(col)
         return common_cols
 
-    def _clear_stats_counts(self, extra=True):
+    def _clear_stats_counts(self, extra=True, suffix=""):
         """
         Deletes all stats and counts.  This cannot be undone.
 
@@ -1395,10 +1395,10 @@ ORDER BY v.ord LIMIT %s"""
         - ``extra`` -- if false, only delete the rows of the counts table not marked as extra.
         """
         deleter = SQL("DELETE FROM {0}")
-        self._execute(deleter.format(Identifier(self.stats)))
+        self._execute(deleter.format(Identifier(self.stats + suffix)))
         if not extra:
             deleter = SQL("DELETE FROM {0} WHERE extra IS NOT TRUE")  # false and null
-        self._execute(deleter.format(Identifier(self.counts)))
+        self._execute(deleter.format(Identifier(self.counts + suffix)))
 
     def add_stats_auto(self, cols=None, constraints=[None], max_depth=None, threshold=1000):
         """
@@ -1516,11 +1516,11 @@ ORDER BY v.ord LIMIT %s"""
 
             # Regenerate stats and counts
             for cols, ccols, cvals, threshold in stat_cmds:
-                self.add_stats(cols, (ccols, cvals), threshold)
+                self.add_stats(cols, (ccols, cvals), threshold, suffix=suffix)
             for cols, ccols, cvals, threshold in split_cmds:
-                self.add_stats(cols, (ccols, cvals), threshold, split_list=True)
+                self.add_stats(cols, (ccols, cvals), threshold, split_list=True, suffix=suffix)
             for col, grouping, ccols, cvals, threshold in nstat_cmds:
-                self.add_numstats(col, grouping, (ccols, cvals), threshold)
+                self.add_numstats(col, grouping, (ccols, cvals), threshold, suffix=suffix)
             self._add_extra_counts(col_value_dict, suffix=suffix)
 
             if total:
