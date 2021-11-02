@@ -946,7 +946,7 @@ def diagram_js(gp, layers, aut=False):
             grp.count,
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagram_aut_x if aut else grp.diagram_aut_x,
+            grp.diagram_aut_x if aut else grp.diagram_x,
         ]
         for grp in layers[0]
     ]
@@ -954,15 +954,13 @@ def diagram_js(gp, layers, aut=False):
 
     return [ll, layers[1], orders]
 
-    return f'var [sautdiagram,gautlist] = make_sdiagram("autdiagram", "{gp.label}",[[{ll},{layers[1]},{orders}]]);'
-
 def diagram_js_string(gp):
     glist = [[],[]]
     if gp.diagram_ok and not gp.outer_equivalence:
         glist[0] = diagram_js(gp, gp.subgroup_lattice)
 
     glist[1] = diagram_js(gp, gp.subgroup_lattice_aut,aut=True)
-    return f'var [sdiagram,glist] = make_sdiagram("autdiagram", "{gp.label}",{glist});'
+    return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}",{glist});'
 
 # Writes individual pages
 def render_abstract_group(label):

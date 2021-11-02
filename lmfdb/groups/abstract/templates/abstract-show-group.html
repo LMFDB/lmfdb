@@ -11,6 +11,7 @@
     $(".subgp").on('touchstart', highlight_group);
   });
 </script>
+
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
 <script>
@@ -29,11 +30,19 @@
   }
 
   function show_info(style) {
-    $('#subgroup_diagram').hide();
-    $('#subgroup_profile').hide();
-    $('#subgroup_autdiagram').hide();
-    $('#subgroup_autprofile').hide();
-    $('#subgroup_'+style).show();
+    $('.subgroup_diagram').hide();
+    $('.subgroup_profile').hide();
+    $('.subgroup_autdiagram').hide();
+    $('.subgroup_autprofile').hide();
+    if(style=="diagram") {
+      sdiagram.newgraph(glist[0]);
+      $('.subgroup_diagram').show();
+    } else if(style=="autdiagram") {
+      sdiagram.newgraph(glist[1]);
+      $('.subgroup_autdiagram').show();
+    } else {
+      $('.subgroup_'+style).show();
+    }
     $('button.diagram').show();
     $('button.profile').show();
     $('button.autdiagram').show();
@@ -286,56 +295,66 @@
 </div>
 
 <p>
-<div id="subgroup_diagram" style="display: block">
-  <h4>Classes of subgroups up to conjugation</h4>
-    {% if gp.diagram_ok and not gp.outer_equivalence%}
-      <script>
-        show_info("diagram");
-      </script>
-      {% if info.wide %}
-        <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
-           Sorry, your browser does not support the subgroup diagram.
-        </canvas>
 
-        <script type="text/javascript">
-          {{ info.dojs|safe }}
-        </script>
-        {% if user_is_authenticated and BETA %}
-          <button onclick="getpositions()">Get positions</button>
-          <br>
-          <p>
-          <div id="positions">
-          </div>
-        {% endif %}
-        <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
-        <h4>Subgroup information</h4>
+{# Just header information for the diagrams #}
+
+<div class="subgroup_autdiagram" style="display: none">
+  <h4>Classes of subgroups up to automorphism</h4>
+  <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+</div>
+
+<div class="subgroup_diagram" style="display: block">
+  <h4>Classes of subgroups up to conjugation</h4>
+</div>
+
+{# now the canvas #}
+
+<div class="subgroup_diagram subgroup_autdiagram">
+{% if info.wide %}
+    <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+       Sorry, your browser does not support the subgroup diagram.
+    </canvas>
+
+    {% if user_is_authenticated and BETA %}
+      <button onclick="getpositions()">Get positions</button>
+      <br>
+      <p>
+      <div id="positions">
+      </div>
+    {% endif %}
+    <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+
+    <h4>Subgroup information</h4>
+    <div class="selectedsub">
+      Click on a subgroup in the diagram to see information about it.
+    </div>
+  {% else %} {# not wide #}
+    <table>
+    <tr><td>
+      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+        Sorry, your browser does not support the subgroup diagram.
+      </canvas>
+    <td valign="top">
+      <script type="text/javascript">
+        {{ info.dojs|safe }}
+      </script>
+      <h4>Subgroup information</h4>
         <div class="selectedsub">
           Click on a subgroup in the diagram to see information about it.
         </div>
-      {% else %}
-        <table>
-        <tr><td>
-          <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
-            Sorry, your browser does not support the subgroup diagram.
-          </canvas>
-        <td valign="top">
-          <script type="text/javascript">
-            {{ info.dojs|safe }}
-          </script>
-          <h4>Subgroup information</h4>
-            <div class="selectedsub">
-              Click on a subgroup in the diagram to see information about it.
-            </div>
-        </table>
-        {% if user_is_authenticated and BETA %}
-          <button onclick="getpositions()">Get positions</button>
-          <br>
-          <p>
-          <div id="positions">
-          </div>
-        {% endif %}
-        <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
-      {% endif %}
+     </table>
+    {% if user_is_authenticated and BETA %}
+      <button onclick="getpositions()">Get positions</button>
+      <br>
+      <p>
+      <div id="positions">
+      </div>
+    {% endif %}
+    <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+  {% endif %}
+</div>
+
+{% if 1 == 1 %}
     {% else %}
       There are too many classes of subgroups to display.
       {% if not gp.outer_equivalence %}
@@ -344,26 +363,30 @@
     {% endif %}
 </div>
 
-<div id="subgroup_autdiagram" style="display: none">
-  <h4>Classes of subgroups up to automorphism</h4>
-  <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
-</div>
+<script type="text/javascript">
+  {{ info.dojs|safe }}
+</script>
 
-<div id="subgroup_profile" style="display: none">
+
+<div class="subgroup_profile" style="display: none">
   <h4>Classes of subgroups up to conjugation</h4>
 {% for ordline in info.subgroup_profile %}
 Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 {% endfor %}
 </div>
 
-<div id="subgroup_autprofile" style="display: none">
+<div class="subgroup_autprofile" style="display: none">
   <h4>Classes of subgroups up to automorphism</h4>
   {% for ordline in info.subgroup_autprofile %}
     Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
   {% endfor %}
 </div>
 
-{% if not gp.diagram_ok or gp.outer_equivalence %}
+{% if gp.diagram_ok and not gp.outer_equivalence%}
+  <script>
+    show_info("diagram");
+  </script>
+{% else %}
   <script>
     show_info("profile");
   </script>

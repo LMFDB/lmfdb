@@ -87,6 +87,7 @@ Graph = class {
     addNodes(values, orders) {
         for(var j=0, item; item = values[j]; j++) {
                 var myx = Math.max(j, item[6]);
+//console.log("Node ", myx, " ", item);
                 this.addNode(item, myx, orders, {});
         }
     }
@@ -211,6 +212,16 @@ class Renderer {
       this.graph = g;
       this.reposition();
       this.draw();
+      var found = false;
+      for (var i = 0; i < g.nodes.length; i++) {
+        if(g.nodes[i].selected) {
+          showsubinfo(g.nodes[i], g.ambient);
+          found = true;
+        }
+      }
+      if (! found) {
+        clearsubinfo();
+      }
     }
 
     clear() {
@@ -798,7 +809,6 @@ function make_sdiagram(canv, ambient, gdatalist) {
     [nodes, edges, orders] = gdatalist[j]
     glist[j] = new Graph(ambient);
     glist[j].addNodes(nodes, orders);
-    dbug=edges;
     for(var k=0, edge; edge=edges[k]; k++) {
       glist[j].addEdge(edge[0],edge[1]);
     }
