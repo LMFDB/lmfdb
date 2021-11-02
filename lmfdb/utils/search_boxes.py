@@ -491,8 +491,7 @@ class SearchButton(SearchBox):
             width=self.width,
             val=self.value,
             desc=self.description,
-            onclick=onclick,
-        )
+            onclick=onclick)
 
 class SearchButtonWithSelect(SearchButton):
     def __init__(self, value, description, select_box, **kwds):
@@ -502,15 +501,13 @@ class SearchButtonWithSelect(SearchButton):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return (
-            self.td(colspan)
-            + '<div style="display: flex; justify-content: space-between;">'
-            + self._label(info)
-            + '<span style="margin-left: 5px;"></span>'
-            + self.select_box._input(info)
-            + "</div>"
-            + "</td>"
-        )
+        return (self.td(colspan)
+                + '<div style="display: flex; justify-content: space-between;">'
+                + self._label(info)
+                + '<span style="margin-left: 5px;"></span>'
+                + self.select_box._input(info)
+                + "</div>"
+                + "</td>")
 
 class SearchArray(UniqueRepresentation):
     """
@@ -569,7 +566,7 @@ class SearchArray(UniqueRepresentation):
                 lines.append("\n      " + row.html(info))
             elif layout_type == 'vertical':
                 if any(box.has_label(info) for box in row):
-                    labels = [box.label_html(info) for box in row]
+                    labels = [box.label_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                     lines.append("".join("\n      " + label for label in labels))
                 inputs = [box.input_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                 lines.append("".join("\n      " + inp for inp in inputs))

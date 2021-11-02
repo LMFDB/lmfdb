@@ -405,7 +405,7 @@ def elliptic_curve_search(info, query):
             query['cm'] = {'$ne' : 0}
         else:
             parse_ints(info,query,field='cm',qfield='cm')
-    parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
+    parse_element_of(info,query,'isogeny_degrees',split_interval=200,contained_in=get_stats().isogeny_degrees)
     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
@@ -418,7 +418,7 @@ def elliptic_curve_search(info, query):
         modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a) and is_prime(modell_image_label_regex.match(a)[1])]
         if len(elladic_labels)+len(modell_labels) != len(labels):
             err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
-            flash_error(err, "13.91.3.1", "13S4")
+            flash_error(err, "13.91.3.2", "13S4")
             raise ValueError(err)
         if elladic_labels:
             query['elladic_images'] = { '$contains': elladic_labels }
@@ -893,7 +893,7 @@ class ECSearchArray(SearchArray):
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad primes $p$",
-            short_label="Bad $p$",
+            short_label=r"Bad$\ p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -902,7 +902,7 @@ class ECSearchArray(SearchArray):
         sha_primes = TextBoxWithSelect(
             name="sha_primes",
             label="$p$ dividing |&#1064;|",
-            short_label="$p$ div |&#1064;|",
+            short_label="$p\ $div$\ $|&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
             select_box=sha_quant)
@@ -938,7 +938,7 @@ class ECSearchArray(SearchArray):
         nonmax_primes = TextBoxWithSelect(
             name="nonmax_primes",
             label=r"Nonmaximal $\ell$",
-            short_label=r"Nonmax $\ell$",
+            short_label=r"Nonmax$\ \ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=nonmax_quant)

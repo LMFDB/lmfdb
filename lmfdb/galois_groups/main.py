@@ -18,8 +18,9 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from .transitive_group import (
-    small_group_display_knowl, galois_module_knowl_guts, group_display_short,
+    galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 
@@ -217,9 +218,8 @@ def render_group_webpage(args):
         if data['gapid'] == 0:
             data['gapid'] = "not available"
         else:
-            data['gapid'] = small_group_display_knowl(int(data['order']),
-                                                      int(data['gapid']),
-                                                      str([int(data['order']), int(data['gapid'])]))
+            gp_label = f"{data['order']}.{data['gapid']}"
+            data['gapid'] = abstract_group_display_knowl(gp_label, gp_label)
         data['otherreps'] = wgg.otherrep_list()
         ae = data['arith_equiv']
         if ae>0:
