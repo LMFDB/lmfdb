@@ -5,7 +5,7 @@ from ast import literal_eval
 from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ, QQ, PolynomialRing, cached_function, magma, prod
+from sage.all import ZZ, QQ, PolynomialRing, magma, prod
 
 from lmfdb import db
 from lmfdb.utils import (
