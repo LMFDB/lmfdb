@@ -361,22 +361,11 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
-<<<<<<< HEAD
 try:
     magma.eval('2')
     has_magma = True
 except (TypeError, RuntimeError):
     has_magma = False
-=======
-@cached_function
-def has_magma():
-    try:
-        magma.eval("2")
-        return True
-    except (TypeError, RuntimeError):
-        return False
-
->>>>>>> upstream/master
 
 def genus2_lookup_equation(f):
     if not has_magma:
@@ -468,19 +457,12 @@ def genus2_jump(info):
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-<<<<<<< HEAD
-    elif has_magma and (re.match(r'^'+POLY_RE+r'$',jump) or
-          re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
-          re.match(r'^'+ZLIST_RE+r'$',jump) or
-          re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
-=======
-    elif has_magma() and (
+    elif has_magma and (
         re.match(r"^" + POLY_RE + r"$", jump)
         or re.match(r"^\[" + POLY_RE + r"," + POLY_RE + r"\]$", jump)
         or re.match(r"^" + ZLIST_RE + r"$", jump)
         or re.match(r"^\[" + ZLIST_RE + r"," + ZLIST_RE + r"\]$", jump)
     ):
->>>>>>> upstream/master
         label = genus2_lookup_equation(jump)
         if label:
             return redirect(url_for_curve_label(label), 301)
