@@ -124,7 +124,7 @@ def index_Q():
     info["stats_url"] = url_for(".statistics")
     info["conductor_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
-    info["equation_search"] = has_magma()
+    info["equation_search"] = has_magma
     title = r'Genus 2 curves over $\Q$'
     return render_template(
         "g2c_browse.html",
@@ -254,15 +254,14 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
-@cached_function
-def has_magma():
-    try:
-        magma.eval('2')
-        return True
-    except (TypeError, RuntimeError):
-        return False
+try:
+    magma.eval('2')
+    has_magma = True
+except (TypeError, RuntimeError):
+    has_magma = False
+
 def genus2_lookup_equation(f):
-    if not has_magma():
+    if not has_magma:
         return None
     f.replace(" ","")
     # TODO allow other variables, if so, fix the error message accordingly
@@ -308,7 +307,7 @@ def genus2_jump(info):
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-    elif has_magma() and (re.match(r'^'+POLY_RE+r'$',jump) or
+    elif has_magma and (re.match(r'^'+POLY_RE+r'$',jump) or
           re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
           re.match(r'^'+ZLIST_RE+r'$',jump) or
           re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
@@ -318,7 +317,7 @@ def genus2_jump(info):
         errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
-        if has_magma():
+        if has_magma:
             errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
         else:
             errmsg +="."
