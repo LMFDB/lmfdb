@@ -5,6 +5,13 @@ import re
 from collections import defaultdict
 
 from psycopg2.sql import SQL, Identifier, Placeholder
+from psycopg2 import __version__ as pg_ver_str
+
+psycopg2_version = pg_ver_str.split(" ")[0].split(".")[:3]
+if len(psycopg2_version) < 3:
+    psycopg2_version += ["0"] * (3 - len(psycopg2_version))
+psycopg2_version = tuple(int(c) for c in psycopg2_version)
+
 
 class SearchParsingError(ValueError):
     """
@@ -82,7 +89,6 @@ def filter_sql_injection(clause, col, col_type, op, table):
             else:
                 raise SearchParsingError("%s: invalid characters %s (only +*-/^() allowed)" % (clause, piece))
     return SQL("{0} %s {1}" % op).format(col, SQL("").join(processed)), values
-
 
 def IdentifierWrapper(name, convert=True):
     """
