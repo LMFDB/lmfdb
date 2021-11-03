@@ -17,7 +17,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 
 from .encoding import Json
-from .utils import reraise, DelayCommit, QueryLogFilter
+from .utils import reraise, DelayCommit, QueryLogFilter, psycopg2_version
 
 
 # This list is used when creating new tables
@@ -869,11 +869,12 @@ class PostgresBase(object):
                 else:
                     addid = False
 
-                # We have to add quotes manually since copy_from doesn't accept
-                # psycopg2.sql.Identifiers
-                # None of our column names have double quotes in them. :-D
-                assert all('"' not in col for col in columns)
-                columns = ['"' + col + '"' for col in columns]
+                if psycopg2_version < (2, 9, 0):
+                    # We have to add quotes manually since copy_from doesn't accept
+                    # psycopg2.sql.Identifiers
+                    # None of our column names have double quotes in them. :-D
+                    assert all('"' not in col for col in columns)
+                    columns = ['"' + col + '"' for col in columns]
                 if addid:
                     # create sequence
                     cur_count = self.max_id(table)

@@ -8,7 +8,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 
 from .encoding import Json, copy_dumps
 from .base import PostgresBase, _meta_table_name
-from .utils import DelayCommit, EmptyContext, IdentifierWrapper, LockError
+from .utils import DelayCommit, EmptyContext, IdentifierWrapper, LockError, psycopg2_version
 from .base import (
     _meta_indexes_cols,
     _meta_constraints_cols,
@@ -2124,7 +2124,10 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 if addid:
                     cols = ["id"] + cols
-                cols_wquotes = ['"' + col + '"' for col in cols]
+                if psycopg2_version < (2, 9, 0):
+                    cols_wquotes = ['"' + col + '"' for col in cols]
+                else:
+                    cols_wquotes = cols
                 cur = self._db.cursor()
                 with open(filename, "w") as F:
                     try:
