@@ -389,7 +389,7 @@ def random_field():
 @local_fields_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "lf.padic_field",
+        "lf",
         db.lf_fields,
         url_for_label,
         title=r"Some interesting $p$-adic fields",
