@@ -798,6 +798,17 @@ function clearsubinfo() {
     });
 }
 
+function newheight(rendr, numrows) {
+  if (numrows>6) {
+    var ctx = $("#subdiagram")[0].getContext('2d').canvas;
+    var h = ctx.height;
+    var w = ctx.width;
+    ctx.height = 50*numrows;
+    ctx.width = w;
+    rendr.setSize();
+    rendr.draw();
+  }
+}
 
 //function make_sdiagram(canv, ambient, nodes, edges, orders) {
 function make_sdiagram(canv, ambient, gdatalist) {
@@ -808,13 +819,15 @@ function make_sdiagram(canv, ambient, gdatalist) {
     var nodes, edges, orders;
     [nodes, edges, orders] = gdatalist[j]
     glist[j] = new Graph(ambient);
-    glist[j].addNodes(nodes, orders);
-    for(var k=0, edge; edge=edges[k]; k++) {
-      glist[j].addEdge(edge[0],edge[1]);
+    if(gdatalist[j].length>0) {
+      glist[j].addNodes(nodes, orders);
+      for(var k=0, edge; edge=edges[k]; k++) {
+        glist[j].addEdge(edge[0],edge[1]);
+      }
+      var layout = new Layout(glist[j]);
+      layout.setiter(nodes[0][0][7]==0);
+      layout.layout();
     }
-    var layout = new Layout(glist[j]);
-    layout.setiter(nodes[0][0][7]==0);
-    layout.layout();
   }
   //ourg = g;
   ambientlabel=ambient;
@@ -828,6 +841,7 @@ function make_sdiagram(canv, ambient, gdatalist) {
           renderer.draw();
       }
   });
+  newheight(renderer, orders.length);
   // The renderer is stored in sdiagram by the web page
   return [renderer,glist];
 }
