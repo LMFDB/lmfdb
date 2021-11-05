@@ -943,7 +943,7 @@ class ECSearchArray(SearchArray):
             example="2,3",
             select_box=nonmax_quant)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
-                   [('-3,-12,-27', 'CM field Q(zeta_3)'), ('-4,-16', 'CM field Q(i)'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
+                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
                    [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
