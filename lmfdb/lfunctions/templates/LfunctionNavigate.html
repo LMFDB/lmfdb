@@ -32,7 +32,11 @@
       <a href="{{url_for('.interesting', degree=4, rational=rational)}}">4</a></td>
   </tr>
   <tr>
-    <td colspan="2">A random L-function in degree <a href="?degree=1&search_type=Random">1</a>, <a href="?degree=2&search_type=Random">2</a>, <a href="?degree=3&search_type=Random">3</a>, <a href="?degree=4&search_type=Random">4</a></td>
+    <td colspan="2">A random L-function in degree <a href="?degree=1&search_type=Random">1</a>, <a href="?degree= 2&search_type=Random">2</a>,
+      {% if not rational %}
+        <a href="?degree=3&search_type=Random">3</a>,
+      {% endif %}
+      <a href="?degree=4&search_type=Random">4</a></td>
     </tr>
 </table>
 
