@@ -714,11 +714,34 @@ def sub_diagram(label):
     h = min(h, 1000)
     w = 200 * maxw
     w = min(w, 1500)
-    info = {"dojs": diagram_js(gp, gp.subgroup_lattice), "w": w, "h": h}
+    info = {"dojs": diagram_js_string(gp), "w": w, "h": h,
+            "type": "conj"}
     return render_template(
         "diagram_page.html",
         info=info,
-        title="Subgroup diagram for %s" % label,
+        title="Diagram of subgroups up to conjugation for group %s" % label,
+        bread=get_bread([("Subgroup diagram", " ")]),
+        learnmore=learnmore_list(),
+    )
+
+@abstract_page.route("/autdiagram/<label>")
+def aut_diagram(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    maxw = max(len(z) for z in gp.subgroup_autprofile.values())
+    h = 160 * len(gp.subgroup_autprofile)
+    h = min(h, 1000)
+    w = 200 * maxw
+    w = min(w, 1500)
+    info = {"dojs": diagram_js_string(gp), "w": w, "h": h,
+            "type": "aut"}
+    return render_template(
+        "diagram_page.html",
+        info=info,
+        title="Diagram of subgroups up to automorphism for group %s" % label,
         bread=get_bread([("Subgroup diagram", " ")]),
         learnmore=learnmore_list(),
     )

@@ -805,8 +805,6 @@ function newheight(rendr, numrows) {
     var w = ctx.width;
     ctx.height = 50*numrows;
     ctx.width = w;
-    rendr.setSize();
-    rendr.draw();
   }
 }
 
@@ -833,7 +831,6 @@ function make_sdiagram(canv, ambient, gdatalist) {
   ambientlabel=ambient;
 
   renderer = new Renderer(document.getElementById(canv),glist[glist.length-1]);
-  renderer.draw();
 
   // Need to call Event.Handler here
   new EventHandler(renderer, {
@@ -842,6 +839,7 @@ function make_sdiagram(canv, ambient, gdatalist) {
       }
   });
   newheight(renderer, orders.length);
+  renderer.setSize();
   // The renderer is stored in sdiagram by the web page
   return [renderer,glist];
 }

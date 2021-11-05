@@ -333,8 +333,13 @@
       <div id="positions">
       </div>
     {% endif %}
+  <div class="subgroup_diagram">
     <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+  </div>
 
+  <div class="subgroup_autdiagram">
+    <a href="{{url_for('.aut_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+  </div>
     <h4>Subgroup information</h4>
     <div class="selectedsub">
       Click on a subgroup in the diagram to see information about it.
@@ -358,7 +363,13 @@
       <div id="positions">
       </div>
     {% endif %}
+  <div class="subgroup_diagram">
     <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+  </div>
+
+  <div class="subgroup_autdiagram">
+    <a href="{{url_for('.aut_diagram', label=gp.label)}}">See a full page version of the diagram</a>
+  </div>
   {% endif %}
 </div>
 
@@ -386,6 +397,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 {% if gp.diagram_ok and not gp.outer_equivalence%}
   <script>
     show_info("diagram");
+    sdiagram.setSize();
   </script>
 {% else %}
   <script>
