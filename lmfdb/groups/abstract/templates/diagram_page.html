@@ -64,8 +64,10 @@
 
 {% if info.type == "aut" %}
   sdiagram.newgraph(glist[1]);
+  type="A";
   {% else %}
   sdiagram.newgraph(glist[0]);
+  type="C";
 {% endif %}
   sdiagram.setSize();
 </script>

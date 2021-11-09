@@ -23,6 +23,7 @@
 */
 var ourg;
 var ambientlabel;
+var type="C"; // C for conjugacy class, A for up to aut
 
 /* The rest of the global variables are for debugging or page colors,
    so they should be ok when 2 diagrams are on the page */
@@ -212,6 +213,7 @@ class Renderer {
       this.graph = g;
       this.reposition();
       this.draw();
+      ourg = g;
       var found = false;
       for (var i = 0; i < g.nodes.length; i++) {
         if(g.nodes[i].selected) {
@@ -827,10 +829,10 @@ function make_sdiagram(canv, ambient, gdatalist) {
       layout.layout();
     }
   }
-  //ourg = g;
+  ourg = glist[glist.length-1];
   ambientlabel=ambient;
 
-  renderer = new Renderer(document.getElementById(canv),glist[glist.length-1]);
+  renderer = new Renderer(document.getElementById(canv),ourg);
 
   // Need to call Event.Handler here
   new EventHandler(renderer, {
@@ -856,7 +858,7 @@ function getpositions() {
   }
   mylist += "]]";
   var mydiv = document.getElementById("positions");
-  mydiv.innerHTML = mylist;
+  mydiv.innerHTML = type+"<br>"+mylist;
 
   return mylist;
 }

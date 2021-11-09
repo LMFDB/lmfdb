@@ -36,9 +36,11 @@
     $('.subgroup_autprofile').hide();
     if(style=="diagram") {
       sdiagram.newgraph(glist[0]);
+      type="C";
       $('.subgroup_diagram').show();
     } else if(style=="autdiagram") {
       sdiagram.newgraph(glist[1]);
+      type="A";
       $('.subgroup_autdiagram').show();
     } else {
       $('.subgroup_'+style).show();
