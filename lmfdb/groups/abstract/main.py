@@ -709,16 +709,43 @@ def sub_diagram(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    maxw = max(len(z) for z in gp.subgroup_profile.values())
     h = 160 * len(gp.subgroup_profile)
     h = min(h, 1000)
-    w = 200 * maxw
+    dojs, orders = diagram_js_string(gp)
+    rowcounts = {z:0 for z in orders}
+    for grp in gp.subgroups.values():
+        rowcounts[grp.subgroup_order] += 1
+    widest = max(rowcounts.values())
+    w = 100 * widest
     w = min(w, 1500)
-    info = {"dojs": diagram_js(gp, gp.subgroup_lattice), "w": w, "h": h}
+    info = {"dojs": dojs, "w": w, "h": h,
+            "type": "conj"}
     return render_template(
         "diagram_page.html",
         info=info,
-        title="Subgroup diagram for %s" % label,
+        title="Diagram of subgroups up to conjugation for group %s" % label,
+        bread=get_bread([("Subgroup diagram", " ")]),
+        learnmore=learnmore_list(),
+    )
+
+@abstract_page.route("/autdiagram/<label>")
+def aut_diagram(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    maxw = max(len(z) for z in gp.subgroup_autprofile.values())
+    h = 160 * len(gp.subgroup_autprofile)
+    h = min(h, 1000)
+    w = 200 * maxw
+    w = min(w, 1500)
+    info = {"dojs": diagram_js_string(gp), "w": w, "h": h,
+            "type": "aut"}
+    return render_template(
+        "diagram_page.html",
+        info=info,
+        title="Diagram of subgroups up to automorphism for group %s" % label,
         bread=get_bread([("Subgroup diagram", " ")]),
         learnmore=learnmore_list(),
     )
@@ -937,8 +964,7 @@ def get_sub_url(label):
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
-
-def diagram_js(gp, layers):
+def diagram_js(gp, layers, aut=False):
     ll = [
         [
             grp.subgroup,
@@ -947,32 +973,21 @@ def diagram_js(gp, layers):
             grp.count,
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagram_x,
+            grp.diagram_aut_x if aut else grp.diagram_x,
         ]
         for grp in layers[0]
     ]
     orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
 
-    return f'var sdiagram = make_sdiagram("subdiagram", "{gp.label}",{ll},{layers[1]},{orders});'
+    return [ll, layers[1], orders], orders
 
+def diagram_js_string(gp):
+    glist = [[],[]]
+    if gp.diagram_ok and not gp.outer_equivalence:
+        glist[0], orders = diagram_js(gp, gp.subgroup_lattice)
 
-def diagram_jsaut(gp, layers):
-    ll = [
-        [
-            grp.subgroup,
-            grp.short_label,
-            grp.subgroup_tex,
-            grp.count,
-            grp.subgroup_order,
-            gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagram_aut_x,
-        ]
-        for grp in layers[0]
-    ]
-    orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
-
-    return f'var sautdiagram = make_sdiagram("autdiagram", "{gp.label}",{ll},{layers[1]},{orders});'
-
+    glist[1], orders = diagram_js(gp, gp.subgroup_lattice_aut,aut=True)
+    return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}",{glist});', orders
 
 # Writes individual pages
 def render_abstract_group(label):
@@ -996,18 +1011,15 @@ def render_abstract_group(label):
     info["subgroup_autprofile"] = [
         (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
     ]
-    # prepare for javascript call to make the diagram
-    if gp.diagram_ok and not gp.outer_equivalence:
-        layers = gp.subgroup_lattice
-        info["dojs"] = diagram_js(gp, layers)
-        totsubs = len(gp.subgroups)
-        info["wide"] = totsubs > 20
-        # boolean
-    else:
-        info["dojs"] = ""
 
-    layers_aut = gp.subgroup_lattice_aut
-    info["doautjs"] = diagram_jsaut(gp, layers_aut)
+    info["dojs"], orders = diagram_js_string(gp)
+    # find the widest row of the diagram
+    rowcounts = {z:0 for z in orders}
+    for grp in gp.subgroups.values():
+        rowcounts[grp.subgroup_order] += 1
+    widest = max(rowcounts.values())
+
+    info["wide"] = widest > 8 # boolean
 
     info["max_sub_cnt"] = gp.max_sub_cnt
     info["max_quo_cnt"] = gp.max_quo_cnt
