@@ -139,7 +139,7 @@
     {% if seq.outer_equivalence %}
       <tr><td>Number of conjugacy classes in this autjugacy class</td><td>${{seq.conjugacy_class_count}}$</td></tr>
     {% endif %}
-    <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td>${{seq.mobius_function}}$</td></tr>
+    <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td>${{seq.mobius_sub}}$</td></tr>
     {% if seq.projective_image is not none %}
     <tr><td>{{KNOWL('group.subgroup.projective_image', 'Projective image')}}</td><td><a href="{{url_for('.by_label', label=seq.projective_image)}}">${{seq.proj_img.tex_name}}$</a></td></tr>
     {% endif %}
