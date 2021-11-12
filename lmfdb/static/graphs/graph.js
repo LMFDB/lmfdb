@@ -416,7 +416,7 @@ class Layout {
             }
             this.levs.get(thisLevel).push(node);
             node.layoutPosX = 0;
-            node.layoutPosY = -10*thisLevel[0] - thisLevel[1];
+            node.layoutPosY = -10*thisLevel[0]; // can subtract thisLevel[1] to get separation by order
             node.layoutForceX = 0;
         }
         this.numlevs = this.levs.size;
@@ -441,7 +441,7 @@ class Layout {
             this.levs.get(thisLevel).push(node);
             node.layoutPosX = node.posn;
             totx += node.posn;
-            node.layoutPosY = -10*thisLevel[0] - thisLevel[1];
+            node.layoutPosY = -10*thisLevel[0]; // can subtract thisLevel[1] to get separation by order
             node.layoutForceX = 0;
         }
         this.numlevs = this.levs.size;
