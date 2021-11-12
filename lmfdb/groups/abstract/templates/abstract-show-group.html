@@ -308,8 +308,10 @@
   <h4>Classes of subgroups up to conjugation</h4>
   {% if not gp.diagram_ok %}
   <p>
-  There are too many subgroups to show.
-    {% if not gp.outer_equivalence%}
+    {% if gp.outer_equivalence %}
+      Subgroups only stored up to automorphism.
+    {% else %}
+      There are too many subgroups to show.
       <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
     {% endif %}
   {% endif %}
