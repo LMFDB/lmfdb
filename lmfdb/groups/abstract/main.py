@@ -984,7 +984,6 @@ def diagram_js(gp, layers, display_opts, aut=False):
 
 def diagram_js_string(gp, conj, aut):
     glist = [[],[]]
-    max_width = None
     display_opts = {}
     if aut:
         glist[1], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice_aut, display_opts, aut=True)
