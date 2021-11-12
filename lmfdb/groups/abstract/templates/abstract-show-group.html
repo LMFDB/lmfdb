@@ -123,6 +123,8 @@
   </table>
 </p>
 
+{% if gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that don't have rational character tables #}
+
 <p>
   <table class="ntdata" style="margin-left:0;">
     <thead>
@@ -152,6 +154,7 @@
   </table>
 </p>
 
+{% endif %}
 
 <h2>Constructions</h2>
 
@@ -309,7 +312,7 @@
   {% if not gp.diagram_ok %}
   <p>
     {% if gp.outer_equivalence %}
-      Subgroups only stored up to automorphism.
+      No diagram available: subgroups only stored up to automorphism.
     {% else %}
       There are too many subgroups to show.
       <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
@@ -503,7 +506,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 {% else %}
 
   <p>
-    The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not stored for this group.
+    The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not available for this group.
   </p>
 
 {% endif %}
@@ -518,7 +521,13 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 
 <h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 
-{% if gp.number_divisions <= 16 %}
+{% if not gp.rational_characters %}
+
+  <p>
+    The ${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table is not available for this group.
+  </p>
+
+{% elif gp.number_divisions <= 16 %}
 
   {% include 'rational_character_table.html' %}
 

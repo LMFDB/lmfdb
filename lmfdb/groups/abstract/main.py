@@ -977,8 +977,8 @@ def diagram_js(gp, layers, display_opts, aut=False):
     # We would normally make order_lookup a dictionary, but we're passing it to the horrible language known as javascript
     order_lookup = [[n, Omega[n], by_Omega[Omega[n]].index(n)] for n in orders]
     max_width = max(sum(order_ctr[n] for n in by_Omega[W]) for W in by_Omega)
-    display_opts["w"] = 100 * max_width
-    display_opts["h"] = 160 * len(by_Omega)
+    display_opts["w"] = min(100 * max_width, 20000)
+    display_opts["h"] = 240 * len(by_Omega)
 
     return [ll, layers[1]], order_lookup, len(by_Omega)
 

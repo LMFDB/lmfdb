@@ -543,7 +543,10 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def irrep_stats(self):
-        D = Counter([rep.dim for rep in self.characters])
+        # rational_characters are always available, but complex characters might not be
+        D = Counter()
+        for rep in self.rational_characters:
+            D[rep.cdim] += rep.qdim // rep.cdim
         return [D[d] for d in self.rep_dims]
 
     @lazy_attribute
