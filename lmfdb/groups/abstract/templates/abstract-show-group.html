@@ -486,10 +486,22 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 
   {% include 'character_table.html' %}
 
-{% else %}
+{% elif gp.number_conjugacy_classes <= 127 %}
 
   <p>
     See the <a href="{{url_for('.char_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>.
+  </p>
+
+{% elif gp.number_divisions == gp.number_conjugacy_classes %}
+
+  <p>
+    See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>.
+  </p>
+
+{% else %}
+
+  <p>
+    The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not stored for this group.
   </p>
 
 {% endif %}
