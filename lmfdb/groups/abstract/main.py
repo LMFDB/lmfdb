@@ -990,7 +990,6 @@ def diagram_js_string(gp, conj, aut):
     # We call conj second so that it overrides w and h, since it will be bigger
     if conj and not gp.outer_equivalence:
         glist[0], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice, display_opts)
-    print(glist)
     if not glist[0] and not glist[1]:
         order_lookup = []
         num_layers = 0
@@ -1995,7 +1994,6 @@ def semidirect_data(label):
 
 def nonsplit_data(label):
     gp = WebAbstractGroup(label)
-    print(label, len(gp.nonsplit_products))
     ans = f"Nonsplit product expressions for ${gp.tex_name}$:<br />\n"
     ans += "<table>\n"
     for sub, cnt, labels in gp.nonsplit_products:
