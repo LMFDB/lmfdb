@@ -4,7 +4,6 @@
 {% block body %}
 
 
-
 {# An invisible span to get the select color in the diagram into the DOM #}
 <div>
 <span id="group-diagram-selected" style="display:none;">Hi</span>
@@ -53,12 +52,24 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
+<h3>{{title|safe}}<h3>
+
+
 <canvas id="subdiagram" width="{{ info.w }}" height="{{ info.h }}" style="border: 0px solid black">
   Sorry, your browser does not support the subgroup diagram.
 </canvas>
 
 <script type="text/javascript">
 {{ info.dojs|safe }}
+
+{% if info.type == "aut" %}
+  sdiagram.newgraph(glist[1]);
+  type="A";
+  {% else %}
+  sdiagram.newgraph(glist[0]);
+  type="C";
+{% endif %}
+  sdiagram.setSize();
 </script>
 
 <div>
@@ -74,7 +85,7 @@ Subgroups can be dragged in all directions?
 </div>
 
 <h4>Subgroup information</h4>
-<div id="selectedsub">
+<div class="selectedsub">
 Click on a subgroup in the diagram to see information about it.
 </div>
 
