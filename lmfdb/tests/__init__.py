@@ -36,9 +36,11 @@ class LmfdbTest(unittest2.TestCase):
         ), "%s not in the %s" % (text, path)
 
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).get_data(
-            as_text=True
-        ), "%s not in the %s" % (text, path)
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            assert t in page, "%s not in the %s" % (t, path)
 
     def check_args_with_timeout(self, path, text):
         timeout_error = "The search query took longer than expected!"
@@ -49,9 +51,11 @@ class LmfdbTest(unittest2.TestCase):
         )
 
     def not_check_args(self, path, text):
-        assert not (
-            text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
-        ), "%s in the %s" % (text, path)
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            assert not t in page, "%s in the %s" % (t, path)
 
     def check_external(self, homepage, path, text):
         headers = {"User-Agent": "Mozilla/5.0"}
