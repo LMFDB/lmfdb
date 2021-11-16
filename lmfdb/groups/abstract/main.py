@@ -978,7 +978,7 @@ def diagram_js(gp, layers, display_opts, aut=False):
     order_lookup = [[n, Omega[n], by_Omega[Omega[n]].index(n)] for n in orders]
     max_width = max(sum(order_ctr[n] for n in by_Omega[W]) for W in by_Omega)
     display_opts["w"] = min(100 * max_width, 20000)
-    display_opts["h"] = 240 * len(by_Omega)
+    display_opts["h"] = 160 * len(by_Omega)
 
     return [ll, layers[1]], order_lookup, len(by_Omega)
 
