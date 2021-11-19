@@ -291,8 +291,6 @@ class WebAbstractGroup(WebObj):
                 primary[p][e] += 1
             comps = []
             for p, part in primary.items():
-                pcomp = []
-                total = 0
                 trunccnt = defaultdict(ZZ) # log of (product of q, truncated at p^e)
                 M = max(part)
                 for e, k in part.items():
@@ -329,7 +327,6 @@ class WebAbstractGroup(WebObj):
         if aid == 0:
             # try a bit harder for cyclic groups
             if self.cyclic:
-                F = self.order.factor()
                 invs = []
                 for p, e in self.order.factor():
                     if p == 2:

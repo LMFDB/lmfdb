@@ -52,10 +52,10 @@ Installation
      ```
      sage -pip install -r requirements.txt --upgrade
      ```
-   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to insall gap_packages 
+   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to insall gap_packages
      (see [this](https://ask.sagemath.org/question/54252/sage92-install-gap_packages-on-macos-1015-fails/) post for some documentation on
-     that). This problem does seem to be resolved for Sage 9.3beta, and it is currently 
-     unclear if the problem exists for Sage 9.0 or 9.1. 
+     that). This problem does seem to be resolved for Sage 9.3beta, and it is currently
+     unclear if the problem exists for Sage 9.0 or 9.1.
 
    - In case the last step fails by is Mac OSX with the error
 
