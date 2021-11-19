@@ -61,7 +61,7 @@ Graph = class {
         this.highlit = null;
     }
 
-    addNode(value, posnx, orders, options) {
+    addNode(value, posnx, order_lookup, options) {
         var key = value[1].toString();
         var node = this.nodeSet[key];
         //dbug = [value, posn, orders, this.nodes, node];
@@ -73,7 +73,7 @@ Graph = class {
             options['raw'] = value[2];
             node.label = value[0];
             node.ccsize = value[3];
-            node.level = orders.indexOf(value[4]);
+            node.level = order_lookup.get(value[4]); // a pair
             node.image = new Image();
             node.image.src = value[5];
             node.key = key;
@@ -85,11 +85,11 @@ Graph = class {
         return node;
     }
 
-    addNodes(values, orders) {
+    addNodes(values, order_lookup) {
         for(var j=0, item; item = values[j]; j++) {
                 var myx = Math.max(j, item[6]);
 //console.log("Node ", myx, " ", item);
-                this.addNode(item, myx, orders, {});
+                this.addNode(item, myx, order_lookup, {});
         }
     }
 
@@ -111,7 +111,7 @@ class Node {
     this.highlit = false;
     this.label = '';
     this.image = null;
-    this.level = 0;
+    this.level = [0,0];
 }
 
     setOptions(options) {
@@ -367,13 +367,13 @@ class Renderer {
 class Layout {
     constructor(graph) {
         this.graph = graph;
-        this.iterations = 10;
+        //this.iterations = 10;
         this.maxRepulsiveForceDistance = 200;
         this.k = 3; // 2;
         this.c = 0.01; //0.01;
         this.maxVertexMovement = 10;
         this.margin = 5;
-        this.doiter=true;
+        this.doiter = false;
     }
 
     setiter(val) {
@@ -386,7 +386,7 @@ class Layout {
         return false;
     }
 
-    layout(by_order=true) {
+    layout() {
         if (this.islinear()) {
           this.linearPrepare();
           this.layoutCalcBounds();
@@ -394,33 +394,32 @@ class Layout {
           this.graph.layoutMinX = -20;
           this.graph.layoutMaxX = 20;
         } else {
-          this.layoutPrepare(by_order);
-          if (this.doiter) {
+          this.layoutPrepare();
+          /*if (this.doiter) {
             this.layoutIteration();
             this.spread();
             for (var i = 0; i < this.iterations; i++) {
               this.layoutIteration();
             }
-          }
+          }*/
           ////this.centering();
           this.layoutCalcBounds();
         }
     }
 
     linearPrepare() {
-        this.levs = new Array();
-        var totx = 0;
+        this.levs = new Map();
         for (var i = 0, node; node = this.graph.nodes[i]; i++) {
-            var thisLevel = node.level || 0;
-            if(typeof(this.levs[thisLevel])=='undefined') {
-                this.levs[thisLevel] = new Array();
+            var thisLevel = node.level || [0,0];
+          if (!this.levs.has(thisLevel)) {
+              this.levs.set(thisLevel, new Array());
             }
-            this.levs[thisLevel].push(node);
-          node.layoutPosX = 0;
-          node.layoutPosY = -10*thisLevel;
-          node.layoutForceX = 0;
+            this.levs.get(thisLevel).push(node);
+            node.layoutPosX = 0;
+            node.layoutPosY = -10*thisLevel[0]; // can subtract thisLevel[1] to get separation by order
+            node.layoutForceX = 0;
         }
-        this.numlevs = this.levs.length;
+        this.numlevs = this.levs.size;
 
         //for (var i=0, node; node = this.graph.nodes[i]; i++) {
         //node.connected = new Array();
@@ -431,24 +430,24 @@ class Layout {
     //}
     }
 
-    layoutPrepare(by_order) {
-        this.levs = new Array();
+    layoutPrepare() {
+        this.levs = new Map();
         var totx = 0;
         for (var i = 0, node; node = this.graph.nodes[i]; i++) {
-            var thisLevel = node.level || 0;
-            if(typeof(this.levs[thisLevel])=='undefined') {
-              this.levs[thisLevel] = new Array();
+            var thisLevel = node.level || [0,0];
+            if(!this.levs.has(thisLevel)) {
+              this.levs.set(thisLevel, new Array());
             }
-            this.levs[thisLevel].push(node);
+            this.levs.get(thisLevel).push(node);
             node.layoutPosX = node.posn;
             totx += node.posn;
-            node.layoutPosY = -10*thisLevel;
+            node.layoutPosY = -10*thisLevel[0]; // can subtract thisLevel[1] to get separation by order
             node.layoutForceX = 0;
         }
-        this.numlevs = this.levs.length;
+        this.numlevs = this.levs.size;
 
     // Make trivial and whole group come at the start and end
-    var wholeg = this.levs[this.numlevs-1][0];
+    /*var wholeg = this.levs[this.numlevs-1][0];
     var triv = this.levs[0][0];
     for (var i = 0; i < this.graph.nodes.length; i++) {
       if(this.graph.nodes[i].label==wholeg.label) {
@@ -459,7 +458,7 @@ class Layout {
         this.graph.nodes[i] = this.graph.nodes[this.graph.nodes.length-1];
         this.graph.nodes[this.graph.nodes.length-1]=triv;
       }
-    }
+    }*/
         //for (var i = 0, lev; lev = this.levs[i]; i++) {
         //    for(var k=0, len=lev.length; k<len; k++) {
       //            var node = lev[k];
@@ -467,14 +466,14 @@ class Layout {
     //       }
     //  }
     // Center <e> and G
-    var wholeg = this.levs[this.numlevs-1][0];
+    /*var wholeg = this.levs[this.numlevs-1][0];
     var triv = this.levs[0][0];
     totx -= triv.layoutPosX;
     totx -= wholeg.layoutPosX;
     // Trvial group and Z/p are linear graphs, so won't be here
     totx = totx/(this.graph.nodes.length-2);
     triv.layoutPosX = totx;
-    wholeg.layoutPosX = totx;
+    wholeg.layoutPosX = totx;*/
 
     // Could be used to optimize layout
         //for (var i=0, node; node = this.graph.nodes[i]; i++) {
@@ -486,8 +485,8 @@ class Layout {
     //}
     }
 
-    centering() {
-        /* Find average of x-coords */
+    /*centering() {
+        // Find average of x-coords
         var maxx=-100, minx=100, cnt=0;
         for(var i=1; i<this.numlevs-1; i++) {
           for(var k=0, len=this.levs[i].length; k<len; k++) {
@@ -497,7 +496,7 @@ class Layout {
           }
         }
         var dx = (maxx+minx)/2;
-        /* Move everyone -dx */
+        // Move everyone -dx
         for(var i=1; i<this.numlevs-1; i++) {
           for(var k=0, len=this.levs[i].length; k<len; k++) {
             this.levs[i][k].layoutPosX -= dx;
@@ -505,7 +504,7 @@ class Layout {
         }
         this.levs[0][0].layoutPosX = dx;
         this.levs[this.levs.length - 1][0].layoutPosX = dx;
-    }
+    }*/
 
     layoutCalcBounds() {
         var minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
@@ -526,7 +525,7 @@ class Layout {
         this.graph.layoutMaxY = maxy;
     }
 
-    layoutIteration() {
+    /*layoutIteration() {
         // Forces on nodes due to node-node repulsions
     for (var i = 0; i < this.graph.nodes.length; i++) {
       var node1 = this.graph.nodes[i];
@@ -620,7 +619,7 @@ class Layout {
         }
       }
     }
-  }
+  }*/
 }
 
 function nullfunc() { ; }
@@ -811,21 +810,26 @@ function newheight(rendr, numrows) {
 }
 
 //function make_sdiagram(canv, ambient, nodes, edges, orders) {
-function make_sdiagram(canv, ambient, gdatalist) {
+function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   // gdatalist is a list of [nodes, edges, orders]
   // Now make a list of graphs
   var glist = Array(gdatalist.length);
+  var order_lookup = new Map();
+  for (var k=0; k < orderdata.length; k++) {
+    var trip = orderdata[k];
+    order_lookup.set(trip[0], [trip[1], trip[2]]);
+  }
   for(var j=0; j<glist.length; j++) {
-    var nodes, edges, orders;
-    [nodes, edges, orders] = gdatalist[j]
+    var nodes, edges;
+    [nodes, edges] = gdatalist[j]
     glist[j] = new Graph(ambient);
     if(gdatalist[j].length>0) {
-      glist[j].addNodes(nodes, orders);
+      glist[j].addNodes(nodes, order_lookup);
       for(var k=0, edge; edge=edges[k]; k++) {
         glist[j].addEdge(edge[0],edge[1]);
       }
       var layout = new Layout(glist[j]);
-      layout.setiter(nodes[0][0][7]==0);
+      //layout.setiter(nodes[0][0][7]==0);
       layout.layout();
     }
   }
@@ -840,7 +844,7 @@ function make_sdiagram(canv, ambient, gdatalist) {
           renderer.draw();
       }
   });
-  newheight(renderer, orders.length);
+  newheight(renderer, num_layers);
   renderer.setSize();
   // The renderer is stored in sdiagram by the web page
   return [renderer,glist];

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import random
+import random, time
 from itertools import islice
 
 from psycopg2.extensions import cursor as pg_cursor
@@ -488,7 +488,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return where + olo, values
 
-    def _search_iterator(self, cur, search_cols, extra_cols, projection):
+    def _search_iterator(self, cur, search_cols, extra_cols, projection, query=""):
         """
         Returns an iterator over the results in a cursor,
         filling in columns from the extras table if needed.
@@ -499,6 +499,7 @@ class PostgresSearchTable(PostgresTable):
         - ``search_cols`` -- the columns in the search table in the results
         - ``extra_cols`` -- the columns in the extras table in the results
         - ``projection`` -- the projection requested.
+        - ``query`` -- the dictionary specifying the query (optional, only used for slow query print statements)
 
         OUTPUT:
 
@@ -508,8 +509,13 @@ class PostgresSearchTable(PostgresTable):
         """
         # Eventually want to batch the queries on the extra_table so that we
         # make fewer SQL queries here.
+        t = time.time()
         try:
             for rec in cur:
+                t = time.time() - t
+                if t > self.slow_cutoff:
+                    self.logger.info("Search iterator for {0} {1} had a gap of \033[91m{2!s}s\033[0m".format(self.search_table, query, t))
+                t = time.time()
                 if projection == 0 or isinstance(projection, str):
                     yield rec[0]
                 else:
@@ -828,7 +834,7 @@ class PostgresSearchTable(PostgresTable):
                     # but the sorting runtime is small compared to getting the records from
                     # postgres in the first place, so we use a simpler option.
                     # We override the projection on the iterator since we need to sort
-                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1))
+                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1, query=Q))
                 if all(
                     (asc == 1 or self.col_type[col] in number_types)
                     for col, asc in raw_sort
@@ -863,14 +869,14 @@ class PostgresSearchTable(PostgresTable):
                 if info is not None:
                     # caller is requesting count data
                     info["number"] = self.count(query)
-                return self._search_iterator(cur, search_cols, extra_cols, projection)
+                return self._search_iterator(cur, search_cols, extra_cols, projection, query=query)
             if nres is None:
                 exact_count = cur.rowcount < prelimit
                 nres = offset + cur.rowcount
             else:
                 exact_count = True
             results = cur.fetchmany(limit)
-            results = list(self._search_iterator(results, search_cols, extra_cols, projection))
+            results = list(self._search_iterator(results, search_cols, extra_cols, projection, query=query))
         if info is not None:
             if offset >= nres > 0:
                 # We're passing in an info dictionary, so this is a front end query,
@@ -1113,7 +1119,7 @@ class PostgresSearchTable(PostgresTable):
                 "SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}"
             ).format(cols, Identifier(self.search_table), repeatable, qstr)
             cur = self._execute(selecter, values, buffered=True)
-            return self._search_iterator(cur, search_cols, extra_cols, projection)
+            return self._search_iterator(cur, search_cols, extra_cols, projection, query=query)
 
     def copy_to_example(self, searchfile, extrafile=None, id=None, sep=u"|", commit=True):
         """
