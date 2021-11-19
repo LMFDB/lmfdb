@@ -17,7 +17,7 @@ def logger_file_handler():
     # set by start_logging
     return file_handler
 
-LMFDB_SAGE_VERSION = '9.2'
+LMFDB_SAGE_VERSION = '9.3'
 def check_sage_version():
     if [int(c) for c in sage_version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
         warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage_version,LMFDB_SAGE_VERSION))
