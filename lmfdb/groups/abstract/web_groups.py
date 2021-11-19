@@ -117,9 +117,9 @@ class WebAbstractGroup(WebObj):
             props.append(("Abelian", "yes"))
             if self.simple:
                 props.extend([("Simple", "yes"),
-                              (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order)))])
+                              (r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order)))])
             else:
-                props.append((r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))))
+                props.append((r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order))))
         else:
             if self.simple:
                 props.append(("Simple", "yes"))
@@ -127,10 +127,10 @@ class WebAbstractGroup(WebObj):
                 props.extend([("Nilpotent", nilp_str),
                               ("Solvable", solv_str)])
             props.extend([
-                (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
-                ("#$Z(G)$", web_latex(self.cent_order_factor())),
-                (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
-                (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
+                (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor())),
+                ("$\card{Z(G)}$", web_latex(self.cent_order_factor())),
+                (r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order))),
+                (r"$\card{\operatorname{Out}(G)}$", web_latex(factor(self.outer_order))),
             ])
         props.extend([
             ("Rank", f"${self.rank}$"),
