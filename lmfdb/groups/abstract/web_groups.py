@@ -489,7 +489,7 @@ class WebAbstractGroup(WebObj):
             if self.simple:
                 props.append(("Simple", "yes"))
             try:
-                props.append((r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))))
+                props.append((r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order))))
             except AssertionError: # timed out
                 pass
         else:
@@ -499,12 +499,12 @@ class WebAbstractGroup(WebObj):
                 props.extend([("Nilpotent", nilp_str),
                               ("Solvable", solv_str)])
             props.extend([
-                (r"#$G^{\mathrm{ab}}$", web_latex(self.Gab_order_factor())),
-                ("#$Z(G)$", web_latex(self.cent_order_factor()))])
+                (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor())),
+                ("$\card{Z(G)}$", web_latex(self.cent_order_factor()))])
             try:
                 props.extend([
-                    (r"#$\operatorname{Aut}(G)$", web_latex(factor(self.aut_order))),
-                    (r"#$\operatorname{Out}(G)$", web_latex(factor(self.outer_order))),
+                    (r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order))),
+                    (r"$\card{\operatorname{Out}(G)}$", web_latex(factor(self.outer_order))),
                 ])
             except AssertionError: # timed out
                 pass

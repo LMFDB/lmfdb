@@ -218,7 +218,7 @@ class ArtinRepresentation(object):
             label = f"{gapid[0]}.{gapid[1]}"
             name = db.gps_groups.lookup(label, "tex_name")
             if name:
-                return abstract_group_display_knowl(label, name)
+                return abstract_group_display_knowl(label, f"${name}$")
         ntj = self._data['Proj_nTj']
         if ntj[1]:
             return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}")

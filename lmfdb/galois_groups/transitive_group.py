@@ -115,7 +115,7 @@ class WebGaloisGroup:
         gp_label = f"{self.order()}.{self.gapid()}"
         group = db.gps_groups.lookup(gp_label)
         if group and group.get('tex_name'):
-            return "${group['tex_name']}$"
+            return f"${group['tex_name']}$"
         if emptyifnotpretty:
             return ""
         return self._data['name']

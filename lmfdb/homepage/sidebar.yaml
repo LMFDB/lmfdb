@@ -221,7 +221,6 @@
 
 9API:
   type: single
-  status: beta
   heading:
     title: Database
     url_for: "API.index"

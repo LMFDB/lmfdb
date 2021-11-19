@@ -26,10 +26,10 @@
       <tr><td>{{KNOWL('hgm.conductor', 'Conductor')}}:<td>&nbsp;&nbsp;<td>${{info.cond}}$
       <tr><td>{{KNOWL('hgm.determinant', 'Determinant character')}}:<td>&nbsp;&nbsp;<td>$\chi_{  {{info.det}} }$
       <tr><td>{{KNOWL('lfunction.sign', 'Root number')}}:<td>&nbsp;&nbsp;<td>$ {{info.sign}}$
-{# 
+{#
       <tr><td>Second moment: <td> </tr>
       <tr><td>Fourth moment: <td> </tr>
-#} 
+#}
       <tr><td>{{KNOWL('lfunction.difficulty', 'Difficulty')}}: <td>&nbsp;&nbsp;<td>${{info.req}}$  </tr>
     </table>
   </p>
@@ -38,10 +38,9 @@
 
   <p>
     <table>
-<tr> <th> $p$ <th> $c_p$ <th> $F_p(x)$ <th> 2 <th> 3 <th> 5 <th> 7 
-  <th> $|\textrm{Gal}(F_p(x))|$ <th> $|D|$
+<tr> <th> $p$ <th> $c_p$ <th> $F_p(x)$ <th> 2 <th> 3 <th> 5 <th> 7 <th> $\card{\textrm{Gal}(F_p(x))}$ <th> $|D|$
 {% for loc in info.locinfo: %}
-<tr><td> ${{loc[0]}}$: 
+<tr><td> ${{loc[0]}}$:
 <td>${{loc[1]}}$
 <td>${{loc[2]}}$
 <td>${{loc[3]}}$
@@ -51,7 +50,7 @@
 <td>${{loc[7]}}$
 <td>${{loc[8]}}$
 {% endfor %}
-<tr><td><td><td><td>${{info.lcms[0]}}$<td> ${{info.lcms[1]}}$ <td>${{info.lcms[2]}}$ <td>${{info.lcms[3]}}$ 
+<tr><td><td><td><td>${{info.lcms[0]}}$<td> ${{info.lcms[1]}}$ <td>${{info.lcms[2]}}$ <td>${{info.lcms[3]}}$
 </table>
 
 
