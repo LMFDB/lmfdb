@@ -643,22 +643,13 @@ def by_abelian_label(label):
     for v in parts.values():
         v.sort()
     primary = sum((parts[p] for p in sorted(parts)), [])
-    label = db.gps_groups.lucky(
+    dblabel = db.gps_groups.lucky(
         {"abelian": True, "primary_abelian_invariants": primary}, "label"
     )
-    if label is None:
-        # We want latex, so don't use the escape
-        flash_error(
-            "The database does not contain the abelian group $%s$"
-            % (
-                r" \times ".join(
-                    "C_{%s}^{%s}" % (q, e) for (q, e) in Counter(primary).items()
-                )
-            )
-        )
-        return redirect(url_for(".index"))
+    if dblabel is None:
+        return render_abstract_group("ab/" + label, data=primary)
     else:
-        return redirect(url_for(".by_label", label=label))
+        return redirect(url_for(".by_label", label=dblabel))
 
 
 @abstract_page.route("/sub/<label>")
@@ -996,10 +987,13 @@ def diagram_js_string(gp, conj, aut):
     return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {num_layers});', display_opts
 
 # Writes individual pages
-def render_abstract_group(label):
+def render_abstract_group(label, data=None):
     info = {}
-    label = clean_input(label)
-    gp = WebAbstractGroup(label)
+    if data is None:
+        label = clean_input(label)
+        gp = WebAbstractGroup(label)
+    elif isinstance(data, list): # abelian group
+        gp = WebAbstractGroup(label, data=data)
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
@@ -1007,57 +1001,71 @@ def render_abstract_group(label):
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
 
-    prof = list(gp.subgroup_profile.items())
-    prof.sort(key=lambda z: -z[0])  # largest to smallest
-    info["subgroup_profile"] = [
-        (z[0], display_profile_line(z[1], ambient=label, aut=False)) for z in prof
-    ]
-    autprof = list(gp.subgroup_autprofile.items())
-    autprof.sort(key=lambda z: -z[0])  # largest to smallest
-    info["subgroup_autprofile"] = [
-        (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
-    ]
+    if gp.live():
+        title = f"Abstract group {label}"
+        friends = []
+        downloads = []
+    else:
+        prof = list(gp.subgroup_profile.items())
+        prof.sort(key=lambda z: -z[0])  # largest to smallest
+        info["subgroup_profile"] = [
+            (z[0], display_profile_line(z[1], ambient=label, aut=False)) for z in prof
+        ]
+        autprof = list(gp.subgroup_autprofile.items())
+        autprof.sort(key=lambda z: -z[0])  # largest to smallest
+        info["subgroup_autprofile"] = [
+            (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
+        ]
 
-    info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True)
-    info["wide"] = display_opts["w"] > 1600 # boolean
+        info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True)
+        info["wide"] = display_opts["w"] > 1600 # boolean
 
-    info["max_sub_cnt"] = gp.max_sub_cnt
-    info["max_quo_cnt"] = gp.max_quo_cnt
+        info["max_sub_cnt"] = gp.max_sub_cnt
+        info["max_quo_cnt"] = gp.max_quo_cnt
 
-    title = "Abstract group " + "$" + gp.tex_name + "$"
+        title = "Abstract group " + "$" + gp.tex_name + "$"
 
-    downloads = [
-        (
-            "Code for Magma",
-            url_for(".download_group", label=label, download_type="magma"),
-        ),
-        ("Code for Gap", url_for(".download_group", label=label, download_type="gap")),
-    ]
+        downloads = [
+            (
+                "Code for Magma",
+                url_for(".download_group", label=label, download_type="magma"),
+            ),
+            ("Code for Gap", url_for(".download_group", label=label, download_type="gap")),
+        ]
 
-    # "internal" friends
-    sbgp_of_url = (
-        " /Groups/Abstract/?hst=Subgroups&subgroup=" + label + "&search_type=Subgroups"
-    )
-    sbgp_url = (
-        "/Groups/Abstract/?hst=Subgroups&ambient=" + label + "&search_type=Subgroups"
-    )
-    quot_url = (
-        "/Groups/Abstract/?hst=Subgroups&quotient=" + label + "&search_type=Subgroups"
-    )
+        # "internal" friends
+        sbgp_of_url = (
+            " /Groups/Abstract/?hst=Subgroups&subgroup=" + label + "&search_type=Subgroups"
+        )
+        sbgp_url = (
+            "/Groups/Abstract/?hst=Subgroups&ambient=" + label + "&search_type=Subgroups"
+        )
+        quot_url = (
+            "/Groups/Abstract/?hst=Subgroups&quotient=" + label + "&search_type=Subgroups"
+        )
 
-    friends = [
-        ("Subgroups", sbgp_url),
-        ("Extensions", quot_url),
-        ("Supergroups", sbgp_of_url),
-    ]
+        friends = [
+            ("Subgroups", sbgp_url),
+            ("Extensions", quot_url),
+            ("Supergroups", sbgp_of_url),
+        ]
 
-    # "external" friends
-    gap_ints = [int(y) for y in label.split(".")]
-    gap_str = str(gap_ints).replace(" ", "")
-    if db.g2c_curves.count({"aut_grp_label": label}) > 0:
-        g2c_url = f"/Genus2Curve/Q/?aut_grp_label={label}"
-        friends += [("As the automorphism of a genus 2 curve", g2c_url)]
-        if db.hgcwa_passports.count({"group": gap_str}) > 0:
+        # "external" friends
+        gap_ints = [int(y) for y in label.split(".")]
+        gap_str = str(gap_ints).replace(" ", "")
+        if db.g2c_curves.count({"aut_grp_label": label}) > 0:
+            g2c_url = f"/Genus2Curve/Q/?aut_grp_label={label}"
+            friends += [("As the automorphism of a genus 2 curve", g2c_url)]
+            if db.hgcwa_passports.count({"group": gap_str}) > 0:
+                auto_url = (
+                    "/HigherGenus/C/Aut/?group=%5B"
+                    + str(gap_ints[0])
+                    + "%2C"
+                    + str(gap_ints[1])
+                    + "%5D"
+                )
+            friends += [("... and of a higher genus curve", auto_url)]
+        elif db.hgcwa_passports.count({"group": gap_str}) > 0:
             auto_url = (
                 "/HigherGenus/C/Aut/?group=%5B"
                 + str(gap_ints[0])
@@ -1065,36 +1073,27 @@ def render_abstract_group(label):
                 + str(gap_ints[1])
                 + "%5D"
             )
-        friends += [("... and of a higher genus curve", auto_url)]
-    elif db.hgcwa_passports.count({"group": gap_str}) > 0:
-        auto_url = (
-            "/HigherGenus/C/Aut/?group=%5B"
-            + str(gap_ints[0])
-            + "%2C"
-            + str(gap_ints[1])
-            + "%5D"
-        )
-        friends += [("As the automorphism of a curve", auto_url)]
+            friends += [("As the automorphism of a curve", auto_url)]
 
-    if db.gps_transitive.count({"gapidfull": gap_str}) > 0:
-        gal_gp_url = (
-            "/GaloisGroup/?gal=%5B"
-            + str(gap_ints[0])
-            + "%2C"
-            + str(gap_ints[1])
-            + "%5D"
-        )
-        friends += [("As a transitive group", gal_gp_url)]
+        if db.gps_transitive.count({"gapidfull": gap_str}) > 0:
+            gal_gp_url = (
+                "/GaloisGroup/?gal=%5B"
+                + str(gap_ints[0])
+                + "%2C"
+                + str(gap_ints[1])
+                + "%5D"
+            )
+            friends += [("As a transitive group", gal_gp_url)]
 
-    if db.gps_st.count({"component_group": label}) > 0:
-        st_url = (
-            "/SatoTateGroup/?hst=List&component_group=%5B"
-            + str(gap_ints[0])
-            + "%2C"
-            + str(gap_ints[1])
-            + "%5D&search_type=List"
-        )
-        friends += [("As the component group of a Sato-Tate group", st_url)]
+        if db.gps_st.count({"component_group": label}) > 0:
+            st_url = (
+                "/SatoTateGroup/?hst=List&component_group=%5B"
+                + str(gap_ints[0])
+                + "%2C"
+                + str(gap_ints[1])
+                + "%5D&search_type=List"
+            )
+            friends += [("As the component group of a Sato-Tate group", st_url)]
 
     bread = get_bread([(label, "")])
 

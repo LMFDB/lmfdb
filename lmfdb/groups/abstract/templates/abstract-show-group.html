@@ -65,9 +65,11 @@
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
+    {% if not gp.live() %}
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
     {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
+    {% endif %}
     {% endif %}
   </table>
 </p>
@@ -105,6 +107,7 @@
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
       </tr>
+      {% if not gp.live() %}
       <tr>
         <td>{{KNOWL('group.division', 'Divisions')}}</td>
         {% for c in gp.division_stats %}
@@ -119,11 +122,12 @@
         {% endfor %}
         <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
       </tr>
+      {% endif %}
     </tbody>
   </table>
 </p>
 
-{% if gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that don't have rational character tables #}
+{% if gp.live() or gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that don't have rational character tables #}
 
 <p>
   <table class="ntdata" style="margin-left:0;">
@@ -143,6 +147,7 @@
         {% endfor %}
         <td class="border-left">{{ gp.irrep_stats | sum }}</td>
       </tr>
+      {% if not gp.live() %}
       <tr style="border-bottom:none;">
         <td>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
         {% for n in gp.ratrep_stats %}
@@ -150,11 +155,14 @@
         {% endfor %}
         <td class="border-left">{{ gp.ratrep_stats | sum }}</td>
       </tr>
+      {% endif %}
     </tbody>
   </table>
 </p>
 
 {% endif %}
+
+{% if not (gp.live() and gp.abelian) %}
 
 <h2>Constructions</h2>
 
@@ -163,6 +171,7 @@
     <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
     <td colspan="5">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
   </tr>
+  {% if not gp.live() %}
   {% if gp.direct_product %}
     <tr>
       <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
@@ -193,6 +202,7 @@
       <td>{{nonsplit_expressions_knowl(gp.label, "all " + (gp.nonsplit_products | length | string) if (gp.nonsplit_products|length > 4) else "more information") | safe}}</td>
     </tr>
   {% endif %}
+  {% endif %} {# gp.live() #}
   {% if gp.as_aut_gp %}
     <tr>
       <td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td>
@@ -207,11 +217,13 @@
       {% endif %}
     </tr>
   {% endif %}
+  {% if not gp.live() or gp.pgroup > 1 %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     <td>${{gp.rank}}$</td>
   </tr>
-  {% if gp.order > 1 and gp.eulerian_function is defined %}
+  {% endif %}
+  {% if not gp.live() and gp.order > 1 and gp.eulerian_function is defined %}
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
     <td>${{gp.eulerian_function}}$</td>
@@ -219,13 +231,21 @@
   {% endif %}
 </table>
 
+{% endif %} {# not live and abelian #}
+
 <h2> Homology </h2>
 
 <table>
   <tr>
-    <td>{{KNOWL('group.abelianization', 'Abelianization')}}:</td>
-    <td> <a href="{{url_for('.by_abelian_label', label=gp.abelianization_label())}}">${{gp.abelian_quot()}} {% if gp.smith_abelian_invariants != gp.primary_abelian_invariants %} \simeq {{gp.abelian_quot_primary()}}{% endif %}$</a></td>
+    {% if gp.abelian %}
+      <td>{{KNOWL('group.primary_decomposition', 'Primary decomposition')}}:</td>
+      <td>${{gp.abelian_quot_primary()}}$</td>
+    {% else %}
+      <td>{{KNOWL('group.abelianization', 'Abelianization')}}:</td>
+      <td> <a href="{{url_for('.by_abelian_label', label=gp.abelianization_label())}}">${{gp.abelian_quot()}} {% if gp.smith_abelian_invariants != gp.primary_abelian_invariants %} \simeq {{gp.abelian_quot_primary()}}{% endif %}$</a></td>
+    {% endif %}
   </tr>
+  {% if not gp.live() %}
   <tr>
     <td>{{KNOWL('group.schur_multiplier', 'Schur multiplier')}}:</td>
     <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td>
@@ -234,10 +254,26 @@
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
     <td>${{gp.commutator_count}}$</td>
   </tr>
+  {% endif %}
 </table>
 
-
 <h2> Subgroups </h2>
+
+{% if gp.live() %}
+
+<table>
+  {% for kwl, sub, quo in gp.show_special_subgroups_live() %}
+    <tr>
+      <td>{{kwl|safe}}:</td>
+      <td>{{sub|safe}}</td>
+      {% if quo %}
+        <td>{{quo|safe}}</td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+</table>
+
+{% else %}
 
 <p>There are {% if gp.number_normal_subgroups < gp.number_subgroups %}{{gp.number_subgroups}} subgroups in <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroup_classes}} conjugacy classes</a>, <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, normal='yes')}}">{{ gp.number_normal_subgroups }} normal</a>{% else %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroups}} subgroups</a>, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, characteristic='yes')}}">{{ gp.number_characteristic_subgroups }} characteristic</a>{% else %}all characteristic{% endif %}).
 </p>
@@ -277,7 +313,7 @@
   {% if gp.pgroup == 0 %}
     {% for p, subgp in gp.sylow_subgroups() %}
       <tr>
-        <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
+        <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}:</td>
         <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{ {{p}} } \simeq {{subgp.subgroup_tex}}$</span></td>
       </tr>
     {% endfor %}
@@ -539,5 +575,6 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 
 {% endif %}
 {% endif %}
+{% endif %} {# gp.live() #}
 
 {% endblock %}
