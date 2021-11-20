@@ -134,10 +134,11 @@ class BMFTest(LmfdbTest):
         L2_variables = self.check_sage_compiles_and_extract_variables(L2_sage_code)
 
         i = L2_variables['i']
-        z = L2_variables['z']
+        z = L2_variables['F'].gen()
         ZF = L2_variables['ZF']
 
-        assert L2_variables['NN'] == ZF.ideal((16*i - 11))  # the level displayed on BMF homepage
+        assert L2_variables['NN'] == ZF.ideal((16*i - 11)), "level doesn't match"  # the level displayed on BMF homepage
+
         for gens in [(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)]:
             assert ZF.ideal(gens) in L2_variables['hecke_eigenvalues']
         hecke_av_start = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]
