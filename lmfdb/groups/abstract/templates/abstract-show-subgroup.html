@@ -88,15 +88,15 @@
     {% if seq.aut_weyl_group is not none %}
       <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order ${{seq.aut_weyl.order_factor()}}$</td></tr>
     {% elif seq.aut_weyl_index is not none %}
-      <tr><td>#$\operatorname{res}({{S}})$</td><td>{{seq.sub.aut_order / seq.aut_weyl_index}}</td></tr>
+    <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{seq.sub.aut_order / seq.aut_weyl_index}}</td></tr>
     {% endif %}
     {% if seq.aut_centralizer_order is not none %}
-      <tr><td>#$\operatorname{ker}(\operatorname{res})$</td><td>${{seq.aut_centralizer_order}}$</td></tr>
+    <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>${{seq.aut_centralizer_order}}$</td></tr>
     {% endif %}
     {% if seq.weyl_group is not none %}
       <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order ${{seq.weyl.order_factor()}}$</td></tr>
     {% else %}
-      <tr><td>#$W$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
+    <tr><td>$\card{W}$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
     {% endif %}
   </table>
 </p>
