@@ -141,7 +141,7 @@ class BMFTest(LmfdbTest):
         for gens in [(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)]:
             assert ZF.ideal(gens) in L2_variables['hecke_eigenvalues']
         hecke_av_start = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]
-        assert L1_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
+        assert L2_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
 
     def test_download_magma(self):
         # A dimension 1 example
