@@ -497,7 +497,7 @@ class WebAbstractGroup(WebObj):
                               ("Solvable", solv_str)])
             props.extend([
                 (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor())),
-                ("$\card{Z(G)}$", web_latex(self.cent_order_factor()))])
+                (r"$\card{Z(G)}$", web_latex(self.cent_order_factor()))])
             try:
                 props.extend([
                     (r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order))),

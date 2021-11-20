@@ -902,7 +902,7 @@ class ECSearchArray(SearchArray):
         sha_primes = TextBoxWithSelect(
             name="sha_primes",
             label="$p$ dividing |&#1064;|",
-            short_label="$p\ $div$\ $|&#1064;|",
+            short_label=r"$p\ $div$\ $|&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
             select_box=sha_quant)

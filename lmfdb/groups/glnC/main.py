@@ -130,7 +130,7 @@ def render_glnC_group(args):
         N=info['cyc_order_mat']
         info['dispmat'] = lambda z: dispmat(N,z)
 
-        title = r'$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
+        title = fr'$\GL({info["dim"]},\C)$ subgroup {label}'
 
         prop = [('Label', '%s' %  label),
                 ('Order', '$%s$' % info['order']),
