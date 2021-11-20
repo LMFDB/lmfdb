@@ -131,7 +131,7 @@ class BMFTest(LmfdbTest):
 
         # A dimension 2 example
         L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
-        L2_variables = self.check_sage_compiles_and_extract_var(L2_sage_code)
+        L2_variables = self.check_sage_compiles_and_extract_variables(L2_sage_code)
 
         i = L2_variables['i']
         z = L2_variables['z']
