@@ -91,6 +91,20 @@ class LmfdbTest(unittest2.TestCase):
                 pass
             else:
                 raise
+    def check_sage_compiles_and_extract_variables(self, sage_code):
+        """
+        Simulates a user downloading the sage code, and then loading it
+        into a sage session. This requires the sage imports at the top of
+        the file. It returns a desired variable for further checks.
+
+        sage_code [Type: str] : the sage code to execute
+        my_name [Type: str] : name of the variable to extract from the
+                              sage code. This then allows the developer
+                              to implement subsequent checks.
+        """
+
+        exec(sage_code, globals())
+        return globals()
 
     def check_sage_compiles_and_extract_var(self, sage_code, my_name):
         """
@@ -104,5 +118,4 @@ class LmfdbTest(unittest2.TestCase):
                               to implement subsequent checks.
         """
 
-        exec(sage_code, globals())
-        return globals()[my_name]
+        return self.check_sage_compiles_and_extract_variables(sage_code)[my_name]

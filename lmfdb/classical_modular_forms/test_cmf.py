@@ -178,8 +178,8 @@ class CmfTest(LmfdbTest):
         assert '1.12.a.a' in page.get_data(as_text=True)
         assert '16744' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/")
-        assert '24q^{2}' in page.get_data(as_text=True)
-        assert '84480q^{8}' in page.get_data(as_text=True)
+        assert '24 q^{2}' in page.get_data(as_text=True)
+        assert '84480 q^{8}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/?format=satake")
         assert '0.299367' in page.get_data(as_text=True)
         assert '0.954138' in page.get_data(as_text=True)
@@ -191,8 +191,7 @@ class CmfTest(LmfdbTest):
         Check that the weight 2 form of level 11 works.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
-        assert '2q^{2}' in page.get_data(as_text=True)
-        assert '2q^{4}' in page.get_data(as_text=True)
+        assert '2 q^{2}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake")
         assert r'0.707107' in page.get_data(as_text=True)
         assert r'0.957427' in page.get_data(as_text=True)
@@ -204,10 +203,10 @@ class CmfTest(LmfdbTest):
 
     def test_triv_character(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/a/a/")
-        assert r'1016q^{7}' in page.get_data(as_text=True)
+        assert r'1016 q^{7}' in page.get_data(as_text=True)
         assert '1680' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
-        assert '168q^{8}' in page.get_data(as_text=True)
+        assert '168 q^{8}' in page.get_data(as_text=True)
         assert '36' in page.get_data(as_text=True)
 
     def test_non_triv_character(self):
@@ -217,9 +216,9 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/e/a/")
         assert r'\Q(\sqrt{-3})' in page.get_data(as_text=True)
         assert '0.866025' in page.get_data(as_text=True)
-        assert r'6q^{6}' in page.get_data(as_text=True)
+        assert r'6 q^{6}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/b/a/")
-        assert r'46q^{9}' in page.get_data(as_text=True)
+        assert r'46 q^{9}' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{-1})' in page.get_data(as_text=True)
         assert r'10' in page.get_data(as_text=True)
 
