@@ -133,8 +133,8 @@ class BMFTest(LmfdbTest):
         L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
         L2_variables = self.check_sage_compiles_and_extract_variables(L2_sage_code)
 
-        i = L2_variables['i']
-        z = L2_variables['F'].gen()
+        i = L2_variables['F'].gen()
+        z = L2_variables['z']
         ZF = L2_variables['ZF']
 
         assert L2_variables['NN'] == ZF.ideal((16*i - 11)), "level doesn't match"  # the level displayed on BMF homepage
