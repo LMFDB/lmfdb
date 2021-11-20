@@ -121,6 +121,7 @@ class BMFTest(LmfdbTest):
         L1_level = self.check_sage_compiles_and_extract_var(L1_sage_code, 'NN')
         assert L1_level.norm() == Integer(18333)
         assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1_sage_code
+        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' == L1_sage_code[1575:1575+68]
         assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1_sage_code
         assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1_sage_code
         """
