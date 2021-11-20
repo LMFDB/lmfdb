@@ -709,17 +709,9 @@ def sub_diagram(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    h = 160 * len(gp.subgroup_profile)
-    h = min(h, 1000)
-    dojs, orders = diagram_js_string(gp)
-    rowcounts = {z:0 for z in orders}
-    for grp in gp.subgroups.values():
-        rowcounts[grp.subgroup_order] += 1
-    widest = max(rowcounts.values())
-    w = 100 * widest
-    w = min(w, 1500)
-    info = {"dojs": dojs, "w": w, "h": h,
-            "type": "conj"}
+    dojs, display_opts = diagram_js_string(gp, conj=True, aut=False)
+    info = {"dojs": dojs, "type": "conj"}
+    info.update(display_opts)
     return render_template(
         "diagram_page.html",
         info=info,
@@ -735,13 +727,9 @@ def aut_diagram(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    maxw = max(len(z) for z in gp.subgroup_autprofile.values())
-    h = 160 * len(gp.subgroup_autprofile)
-    h = min(h, 1000)
-    w = 200 * maxw
-    w = min(w, 1500)
-    info = {"dojs": diagram_js_string(gp), "w": w, "h": h,
-            "type": "aut"}
+    dojs, display_opts = diagram_js_string(gp, conj=False, aut=True)
+    info = {"dojs": dojs, "type": "aut"}
+    info.update(display_opts)
     return render_template(
         "diagram_page.html",
         info=info,
@@ -964,7 +952,7 @@ def get_sub_url(label):
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
-def diagram_js(gp, layers, aut=False):
+def diagram_js(gp, layers, display_opts, aut=False):
     ll = [
         [
             grp.subgroup,
@@ -973,21 +961,39 @@ def diagram_js(gp, layers, aut=False):
             grp.count,
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagram_aut_x if aut else grp.diagram_x,
+            grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
         ]
         for grp in layers[0]
     ]
-    orders = sorted(set(sub.subgroup_order for sub in gp.subgroups.values()))
+    orders = [sub[4] for sub in ll]
+    order_ctr = Counter(orders)
+    orders = sorted(order_ctr)
+    Omega = {}
+    by_Omega = defaultdict(list)
+    for n in orders:
+        W = sum(e for (p,e) in n.factor())
+        Omega[n] = W
+        by_Omega[W].append(n)
+    # We would normally make order_lookup a dictionary, but we're passing it to the horrible language known as javascript
+    order_lookup = [[n, Omega[n], by_Omega[Omega[n]].index(n)] for n in orders]
+    max_width = max(sum(order_ctr[n] for n in by_Omega[W]) for W in by_Omega)
+    display_opts["w"] = min(100 * max_width, 20000)
+    display_opts["h"] = 240 * len(by_Omega)
 
-    return [ll, layers[1], orders], orders
+    return [ll, layers[1]], order_lookup, len(by_Omega)
 
-def diagram_js_string(gp):
+def diagram_js_string(gp, conj, aut):
     glist = [[],[]]
-    if gp.diagram_ok and not gp.outer_equivalence:
-        glist[0], orders = diagram_js(gp, gp.subgroup_lattice)
-
-    glist[1], orders = diagram_js(gp, gp.subgroup_lattice_aut,aut=True)
-    return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}",{glist});', orders
+    display_opts = {}
+    if aut:
+        glist[1], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice_aut, display_opts, aut=True)
+    # We call conj second so that it overrides w and h, since it will be bigger
+    if conj and not gp.outer_equivalence:
+        glist[0], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice, display_opts)
+    if not glist[0] and not glist[1]:
+        order_lookup = []
+        num_layers = 0
+    return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {num_layers});', display_opts
 
 # Writes individual pages
 def render_abstract_group(label):
@@ -1012,14 +1018,8 @@ def render_abstract_group(label):
         (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
     ]
 
-    info["dojs"], orders = diagram_js_string(gp)
-    # find the widest row of the diagram
-    rowcounts = {z:0 for z in orders}
-    for grp in gp.subgroups.values():
-        rowcounts[grp.subgroup_order] += 1
-    widest = max(rowcounts.values())
-
-    info["wide"] = widest > 8 # boolean
+    info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True)
+    info["wide"] = display_opts["w"] > 1600 # boolean
 
     info["max_sub_cnt"] = gp.max_sub_cnt
     info["max_quo_cnt"] = gp.max_quo_cnt
@@ -1994,7 +1994,6 @@ def semidirect_data(label):
 
 def nonsplit_data(label):
     gp = WebAbstractGroup(label)
-    print(label, len(gp.nonsplit_products))
     ans = f"Nonsplit product expressions for ${gp.tex_name}$:<br />\n"
     ans += "<table>\n"
     for sub, cnt, labels in gp.nonsplit_products:

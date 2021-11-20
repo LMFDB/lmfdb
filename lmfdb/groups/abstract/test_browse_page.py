@@ -423,10 +423,12 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to perfect or non-perfect subgroups only
         """
-        self.check_args("/Groups/Abstract/?perfect=yes&search_type=Subgroups", "4.1.4.a1.a1")
-        self.not_check_args("/Groups/Abstract/?perfect=yes&search_type=Subgroups", "4.2.1.a1.a1")
-        self.check_args("/Groups/Abstract/?perfect=no&search_type=Subgroups", "4.2.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?perfect=no&search_type=Subgroups", "4.1.4.a1.a1")
+        page = self.tc.get("/Groups/Abstract/?perfect=yes&proper=yes&search_type=Subgroups", follow_redirects=True).get_data(as_text=True)
+        assert "180.19.3.a1.a1" in page, "Missing perfect group"
+        assert "4.2.2.a1.a1" not in page, "Incorrect perfect group"
+        page = self.tc.get("/Groups/Abstract/?perfect=no&proper=yes&search_type=Subgroups", follow_redirects=True).get_data(as_text=True)
+        assert "4.2.2.a1.a1" in page, "Missing imperfect group"
+        assert "180.19.3.a1.a1" not in page, "Incorrect imperfect group"
 
     def test_subgroup_maximal_search(self):
         r"""

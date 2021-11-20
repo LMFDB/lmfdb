@@ -757,7 +757,7 @@ def WhiteListedRoutes():
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
-        'Group',
+        'Group/foo', # allows /Group but not /Groups/*
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
