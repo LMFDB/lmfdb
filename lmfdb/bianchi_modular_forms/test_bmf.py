@@ -134,6 +134,7 @@ class BMFTest(LmfdbTest):
         L2_variables = self.check_sage_compiles_and_extract_var(L2_sage_code)
 
         i = L2_variables['i']
+        z = L2_variables['z']
         ZF = L2_variables['ZF']
 
         assert L2_variables['NN'] == ZF.ideal((16*i - 11))  # the level displayed on BMF homepage
