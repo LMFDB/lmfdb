@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-from sage.all import Integer, PolynomialRing, QQ, NumberField
+from sage.all import Integer
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
 
@@ -119,7 +119,7 @@ class BMFTest(LmfdbTest):
         # A dimension 1 example
         L1_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage').get_data(as_text=True)
         L1_variables = self.check_sage_compiles_and_extract_variables(L1_sage_code)
-        assert variables['NN'].norm() == Integer(18333)
+        assert L1_variables['NN'].norm() == Integer(18333)
         a = L1_variables['a']
         ZF = L1_variables['ZF']
         assert L1_variables['NN'] == ZF.ideal((6111, 3*a + 5052))
