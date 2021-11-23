@@ -56,7 +56,7 @@ class AbGpsTest(LmfdbTest):
             r"C_{2}^{3} \times C_{6} \times C_{60} \times C_{2520}", # latex
             r"2^{40} \cdot 3^{10} \cdot 5^{2} \cdot 7", # order of automorphism group
             "1990656", # number of elements of order 2520
-            r"C_{2} \times C_{12}", # Frattini
+            r"C_{2}\times C_{12}", # Frattini
         ])
         self.check_args("/Groups/Abstract/ab/2_50", [ # large elementary abelian 2-group
             "4432676798593", # factor of aut_order
