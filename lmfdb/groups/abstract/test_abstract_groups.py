@@ -45,7 +45,7 @@ class AbGpsTest(LmfdbTest):
             "rgb(20,82,204)", # color in image
         ])
         self.check_args("/Groups/Abstract/1536.123", [
-            "C_3 \times ((C_2\times C_8) . (C_4\times C_8))", # latex
+            r"C_3 \times ((C_2\times C_8) . (C_4\times C_8))", # latex
             "216", # number of 2-dimensional complex characters
             "j^3", # presentation
             "metabelian", # boolean quantities
