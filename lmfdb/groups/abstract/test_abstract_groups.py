@@ -61,6 +61,6 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/ab/2_50", [ # large elementary abelian 2-group
             "4432676798593", # factor of aut_order
         ])
-        self.check_args("/Groups/Abstract/ab/3001", [ # large cyclic group
-            r"C_{2}^{3} \times C_{100}", # automorphism group structure
+        self.check_args("/Groups/Abstract/ab/3000", [ # large cyclic group
+            r"C_2^3\times C_{100}", # automorphism group structure
         ])
