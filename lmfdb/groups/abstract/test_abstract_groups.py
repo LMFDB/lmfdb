@@ -11,12 +11,8 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/60.5", "nonsolvable")
         self.check_args("/Groups/Abstract/32.51", "solvable")
 
-
 # To do:  Test a lot more data,  also more property box tests
 
-
-
-        
     def test_property_box(self):
         r"""
         Check that the property box displays.
@@ -39,16 +35,29 @@ class AbGpsTest(LmfdbTest):
         self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
 
 
-        
-#    def test_download_all(self):
-#        r"""
-#        Test downloading all stored data to text
-#        """
-
-#        page = self.tc.get('Variety/Abelian/Fq/download_all/1.81.r', follow_redirects=True)
-#        assert '"abvar_counts": [99, 6435, 532224, 43043715,' in page.get_data(as_text=True)
-
-#        page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
-#        assert '"curve_counts": [21, 283, 4719, 84395' in page.get_data(as_text=True)
-
-
+    def test_live_pages(self):
+        self.check_args("/Groups/Abstract/1920.240463", [
+            "nonsolvable",
+            "10 subgroups in one conjugacy class",
+            "240.190", # socle
+            "960.5735", # max sub
+            "960.5692", # max quo
+            "rgb(20,82,204)", # color in image
+        ])
+        self.check_args("/Groups/Abstract/1536.123", [
+            "C_3 \times ((C_2\times C_8) . (C_4\times C_8))", # latex
+            "216", # number of 2-dimensional complex characters
+            "j^3", # presentation
+            "metabelian", # boolean quantities
+        ])
+        self.check_args("/Groups/Abstract/ab/2.2.3.4.5.6.7.8.9.10", [
+            "7257600", # order
+            "2520", # exponent
+            r"C_{2}^{3} \times C_{6} \times C_{60} \times C_{2520}", # latex
+            r"2^{40} \cdot 3^{10} \cdot 5^{2} \cdot 7", # order of automorphism group
+            "1990656", # number of elements of order 2520
+            r"C_{2} \times C_{12}", # Frattini
+        ])
+        self.check_args("/Groups/Abstract/ab/2_50", [
+            "4432676798593", # factor of aut_order
+        ])

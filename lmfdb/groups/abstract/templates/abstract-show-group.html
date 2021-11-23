@@ -262,13 +262,12 @@
 {% if gp.live() %}
 
 <table>
-  {% for kwl, sub, quo in gp.show_special_subgroups_live() %}
+  {% for kwl, sub, quo, extra in gp.show_special_subgroups_live() %}
     <tr>
-      <td>{{kwl|safe}}:</td>
+      <td>{% if kwl %}{{kwl|safe}}:{% endif %}</td>
       <td>{{sub|safe}}</td>
-      {% if quo %}
-        <td>{{quo|safe}}</td>
-      {% endif %}
+      <td>{% if quo %}{{quo|safe}}{% endif %}</td>
+      <td>{% if extra %}{{extra|safe}}{% endif %}</td>
     </tr>
   {% endfor %}
 </table>
