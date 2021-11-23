@@ -341,7 +341,7 @@ class WebAbstractGroup(WebObj):
             for p, E in by_p.items():
                 c = 0
                 d = 0
-                n = sum([m*e for (e,m) in E.items()])
+                n = sum(E.values())
                 for e in sorted(E):
                     m = E[e]
                     d += m
