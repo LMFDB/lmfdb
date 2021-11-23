@@ -47,7 +47,7 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/1536.123", [
             r"C_3 \times ((C_2\times C_8) . (C_4\times C_8))", # latex
             "216", # number of 2-dimensional complex characters
-            "j^3", # presentation
+            "j^{3}", # presentation
             "metabelian", # boolean quantities
         ])
         self.check_args("/Groups/Abstract/ab/2.2.3.4.5.6.7.8.9.10", [
@@ -58,6 +58,9 @@ class AbGpsTest(LmfdbTest):
             "1990656", # number of elements of order 2520
             r"C_{2} \times C_{12}", # Frattini
         ])
-        self.check_args("/Groups/Abstract/ab/2_50", [
+        self.check_args("/Groups/Abstract/ab/2_50", [ # large elementary abelian 2-group
             "4432676798593", # factor of aut_order
+        ])
+        self.check_args("/Groups/Abstract/ab/3001", [ # large cyclic group
+            r"C_{2}^{3} \times C_{100}", # automorphism group structure
         ])
