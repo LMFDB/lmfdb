@@ -1093,9 +1093,11 @@ class WebAbstractGroup(WebObj):
             chardegs = self.G.CharacterDegrees()
             self.irrep_stats = [ZZ(cnt) for d, cnt in chardegs]
             return [ZZ(d) for d, cnt in chardegs]
+        # currently we always have rational_characters, but not always characters,
+        # so we need to use cdim from rational_characters to find the set of complex dimensions
         return sorted(
             set(
-                [rep.dim for rep in self.characters]
+                [rep.cdim for rep in self.rational_characters]
                 + [rep.qdim for rep in self.rational_characters]
             )
         )

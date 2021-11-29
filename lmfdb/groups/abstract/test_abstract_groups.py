@@ -34,6 +34,10 @@ class AbGpsTest(LmfdbTest):
         self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
         self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
 
+    def character_counts(self):
+        # There was a bug in showing all dimensions of irreducible characters when we don't store the complex character table
+        page = self.tc.get("/Groups/Abstract/1800.328").get_data(as_text=True).replace(" ","").replace("\n","")
+        self.assertTrue("<td>30</td><td>30</td><td>30</td>" in page)
 
     def test_live_pages(self):
         self.check_args("/Groups/Abstract/1920.240463", [
