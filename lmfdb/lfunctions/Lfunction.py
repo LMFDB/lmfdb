@@ -403,7 +403,15 @@ def apply_coeff_info(L, coeff_info):
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
 
-    convert_euler_Lpoly = lambda poly_coeffs: [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+    def convert_euler_Lpoly(poly_coeffs):
+        Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+        # WARNING: the data in the database is wrong!
+        # it lists Fp(-T) instead of Fp(T)
+        # this is a temporary fix
+        assert len(Fp) <= 2
+        if len(Fp) == 2:
+            Fp[1] *= -1
+        return Fp
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
