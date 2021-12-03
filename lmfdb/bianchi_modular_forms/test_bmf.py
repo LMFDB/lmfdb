@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-from sage.all import Integer, PolynomialRing, QQ, NumberField
+from sage.all import Integer
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
 
@@ -69,7 +69,7 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+'2.0.3.1/77283.1', 'contains the following\nnewforms')
         self.check_args(base_url+'2.0.11.1/207.6', 'Dimension of new cuspidal subspace:')
         # I don't know why the following fails, as the text was copied from the page source:
-        #self.check_args(base_url+'2.0.11.1/207.6', '\((2 a + 13) = (\left(a - 1\right))^{2} \cdot (\left(a - 5\right)) \)')
+        #self.check_args(base_url+'2.0.11.1/207.6', r'\((2 a + 13) = (\left(a - 1\right))^{2} \cdot (\left(a - 5\right)) \)')
 
     #
     # tests for individual newform pages
@@ -81,7 +81,7 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+'2.0.11.1/207.6/b', 'Base change')
         self.check_args(base_url+'2.0.11.1/207.6/b', '2.0.11.1-207.6-b')
         self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Elliptic curve 2.0.3.1-44332.1-a')
-        self.check_args(base_url+'2.0.3.1/44332.1/a/', '-238 a + 76')
+        self.check_args(base_url+'2.0.3.1/44332.1/a/', '44332.1')
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'no, but is a twist of the base change of a form over')
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'Elliptic curve 2.0.11.1-256.1-a')
         # A dimension 2 example
@@ -118,36 +118,31 @@ class BMFTest(LmfdbTest):
 
         # A dimension 1 example
         L1_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage').get_data(as_text=True)
-        L1_level = self.check_sage_compiles_and_extract_var(L1_sage_code, 'NN')
-        assert L1_level.norm() == Integer(18333)
-        assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1_sage_code
-        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1_sage_code
-        assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1_sage_code
-        """
-        Observe that example 1 above checks equality of the level norm between
-        the loaded sage code and what appears on the homepage, but then checks
-        for a particular presentation of that ideal in the text file. The problem
-        with this is that the choice of generators for the ideal are not unique,
-        and could potentially change from one sage release to the next. An
-        alternative is to check for equality of the ideals themselves, and that
-        is the strategy adopted in the following example.
-        """
+        L1_variables = self.check_sage_compiles_and_extract_variables(L1_sage_code)
+        assert L1_variables['NN'].norm() == Integer(18333)
+        a = L1_variables['a']
+        ZF = L1_variables['ZF']
+        assert L1_variables['NN'] == ZF.ideal((6111, 3*a + 5052))
+        for gens in [(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)]:
+            assert ZF.ideal(gens) in L1_variables['hecke_eigenvalues']
+        hecke_av_start = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11]
+        assert L1_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
+
 
         # A dimension 2 example
         L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
-        L2_level = self.check_sage_compiles_and_extract_var(L2_sage_code, 'NN')
+        L2_variables = self.check_sage_compiles_and_extract_variables(L2_sage_code)
 
-        P = PolynomialRing(QQ,'x')
-        g = P([1, 0, 1])
-        F = NumberField(g,'i')
-        i = F.gen()
-        ZF = F.ring_of_integers()
+        i = L2_variables['F'].gen()
+        z = L2_variables['z']
+        ZF = L2_variables['ZF']
 
-        L2_level_actual = ZF.ideal((16*i - 11))  # the level displayed on BMF homepage
-        assert L2_level == L2_level_actual
-        assert L2_level.norm() == 377
-        assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2_sage_code
-        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]' in L2_sage_code
+        assert L2_variables['NN'] == ZF.ideal((16*i - 11)), "level doesn't match"  # the level displayed on BMF homepage
+
+        for gens in [(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)]:
+            assert ZF.ideal(gens) in L2_variables['hecke_eigenvalues']
+        hecke_av_start = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]
+        assert L2_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
 
     def test_download_magma(self):
         # A dimension 1 example
