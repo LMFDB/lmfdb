@@ -400,16 +400,23 @@ def apply_coeff_info(L, coeff_info):
         return res[0], CDF(res[1])
 
     base_power_int = int(coeff_info[0][2:-3])
+    fix = False
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
-
+        # checks if we need to fix the Euler factors
+        if is_prime(n) and L.dirichlet_coefficients_arithmetic[n] != 0:
+            if fix:
+                assert L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+            else:
+                fix = L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
     def convert_euler_Lpoly(poly_coeffs):
         Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
         # WARNING: the data in the database is wrong!
         # it lists Fp(-T) instead of Fp(T)
         # this is a temporary fix
+        # the variable fix double checks that is indeed needed
         assert len(Fp) <= 2
-        if len(Fp) == 2:
+        if len(Fp) == 2 and fix:
             Fp[1] *= -1
         return Fp
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
