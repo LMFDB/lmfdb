@@ -170,6 +170,15 @@ def api_query(table, id = None):
     DELIM = request.args.get("_delim", ",")
     fields = request.args.get("_fields", None)
     sortby = request.args.get("_sort", None)
+    def apierror(msg, flash_extras=[], code=404, table=True):
+        if format == "html":
+            flash_error(msg, *flash_extras)
+            if table:
+                return redirect(url_for(".api_query", table=table))
+            else:
+                return redirect(url_for(".index"))
+        else:
+            return abort(code, msg % tuple(flash_extras))
 
     if fields:
         fields = ['id'] + fields.split(DELIM)
@@ -180,33 +189,25 @@ def api_query(table, id = None):
         sortby = sortby.split(DELIM)
 
     if offset > 10000:
-        if format != "html":
-            return abort(404)
-        else:
-            flash_error("offset %s too large, please refine your query.", offset)
-            return redirect(url_for(".api_query", table=table))
+        return apierror("offset %s too large, please refine your query.", [offset])
 
     # preparing the actual database query q
     try:
         coll = getattr(db, table)
     except AttributeError:
-        if format != "html":
-            return abort(404)
-        else:
-            flash_error("table %s does not exist", table)
-            return redirect(url_for(".index"))
+        return apierror("table %s does not exist", [table], table=False)
     q = {}
 
     # if id is set, just go and get it, ignore query parameeters
     if id is not None:
         if offset:
-            return abort(404)
+            return apierror("Cannot include offset with id")
         single_object = True
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
         else:
-            return abort(404, "id '%s' must be an integer" % id)
+            return apierror("id '%s' must be an integer", [id])
         data = coll.lucky({'id':id}, projection=fields)
         data = [data] if data else []
     else:
@@ -273,21 +274,14 @@ def api_query(table, id = None):
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
-            flash_error("Query %s exceeded time limit.", q)
-            return redirect(url_for(".api_query", table=table))
+            return apierror("Query %s exceeded time limit.", [q], code=500)
         except KeyError as err:
-            flash_error("No key %s in table %s", err, table)
-            return redirect(url_for(".api_query", table=table))
-        except ValueError as err:
-            flash_error(str(err))
-            return redirect(url_for(".api_query", table=table))
+            return apierror("No key %s in table %s", [err, table])
+        except Exception as err:
+            return apierror(str(err))
 
     if single_object and not data:
-        if format != 'html':
-            return abort(404)
-        else:
-            flash_error("no document with id %s found in table %s.", id, table)
-            return redirect(url_for(".api_query", table=table))
+        return apierror("no document with id %s found in table %s.", [id, table])
 
     # fixup data for display and json/yaml encoding
     if 'bytea' in coll.col_type.values():
