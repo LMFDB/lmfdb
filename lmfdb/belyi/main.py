@@ -341,16 +341,14 @@ def belyi_orbit_from_label(label):
 # Searching
 ################################################################################
 
-GALMAP_RE = re.compile(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+-[a-z]+$")
-PASSPORT_RE = re.compile(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+$")
 
 def belyi_jump(info):
     jump = info["jump"].strip()
-    if re.match(GALMAP_RE, jump):
+    if re.match(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+-[a-z]+$", jump):
         # 7T6-7_4.2.1_4.2.1-b
         return redirect(url_for_belyi_galmap_label(jump), 301)
     else:
-        if re.match(PASSPORT_RE, jump):
+        if re.match(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+$", jump):
         # 7T6-7_4.2.1_4.2.1
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
