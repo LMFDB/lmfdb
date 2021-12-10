@@ -838,7 +838,7 @@ class BelyiSearchArray(SearchArray):
             label="Primitivization",
             knowl="belyi.primitivization",
             example="2T1-2_2_1.1-a",
-            example_span="2T1-2_2_1.1-a or 2T1-2_2_1.1")
+            example_span="2T1-2_2_1.1-a")
         field = TextBox(
             name="field",
             label="Base field",
