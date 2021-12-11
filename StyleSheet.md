@@ -50,7 +50,7 @@ contains other conventions and information for the development process.
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py).
 - Mathematical values, including integers, should be in math mode.
 - Values that are words (e.g. yes/no, even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
-
+- Use the "\card" macro for cardinalities (which now displays #).
 
 ## Properties box
 
