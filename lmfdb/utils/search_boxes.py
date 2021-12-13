@@ -673,6 +673,7 @@ class SearchArray(UniqueRepresentation):
     def buttons(self, info=None):
         st = self._st(info)
         buttons = []
+        spacer = True
         if st == "DynStats":
             buttons.append(SearchButton("DynStats", "Generate statistics"))
         else:
@@ -686,6 +687,7 @@ class SearchArray(UniqueRepresentation):
             if st is not None:
                 sort = self.sort_order(info)
                 if sort:
+                    spacer = False
                     sort_box = SelectBox(
                         name='sort_order',
                         label='Sort order',
@@ -693,7 +695,8 @@ class SearchArray(UniqueRepresentation):
                         options=sort,
                         width=170)
                     buttons.append(sort_box)
-        return self._print_table([RowSpacer(12), buttons], info, layout_type="vertical")
+        rows = [RowSpacer(22),buttons] if spacer else [buttons]
+        return self._print_table(rows, info, layout_type="vertical")
 
     def html(self, info=None):
         return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
