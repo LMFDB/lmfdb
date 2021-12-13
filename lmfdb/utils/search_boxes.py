@@ -478,7 +478,7 @@ class SearchButton(SearchBox):
 
     def td(self, colspan=None, **kwds):
         kwds = dict(kwds)
-        self._add_class(kwds, 'button')
+        #self._add_class(kwds, 'button')
         return SearchBox.td(self, colspan, **kwds)
 
     def _input(self, info):
@@ -693,7 +693,7 @@ class SearchArray(UniqueRepresentation):
                         options=sort,
                         width=170)
                     buttons.append(sort_box)
-        return self._print_table([RowSpacer(22), buttons], info, layout_type="vertical")
+        return self._print_table([RowSpacer(12), buttons], info, layout_type="vertical")
 
     def html(self, info=None):
         return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
