@@ -64,12 +64,19 @@ class Configuration(_Configuration):
         )
 
         parser.add_argument(
-            "-c",
             "--config-file",
             dest="config_file",
             metavar="FILE",
             help="configuration file [default: %(default)s]",
             default=default_config_file,
+        )
+        # gunicorn uses '-c' to specify its config file
+        # we don't want the config parser to get confused
+        # when the app is ran via gunicorn
+        parser.add_argument(
+            "-c",
+            help=argparse.SUPPRESS,
+            dest="trash_becauseofgunicorn"
         )
         parser.add_argument(
             "-s",
