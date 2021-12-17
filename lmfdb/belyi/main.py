@@ -652,12 +652,13 @@ def belyi_search(info, query):
 
     info["nf_link"] = lambda elt: field_display_gen(elt.get('base_field_label'), elt.get('base_field'), truncate=16)
     parse_bool(info, query, "is_primitive", name="is_primitive")
-    info["primitivization"] = primitivization.strip()
-    if re.match(GALMAP_RE, primitivization):
-        # 7T6-7_4.2.1_4.2.1-b
-        query["primitivization"] = primitivization
-    else:
-        raise ValueError("%s is not a valid Belyi map label", primitivization)
+    if info.get("primitivization"):
+        primitivization = info["primitivization"] 
+        if re.match(GALMAP_RE, primitivization):
+            # 7T6-7_4.2.1_4.2.1-b
+            query["primitivization"] = primitivization
+        else:
+            raise ValueError("%s is not a valid Belyi map label", primitivization)
 
 
 ################################################################################
