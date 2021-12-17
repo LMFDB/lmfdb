@@ -79,6 +79,11 @@ class BelyiTest(LmfdbTest):
         self.not_check_args("Belyi/?is_primitive=no", "1T1-1_1_1-a")
         self.check_args("Belyi/?is_primitive=yes", "1T1-1_1_1-a")
 
+    def test_primitivization_search(self):
+        self.check_args("/Belyi/?primitivization=2T1-2_2_1.1-a", "4T1-4_4_1.1.1.1-a")
+        self.not_check_args("/Belyi/?primitivization=2T1-2_2_1.1-a", "1T1-1_1_1-a")
+
+
     # downloads
 
     def test_download(self):
