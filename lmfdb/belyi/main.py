@@ -341,14 +341,16 @@ def belyi_orbit_from_label(label):
 # Searching
 ################################################################################
 
+GALMAP_RE = re.compile(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+-[a-z]+$")
+PASSPORT_RE = re.compile(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+$")
 
 def belyi_jump(info):
     jump = info["jump"].strip()
-    if re.match(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+-[a-z]+$", jump):
+    if re.match(GALMAP_RE, jump):
         # 7T6-7_4.2.1_4.2.1-b
         return redirect(url_for_belyi_galmap_label(jump), 301)
     else:
-        if re.match(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+$", jump):
+        if re.match(PASSPORT_RE, jump):
         # 7T6-7_4.2.1_4.2.1
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
@@ -650,6 +652,14 @@ def belyi_search(info, query):
 
     info["nf_link"] = lambda elt: field_display_gen(elt.get('base_field_label'), elt.get('base_field'), truncate=16)
     parse_bool(info, query, "is_primitive", name="is_primitive")
+    if info.get("primitivization"):
+        primitivization = info["primitivization"] 
+        if re.match(GALMAP_RE, primitivization):
+            # 7T6-7_4.2.1_4.2.1-b
+            query["primitivization"] = primitivization
+        else:
+            raise ValueError("%s is not a valid Belyi map label", primitivization)
+
 
 ################################################################################
 # Statistics
@@ -824,6 +834,12 @@ class BelyiSearchArray(SearchArray):
             label="Primitive",
             knowl="belyi.primitive",
             example="yes")
+        primitivization = TextBox(
+            name="primitivization",
+            label="Primitivization",
+            knowl="belyi.primitivization",
+            example="2T1-2_2_1.1-a",
+            example_span="2T1-2_2_1.1-a")
         field = TextBox(
             name="field",
             label="Base field",
@@ -832,6 +848,6 @@ class BelyiSearchArray(SearchArray):
             example_span="2.2.5.1 or Qsqrt5")
         count = CountBox()
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [field], [geomtype], [is_primitive], [count]]
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [field], [geomtype], [is_primitive], [primitivization], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive, primitivization]]
