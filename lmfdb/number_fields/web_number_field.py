@@ -201,8 +201,7 @@ def string2list(s):
 def is_fundamental_discriminant(d):
     if d in [0, 1]:
         return False
-    #if d.is_squarefree():
-    if True:
+    if d.is_squarefree():
         return d % 4 == 1
     else:
         return d % 16 in [8, 12] and (d // 4).is_squarefree()
