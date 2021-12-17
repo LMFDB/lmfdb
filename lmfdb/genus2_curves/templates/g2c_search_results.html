@@ -6,27 +6,39 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
+<select oninput="$('.col-'+this.value).toggle(); this.value='none';" id="column-selector">
+  <option value="none" selected></option>
+  <option value="label">label</option>
+  <option value="class">class</option>
+  <option value="equation">equation</option>
+  <option value="st_group">Sato-Tate group</option>
+  <option value="is_simple_geom">absolutely simple</option>
+  <option value="is_gl2_type">GL2-type</option>
+  <option value="analytic_rank">rank</option>
+</select>
+
+
 <table class="ntdata">
 <thead>
 <tr>
-    <th>{{ KNOWL('g2c.label', title='Label') }}</th>
-    <th>{{ KNOWL('g2c.isogeny_class', title='Class') }}</th>
-    <th>{{ KNOWL('g2c.minimal_equation', title='Equation') }}</th>
-    <th>{{ KNOWL('g2c.st_group', title='Sato-Tate') }}</th>
-    <th>{{ KNOWL('ag.geom_simple', title='\(\overline{\Q}\)-simple') }}</th>
-    <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)') }}</th>
-    <th>{{ KNOWL('g2c.analytic_rank', title='Rank*') }}</th>
+    <th class="col-label">{{ KNOWL('g2c.label', title='Label') }}</th>
+    <th class="col-class">{{ KNOWL('g2c.isogeny_class', title='Class') }}</th>
+    <th class="col-equation">{{ KNOWL('g2c.minimal_equation', title='Equation') }}</th>
+    <th class="col-st_group" align=center>{{ KNOWL('g2c.st_group', title='Sato-Tate') }}</th>
+    <th class="col-is_simple_geom" align=center>{{ KNOWL('ag.geom_simple', title='\(\overline{\Q}\)-simple') }}</th>
+    <th class="col-is_gl2_type" align=center>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)') }}</th>
+    <th class="col-analytic_rank" align=center>{{ KNOWL('g2c.analytic_rank', title='Rank*') }}</th>
 </tr>
 </thead>
 {% for curve in info.results: %}
 <tr>
-    <td> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>
-    <td> <a href = "{{info.class_url(curve.class)}}"> {{curve.class}} </a> </td>
-    <td> \({{curve.equation_formatted}}\) </td>
-    <td align=center> {{curve.st_group_link|safe}} </td>
-    <td align=center> {{('&#x2713;' if curve.is_simple_geom else '')|safe}} </td>
-    <td align=center> {{('&#x2713;' if curve.is_gl2_type else '')|safe}} </td>
-    <td align=center> ${{curve.analytic_rank}}$ </td>
+    <td class="col-label"> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>
+    <td class="col-class"> <a href = "{{info.class_url(curve.class)}}"> {{curve.class}} </a> </td>
+    <td class="col-equation"> \({{curve.equation_formatted}}\) </td>
+    <td class="col-st_group" align=center> {{curve.st_group_link|safe}} </td>
+    <td class="col-is_simple_geom" align=center> {{('&#x2713;' if curve.is_simple_geom else '')|safe}} </td>
+    <td class="col-is_gl2_type" align=center> {{('&#x2713;' if curve.is_gl2_type else '')|safe}} </td>
+    <td class="col-analytic_rank" align=center> ${{curve.analytic_rank}}$ </td>
 </tr>
 {% endfor %}
 </table>
