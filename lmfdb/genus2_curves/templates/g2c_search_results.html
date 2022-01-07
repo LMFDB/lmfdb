@@ -6,15 +6,15 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-<select oninput="$('.col-'+this.value).toggle(); this.value='none';" id="column-selector">
+<select oninput="$('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ? this.options[this.selectedIndex].text + '✓':this.options[this.selectedIndex].text.slice(0,-1)); this.value='none';" id="column-selector">
   <option value="none" selected>columns to display</option>
-  <option value="label">label</option>
-  <option value="class">class</option>
-  <option value="equation">equation</option>
-  <option value="st_group">Sato-Tate group</option>
-  <option value="is_simple_geom">absolutely simple</option>
-  <option value="is_gl2_type">GL2-type</option>
-  <option value="analytic_rank">rank</option>
+  <option value="label">label✓</option>
+  <option value="class">class✓</option>
+  <option value="equation">equation✓</option>
+  <option value="st_group">Sato-Tate group✓</option>
+  <option value="is_simple_geom">absolutely simple✓</option>
+  <option value="is_gl2_type">GL2-type✓</option>
+  <option value="analytic_rank">rank✓</option>
 </select>
 
 
