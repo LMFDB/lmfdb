@@ -2,6 +2,7 @@
 import ast
 import os
 import re
+from ast import literal_eval
 from io import BytesIO
 import time
 
@@ -15,7 +16,7 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
+    SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -294,43 +295,6 @@ def elliptic_curve_jump(info):
     else:
         return elliptic_curve_jump_error('', info)
 
-def download_search(info):
-    dltype = info['Submit']
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    ass = '='  # assignment
-    eol = ''   # end of line
-    filename = 'elliptic_curves.gp'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'elliptic_curves.sage'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        ass = ":="
-        eol = ';'
-        filename = 'elliptic_curves.m'
-    s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass coefficients)\n'
-    s += '\n' + com2 + '\n'
-    s += 'data ' + ass + ' [' + '\\\n'
-    # reissue saved query here
-    res = db.ec_curvedata.search(ast.literal_eval(info["query"]), 'ainvs')
-    s += ",\\\n".join(str(ainvs) for ainvs in res)
-    s += ']' + eol + '\n'
-    strIO = BytesIO()
-    strIO.write(s.encode('utf-8'))
-    strIO.seek(0)
-    return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
-
 def url_for_label(label):
     if label == "random":
         return url_for(".random_curve")
@@ -338,6 +302,22 @@ def url_for_label(label):
 
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
+
+class EC_download(Downloader):
+    table = db.ec_curvedata
+    title = "Elliptic curves"
+    columns = "ainvs"
+    data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
+    data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
+    function_body = {
+        "magma": [
+            "return [EllipticCurve([a:a in ai]):ai in data];", # convert ai from list to sequence
+        ],
+        "sage": [
+            "return [EllipticCurve(ai) for ai in data]",
+        ],
+        "gp": ["[ellinit(ai)|ai<-data];"],
+    }
 
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curvedata,
@@ -347,7 +327,7 @@ modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*'
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':download_search},
+                        'download':EC_download()},
              bread=lambda:get_bread('Search results'))
 
 def elliptic_curve_search(info, query):
