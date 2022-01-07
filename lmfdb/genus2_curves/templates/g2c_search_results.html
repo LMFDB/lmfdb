@@ -13,9 +13,10 @@ select {
 </style>
 
 <select
-onmousedown="$(this).attr('size',this.length);"
+onmousedown="$(this).attr('size',this.length); this.value='';"
 onmousemove="return false;"
-oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { $(this).attr('size',0); this.value='none'; } else { $('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ?'✓&ensp;':'&emsp;&thinsp;')+this.options[this.selectedIndex].text.slice(2,this.options[this.selectedIndex].text.length); this.value='none'; }" id="column-selector">
+onblur="$(this).attr('size',0); this.value='none';"
+oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { this.blur();} else { $('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ?'✓&ensp;':'&emsp;&thinsp;')+this.options[this.selectedIndex].text.slice(2,this.options[this.selectedIndex].text.length); this.value=''; }" id="column-selector">
   <option value="none" selected>columns to display</option>
   <option value="label">✓ label</option>
   <option value="class">✓ class</option>
