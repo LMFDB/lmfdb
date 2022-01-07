@@ -6,9 +6,11 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
+
 <select
-onfocus="$(this).attr('size',0); console.log('focus');"
-oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { $(this).attr('size',0); this.value='none'; } else { $('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ?'✓&ensp;':'&emsp;&thinsp;')+this.options[this.selectedIndex].text.slice(2,this.options[this.selectedIndex].text.length); this.value='none'; $(this).attr('size',this.length); }" id="column-selector">
+onmousedown="$(this).attr('size',this.length);"
+onmousemove="return false;"
+oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { $(this).attr('size',0); this.value='none'; } else { $('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ?'✓&ensp;':'&emsp;&thinsp;')+this.options[this.selectedIndex].text.slice(2,this.options[this.selectedIndex].text.length); this.value='none'; }" id="column-selector">
   <option value="none" selected>columns to display</option>
   <option value="label">✓ label</option>
   <option value="class">✓ class</option>
@@ -19,7 +21,6 @@ oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { $(thi
   <option value="analytic_rank">✓ rank</option>
   <option value="done">done</option>
 </select>
-
 
 <table class="ntdata">
 <thead>
