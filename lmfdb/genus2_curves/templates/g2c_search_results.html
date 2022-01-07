@@ -6,6 +6,11 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
+<style>
+select {
+    overflow-y: auto;
+}
+</style>
 
 <select
 onmousedown="$(this).attr('size',this.length);"
@@ -19,7 +24,7 @@ oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { $(thi
   <option value="is_simple_geom">✓ absolutely simple</option>
   <option value="is_gl2_type">✓ GL2-type</option>
   <option value="analytic_rank">✓ rank</option>
-  <option value="done">done</option>
+  <option value="done">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done</option>
 </select>
 
 <table class="ntdata">
