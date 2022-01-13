@@ -476,7 +476,16 @@ class ArtinRepresentation(object):
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
         """
-        return 1 if self._data["Is_Even"] else -1
+        tmp = (self.character()[self.number_field_galois_group().index_complex_conjugation() - 1])
+        try:
+            assert len(tmp) == 1
+            trace_complex = tmp[0]
+        except AssertionError:
+        # We are looking for the character value on the conjugacy class of complex conjugation.
+        # This is always an integer, so we don't expect this to be a more general
+        # algebraic integer, and we can simply convert to sage
+            raise TypeError("Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp)
+        return trace_complex
 
     def number_of_eigenvalues_plus_one_complex_conjugation(self):
         return int(Integer(self.dimension() + self.trace_complex_conjugation()) / 2)
