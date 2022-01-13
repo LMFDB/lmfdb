@@ -196,7 +196,6 @@ def display_galois_orbit(orbit, modulus):
     trunc = (len(orbit) > 5)
     if trunc:
         orbit = [orbit[0], orbit[-1]]
-    urls = [url_for(".render_Dirichletwebpage", modulus=modulus, number=o) for o in orbit]
     disp = [r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, o) for o in orbit]
     if trunc:
         disp = r"$, \cdots ,$".join(disp)
