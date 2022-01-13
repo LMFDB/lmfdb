@@ -18,6 +18,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
@@ -339,10 +340,60 @@ def url_for_label(label):
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
 
-@search_wrap(template="ec-search-results.html",
-             table=db.ec_curvedata,
+ec_columns = SearchColumns([
+    ColGroup("curve_labels", None, "Curve",
+             [
+                 LinkCol("lmfdb_label", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center"),
+                 MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
+                                   ["Clabel", "conductor"],
+                                   lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
+                                   default=True, align="center")
+             ],
+             default=True),
+    ColGroup("iso_labels", "ec.isogeny_class", "Isogeny class",
+             [
+                 LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center"),
+                 MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona label",
+                                   ["Ciso", "conductor"],
+                                   lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
+                                   default=True, align="center")
+             ],
+             default=True),
+    MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", default=True, align="left"),
+    MultiProcessedCol("disc", "ec.discriminant", "Discriminant",
+                      ["signD", "absD"],
+                      lambda s, a: f"+{a}" if s==1 else "-{a}",
+                      contingent=lambda info: info.get("discriminant"),
+                      default=True, mathmode=True, align="center"),
+    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height",
+                 lambda fh: RealField(20)(fh),
+                 contingent=lambda info: info.get("faltings_height"),
+                 default=True, align="center"),
+    MathCol("rank", "ec.rank", "Rank", default=True),
+    ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
+                 lambda tors: f"${tors}$" if tors else "trivial",
+                 default=True, align="center"),
+    SearchCol("cm", "ec.complex_multiplication", "CM disc",
+              contingent=lambda info: info.get("cm") == "CM" or "," in info.get("cm",""),
+              default=True, align="center"),
+    ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", "Nonmax primes",
+                 lambda primes: ",".join(str(p) for p in primes),
+                 contingent=lambda info: info.get("nonmax_primes"),
+                 default=True, mathmode=True, align="center"),
+    ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", "Galois images",
+                  lambda images: ",".join(images),
+                  contingent=lambda info: info.get("galois_image"),
+                  default=True, align="center"),
+    MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
+            contingent=lambda info: info.get("num_int_pts"),
+            default=True, align="center")],
+    tr_class=["bottom-align", ""])
+
+
+@search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
+             columns=ec_columns,
              per_page=50,
              url_for_label=url_for_label,
              learnmore=learnmore_list,

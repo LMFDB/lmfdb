@@ -441,12 +441,12 @@ class WebNumberField:
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
 
     # Return a nice string for the Galois group
-    def galois_string(self):
+    def galois_string(self, cache=None):
         if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])
-        return group_pretty_and_nTj(n, t)
+        return group_pretty_and_nTj(n, t, cache=cache)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
@@ -744,13 +744,17 @@ class WebNumberField:
     def web_poly(self):
         return pol_to_html(str(coeff_to_poly(self.coeffs())))
 
-    def class_group_invariants(self):
+    def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):
-            return na_text()
+            return "n/a" if in_search_results else na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'trivial'
-        return '$%s$'%str(cg_list)
+            invs = 'trivial'
+        else:
+            invs = '$%s$'%str(cg_list)
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
 
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):

@@ -42,6 +42,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, SearchCol, MultiProcessedCol, ColGroup, MultiProcessedCol
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
     WebAbstractCharacter,
@@ -730,15 +731,16 @@ def aut_diagram(label):
     )
 
 
-def show_type(rec):
-    if rec["abelian"]:
-        return f'Abelian - {len(rec["smith_abelian_invariants"])}'
-    elif rec["nilpotent"]:
-        return f'Nilpotent - {rec["nilpotency_class"]}'
-    elif rec["solvable"]:
-        return f'Solvable - {rec["derived_length"]}'
+def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
+    # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
+    if ab:
+        return f'Abelian - {len(smith)}'
+    elif nil:
+        return f'Nilpotent - {nilcls}'
+    elif solv:
+        return f'Solvable - {dlen}'
     else:
-        return f'Non-Solvable - {rec["composition_length"]}'
+        return f'Non-Solvable - {clen}'
 
 
 #### Searching
@@ -775,41 +777,41 @@ def group_download(info):
         learnmore=learnmore_list_remove("Source"),
     )
 
+def show_factor(n):
+    return f"${latex(ZZ(n).factor())}$"
+
+def get_url(label):
+    return url_for(".by_label", label=label)
+
+def get_sub_url(label):
+    return url_for(".by_subgroup_label", label=label)
+
+group_columns = SearchColumns([
+    LinkCol("label", "group.label", "Label", get_url, default=True),
+    MathCol("tex_name", "group.name", "Name", default=True),
+    ProcessedCol("order", "group.order", "Order", show_factor, default=True, align="center"),
+    ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, default=True, align="center"),
+    MathCol("number_conjugacy_classes", "gg.conjugacy_classes", r"$\card{\mathrm{conj}(G)}$", default=True),
+    SearchCol("center_label", "group.center", "Center", default=True, align="center"),
+    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center"),
+    MultiProcessedCol("type", "group.type", "Type - length",
+                      ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
+                      show_type,
+                      default=True, align="center")])
+group_columns.dummy_download=True
 
 @search_wrap(
-    template="abstract-search.html",
     table=db.gps_groups,
     title="Abstract group search results",
     err_title="Abstract groups search input error",
+    columns=group_columns,
     shortcuts={"jump": group_jump, "download": group_download},
-    projection=[
-        "abelian",
-        "center_label",
-        "composition_length",
-        "derived_length",
-        "exponent",
-        "label",
-        "nilpotency_class",
-        "nilpotent",
-        "number_conjugacy_classes",
-        "order",
-        "outer_order",
-        "smith_abelian_invariants",
-        "solvable",
-        "tex_name",
-    ],
-    # cleaners={"class": lambda v: class_from_curve_label(v["label"]),
-    #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
-    #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
     #  credit=lambda:credit_string,
     url_for_label=url_for_label,
 )
 def group_search(info, query={}):
-    info["group_url"] = get_url
-    info["show_factor"] = lambda num: "$" + latex(ZZ(num).factor()) + "$"
-    info["show_type"] = show_type
     group_parse(info, query)
 
 
@@ -862,46 +864,55 @@ def group_parse(info, query):
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
 
+subgroup_columns = SearchColumns([
+    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
+    ColGroup("subgroup_cols", None, "Subgroup", [
+        MultiProcessedCol("sub_name", "group.name", "Name",
+                          ["subgroup", "subgroup_tex"],
+                          lambda sub, tex: '<a href="%s">$%s$</a>' % (get_url(sub), tex),
+                          default=True),
+        ProcessedCol("subgroup_order", "group.order", "Order", show_factor, default=True, align="center"),
+        CheckCol("normal", "group.subgroup.normal", "norm", default=True),
+        CheckCol("characteristic", "group.characteristic_subgroup", "char", default=True),
+        CheckCol("cyclic", "group.cyclic", "cyc", default=True),
+        CheckCol("abelian", "group.abelian", "ab", default=True),
+        CheckCol("solvable", "group.solvable", "solv", default=True),
+        CheckCol("maximal", "group.maximal_subgroup", "max", default=True),
+        CheckCol("perfect", "group.perfect", "perf", default=True),
+        CheckCol("central", "group.central", "cent", default=True)],
+             default=True),
+    SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
+    ColGroup("ambient_cols", None, "Ambient", [
+        MultiProcessedCol("ambient_name", "group.name", "Name",
+                          ["ambient", "ambient_tex"],
+                          lambda amb, tex: '<a href="%s">$%s$</a>' % (get_url(amb), tex),
+                          default=True),
+        ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center")],
+             default=True),
+    SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
+    ColGroup("quotient_cols", None, "Quotient", [
+        MultiProcessedCol("quotient_name", "group.name", "Name",
+                          ["quotient", "quotient_tex"],
+                          lambda quo, tex: '<a href="%s">$%s$</a>' % (get_url(quo), tex) if quo else "",
+                          default=True),
+        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", default=True, align="center"),
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", default=True),
+        CheckCol("quotient_abelian", "group.abelian", "ab", default=True),
+        CheckCol("quotient_solvable", "group.solvable", "solv", default=True),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", default=True)],
+             default=True)],
+    tr_class=["bottom-align", ""])
+subgroup_columns.dummy_download = True
+
 @search_wrap(
-    template="subgroup-search.html",
     table=db.gps_subgroups,
     title="Subgroup search results",
     err_title="Subgroup search input error",
-    projection=[
-        "abelian",
-        "ambient",
-        "ambient_order",
-        "ambient_tex",
-        "central",
-        "characteristic",
-        "cyclic",
-        "direct",
-        "hall",
-        "label",
-        "maximal",
-        "minimal_normal",
-        "normal",
-        "perfect",
-        "quotient",
-        "quotient_abelian",
-        "quotient_cyclic",
-        "quotient_order",
-        "quotient_solvable",
-        "quotient_tex",
-        "solvable",
-        "split",
-        "subgroup",
-        "subgroup_order",
-        "subgroup_tex",
-        "sylow",
-    ],
+    columns=subgroup_columns,
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
 )
 def subgroup_search(info, query={}):
-    info["group_url"] = get_url
-    info["subgroup_url"] = get_sub_url
-    info["show_factor"] = lambda num: "$" + latex(ZZ(num).factor()) + "$"
     info["search_type"] = "Subgroups"
     parse_ints(info, query, "subgroup_order")
     parse_ints(info, query, "ambient_order")
@@ -930,15 +941,6 @@ def subgroup_search(info, query={}):
     parse_regex_restricted(info, query, "subgroup", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "ambient", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "quotient", regex=abstract_group_label_regex)
-
-
-def get_url(label):
-    return url_for(".by_label", label=label)
-
-
-def get_sub_url(label):
-    return url_for(".by_subgroup_label", label=label)
-
 
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)

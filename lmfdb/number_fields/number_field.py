@@ -18,13 +18,14 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl, 
+    parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl,
     raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, ProcessedCol
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data, transitive_group_display_knowl,
-    group_cclasses_knowl_guts, group_pretty_and_nTj,
+    group_cclasses_knowl_guts, group_pretty_and_nTj, knowl_cache,
     group_character_table_knowl_guts, group_alias_table)
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
@@ -791,16 +792,37 @@ def number_field_jump(info):
 #    info = {'results': fields2}
 #    return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
 
+nf_columns = SearchColumns([
+    ProcessedCol("label", "nf.label", "Label",
+                 lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label)),
+                 default=True),
+    SearchCol("poly", "nf.defining_polynomial", "Polynomial", default=True),
+    MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
+    SearchCol("galois", "nf.galois_group", "Galois group", default=True),
+    SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True)],
+    db_cols=["class_group", "coeffs", "degree", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh"])
 
-@search_wrap(template="nf-search.html",
-             table=db.nf_fields,
+def nf_postprocess(res, info, query):
+    galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
+    cache = knowl_cache(list(set(galois_labels)))
+    for rec in res:
+        wnf = WebNumberField.from_data(rec)
+        rec["poly"] = wnf.web_poly()
+        rec["disc"] = wnf.disc_factored_latex()
+        rec["galois"] = wnf.galois_string(cache=cache)
+        rec["class_group_desc"] = wnf.class_group_invariants()
+    return res
+
+@search_wrap(table=db.nf_fields,
              title='Number field search results',
              err_title='Number field search error',
+             columns=nf_columns,
              per_page=50,
              shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
              url_for_label=url_for_label,
+             postprocess=nf_postprocess,
              bread=lambda:[('Number fields', url_for(".number_field_render_webpage")),
                            ('Search results', '.')],
              learnmore=learnmore_list)

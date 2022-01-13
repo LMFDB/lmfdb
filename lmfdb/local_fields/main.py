@@ -16,6 +16,7 @@ from lmfdb.utils import (
     search_wrap, Downloader, StatsDisplay, totaler, proportioners,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
@@ -181,14 +182,37 @@ class LF_download(Downloader):
                              "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
                      'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
 
+lf_columns = SearchColumns([
+    LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", lambda coeffs: format_coeffs(coeffs), default=True),
+    MathCol("p", "lf.qp", "$p$", default=True),
+    MathCol("e", "lf.ramification_index", "$e$", default=True),
+    MathCol("f", "lf.residue_field_degree", "$f$", default=True),
+    MathCol("c", "lf.discriminant_exponent", "$c$", default=True),
+    MultiProcessedCol("gal", "nf.galois_group", "Galois group",
+                      ["n", "gal", "cache"],
+                      lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
+                      default=True),
+    MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
+                      ["slopes", "t", "u"],
+                      lambda slopes, t, u: show_slope_content(slopes, t, u),
+                      default=True, mathmode=True)],
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u"])
 
-@search_wrap(template="lf-search.html",
-             table=db.lf_fields,
+def lf_postprocess(res, info, query):
+    cache = knowl_cache(list(set([f"{rec['n']}T{rec['gal']}" for rec in res])))
+    for rec in res:
+        rec["cache"] = cache
+    return res
+
+@search_wrap(table=db.lf_fields,
              title='$p$-adic field search results',
              titletag=lambda:'p-adic field search results',
              err_title='Local field search input error',
+             columns=lf_columns,
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
+             postprocess=lf_postprocess,
              bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
              url_for_label=url_for_label)
@@ -203,9 +227,6 @@ def local_field_search(info,query):
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
-    info['group_display'] = group_pretty_and_nTj
-    info['display_poly'] = format_coeffs
-    info['slopedisp'] = show_slope_content
     info['search_array'] = LFSearchArray()
 
 def render_field_webpage(args):

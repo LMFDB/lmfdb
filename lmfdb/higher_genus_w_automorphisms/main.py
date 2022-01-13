@@ -21,6 +21,7 @@ from lmfdb.utils import (
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
@@ -593,18 +594,29 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
                     a linear function of variable g for genus (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-@search_wrap(template="hgcwa-search.html",
-        table=db.hgcwa_passports,
-        title='Family of higher genus curves with automorphisms search results',
-        err_title='Family of higher genus curves with automorphisms search input error',
-        per_page=50,
-        url_for_label=url_for_label,
-        random_projection="passport_label",
-        shortcuts={'jump': higher_genus_w_automorphisms_jump,
-            'download': hgcwa_code_download_search },
-        cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
-        bread=lambda: get_bread("Search results"),
-        learnmore=learnmore_list)
+hgcwa_columns = SearchColumns([
+    LinkCol("passport_label", "dq.curve.highergenus.aut.label", "Refined passport label",
+            lambda label: f"/HigherGenus/C/Aut/{label}",
+            default=True),
+    MathCol("genus", "ag.curve.genus", "Genus", default=True),
+    ProcessedCol("group", "group.small_group_label", "Group", lambda grp: group_display(grp), mathmode=True, align="center", default=True),
+    MathCol("group_order", "group.order", "Group order", default=True),
+    MathCol("dim", "curve.highergenus.aut.dimension", "Dimension", default=True),
+    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), default=True, mathmode=True)])
+hgcwa_columns.languages = ['gap', 'magma']
+
+@search_wrap(
+    table=db.hgcwa_passports,
+    title='Family of higher genus curves with automorphisms search results',
+    err_title='Family of higher genus curves with automorphisms search input error',
+    columns=hgcwa_columns,
+    per_page=50,
+    url_for_label=url_for_label,
+    random_projection="passport_label",
+    shortcuts={'jump': higher_genus_w_automorphisms_jump,
+               'download': hgcwa_code_download_search },
+    bread=lambda: get_bread("Search results"),
+    learnmore=learnmore_list)
 def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
         # allow for ; in signature
