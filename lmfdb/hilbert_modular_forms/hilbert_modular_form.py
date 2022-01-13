@@ -134,7 +134,7 @@ hmf_columns = SearchColumns([
                       lambda fld, label, short: '<a href="%s">%s</a>' % (url_for('hmf.render_hmf_webpage', field_label=fld, label=label), short),
                       default=True),
     ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
-    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", lambda level: teXify_pol(level), mathmode=True, default=True),
+    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True)])
 hmf_columns.dummy_download = True
 

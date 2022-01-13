@@ -779,7 +779,6 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
         else:
             info['bread'] = info['bread'][:-1]
             return l_function_search(info)
-        return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
 @l_function_page.route("/CuspForms/")

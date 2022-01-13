@@ -146,6 +146,21 @@ def ratproc(inp):
     sstring += str(qs)
     return sstring
 
+def show_slopes(sl):
+    if str(sl) == "[]":
+        return "None"
+    return(sl)
+
+def show_slope_content(sl,t,u):
+    sc = str(sl)
+    if sc == '[]':
+        sc = r'[\ ]'
+    if t>1:
+        sc += '_{%d}'%t
+    if u>1:
+        sc += '^{%d}'%u
+    return(sc)
+
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
@@ -184,7 +199,7 @@ class LF_download(Downloader):
 
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
-    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", lambda coeffs: format_coeffs(coeffs), default=True),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
     MathCol("p", "lf.qp", "$p$", default=True),
     MathCol("e", "lf.ramification_index", "$e$", default=True),
     MathCol("f", "lf.residue_field_degree", "$f$", default=True),
@@ -195,7 +210,7 @@ lf_columns = SearchColumns([
                       default=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
-                      lambda slopes, t, u: show_slope_content(slopes, t, u),
+                      show_slope_content,
                       default=True, mathmode=True)],
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u"])
 
@@ -341,7 +356,7 @@ def render_field_webpage(args):
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
         if db.nf_fields.exists({'local_algs': {'$contains': label}}):
-            friends.append(('Number fields with this completion', 
+            friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
 
         bread = get_bread([(label, ' ')])
@@ -356,22 +371,6 @@ def render_field_webpage(args):
             learnmore=learnmore_list(),
             KNOWL_ID="lf.%s" % label,
         )
-
-
-def show_slopes(sl):
-    if str(sl) == "[]":
-        return "None"
-    return(sl)
-
-def show_slope_content(sl,t,u):
-    sc = str(sl)
-    if sc == '[]':
-        sc = r'[\ ]'
-    if t>1:
-        sc += '_{%d}'%t
-    if u>1:
-        sc += '^{%d}'%u
-    return(sc)
 
 def prettyname(ent):
     if ent['n'] <= 2:
