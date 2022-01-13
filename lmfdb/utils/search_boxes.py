@@ -468,6 +468,45 @@ class CountBox(TextBox):
             example_value=True,
             example_span="")
 
+class ColumnController(SelectBox):
+    def __init__(self):
+        super().__init__(
+            name="column_control",
+            label="Columns to display",
+            width=170)
+
+    def _input(self, info):
+        if info is None:
+            print("WARNING: Column controller should not be included on browse page")
+            return ""
+        C = info.get("columns")
+        if C is None:
+            print("WARNING: Column controller included but no columns specified in @search_wrap")
+            return ""
+        keys = [
+            '''onmousedown="$(this).attr('size',this.length); this.value='';"''',
+            '''onmousemove="return false;"''',
+            '''onblur="$(this).attr('size',0); this.value='none';"''',
+            '''oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { this.blur();} else { $('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ?'✓&ensp;':'&emsp;&thinsp;')+this.options[this.selectedIndex].text.slice(2,this.options[this.selectedIndex].text.length); this.value=''; }"''',
+            '''id="column-selector"''',
+        ]
+        if self.short_width is not None:
+            keys.append('style="width: %spx"' % self.short_width)
+        options = [("none", " selected", "columns to display")]
+        # Need to fix this for ColGroups
+        for col in C.columns_shown(info, 0):
+            if col.default:
+                disp = "✓ " + col.title
+            else:
+                disp = "  " + col.title
+            options.append((col.name, "", disp))
+        options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
+        options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
+        return "        <select %s>\n%s\n        </select>" % (
+            " ".join(keys),
+            "".join("\n" + " " * 10 + opt for opt in options),
+        )
+
 class SearchButton(SearchBox):
     _default_width = 170
     def __init__(self, value, description, **kwds):
@@ -695,6 +734,7 @@ class SearchArray(UniqueRepresentation):
                         options=sort,
                         width=170)
                     buttons.append(sort_box)
+            buttons.append(ColumnController())
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 
     def html(self, info=None):
