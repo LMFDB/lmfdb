@@ -101,7 +101,7 @@ def make_order_key(order):
 gg_columns = SearchColumns([
     LinkCol("label", "gg.label", "Label", url_for_label, default=True),
     SearchCol("pretty", "gg.simple_name", "Name", default=True),
-    MathCol("order", "group.order", "Order", default=True),
+    MathCol("order", "group.order", "Order", default=True, align="right"),
     MathCol("parity", "gg.parity", "Parity", default=True, align="right"),
     CheckCol("solv", "group.solvable", "Solvable", default=True),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
