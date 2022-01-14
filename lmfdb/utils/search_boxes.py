@@ -501,8 +501,15 @@ class ColumnController(SelectBox):
         if self.short_width is not None:
             keys.append('style="width: %spx"' % self.short_width)
         options = [("none", " selected", "columns to display")]
-        # Need to fix this for ColGroups
+        use_rank = 0 # which rank to iterate over in determining the columns listed in the select
         for col in C.columns_shown(info, 0):
+            if col.height > 1 and any(sub.name != col.name for sub in col.show(info, 1)):
+                # A ColGroup with columns that should be shown/hidden individually
+                use_rank = 1
+                break
+        for col in C.columns_shown(info, use_rank):
+            if col.short_title is None: # probably a spacer column:
+                continue
             title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
             if col.default(info):
                 disp = "✓&ensp;" + title
