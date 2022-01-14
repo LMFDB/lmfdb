@@ -481,6 +481,9 @@ class ColumnController(SelectBox):
         C = info.get("columns")
         if C is None:
             return ""
+        R = info.get("results")
+        if R is None:
+            return ""
         return super()._label(info)
 
     def _input(self, info):
@@ -490,6 +493,10 @@ class ColumnController(SelectBox):
         C = info.get("columns")
         if C is None:
             print("WARNING: Column controller included but no columns specified in @search_wrap")
+            return ""
+        R = info.get("results")
+        if R is None:
+            # can happen if search input error for example
             return ""
         keys = [
             '''onmousedown="$(this).attr('size',this.length); this.value='';"''',
