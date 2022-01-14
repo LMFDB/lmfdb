@@ -18,6 +18,7 @@ from lmfdb.utils import (
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import (
     complete_group_code, knowl_cache, galdata, galunformatter,
@@ -224,16 +225,29 @@ def parse_projective_type(inp, query, qfield):
 def url_for_label(label):
     return url_for(".render_artin_representation_webpage", label=label)
 
-@search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps,
+artin_columns = SearchColumns([
+    SearchCol("galois_links", "artin.label", "Label", default=True),
+    MathCol("dimension", "artin.dimension", "Dimension", default=True),
+    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", default=True),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center"),
+    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True),
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True)],[
+        "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even"])
+
+artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
+artin_columns.dummy_download = True
+
+@search_wrap(table=db.artin_reps,
              title='Artin representation search results',
              err_title='Artin representation search error',
              per_page=50,
+             columns=artin_columns,
              learnmore=learnmore_list,
              url_for_label=url_for_label,
              shortcuts={'jump':artin_representation_jump},
-             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
-             initfunc=lambda:ArtinRepresentation)
+             postprocess=lambda res, info, query: [ArtinRepresentation(data=x) for x in res],
+             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')])
 def artin_representation_search(info, query):
     query['Hide'] = 0
     info['sign_code'] = 0

@@ -16,13 +16,14 @@ from lmfdb.utils import (
     StatsDisplay, totaler, proportioners, prop_int_pretty,
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from .transitive_group import (
     galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
-    group_alias_table, WebGaloisGroup)
+    group_alias_table, WebGaloisGroup, knowl_cache)
 
 # Test to see if this gap installation knows about transitive groups
 # logger = make_logger("GG")
@@ -77,9 +78,11 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 def by_label(label):
     clean_label = clean_input(label)
     if clean_label != label:
-        return redirect(url_for('.by_label', label=clean_label), 301)
+        return redirect(url_for_label(clean_label), 301)
     return render_group_webpage({'label': label})
 
+def url_for_label(label):
+    return url_for(".by_label", label=label)
 
 @galois_groups_page.route("/")
 def index():
@@ -95,11 +98,49 @@ def make_order_key(order):
     order1 = int(ZZ(order).log(10))
     return '%03d%s'%(order1,str(order))
 
-@search_wrap(template="gg-search.html",
-             table=db.gps_transitive,
+gg_columns = SearchColumns([
+    LinkCol("label", "gg.label", "Label", url_for_label, default=True),
+    SearchCol("pretty", "gg.simple_name", "Name", default=True),
+    MathCol("order", "group.order", "Order", default=True),
+    MathCol("parity", "gg.parity", "Parity", default=True, align="right"),
+    CheckCol("solv", "group.solvable", "Solvable", default=True),
+    MultiProcessedCol("subfields", "gg.subfields", "Subfields",
+                      ["subfields", "cache"],
+                      lambda subs, cache: WebGaloisGroup(None, {"subfields": subs}).subfields(cache=cache),
+                      contingent=lambda info: info["show_subs"],
+                      default=True),
+    MultiProcessedCol("siblings", "gg.other_representations", "Low Degree Siblings",
+                      ["siblings", "bound_siblings", "cache"],
+                      lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
+                      default=True)
+],
+    db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields"])
+gg_columns.dummy_download = True
+gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
+
+def gg_postprocess(res, info, query):
+    # We want to cache latex forms both for the results and for any groups that show up as siblings or subfields
+    others = sum([[tuple(pair[0]) for pair in rec["siblings"]] for rec in res], [])
+    if info["show_subs"]:
+        others += sum([[tuple(pair[0]) for pair in rec["subfields"]] for rec in res], [])
+    others = sorted(set(others))
+    others = ["T".join(str(c) for c in nt) for nt in others]
+    others = list(db.gps_transitive.search({"label": {"$in": others}}, ["label", "order", "gapid", "pretty"]))
+    cache = knowl_cache(results=res+others)
+    for rec in res:
+        pretty = cache[rec["label"]].get("pretty")
+        if not pretty:
+            pretty = rec["name"]
+        rec["pretty"] = pretty
+        rec["cache"] = cache
+    return res
+
+@search_wrap(table=db.gps_transitive,
              title='Galois group search results',
              err_title='Galois group search input error',
-             url_for_label=lambda label: url_for(".by_label", label=label),
+             columns=gg_columns,
+             url_for_label=url_for_label,
+             postprocess=gg_postprocess,
              learnmore=learnmore_list,
              bread=lambda: get_bread([("Search results", ' ')]))
 def galois_group_search(info, query):
@@ -136,7 +177,7 @@ def galois_group_search(info, query):
         strip_label = info.get('jump','').strip().upper()
         # If the user entered a simple label
         if re.match(r'^\d+T\d+$',strip_label):
-            return redirect(url_for('.by_label', label=strip_label), 301)
+            return redirect(url_for_label(strip_label), 301)
         try:
             parse_galgrp(info, query, qfield=['label','n'], 
                 name='a Galois group label', field='jump', list_ok=False,
@@ -145,7 +186,7 @@ def galois_group_search(info, query):
             return redirect(url_for('.index'))
 
         if query.get('label', '') in jump_list:
-            return redirect(url_for('.by_label', label=query['label']), 301)
+            return redirect(url_for_label(query['label']), 301)
 
         else: # convert this to a regular search
             info['gal'] = info['jump']
@@ -167,9 +208,6 @@ def galois_group_search(info, query):
 
     degree_str = prep_ranges(info.get('n'))
     info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
-    info['group_display'] = group_display_short
-    info['yesno'] = yesno
-    info['wgg'] = WebGaloisGroup.from_data
 
 def yesno(val):
     if val:
@@ -282,15 +320,14 @@ def search_input_error(info, bread):
 @galois_groups_page.route("/random")
 @redirect_no_cache
 def random_group():
-    label = db.gps_transitive.random()
-    return url_for(".by_label", label=label)
+    return url_for_label(db.gps_transitive.random())
 
 @galois_groups_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "gg",
         db.gps_transitive,
-        url_for_label=lambda label: url_for(".by_label", label=label),
+        url_for_label=url_for_label,
         title=r"Some interesting Galois groups",
         bread=get_bread([("Interesting", " ")]),
         learnmore=learnmore_list()

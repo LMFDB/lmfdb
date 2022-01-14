@@ -29,6 +29,7 @@ from lmfdb.utils import (
     CountBox,
 )
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, MultiProcessedCol
 from . import belyi_page
 from .web_belyi import (
     WebBelyiGalmap,
@@ -36,13 +37,6 @@ from .web_belyi import (
 )
 from .web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
 from lmfdb.classical_modular_forms.web_newform import field_display_gen
-
-###############################################################################
-# List and dictionaries needed routing and searching
-###############################################################################
-
-
-geometry_types_list = list(geometry_types_dict)
 
 
 ###############################################################################
@@ -79,10 +73,6 @@ def index():
     info["degree_list"] = list(range(1,10))
     info["title"] = title = "Belyi maps"
     info["bread"] = bread = get_bread()
-
-    # search options
-    info["geometry_types_list"] = geometry_types_list
-    info["geometry_types_dict"] = geometry_types_dict
 
     return render_template(
         "belyi_browse.html",
@@ -595,14 +585,22 @@ def belyi_galmap_text_download(label):
 def url_for_label(label):
     return url_for(".by_url_belyi_search_url", smthorlabel=label)
 
+belyi_columns = SearchColumns([
+    LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label, default=True),
+    MathCol("deg", "belyi.degree", "Degree", default=True),
+    SearchCol("group", "belyi.group", "Group", default=True),
+    MathCol("abc", "belyi.abc", "abc", default=True, align="left"),
+    MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
+    MathCol("g", "belyi.genus", "Genus", default=True),
+    MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
+    MultiProcessedCol("base_field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True)])
+
 @search_wrap(
-    template="belyi_search_results.html",
     table=db.belyi_galmaps_fixed,
     title="Belyi map search results",
     err_title="Belyi map search input error",
+    columns=belyi_columns,
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
-    #projection=["label", "group", "deg", "g", "orbit_size", "abc", "lambdas", "moduli_field", "moduli_field_label"],
-    projection=["label", "group", "deg", "g", "orbit_size", "abc", "lambdas", "base_field", "base_field_label"],
     url_for_label=url_for_label,
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
@@ -610,9 +608,6 @@ def url_for_label(label):
 
 
 def belyi_search(info, query):
-    info["geometry_types_list"] = geometry_types_list
-    info["geometry_types_dict"] = geometry_types_dict
-    info["belyi_galmap_url"] = url_for_belyi_galmap_label
     if "group" in query:
         info["group"] = query["group"]
     parse_bracketed_posints(info, query, "abc_list", "a, b, c", maxlength=3)
@@ -650,7 +645,6 @@ def belyi_search(info, query):
         if info.get(fld):
             query[fld] = info[fld]
 
-    info["nf_link"] = lambda elt: field_display_gen(elt.get('base_field_label'), elt.get('base_field'), truncate=16)
     parse_bool(info, query, "is_primitive", name="is_primitive")
     if info.get("primitivization"):
         primitivization = info["primitivization"] 

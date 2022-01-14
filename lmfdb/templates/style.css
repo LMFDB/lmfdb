@@ -699,6 +699,9 @@ table.chardata a {
 table td.top {
   vertical-align:top;
 }
+table.ntdata tr.bottom-align {
+  vertical-align:bottom;
+}
 table.ntdata td {
   white-space: nowrap;
   padding-top: 3px;

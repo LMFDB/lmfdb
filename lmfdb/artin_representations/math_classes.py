@@ -84,12 +84,14 @@ class ArtinRepresentation(object):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
-            label=self._data['label']
+            if "label" not in self._data:
+                self._data["label"] = self._data["Baselabel"] + ".a"
+                self._data.update(self._data["GaloisConjugates"][0])
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
                 parts = x[0].split(".")
-                base = "%s.%s.%s.%s"% tuple(parts[j] for j in (0,1,2,3))
+                base = ".".join(parts[:4])
                 if len(parts)<5: # Galois orbit
                     conjindex=1
                 else:
@@ -437,6 +439,18 @@ class ArtinRepresentation(object):
 
     def url_for(self):
         return url_for("artin_representations.render_artin_representation_webpage", label=self.label())
+
+    def galois_links(self):
+        """
+        Used in listing search results to show links to all artin representations in this Galois orbit.
+        """
+        base = self._data["Baselabel"]
+        labels = [f"{base}.{num2letters(conj['GalOrbIndex'])}" for conj in self.GaloisConjugates()]
+        return ' '.join(
+            '<a href="{}">{}</a>'.format(
+                url_for("artin_representations.render_artin_representation_webpage", label=label),
+                artin_label_pretty(label))
+            for label in labels)
 
     def langlands(self):
         """

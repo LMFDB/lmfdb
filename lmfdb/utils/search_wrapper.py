@@ -100,13 +100,14 @@ class SearchWrapper(Wrapper):
     def __init__(
         self,
         f,
-        template,
-        table,
-        title,
-        err_title,
+        template="search_results.html",
+        table=None,
+        title=None,
+        err_title=None,
         per_page=50,
         shortcuts={},
         longcuts={},
+        columns=None,
         projection=1,
         url_for_label=None,
         cleaners={},
@@ -121,7 +122,11 @@ class SearchWrapper(Wrapper):
         self.per_page = per_page
         self.shortcuts = shortcuts
         self.longcuts = longcuts
-        self.projection = projection
+        self.columns = columns
+        if columns is None:
+            self.projection = projection
+        else:
+            self.projection = columns.db_cols
         self.url_for_label = url_for_label
         self.cleaners = cleaners
         self.split_ors = split_ors
@@ -131,6 +136,7 @@ class SearchWrapper(Wrapper):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
         info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
