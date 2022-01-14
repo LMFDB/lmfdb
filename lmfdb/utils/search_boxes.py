@@ -475,6 +475,14 @@ class ColumnController(SelectBox):
             label="Columns to display",
             width=170)
 
+    def _label(self, info):
+        if info is None:
+            return ""
+        C = info.get("columns")
+        if C is None:
+            return ""
+        return super()._label(info)
+
     def _input(self, info):
         if info is None:
             print("WARNING: Column controller should not be included on browse page")
@@ -495,10 +503,11 @@ class ColumnController(SelectBox):
         options = [("none", " selected", "columns to display")]
         # Need to fix this for ColGroups
         for col in C.columns_shown(info, 0):
-            if col.default:
-                disp = "✓ " + col.title
+            title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
+            if col.default(info):
+                disp = "✓&ensp;" + title
             else:
-                disp = "  " + col.title
+                disp = "&ensp;&ensp;" + title
             options.append((col.name, "", disp))
         options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
         options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]

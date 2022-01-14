@@ -1,11 +1,20 @@
 from .utilities import display_knowl
 
 class SearchCol:
-    def __init__(self, name, knowl, title, default=False, align="left", contingent=None, **kwds):
+    def __init__(self, name, knowl, title, default=False, align="left", contingent=None, short_title=None, **kwds):
+        # Both contingent and default can be functions that take info as an input (if default is a boolean it's translated to the constant function with that value)
+        # If contingent is false, then that column doesn't even show up on the list of possible columns
+        # If default is false, then that column is included in the selector but not displayed by default
         self.name = name
         self.knowl = knowl
         self.title = title
-        self.default = default
+        if short_title is None:
+            short_title = title
+        self.short_title = short_title
+        if isinstance(default, bool):
+            self.default = lambda info: default
+        else:
+            self.default = default
         self.orig = [name]
         self.height = 1
         self.contingent = contingent
@@ -16,7 +25,6 @@ class SearchCol:
         else:
             self.th_style = self.td_style = f"text-align:{align};"
         self.th_content = self.td_content = ""
-        #print([k for k in kwds])
 
         for key, val in kwds.items():
             assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")

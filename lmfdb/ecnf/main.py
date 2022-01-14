@@ -493,7 +493,8 @@ ecnf_columns = SearchColumns([
                       ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
-                          web_ainvs(field, ainvs)))])
+                          web_ainvs(field, ainvs)),
+                      short_title="Weier. coeffs")])
 ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
 not known for all curves in the database; curves for which these are
 unknown will not appear in searches specifying one of these
