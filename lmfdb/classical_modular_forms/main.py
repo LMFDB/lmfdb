@@ -806,7 +806,7 @@ newform_columns = SearchColumns([
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
     ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coeff. ring index",
-                 factor_base_factorization_latex, mathmode=True, align="center"),
+                 lambda fac: "" if fac=="?" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
     ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_link),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
