@@ -293,7 +293,7 @@ class AbvarFq_isoclass(object):
                 ans += " "
             else:
                 ans += '<a href="{1}">{0}</a>'.format(simp, url) + "<sup> {0} </sup> ".format(e)
-        return ans
+        return '<span>' + ans + '</span>'
 
     def alg_clo_field(self):
         if self.r == 1:

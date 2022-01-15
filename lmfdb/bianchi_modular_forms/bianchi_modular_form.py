@@ -12,6 +12,7 @@ from lmfdb.utils import (
     teXify_pol, search_wrap)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
 from lmfdb.nfutils.psort import ideal_from_label, primes_iter
 from lmfdb.bianchi_modular_forms import bmf_page
@@ -43,7 +44,12 @@ def bc_info(bc):
 
 def cm_info(cm):
     try:
-        return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
+        if cm == 0:
+            return 'no'
+        elif cm % 4 == 1:
+            return f'${cm}$'
+        else:
+            return f'${4*cm}$'
     except TypeError:
         return str(cm)
 
@@ -120,19 +126,39 @@ def url_for_label(label):
                        label.split('-')
                    )))
 
-@search_wrap(template="bmf-search_results.html",
-             table=db.bmf_forms,
+bmf_columns = SearchColumns([
+    ProcessedCol("field_label", "nf", "Base field",
+                 lambda fld: nf_display_knowl(fld, field_pretty(fld)),
+                 default=True),
+    MultiProcessedCol("level", "mf.bianchi.level", "Level", ["field_label", "level_label"],
+                      lambda fld, lvl: '<a href="{}">{}</a>'.format(
+                          url_for("bmf.render_bmf_space_webpage",
+                                  field_label=fld,
+                                  level_label=lvl),
+                          lvl),
+                      default=True), # teXify_pol(v['level_ideal'])
+    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
+                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
+                          url_for("bmf.render_bmf_webpage",
+                                  field_label=fld,
+                                  level_label=lvl,
+                                  label_suffix=suff),
+                          short),
+                      default=True),
+    MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
+    ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
+                 lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else "?"),
+                 default=True, align="center"),
+    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
+    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, align="center")])
+
+bmf_columns.dummy_download = True
+
+@search_wrap(table=db.bmf_forms,
              title='Bianchi modular form search results',
              err_title='Bianchi modular forms search input error',
+             columns=bmf_columns,
              shortcuts={'jump': bianchi_modular_form_jump},
-             projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
-             cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
-                       "level_ideal": lambda v: teXify_pol(v['level_ideal']),
-                       "sfe": lambda v: "+1" if v.get('sfe',None)==1 else ("-1" if v.get('sfe',None)==-1 else "?"),
-                       "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
-                       "bc": lambda v: bc_info(v['bc']),
-                       "cm": lambda v: cm_info(v.pop('CM', '?')),
-                       "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              bread=lambda:get_bread("Search results"),
              url_for_label=url_for_label,
              learnmore=learnmore_list,

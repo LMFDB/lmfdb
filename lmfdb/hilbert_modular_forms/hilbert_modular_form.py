@@ -16,6 +16,7 @@ from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
 def get_bread(tail=[]):
@@ -127,15 +128,22 @@ def hilbert_modular_form_jump(info):
     except ValueError:
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
-@search_wrap(template="hilbert_modular_form_search.html",
-             table=db.hmf_forms,
+hmf_columns = SearchColumns([
+    MultiProcessedCol("label", "mf.hilbert.label", "Label",
+                      ["field_label", "label", "short_label"],
+                      lambda fld, label, short: '<a href="%s">%s</a>' % (url_for('hmf.render_hmf_webpage', field_label=fld, label=label), short),
+                      default=True),
+    ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
+    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
+    MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True)])
+hmf_columns.dummy_download = True
+
+@search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',
              err_title='Hilbert modular form search error',
+             columns=hmf_columns,
              per_page=50,
              shortcuts={'jump':hilbert_modular_form_jump},
-             projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
-             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal']),
-                       "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,

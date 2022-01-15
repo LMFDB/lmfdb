@@ -8,14 +8,15 @@ from sage.all import ZZ, gap, cached_function
 from lmfdb.utils import list_to_latex_matrix
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 
-def knowl_cache(galois_labels):
+def knowl_cache(galois_labels=None, results=None):
     """
-    Returns a dictionary for use in abstract_group_display_knowl and
+    Returns a dictionary for use in abstract_group_display_knowl, group_display and
     group_pretty_and_nTj as the cache argument.
 
     INPUT:
 
     - ``galois_labels`` -- a list of labels from gps_transitive
+    - ``results`` -- alternatively, a list of dictionaries from a search on db.gps_transitive
 
     OUTPUT:
 
@@ -26,7 +27,12 @@ def knowl_cache(galois_labels):
     cache = {}
     reverse = defaultdict(list)
     gp_labels = []
-    for rec in db.gps_transitive.search({"label": {"$in": galois_labels}}, ["label", "order", "gapid", "pretty"]):
+    if galois_labels is None:
+        cur = results
+    else:
+        assert results is None
+        cur = db.gps_transitive.search({"label": {"$in": galois_labels}}, ["label", "order", "gapid", "pretty"])
+    for rec in cur:
         label = rec["label"]
         cache[label] = rec
         gp_label = f'{rec["order"]}.{rec["gapid"]}'
@@ -40,16 +46,16 @@ def knowl_cache(galois_labels):
     return abstract_group_namecache(gp_labels, cache, reverse)
 
 # Input is a list [[[n1, t1], mult1], [[n2,t2],mult2], ...]
-def list_with_mult(lis, names=True):
+def list_with_mult(lis, names=True, cache=None):
     ans = ''
     for label, cnt in lis:
         if ans != '':
             ans += ', '
         label = base_label(*label)
         if names:
-            ans += transitive_group_display_knowl(label)
+            ans += transitive_group_display_knowl(label, cache=cache)
         else:
-            ans += transitive_group_display_knowl(label, label)
+            ans += transitive_group_display_knowl(label, label, cache=cache)
         if cnt > 1:
             ans += f"<span style='font-size: small'> x {cnt}</span>"
     return ans
@@ -120,18 +126,18 @@ class WebGaloisGroup:
             return ""
         return self._data['name']
 
-    def otherrep_list(self, givebound=True):
+    def otherrep_list(self, givebound=True, cache=None):
         sibs = self._data['siblings']
         pharse = r"with degree $\leq %d$" % self.sibling_bound()
         if len(sibs)==0 and givebound:
             return "There are no siblings "+pharse
-        li = list_with_mult(sibs, names=False)
+        li = list_with_mult(sibs, names=False, cache=cache)
         if givebound:
             li += '<p>Siblings are shown '+pharse
         return li
 
-    def subfields(self):
-        return(list_with_mult(self._data['subfields']))
+    def subfields(self, cache=None):
+        return list_with_mult(self._data['subfields'], cache=cache)
 
     def generator_string(self):
         if str(self.n()) == "1":
@@ -245,10 +251,13 @@ def galunformatter(gal):
     else:
         return "%dT%d" % (n, t)
 
-@cached_function
-def transitive_group_display_knowl(label, name=None):
+@cached_function(key=lambda label, name, cache: (label, name))
+def transitive_group_display_knowl(label, name=None, cache=None):
     n, t = label.split("T")
-    group = db.gps_transitive.lookup(label)
+    if cache is None:
+        group = db.gps_transitive.lookup(label)
+    else:
+        group = cache.get(label)
     if not name:
         if group is not None and group.get('pretty') is not None:
             name = group['pretty']
@@ -258,11 +267,11 @@ def transitive_group_display_knowl(label, name=None):
         return name
     return f'<a title = "{name} [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n={n}&t={t}">{name}</a>'
 
-def transitive_group_display_knowl_C1_as_trivial(label):
+def transitive_group_display_knowl_C1_as_trivial(label, cache=None):
     if label == "1T1":
-        return transitive_group_display_knowl(label, '$C_1$')
+        return transitive_group_display_knowl(label, '$C_1$', cache=cache)
     else:
-        return transitive_group_display_knowl(label)
+        return transitive_group_display_knowl(label, cache=cache)
 
 
 @cached_function

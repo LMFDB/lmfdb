@@ -7,6 +7,7 @@ from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
 from lmfdb import db
 from lmfdb.utils import flash_error, parse_ints, search_wrap
+#from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.half_integral_weight_forms import hiwf_page
 
@@ -23,10 +24,21 @@ def half_integral_weight_form_render_webpage():
     else:
         return half_integral_weight_form_search(args)
 
+#hiwf_columns = SearchColumns([
+#    LinkCol("label", None, "Label", lambda label: url_for("hiwf.render_hiwf_webpage", label=label), default=True),
+#    MathCol("level", None, "Level", default=True),
+#    MathCol("weight", None, "Weight", default=True),
+#    ProcessedCol("character", None, "Character",
+#                 lambda char: r'<a href="Character/Dirichlet/%s">$\chi_{%s}(%s, \cdot)$</a>' % (char.replace(".", "/"), char.split(".")[0], char.split(".")[1]),
+#                 default=True),
+#    MathCol("dim", None, "Dimension", default=True)])
+#hiwf_columns.dummy_download = True
+
 @search_wrap(template="half_integral_weight_form_search.html",
              table=db.halfmf_forms,
              title='Half integral weight cusp forms search results',
              err_title='Half integral weight cusp forms search input error',
+             # columns=hiwf_columns, # doesn't work since nobody has created a search_array for halfmf_forms....
              per_page=50,
              shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
              projection=['level','label','weight','character','dim'],

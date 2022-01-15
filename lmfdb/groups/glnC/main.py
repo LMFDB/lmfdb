@@ -11,6 +11,7 @@ from lmfdb.utils import (
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints,
     search_wrap)
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
@@ -95,29 +96,39 @@ def url_for_label(label):
         return url_for(".random_abstract_group")
     return url_for(".by_label", label=label)
 
-@search_wrap(template="glnC-search.html",
-             table=db.gps_crep,
+def get_url(label):
+    return url_for(".by_label", label=label)
+
+glnC_columns = SearchColumns([
+    LinkCol("label", "group.label", "Label", get_url, default=True),
+    MathCol("tex_name", "group.name", "Name", default=True),
+    MathCol("order", "group.order", "Order", default=True),
+    MathCol("dim", "group.dimension", "Dimension", default=True)],
+    db_cols=["label", "group", "order", "dim"])
+glnC_columns.dummy_download=True
+
+def glnC_postprocess(res, info, query):
+    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
+    for gp in res:
+        gp["tex_name"] = tex_names[gp["group"]]
+    return res
+
+@search_wrap(table=db.gps_crep,
              title=r'$\GL(n,\C)$ subgroup search results',
              err_title=r'$\GL(n,\C)$ subgroup search input error',
+             columns=glnC_columns,
              shortcuts={'jump':group_jump,
                         'download':group_download},
-             projection=['label','order','dim','group'],
-             #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
-             #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
-             #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
+             postprocess=glnC_postprocess,
              bread=lambda:get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
              credit=lambda:credit_string,
              url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
-    info['getname'] = lambda xx: '$'+group_names_pretty(xx)+'$'
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
     parse_bool(info, query, 'irreducible', 'irreducible')
-
-def get_url(label):
-    return url_for(".by_label", label=label)
 
 #Writes individual pages
 def render_glnC_group(args):

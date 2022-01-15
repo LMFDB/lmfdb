@@ -10,6 +10,7 @@ from lmfdb.utils import (
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset,
     StatsDisplay, totaler, proportioners, comma, flash_warning)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
     WebSmallDirichletCharacter,
@@ -191,12 +192,34 @@ def url_for_label(label):
     number = label_to_number(modulus, number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
+def display_galois_orbit(orbit, modulus):
+    trunc = (len(orbit) > 5)
+    if trunc:
+        orbit = [orbit[0], orbit[-1]]
+    disp = [r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, o) for o in orbit]
+    if trunc:
+        disp = r"$, \cdots ,$".join(disp)
+    else:
+        disp = "$,$&nbsp".join(disp)
+    return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
+
+character_columns = SearchColumns([
+    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
+    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],
+                      display_galois_orbit, default=True, align="center"),
+    MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
+    MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
+    MathCol("order", "character.dirichlet.order", "Order", default=True),
+    ProcessedCol("parity", "character.dirichlet.primitive", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
+
+character_columns.dummy_download = True
 
 @search_wrap(
-    template="character_search_results.html",
     table=db.char_dir_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
+    columns=character_columns,
     shortcuts={"jump": jump},
     url_for_label=url_for_label,
     learnmore=learn,

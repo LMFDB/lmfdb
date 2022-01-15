@@ -35,7 +35,11 @@ contains other conventions and information for the development process.
 - Refine search page headings should have the form "Blah search results", where blah is singular.
 - Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
 - Mathematical values listed in search results, including integers, should be in math mode.
-- Search result values that are words (e.g. yes/no, even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
+- Search result values that are words (e.g. even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
+- Boolean values in search results that that indicate the presence of a property (e.g. IsSolvable) should generally use a checkmark &#x2713; for yes, blank for no, with the checkmark centered.
+- Labels and lists (e.g. Weierstrass coefficients) in search results should be left-aligned.
+- Alignment of numbers in search results may vary: fixed precision decimal numbers should be right aligned, as should integers whose values vary over a wide range (e.g. orders of Galois groups).  Small integers (e.g < 100) should generally be centered, factored signed integers (e.g discriminants) should be left aligned.
+- Factored polynomials and factored positive integers in search results should be centered.
 
 ## Object pages
 

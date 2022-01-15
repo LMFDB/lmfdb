@@ -23,6 +23,7 @@ from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 from lmfdb.utils import redirect_no_cache
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol
 from lmfdb.abvar.fq.download import AbvarFq_download
 
 logger = make_logger("abvarfq")
@@ -640,11 +641,20 @@ def jump(info):
         jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
     return by_label(jump_box)
 
+abvar_columns = SearchColumns([
+    LinkCol("label", "ab.fq.lmfdb_label", "Label", url_for_label, default=True),
+    MathCol("g", "ag.dimension", "Dimension", default=True),
+    MathCol("field", "ag.base_field", "Base field", default=True),
+    MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", default=True),
+    MathCol("p_rank", "av.fq.p_rank", "$p$-rank", default=True),
+    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors")],[
+        "label", "g", "q", "poly", "p_rank", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models"])
+
 @search_wrap(
-    template="abvarfq-search-results.html",
     table=db.av_fq_isog,
     title="Abelian variety search results",
     err_title="Abelian variety search input error",
+    columns=abvar_columns,
     shortcuts={
         "jump": jump,
         "download": download_search,

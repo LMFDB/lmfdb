@@ -509,13 +509,11 @@ class PostgresSearchTable(PostgresTable):
         """
         # Eventually want to batch the queries on the extra_table so that we
         # make fewer SQL queries here.
+        total = 0
         t = time.time()
         try:
             for rec in cur:
-                t = time.time() - t
-                if t > self.slow_cutoff:
-                    self.logger.info("Search iterator for {0} {1} had a gap of \033[91m{2!s}s\033[0m".format(self.search_table, query, t))
-                t = time.time()
+                total += time.time() -t
                 if projection == 0 or isinstance(projection, str):
                     yield rec[0]
                 else:
@@ -524,7 +522,10 @@ class PostgresSearchTable(PostgresTable):
                         for k, v in zip(search_cols + extra_cols, rec)
                         if (self._include_nones or v is not None)
                     }
+                t = time.time()
         finally:
+            if total > self.slow_cutoff:
+                self.logger.info("Search iterator for {0} {1} required a total of \033[91m{2!s}s\033[0m".format(self.search_table, query, total))
             if isinstance(cur, pg_cursor):
                 cur.close()
                 if (
