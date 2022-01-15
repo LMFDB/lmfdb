@@ -17,6 +17,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
@@ -342,10 +343,30 @@ def url_for_label(label):
     else:
         return url_for(".by_family_label", label=label)
 
-@search_wrap(template="hgm-search.html",
-             table=db.hgm_motives,  # overridden if family search
+hgm_columns = SearchColumns([
+    MultiProcessedCol("label", None, "Label",
+                      ["A", "B", "t"],
+                      lambda A, B, t: '<a href="%s">%s</a>' % (
+                          url_for('.by_family_label', label=ab_label(A, B)) if t is None else
+                          url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
+                          ab_label(A, B) if t is None else
+                          make_abt_label(A, B, t)),
+                      default=True),
+    MathCol("A", None, "$A$", default=True),
+    MathCol("B", None, "$B$", default=True),
+    ProcessedCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
+    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
+    MathCol("degree", None, "Degree", default=True),
+    MathCol("weight", None, "Weight", default=True),
+    MathCol("famhodge", None, "Hodge", default=True)])
+
+hgm_columns.dummy_download = True
+hgm_columns.db_cols = 1 # all cols, since the table varies
+
+@search_wrap(table=db.hgm_motives,  # overridden if family search
              title=r'Hypergeometric motive over $\Q$ search resultS',
              err_title=r'Hypergeometric motive over $\Q$ search input error',
+             columns=hgm_columns,
              per_page=50,
              shortcuts={'jump': hgm_jump},
              url_for_label=url_for_label,

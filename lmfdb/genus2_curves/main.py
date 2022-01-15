@@ -33,6 +33,7 @@ from lmfdb.utils import (
     to_dict,
 )
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
@@ -514,26 +515,21 @@ def parse_sort(info, query):
         ))
     query["__sort__"] = d[info.get("sort_order")]
 
+g2c_columns = SearchColumns([
+    LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
+    ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
+    ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
+    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), default=True, align="center"),
+    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", default=True),
+    CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)", default=True),
+    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True)])
 
 @search_wrap(
-    template="g2c_search_results.html",
     table=db.g2c_curves,
     title="Genus 2 curve search results",
     err_title="Genus 2 curves search input error",
     shortcuts={"jump": genus2_jump, "download": G2C_download()},
-    projection=[
-        "label",
-        "eqn",
-        "st_group",
-        "is_gl2_type",
-        "is_simple_geom",
-        "analytic_rank",
-    ],
-    cleaners={
-        "class": lambda v: class_from_curve_label(v["label"]),
-        "equation_formatted": lambda v: min_eqn_pretty(literal_eval(v.pop("eqn"))),
-        "st_group_link": lambda v: st_link_by_name(1, 4, v.pop("st_group")),
-    },
+    columns=g2c_columns,
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
     url_for_label=lambda label: url_for(".by_label", label=label),
@@ -610,8 +606,6 @@ def genus2_curve_search(info, query):
         qfield="bad_primes",
         mode=info.get("bad_quantifier"),
     )
-    info["curve_url"] = url_for_curve_label
-    info["class_url"] = url_for_isogeny_class_label
     parse_sort(info, query)
 
 

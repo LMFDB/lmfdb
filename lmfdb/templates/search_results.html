@@ -1,0 +1,27 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{{ info.columns.above_results | safe }}
+{% if info.columns.languages %}
+{% set languages = info.columns.languages %}
+{% endif %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+{# This core is used in some classical modular forms pages to include lists of newforms #}
+{% include 'search_results_table.html' %}
+
+{% include 'forward_back.html' %}
+{% if info.columns.dummy_download %}
+  {% include 'dummy_download_search_results.html' %}
+{% else %}
+  {% include 'download_search_results.html' %}
+{% endif %}
+{{ info.columns.below_download | safe }}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}

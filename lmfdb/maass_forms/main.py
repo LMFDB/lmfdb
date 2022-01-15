@@ -11,6 +11,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils.utilities import display_knowl
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 from sage.all import gcd
@@ -169,7 +170,7 @@ class MaassSearchArray(SearchArray):
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield):
     if not CHARACTER_LABEL_RE.match(inp):
-        raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")  
+        raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")
     level_field, conrey_index_field ='level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
@@ -196,28 +197,32 @@ def parse_character(inp, query, qfield):
     query[level_field] = level
     query[conrey_index_field] = conrey_index
 
+maass_columns = SearchColumns([
+    MathCol("level", "mf.maass.mwf.level", "Level", default=True),
+    MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),
+    MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
+                      ["level", "conrey_index"],
+                      character_link,
+                      default=True, align="center"),
+    MultiProcessedCol("spectral", "mf.maass.mwf.spectralparameter", "Spectral parameter",
+                      ["maass_id", "spectral_parameter"],
+                      lambda mid, param: '<a href="%s">%s</a>' % (url_for('.by_label', label=mid), param),
+                      default=True),
+    ProcessedCol("symmetry", "mf.maass.mwf.symmetry", "Symmetry",
+                 symmetry_pretty,
+                 default=True, align="center"),
+    ProcessedCol("fricke_eigenvalue", "cmf.fricke", "Fricke",
+                 fricke_pretty,
+                 default=True, align="center")],
+    db_cols=["maass_id", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
+
 @search_wrap(
-    template="maass_search_results.html",
     table=db.maass_newforms,
     title="Maass forms search results",
     err_title="Maass forms search input error",
+    columns=maass_columns,
     shortcuts={"download": MaassFormDownloader()},
-    projection=[
-        "maass_id",
-        "level",
-        "weight",
-        "conrey_index",
-        "spectral_parameter",
-        "symmetry",
-        "fricke_eigenvalue",
-    ],
     random_projection="maass_id",
-    cleaners={
-        "character_link": lambda v: character_link(v['level'],v['conrey_index']),
-        "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
-        "fricke_pretty": lambda v: fricke_pretty(v['fricke_eigenvalue']),
-        "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '">' + str(v['spectral_parameter']) + '</a>',
-    },
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
     url_for_label=lambda label: url_for(".by_label", label=label),

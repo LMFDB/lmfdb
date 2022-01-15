@@ -23,6 +23,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -468,14 +469,42 @@ def make_cm_query(cm_disc_str):
 def parse_cm_list(inp, query, qfield):
     query[qfield] = {'$in': make_cm_query(inp)}
 
-@search_wrap(template="ecnf-search-results.html",
-             table=db.ec_nfcurves,
+ecnf_columns = SearchColumns([
+    MultiProcessedCol("label", "ec.curve_label", "Label",
+                      ["short_label", "field_label", "conductor_label", "iso_label", "number"],
+                      lambda label, field, conductor, iso, number: '<a href="%s">%s</a>' % (
+                          url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
+                          label),
+                      default=True, align="center"),
+    ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
+    MultiProcessedCol("conductor", "ec.conductor_label", "Conductor",
+                      ["field_label", "conductor_label"],
+                      lambda field, conductor: '<a href="%s">%s</a>' %(
+                          url_for('.show_ecnf_conductor', nf=field, conductor_label=conductor),
+                          conductor),
+                      default=True, align="center"),
+    MultiProcessedCol("iso_class", "ec.isogeny_class", "Isogeny class",
+                      ["field_label", "conductor_label", "iso_label", "short_class_label"],
+                      lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
+                          url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso),
+                          short_class_label),
+                      default=True, align="center"),
+    MultiProcessedCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients",
+                      ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
+                      lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
+                          url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
+                          web_ainvs(field, ainvs)))])
+ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
+not known for all curves in the database; curves for which these are
+unknown will not appear in searches specifying one of these
+quantities.</p>"""
+
+@search_wrap(table=db.ec_nfcurves,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
+             columns=ecnf_columns,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
-             cleaners={'numb':lambda e: str(e['number']),
-                       'field_knowl':lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')])
@@ -552,7 +581,6 @@ def elliptic_curve_search(info, query):
     parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
              qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
     info['field_pretty'] = field_pretty
-    info['web_ainvs'] = web_ainvs
     parse_ints(info,query,'bf_deg',name='Base field degree',qfield='degree')
 
 @ecnf_page.route("/browse/")

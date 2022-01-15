@@ -43,6 +43,7 @@ from lmfdb.utils import (
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
@@ -298,11 +299,51 @@ def common_parse(info, query):
     parse_sort(info, query)
     info['bigint_knowl'] = bigint_knowl
 
-@search_wrap(template="LfunctionSearchResults.html",
-             table=db.lfunc_search,
+lfunc_columns = SearchColumns([
+    MultiProcessedCol("label", "lfunction.label", "Label",
+                         ["label", "url"],
+                         lambda label, url: '<a href="%s">%s</a>' % (url, label),
+                         default=True),
+    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", default=True),
+    MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", default=True),
+    MathCol("degree", "lfunction.degree", "$d$", default=True),
+    MathCol("factored_conductor", "lfunction.conductor", "$N$", default=True),
+    LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), default=True, align="center"),
+    MathCol("mus", "lfunction.functional_equation", r"$\mu$", default=True),
+    MathCol("nus", "lfunction.functional_equation", r"$\nu$", default=True),
+    MultiProcessedCol("motivic_weight", "lfunction.motivic_weight", "$w$",
+                      ["motivic_weight", "algebraic"],
+                      lambda w, alg: w if alg else "",
+                      default=True, mathmode=True, align="center"),
+    CheckCol("primitive", "lfunction.primitive", "prim", default=True),
+    MathCol("root_number", "lfunction.sign", r"$\epsilon$",
+            contingent=lambda info: info["search_array"].force_rational,
+            default=True),
+    CheckCol("algebraic", "lfunction.arithmetic", "arith",
+             contingent=lambda info: not info["search_array"].force_rational,
+             default=True),
+    CheckCol("rational", "lfunction.rational", r"$\mathbb{Q}$",
+             contingent=lambda info: not info["search_array"].force_rational,
+             default=True),
+    CheckCol("self_dual", "lfunction.self-dual", "self-dual",
+             contingent=lambda info: not info["search_array"].force_rational,
+             default=True),
+    MathCol("root_angle", "lfunction.root_angle", r"$\operatorname{Arg}(\epsilon)$",
+            contingent=lambda info: not info["search_array"].force_rational,
+            default=True),
+    MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", default=True),
+    MathCol("z1", "lfunction.zeros", "First zero", default=True),
+    ProcessedCol("origins", "lfunction.underlying_object", "Origin",
+                 lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
+                 default=True)],
+    db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
+lfunc_columns.dummy_download = True
+
+@search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
+             columns=lfunc_columns,
              shortcuts={'jump':jump_box},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
@@ -738,7 +779,6 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
         else:
             info['bread'] = info['bread'][:-1]
             return l_function_search(info)
-        return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
 @l_function_page.route("/CuspForms/")

@@ -14,6 +14,7 @@ from lmfdb.utils import (
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.lattice_stats import Lattice_stats
@@ -189,20 +190,26 @@ def lattice_search_isometric(res, info, query):
                 res = db.lat_lattices.search(query, proj, limit=count, offset=start, info=info)
                 break
 
-    for v in res:
-        v['min'] = v.pop('minimum')
     return res
 
 def url_for_label(label):
     return url_for(".render_lattice_webpage", label=label)
 
-@search_wrap(template="lattice-search.html",
-             table=db.lat_lattices,
+lattice_columns = SearchColumns([
+    LinkCol("label", "lattice.label", "Label", url_for_label, default=True),
+    MathCol("dim", "lattice.dimension", "Dimension", default=True),
+    MathCol("det", "lattice.determinant", "Determinant", default=True),
+    MathCol("level", "lattice.level", "Level", default=True),
+    MathCol("class_number", "lattice.class_number", "Class number", default=True),
+    MathCol("minimum", "lattice.minimal_vector", "Minimal vector", default=True),
+    MathCol("aut", "lattice.group_order", "Aut. group order", default=True)])
+
+@search_wrap(table=db.lat_lattices,
              title='Integral lattices search results',
              err_title='Integral lattices search error',
+             columns=lattice_columns,
              shortcuts={'download':download_search,
                         'label':lambda info:lattice_by_label_or_name(info.get('label'))},
-             projection=lattice_search_projection,
              postprocess=lattice_search_isometric,
              url_for_label=url_for_label,
              bread=lambda: get_bread("Search results"),
