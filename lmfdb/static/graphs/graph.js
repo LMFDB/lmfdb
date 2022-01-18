@@ -156,7 +156,6 @@ class Renderer {
     this.factorX = (this.ctx.canvas.width - 2 * this.radius) / (this.graph.layoutMaxX - this.graph.layoutMinX+1);
     this.factorY = (this.ctx.canvas.height - 2 * this.radius) / (this.graph.layoutMaxY - this.graph.layoutMinY+1);
     this.reposition();
-    this.draw();
   }
 
 
