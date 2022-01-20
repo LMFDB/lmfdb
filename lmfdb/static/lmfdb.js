@@ -419,7 +419,42 @@ function simult_change(event) {
     $(".simult_select").each(function (i) { this.selectedIndex = event.target.selectedIndex;});
 };
 
-
+function control_columns(S) {
+  if (S.selectedIndex == 0) {
+    S.blur();
+  } else {
+    var show = $("input[name=showcol]");
+    var shown_cols = show.val().split(".").filter(o=>o); // remove empty strings
+    var hide = $("input[name=hidecol]");
+    var hidden_cols = hide.val().split(".").filter(o=>o);
+    var label = S.options[S.selectedIndex].text;
+    label = label.slice(2, label.length);
+    $('.col-'+S.value).toggle();
+    if ($('.col-'+S.value+':visible').length > 0) {
+      S.options[S.selectedIndex].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
+      var i = hidden_cols.indexOf(S.value);
+      if (i == -1) {
+        shown_cols.push(S.value);
+        show.val(shown_cols.join("."));
+      } else {
+        hidden_cols.splice(i, 1);
+        hide.val(hidden_cols.join("."));
+      }
+    } else {
+      S.options[S.selectedIndex].text = '  ' + label; // the spaces are unicode: an em-dash and a thinspace
+      var i = shown_cols.indexOf(S.value);
+      if (i == -1) {
+        hidden_cols.push(S.value);
+        hide.val(hidden_cols.join("."));
+      } else {
+        shown_cols.splice(i, 1);
+        show.val(shown_cols.join("."));
+      }
+      console.log(hidden_cols);
+    }
+    S.value = '';
+  }
+};
 
 function resetStart()
 {
