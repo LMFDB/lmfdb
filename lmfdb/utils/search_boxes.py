@@ -508,8 +508,10 @@ class ColumnController(SelectBox):
             '''oninput="control_columns(this);"''',
             '''id="column-selector"''',
         ]
+        style="position: absolute; z-index: 9999;"
         if self.short_width is not None:
-            keys.append('style="width: %spx"' % self.short_width)
+            style.append(f'width: {self.short_width}px;')
+        keys.append(f'style="{style}"')
         options = [("none", " selected", "columns to display")]
         use_rank = 0 # which rank to iterate over in determining the columns listed in the select
         for col in C.columns_shown(info, 0):
