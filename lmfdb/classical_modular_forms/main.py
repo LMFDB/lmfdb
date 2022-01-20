@@ -14,7 +14,7 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
-    search_wrap, display_float,
+    search_wrap, display_float, factor_base_factorization_latex,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
@@ -24,7 +24,7 @@ from lmfdb.utils import (
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
     WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
@@ -34,6 +34,7 @@ from lmfdb.classical_modular_forms.web_space import (
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
+from lmfdb.sato_tate_groups.main import st_link
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -112,7 +113,7 @@ def display_AL(info):
     return all(mf['char_order'] == 1 for mf in results)
 
 def display_Fricke(info):
-    return not display_AL(info) and any(mf['char_order'] == 1 for mf in info["results"])
+    return any(mf['char_order'] == 1 for mf in info["results"])
 
 # For spaces
 def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
@@ -768,13 +769,20 @@ def _AL_col(i, p):
 
 newform_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
+    MathCol("level", "cmf.level", "Level"),
+    MathCol("weight", "cmf.weight", "Weight"),
+    MultiProcessedCol("character", "cmf.character", "Char",
+                      ["level", "char_orbit_label"],
+                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"})),
+    MathCol("char_order", "character.dirichlet.order", "Char Order"),
     MathCol("dim", "cmf.dimension", "Dim.", default=True, align="left"),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"\(A\)", default=True, align="left"),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="left"),
     MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
-                 lambda img: ('' if img is None else '$%s_{%s}$' % (img[:1], img[1:])),
-                 contingent=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
-                 default=True, align="center"),
+                 lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
+                 contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
+                 default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
+                 align="center"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
                       lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
@@ -784,6 +792,9 @@ newform_columns = SearchColumns([
                       lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                       default=True),
+    CheckCol("is_self_dual", "cmf.selfdual", "Self-dual"),
+    MathCol("inner_twist_count", "cmf.inner_twist_count", "Twists"),
+    MathCol("analytic_rank", "cmf.analytic_rank", "Rank*"),
     ColGroup("traces", "cmf.trace_form", "Traces",
              [_trace_col(i) for i in range(4)],
              default=True),
@@ -793,11 +804,14 @@ newform_columns = SearchColumns([
              contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
     ProcessedCol("fricke_eigenval", "cmf.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
-                 contingent=display_Fricke, default=True, align="center"),
+                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
+    ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coeff. ring index",
+                 lambda fac: "" if fac=="?" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
+    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_link),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)],
-    ['analytic_conductor', 'atkin_lehner_eigenvals', 'char_order', 'cm_discs', 'dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'is_cm', 'is_rm', 'label', 'level', 'nf_label', 'projective_image', 'qexp_display', 'rm_discs', 'trace_display', 'weight'],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.mf_newforms,
@@ -1103,11 +1117,11 @@ def dimension_space_search(info, query):
 
 space_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"\(A\)", default=True, align="left"),
-    MultiProcessedCol("character", "cmf.character", r"\(\chi\)", ["level", "conrey_indexes"],
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="left"),
+    MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_indexes"],
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       default=True),
-    MathCol("char_order", "character.dirichlet.order", r"\(\operatorname{ord}(\chi)\)", default=True),
+    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", default=True),
     MathCol("dim", "cmf.display_dim", "Dim.", default=True),
     MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, align="center", td_class=" nowrap")])

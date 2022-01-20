@@ -397,9 +397,6 @@ def printquad(code, p):
     return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
-def search_input_error(info, bread):
-    return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
-
 @local_fields_page.route("/random")
 @redirect_no_cache
 def random_field():

@@ -647,8 +647,8 @@ abvar_columns = SearchColumns([
     MathCol("field", "ag.base_field", "Base field", default=True),
     MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", default=True),
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank", default=True),
-    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors")],[
-        "label", "g", "q", "poly", "p_rank", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models"])
+    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors")],
+    db_cols=["label", "g", "q", "poly", "p_rank", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models"])
 
 @search_wrap(
     table=db.av_fq_isog,
@@ -723,10 +723,11 @@ def search_input_error(info=None, bread=None):
     if info is None:
         info = {"err": "", "query": {}}
     info["search_array"] = AbvarSearchArray()
+    info["columns"] = abvar_columns
     if bread is None:
         bread = get_bread(("Search results", " "))
     return render_template(
-        "abvarfq-search-results.html",
+        "search_results.html",
         info=info,
         title="Abelian variety search input error",
         bread=bread,
