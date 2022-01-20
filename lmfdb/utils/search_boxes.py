@@ -502,7 +502,7 @@ class ColumnController(SelectBox):
             '''onmousedown="$(this).attr('size',this.length); this.value='';"''',
             '''onmousemove="return false;"''',
             '''onblur="$(this).attr('size',0); this.value='none';"''',
-            '''oninput="if (this.selectedIndex==this.length-1 || this.selectedIndex==0) { this.blur();} else { $('.col-'+this.value).toggle(); this.options[this.selectedIndex].text=($('.col-'+this.value+':visible').length > 0 ?'✓&ensp;':'&emsp;&thinsp;')+this.options[this.selectedIndex].text.slice(2,this.options[this.selectedIndex].text.length); this.value=''; }"''',
+            '''oninput="control_columns(this);"''',
             '''id="column-selector"''',
         ]
         if self.short_width is not None:
@@ -519,9 +519,9 @@ class ColumnController(SelectBox):
                 continue
             title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
             if col.default(info):
-                disp = "✓&ensp;" + title
+                disp = "✓ " + title # The space is a unicode space the size of an emdash
             else:
-                disp = "&ensp;&ensp;" + title
+                disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
             options.append((col.name, "", disp))
         options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
         options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]

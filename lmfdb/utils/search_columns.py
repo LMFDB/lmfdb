@@ -5,6 +5,7 @@ class SearchCol:
         # Both contingent and default can be functions that take info as an input (if default is a boolean it's translated to the constant function with that value)
         # If contingent is false, then that column doesn't even show up on the list of possible columns
         # If default is false, then that column is included in the selector but not displayed by default
+        assert "," not in name
         self.name = name
         self.knowl = knowl
         self.title = title
@@ -12,9 +13,9 @@ class SearchCol:
             short_title = title
         self.short_title = short_title
         if isinstance(default, bool):
-            self.default = lambda info: default
+            self.default = lambda info: not ("hidecol" in info and name in info["hidecol"].split(".")) and ("showcol" in info and name in info["showcol"].split(".") or default)
         else:
-            self.default = default
+            self.default = lambda info: not ("hidecol" in info and name in info["hidecol"].split(".")) and ("showcol" in info and name in info["showcol"].split(".") or default(info))
         self.orig = [name]
         self.height = 1
         self.contingent = contingent
