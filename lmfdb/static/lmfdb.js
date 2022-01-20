@@ -420,7 +420,7 @@ function simult_change(event) {
 };
 
 function control_columns(S) {
-  if (S.selectedIndex == S.length-1 || S.selectedIndex == 0) {
+  if (S.selectedIndex == 0) {
     S.blur();
   } else {
     var show = $("input[name=showcol]");
