@@ -500,9 +500,10 @@ class ColumnController(SelectBox):
             # can happen if search input error for example
             return ""
         keys = [
-            '''onmousedown="$(this).attr('size',this.length); this.value='';"''',
+            '''onmousedown="this.size=this.length; this.value='';"''',
             '''onmousemove="return false;"''',
-            '''onblur="$(this).attr('size',0); this.value='none';"''',
+            '''onmouseup="this.focus();"''',
+            '''onblur="this.size=0; this.value='none';"''',
             '''oninput="control_columns(this);"''',
             '''id="column-selector"''',
         ]
@@ -524,7 +525,7 @@ class ColumnController(SelectBox):
             else:
                 disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
             options.append((col.name, "", disp))
-        options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
+        # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
         options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
         return "        <select %s>\n%s\n        </select>" % (
             " ".join(keys),
