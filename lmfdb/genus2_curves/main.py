@@ -522,7 +522,8 @@ g2c_columns = SearchColumns([
     ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), default=True, align="center"),
     CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Q-simple", default=True),
     CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)", default=True),
-    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True)])
+    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
+    MathCol("num_rat_pts", "g2c.all_rational_points", "Rational pts*")])
 
 @search_wrap(
     table=db.g2c_curves,

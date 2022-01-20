@@ -134,8 +134,14 @@ hmf_columns = SearchColumns([
                       lambda fld, label, short: '<a href="%s">%s</a>' % (url_for('hmf.render_hmf_webpage', field_label=fld, label=label), short),
                       default=True),
     ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
+    MathCol("deg", "nf.degree", "Field degree"),
+    MathCol("disc", "nf.discriminant", "Field discriminant"),
     ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
-    MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True)])
+    MathCol("level_norm", "mf.level_norm", "Level norm"),
+    MathCol("weight", "mf.hilbert.weight_vector", "Weight"),
+    MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", align="center"),
+    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center")])
 hmf_columns.dummy_download = True
 
 @search_wrap(table=db.hmf_forms,

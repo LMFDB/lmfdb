@@ -472,7 +472,8 @@ class ColumnController(SelectBox):
     def __init__(self):
         super().__init__(
             name="column_control",
-            label="Columns to display",
+            knowl="doc.select_search_columns",
+            label="Select",
             width=170)
 
     def _label(self, info):

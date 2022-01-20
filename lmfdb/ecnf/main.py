@@ -23,7 +23,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -494,7 +494,11 @@ ecnf_columns = SearchColumns([
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
                           web_ainvs(field, ainvs)),
-                      short_title="Weier. coeffs")])
+                      short_title="Weier. coeffs", default=True),
+    MathCol("rank", "ec.rank", "Rank", default=True),
+    ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
+                 lambda tors: f"${tors}$" if tors else "trivial",
+                 default=True, align="center")])
 ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
 not known for all curves in the database; curves for which these are
 unknown will not appear in searches specifying one of these
