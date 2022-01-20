@@ -17,6 +17,7 @@ class TdElt(object):
             kwds.update(self.wrap_mixins)
         if self.advanced:
             self._add_class(kwds, 'advanced')
+        kwds['valign'] = 'top'
         for key, val in kwds.items():
             keys.append(' %s="%s"' % (key, val))
         return "<%s%s>" % (typ, "".join(keys))
