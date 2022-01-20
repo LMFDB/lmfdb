@@ -1056,11 +1056,6 @@ def topological_action(fam, cc):
     return render_template("hgcwa-topological-action.html", info=info, title=title, bread=bread, downloads=downloads)
 
 
-def search_input_error(info, bread):
-    return render_template("hgcwa-search.html", info=info, title='Family of higher genus curves with automorphisms search input error', learnmore=learnmore_list(),bread=bread)
-
-
-
 @higher_genus_w_automorphisms_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of higher genus curve with automorphisms data'

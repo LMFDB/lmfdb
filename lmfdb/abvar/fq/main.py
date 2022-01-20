@@ -723,10 +723,11 @@ def search_input_error(info=None, bread=None):
     if info is None:
         info = {"err": "", "query": {}}
     info["search_array"] = AbvarSearchArray()
+    info["columns"] = abvar_columns
     if bread is None:
         bread = get_bread(("Search results", " "))
     return render_template(
-        "abvarfq-search-results.html",
+        "search_results.html",
         info=info,
         title="Abelian variety search input error",
         bread=bread,

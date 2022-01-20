@@ -313,9 +313,6 @@ def render_group_webpage(args):
         return render_template("gg-show-group.html", title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%label, learnmore=learnmore_list())
 
 
-def search_input_error(info, bread):
-    return render_template("gg-search.html", info=info, title='Galois group search input error', bread=bread, learnmore=learnmore_list())
-
 @galois_groups_page.route("/random")
 @redirect_no_cache
 def random_group():

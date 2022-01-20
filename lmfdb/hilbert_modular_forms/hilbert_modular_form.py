@@ -173,9 +173,10 @@ def hilbert_modular_form_search(info, query):
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':''}
     info['search_array'] = HMFSearchArray()
+    info['columns'] = hmf_columns
     if bread is None:
         bread = get_bread("Search results")
-    return render_template("hilbert_modular_form_search.html",
+    return render_template("search_results.html",
                            info=info,
                            title="Hilbert modular forms search error",
                            bread=bread)
