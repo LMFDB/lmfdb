@@ -6,7 +6,7 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
@@ -85,7 +85,7 @@ def gl2_subgroup_data(label):
     if data.get('SZlabel'):
         info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     N = ZZ(data['level'])
-    ell = N.prime_divisors()[0]
+    ell = integer_prime_divisors(N)[0]
     e = N.valuation(ell)
     if e == 1:
         info += row_wrap("Cyclic %s-isogeny field degree" % (ell), min([r[1] for r in data['isogeny_orbits'] if r[0] == ell]))
@@ -276,7 +276,7 @@ class WebEC(object):
                 data['cm_ramp'] = data['cm_ramp'][0]
             else:
                 data['cm_ramp'] = ", ".join(str(p) for p in data['cm_ramp'])
-            data['cm_sqf'] = ZZ(self.cm).squarefree_part()
+            data['cm_sqf'] = integer_squarefree_part(ZZ(self.cm))
 
             data['CM'] = r"yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:

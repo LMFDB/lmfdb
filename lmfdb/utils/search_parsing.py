@@ -11,7 +11,7 @@ from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
 from lmfdb.backend.utils import SearchParsingError
-from .utilities import coeff_to_poly
+from .utilities import coeff_to_poly, integer_squarefree_part
 from math import log2
 import ast
 
@@ -1176,7 +1176,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             F = F.replace("(", "").replace(")", "")
         if F[1:5] in ["sqrt", "root"]:
             try:
-                d = ZZ(str(F[5:])).squarefree_part()
+                d = integer_squarefree_part(ZZ(str(F[5:])))
             except (TypeError, ValueError):
                 d = 0
             if d == 0:
@@ -1296,7 +1296,7 @@ def input_to_subfield(inp):
             inp = inp.replace("(", "").replace(")", "")
         if F[1:5] in ["sqrt", "root"]:
             try:
-                d = ZZ(str(F[5:])).squarefree_part()
+                d = integer_squarefree_part(ZZ(str(F[5:])))
             except (TypeError, ValueError):
                 d = 0
             if d == 0 or d == 1:

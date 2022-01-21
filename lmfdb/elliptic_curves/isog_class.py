@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
@@ -143,7 +143,7 @@ class ECisog_class(object):
 
         if self.cm:
             # set CM field for Properties box.
-            D = ZZ(self.cm).squarefree_part()
+            D = integer_squarefree_part(ZZ(self.cm))
             coeffs = [(1-D)//4,-1,1] if D%4==1 else [-D,0,1]
             lab = db.nf_fields.lucky({'coeffs': coeffs}, projection='label')
             self.CMfield = field_pretty(lab)
