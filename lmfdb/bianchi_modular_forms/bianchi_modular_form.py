@@ -318,7 +318,6 @@ def render_bmf_space_webpage(field_label, level_label):
     properties = []
 
     if not field_label_regex.match(field_label):
-    if not field_label_regex.match(field_label):
         flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
     else:
         pretty_field_label = field_pretty(field_label)
