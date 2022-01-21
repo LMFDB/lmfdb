@@ -8,7 +8,7 @@ from io import BytesIO
 import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, RealField
 
 from lmfdb import db
 from lmfdb.app import app
@@ -868,7 +868,7 @@ def residue_field_degrees_function(nf):
 def see_frobs(frob_data):
     ans = []
     seeram = False
-    plist = [p for p in primes(2, 60)]
+    plist = [p for p in prime_range(2, 60)]
     for i in range(len(plist)):
         p = plist[i]
         dec = frob_data[i][1]
@@ -900,7 +900,7 @@ def frobs(nf):
     D = nf.disc()
     ans = []
     seeram = False
-    for p in primes(2, 60):
+    for p in prime_range(2, 60):
         if not ZZ(p).divides(D):
             # [3] ,   [2,1]
             dec = frob_at_p(p)

@@ -4,7 +4,7 @@ from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
-                         web_latex_split_on)
+                         web_latex_split_on, integer_squarefree_part)
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
@@ -374,7 +374,7 @@ class ECNF(object):
                 self.cm = -self.cm
             else:
                 self.rational_cm = K(self.cm).is_square()
-            self.cm_sqf = ZZ(self.cm).squarefree_part()
+            self.cm_sqf = integer_squarefree_part(ZZ(self.cm))
             self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
                 d4 = ZZ(self.cm) // 4
