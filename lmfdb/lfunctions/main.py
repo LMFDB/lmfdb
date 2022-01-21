@@ -84,7 +84,6 @@ def learnmore_list(path=None, remove=None):
 
 @l_function_page.route("/contents")
 def contents():
-    print("In contents")
     return render_template(
         "LfunctionContents.html",
         title="L-functions",
@@ -93,7 +92,6 @@ def contents():
 
 @l_function_page.route("/")
 def index():
-    print("In index")
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
@@ -110,7 +108,6 @@ def index():
 
 @l_function_page.route("/rational")
 def rational():
-    print("In rational L-function routing")
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
@@ -130,14 +127,12 @@ def rational():
         bread=get_bread([("Rational", " ")]))
 
 def common_postprocess(res, info, query):
-    print("In common_postprocess")
     for L in res:
         L['origins'] = names_and_urls(L['instance_urls'])
         L['url'] = url_for_lfunction(L['label'])
     return res
 
 def process_search(res, info, query):
-    print("In process_search")
     res = common_postprocess(res, info, query)
     for L in res:
         if L.get('motivic_weight') is None:
@@ -169,7 +164,6 @@ def process_search(res, info, query):
     return res
 
 def process_trace(res, info, query):
-    print("In process_trace")
     res = common_postprocess(res, info, query)
     if info.get('view_modp') == 'reductions':
         q = int(info['an_modulo'])
@@ -179,7 +173,6 @@ def process_trace(res, info, query):
     return res
 
 def process_euler(res, info, query):
-    print("In process_euler")
     res = common_postprocess(res, info, query)
     for L in res:
         L['euler_factor'] = {}
@@ -190,7 +183,6 @@ def process_euler(res, info, query):
     return res
 
 def url_for_lfunction(label):
-    print("In url_for_l_function")
     try:
         kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'), 
 label.split('-')))
@@ -201,12 +193,10 @@ label.split('-')))
 
 @l_function_page.route("/<label>")
 def by_full_label(label):
-    print("In by_full_label")
     return redirect(url_for_lfunction(label))
 
 @l_function_page.route("/<int:degree>/<conductor>/<character>/<gamma_real>/<gamma_imag>/<index>")
 def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
-    print("In by_label")
     args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
@@ -734,6 +724,9 @@ def by_url_degree_conductor_character_spectral(degree, conductor, character, spe
     return by_url_bread(degree, conductor, character, spectral_label, False)
 
 def by_url_bread(degree, conductor, character, spectral_label, rational):
+    print("In by_url_bread")
+    print("request.args = ")
+    print(request.args)
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if (
         'degree' in info or
@@ -742,6 +735,7 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
         (spectral_label and 'spectral_label' in info) or
         (rational and 'rational' in info)
     ):
+        print url_for('.index', **request.args)
         return redirect(url_for('.index', **request.args), code=307)
     else:
         if conductor:
