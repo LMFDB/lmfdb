@@ -149,14 +149,14 @@ class CMF_download(Downloader):
     ]
     
     convert_to_hecke_field_magma_cyclotomic = [ 
-        '        Kf := CyclotomicField(poly_data);',
+        '        Kf := CyclotomicField(%d);',
         '    end if;',
         '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
         'end function;'
     ]
     
     convert_to_hecke_field_magma_powbasis = [
-        '        poly := poly_data;',
+        '        ' + self.assign('magma', 'poly', '{hecke_ring_cyclotomic_generator}', level = 1).rstrip('\n'),
         '        Kf := NumberField(Polynomial([elt : elt in poly]));',
         '        AssignNames(~Kf, ["nu"]);',
         '    end if;',
@@ -167,12 +167,12 @@ class CMF_download(Downloader):
     ]
     
     convert_to_hecke_field_magma_generic = [
-        '        poly := poly_data;',
+        '        ' + self.assign('magma', 'poly', '{field_poly}', level = 1).rstrip('\n'),
         '        Kf := NumberField(Polynomial([elt : elt in poly]));',
         '        AssignNames(~Kf, ["nu"]);',
         '    end if;',
-        '    Rf_num := [* numden[1] : numden in basis_data *];',
-        '    Rf_basisdens := [* numden[2] : numden in basis_data *];',
+        '    ' + self.assign('magma', 'Rf_num', '{hecke_ring_numerators}').rstrip('\n'),
+        '    ' + self.assign('magma', 'Rf_basisdens', '{hecke_ring_numerators}').rstrip('\n'),
         '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
         '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
         '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
@@ -194,12 +194,20 @@ class CMF_download(Downloader):
         'qexp_generic' : {'sage': ['Each a_p is given as a linear combination', 'of the following basis for the coefficient ring.']},
         'qexp_sparse_cyclotomic' : {'sage': ['Each a_p is given as list of pairs', 'Each pair (c, e) corresponds to c*zeta^e']}
     }
-
-    # At the moment this is a one-liner, but if we would like to add common headers/footers 
-    # in the future, it might come in handy.
     
-    def create_function_for_download(self, func_label, lang='sage'):
-        return self.func_body.get(func_label,{}).get(lang,[])
+    func_format_args = {
+        'convert_to_hecke_field_cyclotomic' : {'magma' : ['hecke_ring_cyclotomic_generator']},
+        'convert_to_hecke_field_powbasis' : {'magma' : ['field_poly']},
+        'convert_to_hecke_field_generic' : {'magma' : ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators']}
+    }
+    
+    def create_function_for_download(self, func_label, newform, hecke_nf, lang='sage'):
+        format_args = self.func_format_args.get(func_label,{}).get(lang,[])
+        arg_dict = hecke_nf.update(dir(newform))
+        unformatted = self.func_body.get(func_label,{}).get(lang,[])
+        kwargs = { arg : arg_dict[arg] for arg in format_args }
+        code = unformatted.format(**kwargs)
+        return code
     
     def create_function_explain_for_download(self, func_label, lang='sage'):
         explain = ''
