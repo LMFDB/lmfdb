@@ -35,7 +35,6 @@ from sage.all import (
 from sage.misc.functional import round
 from sage.structure.element import Element
 
-from .web_display import web_latex
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
 
@@ -840,6 +839,7 @@ def ajax_result(id):
 
 
 def ajax_more(callback, *arg_list, **kwds):
+    from .web_display import web_latex
     inline = kwds.get('inline', True)
     text = kwds.get('text', 'more')
     nonce = hex(random.randint(0, 1 << 128))

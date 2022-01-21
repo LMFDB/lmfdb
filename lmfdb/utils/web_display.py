@@ -11,7 +11,7 @@ from sage.all import (
     floor,
     PolynomialRing
 )
-from .utilities import coeff_to_poly
+from . import coeff_to_poly
 ################################################################################
 #  latex/math rendering utilities
 ################################################################################

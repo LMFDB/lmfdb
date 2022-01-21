@@ -1,4 +1,4 @@
-from .utilities import display_knowl
+from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 
 
