@@ -209,7 +209,9 @@ class CMF_download(Downloader):
     def create_function_for_download(self, func_label, hecke_nf, lang='sage', sep='\n', newform=None):
         arg_dict = hecke_nf.copy()
         if not newform is None:
-            arg_dict.update(dir(newform))
+            # This is not working, workaround
+            # arg_dict.update(dir(newform))
+            arg_dict['field_poly'] = newform.field_poly
         format_args = self.func_format_args.get(func_label,{}).get(lang,[])
         unformatted = self.func_body.get(func_label,{}).get(lang,[])
         kwargs = { arg : arg_dict[arg] for arg in format_args }
