@@ -134,14 +134,84 @@ class CMF_download(Downloader):
             'return PS(an)']
 
     header = ["from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
-    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_powbasis = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_sparse_cyclotomic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
+    
+    # Magma functions
+    
+    convert_to_hecke_field_magma_header = [
+        'function ConvertToHeckeField(input: pass_field := false, Kf := [])',
+        '    if not pass_field then']
+    
+    convert_to_hecke_field_magma_rationals = [
+        '        Kf := Rationals();',
+        '    end if;',
+        '    return [Kf!elt[1] : elt in input];',
+        'end function;'
+    ]
+    
+    convert_to_hecke_field_magma_cyclotomic = [ 
+        '        Kf := CyclotomicField(poly_data);',
+        '    end if;',
+        '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
+        'end function;'
+    ]
+    
+    convert_to_hecke_field_magma_pow_basis = [
+        '        ' + 'poly_data',
+        '        Kf := NumberField(Polynomial([elt : elt in poly]));',
+        '        AssignNames(~Kf, ["nu"]);',
+        '    end if;',
+        '    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];',
+        '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
+        '    return Eltseq(inp_vec);',
+        'end function;'
+    ]
+    
+    convert_to_hecke_field_magma_generic = [
+        '        ' + 'poly_data',
+        '        Kf := NumberField(Polynomial([elt : elt in poly]));',
+        '        AssignNames(~Kf, ["nu"]);',
+        '    end if;',
+        '    Rf_num := [numden[1] : numden in basis_data];',
+        '    Rf_basisdens := [numden[2] : numden in basis_data];',
+        '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
+        '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
+        '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
+        '    return Eltseq(inp_vec);',
+        'end function;',
+    ]
+    
+    func_body = {
+        'qexp_generic' : {'sage': header + discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage},
+        'qexp_powbasis' : {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage},
+        'qexp_sparse_cyclotomic' : {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage},
+        'convert_to_hecke_field_generic' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_generic},
+        'convert_to_hecke_field_pow_basis' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis},
+        'convert_to_hecke_field_cyclotomic' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_cyclotomic},
+        'convert_to_hecke_field_rationals' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_rationals}
+    }
+    
+    func_explain = {
+        'qexp_generic' : {'sage': ['Each a_p is given as a linear combination', 'of the following basis for the coefficient ring.']},
+        'qexp_sparse_cyclotomic' : {'sage': ['Each a_p is given as list of pairs', 'Each pair (c, e) corresponds to c*zeta^e']}
+    }
 
-
-
-
-
+    def create_function_for_download(self, func_label, lang='sage'):
+        func_start = self.get('function_start',{}).get(lang,[])
+        func_end = self.get('function_end',{}).get(lang,[])
+        func_body = self.func_body.get(func_label,{}).get(lang,[])
+        code = '\n' + '\n'.join(func_start) + '\n'
+        code += '    ' + '\n    '.join(func_body) + '\n'
+        code += '\n'.join(func_end)
+        return code
+    
+    def create_function_explain_for_download(self, func_label, lang='sage'):
+        explain = ''
+        c = self.comment_prefix[lang]
+        lines = self.func_explain.get(func_label,{}).get(lang,[])
+        for line in lines:
+            explain += c + ' ' + line + '\n'
+        return explain
+                                                                                                        
     def download_qexp(self, label, lang='sage'):
         hecke_nf = self._get_hecke_nf(label)
         if hecke_nf is None:
@@ -163,37 +233,29 @@ class CMF_download(Downloader):
         hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
-            explain += c + ' Each a_p is given as list of pairs\n'
-            explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
+            code = self.create_function_for_download('qexp_sparse_cyclotomic', lang)
+            explain += self.create_function_explain_for_download('qexp_sparse_cyclotomic', lang)
             basis_data = ''
             poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
         else:
-            explain += c + ' Each a_p is given as a linear combination\n'
-            explain += c + ' of the following basis for the coefficient ring.\n'
+            explain += self.create_function_explain_for_download('qexp_generic', lang)
             poly_data = '\n' + c + ' The following line gives the coefficients of\n'
             poly_data += c + ' the defining polynomial for the coefficient field.\n'
             poly_data =  self.assign(lang, 'poly_data', hecke_nf['field_poly'], level = 1)
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
-                func_body = self.get('qexp_function_body_powbasis',{}).get(lang,[])
+                code = self.create_function_for_download('qexp_powbasis', lang)
             else:
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
                 basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
                 basis_data += self.assign(lang,  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
-                func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
+                code = self.create_function_for_download('qexp_generic', lang)
 
         if lang in ['sage']:
             explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
-
-
-        if lang in ['sage']:
-            code = '\n' + '\n'.join(func_start) + '\n'
-            code += '    ' + '\n    '.join(func_body) + '\n'
-            code += '\n'.join(func_end)
 
         return self._wrap(explain + code + level_data + weight_data + poly_data + basis_data + hecke_ring_character_values + aps_data,
                           label + '.qexp',
@@ -378,47 +440,28 @@ class CMF_download(Downloader):
     end function;
     """
     def _magma_ConvertToHeckeField(self, newform, hecke_nf):
-        begin = ['function ConvertToHeckeField(input: pass_field := false, Kf := [])',
-                 '    if not pass_field then']
+        c = self.comment_prefix['magma']
         if newform.dim == 1:
-            return begin + [
-                    '        Kf := Rationals();',
-                    '    end if;',
-                    '    return [Kf!elt[1] : elt in input];',
-                    'end function;',
-                    ]
+            code = create_function_for_download('convert_to_hecke_field_rationals', 'magma')
         elif hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            return begin + [
-                    '        Kf := CyclotomicField(%d);' % hecke_nf['hecke_ring_cyclotomic_generator'],
-                    '    end if;',
-                    '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
-                    'end function;',
-                    ]
-        elif hecke_nf['hecke_ring_power_basis']:
-            return begin + [
-                    '        ' + self.assign('magma', 'poly', newform.field_poly, level = 1).rstrip('\n'),
-                    '        Kf := NumberField(Polynomial([elt : elt in poly]));',
-                    '        AssignNames(~Kf, ["nu"]);',
-                    '    end if;',
-                    '    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];',
-                    '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
-                    '    return Eltseq(inp_vec);',
-                    'end function;',
-                    ]
+            poly_data =  self.assign('magma', 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            code = create_function_for_download('convert_to_hecke_field_cyclotomic', 'magma')
         else:
-            return begin + [
-                    '        ' + self.assign('magma', 'poly', newform.field_poly, level = 1).rstrip('\n'),
-                    '        Kf := NumberField(Polynomial([elt : elt in poly]));',
-                    '        AssignNames(~Kf, ["nu"]);',
-                    '    end if;',
-                    '    ' + self.assign('magma', 'Rf_num', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
-                    '    ' + self.assign('magma', 'Rf_basisdens', hecke_nf['hecke_ring_denominators']).rstrip('\n'),
-                    '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
-                    '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
-                    '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
-                    '    return Eltseq(inp_vec);',
-                    'end function;',
-                    ]
+            poly_data = '\n' + c + ' The following line gives the coefficients of\n'
+            poly_data += c + ' the defining polynomial for the coefficient field.\n'
+            poly_data =  self.assign('magma', 'poly_data', hecke_nf['field_poly'], level = 1)
+            if hecke_nf['hecke_ring_power_basis']:
+                basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
+                basis_data += c + ' in the root of the defining polynomial above.\n'
+                code = create_function_for_download('convert_to_hecke_field_pow_basis', 'magma')
+            else:
+                basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
+                basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
+                basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
+                basis_data += self.assign('magma',  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
+                basis_data += '\n'
+                code = create_function_for_download('convert_to_hecke_field_generic', 'magma')
+       return code + poly_data + basis_data
 
     def _magma_MakeCharacters(self, newform, hecke_nf):
         """
