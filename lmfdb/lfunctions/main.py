@@ -232,6 +232,7 @@ def parse_sort(info, query):
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_spectral(inp, query, qfield):
+    print("Are we reaching parse_spectral?")
     if '-' not in inp:
         inp = inp + '-0'
     M = SPECTRAL_RE.match(inp)
