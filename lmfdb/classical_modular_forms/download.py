@@ -469,7 +469,7 @@ class CMF_download(Downloader):
                 basis_data += self.assign('magma',  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
                 code = self.create_function_for_download('convert_to_hecke_field_generic', 'magma')
-        return code + [poly_data, basis_data]
+        return ['\n    '.join(code) + poly_data + basis_data]
 
     def _magma_MakeCharacters(self, newform, hecke_nf):
         """
