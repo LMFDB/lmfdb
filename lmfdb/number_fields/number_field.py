@@ -841,7 +841,7 @@ def number_field_search(info, query):
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
-                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
+                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad',cardinality='num_ram')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
     info['wnf'] = WebNumberField.from_data
