@@ -21,7 +21,7 @@ from lmfdb.utils import (
     parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl,
     raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data, transitive_group_display_knowl,
@@ -800,8 +800,8 @@ nf_columns = SearchColumns([
     MathCol("degree", "nf.degree", "Degree", align="center"), 
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
-    SearchCol("cm", "nf.cm_field", "Is CM field?"),
-    SearchCol("is_galois", "nf.galois_group", "Is Galois?"),
+    CheckCol("cm", "nf.cm_field", "Is CM field?"),
+    CheckCol("is_galois", "nf.galois_group", "Is Galois?"),
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
     SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
