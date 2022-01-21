@@ -680,13 +680,14 @@ class CMF_download(Downloader):
 
 
     def download_newform_to_magma(self, label, lang='magma'):
-        self._init_magma_functions()
+        
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
         newform = WebNewform(data)
         hecke_nf = self._get_hecke_nf(label)
 
+        self._init_magma_functions(newform, hecke_nf)
         out = []
         newlines = [''] * 2
         if newform.has_exact_qexp:
