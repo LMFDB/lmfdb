@@ -493,6 +493,7 @@ class Lfunction_from_db(Lfunction):
         return True
     @lazy_attribute
     def bread(self):
+        print("In bread")
         from .main import url_for_lfunction
         _, conductor, character, cr, imag, index = self.label.split('-')
         spectral_label = cr + '-' + imag
