@@ -713,7 +713,6 @@ def by_url_rational_degree_conductor_character_spectral(degree,
                                                conductor,
                                                character,
                                                spectral_label):
-    print("In by_url_rational_degree_conductor_character_spectral")
     return by_url_bread(degree, conductor, character, spectral_label, True)
 
 @l_function_page.route("/<int:degree>", defaults={elt: None for elt in ['conductor', 'character', 'spectral_label']})
@@ -724,9 +723,6 @@ def by_url_degree_conductor_character_spectral(degree, conductor, character, spe
     return by_url_bread(degree, conductor, character, spectral_label, False)
 
 def by_url_bread(degree, conductor, character, spectral_label, rational):
-    print("In by_url_bread")
-    print("request.args = ")
-    print(request.args)
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if (
         'degree' in info or
@@ -779,14 +775,10 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
             info['bread'] = info['bread'][:-2]
             return l_function_search(info)
         if spectral_label:
-            print("Here is the problem?")
-            print("spectral_label = ")
-            print(spectral_label)
             info['spectral_label'] = spectral_label
-            return l_function_search(info)
         else:
             info['bread'] = info['bread'][:-1]
-            return l_function_search(info)
+        return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
 @l_function_page.route("/CuspForms/")
