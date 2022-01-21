@@ -156,7 +156,7 @@ class CMF_download(Downloader):
     ]
     
     convert_to_hecke_field_magma_powbasis = [
-        '        ' + 'poly_data',
+        '        poly := poly_data;',
         '        Kf := NumberField(Polynomial([elt : elt in poly]));',
         '        AssignNames(~Kf, ["nu"]);',
         '    end if;',
@@ -167,7 +167,7 @@ class CMF_download(Downloader):
     ]
     
     convert_to_hecke_field_magma_generic = [
-        '        ' + 'poly_data',
+        '        poly := poly_data;',
         '        Kf := NumberField(Polynomial([elt : elt in poly]));',
         '        AssignNames(~Kf, ["nu"]);',
         '    end if;',
@@ -452,7 +452,7 @@ class CMF_download(Downloader):
         if newform.dim == 1:
             code = self.create_function_for_download('convert_to_hecke_field_rationals', 'magma')
         elif hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            poly_data =  self.assign('magma', 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            poly_data = self.assign('magma', 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
             code = self.create_function_for_download('convert_to_hecke_field_cyclotomic', 'magma')
         else:
             poly_data = '\n' + c + ' The following line gives the coefficients of\n'
@@ -469,7 +469,7 @@ class CMF_download(Downloader):
                 basis_data += self.assign('magma',  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
                 code = self.create_function_for_download('convert_to_hecke_field_generic', 'magma')
-        return ['\n'.join(code) + poly_data + basis_data]
+        return [poly_data + basis_data + '\n'.join(code)]
 
     def _magma_MakeCharacters(self, newform, hecke_nf):
         """
