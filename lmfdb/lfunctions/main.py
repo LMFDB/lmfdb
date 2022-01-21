@@ -780,6 +780,9 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
             info['bread'] = info['bread'][:-2]
             return l_function_search(info)
         if spectral_label:
+            print("Here is the problem?")
+            print("spectral_label = ")
+            print(spectral_label)
             info['spectral_label'] = spectral_label
         else:
             info['bread'] = info['bread'][:-1]
