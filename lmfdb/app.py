@@ -261,6 +261,8 @@ def netloc_redirect():
     """
     from urllib.parse import urlparse, urlunparse
 
+    print("In netloc_redirect")
+    
     urlparts = urlparse(request.url)
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
@@ -292,6 +294,8 @@ def timestamp():
 
 @app.errorhandler(404)
 def not_found_404(error):
+    print("In error handler 404")
+    raise RuntimeError
     app.logger.info('%s 404 error for URL %s %s' % (timestamp(), request.url, error.description))
     messages = error.description if isinstance(error.description, (list, tuple)) else (error.description,)
     return render_template("404.html", title='LMFDB Page Not Found', messages=messages), 404
