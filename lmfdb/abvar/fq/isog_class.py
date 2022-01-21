@@ -235,6 +235,20 @@ class AbvarFq_isoclass(object):
     # ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
     #    return ans
 
+    def friends(self):
+        friends = []
+        if self.g <= 3:
+            if self.q < 10:
+                dispcols = "1-10"
+            elif self.q < 50:
+                dispcols = "1-50"
+            else:
+                dispcols = f"1-10,{self.q}"
+            # When over a non-prime field, we need to
+            poly = str(coeff_to_poly(self.poly, "T")).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
+            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g}&n={dispcols}&euler_constraints=F{self.q}%3D{poly}"))
+        return friends
+
     def frob_angles(self):
         ans = ""
         eps = 0.00000001
