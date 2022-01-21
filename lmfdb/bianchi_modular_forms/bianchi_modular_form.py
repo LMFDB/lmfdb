@@ -195,33 +195,29 @@ def bmf_search_field(field_label):
     return bianchi_modular_form_search({'field_label':field_label, 'search_array':BMFSearchArray()})
 
 # For statistics, it's useful to be able to pass the field label via a request argument
-@bmf_page.route('/gl2dims/')
+@bmf_page.route('/gl2dims')
 def gl2dims():
-    if "field_label" not in request.args:
-        flash_error("You must specify a field label to access dimension tables")
-        return redirect(url_for(".index"))
-    return redirect(url_for(".render_bmf_field_dim_table_gl2", **request.args))
+    flash_error("You must specify a field label to access dimension tables")
+    return redirect(url_for(".index"))
 
-@bmf_page.route('/sl2dims/')
+@bmf_page.route('/sl2dims')
 def sl2dims():
-    if "field_label" not in request.args:
-        flash_error("You must specify a field label to access dimension tables")
-        return redirect(url_for(".index"))
-    return redirect(url_for(".render_bmf_field_dim_table_sl2", **request.args))
+    flash_error("You must specify a field label to access dimension tables")
+    return redirect(url_for(".index"))
 
 @bmf_page.route('/gl2dims/<field_label>')
-def render_bmf_field_dim_table_gl2(**args):
+def render_bmf_field_dim_table_gl2(field_label):
     if not field_label_regex.match(field_label):
         flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
         return redirect(url_for(".index"))
-    return bmf_field_dim_table(gl_or_sl='gl2_dims', **args)
+    return bmf_field_dim_table(gl_or_sl='gl2_dims', field_label=field_label)
 
 @bmf_page.route('/sl2dims/<field_label>')
-def render_bmf_field_dim_table_sl2(**args):
+def render_bmf_field_dim_table_sl2(field_label):
     if not field_label_regex.match(field_label):
         flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
         return redirect(url_for(".index"))
-    return bmf_field_dim_table(gl_or_sl='sl2_dims', **args)
+    return bmf_field_dim_table(gl_or_sl='sl2_dims', field_label=field_label)
 
 def bmf_field_dim_table(**args):
     argsdict = to_dict(args)
