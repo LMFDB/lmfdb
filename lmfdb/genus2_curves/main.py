@@ -201,7 +201,6 @@ def index_Q():
         "10000-99999",
         "100000-1000000",
     )
-    info["equation_search"] = has_magma
     title = r"Genus 2 curves over $\Q$"
     return render_template(
         "g2c_browse.html",
@@ -362,15 +361,8 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
-try:
-    magma.eval('2')
-    has_magma = True
-except (TypeError, RuntimeError):
-    has_magma = False
 
 def genus2_lookup_equation(f):
-    if not has_magma:
-        return None
     f.replace(" ", "")
     # TODO allow other variables, if so, fix the error message accordingly
     R = PolynomialRing(QQ, "x")
@@ -458,7 +450,7 @@ def genus2_jump(info):
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-    elif has_magma and (
+    elif (
         re.match(r"^" + POLY_RE + r"$", jump)
         or re.match(r"^\[" + POLY_RE + r"," + POLY_RE + r"\]$", jump)
         or re.match(r"^" + ZLIST_RE + r"$", jump)
@@ -470,10 +462,8 @@ def genus2_jump(info):
         errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
-        if has_magma:
-            errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
-        else:
-            errmsg += "."
+        errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
+        errmsg += "."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
@@ -1041,8 +1031,7 @@ class G2CSearchArray(SearchArray):
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
         info["jump_egspan"] = "e.g. 169.a.169.1 or 169.a or 1088.b"
+        info["jump_egspan"] += " or x^5 + 1"
         info["jump_knowl"] = "g2c.search_input"
         info["jump_prompt"] = "Label"
-        if info.get("equation_search"):
-            info["jump_egspan"] += " or x^5 + 1"
         return SearchArray.jump_box(self, info)
