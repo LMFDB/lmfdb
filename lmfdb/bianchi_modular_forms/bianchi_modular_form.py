@@ -211,10 +211,16 @@ def sl2dims():
 
 @bmf_page.route('/gl2dims/<field_label>')
 def render_bmf_field_dim_table_gl2(**args):
+    if not field_label_regex.match(field_label):
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
+        return redirect(url_for(".index"))
     return bmf_field_dim_table(gl_or_sl='gl2_dims', **args)
 
 @bmf_page.route('/sl2dims/<field_label>')
 def render_bmf_field_dim_table_sl2(**args):
+    if not field_label_regex.match(field_label):
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
+        return redirect(url_for(".index"))
     return bmf_field_dim_table(gl_or_sl='sl2_dims', **args)
 
 def bmf_field_dim_table(**args):
@@ -312,7 +318,8 @@ def render_bmf_space_webpage(field_label, level_label):
     properties = []
 
     if not field_label_regex.match(field_label):
-        info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
+    if not field_label_regex.match(field_label):
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
     else:
         pretty_field_label = field_pretty(field_label)
         if not db.bmf_dims.exists({'field_label': field_label}):
