@@ -589,7 +589,6 @@ def search(info):
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
         start2 = start - nres if start > nres else 0
-        proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','second_trace_moment', 'fourth_trace_moment', 'first_a2_moment']
         try:
             res = db.gps_st.search(query, limit=max(count - len(results), 0), offset=start2, info=info)
         except QueryCanceledError as err:
