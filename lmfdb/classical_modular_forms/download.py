@@ -155,7 +155,7 @@ class CMF_download(Downloader):
         'end function;'
     ]
     
-    convert_to_hecke_field_magma_pow_basis = [
+    convert_to_hecke_field_magmapowbasis = [
         '        ' + 'poly_data',
         '        Kf := NumberField(Polynomial([elt : elt in poly]));',
         '        AssignNames(~Kf, ["nu"]);',
@@ -185,7 +185,7 @@ class CMF_download(Downloader):
         'qexp_powbasis' : {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage},
         'qexp_sparse_cyclotomic' : {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage},
         'convert_to_hecke_field_generic' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_generic},
-        'convert_to_hecke_field_pow_basis' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis},
+        'convert_to_hecke_field_powbasis' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis},
         'convert_to_hecke_field_cyclotomic' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_cyclotomic},
         'convert_to_hecke_field_rationals' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_rationals}
     }
@@ -453,7 +453,7 @@ class CMF_download(Downloader):
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
-                code = create_function_for_download('convert_to_hecke_field_pow_basis', 'magma')
+                code = create_function_for_download('convert_to_hecke_field_powbasis', 'magma')
             else:
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
