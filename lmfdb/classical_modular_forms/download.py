@@ -184,7 +184,7 @@ class CMF_download(Downloader):
             '        AssignNames(~Kf, ["nu"]);',
             '    end if;',
             '    ' + self.assign('magma', 'Rf_num', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
-            '    ' + self.assign('magma', 'Rf_basisdens', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
+            '    ' + self.assign('magma', 'Rf_basisdens', hecke_nf['hecke_ring_denominators']).rstrip('\n'),
             '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
             '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
             '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
