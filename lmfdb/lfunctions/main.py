@@ -735,7 +735,7 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
         (spectral_label and 'spectral_label' in info) or
         (rational and 'rational' in info)
     ):
-        print url_for('.index', **request.args)
+        print(url_for('.index', **request.args))
         return redirect(url_for('.index', **request.args), code=307)
     else:
         if conductor:
