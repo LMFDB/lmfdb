@@ -165,7 +165,7 @@ class CMF_download(Downloader):
     
     # The next ones depend on self, because assign does. We therefore create a function to initialize them
     
-    def _init_functions(self):
+    def _init_magma_functions(self):
         convert_to_hecke_field_magma_powbasis = [
             '        ' + self.assign('magma', 'poly', '{field_poly}', level = 1).rstrip('\n'),
             '        Kf := NumberField(Polynomial([elt : elt in poly]));',
@@ -191,8 +191,8 @@ class CMF_download(Downloader):
             'end function;',
         ]
         
-        self.func_body['convert_to_hecke_field_generic'] = {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_generic}
-        self.func_body['convert_to_hecke_field_powbasis'] = {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis}
+        self.func_body['convert_to_hecke_field_generic'] = {'magma' : self.convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_generic}
+        self.func_body['convert_to_hecke_field_powbasis'] = {'magma' : self.convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis}
         return
     
     func_explain = {
@@ -669,7 +669,7 @@ class CMF_download(Downloader):
 
 
     def download_newform_to_magma(self, label, lang='magma'):
-        self._init_functions()
+        self._init_magma_functions()
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
