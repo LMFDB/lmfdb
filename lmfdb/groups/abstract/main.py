@@ -887,8 +887,8 @@ subgroup_columns = SearchColumns([
                           ["ambient", "ambient_tex"],
                           lambda amb, tex: '<a href="%s">$%s$</a>' % (get_url(amb), tex),
                           default=True, short_title="Ambient name"),
-        ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center")],
-             default=True, short_title="Ambient order"),
+        ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Ambient order")],
+             default=True),
     SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",

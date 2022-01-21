@@ -3,7 +3,7 @@
 # make pyflakes happy, define interface for import *
 __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'send_file', 'list_to_factored_poly_otherorder', 'prop_int_pretty',
-           'list_factored_to_factored_poly_otherorder',
+           'list_factored_to_factored_poly_otherorder', 'integer_squarefree_part', 'integer_is_squarefree',
            'key_for_numerically_sort', 'an_list', 'coeff_to_poly',
            'coeff_to_power_series', 'display_multiset', 'pair2complex',
            'round_CBF_to_half_int', 'str_to_CBF', 'to_dict', 'display_float',
@@ -16,7 +16,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'bigint_knowl', 'too_big', 'make_bigint', 'bigpoly_knowl',
            'factor_base_factor', 'factor_base_factorization_latex',
            'polyquo_knowl', 'web_latex_poly', 'list_to_latex_matrix',
-           'code_snippet_knowl',
+           'code_snippet_knowl', 'integer_divisors', 'integer_prime_divisors',
            'Pagination', 'to_ordinal',
            'debug', 'flash_error', 'flash_warning', 'flash_info',
            'image_callback', 'encode_plot',
@@ -52,6 +52,10 @@ from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
 
 from .utilities import (
+    integer_divisors,
+    integer_prime_divisors,
+    integer_squarefree_part,
+    integer_is_squarefree,
     Pagination,
     an_list,
     code_snippet_knowl,

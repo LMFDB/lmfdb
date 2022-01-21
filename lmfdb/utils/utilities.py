@@ -15,28 +15,55 @@ from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
 from werkzeug.utils import cached_property
 from sage.all import (
-    CC,
     CBF,
+    CC,
     CDF,
     NumberField,
     PolynomialRing,
     PowerSeriesRing,
     QQ,
-    RealField,
     RIF,
+    RealField,
     TermOrder,
     ZZ,
     floor,
     latex,
-    prime_range,
-    valuation,
     log,
+    prime_range,
+    prod,
+    sign,
+    valuation,
 )
 from sage.misc.functional import round
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
+
+def integer_divisors(n):
+    """ returns sorted list of positive divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    if not n:
+        raise ValueError("n must be nonzero")
+    def _divisors(a):
+        if len(a) == 0:
+            return [1]
+        q = a[0]
+        return sum([[q[0]**e*n for n in _divisors(a[1:])] for e in range(0,q[1]+1)],[])
+    return sorted(_divisors(ZZ(n).factor()))
+
+def integer_prime_divisors(n):
+    """ returns sorted list of prime divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    if not n:
+        raise ValueError("n must be nonzero")
+    return [p for p, _ in ZZ(n).factor()]
+
+def integer_squarefree_part(n):
+    """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
+
+def integer_is_squarefree(n):
+    """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    return all([e == 1 for _, e in ZZ(n).factor()])
 
 def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
