@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from six import string_types, PY3
-if PY3:
-    buffer = memoryview
-
-from six.moves.urllib_parse import unquote
+from urllib.parse import unquote
 import re
 import yaml
 import json
@@ -19,20 +14,24 @@ from flask import (render_template, request, url_for, current_app,
 from lmfdb.api import api_page, api_logger
 
 
+buffer = memoryview
+
+
 def pluck(n, list):
     return [_[n] for _ in list]
 
 
 def quote_string(value):
-    if isinstance(value, string_types):
+    if isinstance(value, str):
         return repr(value)
     return value
 
 
-def pretty_document(rec,sep=", ",id = True):
+def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
     attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
-    return "{"+sep.join(["'%s': %s" % attr for attr in attrs])+"}"
+    return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
+
 
 def hidden_collection(c):
     """
@@ -61,7 +60,7 @@ def get_database_info(show_hidden=False):
 @api_page.route("/")
 def index(show_hidden=False):
     databases = get_database_info(show_hidden)
-    title = "API"
+    title = "Database"
     return render_template("api.html", **locals())
 
 @api_page.route("/all")
@@ -156,7 +155,7 @@ def api_query_id(table, id):
             out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
         return out
     else:
-        return api_query(table, id = id)
+        return api_query(table, id=id)
 
 
 @api_page.route("/<table>")
@@ -171,6 +170,15 @@ def api_query(table, id = None):
     DELIM = request.args.get("_delim", ",")
     fields = request.args.get("_fields", None)
     sortby = request.args.get("_sort", None)
+    def apierror(msg, flash_extras=[], code=404, table=True):
+        if format == "html":
+            flash_error(msg, *flash_extras)
+            if table:
+                return redirect(url_for(".api_query", table=table))
+            else:
+                return redirect(url_for(".index"))
+        else:
+            return abort(code, msg % tuple(flash_extras))
 
     if fields:
         fields = ['id'] + fields.split(DELIM)
@@ -181,33 +189,25 @@ def api_query(table, id = None):
         sortby = sortby.split(DELIM)
 
     if offset > 10000:
-        if format != "html":
-            return abort(404)
-        else:
-            flash_error("offset %s too large, please refine your query.", offset)
-            return redirect(url_for(".api_query", table=table))
+        return apierror("offset %s too large, please refine your query.", [offset])
 
     # preparing the actual database query q
     try:
         coll = getattr(db, table)
     except AttributeError:
-        if format != "html":
-            return abort(404)
-        else:
-            flash_error("table %s does not exist", table)
-            return redirect(url_for(".index"))
+        return apierror("table %s does not exist", [table], table=False)
     q = {}
 
     # if id is set, just go and get it, ignore query parameeters
     if id is not None:
         if offset:
-            return abort(404)
+            return apierror("Cannot include offset with id")
         single_object = True
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
         else:
-            return abort(404, "id '%s' must be an integer" % id)
+            return apierror("id '%s' must be an integer", [id])
         data = coll.lucky({'id':id}, projection=fields)
         data = [data] if data else []
     else:
@@ -240,7 +240,7 @@ def api_query(table, id = None):
                     qval = { "contains" : [float(qval[2:])] }
                 elif qval.startswith("cpy"):
                     qval = { "$contains" : [literal_eval(qval[3:])] }
-            except:
+            except Exception:
                 # no suitable conversion for the value, keep it as string
                 pass
 
@@ -248,7 +248,7 @@ def api_query(table, id = None):
             q[qkey] = qval
 
         # assure that one of the keys of the query is indexed
-        # however, this doesn't assure that the query will be fast... 
+        # however, this doesn't assure that the query will be fast...
         #if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(coll))) == 0:
         #    flash_error("no key in the query %s is indexed.", q)
         #    return redirect(url_for(".api_query", table=table))
@@ -274,21 +274,14 @@ def api_query(table, id = None):
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
-            flash_error("Query %s exceeded time limit.", q)
-            return redirect(url_for(".api_query", table=table))
+            return apierror("Query %s exceeded time limit.", [q], code=500)
         except KeyError as err:
-            flash_error("No key %s in table %s", err, table)
-            return redirect(url_for(".api_query", table=table))
-        except ValueError as err:
-            flash_error(str(err))
-            return redirect(url_for(".api_query", table=table))
+            return apierror("No key %s in table %s", [err, table])
+        except Exception as err:
+            return apierror(str(err))
 
     if single_object and not data:
-        if format != 'html':
-            return abort(404)
-        else:
-            flash_error("no document with id %s found in table %s.", id, table)
-            return redirect(url_for(".api_query", table=table))
+        return apierror("no document with id %s found in table %s.", [id, table])
 
     # fixup data for display and json/yaml encoding
     if 'bytea' in coll.col_type.values():
@@ -323,10 +316,7 @@ def api_query(table, id = None):
 
     if format.lower() == "json":
         #return flask.jsonify(**data) # can't handle binary data
-        if PY3:
-            return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
-        else:
-            return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2), mimetype='application/json')
+        return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
     elif format.lower() == "yaml":
         y = yaml.dump(data,
                       default_flow_style=False,
@@ -337,11 +327,20 @@ def api_query(table, id = None):
         # sort displayed records by key (as jsonify and yaml_dump do)
         data["pretty"] = pretty_document
         location = table
-        title = "API - " + location
-        bc = [("API", url_for(".index")), (table,)]
+        title = "Database - " + location
+        bc = [("Database", url_for(".index")), (table,)]
         query_unquote = unquote(data["query"])
+        description = coll.description()
+        if description:
+            title += " (%s)" % description
+        search_schema = [(col, coll.col_type[col])
+                         for col in sorted(coll.search_cols)]
+        extra_schema = [(col, coll.col_type[col])
+                        for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
+                               search_schema=search_schema,
+                               extra_schema=extra_schema,
                                single_object=single_object,
                                query_unquote = query_unquote,
                                url_args = url_args,

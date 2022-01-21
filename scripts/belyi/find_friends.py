@@ -5,6 +5,15 @@ from sage.all import EllipticCurve
 import re
 from lmfdb.genus2_curves.main import genus2_lookup_equation as genus2_lookup_equation_polys
 
+def base_field_label(rec):
+    if rec['base_field'] == [-1, 1]:
+        rec['base_field_label'] = '1.1.1.1'
+    else:
+        field_rec = db.nf_fields.lucky({'coeffs':rec['base_field']})
+        if field_rec:
+            rec['base_field_label'] = field_rec['label']
+    return rec
+
 def genus2_lookup_equation(rec):
     f,h = curve_string_parser(rec)
     return genus2_lookup_equation_polys(str([f,h]))
@@ -31,7 +40,7 @@ def NFelt(a):
 
     For example the element (3+4*w)/2 in Q(w) gives '3/2,2'.
     """
-    return ",".join([str(c) for c in list(a)])
+    return ",".join(str(c) for c in list(a))
 
 def genus1_lookup_equation_nf(rec):
     assert rec['g'] == 1

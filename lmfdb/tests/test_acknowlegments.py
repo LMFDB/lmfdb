@@ -6,7 +6,7 @@ class HomePageTest(LmfdbTest):
     # All tests should pass
     #
     # The acknowledgments page
-    def test_acknowledgements(self):
+    def test_acknowledgments(self):
         homepage = self.tc.get("/acknowledgment").get_data(as_text=True)
         assert 'American Institute of Mathematics' in homepage
 

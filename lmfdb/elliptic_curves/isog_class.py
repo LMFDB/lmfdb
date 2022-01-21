@@ -6,7 +6,7 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label,
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
 class ECisog_class(object):
     """
@@ -94,10 +94,9 @@ class ECisog_class(object):
             for c in self.curves:
                 c['optimal'] = None
                 c['optimality_known'] = False
-                
         for c in self.curves:
             c['ai'] = c['ainvs']
-            c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=self.conductor, iso_label=self.iso_label, number=c['lmfdb_number'])
+            c['curve_url_lmfdb'] = url_for(".by_ec_label", label=c['lmfdb_label'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['Clabel']) if self.conductor < CREMONA_BOUND else "N/A"
             if self.label_type == 'Cremona':
                 c['curve_label'] = c['Clabel']
@@ -106,6 +105,9 @@ class ECisog_class(object):
                 c['curve_label'] = c['lmfdb_label']
                 _, c_iso, c_number = split_lmfdb_label(c['lmfdb_label'])
             c['short_label'] = "{}{}".format(c_iso,c_number)
+            c['FH'] = RealField(20)(c['faltings_height'])
+            c['j_inv'] = QQ(tuple(c['jinv'])) # convert [num,den] to rational for display
+            c['disc'] = c['signD'] * c['absD']
             
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']

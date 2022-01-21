@@ -1,0 +1,27 @@
+
+<table class="nowrap">
+  <tr>
+    <td></td><td></td>
+    {% for c in gp.conjugacy_class_divisions %}
+      <td>{{ c.display_knowl() | safe }}</td>
+    {% endfor %}
+  </tr>
+  {% for p in gp.factors_of_order %}
+    {% set ploop = loop %}
+    <tr>
+      <td></td><td>{{p}}P</td>
+      {% for c in gp.conjugacy_class_divisions %}
+        <td>{{ gp.conjugacy_classes[c.classes.0.powers[ploop.index0]-1].division.label }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+
+  {% for chtr in gp.rational_characters %}
+    <tr>
+      <td> {{ chtr.display_knowl() | safe }}</td><td></td>
+      {% for c in gp.conjugacy_class_divisions %}
+        <td class="right">${{ chtr.qvalues[c.classes.0.counter - 1] }}$</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>

@@ -10,22 +10,23 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
+    parse_inertia,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, group_display_inertia,
+    transitive_group_display_knowl, group_display_inertia,
     knowl_cache, galdata, galunformatter,
-    group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+    group_pretty_and_nTj, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
 import re
-
-LF_credit = 'J. Jones and D. Roberts'
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -34,10 +35,10 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
-            ('Local field labels', url_for(".labels_page"))]
+            ('$p$-adic field labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -71,11 +72,10 @@ def local_algebra_data(labels):
     fall = [db.lf_fields.lookup(label) for label in labs]
     for f in fall:
         l = str(f['label'])
-        ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
+        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        galnt = [int(z) for z in f['galois_label'].split('T')]
-        ans += group_display_knowl(galnt[0],galnt[1])
+        ans += transitive_group_display_knowl(f['galois_label'])
         ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
@@ -113,7 +113,6 @@ def local_algebra_display_knowl(labels):
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_data,
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
@@ -147,13 +146,28 @@ def ratproc(inp):
     sstring += str(qs)
     return sstring
 
+def show_slopes(sl):
+    if str(sl) == "[]":
+        return "None"
+    return(sl)
+
+def show_slope_content(sl,t,u):
+    sc = str(sl)
+    if sc == '[]':
+        sc = r'[\ ]'
+    if t>1:
+        sc += '_{%d}'%t
+    if u>1:
+        sc += '^{%d}'%u
+    return(sc)
+
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
         return local_field_search(info)
-    return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
+    return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -176,35 +190,58 @@ class LF_download(Downloader):
     title = '$p$-adic fields'
     columns = ['p', 'coeffs']
     data_format = ['p', '[coeffs]']
-    data_description = 'defining the local field over Qp by adjoining a root of f(x).'
+    data_description = 'defining the $p$-adic field over Qp by adjoining a root of f(x).'
     function_body = {'magma':['Prec := 100; // Default precision of 100',
                               'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
                      'sage':['Prec = 100 # Default precision of 100',
                              "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
                      'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
 
+lf_columns = SearchColumns([
+    LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
+    MathCol("p", "lf.qp", "$p$", default=True),
+    MathCol("e", "lf.ramification_index", "$e$", default=True),
+    MathCol("f", "lf.residue_field_degree", "$f$", default=True),
+    MathCol("c", "lf.discriminant_exponent", "$c$", default=True),
+    MultiProcessedCol("gal", "nf.galois_group", "Galois group",
+                      ["n", "gal", "cache"],
+                      lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
+                      default=True),
+    MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
+                      ["slopes", "t", "u"],
+                      show_slope_content,
+                      default=True, mathmode=True)],
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u"])
 
-@search_wrap(template="lf-search.html",
-             table=db.lf_fields,
+def lf_postprocess(res, info, query):
+    cache = knowl_cache(list(set([f"{rec['n']}T{rec['gal']}" for rec in res])))
+    for rec in res:
+        rec["cache"] = cache
+    return res
+
+@search_wrap(table=db.lf_fields,
              title='$p$-adic field search results',
              titletag=lambda:'p-adic field search results',
              err_title='Local field search input error',
+             columns=lf_columns,
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
+             postprocess=lf_postprocess,
              bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
-             url_for_label=url_for_label,
-             credit=lambda:LF_credit)
+             url_for_label=url_for_label)
 def local_field_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'u',name='Unramified degree')
+    parse_ints(info,query,'t',name='Tame degree')
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
-    info['group_display'] = group_pretty_and_nTj
-    info['display_poly'] = format_coeffs
-    info['slopedisp'] = show_slope_content
+    parse_inertia(info,query,qfield=('inertia_gap','inertia'))
+    parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     info['search_array'] = LFSearchArray()
 
 def render_field_webpage(args):
@@ -249,7 +286,7 @@ def render_field_webpage(args):
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = "/LocalNumberField/%s" % unramlabel
+            unramfriend = url_for_label(unramlabel)
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
@@ -273,15 +310,19 @@ def render_field_webpage(args):
             logger.fatal("Cannot find discriminant root field!")
             rffriend = ''
         else:
-            rffriend = "/LocalNumberField/%s" % rflabel
+            rffriend = url_for_label(rflabel)
         gsm = data['gsm']
         if gsm == [0]:
             gsm = 'Not computed'
         elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
-            gsm = lf_formatfield(','.join([str(b) for b in gsm]))
+            gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
+        if 'wild_gap' in data:
+            wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
+        else:
+            wild_inertia = 'data not computed'
 
         info.update({
                     'polynomial': raw_typeset(polynomial),
@@ -299,6 +340,7 @@ def render_field_webpage(args):
                     'gal': group_pretty_and_nTj(gn, gt, True),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
+                    'wild_inertia': wild_inertia,
                     'unram': unramp,
                     'eisen': eisenp,
                     'gms': data['gms'],
@@ -313,11 +355,13 @@ def render_field_webpage(args):
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
+        if db.nf_fields.exists({'local_algs': {'$contains': label}}):
+            friends.append(('Number fields with this completion',
+                url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
 
         bread = get_bread([(label, ' ')])
         return render_template(
             "lf-show-field.html",
-            credit=LF_credit,
             title=title,
             titletag=titletag,
             bread=bread,
@@ -327,22 +371,6 @@ def render_field_webpage(args):
             learnmore=learnmore_list(),
             KNOWL_ID="lf.%s" % label,
         )
-
-
-def show_slopes(sl):
-    if str(sl) == "[]":
-        return "None"
-    return(sl)
-
-def show_slope_content(sl,t,u):
-    sc = str(sl)
-    if sc == '[]':
-        sc = r'[\ ]'
-    if t>1:
-        sc += '_{%d}'%t
-    if u>1:
-        sc += '^{%d}'%u
-    return(sc)
 
 def prettyname(ent):
     if ent['n'] <= 2:
@@ -369,9 +397,6 @@ def printquad(code, p):
     return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
-def search_input_error(info, bread):
-    return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
-
 @local_fields_page.route("/random")
 @redirect_no_cache
 def random_field():
@@ -381,12 +406,11 @@ def random_field():
 @local_fields_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "lf.padic_field",
+        "lf",
         db.lf_fields,
         url_for_label,
         title=r"Some interesting $p$-adic fields",
         bread=get_bread([("Interesting", " ")]),
-        credit=LF_credit,
         learnmore=learnmore_list()
     )
 
@@ -394,7 +418,7 @@ def interesting():
 def statistics():
     title = "Local fields: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=LFStats(), credit=LF_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=LFStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @local_fields_page.route("/Completeness")
 def cande():
@@ -402,7 +426,7 @@ def cande():
     tt = 'Completeness of p-adic field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
-                           credit=LF_credit, title=t, titletag=tt, bread=bread,
+                           title=t, titletag=tt, bread=bread,
                            learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
@@ -412,15 +436,16 @@ def labels_page():
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
                   learnmore=learnmore_list_remove('label'),
-                  credit=LF_credit, title=t, titletag=tt, bread=bread)
+                  title=t, titletag=tt, bread=bread)
 
 @local_fields_page.route("/Source")
 def source():
-    t = 'Source of $p$-adic field data'
-    ttag = 'Source of p-adic field data'
+    t = 'Source and acknowledgments for $p$-adic field pages'
+    ttag = 'Source and acknowledgments for p-adic field pages'
     bread = get_bread([("Source", '')])
-    return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
+    return render_template("double.html", kid='rcs.source.lf',
+                           kid2='rcs.ack.lf', title=t,
+                           titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
 @local_fields_page.route("/Reliability")
@@ -429,7 +454,7 @@ def reliability():
     ttag = 'Reliability of p-adic field data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
+                           title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
 class LFSearchArray(SearchArray):
@@ -465,6 +490,12 @@ class LFSearchArray(SearchArray):
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
+        f = TextBox(
+            name='f',
+            label='Residue field degree',
+            knowl='lf.residue_field_degree',
+            example='3',
+            example_span='3, or a range like 2..6')
         topslope = TextBox(
             name='topslope',
             label='Top slope',
@@ -481,10 +512,47 @@ class LFSearchArray(SearchArray):
                 display_knowl('group.small_group_label', "GAP id's"),
                 display_knowl('nf.galois_group.name', 'list of group labels'),
                 display_knowl('gg.label', 'transitive group labels')))
+        u = TextBox(
+            name='u',
+            label='Galois unramified degree',
+            knowl='lf.unramified_degree',
+            example='3',
+            example_span='3, or a range like 1..4'
+            )
+        t = TextBox(
+            name='t',
+            label='Galois tame degree',
+            knowl='lf.tame_degree',
+            example='2',
+            example_span='2, or a range like 2..3'
+            )
+        inertia = TextBox(
+            name='inertia_gap',
+            label='Inertia subgroup',
+            knowl='lf.inertia_group_search',
+            example='[3,1]',
+            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group label'))
+            )
+        wild = TextBox(
+            name='wild_gap',
+            label='Wild inertia subgroup',
+            knowl='lf.wild_inertia_group_search',
+            example='[4,1]',
+            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group label'))
+            )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
-        self.refine_array = [[degree, c, gal], [qp, e, topslope]]
+        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u], 
+            [t], [gal], [inertia], [wild], [results]]
+        self.refine_array = [[degree, qp, gal, u], 
+            [e, c, inertia, t], 
+            [f, topslope, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],

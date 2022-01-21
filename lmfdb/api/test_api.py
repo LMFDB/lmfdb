@@ -13,8 +13,7 @@ class ApiTest(LmfdbTest):
         r"""
         Check that one collection from each database works
         """
-        dbs = ['mwfp_forms', 'lat_lattices', 'lfunc_lfunctions',
-               'mwf_coeffs', 'sl2z_subgroups', 'av_fqisog',
+        dbs = ['lat_lattices', 'lfunc_lfunctions', 'av_fqisog',
                'artin_reps', 'bmf_forms', 'hgcwa_passports',
                'ec_curvedata', 'g2c_curves', 'halfmf_forms',
                'hgm_motives', 'hmf_forms', 'lf_fields',
@@ -39,7 +38,7 @@ class ApiTest(LmfdbTest):
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
             assert 'Query: <code><a href="/api/' in data
-            assert not "Error:" in data
+            assert "Error:" not in data
 
     def test_api_examples_yaml(self):
         r"""
@@ -50,7 +49,7 @@ class ApiTest(LmfdbTest):
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
             assert ("jinv:\n  - -65626385453056\n  - 656000554923" in data) or ("'jinv': !!python/unicode '-65626385453056/656000554923'" in data)
-            assert not "Error:" in data
+            assert "Error:" not in data
 
     def test_api_examples_json(self):
         r"""

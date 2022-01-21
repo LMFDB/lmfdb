@@ -6,7 +6,7 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
-from __future__ import absolute_import
+
 import math
 import re
 
@@ -82,7 +82,7 @@ from .LfunctionDatabase import (
 
 
 def validate_required_args(errmsg, args, *keys):
-    missing_keys = [key for key in keys if not key in args]
+    missing_keys = [key for key in keys if key not in args]
     if len(missing_keys):
         raise KeyError(errmsg, "Missing required parameters: %s." % ','.join(missing_keys))
 
@@ -249,7 +249,7 @@ def makeLfromdata(L):
                           for p, elt in L.bad_lfactors]
 
     # add missing bad factors
-    known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
+    known_bad_lfactors = [p for p, _ in L.bad_lfactors]
     for p in sorted([elt[0] for elt in L.level_factored]):
         if p not in known_bad_lfactors:
             L.bad_lfactors.append([p, [1, None]])
@@ -400,10 +400,25 @@ def apply_coeff_info(L, coeff_info):
         return res[0], CDF(res[1])
 
     base_power_int = int(coeff_info[0][2:-3])
+    fix = False
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
-
-    convert_euler_Lpoly = lambda poly_coeffs: [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+        # checks if we need to fix the Euler factors
+        if is_prime(n) and L.dirichlet_coefficients_arithmetic[n] != 0:
+            if fix:
+                assert L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+            else:
+                fix = L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+    def convert_euler_Lpoly(poly_coeffs):
+        Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+        # WARNING: the data in the database is wrong!
+        # it lists Fp(-T) instead of Fp(T)
+        # this is a temporary fix
+        # the variable fix double checks that is indeed needed
+        assert len(Fp) <= 2
+        if len(Fp) == 2 and fix:
+            Fp[1] *= -1
+        return Fp
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
@@ -656,6 +671,7 @@ class Lfunction_from_db(Lfunction):
             return r"\Lambda(1-s)"
         else:
             return r"\overline{\Lambda}(1-s)"
+
     @lazy_attribute
     def texnamecompleted1ms_arithmetic(self):
         if self.selfdual:
@@ -665,7 +681,8 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def texnamecompleteds(self):
-        return  r"\Lambda(s)"
+        return r"\Lambda(s)"
+
     @lazy_attribute
     def texnamecompleteds_arithmetic(self):
         return self.texnamecompleteds
@@ -756,7 +773,7 @@ class Lfunction_Maass(Lfunction):
             if self.level > 1:
                 try:
                     self.fricke = self.mf.fricke_eigenvalue
-                except:
+                except Exception:
                     raise KeyError('No Fricke information available for '
                                    + 'Maass form so not able to compute '
                                    + 'the L-function. ')
@@ -1348,7 +1365,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         # Compute Dirichlet coefficients ########################
         try:
             self.arith_coeffs = self.motive["coeffs"]
-        except:
+        except Exception:
             self.arith_coeffs = [Integer(k)
                                  for k in self.motive["coeffs_string"]]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.)

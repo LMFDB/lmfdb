@@ -973,7 +973,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
 
         label = "%s.%s"%(self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
-        if not myrep is None:
+        if myrep is not None:
             j=myrep['Dets'].index(label)
             artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
             friendlist.append(('Artin representation '+artlabel,
@@ -1074,7 +1074,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal', 'isorbit']
+              'orbit_label', 'orbit_index', 'isminimal', 'isorbit', 'degree']
 
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
@@ -1112,9 +1112,9 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
 
-        upper_limit = min(self.maxrows + 1, self.order + 1)
+        upper_limit = min(self.maxrows + 1, self.degree + 1)
 
-        if self.maxrows < self.order + 1:
+        if self.maxrows < self.degree + 1:
             self.rowtruncate = True
         self.galorbnums = orbit_data['galois_orbit'][:upper_limit]
         self.galoisorbit = list(
@@ -1134,6 +1134,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
         self.conductor = orbit_data['conductor']
         self.order = orbit_data['order']
+        self.degree = orbit_data['char_degree']
         self.isprimitive = bool_string(orbit_data['is_primitive'])
         self.isminimal = bool_string(orbit_data['is_minimal'])
         self.parity = parity_string(int(orbit_data['parity']))

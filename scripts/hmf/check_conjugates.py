@@ -11,7 +11,7 @@ Note that labels contain no information about weight.
 Initial version (University of Warwick 2015) Aurel Page
 
 """
-from __future__ import print_function
+
 import sys
 sys.path.append("../..");
 from copy import copy

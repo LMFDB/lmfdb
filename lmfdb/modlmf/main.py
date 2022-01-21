@@ -2,7 +2,7 @@
 
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, request, url_for, make_response, redirect, send_file
@@ -192,7 +192,7 @@ def render_modlmf_webpage(**args):
         try:
             pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace('x','a').replace('*','')
             info['field']= pol
-        except:
+        except Exception:
             info['field']=""
 
 
@@ -224,7 +224,7 @@ def render_modlmf_webpage(**args):
 def q_exp_display(label, number):
     try:
         number = int(number)
-    except:
+    except Exception:
         number = 20
     if number < 20:
         number = 20

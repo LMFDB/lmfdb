@@ -69,7 +69,7 @@ def make_keys(K,p):
     if not hasattr(K,'psort_dict'):
         K.psort_dict = {}
         K.primes_dict = {}
-    if not p in K.psort_dict:
+    if p not in K.psort_dict:
         #print("creating keys for primes above {}".format(p))
         key_dict = {}
         Fp = GF(p)
@@ -95,24 +95,24 @@ def make_keys(K,p):
             k0 = 20
             ok = False
             while not ok:
-                gfact = [h for h,e in g.factor_padic(p,k0)]
+                gfact = [h for h, e in g.factor_padic(p, k0)]
                 nfact = len(gfact)
                 gf = [h.lift() for h in gfact]
                 k1 = 1
-                while (k1<k0) and not ok:
-                    hh = [h % p**k1 for h  in gf]
-                    ok = len(Set(hh))==nfact
+                while (k1 < k0) and not ok:
+                    hh = [h % p**k1 for h in gf]
+                    ok = len(Set(hh)) == nfact
                     if not ok:
                         k1 += 1
                 if not ok:
-                    k0+=10
+                    k0 += 10
             # now hh holds the factors reduced mod p^k1 and these are
             # distinct so we sort the p-adic factors accordingly (these
             # will be first sorted by degree)
             gfact.sort(key=ZpX_key(k1))
             #print("p-adic factors: {}".format(gfact))
             #print("with keys {}".format([ZpX_key(k1)(h) for h in gfact]))
-            hh = [h.lift() % p**k1 for h  in gfact]
+            hh = [h.lift() % p**k1 for h in gfact]
             #print("p-adic factors mod {}^{}: {}".format(p,k1,hh))
             degs = list(Set([h.degree() for h in gfact]))
             hd = dict([(d,[h for h in hh if h.degree()==d]) for d in degs])
@@ -129,7 +129,7 @@ def make_keys(K,p):
                 key_dict[P] = (P.norm(),e,i)
 
         # Lastly we add a field j to each key (n,e,i) -> (n,j,e,i)
-        # which is its index in the sublist with same n-value.  This
+        # which is its index in the sublist with the same n-value.  This
         # will not affect sorting but is used in the label n.j.
 
         vals = list(key_dict.values())
@@ -208,10 +208,12 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
     # The set of possible degrees f of primes is the set of cycle
     # lengths in the Galois group acting as permutations on the roots
     # of the defining polynomial:
-    dlist = Set(sum([list(g.cycle_type()) for g in K.galois_group('gap').group()],[]))
+
+    dlist = Set([1, 2]) if K.degree() == 2 else Set(sum([list(g.cycle_type()) for g in K.galois_group()],[]))
 
     # Create an array of iterators, one for each residue degree
-    PPs = [primes_of_degree_iter(K,d, condition, sort_key, maxnorm=maxnorm)  for d in dlist]
+    PPs = [primes_of_degree_iter(K, d, condition, sort_key, maxnorm=maxnorm)
+           for d in dlist]
 
     # pop the first prime off each iterator (allowing for the
     # possibility that there may be none):
@@ -338,7 +340,7 @@ def ideals_of_norm(K,n):
     """
     if not hasattr(K,'ideal_norm_dict'):
         K.ideal_norm_dict = {}
-    if not n in K.ideal_norm_dict:
+    if n not in K.ideal_norm_dict:
         if n==1:
             K.ideal_norm_dict[n] = [K.ideal(1)]
         else:

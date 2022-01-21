@@ -12,6 +12,10 @@
     * title: to overwrite the knowl's title, usually just leave it
              to its default None.
 #}
+{% macro LINK_EXT(title, href) %}
+<a href="{{href}}" target="_blank">{{title}}</a>
+{% endmacro %}
+
 {% macro KNOWL(kid, title=none) -%}
 {% with ktitle = knowl_title(kid) -%}
 {% if ktitle is none -%}

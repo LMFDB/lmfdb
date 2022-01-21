@@ -4,7 +4,7 @@
 
 {% if contents %}
 {# Characters #}
-<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%} in Galois orbit</h2>
+<h2> {%if rowtruncate%}First {{contents|count}} of {{degree}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%} in Galois orbit</h2>
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr>

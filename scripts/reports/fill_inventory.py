@@ -22,7 +22,7 @@ def start_lmfdb_connection():
         try:
             save_stderr = sys.stderr
             sys.stderr = open('/dev/null','w')
-        except:
+        except Exception:
            #This is only for neatness, so no worries if it fails
             pass
 
@@ -37,7 +37,7 @@ def start_lmfdb_connection():
     if not debug:
         try:
             sys.stderr = save_stderr
-        except:
+        except Exception:
             pass
 
 def show_databases():

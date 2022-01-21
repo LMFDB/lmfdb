@@ -4,7 +4,7 @@ This script is used to run verification jobs in parallel.
 For more options (such as verifying only a single check or a single object)
 see the verify method of PosgresTable in lmfdb/backend/database.py.
 """
-from __future__ import print_function
+
 import argparse
 import os
 import subprocess

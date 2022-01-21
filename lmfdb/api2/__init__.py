@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 from lmfdb.app import app
 assert app # keeps pyflakes happy
 from lmfdb.logger import make_logger

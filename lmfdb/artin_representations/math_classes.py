@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from six import string_types
 from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, group_display_short, small_group_display_knowl)
+    transitive_group_display_knowl, group_display_short)
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 import re
@@ -85,12 +84,14 @@ class ArtinRepresentation(object):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
-            label=self._data['label']
+            if "label" not in self._data:
+                self._data["label"] = self._data["Baselabel"] + ".a"
+                self._data.update(self._data["GaloisConjugates"][0])
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
                 parts = x[0].split(".")
-                base = "%s.%s.%s.%s"% tuple(parts[j] for j in (0,1,2,3))
+                base = ".".join(parts[:4])
                 if len(parts)<5: # Galois orbit
                     conjindex=1
                 else:
@@ -215,16 +216,16 @@ class ArtinRepresentation(object):
 
     def projective_group(self):
         gapid = self._data['Proj_GAP']
-        smallg = None
         if gapid[0]:
-            smallg = db.gps_small.lookup('%s.%s' % (gapid[0], gapid[1]))
-            if smallg:
-                return small_group_display_knowl(gapid[0], gapid[1])
+            label = f"{gapid[0]}.{gapid[1]}"
+            name = db.gps_groups.lookup(label, "tex_name")
+            if name:
+                return abstract_group_display_knowl(label, f"${name}$")
         ntj = self._data['Proj_nTj']
         if ntj[1]:
-            return group_display_knowl(ntj[0], ntj[1])
-        if smallg:
-            return 'Group with GAP id [%s, %s]' % (gapid[0],gapid[1])
+            return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}")
+        if gapid:
+            return f'Group({gapid[0]}.{gapid[1]})'
         return 'data not computed'
 
     def projective_field(self):
@@ -260,7 +261,7 @@ class ArtinRepresentation(object):
         galnt = self.smallest_gal_t()
         if len(galnt)==1:
             return galnt[0]
-        return group_display_knowl(galnt[0],galnt[1])
+        return transitive_group_display_knowl(f"{galnt[0]}T{galnt[1]}")
 
     def is_ramified(self, p):
         return self.is_bad_prime(p)
@@ -321,7 +322,7 @@ class ArtinRepresentation(object):
         p = 2
         hard_primes = self.hard_primes()
         while len(artfull)>1:
-            if not p in hard_primes:
+            if p not in hard_primes:
               k=0
               while k<len(artfull):
                   if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
@@ -389,7 +390,7 @@ class ArtinRepresentation(object):
 
     def coefficients_list(self, upperbound=100):
         from lmfdb.utils import an_list
-        return an_list(lambda p: self.euler_polynomial(p), upperbound=upperbound, base_field=ComplexField())
+        return an_list(self.euler_polynomial, upperbound=upperbound, base_field=ComplexField())
 
     def character(self):
         return CharacterValues(self._data["Character"])
@@ -419,26 +420,37 @@ class ArtinRepresentation(object):
         return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
-        return group_display_knowl(n,t)
+        return transitive_group_display_knowl(self._data['GaloisLabel'])
 
     def __str__(self):
         try:
             return "An Artin representation of conductor " +\
                 str(self.conductor()) + " and dimension " + str(self.dimension())
             #+", "+str(self.index())
-        except:
+        except Exception:
             return "An Artin representation"
 
     def title(self):
         try:
             return "An Artin representation of conductor $" +\
                 str(self.conductor()) + "$ and dimension $" + str(self.dimension()) + "$"
-        except:
+        except Exception:
             return "An Artin representation"
 
     def url_for(self):
         return url_for("artin_representations.render_artin_representation_webpage", label=self.label())
+
+    def galois_links(self):
+        """
+        Used in listing search results to show links to all artin representations in this Galois orbit.
+        """
+        base = self._data["Baselabel"]
+        labels = [f"{base}.{num2letters(conj['GalOrbIndex'])}" for conj in self.GaloisConjugates()]
+        return ' '.join(
+            '<a href="{}">{}</a>'.format(
+                url_for("artin_representations.render_artin_representation_webpage", label=label),
+                artin_label_pretty(label))
+            for label in labels)
 
     def langlands(self):
         """
@@ -569,12 +581,12 @@ class ArtinRepresentation(object):
         # Index in the conjugacy classes, but starts at 1
         try:
             i = self.hard_primes().index(p)
-        except:
+        except Exception:
             raise IndexError("Not a 'hard' prime")
         return self.hard_factors()[i]
 
     def nf(self):
-        if not 'nf' in self._data:
+        if 'nf' not in self._data:
             self._data['nf']= self.number_field_galois_group()
         return self._data['nf']
 
@@ -654,7 +666,7 @@ class ConjugacyClass(object):
     def __str__(self):
         try:
             return "A conjugacy class in the group %s, of order %s and with representative %s" % (self._G, self.order(), self.representative())
-        except:
+        except Exception:
             return "A conjugacy class"
 
 
@@ -671,7 +683,7 @@ class NumberFieldGaloisGroup(object):
         elif len(x) > 1:
             raise ValueError("Only one positional argument allowed")
         else:
-            if isinstance(x[0], string_types):
+            if isinstance(x[0], str):
                 if x[0]:
                     coeffs = x[0].split(',')
                 else:
@@ -867,7 +879,7 @@ class NumberFieldGaloisGroup(object):
     # def Frobenius_fn(self):
     #    try:
     #        return self._Frobenius
-    #    except:
+    #    except Exception:
     #        tmp = self._data["Frobs"]
 
     def Frobenius_resolvents(self):
@@ -936,7 +948,7 @@ class NumberFieldGaloisGroup(object):
     def frobenius_cycle_type(self, p):
         try:
             assert p not in self.all_bad_primes()
-        except:
+        except Exception:
             raise AssertionError("Expecting a prime not dividing the discriminant")
         return tuple(self.residue_field_degrees(p))
         # tuple allows me to use this for indexing of a dictionary
@@ -944,7 +956,7 @@ class NumberFieldGaloisGroup(object):
     # def increasing_frobenius_cycle_type(self, p):
     #    try:
     #        assert not self.discriminant() % p == 0
-    #    except:
+    #    except Exception:
     #        raise AssertionError, "Expecting a prime not dividing the discriminant", p
     #    return tuple(sorted(self.residue_field_degrees(p), reverse = True))
     def residue_field_degrees(self, p):
@@ -962,7 +974,7 @@ class NumberFieldGaloisGroup(object):
     def __str__(self):
         try:
             tmp = "The Galois group of the number field  Q[x]/(%s)" % [str(m) for m in self.polynomial()]
-        except:
+        except Exception:
             tmp = "The Galois group of a number field"
         return tmp
 

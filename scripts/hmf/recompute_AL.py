@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals

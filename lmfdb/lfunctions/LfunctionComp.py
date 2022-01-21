@@ -5,6 +5,7 @@ from lmfdb import db
 
 # TODO These should all use lfunc.instances
 
+
 def isogeny_class_table(Nmin, Nmax):
     ''' Returns a table of all isogeny classes of elliptic curves with
      conductor in the ranges NMin, NMax.
@@ -18,6 +19,7 @@ def isogeny_class_table(Nmin, Nmax):
     iso_list = [iso.split('.') for iso in res]
 
     return iso_list
+
 
 def genus2_isogeny_class_table(Nmin, Nmax):
     ''' Returns a table of all isogeny classes of elliptic curves with
@@ -33,8 +35,10 @@ def genus2_isogeny_class_table(Nmin, Nmax):
 
     return iso_list
 
+
 def isogeny_class_cm(label):
-    return db.ec_curvedata.lucky({'lmfdb_iso':label}, projection='cm')
+    return db.ec_curvedata.lucky({'lmfdb_iso': label}, projection='cm')
+
 
 def EC_from_modform(level, iso):
     ''' The inverse to modform_from_EC
@@ -43,8 +47,8 @@ def EC_from_modform(level, iso):
 
 
 # DEPRECATED
-#from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex
-#def nr_of_EC_in_isogeny_class(long_isogeny_class_label, field_label = "1.1.1.1"):
+# from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex
+# def nr_of_EC_in_isogeny_class(long_isogeny_class_label, field_label = "1.1.1.1"):
 #    ''' Returns the number of elliptic curves in the isogeny class
 #     with given label.
 #    '''
@@ -52,13 +56,10 @@ def EC_from_modform(level, iso):
 #        return db.ec_curvedata.count({'lmfdb_iso':long_isogeny_class_label})
 #    else:
 #        return db.ec_nfcurves.count({'class_label':field_label + "." + long_isogeny_class_label})
-#
-#def modform_from_EC(label):
+
+# def modform_from_EC(label):
 #    ''' Returns the level and label for the cusp form corresponding
 #     to the elliptic curve with given label.
 #    '''
 #    N, iso, number = lmfdb_label_regex.match(label).groups()
 #    return {'level': N, 'iso': iso}
-        
-
-

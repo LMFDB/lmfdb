@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
-from six.moves import range
-
 import re
 from sage.all import lcm, factor, divisors, Integers
 from sage.databases.cremona import cremona_letter_code
@@ -11,6 +9,7 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import flash_error
 
 # utility functions #
+
 
 def modn_exponent(n):
     """ given a nonzero integer n, returns the group exponent of (Z/nZ)* """
@@ -152,7 +151,7 @@ class CharacterSearch:
         if self.parity in ["Even","even"]:
             self.parity = parity_string(1)
         self.limit = parse_limit(query.get('limit'))
-        if self.parity and not self.parity in [parity_string(-1),parity_string(1)]:
+        if self.parity and self.parity not in [parity_string(-1),parity_string(1)]:
             flash_error("%s is not a valid value for parity.  It must be '%s' or '%s'", self.parity, parity_string(-1), parity_string(1))
             raise ValueError('parity')
         self.primitive = query.get('primitive')
@@ -160,7 +159,7 @@ class CharacterSearch:
             self.primitive = bool_string(True)
         if self.primitive in ["No","no"]:
             self.primitive = bool_string(False)
-        if self.primitive and not self.primitive in [bool_string(True),bool_string(False)]:
+        if self.primitive and self.primitive not in [bool_string(True),bool_string(False)]:
             flash_error("%s is not a valid value for primitive.  It must be %s or %s", self.primitive, bool_string(True), bool_string(False))
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)

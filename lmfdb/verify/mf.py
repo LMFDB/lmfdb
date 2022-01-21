@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from collections import defaultdict
 
 from sage.all import cached_function, psi, RR, Integer, prod

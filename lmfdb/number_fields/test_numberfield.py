@@ -58,7 +58,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/GaloisGroups', 'abstract group may have')
 
     def test_imaginary_quadratic_page(self):
-        self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'Mosunov')
+        self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'extensive computations')
 
     def test_discriminants_page(self):
         self.check_args('/NumberField/Source', 'Jones-David Roberts')

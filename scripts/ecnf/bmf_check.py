@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r""" Functions to check consistency of data between elliptic curves and
 Bianchi Modular Forms databases:  """
-from __future__ import print_function
+
 
 # 2020-04-15: first version by JEC
 

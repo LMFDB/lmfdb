@@ -82,8 +82,18 @@
         {% endif %} {# renamable #}
         <tr>
           <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
-          <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+          {% if k.type == 2 %}
+            <td>{{ k.title }}<input name="title" id="ktitle" value="{{ k.title }}" type="hidden" /></td>
+          {% else %}
+            <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+          {% endif %}
         </tr>
+        {% if k.type == 2 %}
+          <tr>
+            <td>Postgres column type</td>
+            <td>{{ k.coltype }}</td>
+          </tr>
+        {% endif %}
         <tr>
           <td>Quality</td>
           <td>

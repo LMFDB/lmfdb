@@ -1,8 +1,4 @@
 # -*- encoding: utf-8 -*-
-from six.moves import range
-from six import integer_types as six_integers
-from six import string_types
-
 import cmath
 import math
 import datetime
@@ -14,8 +10,7 @@ import time
 from copy import copy
 from itertools import islice
 from types import GeneratorType
-from six.moves.urllib_parse import urlencode
-from six import PY3
+from urllib.parse import urlencode
 
 from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
@@ -95,7 +90,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
                     val = ZZ(elt).valuation(p)
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
-        if  e > 1:
+        if e > 1:
             if len(glatex) != 1:
                 outstr += '( %s )^{%d}' % (glatex, e)
             else:
@@ -369,7 +364,7 @@ def to_dict(args, exclude = [], **kwds):
 
 
 def is_exact(x):
-    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
 
 
 def display_float(x, digits, method = "truncate",
@@ -599,7 +594,7 @@ def web_latex(x, enclose=True):
     >>> web_latex(x**23 + 2*x + 1)
     '\\( x^{23} + 2 \\, x + 1 \\)'
     """
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return x
     return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
 
@@ -655,7 +650,7 @@ def web_latex_split_on(x, on=['+', '-']):
     >>> web_latex_split_on(x**2 + 1)
     '\\( x^{2} \\) + \\(  1 \\)'
     """
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return x
     else:
         A = r"\( %s \)" % latex(x)
@@ -679,7 +674,7 @@ def web_latex_split_on_pm(x):
  #   A = "\( %s \)" % latex(x)
     try:
         A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
-    except:
+    except Exception:
         A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly
@@ -719,7 +714,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     def insert_latex(s):
         return s.group(1) + r'\) \('
 
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return x
     else:
         A = r"\( %s \)" % latex(x)
@@ -1112,6 +1107,9 @@ def flash_warning(errmsg, *args):
     """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
     flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
 
+def flash_info(errmsg, *args):
+    """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
+    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
 
 ################################################################################
 #  Ajax utilities
@@ -1248,13 +1246,10 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    if PY3:
-        from io import BytesIO as IO
-    else:
-        from StringIO import StringIO as IO
+    from io import BytesIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
-    from six.moves.urllib_parse import quote
+    from urllib.parse import quote
 
     virtual_file = IO()
     fig = P.matplotlib(axes_pad=axes_pad)
@@ -1266,10 +1261,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
         fig.tight_layout(pad=pad)
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
     virtual_file.seek(0)
-    if PY3:
-        buf = virtual_file.getbuffer()
-    else:
-        buf = virtual_file.buf
+    buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
 # conversion tools between timestamp different kinds of timestamp
@@ -1284,7 +1276,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, string_types):
+    if not isinstance(pol_str, str):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')
@@ -1324,6 +1316,41 @@ def add_space_if_positive(texified_pol):
         return texified_pol
     return r"\phantom{-}" + texified_pol
 
+
+def sparse_cyclotomic_to_latex(n, dat):
+    r"""
+    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
+    and return sum_{j=1}^k cj zeta_n^ej in latex form as it is given
+    (converting to sage will rewrite the element in terms of a basis)
+    """
+
+    dat.sort(key=lambda p: p[1])
+    ans=''
+    z = r'\zeta_{%d}' % n
+    for p in dat:
+        if p[0] == 0:
+            continue
+        if p[1]==0:
+            if p[0] == 1 or p[0] == -1:
+                zpart = '1'
+            else:
+                zpart = ''
+        elif p[1]==1:
+            zpart = z
+        else:
+            zpart = z+r'^{'+str(p[1])+'}'
+        # Now the coefficient
+
+        if p[0] == 1:
+            ans += '+'  + zpart
+        elif p[0] == -1:
+            ans += '-'  + zpart
+        else:
+            ans += '{:+d}'.format(p[0])  + zpart
+    ans= re.compile(r'^\+').sub('', ans)
+    if ans == '':
+        return '0'
+    return ans
 raw_count = 0
 
 def raw_typeset(raw, tset='', extra='', text_area_threshold=150):
@@ -1355,4 +1382,36 @@ def raw_typeset(raw, tset='', extra='', text_area_threshold=150):
     out += extra
     out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
     return out
+
+def to_ordinal(n):
+    a = (n % 100) // 10
+    if a == 1:
+        return '%sth' % n
+    b = n % 10
+    if b == 1:
+        return '%sst' % n
+    elif b == 2:
+        return '%snd' % n
+    elif b == 3:
+        return '%srd' % n
+    else:
+        return '%sth' % n
+
+def dispZmat(mat):
+    r""" Display a matrix with integer entries
+    """
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([str(z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
+
+def dispcyclomat(n,mat):
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
 

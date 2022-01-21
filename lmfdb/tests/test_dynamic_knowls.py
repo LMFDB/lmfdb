@@ -20,9 +20,9 @@ class DynamicKnowlTest(LmfdbTest):
         # character table order can vary, so use trivial character
         assert '1  1  1  1  1  1  1' in L.get_data(as_text=True)
 
-    def test_small_group_knowl(self):
-        L = self.tc.get('/knowledge/show/group.small.data?gapid=2.1', follow_redirects=True)
-        assert 'Maximal subgroups' in L.get_data(as_text=True)
+    def test_abstract_group_knowl(self):
+        L = self.tc.get('/knowledge/show/lmfdb.object_information?func=group_data&args=16.5', follow_redirects=True)
+        assert '11 subgroups' in L.get_data(as_text=True)
 
     def test_number_field_knowl(self):
         L = self.tc.get('/knowledge/show/nf.field.data?label=6.0.21296.1', follow_redirects=True)

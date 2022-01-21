@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 import os
 import sage.repl.preparse
 from sage.repl.preparse import preparse

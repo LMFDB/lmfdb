@@ -11,13 +11,13 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
-from __future__ import absolute_import
+
 import string
 import re
 import json
 import time
 from xml.etree import ElementTree
-from collections import Counter
+from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
@@ -39,21 +39,17 @@ _cache_time = 120
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_annotation_id = re.compile("^[a-zA-Z0-9._-~]+$") # all unreserved URL characters
 def allowed_id(ID):
-    if ID.endswith('top') or ID.endswith('bottom'):
-        if ID.startswith('belyi'):
-            extras = "[],T"
-        elif ID.startswith('hgm'):
-            extras = "AB"
-        elif ID.startswith('ec'):
-            extras = "CM"
-        elif ID.startswith('gg'):
-            extras = "T"
-        else:
-            extras = ""
-        for c in extras:
-            ID = ID.replace(c,'')
-    if not allowed_knowl_id.match(ID):
+    if ID.endswith('comment'):
+        main_knowl = ".".join(ID.split(".")[:-2])
+        return knowldb.knowl_exists(main_knowl)
+    if ID.endswith('top') or ID.endswith('bottom') or ID.startswith("columns."):
+        if not allowed_annotation_id.match(ID):
+            label = '.'.join(ID.split(".")[1:-1])
+            flash_error("Label '%s' contains characters not allowed by knowl database; updated allowed_id function or change label scheme" % label)
+            return False
+    elif not allowed_knowl_id.match(ID):
         flash_error("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""", ID)
@@ -186,13 +182,13 @@ def ref_to_link(txt):
             ref = ref.replace(":","")
             the_mr = ref[2:]    # remove the "MR"
             this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1='
+            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
             this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
             ref = ref.replace(":","")
             the_arx = ref[5:]    # remove the "arXiv"
             this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
-            this_link += '"http://arxiv.org/abs/'
+            this_link += '"https://arxiv.org/abs/'
             this_link += the_arx + '")| safe}}'
 
 
@@ -254,6 +250,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+  {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
   %(content)s
   """
@@ -354,6 +351,15 @@ def edit(ID):
         title = "Comment on '%s'" % knowl.source
     elif knowl.type == 0:
         title = "Edit Knowl '%s'" % ID
+    elif knowl.type == 2:
+        pieces = ID.split(".")
+        title = f"Edit column information for '{pieces[2]}' in '{pieces[1]}'"
+        knowl.title = f"Column {pieces[2]} of table {pieces[1]}"
+        from lmfdb import db
+        if pieces[1] in db.tablenames:
+            knowl.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+        else:
+            knowl.coltype = "DEFUNCT"
     else:
         ann_type = 'Top' if knowl.type == 1 else 'Bottom'
         title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
@@ -395,7 +401,11 @@ def show(ID):
             can_delete = (current_user.is_admin() or current_user.get_id() == author)
             author_name = userdb.lookup(author)["full_name"]
             k.comments[i] = (cid, author_name, timestamp, can_delete)
-    b = get_bread([(k.category, url_for('.index', category=k.category)), ('%s' % title, url_for('.show', ID=ID))])
+    if k.type == 2:
+        caturl = url_for('.index', category=k.category, column="on")
+    else:
+        caturl = url_for('.index', category=k.category)
+    b = get_bread([(k.category, caturl), ('%s' % title, url_for('.show', ID=ID))])
 
     return render_template(u"knowl-show.html",
                            title=title,
@@ -571,6 +581,38 @@ def orphans():
                            orphans=orphans,
                            bread=b)
 
+@knowledge_page.route("/columns")
+def columns():
+    from lmfdb import db
+    bad_cat = knowldb.search(category="columns", types=["normal", "top", "bottom"])
+    knowls = defaultdict(dict)
+    for k in knowldb.search(types=["column"], projection=['id', 'cat', 'content']):
+        if k['cat'] == "columns" and k['id'].count('.') == 2:
+            pieces = k['id'].split('.')
+            if k['content'].strip():
+                knowls[pieces[1]][pieces[2]] = k['content']
+        else:
+            bad_cat.append(k)
+    missing_tables = {tbl: sorted(db[tbl].search_cols) + sorted(db[tbl].extra_cols) for tbl in db.tablenames if tbl not in knowls}
+    bad_tables = {tbl: klist for (tbl, klist) in knowls.items() if tbl not in db.tablenames}
+    for tbl in bad_tables:
+        del knowls[tbl]
+    missing_knowls = defaultdict(list)
+    for tbl in knowls:
+        table = db[tbl]
+        for col in sorted(table.search_cols) + sorted(table.extra_cols):
+            if col not in knowls[tbl]:
+                missing_knowls[tbl].append(col)
+    b = get_bread([("Missing columns", " ")])
+    return render_template("knowl-columns.html",
+                           title="Missing columns",
+                           missing_knowls=missing_knowls,
+                           missing_tables=missing_tables,
+                           bad_tables=bad_tables,
+                           bad_cat=bad_cat,
+                           knowls=knowls,
+                           bread=b)
+
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
     time = datetime_to_timestamp_in_ms(datetime.utcnow())
@@ -704,9 +746,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # If we are rendering a reviewed knowl on nonbeta,
         # we always include the timestamp
         if timestamp is None and k.status == 1 and not is_beta():
-            kwargs['timestamp'] = k.ms_timestamp;
-
-
+            kwargs['timestamp'] = k.ms_timestamp
 
     # kw_params is inserted *verbatim* into the url_for(...) function inside the template
     # the idea is to pass the keyword arguments of the knowl further along the chain
@@ -736,6 +776,7 @@ def render_knowl(ID, footer=None, kwargs=None,
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+  {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
   <div class="knowl">"""
     if foot == "1":
@@ -823,6 +864,7 @@ def index():
             flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occurred during knowl search", str(e))
+        all_knowls = []
     categories = Counter()
     if cur_cat:
         # Always include the current category
@@ -839,9 +881,13 @@ def index():
         if len(t) == 0 or t[0] not in string.ascii_letters:
             return "?"
         return t[0].upper()
+    def get_table(k):
+        return k['id'].split(".")[1]
 
     def knowl_sort_key(knowl):
         '''sort knowls, special chars at the end'''
+        if cur_cat == "columns":
+            return knowl['id']
         title = knowl['title']
         if title and title[0] in string.ascii_letters:
             return (0, title.lower())
@@ -850,7 +896,10 @@ def index():
 
     knowls = sorted(knowls, key=knowl_sort_key)
     from itertools import groupby
-    knowls = groupby(knowls, first_char)
+    if cur_cat == "columns":
+        knowls = groupby(knowls, get_table)
+    else:
+        knowls = groupby(knowls, first_char)
     knowl_qualities = ["reviewed", "beta"]
     #if current_user.is_authenticated:
     #    knowl_qualities.append("in progress")

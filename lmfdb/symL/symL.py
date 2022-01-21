@@ -13,10 +13,6 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 ########################################################################
-from __future__ import print_function
-from __future__ import absolute_import
-from six.moves import range
-
 from sage.structure.sage_object import SageObject
 import sage.rings.all
 

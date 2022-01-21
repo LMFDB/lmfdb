@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
-from six.moves import input  # in python2, this is raw_input
 import csv
 import logging
 import os
 import time
 import traceback
+import itertools
 from collections import defaultdict, Counter
 from glob import glob
 
@@ -145,7 +143,24 @@ class PostgresDatabase(PostgresBase):
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
-        self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
+
+        if self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]:
+            self._read_only = True
+        else:
+            # Check if there is a table where we can insert/update
+            privileges = ["INSERT", "UPDATE"]
+            cur = self._execute(
+                SQL(
+                    "SELECT count(*) FROM information_schema.role_table_grants "
+                    + "WHERE grantee = %s AND table_schema = %s "
+                    + "AND privilege_type IN ("
+                    + ",".join(["%s"] * len(privileges))
+                    + ")"
+                ),
+                [self._user, "public"] + privileges,
+            )
+            self._read_only = cur.fetchone()[0] ==0
+
         self._super_user = (self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0] == "on")
 
         if self._read_only:
@@ -475,13 +490,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 "(name text, sort jsonb, count_cutoff smallint DEFAULT 1000, "
                 "id_ordered boolean, out_of_order boolean, has_extras boolean, "
                 "stats_valid boolean DEFAULT true, label_col text, total bigint, "
-                "include_nones boolean, version integer)"
+                "include_nones boolean, table_description text, col_description jsonb, version integer)"
             ))
             version = 0
 
             # copy data from meta_tables
             rows = self._execute(SQL(
-                "SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones FROM meta_tables "
+                "SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, table_description, col_description FROM meta_tables "
             ))
 
             for row in rows:
@@ -489,8 +504,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     SQL(
                         "INSERT INTO meta_tables_hist "
                         "(name, sort, id_ordered, out_of_order, has_extras, label_col, "
-                        "total, include_nones, version) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                        "total, include_nones, table_description, col_description, version) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                     ),
                     row + (version,),
                 )
@@ -508,7 +523,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``new_name`` -- a string giving the desired table name.
         - ``table`` -- a string or PostgresSearchTable object giving an existing table.
         """
-        if isinstance(table, string_types):
+        if isinstance(table, str):
             table = self[table]
         search_columns = {
             typ: [col for col in table.search_cols if table.col_type[col] == typ]
@@ -528,6 +543,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         else:
             extra_order = table.extra_cols
         label_col = table._label_col
+        table_description = table.description()
+        col_description = table.column_description()
         sort = table._sort_orig
         id_ordered = table._id_ordered
         search_order = table.search_cols
@@ -535,6 +552,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             new_name,
             search_columns,
             label_col,
+            table_description,
+            col_description,
             sort,
             id_ordered,
             extra_columns,
@@ -566,11 +585,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         name,
         search_columns,
         label_col,
+        table_description=None,
+        col_description=None,
         sort=None,
         id_ordered=None,
         extra_columns=None,
         search_order=None,
         extra_order=None,
+        force_description=False,
         commit=True,
     ):
         """
@@ -584,6 +606,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             An id column of type bigint will be added as a primary key (do not include it).
         - ``label_col`` -- the column holding the LMFDB label.  This will be used in the ``lookup`` method
             and in the display of results on the API.  Use None if there is no appropriate column.
+        - ``table_description`` -- a text description of this table
+        - ``col_description`` -- a dictionary giving descriptions for the columns (both search and extra)
         - ``sort`` -- If not None, provides a default sort order for the table, in formats accepted by
             the ``_sort_str`` method.
         - ``id_ordered`` -- boolean (default None).  If set, the table will be sorted by id when
@@ -595,6 +619,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             in the search table, speeding up scans.
         - ``search_order`` -- (optional) list of column names, specifying the default order of columns
         - ``extra_order`` -- (optional) list of column names, specifying the default order of columns
+        - ``force_description`` -- whether to require descriptions
 
         COMMON TYPES:
 
@@ -617,7 +642,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if id_ordered is None:
             id_ordered = sort is not None
         for typ, L in list(search_columns.items()):
-            if isinstance(L, string_types):
+            if isinstance(L, str):
                 search_columns[typ] = [L]
         valid_list = sum(search_columns.values(), [])
         valid_set = set(valid_list)
@@ -653,7 +678,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             dictorder = []
             for typ, cols in coldict.items():
                 self._check_col_datatype(typ)
-                if isinstance(cols, string_types):
+                if isinstance(cols, str):
                     cols = [cols]
                 for col in cols:
                     if col == "id":
@@ -669,6 +694,42 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             return allcols
 
         processed_search_columns = process_columns(search_columns, search_order)
+        # Check that descriptions are provided if required
+        if extra_columns is not None:
+            valid_extra_list = sum(extra_columns.values(), [])
+            valid_extra_set = set(valid_extra_list)
+            # Check that columns aren't listed twice
+            if len(valid_extra_list) != len(valid_extra_set):
+                C = Counter(valid_extra_list)
+                raise ValueError("Column %s repeated" % (C.most_common(1)[0][0]))
+            if extra_order is not None:
+                for col in extra_order:
+                    if col not in valid_extra_set:
+                        raise ValueError("Column %s does not exist" % (col))
+                if len(extra_order) != len(valid_extra_set):
+                    raise ValueError("Must include all columns")
+            processed_extra_columns = process_columns(extra_columns, extra_order)
+        else:
+            processed_extra_columns = []
+        description_columns = []
+        for col in itertools.chain(search_columns.values(), [] if extra_columns is None else extra_columns.values()):
+            if col == 'id':
+                continue
+            if isinstance(col, str):
+                description_columns.append(col)
+            else:
+                description_columns.extend(col)
+        if force_description:
+            if table_description is None or col_description is None:
+                raise ValueError("You must provide table and column descriptions")
+            if set(col_description) != set(description_columns):
+                raise ValueError("Must provide descriptions for all columns")
+        else:
+            if table_description is None:
+                table_description = ""
+            if col_description is None:
+                col_description = {col: "" for col in description_columns}
+
         with DelayCommit(self, commit, silence=True):
             creator = SQL("CREATE TABLE {0} ({1})").format(
                 Identifier(name), SQL(", ").join(processed_search_columns)
@@ -676,19 +737,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self._execute(creator)
             self.grant_select(name)
             if extra_columns is not None:
-                valid_extra_list = sum(extra_columns.values(), [])
-                valid_extra_set = set(valid_extra_list)
-                # Check that columns aren't listed twice
-                if len(valid_extra_list) != len(valid_extra_set):
-                    C = Counter(valid_extra_list)
-                    raise ValueError("Column %s repeated" % (C.most_common(1)[0][0]))
-                if extra_order is not None:
-                    for col in extra_order:
-                        if col not in valid_extra_set:
-                            raise ValueError("Column %s does not exist" % (col))
-                    if len(extra_order) != len(valid_extra_set):
-                        raise ValueError("Must include all columns")
-                processed_extra_columns = process_columns(extra_columns, extra_order)
                 creator = SQL("CREATE TABLE {0} ({1})")
                 creator = creator.format(
                     Identifier(name + "_extras"),
@@ -717,8 +765,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # FIXME use global constants ?
             inserter = SQL(
                 "INSERT INTO meta_tables "
-                "(name, sort, id_ordered, out_of_order, has_extras, label_col) "
-                "VALUES (%s, %s, %s, %s, %s, %s)"
+                "(name, sort, id_ordered, out_of_order, has_extras, label_col, table_description, col_description) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
             )
             self._execute(
                 inserter,
@@ -729,6 +777,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     not id_ordered,
                     extra_columns is not None,
                     label_col,
+                    table_description,
+                    Json(col_description),
                 ],
             )
         self.__dict__[name] = self._search_table_class_(
@@ -911,7 +961,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.tablenames.remove(old_name)
             self.tablenames.sort()
 
-    def copy_to(self, search_tables, data_folder, **kwds):
+    def copy_to(self, search_tables, data_folder, fail_on_error=True, **kwds):
         """
         Copy a set of search tables to a folder on the disk.
 
@@ -921,6 +971,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``data_folder`` -- a path to a folder to save the data.  The folder must not currently exist.
         - ``**kwds`` -- other arguments are passed on to the ``copy_to`` method of each table.
         """
+        if fail_on_error:
+            for tablename in search_tables:
+                if tablename not in self.tablenames:
+                    raise ValueError(f"{tablename} is not in tablenames")
+
         if os.path.exists(data_folder):
             raise ValueError("The path {} already exists".format(data_folder))
         os.makedirs(data_folder)
@@ -953,7 +1008,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if failures:
             print("Failed to copy %s (not in tablenames)" % (", ".join(failures)))
 
-    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, **kwds):
+    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, fail_on_error=True, **kwds):
         """
         Copy data to a folder from a postgres instance on another server.
 
@@ -970,7 +1025,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         source = PostgresDatabase(**remote_opts)
 
         # copy all the data
-        source.copy_to(search_tables, data_folder, **kwds)
+        source.copy_to(search_tables, data_folder, fail_on_error=fail_on_error, **kwds)
 
     def reload_all(
         self,
@@ -1046,6 +1101,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
+                    import ast
+                    meta["col_description"] = ast.literal_eval(meta["col_description"])
                     assert meta["name"] == tablename
 
                     with open(search_table_file, "r") as F:
@@ -1067,7 +1124,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                             if name != "id":
                                 extra_columns[typ].append(name)
                     # the rest of the meta arguments will be replaced on the reload_all
-                    self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
+                    # We use force_description=False so that beta and prod can be out-of-sync with respect to columns and/or descriptions
+                    self.create_table(tablename, search_columns, None, table_description=meta["table_description"], col_description=meta["col_description"], extra_columns=extra_columns, force_description=False)
 
             for tablename in self.tablenames:
                 included = []

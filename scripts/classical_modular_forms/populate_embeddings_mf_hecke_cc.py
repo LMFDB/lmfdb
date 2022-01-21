@@ -1,5 +1,5 @@
 # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
-from __future__ import print_function
+
 from sage.all import matrix, vector, PolynomialRing, ZZ, NumberField, ComplexField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))

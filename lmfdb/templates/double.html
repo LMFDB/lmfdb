@@ -1,0 +1,11 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{{ KNOWL_INC(kid) }}
+
+{% if kid2 is defined %}
+  {{ KNOWL_INC(kid2) }}
+{% endif %}
+
+{% endblock %}
+

@@ -54,7 +54,7 @@ class DirichletSearchTest(LmfdbTest):
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
-        get=r'modulus=35&poly=\%28+x^{6}+\%29+-+\%28+x^{5}+\%29+-+\%28+7+x^{4}+\%29+%2B+\%28+2+x^{3}+\%29+%2B+\%28+7+x^{2}+\%29+-+\%28+2+x+\%29+-+\%28+1+\%29&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        get= r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
         W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
         assert '35 }(29' in W.get_data(as_text=True)
 
@@ -141,11 +141,11 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
-        assert  '/NumberField/1.1.1.1' in W.get_data(as_text=True)
+        assert '/NumberField/1.1.1.1' in W.get_data(as_text=True)
 
     def test_valuefield(self):
         W = self.tc.get('/Character/Dirichlet/13/2')
-        assert  'Value field' in W.get_data(as_text=True)
+        assert 'Value field' in W.get_data(as_text=True)
 
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
@@ -188,7 +188,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/Character/Dirichlet/531/247' in W.get_data(as_text=True)
         assert '(119,415)' in W.get_data(as_text=True), "generators"
         assert 'Kloosterman sum' in W.get_data(as_text=True)
-        assert  r'(\zeta_{87})' in W.get_data(as_text=True), "field of values"
+        assert r'(\zeta_{87})' in W.get_data(as_text=True), "field of values"
 
     def test_dirichletchar6000lfunc(self):
         """ Check Sato-Tate group and L-function link for 6000/11  """

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Artin representations
-# Author: Paul-Olivier Dehaye, John Jones
+# Authors: Paul-Olivier Dehaye, John Jones
 
 import re
 import random
@@ -18,6 +18,7 @@ from lmfdb.utils import (
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import (
     complete_group_code, knowl_cache, galdata, galunformatter,
@@ -48,8 +49,8 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Artin representations labels', url_for(".labels_page"))]
 
@@ -75,7 +76,7 @@ def parse_artin_orbit_label(label, safe=False):
             newlabel = db.artin_old2new_labels.lookup(label)['new']
             if newlabel:
                 return newlabel
-    except:
+    except Exception:
         if safe:
             return ''
     raise ValueError
@@ -89,7 +90,7 @@ def parse_artin_label(label, safe=False):
             newlabel = db.artin_old2new_labels.lookup(label)['new']
         if newlabel:
             return newlabel
-    except:
+    except Exception:
         if safe:
             return ''
     raise ValueError
@@ -106,11 +107,11 @@ def parse_any(label):
     try:
         newlabel = parse_artin_label(label)
         return ['rep', newlabel]
-    except:
+    except Exception:
         try:
             newlabel = parse_artin_orbit_label(label)
             return ['orbit', newlabel]
-        except:
+        except Exception:
             return ['malformed', label]
 
 
@@ -190,7 +191,7 @@ def parse_projective_group(inp, query, qfield):
         try:
             mycode = complete_group_code(inp.upper())[0]
             query['Proj_nTj'] = [mycode[0],mycode[1]]
-        except:
+        except Exception:
             raise ValueError("Allowed values are A4, S4, A5, or Dn for an integer n>1, a GAP id, such as [4,1] or [12,5], a transitive group in nTj notation, such as 5T1, or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>.")
 
 @search_parser(clean_info=True)
@@ -224,16 +225,29 @@ def parse_projective_type(inp, query, qfield):
 def url_for_label(label):
     return url_for(".render_artin_representation_webpage", label=label)
 
-@search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps,
+artin_columns = SearchColumns([
+    SearchCol("galois_links", "artin.label", "Label", default=True),
+    MathCol("dimension", "artin.dimension", "Dimension", default=True),
+    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", default=True),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center"),
+    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True),
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True)],[
+        "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even"])
+
+artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
+artin_columns.dummy_download = True
+
+@search_wrap(table=db.artin_reps,
              title='Artin representation search results',
              err_title='Artin representation search error',
              per_page=50,
+             columns=artin_columns,
              learnmore=learnmore_list,
              url_for_label=url_for_label,
              shortcuts={'jump':artin_representation_jump},
-             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
-             initfunc=lambda:ArtinRepresentation)
+             postprocess=lambda res, info, query: [ArtinRepresentation(data=x) for x in res],
+             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')])
 def artin_representation_search(info, query):
     query['Hide'] = 0
     info['sign_code'] = 0
@@ -256,17 +270,10 @@ def artin_representation_search(info, query):
         info['parity'] = info.pop('Is_Even')
     parse_bool(info,query,'parity',qfield='Is_Even')
 
-def search_input_error(info, bread):
-    return render_template("artin-representation-search.html", req=info, title='Artin representation search error', bread=bread)
-
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
     return artin_representation_search({'dimension': dim, 'conductor': conductor, 'search_array': ArtinSearchArray()})
 
-
-# credit information should be moved to the databases themselves, not at the display level. that's too late.
-tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
-support_credit = "Support by Paul-Olivier Dehaye."
 
 @artin_representations_page.route("/<label>/")
 @artin_representations_page.route("/<label>")
@@ -284,7 +291,7 @@ def render_artin_representation_webpage(label):
     if case[0] == 'malformed':
         try:
             raise ValueError
-        except:
+        except Exception:
             flash_error("%s is not in a valid form for the label for an Artin representation or a Galois orbit of Artin representations", label)
             return redirect(url_for(".index"))
     # Do this twice to customize error messages
@@ -293,14 +300,14 @@ def render_artin_representation_webpage(label):
     if case == 'rep':
         try:
             the_rep = ArtinRepresentation(newlabel)
-        except:
+        except Exception:
             newlabel = parse_artin_label(label)
             flash_error("Artin representation %s is not in database", label)
             return redirect(url_for(".index"))
     else: # it is an orbit
         try:
             the_rep = ArtinRepresentation(newlabel+'.a')
-        except:
+        except Exception:
             newlabel = parse_artin_orbit_label(newlabel)
             flash_error("Galois orbit of Artin representations %s is not in database", label)
             return redirect(url_for(".index"))
@@ -390,8 +397,6 @@ def render_artin_representation_webpage(label):
     if case == 'rep':
         return render_template(
             "artin-representation-show.html",
-            credit=tim_credit,
-            support=support_credit,
             title=title,
             bread=bread,
             friends=friends,
@@ -407,8 +412,6 @@ def render_artin_representation_webpage(label):
     # else we have an orbit
     return render_template(
         "artin-representation-galois-orbit.html",
-        credit=tim_credit,
-        support=support_credit,
         title=title,
         bread=bread,
         allchars=allchars,
@@ -440,7 +443,6 @@ def interesting():
         label_col="Baselabel",
         title=r"Some interesting Artin representations",
         bread=get_bread([("Interesting", " ")]),
-        credit=tim_credit,
         learnmore=learnmore_list(),
     )
 
@@ -448,22 +450,23 @@ def interesting():
 def statistics():
     title = "Artin representations: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=ArtinStats(), credit=tim_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=ArtinStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @artin_representations_page.route("/Labels")
 def labels_page():
     t = 'Labels for Artin representations'
     bread = get_bread([("Labels", '')])
     learnmore = learnmore_list_remove('labels')
-    return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
+    return render_template("single.html", kid='artin.label',learnmore=learnmore, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin representation data'
+    t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
-    return render_template("single.html", kid='rcs.source.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+    return render_template("double.html", kid='rcs.source.artin',
+                           kid2='rcs.ack.artin',
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Reliability")
@@ -472,7 +475,7 @@ def reliability():
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
@@ -481,7 +484,7 @@ def cande():
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 class ArtinSearchArray(SearchArray):

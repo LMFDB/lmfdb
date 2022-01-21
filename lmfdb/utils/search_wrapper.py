@@ -1,6 +1,7 @@
 from random import randrange
 from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
+from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 
 from lmfdb.app import ctx_proc_userdata
@@ -32,13 +33,14 @@ def use_split_ors(info, query, split_ors, offset, table):
 
 
 class Wrapper(object):
-    def __init__(self, f, template, table, title, err_title, postprocess=None, **kwds):
+    def __init__(self, f, template, table, title, err_title, postprocess=None, one_per=None, **kwds):
         self.f = f
         self.template = template
         self.table = table
         self.title = title
         self.err_title = err_title
         self.postprocess = postprocess
+        self.one_per = one_per
         self.kwds = kwds
 
     def make_query(self, info, random=False):
@@ -61,7 +63,10 @@ class Wrapper(object):
         title = query.pop("__title__", self.title)
         title = info.get("title", title)
         template = query.pop("__template__", self.template)
-        return query, sort, table, title, err_title, template
+        one_per = query.pop("__one_per__", self.one_per)
+        if isinstance(one_per, str):
+            one_per = [one_per]
+        return query, sort, table, title, err_title, template, one_per
 
     def query_cancelled_error(
         self, info, query, err, err_title, template, template_kwds
@@ -84,17 +89,25 @@ class Wrapper(object):
         info['query'] = dict(query)
         return render_template(template, info=info, title=self.err_title, **template_kwds)
 
+    def oob_error(self, info, query, err, err_title, template, template_kwds):
+        # The error string is long and ugly, so we just describe the type of issue
+        flash_error('Input number larger than allowed by integer type in database.')
+        info['err'] = str(err)
+        info['query'] = dict(query)
+        return render_template(template, info=info, title=self.err_title, **template_kwds)
+
 class SearchWrapper(Wrapper):
     def __init__(
         self,
         f,
-        template,
-        table,
-        title,
-        err_title,
+        template="search_results.html",
+        table=None,
+        title=None,
+        err_title=None,
         per_page=50,
         shortcuts={},
         longcuts={},
+        columns=None,
         projection=1,
         url_for_label=None,
         cleaners={},
@@ -109,7 +122,11 @@ class SearchWrapper(Wrapper):
         self.per_page = per_page
         self.shortcuts = shortcuts
         self.longcuts = longcuts
-        self.projection = projection
+        self.columns = columns
+        if columns is None:
+            self.projection = projection
+        else:
+            self.projection = columns.db_cols
         self.url_for_label = url_for_label
         self.cleaners = cleaners
         self.split_ors = split_ors
@@ -119,6 +136,7 @@ class SearchWrapper(Wrapper):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
         info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
@@ -140,17 +158,20 @@ class SearchWrapper(Wrapper):
         data = self.make_query(info, random)
         if not isinstance(data, tuple):
             return data
-        query, sort, table, title, err_title, template = data
+        query, sort, table, title, err_title, template, one_per = data
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
         if "result_count" in info:
-            nres = table.count(query)
+            if one_per:
+                nres = table.count_distinct(one_per, query)
+            else:
+                nres = table.count(query)
             return jsonify({"nres": str(nres)})
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
-            split_ors = use_split_ors(info, query, self.split_ors, start, table)
+            split_ors = not one_per and use_split_ors(info, query, self.split_ors, start, table)
             if random:
                 # Ignore __projection__: it's intended for searches
                 if split_ors:
@@ -189,6 +210,7 @@ class SearchWrapper(Wrapper):
                     offset=start,
                     sort=sort,
                     info=info,
+                    one_per=one_per,
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
@@ -196,6 +218,9 @@ class SearchWrapper(Wrapper):
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
             return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+        except NumericValueOutOfRange as err:
+            # This is caused when a user inputs a number that's too large for a column search type
+            return self.oob_error(info, query, err, err_title, template, template_kwds)
         else:
             try:
                 if self.cleaners:
@@ -250,7 +275,7 @@ class CountWrapper(Wrapper):
         data = self.make_query(info)
         if not isinstance(data, tuple):
             return data  # error page
-        query, sort, table, title, err_title, template = data
+        query, sort, table, title, err_title, template, one_per = data
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:

@@ -19,8 +19,11 @@ text-align: center;
 <th>{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
 {% endif %}
 <th>{{ KNOWL('ec.q.minimal_weierstrass_equation', title='Weierstrass coefficients') }}</th>
+<th>{{ KNOWL('ec.j_invariant', title='j-invariant') }}</th>
+<th>{{ KNOWL('ec.discriminant',  title='Discriminant') }}</th>
 <th>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
+<th>{{ KNOWL('ec.q.faltings_height', title='Faltings height') }}</th>
 {% if info.conductor < info.cremona_bound %}
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
 {% endif %}
@@ -41,10 +44,15 @@ text-align: center;
 {% if info.conductor < info.cremona_bound %}
 <td class="center"><a href="{{c.curve_url_cremona}}">{{c.Clabel}}</a></td>
 {% endif %}
-<td class="center">{{c.ai}}</td>
-<td align="center">{{c.torsion_structure}}</td>
+<td class="center">\({{c.ai}}\)</td>
+<td class="center">\({{c.j_inv}}\)</td>
+<td class="center">\({{c.disc}}\)</td>
+<td align="center">\({{c.torsion_structure}}\)</td>
 <td align="center">
-{% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
+{% if c.degree==0 %}Not available{% else %}\({{c.degree}}\){% endif %}
+</td>
+<td align="center">
+\({{c.FH}}\)
 </td>
 {% if info.conductor < info.cremona_bound %}
 <td>
@@ -69,10 +77,10 @@ text-align: center;
 </td>
 {% endif %}
 {#
-<td>{{c.faltings_ratio}}</td>
+<td>\({{c.faltings_ratio}}\)</td>
 #}
 {% if info.cm %}
-<td>{{c.cm}}</td>
+<td>\({{c.cm}}\)</td>
 {% endif %}
 </tr>
 {% endfor %}

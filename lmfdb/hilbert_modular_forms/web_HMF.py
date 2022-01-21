@@ -5,8 +5,6 @@
 #
 # In particular this code assumes that all the data for one HMF is in
 # a single collection, which is no longer the case.
-from __future__ import print_function
-from six import text_type
 from sage.all import QQ, polygen
 
 from lmfdb import db
@@ -140,7 +138,7 @@ class WebHMF(object):
         i = L.rfind("[")
         j = L.rfind("]")
         data['hecke_eigenvalues'] = L[i+1:j].replace(" ","").split(",")
-        data['hecke_eigenvalues'] = [text_type(s) for s in data['hecke_eigenvalues']]
+        data['hecke_eigenvalues'] = [str(s) for s in data['hecke_eigenvalues']]
         #print("hecke_eigenvalues = %s..." % data['hecke_eigenvalues'][:20])
 
         # Find (some of the) AL-eigenvalues

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import csv
 import logging
 import re
@@ -19,7 +17,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 
 from .encoding import Json
-from .utils import reraise, DelayCommit, QueryLogFilter
+from .utils import reraise, DelayCommit, QueryLogFilter, psycopg2_version
 
 
 # This list is used when creating new tables
@@ -124,6 +122,8 @@ _meta_tables_cols = (
     "total",
     "important",
     "include_nones",
+    "table_description",
+    "col_description",
 )
 _meta_tables_cols_notrequired = (
     "count_cutoff",
@@ -131,7 +131,9 @@ _meta_tables_cols_notrequired = (
     "total",
     "important",
     "include_nones",
-)  # defaults: 1000, true, 0, false, false
+    "table_description",
+    "col_description",
+)  # defaults: 1000, true, 0, false, false, "", {}
 _meta_tables_types = dict(zip(_meta_tables_cols, (
     "text",
     "jsonb",
@@ -144,6 +146,8 @@ _meta_tables_types = dict(zip(_meta_tables_cols, (
     "bigint",
     "boolean",
     "boolean",
+    "text",
+    "jsonb",
 )))
 _meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
 
@@ -419,7 +423,7 @@ class PostgresBase(object):
         A list of pairs (locktype, pid) where locktype is a string as above,
         and pid is the process id of the postgres transaction holding the lock.
         """
-        if isinstance(types, string_types):
+        if isinstance(types, str):
             if types in ["update", "delete", "insert"]:
                 types = [
                     "ShareLock",
@@ -454,7 +458,7 @@ class PostgresBase(object):
         return [
             (locktype, pid)
             for (name, locktype, pid, t) in self._get_locks()
-            if name == tablename and (types == "all" or locktype in types)
+            if name == tablename and (types == "all" or locktype in types) and pid != self.conn.info.backend_pid
         ]
 
     def _index_exists(self, indexname, tablename=None):
@@ -674,7 +678,7 @@ class PostgresBase(object):
         """
         L = []
         for col in sort_list:
-            if isinstance(col, string_types):
+            if isinstance(col, str):
                 L.append(Identifier(col))
             elif col[1] == 1:
                 L.append(Identifier(col[0]))
@@ -720,7 +724,7 @@ class PostgresBase(object):
         has_id = False
         col_list = []
         col_type = {}
-        if isinstance(table_name, string_types):
+        if isinstance(table_name, str):
             table_name = [table_name]
         for tname in table_name:
             if data_types is None or tname not in data_types:
@@ -865,11 +869,12 @@ class PostgresBase(object):
                 else:
                     addid = False
 
-                # We have to add quotes manually since copy_from doesn't accept
-                # psycopg2.sql.Identifiers
-                # None of our column names have double quotes in them. :-D
-                assert all('"' not in col for col in columns)
-                columns = ['"' + col + '"' for col in columns]
+                if psycopg2_version < (2, 9, 0):
+                    # We have to add quotes manually since copy_from doesn't accept
+                    # psycopg2.sql.Identifiers
+                    # None of our column names have double quotes in them. :-D
+                    assert all('"' not in col for col in columns)
+                    columns = ['"' + col + '"' for col in columns]
                 if addid:
                     # create sequence
                     cur_count = self.max_id(table)
@@ -1150,9 +1155,9 @@ class PostgresBase(object):
             for line in lines:
                 if line[table_name_idx] != search_table:
                     raise RuntimeError(
-                        "in %s column %d (= %s) in the file "
-                        "doesn't match the search table name %s"
-                        % (filename, table_name_idx, line[table_name_idx], search_table)
+                        f"column {table_name_idx} (= {line[table_name_idx]}) "
+                        f"in the file {filename} doesn't match "
+                        f"the search table name {search_table}"
                     )
 
         with DelayCommit(self, silence=True):

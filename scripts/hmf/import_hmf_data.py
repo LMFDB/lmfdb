@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from six import string_types
 import os
 import sage
 from sage.repl import preparse
@@ -219,7 +217,7 @@ def import_data(hmf_filename):
         AL_eigsin = [hecke_eigenvalues[c] for c in ALind]
         try:
             assert all([abs(int(c)) <= 1 for c in AL_eigsin])
-        except:
+        except Exception:
             ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
 
         AL_eigenvalues = []
@@ -331,7 +329,7 @@ def attach_new_label(f):
     # assert statement is for pyflakes.
     assert P
 
-    if isinstance(f['level_ideal'], string_types):
+    if isinstance(f['level_ideal'], str):
         N = eval(f['level_ideal'])
     else:
         N = f['level_ideal']

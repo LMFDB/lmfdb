@@ -3,7 +3,7 @@ from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
-from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
+from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label, prime_key
 from lmfdb.utils import web_latex, names_and_urls, prop_int_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
         get_instances_by_Lhash_and_trace_hash)
@@ -21,6 +21,11 @@ logger = make_logger("bmf")
 # Schembri.  At some point we will want to list these abelian surfaces
 # as friends when there is no curve.
 
+# TO (after adding 31 more for 2.0.43.1): make this list into a table,
+# OR add a column to the bmf_forms table to indicate whether or not a
+# curve exists (which could be because we have not foud one, but is
+# normally because there really is not curve).
+
 bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.4.1-34225.7-a',
                       '2.0.4.1-34225.3-b',
@@ -36,7 +41,49 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.3.1-123201.1-b',
                       '2.0.3.1-123201.1-c',
                       '2.0.3.1-123201.3-b',
-                      '2.0.3.1-123201.3-c']
+                      '2.0.3.1-123201.3-c',
+                      '2.0.19.1-1849.1-a',
+                      '2.0.19.1-1849.3-a',
+                      '2.0.43.1-121.1-a',
+                      '2.0.43.1-121.3-a',
+                      '2.0.43.1-256.1-c',
+                      '2.0.43.1-256.1-d',
+                      '2.0.43.1-256.1-e',
+                      '2.0.43.1-256.1-f',
+                      '2.0.43.1-529.1-a',
+                      '2.0.43.1-529.3-a',
+                      '2.0.43.1-961.1-a',
+                      '2.0.43.1-961.3-a',
+                      '2.0.43.1-1849.1-b',
+                      '2.0.43.1-1936.1-a',
+                      '2.0.43.1-1936.3-a',
+                      '2.0.43.1-2209.1-a',
+                      '2.0.43.1-2209.3-a',
+                      '2.0.43.1-3481.1-a',
+                      '2.0.43.1-3481.3-a',
+                      '2.0.43.1-4096.1-d',
+                      '2.0.43.1-4096.1-e',
+                      '2.0.43.1-4096.1-f',
+                      '2.0.43.1-4096.1-g',
+                      '2.0.43.1-4489.1-a',
+                      '2.0.43.1-4489.3-a',
+                      '2.0.43.1-6241.1-a',
+                      '2.0.43.1-6241.3-a',
+                      '2.0.43.1-6889.1-a',
+                      '2.0.43.1-6889.3-a',
+                      '2.0.43.1-8464.1-a',
+                      '2.0.43.1-8464.3-a',
+                      '2.0.43.1-9801.1-a',
+                      '2.0.43.1-9801.3-a',
+                      '2.0.43.1-10609.1-a',
+                      '2.0.43.1-10609.3-a',
+                      '2.0.43.1-11449.1-a',
+                      '2.0.43.1-11449.3-a']
+
+def cremona_label_to_lmfdb_label(lab):
+    if "." in lab:
+        return lab
+    return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
 class WebBMF(object):
     """
@@ -106,19 +153,20 @@ class WebBMF(object):
         self.level = ideal_from_label(K,self.level_label)
         self.level_ideal2 = web_latex(self.level)
         badp = self.level.prime_factors()
+        badp.sort(key=prime_key)
 
         self.nap = len(self.hecke_eigs)
         self.nap0 = min(nap0, self.nap)
         self.neigs = self.nap0 + len(badp)
         self.hecke_table = [[web_latex(p.norm()),
                              ideal_label(p),
-                             web_latex(p.gens_reduced()[0]),
-                             web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if not p in badp]
+                             web_latex(p.gens_reduced()),
+                             web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if p not in badp]
         self.have_AL = self.AL_eigs[0]!='?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),
                              ideal_label(p),
-                              web_latex(p.gens_reduced()[0]),
+                              web_latex(p.gens_reduced()),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
             # The following helps to create Sage download data
             self.AL_table_data = [[p.gens_reduced(),ap] for p,ap in zip(badp, self.AL_eigs)]
@@ -185,6 +233,9 @@ class WebBMF(object):
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:
+            curve_bc = [lab for lab in curve_bc if '?' not in lab]
+            if curve_bc and "." not in curve_bc[0]:
+                curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
             curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]

@@ -11,6 +11,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils.utilities import display_knowl
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 from sage.all import gcd
@@ -24,8 +25,8 @@ bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', ur
 ###############################################################################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.source_page')),
+    return [('Source and acknowledgments', url_for('.source_page')),
+            ('Completeness of the data', url_for('.completeness_page')),
             ('Reliability of the data', url_for('.reliability_page'))]
 
 def learnmore_list_remove(matchstring):
@@ -35,8 +36,6 @@ def learnmore_list_remove(matchstring):
 # Pages
 ###############################################################################
 
-credit_string = "David Farmer, Stefan Lemurell, Fredrik Stromberg, and Holger Then"
-
 @maass_page.route('/')
 def index():
     info = to_dict(request.args, search_array=MaassSearchArray(), stats=MaassStats())
@@ -44,7 +43,7 @@ def index():
         return search(info)
     title = 'Maass forms'
     bread = bread_prefix()
-    return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
+    return render_template('maass_browse.html', info=info, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
 @redirect_no_cache
@@ -60,7 +59,6 @@ def interesting():
         label_col="maass_id",
         url_for_label=lambda label: url_for(".by_label", label=label),
         title="Some interesting Maass forms",
-        credit=credit_string,
         bread=bread_prefix() + [("Interesting", " ")],
         learnmore=learnmore_list()
     )
@@ -69,7 +67,7 @@ def interesting():
 def statistics():
     title = "Maass forms: statistics"
     bread = bread_prefix() + [("Statistics", " ")]
-    return render_template("display_stats.html", info=MaassStats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=MaassStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @maass_page.route('/<label>')
 def by_label(label):
@@ -123,26 +121,26 @@ def download(label):
 def download_coefficients(label):
     return MaassFormDownloader().download_coefficients(label)
 
+@maass_page.route('/Source')
+def source_page():
+    t = 'Source of Maass form data'
+    bread = bread_prefix() + [('Source','')]
+    return render_template('double.html', kid='rcs.source.maass',kid2='rcs.ack.maass',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
 @maass_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Maass form data'
     bread = bread_prefix() + [('Completeness','')]
     return render_template('single.html', kid='rcs.cande.maass',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@maass_page.route('/Source')
-def source_page():
-    t = 'Source of Maass form data'
-    bread = bread_prefix() + [('Source','')]
-    return render_template('single.html', kid='rcs.source.maass',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @maass_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
     bread = bread_prefix() + [('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.maass',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 class MaassSearchArray(SearchArray):
     noun = "Maass form"
@@ -172,12 +170,12 @@ class MaassSearchArray(SearchArray):
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield):
     if not CHARACTER_LABEL_RE.match(inp):
-        raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")  
+        raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")
     level_field, conrey_index_field ='level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
-    if conrey_index >= level:
-        raise ValueError("Character labels q.n must have Conrey index n less than the modulus q.")
+    if conrey_index > level:
+        raise ValueError("Character labels q.n must have Conrey index n no greater than the modulus q.")
     if gcd(level,conrey_index) != 1:
         raise ValueError("Character labels q.n must have Conrey index coprime to the modulus q.")
     def contains_level(D):
@@ -199,38 +197,41 @@ def parse_character(inp, query, qfield):
     query[level_field] = level
     query[conrey_index_field] = conrey_index
 
+maass_columns = SearchColumns([
+    MathCol("level", "mf.maass.mwf.level", "Level", default=True),
+    MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),
+    MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
+                      ["level", "conrey_index"],
+                      character_link,
+                      default=True, align="center"),
+    MultiProcessedCol("spectral", "mf.maass.mwf.spectralparameter", "Spectral parameter",
+                      ["maass_id", "spectral_parameter"],
+                      lambda mid, param: '<a href="%s">%s</a>' % (url_for('.by_label', label=mid), param),
+                      default=True),
+    ProcessedCol("symmetry", "mf.maass.mwf.symmetry", "Symmetry",
+                 symmetry_pretty,
+                 default=True, align="center"),
+    ProcessedCol("fricke_eigenvalue", "cmf.fricke", "Fricke",
+                 fricke_pretty,
+                 default=True, align="center")],
+    db_cols=["maass_id", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
+
 @search_wrap(
-    template="maass_search_results.html",
     table=db.maass_newforms,
     title="Maass forms search results",
     err_title="Maass forms search input error",
+    columns=maass_columns,
     shortcuts={"download": MaassFormDownloader()},
-    projection=[
-        "maass_id",
-        "level",
-        "weight",
-        "conrey_index",
-        "spectral_parameter",
-        "symmetry",
-        "fricke_eigenvalue",
-    ],
     random_projection="maass_id",
-    cleaners={
-        "character_link": lambda v: character_link(v['level'],v['conrey_index']),
-        "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
-        "fricke_pretty": lambda v: fricke_pretty(v['fricke_eigenvalue']),
-        "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '">' + str(v['spectral_parameter']) + '</a>',
-    },
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
-    credit=lambda: credit_string,
     url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def search(info, query):
     parse_ints(info, query, 'level', name='Level')
     parse_ints(info, query, 'weight', name='Weight')
     parse_character(info, query, 'character', name='Character')
-    parse_floats(info, query, 'spectral_parameter', name='Spectral parameter', allow_singletons=True)
+    parse_floats(info, query, 'spectral_parameter', name='Spectral parameter')
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
@@ -258,7 +259,6 @@ def search_by_label(label):
                            mf=mf,
                            properties=mf.properties,
                            downloads=mf.downloads,
-                           credit=credit_string,
                            bread=mf.bread,
                            learnmore=learnmore_list(),
                            title=mf.title,

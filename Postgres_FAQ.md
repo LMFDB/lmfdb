@@ -272,7 +272,7 @@ Note that you need editor priviledges to add, delete or modify data.
    `add_column` method.
 
    ```python
-   sage: db.test_table.add_column("bad_primes", 'jsonb')
+   sage: db.test_table.add_column("bad_primes", 'jsonb', description = 'The primes of bad reduction.')
    ```
 
    This column will be NULL for existing rows.

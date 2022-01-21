@@ -2,7 +2,7 @@
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones, Edgar Costa
 
-from __future__ import absolute_import
+
 import re
 
 from flask import render_template, request, url_for, redirect, abort
@@ -17,18 +17,18 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.galois_groups.transitive_group import small_group_display_knowl
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
 
-HGM_credit = 'D. Roberts and M. Watkins'
-
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Hypergeometric motive labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -37,7 +37,7 @@ def learnmore_list_remove(matchstring):
 
 
 def list2string(li):
-    return ','.join([str(x) for x in li])
+    return ','.join(str(x) for x in li)
 
 GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
@@ -49,9 +49,9 @@ def dogapthing(m1):
         two = mnew.split(',')
         two = [int(j) for j in two]
         try:
-            m1[2] = small_group_display_knowl(two[0],two[1])
+            m1[2] = abstract_group_display_knowl(f"{two[0]}.{two[1]}")
         except TypeError:
-            m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
+            m1[2] = f'Group({two[0]}.{two[1]})'
     else:
         # Fix multiple backslashes
         m1[2] = re.sub(r'\\+', r'\\', m1[2])
@@ -65,7 +65,7 @@ def getgroup(m1, ell):
     myA = m1[3][0]
     myB = m1[3][1]
     if not myA and not myB:  # myA = myB = []
-        return [small_group_display_knowl(1, 1), 1]
+        return [abstract_group_display_knowl("1.1", "$C_1$"), 1]
     mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
     if mono is None:
         return ['??', 1]
@@ -80,8 +80,8 @@ def normalize_family(label):
     m = re.match(r'^A((\d+\.)*\d+)_B((\d+\.)*\d+)$', label)
     a = sorted([int(u) for u in m.group(1).split('.')], reverse=True)
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
-    aas = '.'.join([str(u) for u in a])
-    bs = '.'.join([str(u) for u in b])
+    aas = '.'.join(str(u) for u in a)
+    bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0]>a[0]:
         return 'A%s_B%s'%(aas, bs)
     return 'A%s_B%s'%(bs, aas)
@@ -90,8 +90,8 @@ def normalize_motive(label):
     m = re.match(r'^A((\d+\.)*\d+)_B((\d+\.)*\d+)_t(-?)(\d+)\.(\d+)$', label)
     a = sorted([int(u) for u in m.group(1).split('.')], reverse=True)
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
-    aas = '.'.join([str(u) for u in a])
-    bs = '.'.join([str(u) for u in b])
+    aas = '.'.join(str(u) for u in a)
+    bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0]>a[0]:
         return 'A%s_B%s_t%s%s.%s'%(aas, bs,m.group(5),m.group(6),m.group(7))
     return 'A%s_B%s_t%s%s.%s'%(bs, aas, m.group(5), m.group(7), m.group(6))
@@ -269,7 +269,6 @@ def index():
         "hgm-index.html",
         title=r"Hypergeometric motives over $\Q$",
         bread=get_bread(),
-        credit=HGM_credit,
         info=info,
         learnmore=learnmore_list())
 
@@ -344,15 +343,34 @@ def url_for_label(label):
     else:
         return url_for(".by_family_label", label=label)
 
-@search_wrap(template="hgm-search.html",
-             table=db.hgm_motives,  # overridden if family search
+hgm_columns = SearchColumns([
+    MultiProcessedCol("label", None, "Label",
+                      ["A", "B", "t"],
+                      lambda A, B, t: '<a href="%s">%s</a>' % (
+                          url_for('.by_family_label', label=ab_label(A, B)) if t is None else
+                          url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
+                          ab_label(A, B) if t is None else
+                          make_abt_label(A, B, t)),
+                      default=True),
+    MathCol("A", None, "$A$", default=True),
+    MathCol("B", None, "$B$", default=True),
+    ProcessedCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
+    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
+    MathCol("degree", None, "Degree", default=True),
+    MathCol("weight", None, "Weight", default=True),
+    MathCol("famhodge", None, "Hodge", default=True)])
+
+hgm_columns.dummy_download = True
+hgm_columns.db_cols = 1 # all cols, since the table varies
+
+@search_wrap(table=db.hgm_motives,  # overridden if family search
              title=r'Hypergeometric motive over $\Q$ search resultS',
              err_title=r'Hypergeometric motive over $\Q$ search input error',
+             columns=hgm_columns,
              per_page=50,
              shortcuts={'jump': hgm_jump},
              url_for_label=url_for_label,
              bread=lambda: get_bread([("Search results", '')]),
-             credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
     info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
@@ -494,7 +512,6 @@ def render_hgm_webpage(label):
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
     return render_template(
         "hgm-show-motive.html",
-        credit=HGM_credit,
         title=title,
         bread=bread,
         info=info,
@@ -547,7 +564,6 @@ def render_hgm_family_webpage(label):
                            info=info,
                            family=family,
                            properties=family.properties,
-                           credit=HGM_credit,
                            bread=family.bread,
                            title=family.title,
                            friends=family.friends,
@@ -580,7 +596,6 @@ def interesting_families():
         regex=HGM_FAMILY_LABEL_RE,
         title=r"Some interesting families of hypergeometric motives",
         bread=get_bread([("Interesting", " ")]),
-        credit=HGM_credit,
         learnmore=learnmore_list()
     )
 
@@ -593,32 +608,39 @@ def interesting_motives():
         regex=HGM_LABEL_RE,
         title=r"Some interesting hypergeometric motives",
         bread=get_bread([("Interesting motives", " ")]),
-        credit=HGM_credit,
         learnmore=learnmore_list()
     )
+
+@hypergm_page.route("/Source")
+def how_computed_page():
+    t = r'Source and acknowledgments for hypergeometric motives over $\Q$'
+    bread = get_bread(('Source',''))
+    return render_template("double.html", kid='rcs.source.hgm', kid2='rcs.ack.hgm',
+           title=t, bread=bread,
+           learnmore=learnmore_list_remove('Source'))
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of hypergeometric motive data over $\Q$'
     bread = get_bread(('Completeness', ''))
-    return render_template("single.html", kid='dq.hgm.extent',
-           credit=HGM_credit, title=t, bread=bread,
+    return render_template("single.html", kid='rcs.cande.hgm',
+           title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
 
-@hypergm_page.route("/Source")
-def how_computed_page():
-    t = r'Source of hypergeometric motive Data over $\Q$'
-    bread = get_bread(('Source',''))
-    return render_template("single.html", kid='dq.hgm.source',
-           credit=HGM_credit, title=t, bread=bread,
-           learnmore=learnmore_list_remove('Source'))
+@hypergm_page.route("/Reliability")
+def reliability_page():
+    t = r'Reliability of hypergeometric motive data over $\Q$'
+    bread = get_bread(('Reliability', ''))
+    return render_template("single.html", kid='rcs.rigor.hgm',
+           title=t, bread=bread,
+           learnmore=learnmore_list_remove('Reliability'))
 
 @hypergm_page.route("/Labels")
 def labels_page():
     t = r'Labels for hypergeometric motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
-           credit=HGM_credit, title=t, bread=bread,
+           title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))
 
 class HGMSearchArray(SearchArray):

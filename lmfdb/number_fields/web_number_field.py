@@ -2,7 +2,6 @@
 from collections import Counter
 import os
 import yaml
-from six import text_type
 
 from flask import url_for
 from sage.all import (
@@ -14,7 +13,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         raw_typeset, display_multiset, factor_base_factor, 
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
 wnflog = make_logger("WNF")
 
@@ -252,6 +251,7 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+
 def formatfield(coef, show_poly=False, missing_text=None):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
@@ -263,7 +263,7 @@ def formatfield(coef, show_poly=False, missing_text=None):
       If show_poly is set to true and the polynomial is not in the
       database, just display the polynomial (no knowl).
     """
-    if isinstance(coef, text_type):
+    if isinstance(coef, str):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
@@ -441,12 +441,12 @@ class WebNumberField:
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
 
     # Return a nice string for the Galois group
-    def galois_string(self):
+    def galois_string(self, cache=None):
         if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])
-        return group_pretty_and_nTj(n, t)
+        return group_pretty_and_nTj(n, t, cache=cache)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
@@ -487,8 +487,8 @@ class WebNumberField:
     def is_imag_quadratic(self):
         return self.signature()==[0,1]
 
-    def poly(self):
-        return coeff_to_poly(self._data['coeffs'])
+    def poly(self, var="x"):
+        return coeff_to_poly(self._data['coeffs'], var=var)
 
     def haskey(self, key):
         return self._data and self._data.get(key) is not None
@@ -744,13 +744,17 @@ class WebNumberField:
     def web_poly(self):
         return pol_to_html(str(coeff_to_poly(self.coeffs())))
 
-    def class_group_invariants(self):
+    def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):
-            return na_text()
+            return "n/a" if in_search_results else na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'trivial'
-        return '$%s$'%str(cg_list)
+            invs = 'trivial'
+        else:
+            invs = '$%s$'%str(cg_list)
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
 
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):
@@ -840,7 +844,7 @@ class WebNumberField:
             ccgen = '['+','.join(ccreps)+']'
             ar = nfgg.artin_representations() # list of artin reps from db
             arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
-            gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;');
+            gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;')
             g = gap.Group(ccgen)
             h = g.Stabilizer('1')
             rc = g.RightCosets(h)
@@ -870,39 +874,39 @@ class WebNumberField:
         return self._data['dirichlet_group']
 
     # Helper for ramified algebras table
-    def get_local_algebra(self, p):
-        local_algebra_dict = self._data.get('loc_algebras', None)
-        if local_algebra_dict is None:
+    def get_local_algebras(self):
+        local_algs = self._data.get('local_algs', None)
+        if local_algs is None:
             return None
-        if str(p) in local_algebra_dict:
-            R = PolynomialRing(QQ, 'x')
-            palg = local_algebra_dict[str(p)]
-            palgs = [R(str(s)) for s in palg.split(',')]
-            try:
-                palgstr = [
-                    list2string([int(c) for c in pol.coefficients(sparse=False)])
-                    for pol in palgs]
-                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for cf in c.split(',')]}) for c in palgstr]
-                return [
-                    [
-                        LF['label'],
-                        latex(f),
-                        int(LF['e']),
-                        int(LF['f']),
-                        int(LF['c']),
-                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
-                        LF['t'],
-                        LF['u'],
-                        LF['slopes']
-                    ]
-                    for LF, f in zip(palgrec, palgs) ]
-            except: # we were unable to find the local fields in the database
-                return None
+        local_algebra_dict = {}
+        R = PolynomialRing(QQ, 'x')
+        for lab in local_algs:
+            if lab[0] == 'm': # signals data about field not in lf db
+                lab1 = lab[1:] # deletes marker m
+                p, e, f, c = [int(z) for z in lab1.split('.')]
+                deg = e*f
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [[deg,e,f,c]]
+                else:
+                    local_algebra_dict[str(p)].append([deg,e,f,c])
+            else:
+                LF = db.lf_fields.lookup(lab)
+                f = latex(R(LF['coeffs']))
+                p = LF['p']
+                thisdat = [lab, f, LF['e'], LF['f'], LF['c'], 
+                    transitive_group_display_knowl(LF['galois_label']),
+                    LF['t'], LF['u'], LF['slopes']]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [thisdat]
+                else:
+                    local_algebra_dict[str(p)].append(thisdat)
+        return local_algebra_dict
 
     def ramified_algebras_data(self):
-        if 'loc_algebras' not in self._data:
+        if 'local_algs' not in self._data:
             return dnc
-        return [self.get_local_algebra(p) for p in self.ramified_primes()]
+        loc_alg_dict = self.get_local_algebras()
+        return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
     def make_code_snippets(self):
          # read in code.yaml from numberfields directory:

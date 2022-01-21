@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
 import os
 import argparse
-from six.moves.configparser import ConfigParser
+from configparser import ConfigParser
 from collections import defaultdict
 from copy import deepcopy
+
 
 def strbool(s):
     """
@@ -16,6 +16,7 @@ def strbool(s):
         return False
     else:
         raise ValueError(s)
+
 
 class Configuration(object):
     """

@@ -25,7 +25,7 @@ from sage.misc.cachefunc import cached_method
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
 
 def maxq(g, p):
@@ -96,6 +96,10 @@ class AbvarFq_isoclass(object):
         self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+        if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
+            self.expanded_polynomial = ''
+        else:
+            self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):
@@ -274,8 +278,7 @@ class AbvarFq_isoclass(object):
             # the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
-            group = (self.galois_groups[0]).split("T")
-            return group_display_knowl(group[0], group[1])
+            return transitive_group_display_knowl(self.galois_groups[0])
 
     def decomposition_display_search(self):
         if self.is_simple:
@@ -290,7 +293,7 @@ class AbvarFq_isoclass(object):
                 ans += " "
             else:
                 ans += '<a href="{1}">{0}</a>'.format(simp, url) + "<sup> {0} </sup> ".format(e)
-        return ans
+        return '<span>' + ans + '</span>'
 
     def alg_clo_field(self):
         if self.r == 1:
@@ -413,16 +416,20 @@ class AbvarFq_isoclass(object):
         return ans
 
     def curve_display(self):
+        def show_curve(cv):
+            cv = cv.replace("*", "")
+            if "=" not in cv:
+                cv = cv + "=0"
+            return "  <li>$%s$</li>\n" % cv
         if hasattr(self, "curves") and self.curves:
             s = "\n<ul>\n"
             cutoff = 20 if len(self.curves) > 30 else len(self.curves)
             for cv in self.curves[:cutoff]:
-                cv = cv.replace("*", "")
-                if "=" not in cv:
-                    cv = cv + "=0"
-                s += "  <li>$%s$</li>\n" % cv
+                s += show_curve(cv)
             if cutoff < len(self.curves):
-                s += "  <li>and %s more</li>\n" % (len(self.curves) - cutoff)
+                s += '  <li id="curve_shower">and <a href="#" onclick="show_more_curves(); return false;">%s more</a></li>\n</ul>\n<ul id="more_curves" style="display: none;">\n' % (len(self.curves) - cutoff)
+                for cv in self.curves[cutoff:]:
+                    s += show_curve(cv)
             s += "</ul>\n"
             return s
         else:

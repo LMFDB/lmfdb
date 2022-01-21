@@ -127,13 +127,13 @@ class ECNF_isoclass(object):
         # most of this code is repeated in WebEllipticCurve.py
         # and should be refactored
         self.friends = []
-        if totally_real and not 'Lfunction' in self.urls:
+        if totally_real and 'Lfunction' not in self.urls:
             self.friends += [('Hilbert modular form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
                 self.friends += [('Bianchi modular form is not cuspidal', '')]
-            elif not 'Lfunction' in self.urls:
+            elif 'Lfunction' not in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
                     self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
                 else:

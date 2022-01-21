@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from mpmath import nstr, inf
 from sage.all import floor, log
 from lmfdb.logger import make_logger

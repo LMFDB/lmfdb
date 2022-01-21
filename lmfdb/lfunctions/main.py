@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, Integer, next_prime, prime_range, GCD
+from sage.all import srange, spline, line, ZZ, QQ, latex, Factorization, Integer, next_prime, prime_range, GCD
 
 import tempfile
 import os
 import re
-from collections import defaultdict, Counter
+from collections import Counter
 from markupsafe import escape
 
 from . import LfunctionPlot
@@ -24,7 +23,7 @@ from .Lfunction import (
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (
     p2sage, styleTheSign, get_bread, parse_codename,
-    getConductorIsogenyFromLabel, string2number)
+    getConductorIsogenyFromLabel)
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -44,17 +43,15 @@ from lmfdb.utils import (
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
-from six import string_types
 
 SPECTRAL_STR = r"((?:[rc]\d+)+)(?:e(\d+))?-(0|(?:[pmc]\d+(?:\.\d\d)?)+)"
 SPECTRAL_RE = re.compile("^"+SPECTRAL_STR+"$")
 CRE = re.compile(r"c(\d+)")
 LFUNC_LABEL_RE = re.compile(r"^(\d+)-(\d+)(?:e(\d+))?-(\d+\.\d+)-"+SPECTRAL_STR+r"-(\d+)$")
-
-credit_string = "Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Platt"
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -62,17 +59,19 @@ def get_degree(degree_string):
     return int(degree_string[6:])
 
 def learnmore_list(path=None, remove=None):
-    learnmore = [('Completeness of the data', url_for('.completeness')),
-                 ('L-function labels', url_for('.labels'))]
     if path:
         prepath = re.sub(r'^/L/', '', path)
         prepath = re.sub(r'/$', '', prepath)
-        learnmore.extend([
-            ('Source of the data', url_for('.source', prepath=prepath)),
-            ('Reliability of the data', url_for('.reliability', prepath=prepath)),
-        ])
+        learnmore = [('Source and acknowledgments', url_for('.source', prepath=prepath)),
+                     ('Completeness of the data', url_for('.completeness', prepath=prepath)),
+                     ('Reliability of the data', url_for('.reliability', prepath=prepath)),
+                     ('L-function labels', url_for('.labels'))]
     else:
-        learnmore.append((r'$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
+        learnmore = [('Source and acknowledgments', url_for('.generic_source')),
+                     ('Completeness of the data', url_for('.generic_completeness')),
+                     ('Reliability of the data', url_for('.generic_reliability')),
+                     ('L-function labels', url_for('.labels')),
+                     ((r'$\zeta$ zeros', url_for("zeta zeros.zetazeros")))]
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
@@ -87,7 +86,6 @@ def learnmore_list(path=None, remove=None):
 def contents():
     return render_template(
         "LfunctionContents.html",
-        credit=credit_string,
         title="L-functions",
         learnmore=learnmore_list(),
         bread=[("L-functions", " ")])
@@ -104,7 +102,6 @@ def index():
     return render_template(
         "LfunctionNavigate.html",
         info=info,
-        credit=credit_string,
         title="L-functions",
         learnmore=learnmore_list(),
         bread=get_bread())
@@ -125,15 +122,11 @@ def rational():
     return render_template(
         "LfunctionNavigate.html",
         info=info,
-        credit=credit_string,
         title="Rational L-functions",
         learnmore=learnmore_list(),
         bread=get_bread([("Rational", " ")]))
 
 def common_postprocess(res, info, query):
-    origins = defaultdict(lambda: defaultdict(list))
-    for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
-        origins[rec["Lhash"]][rec["type"]].append(rec["url"])
     for L in res:
         L['origins'] = names_and_urls(L['instance_urls'])
         L['url'] = url_for_lfunction(L['label'])
@@ -147,16 +140,18 @@ def process_search(res, info, query):
             L['motivic_weight'] = ''
         else:
             L['analytic_normalization'] = QQ(L['motivic_weight'])/2
-        mus = [L['analytic_normalization'] + string2number(mu) for mu in L['gamma_factors'][0]]
-        mus = [latex(mu) if imag_part(mu) == 0 else display_complex(real_part(mu), imag_part(mu), 3) for mu in mus]
+        mus = [latex(mu_real + L['analytic_normalization']) if mu_imag == 0 else
+               display_complex(mu_real + L['analytic_normalization'], mu_imag, 3)
+               for mu_real, mu_imag in zip(L['mu_real'], L['mu_imag'])]
+        nus = [latex(nu_real_doubled*0.5 + L['analytic_normalization']) if nu_imag == 0 else
+               display_complex(nu_real_doubled*0.5 + L['analytic_normalization'], nu_imag, 3)
+               for nu_real_doubled, nu_imag in zip(L['nu_real_doubled'], L['nu_imag'])]
         if len(mus) > 4 and len(set(mus)) == 1: # >4 so this case only happens for imprimitive
             mus = ["[%s]^{%s}" % (mus[0], len(mus))]
-        L['mus'] = ", ".join(mus)
-        nus = [L['analytic_normalization'] + string2number(nu) for nu in L['gamma_factors'][1]]
-        nus = [latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus]
         if len(nus) > 4 and len(set(nus)) == 1:
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
+        L['mus'] = ", ".join(mus)
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
             L['root_number'] = 1 - int(4*L['root_angle'])
@@ -271,7 +266,7 @@ def parse_spectral(inp, query, qfield):
     query[qfield] = out
 
 def common_parse(info, query):
-    info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
+    info['z1'] = parse_floats(info,query,'z1')
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
     parse_bool(info,query,'primitive')
@@ -299,21 +294,60 @@ def common_parse(info, query):
     parse_spectral(info,query,'spectral_label')
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
-    info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
-    info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor', allow_singletons=True)
+    info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
+    info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
     parse_sort(info, query)
     info['bigint_knowl'] = bigint_knowl
 
-@search_wrap(template="LfunctionSearchResults.html",
-             table=db.lfunc_search,
+lfunc_columns = SearchColumns([
+    MultiProcessedCol("label", "lfunction.label", "Label",
+                         ["label", "url"],
+                         lambda label, url: '<a href="%s">%s</a>' % (url, label),
+                         default=True),
+    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", default=True),
+    MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", default=True),
+    MathCol("degree", "lfunction.degree", "$d$", default=True),
+    MathCol("factored_conductor", "lfunction.conductor", "$N$", default=True),
+    LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), default=True, align="center"),
+    MathCol("mus", "lfunction.functional_equation", r"$\mu$", default=True),
+    MathCol("nus", "lfunction.functional_equation", r"$\nu$", default=True),
+    MultiProcessedCol("motivic_weight", "lfunction.motivic_weight", "$w$",
+                      ["motivic_weight", "algebraic"],
+                      lambda w, alg: w if alg else "",
+                      default=True, mathmode=True, align="center"),
+    CheckCol("primitive", "lfunction.primitive", "prim", default=True),
+    MathCol("root_number", "lfunction.sign", r"$\epsilon$",
+            contingent=lambda info: info["search_array"].force_rational,
+            default=True),
+    CheckCol("algebraic", "lfunction.arithmetic", "arith",
+             contingent=lambda info: not info["search_array"].force_rational,
+             default=True),
+    CheckCol("rational", "lfunction.rational", r"$\mathbb{Q}$", short_title="rational",
+             contingent=lambda info: not info["search_array"].force_rational,
+             default=True),
+    CheckCol("self_dual", "lfunction.self-dual", "self-dual",
+             contingent=lambda info: not info["search_array"].force_rational,
+             default=True),
+    MathCol("root_angle", "lfunction.root_angle", r"$\operatorname{Arg}(\epsilon)$", short_title="Arg(eps)",
+            contingent=lambda info: not info["search_array"].force_rational,
+            default=True),
+    MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", default=True),
+    MathCol("z1", "lfunction.zeros", "First zero", default=True),
+    ProcessedCol("origins", "lfunction.underlying_object", "Origin",
+                 lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
+                 default=True)],
+    db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
+lfunc_columns.dummy_download = True
+
+@search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
+             columns=lfunc_columns,
              shortcuts={'jump':jump_box},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
 def l_function_search(info, query):
     if info.get("rational") == "yes":
         info["title"] = "Rational L-function search results"
@@ -326,8 +360,8 @@ def l_function_search(info, query):
              shortcuts={'jump':jump_box},
              postprocess=process_trace,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
+
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
@@ -367,8 +401,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              shortcuts={'jump':jump_box},
              postprocess=process_euler,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
 def euler_search(info, query):
     if 'n' not in info:
         info['n'] = '1-10'
@@ -464,7 +497,7 @@ class LFunctionSearchArray(SearchArray):
         else:
             root_angle = TextBox(
                 name="root_angle",
-                knowl="lfunction.sign",
+                knowl="lfunction.root_angle_input",
                 label="Root angle",
                 example="0.5",
                 example_span="0.5, -0.1-0.1")
@@ -645,7 +678,6 @@ def interesting():
         regex=regex,
         query=query,
         title=title,
-        credit=credit_string,
         bread=get_bread(breads=breads),
         learnmore=learnmore_list()
     )
@@ -663,7 +695,7 @@ def random_l_function():
     return url_for_lfunction(label)
 
 
-@l_function_page.route("/degree<degree>/")
+@l_function_page.route("/degree<int:degree>/")
 def by_old_degree(degree):
     return redirect(url_for(".by_url_degree_conductor_character_spectral", degree=degree))
 
@@ -747,8 +779,6 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
         else:
             info['bread'] = info['bread'][:-1]
             return l_function_search(info)
-
-        return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
 @l_function_page.route("/CuspForms/")
@@ -1562,7 +1592,7 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
-    except:
+    except Exception:
         return ""
 
     plotrange = 30
@@ -1636,7 +1666,7 @@ def render_zerosLfunction(request, *args):
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     # Handle cases where zeros are not available
-    if isinstance(website_zeros, string_types):
+    if isinstance(website_zeros, str):
         return website_zeros
 
     positiveZeros = []
@@ -1734,7 +1764,7 @@ def processEllipticCurveNavigation(startCond, endCond):
             N = 11
         elif N > 100:
             N = 100
-    except:
+    except Exception:
         N = 11
 
     try:
@@ -1743,7 +1773,7 @@ def processEllipticCurveNavigation(startCond, endCond):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 1000
 
     iso_list = isogeny_class_table(N, end)
@@ -1783,7 +1813,7 @@ def processGenus2CurveNavigation(startCond, endCond):
             N = 169
         elif N > 1000:
             N = 1000
-    except:
+    except Exception:
         N = 169
 
     try:
@@ -1792,7 +1822,7 @@ def processGenus2CurveNavigation(startCond, endCond):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 1000
 
     iso_list = genus2_isogeny_class_table(N, end)
@@ -1831,7 +1861,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
             N = 11
         elif N > 100:
             N = 100
-    except:
+    except Exception:
         N = 11
 
     try:
@@ -1840,7 +1870,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 100
 
     iso_list = isogeny_class_table(N, end)
@@ -1876,38 +1906,25 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     s += '</table>\n'
     return s
 
-@l_function_page.route("/<path:prepath>/Reliability")
-def reliability(prepath):
-    t = 'Reliability of L-function data'
-    args = tuple(prepath.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
-    info={'bread': ()}
-    set_bread_and_friends(info, L, request)
-    if L.fromDB:
-        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
-        if 'load_key' in Ldb:
-            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['reliability'])['reliability']
-        else:
-            knowl = 'rcs.rigor.lfunction.lcalc'
-    else:
-        knowl = 'rcs.rigor.lfunction.lcalc'
-    bread = info['bread']
-    target = bread.pop()
-    bread.append((target[0], re.sub(r'/Reliability$','',target[1])))
-    bread.append(('Reliability', ' '))
-    return render_template("single.html", kid=knowl, title=t, bread=bread,
-        learnmore=learnmore_list(prepath, remove='Reliability'))
+
+@l_function_page.route("/Source")
+def generic_source():
+    t = 'Source and acknowledgments for L-function data'
+    bread = get_bread(breads=[('Source', ' ')])
+    return render_template("double.html", kid='rcs.source.lfunction', kid2='rcs.ack.lfunction', title=t, 
+        bread=bread)
 
 @l_function_page.route("/Completeness")
-def completeness():
+def generic_completeness():
     t = 'Completeness of L-function data'
     bread = get_bread(breads=[('Completeness', ' ')])
-    return render_template("single.html", kid='rcs.cande.lfunction', title=t, 
-        bread=bread)
+    return render_template("single.html", kid='rcs.cande.lfunction', title=t, bread=bread)
+
+@l_function_page.route("/Reliability")
+def generic_reliability():
+    t = 'Reliabililty of L-function data'
+    bread = get_bread(breads=[('Reliabillity', ' ')])
+    return render_template("single.html", kid='rcs.rigor.lfunction', title=t, bread=bread)
 
 @l_function_page.route("/<path:prepath>/Source")
 def source(prepath):
@@ -1916,24 +1933,81 @@ def source(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
+    knowl = ''
     if L.fromDB:
         Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
         if 'load_key' in Ldb:
-            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['source'])['source']
-        else:
-            knowl = 'rcs.source.lfunction.lcalc'
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection='source')
+            knowl2 = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection='acknowledgments')
     else:
         knowl = 'rcs.source.lfunction.lcalc'
+        knowl2 = 'rcs.ack.lfunction.lcalc'
+    if not knowl:
+        return generic_source()
     bread = info['bread']
     target = bread.pop()
     bread.append((target[0], re.sub(r'/Source$','',target[1])))
     bread.append(('Source', ' '))
-    return render_template("single.html", kid=knowl, title=t, bread=bread,
+    return render_template("double.html", kid=knowl, kid2=knowl2, title=t, bread=bread,
         learnmore=learnmore_list(prepath, remove='Source'))
+
+@l_function_page.route("/<path:prepath>/Completeness")
+def completeness(prepath):
+    t = 'Completeness of L-function data'
+    args = tuple(prepath.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except Exception:
+        return abort(404)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    knowl = ''
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection='completeness')
+    else:
+        knowl = 'rcs.source.lfunction.lcalc'
+    if not knowl:
+        return generic_completeness()
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Source$','',target[1])))
+    bread.append(('Completeness', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Completeness'))
+
+@l_function_page.route("/<path:prepath>/Reliability")
+def reliability(prepath):
+    t = 'Reliability of L-function data'
+    args = tuple(prepath.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except Exception:
+        return abort(404)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    knowl = ''
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['reliability'])['reliability']
+    else:
+        knowl = 'rcs.rigor.lfunction.lcalc'
+    if not knowl:
+        return generic_reliability()
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Reliability$','',target[1])))
+    bread.append(('Reliability', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Reliability'))
 
 @l_function_page.route("/Labels")
 def labels():

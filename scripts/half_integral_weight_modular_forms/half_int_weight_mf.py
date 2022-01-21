@@ -25,7 +25,7 @@ where
        [3,2,1] represents x^2+2*x+3
    - clgp: (list of ints) the class group structure [a_1,a_2,...] where
 """
-from __future__ import print_function
+
 import sys
 import re
 import json
