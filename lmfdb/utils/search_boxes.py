@@ -17,6 +17,7 @@ class TdElt(object):
             kwds.update(self.wrap_mixins)
         if self.advanced:
             self._add_class(kwds, 'advanced')
+        kwds['valign'] = 'top'
         for key, val in kwds.items():
             keys.append(' %s="%s"' % (key, val))
         return "<%s%s>" % (typ, "".join(keys))
@@ -468,6 +469,72 @@ class CountBox(TextBox):
             example_value=True,
             example_span="")
 
+class ColumnController(SelectBox):
+    def __init__(self):
+        super().__init__(
+            name="column_control",
+            knowl="doc.select_search_columns",
+            label="Select",
+            width=170)
+
+    def _label(self, info):
+        if info is None:
+            return ""
+        C = info.get("columns")
+        if C is None:
+            return ""
+        R = info.get("results")
+        if R is None:
+            return ""
+        return super()._label(info)
+
+    def _input(self, info):
+        if info is None:
+            print("WARNING: Column controller should not be included on browse page")
+            return ""
+        C = info.get("columns")
+        if C is None:
+            print("WARNING: Column controller included but no columns specified in @search_wrap")
+            return ""
+        R = info.get("results")
+        if R is None:
+            # can happen if search input error for example
+            return ""
+        keys = [
+            '''onmousedown="this.size=this.length; this.value='';"''',
+            '''onmousemove="return false;"''',
+            '''onmouseup="this.focus();"''',
+            '''onblur="this.size=0; this.value='none';"''',
+            '''oninput="control_columns(this);"''',
+            '''id="column-selector"''',
+        ]
+        style="position: absolute; z-index: 9999;"
+        if self.short_width is not None:
+            style += f'width: {self.short_width}px;'
+        keys.append(f'style="{style}"')
+        options = [("none", " selected", "columns to display")]
+        use_rank = 0 # which rank to iterate over in determining the columns listed in the select
+        for col in C.columns_shown(info, 0):
+            if col.height > 1 and any(sub.name != col.name for sub in col.show(info, 1)):
+                # A ColGroup with columns that should be shown/hidden individually
+                use_rank = 1
+                break
+        for col in C.columns_shown(info, use_rank):
+            if col.short_title is None: # probably a spacer column:
+                continue
+            title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
+            if col.default(info):
+                disp = "✓ " + title # The space is a unicode space the size of an emdash
+            else:
+                disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
+            options.append((col.name, "", disp))
+        # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
+        options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
+        return "        <select %s>\n%s\n        </select>" % (
+            " ".join(keys),
+            "".join("\n" + " " * 10 + opt for opt in options),
+        )
+
 class SearchButton(SearchBox):
     _default_width = 170
     def __init__(self, value, description, **kwds):
@@ -695,6 +762,7 @@ class SearchArray(UniqueRepresentation):
                         options=sort,
                         width=170)
                     buttons.append(sort_box)
+            buttons.append(ColumnController())
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 
     def html(self, info=None):

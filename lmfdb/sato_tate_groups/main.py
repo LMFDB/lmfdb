@@ -16,6 +16,7 @@ from lmfdb.utils import (
     parse_ints_to_list_flash, clean_input, redirect_no_cache)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.sato_tate_groups import st_page
 
@@ -436,6 +437,20 @@ def search_by_label(label):
         return redirect(url_for(".index"))
     return redirect(url_for('.by_label', label=rlabel), 301)
 
+st_columns = SearchColumns([
+    LinkCol("label", "st_group.label", "Label", lambda label: url_for('.by_label', label=label), default=True),
+    MathCol("weight", "st_group.weight", "Wt", default=True),
+    MathCol("degree", "st_group.degree", "Deg", default=True),
+    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="dim_R", default=True),
+    MathCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", short_title="G^0", default=True),
+    MathCol("pretty", "st_group.name", "Name", default=True),
+    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="G/G^0", default=True),
+    MathCol("trace_zero_density", "st_group.trace_zero_density", r"$\mathrm{Pr}[t\!=\!0]$", short_title="Pr[t=0]", default=True),
+    MathCol("second_trace_moment", "st_group.second_trac_moment", r"$\mathrm{E}[a_1^2]$", short_title="E[a_1^2]", default=True),
+    MathCol("fourth_trace_moment", "st_group.fourth_trace_moment", r"$\mathrm{E}[a_1^4]$", short_title="E[a_1^4]", default=True),
+    MathCol("first_a2_moment", "st_group.first_a2_moment", r"$\mathrm{E}[a_2]$", default=True)])
+st_columns.dummy_download = True
+
 # This search function doesn't fit the model of search_wrapper very well,
 # So we don't use it.
 def search(info):
@@ -444,6 +459,7 @@ def search(info):
         return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
+    info["columns"] = st_columns
     search_type = info.get("search_type", info.get("hst", "List"))
     template_kwds = {'bread':get_bread("Search results"),
                      'learnmore':learnmore_list()}
@@ -458,7 +474,7 @@ def search(info):
     if search_type == "Random" and not ratonly:
         info['err'] = err = 'Cannot select random irrational Sato-Tate group'
         flash_error(err)
-        return render_template('st_results.html', info=info, title=err_title, **template_kwds)
+        return render_template('search_results.html', info=info, title=err_title, **template_kwds)
     query = {'rational':True} if ratonly else {}
     try:
         parse_ints(info,query,'weight','weight')
@@ -517,7 +533,7 @@ def search(info):
             components_list = []
     except ValueError as err:
         info['err'] = str(err)
-        return render_template('st_results.html', info=info, title=err_title, **template_kwds)
+        return render_template('search_results.html', info=info, title=err_title, **template_kwds)
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
@@ -563,7 +579,7 @@ def search(info):
             ctx = ctx_proc_userdata()
             flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
             info['err'] = str(err)
-            return render_template('st_results.html', info=info, title=err_title, **template_kwds)
+            return render_template('search_results.html', info=info, title=err_title, **template_kwds)
         info['number'] += nres
         if start < info['number'] and len(results) < count:
             for v in res:
@@ -579,7 +595,7 @@ def search(info):
     info['st0_dict'] = st0_dict
     info['results'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
-    return render_template('st_results.html', info=info, title=title, **template_kwds)
+    return render_template('search_results.html', info=info, title=title, **template_kwds)
 
 ###############################################################################
 # Rendering

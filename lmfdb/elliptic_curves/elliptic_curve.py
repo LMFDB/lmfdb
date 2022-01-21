@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
@@ -320,50 +320,52 @@ class EC_download(Downloader):
 ec_columns = SearchColumns([
     ColGroup("curve_labels", None, "Curve",
              [
-                 LinkCol("lmfdb_label", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center"),
+                 LinkCol("lmfdb_label", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center", short_title="Curve LMFDB label"),
                  MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
                                    ["Clabel", "conductor"],
                                    lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
-                                   default=True, align="center")
+                                   default=True, align="center", short_title="Curve Cremona label")
              ],
              default=True),
     ColGroup("iso_labels", "ec.isogeny_class", "Isogeny class",
              [
-                 LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center"),
+                 LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center", short_title="Class LMFDB label"),
                  MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona label",
                                    ["Ciso", "conductor"],
                                    lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
-                                   default=True, align="center")
+                                   default=True, align="center", short_title="Class Cremona label")
              ],
              default=True),
-    MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", default=True, align="left"),
-    MultiProcessedCol("disc", "ec.discriminant", "Discriminant",
-                      ["signD", "absD"],
-                      lambda s, a: f"+{a}" if s==1 else "-{a}",
-                      contingent=lambda info: info.get("discriminant"),
-                      default=True, mathmode=True, align="center"),
-    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height",
-                 RealField(20),
-                 contingent=lambda info: info.get("faltings_height"),
-                 default=True, align="center"),
-    MathCol("rank", "ec.rank", "Rank", default=True),
-    ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                 lambda tors: f"${tors}$" if tors else "trivial",
-                 default=True, align="center"),
-    SearchCol("cm", "ec.complex_multiplication", "CM disc",
-              contingent=lambda info: info.get("cm") == "CM" or "," in info.get("cm",""),
-              default=True, align="center"),
-    ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", "Nonmax primes",
-                 lambda primes: ",".join(str(p) for p in primes),
-                 contingent=lambda info: info.get("nonmax_primes"),
-                 default=True, mathmode=True, align="center"),
-    ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", "Galois images",
-                  ",".join,
-                  contingent=lambda info: info.get("galois_image"),
-                  default=True, align="center"),
-    MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
-            contingent=lambda info: info.get("num_int_pts"),
-            default=True, align="center")],
+    # We need the other columns to appear in rank 1, so we add a dummy ColGroup
+    ColGroup("dummy", None, "",
+             [
+                 MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weier. coeffs", default=True, align="left"),
+                 MultiProcessedCol("disc", "ec.discriminant", "Discriminant",
+                                   ["signD", "absD"],
+                                   lambda s, a: f"+{a}" if s==1 else f"-{a}",
+                                   default=lambda info: info.get("discriminant"),
+                                   mathmode=True, align="right"),
+                 ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height",
+                              RealField(20),
+                              default=lambda info: info.get("faltings_height"), align="center"),
+                 MathCol("rank", "ec.rank", "Rank", default=True),
+                 ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
+                              lambda tors: f"${tors}$" if tors else "trivial",
+                              default=True, align="center"),
+                 SearchCol("cm", "ec.complex_multiplication", "CM disc",
+                           default=lambda info: info.get("cm") == "CM" or "," in info.get("cm",""),
+                           align="center"),
+                 ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", "Nonmax primes",
+                              lambda primes: ",".join(str(p) for p in primes),
+                              default=lambda info: info.get("nonmax_primes"),
+                              mathmode=True, align="center"),
+                 ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", "Galois images",
+                              ",".join,
+                              default=lambda info: info.get("galois_image"),
+                              align="center"),
+                 MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
+                         default=lambda info: info.get("num_int_pts"), align="center")
+             ], default=True)],
     tr_class=["bottom-align", ""])
 
 
@@ -395,7 +397,7 @@ def elliptic_curve_search(info, query):
                 flash_error(err)
                 raise ValueError(err)
             else:
-                query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
+                query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')

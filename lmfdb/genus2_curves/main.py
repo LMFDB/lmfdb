@@ -38,7 +38,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name
 
 ###############################################################################
 # List and dictionaries needed for routing and searching
@@ -531,9 +531,26 @@ g2c_columns = SearchColumns([
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
     ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
     ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), default=True, align="center"),
-    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", default=True),
-    CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)", default=True),
-    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True)])
+    ProcessedCol("end_alg", "g2c.end_alg", r"\(\Q\)-end algebra", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
+    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"\(\overline{\Q}\)-end algebra", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", align="center"),
+    CheckCol("is_simple_base", "ag.simple", r"\(\Q\)-simple", short_title="Q-simple"),
+    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple", default=True),
+    CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)-type", short_title="GL2-type", default=True),
+    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
+    MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
+    MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-Automorphisms"),
+    CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
+    MathCol("num_rat_pts", "g2c.all_rational_points", "Q-points*"),
+    MathCol("num_rat_wpts", "g2c.num_rat_wpts", "Q-Weierstrass pts"),
+    CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
+    MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
+    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion subgroup", lambda v: "trivial" if v=="[]" else r"\(%s\)"%v, align="center"),
+    MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
+    MathCol("tamagawa_product", "g2c.tamagawa", "Tamagawa product"),
+    ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coeff", lambda v: r"\(%.6f\)"%v, align="right"),
+])
 
 @search_wrap(
     table=db.g2c_curves,

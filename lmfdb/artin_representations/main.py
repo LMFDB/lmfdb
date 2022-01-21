@@ -270,9 +270,6 @@ def artin_representation_search(info, query):
         info['parity'] = info.pop('Is_Even')
     parse_bool(info,query,'parity',qfield='Is_Even')
 
-def search_input_error(info, bread):
-    return render_template("artin-representation-search.html", req=info, title='Artin representation search error', bread=bread)
-
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
     return artin_representation_search({'dimension': dim, 'conductor': conductor, 'search_array': ArtinSearchArray()})

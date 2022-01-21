@@ -107,8 +107,7 @@ gg_columns = SearchColumns([
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
                       lambda subs, cache: WebGaloisGroup(None, {"subfields": subs}).subfields(cache=cache),
-                      contingent=lambda info: info["show_subs"],
-                      default=True),
+                      default=lambda info: info["show_subs"]),
     MultiProcessedCol("siblings", "gg.other_representations", "Low Degree Siblings",
                       ["siblings", "bound_siblings", "cache"],
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
@@ -313,9 +312,6 @@ def render_group_webpage(args):
         bread = get_bread([(label, ' ')])
         return render_template("gg-show-group.html", title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%label, learnmore=learnmore_list())
 
-
-def search_input_error(info, bread):
-    return render_template("gg-search.html", info=info, title='Galois group search input error', bread=bread, learnmore=learnmore_list())
 
 @galois_groups_page.route("/random")
 @redirect_no_cache

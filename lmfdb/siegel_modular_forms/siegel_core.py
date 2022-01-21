@@ -5,7 +5,8 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from sage.all import QQ, ZZ, PowerSeriesRing, is_even, is_prime, divisors
+from sage.all import QQ, ZZ, PowerSeriesRing, is_even, is_prime
+from lmfdb.utils import integer_divisors
 
 tbi = 't.b.i.'
 uk = '?'
@@ -121,7 +122,7 @@ def __JacobiDimension(k, m):
     if (k % 2) == 0:
         x = 0
         if k == 2:
-            x = (len(divisors(m)) - 1) // 2
+            x = (len(integer_divisors(m)) - 1) // 2
         for j in range(1, m + 1):
             x += (__S1k(k + 2 * j) - ((j * j) // (4 * m)))
         return x

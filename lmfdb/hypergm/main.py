@@ -7,7 +7,7 @@ import re
 
 from flask import render_template, request, url_for, redirect, abort
 from sage.all import (
-    is_prime, ZZ, QQ, latex, valuation, PolynomialRing, gcd, divisors)
+    is_prime, ZZ, QQ, latex, valuation, PolynomialRing, gcd)
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -15,7 +15,7 @@ from lmfdb.utils import (
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
-    to_dict, web_latex)
+    to_dict, web_latex, integer_divisors)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -123,7 +123,7 @@ def ab2gammas(A,B):
         wh = 0 if m in ab[0] else 1
         gamma[wh].append(m)
         subdict(ab[wh],m)
-        for d in divisors(m)[:-1]:
+        for d in integer_divisors(m)[:-1]:
             if d in ab[wh]:
                 subdict(ab[wh],d)
             else:

@@ -23,7 +23,7 @@ from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
@@ -313,7 +313,7 @@ class AbvarFq_isoclass(object):
         return list(db.av_fq_endalg_factors.search({"base_label": self.label}))
 
     def relevant_degs(self):
-        return Integer(self.geometric_extension_degree).divisors()[1:-1]
+        return integer_divisors(Integer(self.geometric_extension_degree))[1:-1]
 
     def endo_extension_by_deg(self, degree):
         return [
