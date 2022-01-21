@@ -39,11 +39,8 @@ class ReverseProxied(object):
         scheme = environ.get('HTTP_X_FORWARDED_PROTO')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
-        try:
-            return self.app(environ, start_response)
-        except TypeError as e:
-            print("environ = %s" %(environ))
-
+        
+        return self.app(environ, start_response)
 
 app = Flask(__name__)
 
@@ -260,8 +257,6 @@ def netloc_redirect():
         Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
     """
     from urllib.parse import urlparse, urlunparse
-
-    print("In netloc_redirect")
     
     urlparts = urlparse(request.url)
 
@@ -294,8 +289,6 @@ def timestamp():
 
 @app.errorhandler(404)
 def not_found_404(error):
-    print("In error handler 404")
-    raise RuntimeError
     app.logger.info('%s 404 error for URL %s %s' % (timestamp(), request.url, error.description))
     messages = error.description if isinstance(error.description, (list, tuple)) else (error.description,)
     return render_template("404.html", title='LMFDB Page Not Found', messages=messages), 404
