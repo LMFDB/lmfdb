@@ -461,7 +461,7 @@ class CMF_download(Downloader):
             #   [[c,e]] encoding c x zeta_m^e where m is hecke_ring_cyclotomic_generator
             assert char_gens == [elt[0] for elt in hecke_nf['hecke_ring_character_values']]
             char_values = [elt[1] for elt in hecke_nf['hecke_ring_character_values']]
-            explain = '// To make the character of type GrpDrchElt with Codamain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label)
+            explain = '// To make the character of type GrpDrchElt with Codomain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label)
             self.explain.append(explain)
             out += [
                 explain,
