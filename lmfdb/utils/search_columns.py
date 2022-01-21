@@ -35,7 +35,7 @@ class SearchCol:
         # We support dictionaries as well as classes like
         # AbvarFq_isoclass that are created in a postprocess step
         if isinstance(rec, dict):
-            return rec.get(self.orig[0], "?")
+            return rec.get(self.orig[0], "")
         val = getattr(rec, self.name)
         if callable(val):
             return val()
