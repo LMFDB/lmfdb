@@ -195,14 +195,11 @@ class CMF_download(Downloader):
         'qexp_sparse_cyclotomic' : {'sage': ['Each a_p is given as list of pairs', 'Each pair (c, e) corresponds to c*zeta^e']}
     }
 
+    # At the moment this is a one-liner, but if we would like to add common headers/footers 
+    # in the future, it might come in handy.
+    
     def create_function_for_download(self, func_label, lang='sage'):
-        func_start = self.get('function_start',{}).get(lang,[])
-        func_end = self.get('function_end',{}).get(lang,[])
-        func_body = self.func_body.get(func_label,{}).get(lang,[])
-        code = '\n' + '\n'.join(func_start) + '\n'
-        code += '    ' + '\n    '.join(func_body) + '\n'
-        code += '\n'.join(func_end)
-        return code
+        return self.func_body.get(func_label,{}).get(lang,[])
     
     def create_function_explain_for_download(self, func_label, lang='sage'):
         explain = ''
@@ -223,8 +220,6 @@ class CMF_download(Downloader):
         weight_data = self.assign(lang, 'weight', weight)
 
         c = self.comment_prefix[lang]
-        func_start = self.get('function_start',{}).get(lang,[])
-        func_end = self.get('function_end',{}).get(lang,[])
 
         explain = '\n'
         explain += c + ' We generate the q-expansion using the Hecke eigenvalues a_p at the primes.\n'
@@ -233,7 +228,7 @@ class CMF_download(Downloader):
         hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            code = self.create_function_for_download('qexp_sparse_cyclotomic', lang)
+            func_body = self.create_function_for_download('qexp_sparse_cyclotomic', lang)
             explain += self.create_function_explain_for_download('qexp_sparse_cyclotomic', lang)
             basis_data = ''
             poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
@@ -245,18 +240,29 @@ class CMF_download(Downloader):
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
-                code = self.create_function_for_download('qexp_powbasis', lang)
+                func_body = self.create_function_for_download('qexp_powbasis', lang)
             else:
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
                 basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
                 basis_data += self.assign(lang,  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
-                code = self.create_function_for_download('qexp_generic', lang)
+                func_body = self.create_function_for_download('qexp_generic', lang)
 
         if lang in ['sage']:
             explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
 
+        # At the moment, when we create magma files we do not wrap them with these 
+        # We do not change that for compatibility
+        if lang in ['sage']:
+            func_start = self.get('function_start',{}).get(lang,[])
+            func_end = self.get('function_end',{}).get(lang,[])
+            code = '\n' + '\n'.join(func_start) + '\n'
+            code += '    ' + '\n    '.join(func_body) + '\n'
+            code += '\n'.join(func_end)
+        else:
+            code = func_body
+            
         return self._wrap(explain + code + level_data + weight_data + poly_data + basis_data + hecke_ring_character_values + aps_data,
                           label + '.qexp',
                           lang=lang,
