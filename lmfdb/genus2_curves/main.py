@@ -385,12 +385,12 @@ def genus2_lookup_equation(input_str):
             return "", input_str
     if len(fg) == 1:
         fg.append(R(0));
-    C_str= f"{y**2 + y*fg[1]} = {fg[0]}"
+    C_str_latex= f"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
     try:
         C = magma.HyperellipticCurve(fg)
         g2 = magma.G2Invariants(C)
     except (TypeError, RuntimeError):
-        return 0, C_str
+        return 0, C_str_latex
     g2 = str([str(i) for i in g2]).replace(" ", "")
     for r in db.g2c_curves.search({"g2_inv": g2}):
         eqn = literal_eval(r["eqn"])
@@ -399,10 +399,9 @@ def genus2_lookup_equation(input_str):
         # there is recursive bug in sage
         if str(magma.IsIsomorphic(C, D)) == "true":
             if fgD != fg:
-                C_str_latex= f"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
-                flash_info(r"The requested genus 2 curve {} is isomorphic to the one below, but uses a different defining polynomial.".format(C_str_latex))
+                flash_info(f"The requested genus 2 curve {C_str_latex} is isomorphic to the one below, but uses a different defining polynomial.")
             return r["label"], fg
-    return None, fg
+    return None, C_str_latex
 
 
 def geom_inv_to_G2(inv):
@@ -476,11 +475,12 @@ def genus2_jump(info):
             return redirect(url_for_curve_label(label), 301)
         elif label is None:
             # the input was parsed
-            errmsg = f"{eqn_str} is not the equation of a genus 2 curve in the database"
-        elif label == "":
+            errmsg = f"equation {eqn_str} interpreted from %s the equation of a genus 2 curve in the database"
+        elif label == "": # failed to sagify input
             errmsg = "unable to parse %s as a valid input for as an of a genus 2 curve"
-        elif label == 0: # magma failed to start
-            errmsg = "unable to process your request at the moment"
+        elif label == 0: # magma failed to create curve
+            # better wording?
+            errmsg = "at the moment we are unable to check if equation {eqn_str} interpreted from %s is the equation of a genus 2 curve in the database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
         errmsg += ", or a univariate polynomial, e.g., x^5 + 1"

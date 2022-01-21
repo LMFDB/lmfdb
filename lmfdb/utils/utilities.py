@@ -234,7 +234,6 @@ def coeff_to_poly(c, var=None):
                 raise ValueError("Polynomial must be univariate")
     if var is None:
         var = 'x'
-    print(PolynomialRing(QQ, var)(c))
     return PolynomialRing(QQ, var)(c)
 
 def coeff_to_power_series(c, var='q', prec=None):
