@@ -232,7 +232,6 @@ def parse_sort(info, query):
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_spectral(inp, query, qfield):
-    print("Are we reaching parse_spectral?")
     if '-' not in inp:
         inp = inp + '-0'
     M = SPECTRAL_RE.match(inp)
@@ -736,7 +735,6 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
         (spectral_label and 'spectral_label' in info) or
         (rational and 'rational' in info)
     ):
-        print(url_for('.index', **request.args))
         return redirect(url_for('.index', **request.args), code=307)
     else:
         if conductor:
@@ -785,6 +783,7 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
             print("spectral_label = ")
             print(spectral_label)
             info['spectral_label'] = spectral_label
+            return l_function_search(info)
         else:
             info['bread'] = info['bread'][:-1]
             return l_function_search(info)
