@@ -149,46 +149,51 @@ class CMF_download(Downloader):
     ]
     
     convert_to_hecke_field_magma_cyclotomic = [ 
-        '        Kf := CyclotomicField(%d);',
+        '        Kf := CyclotomicField({hecke_ring_cyclotomic_generator});',
         '    end if;',
         '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
         'end function;'
-    ]
-    
-    convert_to_hecke_field_magma_powbasis = [
-        '        ' + self.assign('magma', 'poly', '{hecke_ring_cyclotomic_generator}', level = 1).rstrip('\n'),
-        '        Kf := NumberField(Polynomial([elt : elt in poly]));',
-        '        AssignNames(~Kf, ["nu"]);',
-        '    end if;',
-        '    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];',
-        '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
-        '    return Eltseq(inp_vec);',
-        'end function;'
-    ]
-    
-    convert_to_hecke_field_magma_generic = [
-        '        ' + self.assign('magma', 'poly', '{field_poly}', level = 1).rstrip('\n'),
-        '        Kf := NumberField(Polynomial([elt : elt in poly]));',
-        '        AssignNames(~Kf, ["nu"]);',
-        '    end if;',
-        '    ' + self.assign('magma', 'Rf_num', '{hecke_ring_numerators}').rstrip('\n'),
-        '    ' + self.assign('magma', 'Rf_basisdens', '{hecke_ring_numerators}').rstrip('\n'),
-        '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
-        '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
-        '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
-        '    return Eltseq(inp_vec);',
-        'end function;',
     ]
     
     func_body = {
         'qexp_generic' : {'sage': header + discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage},
         'qexp_powbasis' : {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage},
         'qexp_sparse_cyclotomic' : {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage},
-        'convert_to_hecke_field_generic' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_generic},
-        'convert_to_hecke_field_powbasis' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis},
         'convert_to_hecke_field_cyclotomic' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_cyclotomic},
         'convert_to_hecke_field_rationals' : {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_rationals}
     }
+    
+    # The next ones depend on self, because assign does. We therefore create a function to initialize them
+    
+    def init_functions(self):
+        convert_to_hecke_field_magma_powbasis = [
+            '        ' + self.assign('magma', 'poly', '{field_poly}', level = 1).rstrip('\n'),
+            '        Kf := NumberField(Polynomial([elt : elt in poly]));',
+            '        AssignNames(~Kf, ["nu"]);',
+            '    end if;',
+            '    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];',
+            '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
+            '    return Eltseq(inp_vec);',
+            'end function;'
+        ]
+
+        convert_to_hecke_field_magma_generic = [
+            '        ' + self.assign('magma', 'poly', '{field_poly}', level = 1).rstrip('\n'),
+            '        Kf := NumberField(Polynomial([elt : elt in poly]));',
+            '        AssignNames(~Kf, ["nu"]);',
+            '    end if;',
+            '    ' + self.assign('magma', 'Rf_num', '{hecke_ring_numerators}').rstrip('\n'),
+            '    ' + self.assign('magma', 'Rf_basisdens', '{hecke_ring_numerators}').rstrip('\n'),
+            '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
+            '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
+            '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
+            '    return Eltseq(inp_vec);',
+            'end function;',
+        ]
+        
+        self.func_body['convert_to_hecke_field_generic'] = {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_generic}
+        self.func_body['convert_to_hecke_field_powbasis'] = {'magma' : convert_to_hecke_field_magma_header + convert_to_hecke_field_magma_powbasis}
+        return
     
     func_explain = {
         'qexp_generic' : {'sage': ['Each a_p is given as a linear combination', 'of the following basis for the coefficient ring.']},
