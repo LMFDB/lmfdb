@@ -42,7 +42,6 @@ class ReverseProxied(object):
         try:
             return self.app(environ, start_response)
         except TypeError as e:
-            print("start_response = %s" %(start_response)) 
             print("environ = %s" %(environ))
 
 
