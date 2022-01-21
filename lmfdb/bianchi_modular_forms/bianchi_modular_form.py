@@ -172,6 +172,7 @@ def bianchi_modular_form_search(info, query):
     parse_nf_string(info, query, 'field_label', name='base number field')
     parse_noop(info, query, 'label')
     #parse_ints(info, query, 'dimension')
+    query['dimension'] = 1
     parse_ints(info, query, 'level_norm')
     parse_primes(info, query, 'field_bad_primes', name='field bad primes',
          qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
