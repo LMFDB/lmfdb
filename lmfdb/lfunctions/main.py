@@ -108,6 +108,7 @@ def index():
 
 @l_function_page.route("/rational")
 def rational():
+    print("In rational L-function routing")
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
