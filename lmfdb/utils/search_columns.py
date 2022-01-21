@@ -158,20 +158,24 @@ class ColGroup(SearchCol):
             orig = sum([sub.orig for sub in subcols], [])
         self.orig = orig
         self.height = 2
-        if not callable(subcols):
-            self.th_content = f" colspan={len(subcols)}"
 
     def show(self, info, rank=None):
         if self.contingent(info):
             if callable(self.subcols):
                 subcols = self.subcols(info)
-                self.th_content = f" colspan={len(subcols)}"
+            else:
+                subcols = self.subcols
+            n = 0
+            for sub in subcols:
+                if sub.name != self.name and "colgroup" not in sub.th_class:
+                    sub.th_class += f" colgroup-{self.name}"
+                if sub.default(info):
+                    n += 1
+            self.th_content = f" colspan={n}"
             if rank == 0:
                 yield self
-            elif callable(self.subcols):
-                yield from subcols
             else:
-                yield from self.subcols
+                yield from subcols
 
 class SearchColumns:
     above_results = "" # Can add text above the Results (1-50 of ...) if desired
