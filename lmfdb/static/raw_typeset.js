@@ -7,20 +7,20 @@ function SelectText(element) {
   selection.addRange(range);
 }
 
-function setraw (elt, iconid, iconpath) {
+function setraw(elt, iconid, iconpath) {
     $(elt).attr("tset", $(elt).html());
     $(elt).html($(elt).attr("raw"));
     $(elt).attr("israw", "1");
     $(iconid)[0].src=iconpath;
 }
 
-function settset (elt, iconid, iconpath) {
+function settset(elt, iconid, iconpath) {
     $(elt).html($(elt).attr("tset"));
     $(elt).attr("israw", "0");
     $(iconid)[0].src=iconpath;
 }
 
-function setallraw (iconpath) {
+function setallraw(iconpath) {
   $(".tset-raw").each(function (i,elt) {
     var eltid = $(elt).prop("id");
     var matchinfo = eltid.match(/tset-raw-(\d+)$/);
@@ -30,7 +30,7 @@ function setallraw (iconpath) {
   }});
 }
 
-function clearallraw (iconpath) {
+function clearallraw(iconpath) {
   $(".tset-raw").each(function (i,elt) {
     var eltid = $(elt).prop("id");
     var matchinfo = eltid.match(/tset-raw-(\d+)$/);
@@ -40,7 +40,7 @@ function clearallraw (iconpath) {
   }});
 }
 
-function ondouble (clicknum) {
+function ondouble(clicknum) {
   var elt = "#tset-raw-"+clicknum;
   var iconid = "#tset-raw-icon-"+clicknum;
   var iconsrc = $(iconid)[0].src;
@@ -78,4 +78,12 @@ function iconrawtsetall() {
     $(iconid)[0].src = matcharray[1]+"t2r.png";
     clearallraw(matcharray[1]+"t2r.png");
   }
+}
+
+function copySourceOfId(id) {
+  var copyText = $("#"+id);
+  copyText.select();
+  document.execCommand("copy");
+  console.log("Copied!");
+  copyText.notify("Copied!", {className: "success", position:"bottom right" });
 }
