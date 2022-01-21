@@ -372,15 +372,13 @@ def genus2_lookup_equation(input_str):
     # 0, C_str when it fails to start magma
     R = PolynomialRing(QQ, "x")
     y = PolynomialRing(R, "y").gen()
-    s = input_str.split(",")
-    if len(s) not in [1,2]:
-        return "", input_str
+    input_str = input_str.split(" ", "")
     if ']' in input_str and '[' in input_str:
-         fg = [R(literal_eval) for elt in s]
+        fg = [R(elt) for elt in literal_eval(input_str)]
     else:
         # this change the gen to x
         try:
-            fg = [R(list(coeff_to_poly(elt))) for elt in s]
+            fg = [R(list(coeff_to_poly(elt))) for elt in input_str.splt(",")]
         except ValueError:
             return "", input_str
     if len(fg) == 1:
