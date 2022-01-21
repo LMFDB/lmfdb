@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
 import re
-from sage.all import lcm, factor, divisors, Integers
+from sage.all import lcm, factor, Integers
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.utils import flash_error
+from lmfdb.utils import flash_error, integer_divisors
 
 # utility functions #
 
@@ -17,7 +17,7 @@ def modn_exponent(n):
 
 def divisors_in_interval(n, a, b):
     """ given a nonzero integer n and an interval [a,b] returns a list of the divisors of n in [a,b] """
-    return [d for d in divisors(n) if a <= d and d <= b]
+    return [d for d in integer_divisors(n) if a <= d and d <= b]
 
 def parse_interval(arg, name):
     """ parses a user specified interval of positive integers (or a single integer), flashes errors and raises exceptions """

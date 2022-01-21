@@ -4,7 +4,7 @@ import re
 from flask import url_for
 from collections import defaultdict
 from sage.all import ZZ, QQ, LCM
-from sage.all import (cached_method, ceil, divisors, gcd,
+from sage.all import (cached_method, ceil, gcd,
                       latex, lazy_attribute,
                       matrix, valuation)
 from sage.geometry.newton_polygon import NewtonPolygon
@@ -12,7 +12,7 @@ from sage.geometry.newton_polygon import NewtonPolygon
 from lmfdb import db
 from lmfdb.utils import (
     encode_plot, list_to_factored_poly_otherorder,
-    make_bigint, web_latex)
+    make_bigint, web_latex, integer_divisors, integer_prime_divisors)
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
@@ -90,7 +90,7 @@ class WebHyperGeometricFamily(object):
             wh = 0 if m in a else 1
             gamma[wh].append(m)
             subdict(ab[wh], m)
-            for d in divisors(m)[:-1]:
+            for d in integer_divisors(m)[:-1]:
                 if d in ab[wh]:
                     subdict(ab[wh], d)
                 else:
@@ -102,7 +102,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def wild_primes(self):
-        return LCM(LCM(self.A), LCM(self.B)).prime_divisors()
+        return integer_prime_divisors(LCM(LCM(self.A), LCM(self.B)))
 
 
 
