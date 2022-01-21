@@ -880,7 +880,7 @@ class WebG2C(object):
         # Friends
         self.friends = friends = []
         if is_curve:
-            friends.append(('Genus 2 curve %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+            friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
         # first deal with ECs and MFs
         ecs = []
