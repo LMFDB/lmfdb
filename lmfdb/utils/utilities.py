@@ -41,15 +41,15 @@ def integer_prime_divisors(n):
     """ returns sorted list of prime divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
     if not n:
         raise ValueError("n must be nonzero")
-    return [a[0] for a in ZZ(n).factor()]
+    return [p for p, _ in ZZ(n).factor()]
 
 def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return sign(n)*prod([a[0]**(a[1]%2) for a in ZZ(n).factor()]) 
+    return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
 
 def integer_is_squarefree(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return all([a[1]%2==1 for a in ZZ(n).factor()])
+    return all([e == 1 for _, e in ZZ(n).factor()])
 
 def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
