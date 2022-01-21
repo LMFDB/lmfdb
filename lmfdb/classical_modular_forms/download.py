@@ -521,9 +521,11 @@ class CMF_download(Downloader):
                 ]
 
     def _magma_qexpCoeffs(self, newform, hecke_nf):
+        explain = '// To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"'
+        self.explain.append(explain)
         return [
             'function qexpCoeffs()',
-            '    // To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"',
+            '    ' + explain,
             '    ' + self.assign('magma', 'weight', newform.weight).rstrip('\n'),
             '    ' + self.assign('magma', 'raw_aps', hecke_nf['ap'], prepend = '    '*2).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
