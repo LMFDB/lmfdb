@@ -5,7 +5,7 @@ from ast import literal_eval
 from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ, QQ, PolynomialRing, magma, prod
+from sage.all import ZZ, QQ, PolynomialRing, magma, prod, latex
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -19,8 +19,10 @@ from lmfdb.utils import (
     TextBox,
     TextBoxWithSelect,
     YesNoBox,
+    coeff_to_poly,
     comma,
     display_knowl,
+    flash_info,
     flash_error,
     formatters,
     parse_bool,
@@ -362,32 +364,45 @@ def class_from_curve_label(label):
 # Searching
 ################################################################################
 
-def genus2_lookup_equation(f):
-    f.replace(" ", "")
-    # TODO allow other variables, if so, fix the error message accordingly
+def genus2_lookup_equation(input_str):
+    # retuns:
+    # label, C_str
+    # None, C_str when it couldn't find it in the DB
+    # "", input_str when it fails to parse
+    # 0, C_str when it fails to start magma
     R = PolynomialRing(QQ, "x")
-    if ("x" in f and "," in f) or "],[" in f:
-        if "],[" in f:
-            e = f.split("],[")
-            f = [R(literal_eval(e[0][1:] + "]")), R(literal_eval("[" + e[1][0:-1]))]
-        else:
-            e = f.split(",")
-            f = [R(str(e[0][1:])), R(str(e[1][0:-1]))]
+    y = PolynomialRing(R, "y").gen()
+    s = input_str.split(",")
+    if len(s) not in [1,2]:
+        return "", input_str
+    if ']' in input_str and '[' in input_str:
+         fg = [R(literal_eval) for elt in s]
     else:
-        f = R(str(f))
+        # this change the gen to x
+        try:
+            fg = [R(list(coeff_to_poly(elt))) for elt in s]
+        except ValueError:
+            return "", input_str
+    if len(fg) == 1:
+        fg.append(R(0));
+    C_str= f"{y**2 + y*fg[1]} = {fg[0]}"
     try:
-        C = magma.HyperellipticCurve(f)
+        C = magma.HyperellipticCurve(fg)
         g2 = magma.G2Invariants(C)
-    except TypeError:
-        return None
+    except (TypeError, RuntimeError):
+        return 0, C_str
     g2 = str([str(i) for i in g2]).replace(" ", "")
     for r in db.g2c_curves.search({"g2_inv": g2}):
         eqn = literal_eval(r["eqn"])
-        D = magma.HyperellipticCurve(R(eqn[0]), R(eqn[1]))
+        fgD = [R(eqn[0]), R(eqn[1])]
+        D = magma.HyperellipticCurve(fgD)
         # there is recursive bug in sage
         if str(magma.IsIsomorphic(C, D)) == "true":
-            return r["label"]
-    return None
+            if fgD != fg:
+                C_str_latex= f"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
+                flash_info(r"The requested genus 2 curve {} is isomorphic to the one below, but uses a different defining polynomial.".format(C_str_latex))
+            return r["label"], fg
+    return None, fg
 
 
 def geom_inv_to_G2(inv):
@@ -431,8 +446,8 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-TERM_RE = r"(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?"
-STERM_RE = r"(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?"
+TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
+STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 POLY_RE = TERM_RE + "(" + STERM_RE + ")*"
 ZLIST_RE = r"\[\d+(,\d+)*\]"
 
@@ -456,13 +471,19 @@ def genus2_jump(info):
         or re.match(r"^" + ZLIST_RE + r"$", jump)
         or re.match(r"^\[" + ZLIST_RE + r"," + ZLIST_RE + r"\]$", jump)
     ):
-        label = genus2_lookup_equation(jump)
+        label, eqn_str = genus2_lookup_equation(jump)
         if label:
             return redirect(url_for_curve_label(label), 301)
-        errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
+        elif label is None:
+            # the input was parsed
+            errmsg = f"{eqn_str} is not the equation of a genus 2 curve in the database"
+        elif label == "":
+            errmsg = "unable to parse %s as a valid input for as an of a genus 2 curve"
+        elif label == 0: # magma failed to start
+            errmsg = "unable to process your request at the moment"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
-        errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
+        errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
         errmsg += "."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
