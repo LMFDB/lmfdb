@@ -238,15 +238,18 @@ class AbvarFq_isoclass(object):
     def friends(self):
         friends = []
         if self.g <= 3:
-            if self.q < 10:
+            if self.p < 10:
                 dispcols = "1-10"
-            elif self.q < 50:
+            elif self.p < 50:
                 dispcols = "1-50"
             else:
-                dispcols = f"1-10,{self.q}"
+                dispcols = f"1-10,{self.p}"
             # When over a non-prime field, we need to
-            poly = str(coeff_to_poly(self.poly, "T")).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
-            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g}&n={dispcols}&euler_constraints=F{self.q}%3D{poly}"))
+            poly = coeff_to_poly(self.poly, "T")
+            if self.r > 1:
+                poly = poly.subs(poly.parent().gen()**self.r)
+            poly = str(poly).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
+            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g*self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
         return friends
 
     def frob_angles(self):
