@@ -16,6 +16,61 @@ from . import coeff_to_poly
 #  latex/math rendering utilities
 ################################################################################
 
+
+raw_count = 0
+def raw_typeset(raw, typeset='', extra='', text_area=False, text_area_threshold=150):
+    r"""
+    Return a span with typeset material which will toggle to raw material 
+    when an icon is clicked on.
+
+    The raw version can be a string, or a sage object which will stringify
+    properly.
+
+    If the typeset version can be gotten by just applying latex to the raw
+    version, the typeset version can be omitted.
+
+    If there is a string to appear between the toggled text and the icon,
+    it can be given in the argument extra
+
+    If one of these appear on a page, then the icon to toggle all of them
+    on the page will appear in the upper right corner of the body of the
+    page.
+    """
+    global raw_count
+    raw_count += 1
+    if not typeset:
+        typeset = r'\({}\)'.format(latex(raw))
+
+    srcloc = url_for('static', filename='images/t2r.png')
+
+    # FIXME: fix javascript to resize textarea
+    if text_area and len(str(raw)) > text_area_threshold:
+        raw = f"""
+        <textarea
+        readonly=""
+        rows="1"
+        cols="80"
+        style="line-height: 1; height: 13px";
+        id="tset-raw-textarea-{raw_count}">
+        {raw}
+        </textarea>
+        <span><a onclick="copySourceOfId(tset-raw-textarea-{raw_count})">📋</a></span>
+        """
+
+    raw=escape(raw)
+    out = f"""
+<span class="tset-container">
+    <span class="tset-raw" id="tset-raw-{raw_count}" raw="{raw}" israw="0" ondblclick="ondouble({raw_count})">
+    {typeset}
+    </span>
+    {extra}
+    &nbsp;&nbsp
+    <span onclick="iconrawtset({raw_count})">
+        <img alt="Toggle raw display" src="{srcloc}" class="tset-icon" id="tset-raw-icon-{raw_count}" style="position:relative;top: 2px">
+    </span>
+</span>"""
+    return out
+
 def display_knowl(kid, title=None, kwargs={}):
     """
     Allows for the construction of knowls from python code
@@ -41,6 +96,25 @@ def display_knowl(kid, title=None, kwargs={}):
             return '<a title="{0} [{1}]" knowl="{1}" kwargs="{2}">{3}</a>'.format(ktitle, kid, urlencode(kwargs), title)
         else:
             return ''
+
+def web_latex(x, enclose=True):
+    r"""
+    Convert input to latex string unless it's a string or unicode. The key word
+    argument `enclose` indicates whether to surround the string with
+    `\(` and `\)` to tag it as an equation in html.
+
+    Note:
+    if input is a factored ideal, use web_latex_ideal_fact instead.
+
+    Example:
+    >>> x = var('x')
+    >>> web_latex(x**23 + 2*x + 1)
+    '\\( x^{23} + 2 \\, x + 1 \\)'
+    """
+    if isinstance(x, str):
+        return x
+    latex_str =" %s " % latex(x) 
+    return rf"\( {latex_str} \)" if enclose else latex_str
 
 def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     if abs(n) >= 10**cutoff:
@@ -147,23 +221,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
 
 
 
-def web_latex(x, enclose=True):
-    r"""
-    Convert input to latex string unless it's a string or unicode. The key word
-    argument `enclose` indicates whether to surround the string with
-    `\(` and `\)` to tag it as an equation in html.
 
-    Note:
-    if input is a factored ideal, use web_latex_ideal_fact instead.
-
-    Example:
-    >>> x = var('x')
-    >>> web_latex(x**23 + 2*x + 1)
-    '\\( x^{23} + 2 \\, x + 1 \\)'
-    """
-    if isinstance(x, str):
-        return x
-    return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
 
 def web_latex_factored_integer(x, enclose=True, equals=False):
     r"""
@@ -407,36 +465,7 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
 
 
 
-raw_count = 0
-def raw_typeset(raw, tset='', extra='', text_area_threshold=150):
-    r"""
-    Return a span with typeset material which will toggle to raw material 
-    when an icon is clicked on.
 
-    The raw version can be a string, or a sage object which will stringify
-    properly.
-
-    If the typeset version can be gotten by just applying latex to the raw
-    version, the typeset version can be omitted.
-
-    If there is a string to appear between the toggled text and the icon,
-    it can be given in the argument extra
-
-    If one of these appear on a page, then the icon to toggle all of them
-    on the page will appear in the upper right corner of the body of the
-    page.
-    """
-    global raw_count
-    raw_count += 1
-    if not tset:
-        tset = r'\({}\)'.format(latex(raw))
-    srcloc = url_for('static', filename='images/t2r.png')
-    if len(str(raw)) > text_area_threshold:
-        raw = escape('<textarea readonly="" rows="1" cols="80" style="line-height: 1; height: 13px"; >{}</textarea>'.format(raw))
-    out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0" ondblclick="ondouble({})">{}</span>'.format(raw_count, raw, raw_count, tset)
-    out += extra
-    out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
-    return out
 
 def to_ordinal(n):
     a = (n % 100) // 10
