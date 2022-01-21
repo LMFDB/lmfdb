@@ -81,6 +81,11 @@ and several values of the character.
     {% endfor %}
   </tbody>
 </table>
+
+{%if rowtruncate%}
+Click here to search among the remaining {{order - contents|count}} characters.
+{% endif %}
+
 {% endif %}
 
 {% endblock %}
