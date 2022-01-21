@@ -859,7 +859,9 @@ class WebCharGroup(WebCharObject):
     @lazy_attribute
     def structure(self):
         inv = self.H.invariants()
-        return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv))
+        inv_list = list(inv)
+        inv_list.sort()
+        return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
 
     @lazy_attribute
     def structure_group_knowl(self):
