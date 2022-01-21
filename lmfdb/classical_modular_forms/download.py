@@ -441,6 +441,8 @@ class CMF_download(Downloader):
     """
     def _magma_ConvertToHeckeField(self, newform, hecke_nf):
         c = self.comment_prefix['magma']
+        poly_data = ''
+        basis_data = '' 
         if newform.dim == 1:
             code = self.create_function_for_download('convert_to_hecke_field_rationals', 'magma')
         elif hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
