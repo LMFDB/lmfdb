@@ -161,7 +161,7 @@ class CMF_download(Downloader):
     
     def _init_magma_functions(self, newform, hecke_nf):
         convert_to_hecke_field_magma_cyclotomic = [ 
-            '        Kf := CyclotomicField(%d);', % hecke_nf['hecke_ring_cyclotomic_generator'],
+            '        Kf := CyclotomicField(%d);' % hecke_nf['hecke_ring_cyclotomic_generator'],
             '    end if;',
             '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
             'end function;'
