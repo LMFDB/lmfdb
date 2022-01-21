@@ -442,10 +442,10 @@ class CMF_download(Downloader):
     def _magma_ConvertToHeckeField(self, newform, hecke_nf):
         c = self.comment_prefix['magma']
         if newform.dim == 1:
-            code = create_function_for_download('convert_to_hecke_field_rationals', 'magma')
+            code = self.create_function_for_download('convert_to_hecke_field_rationals', 'magma')
         elif hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
             poly_data =  self.assign('magma', 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
-            code = create_function_for_download('convert_to_hecke_field_cyclotomic', 'magma')
+            code = self.create_function_for_download('convert_to_hecke_field_cyclotomic', 'magma')
         else:
             poly_data = '\n' + c + ' The following line gives the coefficients of\n'
             poly_data += c + ' the defining polynomial for the coefficient field.\n'
@@ -453,14 +453,14 @@ class CMF_download(Downloader):
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
-                code = create_function_for_download('convert_to_hecke_field_powbasis', 'magma')
+                code = self.create_function_for_download('convert_to_hecke_field_powbasis', 'magma')
             else:
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
                 basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
                 basis_data += self.assign('magma',  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
-                code = create_function_for_download('convert_to_hecke_field_generic', 'magma')
+                code = self.create_function_for_download('convert_to_hecke_field_generic', 'magma')
         return code + poly_data + basis_data
 
     def _magma_MakeCharacters(self, newform, hecke_nf):
