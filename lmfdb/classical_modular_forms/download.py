@@ -155,7 +155,7 @@ class CMF_download(Downloader):
         'end function;'
     ]
     
-    convert_to_hecke_field_magmapowbasis = [
+    convert_to_hecke_field_magma_powbasis = [
         '        ' + 'poly_data',
         '        Kf := NumberField(Polynomial([elt : elt in poly]));',
         '        AssignNames(~Kf, ["nu"]);',
