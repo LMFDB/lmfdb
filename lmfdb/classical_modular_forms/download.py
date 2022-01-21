@@ -206,7 +206,7 @@ class CMF_download(Downloader):
         'convert_to_hecke_field_generic' : {'magma' : ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators']}
     }
     
-    def create_function_for_download(self, hecke_nf, lang='sage'):
+    def create_function_for_download(self, func_label, hecke_nf, lang='sage'):
         format_args = self.func_format_args.get(func_label,{}).get(lang,[])
         unformatted = self.func_body.get(func_label,{}).get(lang,[])
         kwargs = { arg : hecke_nf[arg] for arg in format_args }
