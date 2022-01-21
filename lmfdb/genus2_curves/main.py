@@ -477,10 +477,9 @@ def genus2_jump(info):
             # the input was parsed
             errmsg = f"equation {eqn_str} interpreted from %s the equation of a genus 2 curve in the database"
         elif label == "": # failed to sagify input
-            errmsg = "unable to parse %s as a valid input for as an of a genus 2 curve"
+            errmsg = "unable to parse %s as a valid input for as an equation of a genus 2 curve"
         elif label == 0: # magma failed to create curve
-            # better wording?
-            errmsg = "at the moment we are unable to check if equation {eqn_str} interpreted from %s is the equation of a genus 2 curve in the database"
+            errmsg = "unable to process equation {eqn_str} (parsed from %s) as a valid input for as an equation of a genus 2 curve"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
         errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
