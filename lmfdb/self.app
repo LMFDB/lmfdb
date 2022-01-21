@@ -39,7 +39,12 @@ class ReverseProxied(object):
         scheme = environ.get('HTTP_X_FORWARDED_PROTO')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
-        return self.app(environ, start_response)
+        try:
+            return self.app(environ, start_response)
+        except TypeError as e:
+            print("start_response = %s" %(start_response)) 
+            print(e.message)
+            self.not_found_404()
 
 
 app = Flask(__name__)
