@@ -372,10 +372,17 @@ def genus2_lookup_equation(input_str):
     # 0, C_str when it fails to start magma
     R = PolynomialRing(QQ, "x")
     y = PolynomialRing(R, "y").gen()
-    input_str = input_str.replace(" ", "")
+    input_str = input_str.replace(" ", "").strip('[').strip(']')
+    def read_list_coeffs(elt):
+        if not elt:
+            return R(0)
+        else:
+            return R([int(c) for c in elt.split(",")])
+
     if '],[' in input_str:
-        input_str.strip('[').strip(']')
-        fg = [R([int(c) for c in elt.split(",")]) for elt in input_str.split('],[')]
+        fg = [read_list_coeffs(elt) for elt in input_str.split('],[')]
+    elif '[' in input_str:
+        fg = [read_list_coeffs(input_str), R(0)]
     else:
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str.split(",")]
     if len(fg) == 1:
@@ -392,7 +399,7 @@ def genus2_lookup_equation(input_str):
         if str(magma.IsIsomorphic(C, D)) == "true":
             if fgD != fg:
                 flash_info(f"The requested genus 2 curve {C_str_latex} is isomorphic to the one below, but uses a different defining polynomial.")
-            return r["label"]
+            return r["label"], ""
     return None, C_str_latex
 
 
@@ -440,7 +447,7 @@ def geom_inv_to_G2(inv):
 TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 POLY_RE = TERM_RE + "(" + STERM_RE + ")*"
-ZLIST_RE = r"\[\d+(,\d+)*\]"
+ZLIST_RE = r"\[(\d+\s*)*(,\d+\s*)*\]"
 
 
 def genus2_jump(info):
@@ -458,9 +465,10 @@ def genus2_jump(info):
             errmsg = "hash %s not found"
     elif (
         re.match(r"^" + POLY_RE + r"$", jump)
-        or re.match(r"^\[" + POLY_RE + r"," + POLY_RE + r"\]$", jump)
+        or re.match(r"^" + POLY_RE  + r"$", jump)
+        or re.match(r"^(\[|)" + POLY_RE + r"," + POLY_RE + r"(\]|)$", jump)
         or re.match(r"^" + ZLIST_RE + r"$", jump)
-        or re.match(r"^\[" + ZLIST_RE + r"," + ZLIST_RE + r"\]$", jump)
+        or re.match(r"^(\[|)" + ZLIST_RE + r"," + ZLIST_RE + r"(\]|)$", jump)
     ):
         label, eqn_str = genus2_lookup_equation(jump)
         if label:
