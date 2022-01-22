@@ -677,9 +677,9 @@ class WebNewform(object):
                                                           display_knowl('cmf.newspace','newspace'),self.display_newspace())
         return desc
 
-    def defining_polynomial(self):
+    def defining_polynomial(self, separator=''):
         if self.field_poly:
-            return raw_typeset_poly(self.field_poly, superscript=True)
+            return raw_typeset_poly(self.field_poly, superscript=True, extra=separator)
         return None
 
     def Qnu(self):
@@ -861,9 +861,9 @@ function switch_basis(btype) {
     def order_gen_below(self):
         m = self.field_poly_root_of_unity
         if m == 0:
-            return r" in terms of a root \(\nu\) of %s" % self.defining_polynomial()
+            return r" in terms of a root \(\nu\) of %s" % self.defining_polynomial(separator=":")
         elif self.field_poly_is_real_cyclotomic:
-            return r" in terms of \(\nu = \zeta_{%s} + \zeta_{%s}^{-1}\)" % (m, m)
+            return r" in terms of \(\nu = \zeta_{%s} + \zeta_{%s}^{-1}\):" % (m, m)
         else:
             return ""
 
