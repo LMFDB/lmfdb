@@ -519,16 +519,17 @@ g2c_columns = SearchColumns([
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
     MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-Automorphisms"),
     CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
-    MathCol("num_rat_pts", "g2c.all_rational_points", "Q-points*"),
-    MathCol("num_rat_wpts", "g2c.num_rat_wpts", "Q-Weierstrass pts"),
+    MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
+    MathCol("num_rat_wpts", "g2c.num_rat_wpts",  r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
     CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
     MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
-    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion subgroup", lambda v: "trivial" if v=="[]" else r"\(%s\)"%v, align="center"),
+    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
+              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
     MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
     MathCol("tamagawa_product", "g2c.tamagawa", "Tamagawa product"),
     ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
-    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coeff", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),
 ])
 
 @search_wrap(
