@@ -399,7 +399,7 @@ def raw_typeset_poly(coeffs,
     if denominator == 1:
         denominatorraw = denominatortset = ""
     else:
-        denominatortset = denominatorraw = "/ {denominator}"
+        denominatortset = denominatorraw = f"/ {denominator}"
 
     # figure out if we will compress the polynomial
     # 3 = var + sign + exp
@@ -409,7 +409,7 @@ def raw_typeset_poly(coeffs,
     raw = str(poly)
     compress_poly = len(raw) + len(denominatorraw) > compress_threshold
     if compress_poly:
-        denominatortset = f"/ {compress_int(denominator)}"
+        denominatortset = f"/ {compress_int(denominator)[0]}"
 
     if compress_poly:
         # compress the tset
@@ -450,7 +450,7 @@ def raw_typeset_poly(coeffs,
 
         tset += tsetend
     else:
-        tset = latex(poly).replace(rawvar, var)
+        tset = latex(poly)
 
     if not superscript:
         raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
