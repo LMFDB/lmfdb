@@ -23,7 +23,7 @@ from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
@@ -235,6 +235,23 @@ class AbvarFq_isoclass(object):
     # ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
     #    return ans
 
+    def friends(self):
+        friends = []
+        if self.g <= 3:
+            if self.p < 10:
+                dispcols = "1-10"
+            elif self.p < 50:
+                dispcols = "1-50"
+            else:
+                dispcols = f"1-10,{self.p}"
+            # When over a non-prime field, we need to
+            poly = coeff_to_poly(self.poly, "T")
+            if self.r > 1:
+                poly = poly.subs(poly.parent().gen()**self.r)
+            poly = str(poly).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
+            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g*self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
+        return friends
+
     def frob_angles(self):
         ans = ""
         eps = 0.00000001
@@ -313,7 +330,7 @@ class AbvarFq_isoclass(object):
         return list(db.av_fq_endalg_factors.search({"base_label": self.label}))
 
     def relevant_degs(self):
-        return Integer(self.geometric_extension_degree).divisors()[1:-1]
+        return integer_divisors(Integer(self.geometric_extension_degree))[1:-1]
 
     def endo_extension_by_deg(self, degree):
         return [

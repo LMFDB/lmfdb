@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
@@ -397,7 +397,7 @@ def elliptic_curve_search(info, query):
                 flash_error(err)
                 raise ValueError(err)
             else:
-                query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
+                query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')

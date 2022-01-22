@@ -17,7 +17,7 @@ from lmfdb.utils import (
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
-    list_factored_to_factored_poly_otherorder)
+    list_factored_to_factored_poly_otherorder, integer_squarefree_part)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -822,7 +822,7 @@ function switch_basis(btype) {
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
             D = b**2 - 4*a*c
-            d = D.squarefree_part()
+            d = integer_squarefree_part(D)
             s = (D//d).isqrt()
             if self.hecke_ring_power_basis:
                 k, l = ZZ(0), ZZ(1)
