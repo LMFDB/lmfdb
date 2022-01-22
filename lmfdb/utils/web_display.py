@@ -427,6 +427,10 @@ def raw_typeset_poly(coeffs,
                 tset += cdots
                 break
 
+            short, shortened = compress_int(abs(c))
+            if shortened and n != m -1:
+                break
+
             if c > 0:
                 if n != m -1: # don't need the + for the leading coefficient
                     tset += plus

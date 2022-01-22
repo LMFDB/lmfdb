@@ -750,13 +750,17 @@ class WebNewform(object):
     def _order_basis_forward(self):
         basis = []
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
-            numsize = sum(len(str(c)) for c in num if c)
-            if numsize > 80:
-                num = web_latex_poly(num, self._nu_latex, superscript=True)
-            else:
-                num = web_latex(coeff_to_poly(num, self._nu_var))
-            betai = r'\(\beta_{%s}\)'%i
-            basis.append((betai, self._make_frac(num, den)))
+            basis.append(
+                (rf'\(\beta_{{{i}}}\)',
+                 raw_typeset_poly(coeff_to_poly(num), denominator=den))
+            )
+            # numsize = sum(len(str(c)) for c in num if c)
+            # if numsize > 80:
+            #     num = web_latex_poly(num, self._nu_latex, superscript=True)
+            # else:
+            #     num = web_latex(coeff_to_poly(num, self._nu_var))
+            # betai = r'\(\beta_{%s}\)'%i
+            # basis.append((betai, self._make_frac(num, den)))
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
