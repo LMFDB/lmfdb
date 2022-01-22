@@ -17,7 +17,6 @@ from . import coeff_to_poly
 ################################################################################
 
 
-raw_count = 0
 def raw_typeset(raw, typeset='', extra='', text_area=True, text_area_threshold=150):
     r"""
     Return a span with typeset material which will toggle to raw material
@@ -36,28 +35,25 @@ def raw_typeset(raw, typeset='', extra='', text_area=True, text_area_threshold=1
     on the page will appear in the upper right corner of the body of the
     page.
     """
-    global raw_count
-    raw_count += 1
     if not typeset:
         typeset = r'\({}\)'.format(latex(raw))
-
-    srcloc = url_for('static', filename='images/t2r.png')
 
     # FIXME: fix javascript to resize textarea
     text_area = text_area and len(str(raw)) > text_area_threshold
     if text_area and len(str(raw)) > text_area_threshold:
-        raw = f"""
-        <textarea
-        readonly=""
-        rows="1"
-        cols="60"
-        style="line-height: 1; height: 13px";
-        id="tset-raw-textarea-{raw_count}"
-        >{raw}</textarea><span>
-            <img
-            class="copy"
-            onclick="copyuncle(this)"
-            ></span>
+        # no space is quite important, as we check on the start of this string in JS
+        raw = f"""<textarea
+class="tset-raw"
+readonly=""
+rows="1"
+cols="60"
+style="line-height: 1; height: 13px";
+>{raw}</textarea>
+<span class="copy">
+    <img
+    onclick="copyuncle(this)"
+    >
+</span>
         """
 
     raw=escape(raw)

@@ -1,8 +1,15 @@
 function setraw(elt) {
   var $this = $(elt);
-  console.log($this);
+  var raw = $this.attr("raw");
+  if( raw.startsWith("<textarea") ) {
+    raw = $(raw);
+    var ta = $(raw[0]); // the textarea element
+    ta.width($this.width() - (21 + 4 + 5 + 48)); // icon + 2*border + ws +  (x->x)
+    ta.height($this.height());
+  }
+
   $this.attr("tset", $this.html());
-  $this.html($this.attr("raw"));
+  $this.html(raw);
   $this.addClass("raw");
   $this.removeClass("tset");
   $next = $this.next();
@@ -82,7 +89,7 @@ function copyTextOf(elt) {
 }
 
 function copyuncle(elt) {
-  copyTextOf(elt.parentElement.parentElement.children[0]);
+  copyTextOf($(elt.parentElement.parentElement).children("textarea")[0]);
 }
 
 

@@ -2455,6 +2455,14 @@ span.activesubgp {
   overflow-y: auto;
 }
 
+
+/* raw type set styling */
+
+textarea.tset-raw {
+    padding: 0px;
+    font-size: 95%;
+}
+
 img.tset-icon {
   visibility: hidden;
   position:relative;
@@ -2473,7 +2481,28 @@ img.tset-icon {
   content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
 }
 
-img.copy {
+span.copy > img {
     content: url({{url_for('static', filename='images/copy.svg')}});
-    cursor: pointer;
+    vertical-align: middle;
+    height: 12px;
 }
+span.copy {
+    box-shadow: inset 0 0.15em 0.3em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+    display: inline-block;
+    padding: 2px;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid;
+    border-radius: 3px;
+    appearance: none;
+    line-height: 12px;
+    bottom: 3px;
+    position: relative;
+    transition: .2s cubic-bezier(0.3, 0, 0.5, 1);
+    transition-property: color,background-color,border-color;
+    color: rgb(36, 41, 47);
+}
+span.copy:active {
+    box-shadow: inset 0 0.15em 0.3em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
+}
+
