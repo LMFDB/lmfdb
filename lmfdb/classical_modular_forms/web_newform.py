@@ -13,7 +13,7 @@ from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb import db
 from lmfdb.utils import (
     coeff_to_poly, coeff_to_power_series, web_latex,
-    web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
+    bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
@@ -659,7 +659,7 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
-        polynomials = [bigpoly_knowl(F, var='T%s'%p) for p,F in self.hecke_cutters]
+        polynomials = [raw_typeset_poly(F, var=f'T{p}') for p, F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'

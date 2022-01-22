@@ -383,8 +383,18 @@ def raw_typeset_poly(coeffs,
                      compress_threshold=100,
                      **kwargs):
     """
-    returns a raw_typeset span for polynomials
-    """
+    Generate a raw_typeset string a given integral polynomial, or a linear combination
+    (using subscripts instead of exponents).  In either case, the constant term is printed
+    without a variable.
+    It compresses the typeset latex if raw string is too  long.
+
+    INPUT:
+
+    - ``coeffs`` -- a list of integers
+    - ``denominator`` -- a integer
+    - ``var`` -- a variable name
+    - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
+    - ``compress_threshold`` -- the number of characters by which we would need to reduce the output of the typeset"""
     plus = r" + "
     minus = r" - "
 
