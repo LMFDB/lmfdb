@@ -2461,6 +2461,7 @@ span.activesubgp {
 textarea.tset-raw {
     padding: 0px;
     font-size: 95%;
+    border: 1px solid {{color.input_border}};
 }
 
 img.tset-icon {
@@ -2484,7 +2485,7 @@ img.tset-icon {
 span.copy > img {
     content: url({{url_for('static', filename='images/copy.svg')}});
     vertical-align: middle;
-    height: 12px;
+    height: 11px;
 }
 span.copy {
     box-shadow: inset 0 0.15em 0.3em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
