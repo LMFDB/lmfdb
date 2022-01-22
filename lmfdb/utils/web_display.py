@@ -18,9 +18,9 @@ from . import coeff_to_poly
 
 
 raw_count = 0
-def raw_typeset(raw, typeset='', extra='', text_area=False, text_area_threshold=150):
+def raw_typeset(raw, typeset='', extra='', text_area=True, text_area_threshold=150):
     r"""
-    Return a span with typeset material which will toggle to raw material 
+    Return a span with typeset material which will toggle to raw material
     when an icon is clicked on.
 
     The raw version can be a string, or a sage object which will stringify
@@ -44,29 +44,33 @@ def raw_typeset(raw, typeset='', extra='', text_area=False, text_area_threshold=
     srcloc = url_for('static', filename='images/t2r.png')
 
     # FIXME: fix javascript to resize textarea
+    text_area = text_area and len(str(raw)) > text_area_threshold
     if text_area and len(str(raw)) > text_area_threshold:
         raw = f"""
         <textarea
         readonly=""
         rows="1"
-        cols="80"
+        cols="60"
         style="line-height: 1; height: 13px";
-        id="tset-raw-textarea-{raw_count}">
-        {raw}
-        </textarea>
-        <span><a onclick="copySourceOfId(tset-raw-textarea-{raw_count})">📋</a></span>
+        id="tset-raw-textarea-{raw_count}"
+        >{raw}</textarea><span>
+            <img
+            class="copy"
+            onclick="copyuncle(this)"
+            ></span>
         """
 
     raw=escape(raw)
     out = f"""
 <span class="tset-container">
-    <span class="tset-raw" id="tset-raw-{raw_count}" raw="{raw}" israw="0" ondblclick="ondouble({raw_count})">
+    <span class="tset-raw tset" raw="{raw}" ondblclick="ondouble(this)">
     {typeset}
     </span>
     {extra}
-    &nbsp;&nbsp
-    <span onclick="iconrawtset({raw_count})">
-        <img alt="Toggle raw display" src="{srcloc}" class="tset-icon" id="tset-raw-icon-{raw_count}" style="position:relative;top: 2px">
+    {"" if text_area else "&nbsp;&nbsp"}
+    <span class="tset" onclick="iconrawtset(this)">
+        <img alt="Toggle raw display"
+        class="tset-icon"
     </span>
 </span>"""
     return out

@@ -2444,13 +2444,7 @@ span.normgp {
 span.activesubgp {
     background: {{color.col_main_ll}};
 }
-.tset-icon {
-  visibility: hidden;
-}
 
-.tset-container:hover .tset-icon {
-  visibility: visible;
-}
 
 #group-diagram-selected {
     color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
@@ -2459,4 +2453,29 @@ span.activesubgp {
 
 #column-selector {
   overflow-y: auto;
+}
+
+img.tset-icon {
+  visibility: hidden;
+  position:relative;
+  top: 2px
+}
+
+.all > img.tset-icon,  span.tset-container:hover > span > img.tset-icon {
+  visibility: visible;
+  cursor: pointer;
+}
+
+/* FIXME use svg */
+.tset > img.tset-icon {
+  content: url({{url_for('static', filename='images/tset_to_raw.png')}});
+}
+
+.raw > img.tset-icon {
+  content: url({{url_for('static', filename='images/raw_to_tset.png')}});
+}
+
+img.copy {
+    content: url({{url_for('static', filename='images/copy.svg')}});
+    cursor: pointer;
 }

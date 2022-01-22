@@ -235,8 +235,7 @@
     <script>
     $().ready( function(){
         if ($(".tset-container").length>0) {
-            imgsrc = "{{url_for("static", filename="images/t2r.png") }}";
-            $("#rawtseticonspot").html('<span onclick="iconrawtsetall()"><img alt="Toggle raw display" src="'+imgsrc+'" id="tset-raw-icon-all" style="position:relative;top: 2px"></span>');
+            $("#rawtseticonspot").html('<span class="tset all" onclick="iconrawtsetall(this)"><img class="tset-icon" alt="Toggle raw display"></span>');
     } });
     </script>
     {% if KNOWL_ID %}

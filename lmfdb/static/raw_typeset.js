@@ -1,89 +1,88 @@
-function SelectText(element) {
-  var txt = document.getElementById(element);
-  var selection = window.getSelection();
-  var range = document.createRange();
-  range.selectNodeContents(txt);
-  selection.removeAllRanges();
-  selection.addRange(range);
+function setraw(elt) {
+  var $this = $(elt);
+  console.log($this);
+  $this.attr("tset", $this.html());
+  $this.html($this.attr("raw"));
+  $this.addClass("raw");
+  $this.removeClass("tset");
+  $next = $this.next();
+  $next.addClass("raw");
+  $next.removeClass("tset");
 }
 
-function setraw(elt, iconid, iconpath) {
-    $(elt).attr("tset", $(elt).html());
-    $(elt).html($(elt).attr("raw"));
-    $(elt).attr("israw", "1");
-    $(iconid)[0].src=iconpath;
+
+function settset(elt) {
+  var $this = $(elt);
+  $this.html($this.attr("tset"));
+  $this.addClass("tset");
+  $this.removeClass("raw");
+  $next = $this.next();
+  $next.addClass("tset");
+  $next.removeClass("raw");
 }
 
-function settset(elt, iconid, iconpath) {
-    $(elt).html($(elt).attr("tset"));
-    $(elt).attr("israw", "0");
-    $(iconid)[0].src=iconpath;
+// safe versions to be used with each in setall*
+function setraw_safe(i, elt) {
+  if( $(elt).hasClass("tset") ) {
+    setraw(elt);
+  }
+}
+function settset_safe(i, elt) {
+  if( $(elt).hasClass("raw") ) {
+    settset(elt);
+  }
+}
+
+function toggle(elt) {
+  if( $(elt).hasClass("raw") ) {
+    settset(elt);
+  } else {
+    setraw(elt);
+  }
 }
 
 function setallraw(iconpath) {
-  $(".tset-raw").each(function (i,elt) {
-    var eltid = $(elt).prop("id");
-    var matchinfo = eltid.match(/tset-raw-(\d+)$/);
-    var eltidnum = matchinfo[1];
-    if ($(elt).attr("israw") == "0") {
-      setraw(elt, "#tset-raw-icon-"+eltidnum, iconpath);
-  }});
+  console.log("setallraw");
+  $("span.tset-raw").each(setraw_safe);
 }
 
-function clearallraw(iconpath) {
-  $(".tset-raw").each(function (i,elt) {
-    var eltid = $(elt).prop("id");
-    var matchinfo = eltid.match(/tset-raw-(\d+)$/);
-    var eltidnum = matchinfo[1];
-    if ($(elt).attr("israw") == "1") {
-      settset(elt, "#tset-raw-icon-"+eltidnum, iconpath);
-  }});
+function setalltset(iconpath) {
+  console.log("setalltset");
+  $("span.tset-raw").each(settset_safe);
 }
 
-function ondouble(clicknum) {
-  var elt = "#tset-raw-"+clicknum;
-  var iconid = "#tset-raw-icon-"+clicknum;
-  var iconsrc = $(iconid)[0].src;
-  var iconRe = /^(.*)(.2.)\.png$/;
-  var matcharray = iconsrc.match(iconRe);
-  if ($(elt).attr("israw")=="0") {
-    setraw(elt, iconid, matcharray[1]+"r2t.png");
-  }
-  $(elt).focus();
-  SelectText("tset-raw-"+clicknum);
+function ondouble(elt) {
+  setraw(elt);
 }
 
-function iconrawtset(idnum) {
-  var elt = "#tset-raw-"+idnum;
-  var iconid = "#tset-raw-icon-"+idnum;
-  var iconsrc = $(iconid)[0].src;
-  var iconRe = /^(.*)(.2.)\.png$/;
-  var matcharray = iconsrc.match(iconRe);
-  if ($(elt).attr("israw") == "0") {
-    setraw(elt, iconid, matcharray[1]+"r2t.png");
+function iconrawtset(elt) {
+  toggle(elt.parentElement.children[0]);
+}
+
+function iconrawtsetall(elt) {
+  var $this = $(elt);
+  if( $this.hasClass("raw") ) {
+    setalltset();
+    $this.removeClass("raw");
+    $this.addClass("tset");
   } else {
-    settset(elt, iconid, matcharray[1]+"t2r.png");
+    setallraw();
+    $this.removeClass("tset");
+    $this.addClass("raw");
   }
 }
 
-function iconrawtsetall() {
-  var iconid = "#tset-raw-icon-all";
-  var iconsrc = $(iconid)[0].src;
-  var iconRe = /^(.*)(.2.)\.png$/;
-  var matcharray = iconsrc.match(iconRe);
-  if (matcharray[2] == "t2r") {
-    $(iconid)[0].src = matcharray[1]+"r2t.png";
-    setallraw(matcharray[1]+"r2t.png");
-  } else {
-    $(iconid)[0].src = matcharray[1]+"t2r.png";
-    clearallraw(matcharray[1]+"t2r.png");
-  }
+
+function copyTextOf(elt) {
+  var copyText = $(elt);
+  navigator.clipboard.writeText(copyText.text());
+  copyText.notify("Copied!",
+    {className: "success", position:"bottom right" }
+);
 }
 
-function copySourceOfId(id) {
-  var copyText = $("#"+id);
-  copyText.select();
-  document.execCommand("copy");
-  console.log("Copied!");
-  copyText.notify("Copied!", {className: "success", position:"bottom right" });
+function copyuncle(elt) {
+  copyTextOf(elt.parentElement.parentElement.children[0]);
 }
+
+
