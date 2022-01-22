@@ -7,6 +7,9 @@ from flask import render_template, url_for, request, redirect, make_response, se
 from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
+from lmfdb.elliptic_curves.web_ec import latex_equation
+
+
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
@@ -16,7 +19,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
@@ -318,60 +321,50 @@ class EC_download(Downloader):
     }
 
 ec_columns = SearchColumns([
-    ColGroup("curve_labels", None, "Curve",
-             [
-                 LinkCol("lmfdb_label", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center", short_title="Curve LMFDB label"),
-                 MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
-                                   ["Clabel", "conductor"],
-                                   lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
-                                   default=True, align="center", short_title="Curve Cremona label")
-             ],
-             default=True),
-    ColGroup("iso_labels", "ec.isogeny_class", "Isogeny class",
-             [
-                 LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "LMFDB label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center", short_title="Class LMFDB label"),
-                 MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona label",
-                                   ["Ciso", "conductor"],
-                                   lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
-                                   default=True, align="center", short_title="Class Cremona label"),
-                 SearchCol("class_size", "ec.isogeny_class", "Size", short_title="Class size", align="center"),
-                 SearchCol("class_deg", "ec.isogeny_class_degree", "Degree", short_title="Class degree", align="center"),
-             ],
-             default=True),
-    # We need the other columns to appear in rank 1, so we add a dummy ColGroup
-    ColGroup("dummy", None, "",
-             [
-                 MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", default=True, align="left"),
-                 ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0], short_title="j-invariant", align="center"),
-                 MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: f"+{a}" if s==1 else f"-{a}",
-                                   default=lambda info: info.get("discriminant"), mathmode=True, align="right"),
-                 MathCol("rank", "ec.rank", "Rank", default=True),
-                 ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
-                 MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
-                 ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
-                 ProcessedCol("cm", "ec.complex_multiplication", "CM disc", lambda v: "" if v == 0 else v,
-                           default=lambda info: info.get("cm") == "CM" or "," in info.get("cm",""), short_title="CM discriminant", mathmode=True, align="center"),
-                 ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join(str(p) for p in primes),
-                              default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
-                 ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", "Nonmax primes", lambda primes: ", ".join([str(p) for p in primes]),
-                              default=lambda info: info.get("nonmax_primes"), short_title="Nonmaximal primes", mathmode=True, align="center"),
-                 ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
-                              default=lambda info: info.get("sha_primes"), mathmode=True, align="center"),
-                 ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", ", ".join, short_title="ℓ-adic images",
-                              default=lambda info: info.get("galois_image"),
-                              align="center"),
-                 ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
-                              default=lambda info: info.get("galois_image"),
-                              align="center"),
-                 CheckCol("semistable", "ec.reduction", "Semistable"),
-                 CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
-                 MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
-                         default=lambda info: info.get("num_int_pts"), align="center"),
-                 ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
-                              default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
-             ], default=True)],
-    tr_class=["bottom-align", ""])
+     LinkCol("lmfdb_label", "ec.q.lmfdb_label", "Label", lambda label: url_for(".by_ec_label", label=label), default=True, align="center", short_title="LMFDB curve label"),
+     MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
+                       ["Clabel", "conductor"],
+                       lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
+                       align="center", short_title="Cremona curve label"),
+     LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "Class", lambda label: url_for(".by_ec_label", label=label), default=True, align="center", short_title="LMFDB class label"),
+     MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona class",
+                       ["Ciso", "conductor"],
+                       lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
+                       align="center", short_title="Cremona class label"),
+     SearchCol("class_size", "ec.isogeny_class", "Class size", align="center"),
+     SearchCol("class_deg", "ec.isogeny_class_degree", "Class Degree", align="center"),
+     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", lambda ainvs: latex_equation(ainvs), default=True, align="left", orig="ainvs"),
+     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
+     ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0], short_title="j-invariant", align="center"),
+     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: f"+{a}" if s==1 else f"-{a}",
+                       default=lambda info: info.get("discriminant"), mathmode=True, align="right"),
+     MathCol("rank", "ec.rank", "Rank", default=True),
+     ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
+     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
+     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
+     CheckCol("cm", "ec.complex_multiplication", "PCM", short_title="Potential CM"),
+     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM disc", lambda v: "" if v == 0 else v,
+                  default=lambda info: info.get("cm") == "CM" or "," in info.get("cm",""), short_title="CM discriminant", mathmode=True, align="center", orig="cm"),
+     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([str(p) for p in primes]),
+                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
+     ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", "Nonmax primes", lambda primes: ", ".join([str(p) for p in primes]),
+                  default=lambda info: info.get("nonmax_primes"), short_title="Nonmaximal primes", mathmode=True, align="center"),
+     ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
+                  default=lambda info: info.get("sha_primes"), mathmode=True, align="center"),
+     ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", ", ".join, short_title="ℓ-adic images",
+                  default=lambda info: info.get("galois_image"),
+                  align="center"),
+     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
+                  default=lambda info: info.get("galois_image"),
+                  align="center"),
+     CheckCol("semistable", "ec.reduction", "Semistable"),
+     CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
+     MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
+             default=lambda info: info.get("num_int_pts"), align="center"),
+     ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
+                  default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
+])
 
 
 @search_wrap(table=db.ec_curvedata,
