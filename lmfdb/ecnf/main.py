@@ -506,7 +506,7 @@ ecnf_columns = SearchColumns([
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
                  default=lambda info: info.get("galois_images"),
                  align="center"),
-    MathCol("sha", "ec.analytic_sha_order", "Ш", short_title="Analytic Ш"),
+    MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
