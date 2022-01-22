@@ -17,7 +17,7 @@ from . import coeff_to_poly
 ################################################################################
 
 
-def raw_typeset(raw, typeset='', extra='', text_area=True, text_area_threshold=150):
+def raw_typeset(raw, typeset='', extra='', text_area=False, text_area_threshold=150):
     r"""
     Return a span with typeset material which will toggle to raw material
     when an icon is clicked on.
@@ -38,7 +38,6 @@ def raw_typeset(raw, typeset='', extra='', text_area=True, text_area_threshold=1
     if not typeset:
         typeset = r'\({}\)'.format(latex(raw))
 
-    # FIXME: fix javascript to resize textarea
     text_area = text_area and len(str(raw)) > text_area_threshold
     if text_area and len(str(raw)) > text_area_threshold:
         # no space is quite important, as we check on the start of this string in JS
@@ -116,14 +115,23 @@ def web_latex(x, enclose=True):
     latex_str =" %s " % latex(x) 
     return rf"\( {latex_str} \)" if enclose else latex_str
 
-def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
+
+def compress_int(n, cutoff=20, sides=2):
+    res = str(n)
     if abs(n) >= 10**cutoff:
-        short = str(n)
-        short = short[:sides] + r'\!\cdots\!' + short[-sides:]
+        short = res[:sides + (1 if n < 0 else 0)] + r'\!\cdots\!' + res[-sides:]
+        return short, True
+    else:
+        return res, False
+
+
+def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
+    short, shortened = compress_int(n, cutoff=cutoff, sides=sides)
+    if shortened:
         lng = r"<div style='word-break: break-all'>%s</div>" % n
         return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
-        return r'\(%s\)'%n
+        return r'\(%s\)' % n
 
 def too_big(L, threshold):
     r"""
@@ -363,6 +371,90 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     A = A.replace(r'( ', r'(')
     A = A.replace(r'+\) \(O', r'+O')
     return A
+
+
+
+
+
+def raw_typeset_poly(coeffs, denominator=1, var='x', superscript=True, compress_threshold=100, **kwargs):
+    """
+    returns a raw_typeset span for polynomials
+    """
+    plus = r" + "
+    minus = r" - "
+
+
+    # remove leading zeros
+    m = len(coeffs)
+    while m and coeffs[m-1] == 0:
+        m -= 1
+    if m == 0:
+        return r"\(0\)"
+
+    if denominator == 1:
+        denominatorraw = denominatortset = ""
+    else:
+        denominatortset = denominatorraw = "/ {denominator}"
+
+    # figure out if we will compress the polynomial
+    # 3 = var + sign + exp
+    rawvar = var.lstrip("\\")
+    R = PolynomialRing(ZZ, rawvar)
+    poly = R(coeffs)
+    raw = str(poly)
+    compress_poly = len(raw) + len(denominatorraw) > compress_threshold
+    if compress_poly:
+        denominatortset = f"/ {compress_int(denominator)}"
+
+    if compress_poly:
+        # compress the tset
+        cc = poly.constant_coefficient()
+        cdots = r" + \cdots "
+        tsetend = plus if cc >= 0 else minus
+        short, shortened = compress_int(abs(cc))
+        tsetend += short
+
+        tset = ""
+        monomial_format = f"{var}^{{{{{{}}}}}}" # I'm into ASCII art
+        for n in reversed(range(1,m)):
+            c = coeffs[n]
+            if len(tset) + len(cdots) + len(tsetend) + len(denominatortset) > compress_threshold:
+                tset += cdots
+                break
+
+            if c > 0:
+                tset += plus
+            elif c < 0:
+                tset += minus
+            else:
+                continue
+
+            if abs(c) != 1:
+                tset += compress_int(abs(c))[0] + " "
+
+            if n == 1:
+                monomial = var
+            else: # n > 1
+                monomial = monomial_format.format(n)
+            tset += monomial
+
+        tset += tsetend
+    else:
+        tset = latex(poly).replace(rawvar, var)
+
+    if not superscript:
+        raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
+        tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+
+    if denominator != 1:
+        tset = f"( {tset} ) {denominatortset}"
+        raw = f"( {raw} ) {denominatorraw}"
+
+    return raw_typeset(raw, tset, **kwargs)
+
+
+
+
 
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):

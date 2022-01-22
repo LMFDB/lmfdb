@@ -46,7 +46,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
            'TraceHash', 'TraceHashClass',
            'redirect_no_cache', 'nums2letters', 'letters2num', 'num2letters',
-           'raw_typeset', 'input_string_to_poly', 'dispZmat', 'dispcyclomat']
+           'raw_typeset', 'raw_typeset_poly',
+           'input_string_to_poly', 'dispZmat', 'dispcyclomat']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -105,6 +106,7 @@ from .web_display import (
     make_bigint,
     polyquo_knowl,
     raw_typeset,
+    raw_typeset_poly,
     sparse_cyclotomic_to_latex,
     teXify_pol,
     to_ordinal,
