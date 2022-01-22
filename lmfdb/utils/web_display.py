@@ -63,7 +63,7 @@ style="line-height: 1; height: 13px";
     </span>
     {extra}
     {"" if textarea else "&nbsp;&nbsp"}
-    <span class="tset" onclick="iconrawtset(this)">
+    <span class="tset rawtset-btn" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
         class="tset-icon"
     </span>

@@ -2469,7 +2469,7 @@ img.tset-icon {
   position:relative;
 }
 
-.all > img.tset-icon,  span.tset-container:hover > span > img.tset-icon {
+.all > img.tset-icon,  span.tset-container:hover > span > img.tset-icon, span.tset-container:hover > span.rawtset-btn {
   visibility: visible;
   cursor: pointer;
 }
@@ -2487,7 +2487,7 @@ span.copy > img {
     vertical-align: middle;
     height: 11px;
 }
-span.copy {
+span.copy, span.rawtset-btn {
     box-shadow: inset 0 0.15em 0.3em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
     display: inline-block;
     padding: 2px;
@@ -2503,7 +2503,12 @@ span.copy {
     transition-property: color,background-color,border-color;
     color: rgb(36, 41, 47);
 }
-span.copy:active {
+span.copy:active, span.rawtset-btn:active {
     box-shadow: inset 0 0.15em 0.3em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
 }
+
+span.tset-container > span.rawtset-btn {
+    visibility: hidden;
+}
+
 
