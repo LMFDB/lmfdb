@@ -21,7 +21,7 @@ from lmfdb.utils import (
     parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl,
     raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, ProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data, transitive_group_display_knowl,
@@ -797,10 +797,17 @@ nf_columns = SearchColumns([
                  lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label)),
                  default=True),
     SearchCol("poly", "nf.defining_polynomial", "Polynomial", default=True),
+    MathCol("degree", "nf.degree", "Degree", align="center"), 
+    MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
+    CheckCol("cm", "nf.cm_field", "Is CM field?"),
+    CheckCol("is_galois", "nf.galois_group", "Is Galois?"),
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
-    SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True)],
-    db_cols=["class_group", "coeffs", "degree", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh"])
+    SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
+    MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
+    MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 + - 1, align="center", mathmode=True),
+    MathCol("regulator", "nf.regulator", "Regulator", align="left")],
+    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -841,7 +848,7 @@ def number_field_search(info, query):
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
-                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
+                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad',cardinality='num_ram')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
     info['wnf'] = WebNumberField.from_data

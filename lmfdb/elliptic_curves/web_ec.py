@@ -11,7 +11,9 @@ from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
+
+RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
 RZB_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
@@ -210,6 +212,8 @@ class WebEC(object):
         if data['j_invariant']: # don't factor 0
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
         data['j_inv_latex'] = web_latex(data['j_invariant'])
+        data['faltings_height'] = RR(self.faltings_height)
+        data['stable_faltings_height'] = RR(self.stable_faltings_height)
 
         # retrieve local reduction data from table ec_localdata:
 
@@ -477,6 +481,8 @@ class WebEC(object):
             mwbsd['reg']  = self.regulator
             mwbsd['sha']  = self.sha
             mwbsd['sha2'] = latex_sha(self.sha)
+            for num in ['reg', 'special_value', 'real_period', 'area']:
+                mwbsd[num]  = RR(mwbsd[num])
         except AttributeError:
             mwbsd['rank'] = '?'
             mwbsd['reg']  = '?'
@@ -504,6 +510,7 @@ class WebEC(object):
 
         # Generators (mod torsion) and heights:
         mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
+        mwbsd['heights'] = [RR(h) for h in mwbsd['heights']]
 
         # Torsion structure and generators:
         if mwbsd['torsion'] == 1:
