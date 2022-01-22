@@ -2461,6 +2461,7 @@ span.activesubgp {
 textarea.tset-raw {
     padding: 0px;
     font-size: 95%;
+    padding: 1px;
     border: 1px solid {{color.input_border}};
 }
 
