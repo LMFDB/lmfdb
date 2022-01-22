@@ -450,7 +450,7 @@ def geom_inv_to_G2(inv):
 TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 POLY_RE = TERM_RE + "(" + STERM_RE + ")*"
-ZLIST_RE = r"\[(\d+\s*)*(,\d+\s*)*\]"
+ZLIST_RE = r"\[((|-)\d+\s*)*(,(|-)\d+\s*)*\]"
 
 
 def genus2_jump(info):
