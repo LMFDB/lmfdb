@@ -754,13 +754,6 @@ class WebNewform(object):
                 (rf'\(\beta_{{{i}}}\)',
                  raw_typeset_poly(num, denominator=den, var=self._nu_latex, superscript=True))
             )
-            # numsize = sum(len(str(c)) for c in num if c)
-            # if numsize > 80:
-            #     num = web_latex_poly(num, self._nu_latex, superscript=True)
-            # else:
-            #     num = web_latex(coeff_to_poly(num, self._nu_var))
-            # betai = r'\(\beta_{%s}\)'%i
-            # basis.append((betai, self._make_frac(num, den)))
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
@@ -770,13 +763,10 @@ class WebNewform(object):
                 nupow = r'\(%s\)' % self._nu_latex
             else:
                 nupow = r'\(%s^{%s}\)' % (self._nu_latex, i+1)
-            print(i, den)
             basis.append(
                 (nupow,
                  raw_typeset_poly(num, denominator=den, var=r'\beta', superscript=False))
             )
-
-            # basis.append((nupow, self._make_frac(num, den)))
         return self._make_table(basis)
 
     def order_basis(self):
