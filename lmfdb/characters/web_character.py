@@ -44,7 +44,8 @@ The design is the following:
 """
 
 from flask import url_for
-from sage.all import (gcd, Rational, Integers, cached_method,
+from collections import defaultdict
+from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
                       euler_phi, latex)
 from sage.databases.cremona import cremona_letter_code
 from sage.misc.lazy_attribute import lazy_attribute
@@ -56,7 +57,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf
 from lmfdb.characters.TinyConrey import (ConreyCharacter, kronecker_symbol,
                 symbol_numerator, PariConreyGroup, get_sage_genvalues)
 from lmfdb.characters.utils import url_character, complex2str
-
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
 def parity_string(n):
@@ -704,7 +705,7 @@ class WebCharGroup(WebCharObject):
     headers = [ 'order', 'primitive']
     _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
-            'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
+            'prevmod', 'next', 'nextmod', 'structure', 'structure_group_knowl', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties', 'friends', 'rowtruncate', 'coltruncate']
@@ -718,7 +719,33 @@ class WebCharGroup(WebCharObject):
     @lazy_attribute
     def structure(self):
         inv = self.H.invariants()
-        return r'\(%s\)' % ('\\times '.join('C_{%s}' % d for d in inv))
+        inv_list = list(inv)
+        inv_list.sort()
+        return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
+
+    @lazy_attribute
+    def structure_group_knowl(self):
+        inv = self.H.invariants()
+        label = ".".join(str(v) for v in inv)
+        parts = defaultdict(list)
+        for piece in label.split("."):
+            if "_" in piece:
+                base, exp = map(ZZ, piece.split("_"))
+            else:
+                base = ZZ(piece)
+                exp = 1
+            for p, e in base.factor():
+                parts[p].extend([p ** e] * exp)
+        for v in parts.values():
+            v.sort()
+        primary = sum((parts[p] for p in sorted(parts)), [])
+        dblabel = db.gps_groups.lucky(
+            {"abelian": True, "primary_abelian_invariants": primary}, "label"
+        )
+        if dblabel is None:
+            abgp_url = url_for('abstract.by_abelian_label', label=label)
+            return f'<a href= %s >{self.structure}</a>' % abgp_url
+        return abstract_group_display_knowl(dblabel, f"{self.structure}")
 
     @lazy_attribute
     def codestruct(self):
