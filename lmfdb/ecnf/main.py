@@ -491,7 +491,7 @@ ecnf_columns = SearchColumns([
                           web_ainvs(field, ainvs)),
                       short_title="Weierstrass coeffs", default=True),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
-                      lambda rank, rank_bounds: rank if rank is not None else r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]),
+                      lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center", default=True),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
