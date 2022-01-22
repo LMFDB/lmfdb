@@ -388,8 +388,11 @@ def genus2_lookup_equation(input_str):
     if len(fg) == 1:
         fg.append(R(0));
     C_str_latex= fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
-    C = magma.HyperellipticCurve(fg)
-    g2 = magma.G2Invariants(C)
+    try:
+        C = magma.HyperellipticCurve(fg)
+        g2 = magma.G2Invariants(C)
+    except TypeError:
+        raise ValueError(f'{C_str_latex} invalid genus 2 curve')
     g2 = str([str(i) for i in g2]).replace(" ", "")
     for r in db.g2c_curves.search({"g2_inv": g2}):
         eqn = literal_eval(r["eqn"])
