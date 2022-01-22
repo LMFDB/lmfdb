@@ -219,7 +219,6 @@ def coeff_to_poly(c, var=None):
     >>> coeff_to_poly("1 - 3*x + x**2")
     x**2 - 3*x + 1
     """
-    print(c)
     if isinstance(c, str):
         # accept latex
         c = c.replace("{", "").replace("}", "")
