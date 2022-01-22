@@ -116,7 +116,7 @@ def web_latex(x, enclose=True):
     return rf"\( {latex_str} \)" if enclose else latex_str
 
 
-def compress_int(n, cutoff=20, sides=2):
+def compress_int(n, cutoff=10, sides=2):
     res = str(n)
     if abs(n) >= 10**cutoff:
         short = res[:sides + (1 if n < 0 else 0)] + r'\!\cdots\!' + res[-sides:]
