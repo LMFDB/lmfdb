@@ -10,6 +10,7 @@ from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, abort
 from markupsafe import Markup, escape
+from sage.all import factor
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
@@ -18,7 +19,7 @@ from lmfdb.utils import (
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, redirect_no_cache
+    search_wrap, redirect_no_cache, web_latex
     )
 from lmfdb.utils.search_parsing import search_parser
 
@@ -474,33 +475,26 @@ ecnf_columns = SearchColumns([
                       lambda label, field, conductor, iso, number: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number), label),
                       default=True, align="center"),
+    MultiProcessedCol("iso_class", "ec.isogeny_class", "Class", ["field_label", "conductor_label", "iso_label", "short_class_label"],
+                      lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
+                          url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso), short_class_label),
+                      short_title="Isogeny class", default=True, align="center"),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     MultiProcessedCol("conductor", "ec.conductor_label", "Conductor", ["field_label", "conductor_label"],
                       lambda field, conductor: '<a href="%s">%s</a>' %(url_for('.show_ecnf_conductor', nf=field, conductor_label=conductor), conductor),
                       align="center"),
-    MultiProcessedCol("iso_class", "ec.isogeny_class", "Class", ["field_label", "conductor_label", "iso_label", "short_class_label"],
-                      lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
-                          url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso), short_class_label),
-                      short_title="Isogendy class", default=True, align="center"),
     MathCol("class_size", "ec.isogeny", "Class size", short_title="Isogeny class size"),
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="Isogeny class degree"),
-    MultiProcessedCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients",
-                      ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
-                      lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
-                          url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
-                          web_ainvs(field, ainvs)),
-                      short_title="Weierstrass coeffs", align="left"),
-    MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", default=True, align="left"),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center", default=True),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
-    ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: "no" if v == 0 else ("potential" if v < 0 else "yes"),
+    ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="Has CM", align="center", orig="cm"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM disc", lambda v: "" if v == 0 else -abs(v),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="CM discriminant", mathmode=True, align="center"),
-    ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p).split('*')) for p in primes]) if primes else r"\textsf{none}",
+    ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
     ProcessedCol("non-surjective_primes", "ec.maximal_galois_rep", "Nonmax primes", lambda primes: ", ".join([str(p) for p in primes]), short_title="Nonmaximal primes",
                  default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
@@ -508,12 +502,20 @@ ecnf_columns = SearchColumns([
                  default=lambda info: info.get("galois_images"),
                  align="center"),
     MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
+    ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
+    ProcessedCol("Lvalue", "lfunction.leading_coeff", "Leading coeff", lambda v: str(v)[:11], short_title="Leading coefficient", align="left"),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
     CheckCol("base_change", "ec.base_change", "Base change"),
     CheckCol("semistable", "ec.semistable", "Semistable"),
     CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),    
+    MultiProcessedCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients",
+                      ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
+                      lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
+                          url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
+                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left"),
+    MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", default=True, align="left"),
 ])
 ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
 not known for all curves in the database; curves for which these are

@@ -4,7 +4,7 @@ import re
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, factor
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb.elliptic_curves.web_ec import latex_equation
@@ -332,11 +332,12 @@ ec_columns = SearchColumns([
                        lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
                        align="center", short_title="Cremona class label"),
      SearchCol("class_size", "ec.isogeny_class", "Class size", align="center"),
-     SearchCol("class_deg", "ec.isogeny_class_degree", "Class Degree", align="center"),
+     SearchCol("class_deg", "ec.isogeny_class_degree", "Class degree", align="center"),
+     ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex(factor(v)), default=True, align="center"),
      ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", lambda ainvs: latex_equation(ainvs), default=True, align="left", orig="ainvs"),
      MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
      ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0], short_title="j-invariant", align="center"),
-     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: f"+{a}" if s==1 else f"-{a}",
+     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: ("+" if s == 1 else "-") + str(a),
                        default=lambda info: info.get("discriminant"), mathmode=True, align="right"),
      MathCol("rank", "ec.rank", "Rank", default=True),
      ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
@@ -364,6 +365,7 @@ ec_columns = SearchColumns([
              default=lambda info: info.get("num_int_pts"), align="center"),
      ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
+     MathCol("manin_constant", "ec.q.modular_degree", "Modular degree", align="center"),
 ])
 
 
