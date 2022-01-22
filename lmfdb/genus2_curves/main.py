@@ -375,7 +375,7 @@ def genus2_lookup_equation(input_str):
     input_str = input_str.replace(" ", "")
     if '],[' in input_str:
         input_str.strip('[').strip(']')
-        fg = [R([int(c) for c in elt.split(",")]) for elt in input_str.split('],[')]]
+        fg = [R([int(c) for c in elt.split(",")]) for elt in input_str.split('],[')]
     else:
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str.split(",")]
     if len(fg) == 1:
