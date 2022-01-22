@@ -15,15 +15,24 @@
         {% endif %}
         <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>
         {% if wnf %}
-        Galois closure of {{wnf.knowl()|safe}}
+            {% if wnf.is_galois() %}
+                {{wnf.knowl()|safe}}
+            {% else %}
+                Galois closure of {{wnf.knowl()|safe}}
+            {%endif%}
         {% else %}
         Splitting field of {{ object.number_field_galois_group().polynomial_raw_typeset()|safe}} over $\Q$</td></tr>
         {%endif%}
         <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
         <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Smallest permutation container') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
-        <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
-        <tr><td> {{ KNOWL('artin.projective_image', title='Projective image') }}: <td> {{ object.projective_group()|safe}} </tr>
-        <tr><td> {{ KNOWL('artin.projective_field', title='Projective field') }}: <td>Galois closure of {{ object.projective_field()|safe}} </tr>
+        <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:</td><td> {{ object.parity()}} </td></tr>
+        <tr><td> {{ KNOWL('artin.projective_image', title='Projective image') }}: </td><td> {{ object.projective_group()|safe}} </td></tr>
+        <tr><td> {{ KNOWL('artin.projective_field', title='Projective field') }}: </td>
+        {% if proj_wnf.is_galois() %}
+            <td> {{ object.projective_field()|safe}} </td></tr>
+        {% else %}
+            <td> Galois closure of {{ object.projective_field()|safe}} </td></tr>
+        {%endif%}
     </table>
 
 
