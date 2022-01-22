@@ -368,9 +368,8 @@ ec_columns = SearchColumns([
                  CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
                  MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
                          default=lambda info: info.get("num_int_pts"), align="center"),
-                 ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height",
-                              RealField(20),
-                              default=lambda info: info.get("faltings_height"), align="center"),
+                 ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
+                              default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
              ], default=True)],
     tr_class=["bottom-align", ""])
 
