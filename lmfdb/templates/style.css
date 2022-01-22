@@ -2458,7 +2458,6 @@ span.activesubgp {
 img.tset-icon {
   visibility: hidden;
   position:relative;
-  top: 2px
 }
 
 .all > img.tset-icon,  span.tset-container:hover > span > img.tset-icon {
@@ -2466,13 +2465,12 @@ img.tset-icon {
   cursor: pointer;
 }
 
-/* FIXME use svg */
 .tset > img.tset-icon {
-  content: url({{url_for('static', filename='images/tset_to_raw.png')}});
+  content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
 }
 
 .raw > img.tset-icon {
-  content: url({{url_for('static', filename='images/raw_to_tset.png')}});
+  content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
 }
 
 img.copy {
