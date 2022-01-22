@@ -1,7 +1,6 @@
 import re
 from urllib.parse import urlencode
 from markupsafe import escape
-from flask import url_for
 from sage.all import (
     Factorization,
     latex,
@@ -9,7 +8,8 @@ from sage.all import (
     factor,
     RR,
     floor,
-    PolynomialRing
+    PolynomialRing,
+    TermOrder,
 )
 from . import coeff_to_poly
 ################################################################################
@@ -217,9 +217,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
-    if cutoff:
-        long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
+    long = r'Defining polynomial: %s' % escape(raw_typeset_poly(f))
     if disc is not None:
         if isinstance(disc, list):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
@@ -374,6 +372,67 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
 
 
 
+def compress_polynomial(poly, threshold, decreasing=True):
+    if poly == 0:
+        return '0'
+    plus = r" + "
+    minus = r" - "
+    var = latex(poly.parent().gen())
+    monomial_str = f"{var}^{{{{{{}}}}}}" # I'm into ASCII art
+
+    d = 0 if decreasing else poly.degree()
+    assert poly[d] != 0 or decreasing
+    while poly[d]  == 0: # we only enter the loop if decreasing=True
+        d += 1
+    lastc = poly[d]
+    cdots = r" + \cdots "
+    tsetend = plus if lastc > 0 else minus
+    short, shortened = compress_int(abs(lastc))
+    if abs(lastc) != 1 or d == 0:
+        tsetend += short
+
+    if d > 0:
+        if d == 1:
+            tsetend += var
+        else:
+            tsetend += monomial_str.format(d)
+
+    tset = ""
+    for n in (reversed(range(d + 1, poly.degree() + 1)) if decreasing else range(d)):
+        c = poly[n]
+        if tset and len(tset) + len(cdots) + len(tsetend) > threshold:
+            tset += cdots
+            break
+
+        short, shortened = compress_int(abs(c))
+        if shortened and tset:
+            tset += cdots
+            break
+
+        if c > 0:
+            if tset: # don't need the + for the leading coefficient
+                tset += plus
+        elif c < 0:
+            tset += minus
+        else:
+            continue
+
+        if abs(c) != 1:
+            tset += compress_int(abs(c))[0] + " "
+
+        if n == 1:
+            monomial = var
+        elif n > 1:
+            monomial = monomial_str.format(n)
+        else:
+            monomial = "1" if abs(c) == 1 else ""
+        tset += monomial
+
+    tset += tsetend
+    if tset.startswith(plus): # single monomial polynomials
+        tset = tset[len(plus):]
+    return tset
+
 
 
 def raw_typeset_poly(coeffs,
@@ -381,6 +440,7 @@ def raw_typeset_poly(coeffs,
                      var='x',
                      superscript=True,
                      compress_threshold=100,
+                     decreasing=True,
                      **kwargs):
     """
     Generate a raw_typeset string a given integral polynomial, or a linear combination
@@ -395,17 +455,6 @@ def raw_typeset_poly(coeffs,
     - ``var`` -- a variable name
     - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
     - ``compress_threshold`` -- the number of characters by which we would need to reduce the output of the typeset"""
-    plus = r" + "
-    minus = r" - "
-
-
-    # remove leading zeros
-    m = len(coeffs)
-    while m and coeffs[m-1] == 0:
-        m -= 1
-    if m == 0:
-        return r"\(0\)"
-
     if denominator == 1:
         denominatorraw = denominatortset = ""
     else:
@@ -416,52 +465,26 @@ def raw_typeset_poly(coeffs,
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
     poly = R(coeffs)
+    if poly == 0:
+        return r"\(0\)"
     raw = str(poly)
     compress_poly = len(raw) + len(denominatorraw) > compress_threshold
     if compress_poly:
         denominatortset = f"/ {compress_int(denominator)[0]}"
 
     if compress_poly:
-        # compress the tset
-        cc = poly.constant_coefficient()
-        cdots = r" + \cdots "
-        tsetend = plus if cc >= 0 else minus
-        short, shortened = compress_int(abs(cc))
-        tsetend += short
-
-        tset = ""
-        monomial_format = f"{var}^{{{{{{}}}}}}" # I'm into ASCII art
-        for n in reversed(range(1,m)):
-            c = coeffs[n]
-            if len(tset) + len(cdots) + len(tsetend) + len(denominatortset) > compress_threshold:
-                tset += cdots
-                break
-
-            short, shortened = compress_int(abs(c))
-            if shortened and n != m -1:
-                tset += cdots
-                break
-
-            if c > 0:
-                if n != m -1: # don't need the + for the leading coefficient
-                    tset += plus
-            elif c < 0:
-                tset += minus
-            else:
-                continue
-
-            if abs(c) != 1:
-                tset += compress_int(abs(c))[0] + " "
-
-            if n == 1:
-                monomial = var
-            else: # n > 1
-                monomial = monomial_format.format(n)
-            tset += monomial
-
-        tset += tsetend
+            tset = compress_polynomial(
+                poly,
+                compress_threshold - len(denominatortset),
+                decreasing)
     else:
-        tset = latex(poly)
+        if decreasing:
+            tset = latex(poly)
+        else:
+            # to lazy to reverse it by hand
+            Rfake = PolynomialRing(ZZ, [f'{var}fake', var], order=TermOrder('M(0,-1,0,-1)'))
+            polytoprint = Rfake({(0, i): c for i, c in enumerate(poly)})
+            tset = latex(polytoprint)
 
     if not superscript:
         raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
@@ -478,6 +501,38 @@ def raw_typeset_poly(coeffs,
         kwargs['textarea_threshold'] =compress_threshold
 
     return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
+
+def raw_typeset_poly_factor(factors, # list of pairs (f,e)
+                            compress_threshold=20, # this is per factor
+                            decreasing=True,
+                            **kwargs):
+    if len(factors) == 0:
+        return r"\( 1 \)"
+    if len(factors) == 1 and factors[0][1] == 1:
+        coeffs = factors[0][0].list()
+        var = str(factors[0][0].parent().gen())
+        return raw_typeset_poly(
+            coeffs,
+            var=var,
+            compress_threshold=compress_threshold,
+            decreasing=decreasing,
+            **kwargs)
+    raw = []
+    tset = []
+    for f, e in factors:
+        rawf = str(f)
+        tsetf = compress_polynomial(f, compress_threshold, decreasing)
+        if '+' in rawf or '-' in rawf:
+            raw.append(f'({rawf})^{e}')
+            tset.append(f'({tsetf})^{e}')
+        else:
+            raw.append(f'{rawf}^{e}')
+            tset.append(f'{tsetf}^{e}')
+
+    tset = " ".join(tset)
+    raw = " ".join(raw)
+    return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
+
 
 
 

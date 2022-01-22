@@ -12,13 +12,13 @@ from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
 from lmfdb.utils import (
-    coeff_to_poly, coeff_to_power_series, web_latex,
-    bigint_knowl, bigpoly_knowl, too_big, make_bigint,
+    coeff_to_power_series, web_latex,
+    bigint_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
-    list_factored_to_factored_poly_otherorder, integer_squarefree_part,
-    raw_typeset_poly,
+    integer_squarefree_part,
+    raw_typeset_poly, raw_typeset_poly_factor,
 )
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -659,7 +659,7 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
-        polynomials = [raw_typeset_poly(F, var=f'T{p}') for p, F in self.hecke_cutters]
+        polynomials = [raw_typeset_poly(F, var=f'T_{p}') for p, F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
@@ -993,15 +993,10 @@ function switch_basis(btype) {
         - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
         """
 
-        hecke_polys_orbits = {}
+        hecke_polys_orbits = defaultdict(list)
+        R = PolynomialRing(ZZ, 'T');
         for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : self.hecke_orbit_code}):
-            coeffs = poly_item['charpoly_factorization']
-            F_p = list_factored_to_factored_poly_otherorder(coeffs)
-            F_p = make_bigint(r'\( %s \)' % F_p)
-            if (F_p != r"\( 1 \)") and (len(F_p) > 6):
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
-            else:
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
+            hecke_polys_orbits[poly_item['p']] += [(R(f), e) for f, e in poly_item['charpoly_factorization']]
         if not hecke_polys_orbits:
             return None
         polys = ['<div style="max-width: 100%; overflow-x: auto;">',
@@ -1010,9 +1005,9 @@ function switch_basis(btype) {
                  th_wrap('charpoly', '$F_p(T)$'),
                  '  </tr>', '</thead>', '<tbody>']
         loop_count = 0
-        for p, charpoly in hecke_polys_orbits.items():
-            if charpoly.strip() == "":
-                charpoly = "1"
+        for p, factorisation in hecke_polys_orbits.items():
+            factorisation.sort(key=lambda elt: (elt[0].degree(), elt[1]))
+            charpoly = raw_typeset_poly_factor(factorisation, decreasing=True)
             if loop_count < num_disp:
                 polys.append('  <tr>')
             else:
