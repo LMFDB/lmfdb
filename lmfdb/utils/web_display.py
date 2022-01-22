@@ -459,7 +459,7 @@ def raw_typeset_poly(coeffs,
 
     if denominator != 1:
         tset = f"( {tset} ) {denominatortset}"
-        raw = f"( {raw} ) {denominatorraw}"
+        raw = f"({raw}) {denominatorraw}"
 
 
     if compress_poly:

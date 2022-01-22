@@ -679,7 +679,7 @@ class WebNewform(object):
 
     def defining_polynomial(self):
         if self.field_poly:
-            return web_latex_poly(self.field_poly, superscript=True)
+            return raw_typeset_poly(self.field_poly, superscript=True)
         return None
 
     def Qnu(self):
