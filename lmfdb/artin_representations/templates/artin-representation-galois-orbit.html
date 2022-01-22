@@ -13,7 +13,7 @@
         {% if object.sign() %}
         <tr><td class="nowrap">{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
         {% endif %}
-        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>
+        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin field') }}: </td><td>
         {% if wnf %}
             {% if wnf.is_galois() %}
                 {{wnf.knowl()|safe}}
