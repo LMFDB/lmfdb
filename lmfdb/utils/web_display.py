@@ -17,7 +17,7 @@ from . import coeff_to_poly
 ################################################################################
 
 
-def raw_typeset(raw, typeset='', extra='', text_area=False, text_area_threshold=150):
+def raw_typeset(raw, typeset='', extra='', textarea=False, textarea_threshold=150):
     r"""
     Return a span with typeset material which will toggle to raw material
     when an icon is clicked on.
@@ -38,8 +38,8 @@ def raw_typeset(raw, typeset='', extra='', text_area=False, text_area_threshold=
     if not typeset:
         typeset = r'\({}\)'.format(latex(raw))
 
-    text_area = text_area and len(str(raw)) > text_area_threshold
-    if text_area and len(str(raw)) > text_area_threshold:
+    textarea = textarea and len(str(raw)) > textarea_threshold
+    if textarea and len(str(raw)) > textarea_threshold:
         # no space is quite important, as we check on the start of this string in JS
         raw = f"""<textarea
 class="tset-raw"
@@ -62,7 +62,7 @@ style="line-height: 1; height: 13px";
     {typeset}
     </span>
     {extra}
-    {"" if text_area else "&nbsp;&nbsp"}
+    {"" if textarea else "&nbsp;&nbsp"}
     <span class="tset" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
         class="tset-icon"
@@ -376,7 +376,12 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
 
 
 
-def raw_typeset_poly(coeffs, denominator=1, var='x', superscript=True, compress_threshold=100, **kwargs):
+def raw_typeset_poly(coeffs,
+                     denominator=1,
+                     var='x',
+                     superscript=True,
+                     compress_threshold=100,
+                     **kwargs):
     """
     returns a raw_typeset span for polynomials
     """
@@ -423,7 +428,8 @@ def raw_typeset_poly(coeffs, denominator=1, var='x', superscript=True, compress_
                 break
 
             if c > 0:
-                tset += plus
+                if n != m -1: # don't need the + for the leading coefficient
+                    tset += plus
             elif c < 0:
                 tset += minus
             else:
@@ -450,7 +456,13 @@ def raw_typeset_poly(coeffs, denominator=1, var='x', superscript=True, compress_
         tset = f"( {tset} ) {denominatortset}"
         raw = f"( {raw} ) {denominatorraw}"
 
-    return raw_typeset(raw, tset, **kwargs)
+
+    if compress_poly:
+        # thirs forces the box
+        kwargs['textarea'] = True
+        kwargs['textarea_threshold'] =compress_threshold
+
+    return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
 
 
 
@@ -524,7 +536,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         res =  r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
         res = r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
-    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res, text_area_threshold=100)
+    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res, textarea_threshold=100)
 
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
