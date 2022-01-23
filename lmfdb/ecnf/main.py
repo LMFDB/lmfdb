@@ -10,7 +10,7 @@ from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, abort
 from markupsafe import Markup, escape
-from sage.all import factor, is_prime, QQ, PolynomialRing
+from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
@@ -19,7 +19,7 @@ from lmfdb.utils import (
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, redirect_no_cache, web_latex
+    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer
     )
 from lmfdb.utils.search_parsing import search_parser
 
@@ -484,8 +484,9 @@ ecnf_columns = SearchColumns([
     MathCol("class_size", "ec.isogeny", "Class size", short_title="Isogeny class size"),
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="Isogeny class degree"),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
-    ProcessedCol("conductor_norm", "ec.conductor", r"$[\mathcal O_K:\mathfrak n]$", lambda v: web_latex(factor(v)), short_title="Conductor norm", default=True, align="center"),
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center"),
+    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
+    ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],

@@ -32,9 +32,10 @@ from lmfdb.utils import (
     search_wrap,
     to_dict,
     web_latex,
+    web_latex_factored_integer,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name
@@ -510,6 +511,9 @@ g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
     ProcessedCol("cond", "g2c.conductor", "Conductor", lambda v: web_latex(factor(v)), align="center", default=True),
+    MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["disc_sign", "abs_disc"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
+                      default=lambda info: info.get("abs_disc"), align="center"),
+
     MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
     MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
     ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",

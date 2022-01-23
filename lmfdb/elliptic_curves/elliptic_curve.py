@@ -4,7 +4,7 @@ import re
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, factor
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb.elliptic_curves.web_ec import latex_equation
@@ -14,10 +14,10 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, integer_squarefree_part)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -335,7 +335,9 @@ ec_columns = SearchColumns([
                        align="center", short_title="Cremona class label"),
      MathCol("class_size", "ec.isogeny_class", "Class size", align="center", default=lambda info: info.get("class_size") or info.get("optimal") == "on"),
      MathCol("class_deg", "ec.isogeny_class_degree", "Class degree", align="center", default=lambda info: info.get("class_deg")),
-     ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex(factor(v)), default=True, align="center"),
+     ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(v), default=True, align="center"),
+     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
+                       default=lambda info: info.get("discriminant"), align="center"),
      MathCol("rank", "ec.rank", "Rank", default=True),
      ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
                   lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
@@ -363,8 +365,6 @@ ec_columns = SearchColumns([
      MathCol("manin_constant", "ec.q.modular_degree", "Modular degree", align="center"),
      ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
-     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: ("+" if s == 1 else "-") + str(a),
-                       default=lambda info: info.get("discriminant"), mathmode=True, align="right"),
      ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
                   short_title="j-invariant", align="center"),
      MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
