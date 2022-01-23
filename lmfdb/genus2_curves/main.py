@@ -5,7 +5,7 @@ from ast import literal_eval
 from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ, QQ, PolynomialRing, magma, prod
+from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -31,6 +31,7 @@ from lmfdb.utils import (
     redirect_no_cache,
     search_wrap,
     to_dict,
+    web_latex,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
@@ -508,14 +509,17 @@ def parse_sort(info, query):
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
+    ProcessedCol("cond", "g2c.conductor", "Conductor", lambda v: web_latex(factor(v)), align="center", default=True),
     ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
-    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), default=True, align="center"),
-    ProcessedCol("end_alg", "g2c.end_alg", r"\(\Q\)-end algebra", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
-    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"\(\overline{\Q}\)-end algebra", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", align="center"),
-    CheckCol("is_simple_base", "ag.simple", r"\(\Q\)-simple", short_title="Q-simple"),
-    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple", default=True),
-    CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)-type", short_title="GL2-type", default=True),
     MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
+    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
+              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
+    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", default=True, align="center"),
+    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
+    CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type", default=True),
+    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), align="left"),
+    CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
+    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
     MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-Automorphisms"),
     CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
@@ -523,10 +527,8 @@ g2c_columns = SearchColumns([
     MathCol("num_rat_wpts", "g2c.num_rat_wpts",  r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
     CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
     MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
-    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
-              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
     MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
-    MathCol("tamagawa_product", "g2c.tamagawa", "Tamagawa product"),
+    ProcessedCol("tamagawa_product", "g2c.tamagawa", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),

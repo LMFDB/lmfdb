@@ -10,15 +10,15 @@ from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, abort
 from markupsafe import Markup, escape
-from sage.all import factor
+from sage.all import factor, is_prime
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
-    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
+    parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache, web_latex
     )
 from lmfdb.utils.search_parsing import search_parser
@@ -492,14 +492,14 @@ ecnf_columns = SearchColumns([
                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="Has CM", align="center", orig="cm"),
-    ProcessedCol("cm", "ec.complex_multiplication", "CM disc", lambda v: "" if v == 0 else -abs(v),
-                 default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="CM discriminant", mathmode=True, align="center"),
+    ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
+                 default=True, short_title="CM discriminant", mathmode=True, align="center"),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
-    ProcessedCol("non-surjective_primes", "ec.maximal_galois_rep", "Nonmax primes", lambda primes: ", ".join([str(p) for p in primes]), short_title="Nonmaximal primes",
+    ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]), short_title="Nonmaximal primes",
                  default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
-                 default=lambda info: info.get("galois_images"),
+                 default=lambda info: info.get("galois_image"),
                  align="center"),
     MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
@@ -517,10 +517,12 @@ ecnf_columns = SearchColumns([
                           web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left"),
     MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", default=True, align="left"),
 ])
-ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
-not known for all curves in the database; curves for which these are
-unknown will not appear in searches specifying one of these
-quantities.</p>"""
+#ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
+#not known for all curves in the database; curves for which these are
+#unknown will not appear in searches specifying one of these
+#quantities.</p>"""
+
+modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(\[\d+\])?')
 
 @search_wrap(table=db.ec_nfcurves,
              title='Elliptic curve search results',
@@ -535,7 +537,6 @@ def elliptic_curve_search(info, query):
     parse_nf_string(info,query,'field',name="base number field",qfield='field_label')
     if query.get('field_label') == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
-
     parse_ints(info,query,'conductor_norm')
     parse_noop(info,query,'conductor_label')
     parse_ints(info,query,'rank')
@@ -547,8 +548,15 @@ def elliptic_curve_search(info, query):
             t_o *= int(n)
         query['torsion_order'] = t_o
     parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=ECNF_stats().isogeny_degrees)
-    parse_bool(info,query,'semistable','semistable')
-    parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
+    if info.get('reduction'):
+        if info['reduction'] == 'semistable':
+            query['semistable'] = True
+        elif info['reduction'] == 'not semistable':
+            query['semistable'] = False
+        elif info['reduction'] == 'potentially good':
+            query['potential_good_reduction'] = True
+        elif info['reduction'] == 'not potentially good':
+            query['potential_good_reduction'] = False
     parse_ints(info,query,'class_size','class_size')
     parse_ints(info,query,'class_deg','class_deg')
     parse_ints(info,query,'sha','analytic order of &#1064;')
@@ -559,19 +567,35 @@ def elliptic_curve_search(info, query):
         info['number'] = 1
         query['number'] = 1
 
+    # Keep include_base_change/include_Q_curves options for backward compat with URLs
     if 'include_base_change' in info:
-        if info['include_base_change'] in ['exclude', 'off']: # off for backward compat with urls
+        if info['include_base_change'] in ['exclude', 'off']: # off for backward compat
             query['base_change'] = []
         if info['include_base_change'] == 'only':
             query['base_change'] = {'$ne':[]}
     else:
         info['include_base_change'] = "on"
-
     if 'include_Q_curves' in info:
         if info['include_Q_curves'] == 'exclude':
             query['q_curve'] = False
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
+    print(info)
+    if 'Qcurves' in info:
+        print("Qcurves")
+        if info['Qcurves'] == 'Q-curve':
+            query['q_curve'] = True
+        elif info['Qcurves'] == 'base-change':
+            query['q_curve'] = True
+            query['base_change'] = {'$ne':[]}
+        elif info['Qcurves'] == 'non-Q-curve':
+            query['q_curve'] = False
+        elif info['Qcurves'] == 'non-base-change':
+            query['base_change'] = []
+        elif info['Qcurves'] == 'non-base-change-Q-curve':
+            query['q_curve'] = True
+            query['base_change'] = []
+    print(query)
 
     parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
 
@@ -600,6 +624,48 @@ def elliptic_curve_search(info, query):
                 query['cm'] = {'$and': [tmp, query['cm']]}
             else:
                 query['cm'] = tmp
+
+    parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                 qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
+
+    if info.get('galois_image'):
+        labels = [a.strip() for a in info['galois_image'].split(',')]
+        modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a) and is_prime(modell_image_label_regex.match(a)[1])]
+        if len(modell_labels) != len(labels):
+            err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
+            flash_error(err, "7C2.2.1")
+            raise ValueError(err)
+        if modell_labels:
+            query['galois_images'] = { '$contains': modell_labels }
+        if not 'cm' in query:
+            query['cm'] = 0
+            info['cm'] = "noCM"
+        if query['cm']:
+            # try to help the user out if they specify the normalizer of a Cartan in the CM case (these are either maximal or impossible
+            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
+                err = "To search for maximal images, exclude non-maximal primes"
+                flash_error(err)
+                raise ValueError(err)
+        else:
+            # if the user specifies full mod-ell image with ell > 3, automatically exclude nonmax primes (if possible)
+            max_labels = [a for a in modell_labels if a.endswith("G") and int(modell_image_label_regex.match(a)[1]) > 3]
+            if max_labels:
+                if info.get('nonmax_primes') and info['nonmax_quantifier'] != 'exclude':
+                    err = "To search for maximal images, exclude non-maximal primes"
+                    flash_error(err)
+                    raise ValueError(err)
+                else:
+                    modell_labels = [a for a in modell_labels if not a in max_labels]
+                    max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
+                    if info.get('nonmax_primes'):
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                    max_primes.sort(key=int)
+                    info['nonmax_primes'] = ','.join(max_primes)
+                    info['nonmax_quantifier'] = 'exclude'
+                    parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                                 qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
+                    info['galois_image'] = ','.join(modell_labels)
+                query['galois_images'] = { '$contains': modell_labels }
 
     parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
              qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
@@ -774,14 +840,19 @@ class ECNFSearchArray(SearchArray):
             knowl="ag.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
-        include_base_change = ExcludeOnlyBox(
-            name="include_base_change",
-            label="Base change curves",
-            knowl="ec.base_change")
-        include_Q_curves = ExcludeOnlyBox(
-            name="include_Q_curves",
-            label=r"\(\Q\)-curves",
-            knowl="ec.q_curve")
+        Qcurve_opts = ([("", ""),
+                        ("Q-curve",  "Q-curve"),
+                        ("base-change", "base change"),
+                        ("non-Q-curve",  "not a Q-curve"),
+                        ("non-base-change",  "not a base change"),
+                        ("non-base-change-Q-curve",  "non-base-chg Q-curve"),
+                       ])
+        Qcurves = SelectBox(
+            name="Qcurves",
+            label=r"$\Q$-curves",
+            example="base change",
+            knowl="ec.q_curve",
+            options=Qcurve_opts)
         conductor_norm = TextBox(
             name="conductor_norm",
             label="Conductor norm",
@@ -811,7 +882,7 @@ class ECNFSearchArray(SearchArray):
             name="jinv",
             label="j-invariant",
             knowl="ec.j_invariant",
-            width=685,
+            width=700,
             short_width=160,
             colspan=(1, 4, 1),
             example_span_colspan=2,
@@ -844,7 +915,7 @@ class ECNFSearchArray(SearchArray):
             options=tor_opts)
         sha = TextBox(
             name="sha",
-            label="Analytic order* of &#1064;",
+            label="Analytic order of &#1064;*",
             knowl="ec.analytic_sha_order",
             example="4")
         regulator = TextBox(
@@ -856,7 +927,8 @@ class ECNFSearchArray(SearchArray):
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="conductor_norm_factors",
-            label="Bad primes",
+            label="Bad&ensp;primes",
+            short_label=r"Bad&ensp;\(p\)",
             knowl="ec.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -865,16 +937,32 @@ class ECNFSearchArray(SearchArray):
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")
-        semistable = YesNoBox(
-            name="semistable",
-            label="Semistable",
-            example="Yes",
-            knowl="ec.semistable")
-        potential_good_reduction = YesNoBox(
-            name="potential_good_reduction",
-            label="Potential good reduction",
-            example="Yes",
-            knowl="ec.potential_good_reduction")
+        reduction_opts = ([("", ""),
+                           ("semistable",  "semistable"),
+                           ("not semistable",  "not semistable"),
+                           ("potentially good", "potentially good"),
+                           ("not potentially good", "not potentially good")])
+        reduction = SelectBox(
+            name="reduction",
+            label="Reduction",
+            example="semistable",
+            knowl="ec.reduction",
+            options=reduction_opts)
+        galois_image = TextBox(
+            name="galois_image",
+            label=r"Galois image",
+            short_label=r"Galois image",
+            example="7Cs.2.1 or 17B",
+            knowl="ec.galois_image_search")
+        nonmax_quant = SubsetBox(
+            name="nonmax_quantifier")
+        nonmax_primes = TextBoxWithSelect(
+            name="nonmax_primes",
+            label=r"Nonmaximal $\ell$",
+            short_label=r"Nonmax$\ \ell$",
+            knowl="ec.maximal_galois_rep",
+            example="2,3",
+            select_box=nonmax_quant)
         class_size = TextBox(
             name="class_size",
             label="Isogeny class size",
@@ -889,21 +977,21 @@ class ECNFSearchArray(SearchArray):
 
         self.browse_array = [
             [field, bf_deg],
-            [conductor_norm, include_base_change],
-            [rank, include_Q_curves],
+            [conductor_norm, bad_primes],
+            [rank, Qcurves],
             [torsion, torsion_structure],
             [cm_disc, include_cm],
             [sha, regulator],
             [isodeg, one],
             [class_size, class_deg],
-            [semistable, potential_good_reduction],
+            [galois_image, nonmax_primes],
             [jinv],
-            [count, bad_primes]
+            [count, reduction],
             ]
 
         self.refine_array = [
             [field, conductor_norm, rank, torsion, cm_disc],
-            [bf_deg, include_base_change, include_Q_curves, torsion_structure, include_cm],
-            [sha, isodeg, class_size, semistable, jinv],
-            [regulator, one, class_deg, potential_good_reduction, bad_primes],
+            [bf_deg, bad_primes, Qcurves, torsion_structure, include_cm],
+            [sha, isodeg, class_size, reduction, galois_image],
+            [jinv, regulator, one, class_deg, nonmax_primes],
             ]
