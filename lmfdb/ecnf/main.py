@@ -18,7 +18,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
-    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
+    SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache, web_latex
     )
 from lmfdb.utils.search_parsing import search_parser
