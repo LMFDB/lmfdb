@@ -19,7 +19,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, integer_squarefree_part)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
