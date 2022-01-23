@@ -378,7 +378,6 @@ def compress_polynomial(poly, threshold, decreasing=True):
     plus = r" + "
     minus = r" - "
     var = poly.parent().gen()
-    print(var)
 
     d = 0 if decreasing else poly.degree()
     assert poly[d] != 0 or decreasing
@@ -426,7 +425,6 @@ def compress_polynomial(poly, threshold, decreasing=True):
     tset += tsetend
     if tset.startswith(plus): # single monomial polynomials
         tset = tset[len(plus):]
-    print(tset)
     return tset
 
 
