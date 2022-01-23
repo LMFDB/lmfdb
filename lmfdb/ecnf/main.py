@@ -10,7 +10,7 @@ from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, abort
 from markupsafe import Markup, escape
-from sage.all import factor, is_prime
+from sage.all import factor, is_prime, QQ, PolynomialRing
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
@@ -470,6 +470,8 @@ def make_cm_query(cm_disc_str):
 def parse_cm_list(inp, query, qfield):
     query[qfield] = {'$in': make_cm_query(inp)}
 
+Ra=PolynomialRing(QQ,'a')
+
 ecnf_columns = SearchColumns([
     MultiProcessedCol("label", "ec.curve_label", "Label", ["short_label", "field_label", "conductor_label", "iso_label", "number"],
                       lambda label, field, conductor, iso, number: '<a href="%s">%s</a>' % (
@@ -479,12 +481,14 @@ ecnf_columns = SearchColumns([
                       lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso), short_class_label),
                       short_title="Isogeny class", default=True, align="center"),
+    MathCol("class_size", "ec.isogeny", "Class size", short_title="Isogeny class size"),
+    MathCol("class_deg", "ec.isogeny", "Class degree", short_title="Isogeny class degree"),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     MultiProcessedCol("conductor", "ec.conductor_label", "Conductor", ["field_label", "conductor_label"],
                       lambda field, conductor: '<a href="%s">%s</a>' %(url_for('.show_ecnf_conductor', nf=field, conductor_label=conductor), conductor),
                       align="center"),
-    MathCol("class_size", "ec.isogeny", "Class size", short_title="Isogeny class size"),
-    MathCol("class_deg", "ec.isogeny", "Class degree", short_title="Isogeny class degree"),
+    ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
+                 default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center", default=True),
@@ -494,8 +498,10 @@ ecnf_columns = SearchColumns([
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="Has CM", align="center", orig="cm"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
                  default=True, short_title="CM discriminant", mathmode=True, align="center"),
-    ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
-                 default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
+    CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
+    CheckCol("base_change", "ec.base_change", "Base change"),
+    CheckCol("semistable", "ec.semistable", "Semistable"),
+    CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),    
     ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]), short_title="Nonmaximal primes",
                  default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
@@ -506,10 +512,7 @@ ecnf_columns = SearchColumns([
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("Lvalue", "lfunction.leading_coeff", "Leading coeff", lambda v: str(v)[:11], short_title="Leading coefficient", align="left"),
-    CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
-    CheckCol("base_change", "ec.base_change", "Base change"),
-    CheckCol("semistable", "ec.semistable", "Semistable"),
-    CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),    
+    ProcessedCol("jinv", "ec.j_invariant", "j-invariant", lambda v: web_latex(Ra([QQ(s) for s in v.split(',')])), align="left"),
     MultiProcessedCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients",
                       ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
@@ -517,10 +520,10 @@ ecnf_columns = SearchColumns([
                           web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left"),
     MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", default=True, align="left"),
 ])
-#ecnf_columns.above_results = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
-#not known for all curves in the database; curves for which these are
-#unknown will not appear in searches specifying one of these
-#quantities.</p>"""
+ecnf_columns.below_download = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
+not known for all curves in the database; curves for which these are
+unknown will not appear in searches specifying one of these
+quantities.</p>"""
 
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(\[\d+\])?')
 
@@ -580,7 +583,6 @@ def elliptic_curve_search(info, query):
             query['q_curve'] = False
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
-    print(info)
     if 'Qcurves' in info:
         print("Qcurves")
         if info['Qcurves'] == 'Q-curve':
@@ -595,7 +597,6 @@ def elliptic_curve_search(info, query):
         elif info['Qcurves'] == 'non-base-change-Q-curve':
             query['q_curve'] = True
             query['base_change'] = []
-    print(query)
 
     parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
 
