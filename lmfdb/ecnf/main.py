@@ -24,7 +24,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -484,9 +484,8 @@ ecnf_columns = SearchColumns([
     MathCol("class_size", "ec.isogeny", "Class size", short_title="Isogeny class size"),
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="Isogeny class degree"),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
-    MultiProcessedCol("conductor", "ec.conductor_label", "Conductor", ["field_label", "conductor_label"],
-                      lambda field, conductor: '<a href="%s">%s</a>' %(url_for('.show_ecnf_conductor', nf=field, conductor_label=conductor), conductor),
-                      align="center"),
+    ProcessedCol("conductor_norm", "ec.conductor", r"$[\mathcal O_K:\mathfrak n]$", lambda v: web_latex(factor(v)), short_title="Conductor norm", default=True, align="center"),
+    SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center"),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
