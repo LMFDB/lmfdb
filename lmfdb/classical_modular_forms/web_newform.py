@@ -659,7 +659,9 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
-        polynomials = [raw_typeset_poly(F, var=f'T_{p}') for p, F in self.hecke_cutters]
+        # using dummy variable T to workaround T_{p} not being a valid var for sage
+        print(self.hecke_cutters[1])
+        polynomials = [raw_typeset_poly(F, var=f'TTTT').replace('TTTT', f'T_{p}') for p, F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'

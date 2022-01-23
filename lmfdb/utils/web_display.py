@@ -377,8 +377,8 @@ def compress_polynomial(poly, threshold, decreasing=True):
         return '0'
     plus = r" + "
     minus = r" - "
-    var = latex(poly.parent().gen())
-    monomial_str = f"{var}^{{{{{{}}}}}}" # I'm into ASCII art
+    var = poly.parent().gen()
+    print(var)
 
     d = 0 if decreasing else poly.degree()
     assert poly[d] != 0 or decreasing
@@ -392,10 +392,7 @@ def compress_polynomial(poly, threshold, decreasing=True):
         tsetend += short
 
     if d > 0:
-        if d == 1:
-            tsetend += var
-        else:
-            tsetend += monomial_str.format(d)
+        tsetend += latex(var**d)
 
     tset = ""
     for n in (reversed(range(d + 1, poly.degree() + 1)) if decreasing else range(d)):
@@ -420,10 +417,8 @@ def compress_polynomial(poly, threshold, decreasing=True):
         if abs(c) != 1:
             tset += compress_int(abs(c))[0] + " "
 
-        if n == 1:
-            monomial = var
-        elif n > 1:
-            monomial = monomial_str.format(n)
+        if n >= 1:
+            monomial = latex(var**n) 
         else:
             monomial = "1" if abs(c) == 1 else ""
         tset += monomial
@@ -431,6 +426,7 @@ def compress_polynomial(poly, threshold, decreasing=True):
     tset += tsetend
     if tset.startswith(plus): # single monomial polynomials
         tset = tset[len(plus):]
+    print(tset)
     return tset
 
 
