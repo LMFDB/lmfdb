@@ -335,7 +335,7 @@ ec_columns = SearchColumns([
                        align="center", short_title="Cremona class label"),
      MathCol("class_size", "ec.isogeny_class", "Class size", align="center", default=lambda info: info.get("class_size") or info.get("optimal") == "on"),
      MathCol("class_deg", "ec.isogeny_class_degree", "Class degree", align="center", default=lambda info: info.get("class_deg")),
-     ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(v), default=True, align="center"),
+     ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
      MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
                        default=lambda info: info.get("discriminant"), align="center"),
      MathCol("rank", "ec.rank", "Rank", default=True),
