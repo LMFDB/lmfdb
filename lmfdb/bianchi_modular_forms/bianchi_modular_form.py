@@ -314,6 +314,7 @@ def render_bmf_space_webpage(field_label, level_label):
         (level_label, '')])
     friends = []
     properties = []
+    downloads = []
 
     if not field_label_regex.match(field_label):
         flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
@@ -370,8 +371,9 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] # - 2*info['nnf2']
                 properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
+                downloads = [('Underlying data', url_for("API.api_query", table="bmf_dims") + f"?label={info['label']}")]
 
-    return render_template("bmf-space.html", info=info, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
+    return render_template("bmf-space.html", info=info, title=t, bread=bread, properties=properties, friends=friends, downloads=downloads, learnmore=learnmore_list())
 
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
