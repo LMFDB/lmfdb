@@ -5,7 +5,7 @@ from ast import literal_eval
 from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ, QQ, PolynomialRing, magma, prod, latex
+from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -22,8 +22,8 @@ from lmfdb.utils import (
     coeff_to_poly,
     comma,
     display_knowl,
-    flash_info,
     flash_error,
+    flash_info,
     formatters,
     parse_bool,
     parse_bracketed_posints,
@@ -33,9 +33,11 @@ from lmfdb.utils import (
     redirect_no_cache,
     search_wrap,
     to_dict,
+    web_latex,
+    web_latex_factored_integer,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name
@@ -150,6 +152,8 @@ geom_aut_grp_dict_pretty = {
     "24.8": "$C_3:D_4$",
     "48.29": r"$\GL(2,3)$",
 }
+
+
 
 ###############################################################################
 # Routing for top level and random_curve
@@ -364,6 +368,18 @@ def class_from_curve_label(label):
 # Searching
 ################################################################################
 
+### Regex patterns used in lookup
+TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
+STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
+POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
+POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
+ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
+ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
+G2_LOOKUP_RE = re.compile(
+    r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")"
+)
+
+
 def genus2_lookup_equation(input_str):
     # retuns:
     # label, C_str
@@ -372,21 +388,25 @@ def genus2_lookup_equation(input_str):
     # 0, C_str when it fails to start magma
     R = PolynomialRing(QQ, "x")
     y = PolynomialRing(R, "y").gen()
-    input_str = input_str.replace(" ", "").strip('[').strip(']')
     def read_list_coeffs(elt):
         if not elt:
             return R(0)
         else:
             return R([int(c) for c in elt.split(",")])
 
-    if '],[' in input_str:
+    if ZLLIST_RE.fullmatch(input_str):
+        input_str = input_str.strip('[').strip(']')
         fg = [read_list_coeffs(elt) for elt in input_str.split('],[')]
-    elif '[' in input_str:
+    elif ZLIST_RE.fullmatch(input_str):
+        input_str = input_str.strip('[').strip(']')
         fg = [read_list_coeffs(input_str), R(0)]
     else:
+        print(input_str)
+        input_str = input_str.strip('[').strip(']')
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str.split(",")]
     if len(fg) == 1:
         fg.append(R(0));
+
     C_str_latex= fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
     try:
         C = magma.HyperellipticCurve(fg)
@@ -447,32 +467,26 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
-STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
-POLY_RE = TERM_RE + "(" + STERM_RE + ")*"
-ZLIST_RE = r"\[((|-)\d+\s*)*(,(|-)\d+\s*)*\]"
+
+LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
+LHASH_RE = re.compile(r"\#\d+")
 
 
 def genus2_jump(info):
     jump = info["jump"].replace(" ", "")
-    if re.match(r"^\d+\.[a-z]+\.\d+\.\d+$", jump):
+    if LABEL_RE.fullmatch(jump):
         return redirect(url_for_curve_label(jump), 301)
-    elif re.match(r"^\d+\.[a-z]+$", jump):
+    elif ISOGENY_LABEL_RE.fullmatch(jump):
         return redirect(url_for_isogeny_class_label(jump), 301)
-    elif re.match(r"^\#\d+$", jump) and ZZ(jump[1:]) < 2 ** 61:
+    elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves.lucky({"Lhash": jump[1:].strip()}, projection="class")
         if c:
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-    elif (
-        re.match(r"^" + POLY_RE + r"$", jump)
-        or re.match(r"^" + POLY_RE  + r"$", jump)
-        or re.match(r"^(\[|)" + POLY_RE + r"," + POLY_RE + r"(\]|)$", jump)
-        or re.match(r"^" + ZLIST_RE + r"$", jump)
-        or re.match(r"^(\[|)" + ZLIST_RE + r"," + ZLIST_RE + r"(\]|)$", jump)
-    ):
+    elif G2_LOOKUP_RE.fullmatch(jump):
         label, eqn_str = genus2_lookup_equation(jump)
         if label:
             return redirect(url_for_curve_label(label), 301)
@@ -485,6 +499,8 @@ def genus2_jump(info):
         errmsg += "."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
+
+
 
 
 class G2C_download(Downloader):
@@ -527,27 +543,35 @@ def parse_sort(info, query):
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
-    ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
-    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), default=True, align="center"),
-    ProcessedCol("end_alg", "g2c.end_alg", r"\(\Q\)-end algebra", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
-    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"\(\overline{\Q}\)-end algebra", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", align="center"),
-    CheckCol("is_simple_base", "ag.simple", r"\(\Q\)-simple", short_title="Q-simple"),
-    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple", default=True),
-    CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)-type", short_title="GL2-type", default=True),
+    ProcessedCol("cond", "g2c.conductor", "Conductor", lambda v: web_latex(factor(v)), align="center", default=True),
+    MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["disc_sign", "abs_disc"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
+                      default=lambda info: info.get("abs_disc"), align="center"),
+
     MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
+    MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
+    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
+              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
+    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", default=True, align="center"),
+    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
+    CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
+    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), align="left"),
+    CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
+    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
     MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-Automorphisms"),
+    MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
+    MathCol("num_rat_wpts", "g2c.num_rat_wpts",  r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
     CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
-    MathCol("num_rat_pts", "g2c.all_rational_points", "Q-points*"),
-    MathCol("num_rat_wpts", "g2c.num_rat_wpts", "Q-Weierstrass pts"),
     CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
     MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
-    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion subgroup", lambda v: "trivial" if v=="[]" else r"\(%s\)"%v, align="center"),
-    MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
-    MathCol("tamagawa_product", "g2c.tamagawa", "Tamagawa product"),
+    ProcessedCol("tamagawa_product", "g2c.tamagawa", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
-    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coeff", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), mathmode=True),
+    ProcessedCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), mathmode=True),
+    ProcessedCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), mathmode=True),
+    ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
 ])
 
 @search_wrap(
