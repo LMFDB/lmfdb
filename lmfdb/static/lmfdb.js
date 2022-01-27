@@ -430,6 +430,24 @@ function control_columns(S) {
     var label = S.options[S.selectedIndex].text;
     label = label.slice(2, label.length);
     $('.col-'+S.value).toggle();
+    // For column groups, have to adjust the width of the top column
+    $('th.col-'+S.value).each(function(i, obj) {
+      // We need to adjust the column width for any colgroup header containing this column.
+      // there should only be one in the list, but doing this more than once won't hurt.
+      var classes = $(this).attr('class').split(' ');
+      for (i = 0; i < classes.length; i++) {
+        if (classes[i].startsWith("colgroup-")) {
+          var colspan = $('th.'+classes[i]+':visible').length;
+          var header = $('.col-' + classes[i].slice(9));
+          if (colspan == 0) {
+            header.hide();
+          } else {
+            header.show();
+            header.prop("colSpan", $('th.'+classes[i]+':visible').length);
+          }
+        }
+      }
+    })
     if ($('.col-'+S.value+':visible').length > 0) {
       S.options[S.selectedIndex].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
       var i = hidden_cols.indexOf(S.value);
@@ -450,7 +468,6 @@ function control_columns(S) {
         shown_cols.splice(i, 1);
         show.val(shown_cols.join("."));
       }
-      console.log(hidden_cols);
     }
     S.value = '';
   }

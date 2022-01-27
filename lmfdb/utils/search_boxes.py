@@ -740,7 +740,7 @@ class SearchArray(UniqueRepresentation):
     def buttons(self, info=None):
         st = self._st(info)
         buttons = []
-        spacer = RowSpacer(22)
+        spacer = RowSpacer(8)
         if st == "DynStats":
             buttons.append(SearchButton("DynStats", "Generate statistics"))
         else:

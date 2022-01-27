@@ -25,23 +25,23 @@ class AVTest(LmfdbTest):
         r"""
         Check that is_simple is computed correctly, and that the decomposition information displays correctly
         """
-        self.check_args("/Variety/Abelian/Fq/4/3/ab_d_ad_g", "simple")
+        self.check_args("/Variety/Abelian/Fq/4/3/ab_d_ad_g", ">simple")
         self.check_args("/Variety/Abelian/Fq/3/4/e_q_bg", "1.4.a")
-        self.check_args("/Variety/Abelian/Fq/3/4/e_q_bg", 'not <a title="Simple abelian variety [av.simple]" knowl="av.simple" kwargs="">simple</a>')
+        self.check_args("/Variety/Abelian/Fq/3/4/e_q_bg", '<a title="Simple abelian variety [av.simple]" knowl="av.simple" kwargs="">not simple</a>')
 
     def test_is_ordinary(self):
         r"""
         Check that is_ordinary is computed correctly
         """
-        self.check_args("/Variety/Abelian/Fq/3/3/ad_i_aq", "ordinary")
-        self.not_check_args("/Variety/Abelian/Fq/2/61/ah_a", "ordinary")
+        self.check_args("/Variety/Abelian/Fq/3/3/ad_i_aq", ">ordinary")
+        self.check_args("/Variety/Abelian/Fq/2/61/ah_a", ">not ordinary")
 
     def test_is_supersingular(self):
         r"""
         Check that is_supersingular is computed correctly
         """
-        self.check_args("/Variety/Abelian/Fq/2/7/a_a", "supersingular")
-        self.not_check_args("/Variety/Abelian/Fq/2/71/ah_a", "supersingular")
+        self.check_args("/Variety/Abelian/Fq/2/7/a_a", ">supersingular")
+        self.check_args("/Variety/Abelian/Fq/2/71/ah_a", ">not supersingular")
 
     def test_slopes(self):
         r"""

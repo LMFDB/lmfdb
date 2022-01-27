@@ -85,7 +85,7 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'no, but is a twist of the base change of a form over')
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'Elliptic curve 2.0.11.1-256.1-a')
         # A dimension 2 example
-        self.check_args(base_url+'2.0.4.1/377.1/a2', r'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining')
+        # self.check_args(base_url+'2.0.4.1/377.1/a2', r'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining')
 
     def test_friends(self):
         for url, texts, notitself in [
@@ -128,21 +128,20 @@ class BMFTest(LmfdbTest):
         hecke_av_start = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11]
         assert L1_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
 
+        # A dimension 2 example (no longer available)
+        # L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
+        # L2_variables = self.check_sage_compiles_and_extract_variables(L2_sage_code)
 
-        # A dimension 2 example
-        L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
-        L2_variables = self.check_sage_compiles_and_extract_variables(L2_sage_code)
+        # i = L2_variables['F'].gen()
+        # z = L2_variables['z']
+        # ZF = L2_variables['ZF']
 
-        i = L2_variables['F'].gen()
-        z = L2_variables['z']
-        ZF = L2_variables['ZF']
+        # assert L2_variables['NN'] == ZF.ideal((16*i - 11)), "level doesn't match"  # the level displayed on BMF homepage
 
-        assert L2_variables['NN'] == ZF.ideal((16*i - 11)), "level doesn't match"  # the level displayed on BMF homepage
-
-        for gens in [(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)]:
-            assert ZF.ideal(gens) in L2_variables['hecke_eigenvalues']
-        hecke_av_start = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]
-        assert L2_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
+        # for gens in [(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)]:
+        #     assert ZF.ideal(gens) in L2_variables['hecke_eigenvalues']
+        # hecke_av_start = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]
+        # assert L2_variables['hecke_eigenvalues_array'][:len(hecke_av_start)] == hecke_av_start
 
     def test_download_magma(self):
         # A dimension 1 example

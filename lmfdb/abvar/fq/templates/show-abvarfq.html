@@ -38,12 +38,43 @@
 
 <p>
   {% if cl.is_geometrically_simple %}
-  This isogeny class is {{ KNOWL('av.simple',title='simple') }} and {{ KNOWL('av.geometrically_simple',title='geometrically simple') }}.
+  This isogeny class is {{ KNOWL('av.simple',title='simple') }} and {{ KNOWL('av.geometrically_simple',title='geometrically simple') }},
   {% elif cl.is_simple %}
-  This isogeny class is {{ KNOWL('av.simple',title='simple') }} but not {{ KNOWL('av.geometrically_simple',title='geometrically simple') }}.
+  This isogeny class is {{ KNOWL('av.simple',title='simple') }} but not {{ KNOWL('av.geometrically_simple',title='geometrically simple') }},
   {% else %}
-  This isogeny class is not {{ KNOWL('av.simple',title='simple') }}.
+  This isogeny class is {{ KNOWL('av.simple',title='not simple') }},
   {% endif %}
+
+  {% if cl.is_primitive %}
+  {{ KNOWL('ag.primitive',title='primitive') }}, 
+  {% else %}
+  {{ KNOWL('ag.primitive',title='not primitive') }},
+  {% endif %}
+
+  {% if cl.is_ordinary() %}
+  {{ KNOWL('av.fq.ordinary',title='ordinary') }},
+  {% else %}
+  {{ KNOWL('av.fq.ordinary',title='not ordinary') }},
+  {% endif %}
+
+  {% if cl.is_supersingular() %}
+  and {{ KNOWL('av.fq.supersingular',title='supersingular') }}.
+  {% else %}
+  and {{ KNOWL('av.fq.supersingular',title='not supersingular')}}.
+  {% endif %}
+
+
+  {% if cl.has_principal_polarization != 1 and cl.has_jacobian != 1 %}
+  {# nothing to how here #}
+  {% elif cl.has_principal_polarization == 1  and cl.has_jacobian == 1 %}
+  It is {{ KNOWL('av.princ_polarizable',title='principally polarizable') }} and
+  contains a {{ KNOWL('av.fq.jacobian',title='Jacobian') }}.
+  {% elif cl.has_jacobian == 1 %}
+  It contains a {{ KNOWL('av.fq.jacobian',title='Jacobian') }}.
+  {% else %}
+  It is {{ KNOWL('av.princ_polarizable',title='principally polarizable') }}.
+  {% endif %}
+  
 </p>
 
 <h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
