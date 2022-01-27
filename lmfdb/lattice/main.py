@@ -324,11 +324,20 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     else:
         info['properties']=[('Class number', prop_int_pretty(info['class_number']))]+info['properties']
     info['properties']=[('Label', '%s' % info['label'])]+info['properties']
+    downloads = [("Underlying data", url_for("API.api_query", table="lat_lattices") + f"?label={lab}")]
 
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
+    return render_template(
+        "lattice-single.html",
+        info=info,
+        title=t,
+        bread=bread,
+        properties=info['properties'],
+        downloads=downloads,
+        learnmore=learnmore_list(),
+        KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):

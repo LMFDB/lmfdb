@@ -2,7 +2,7 @@
 import itertools
 import re
 
-from flask import render_template, url_for, redirect, request, jsonify
+from flask import render_template, url_for, redirect, request, jsonify, abort
 from psycopg2.extensions import QueryCanceledError
 from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_function
 
@@ -17,6 +17,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
+from lmfdb.api import datapage
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.sato_tate_groups import st_page
 
@@ -887,9 +888,9 @@ def render_by_label(label):
         c=data['counts']
         T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
         info['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
-    return render_st_group(info, portrait=data.get('trace_histogram'))
+    return render_st_group(info, portrait=data.get('trace_histogram'), in_database=True)
 
-def render_st_group(info, portrait=None):
+def render_st_group(info, portrait=None, in_database=False):
     """ render html page for Sato-Tate group described by info """
     prop = [('Label', '%s'%info['label'])]
     if portrait:
@@ -904,6 +905,7 @@ def render_st_group(info, portrait=None):
         ('Identity component', r'\(%s\)'%info['identity_component']),
         ('Component group', r'\(%s\)'%info['component_group']),
     ]
+    downloads = [("Underlying data", url_for(".st_data", label=info['label']))] if in_database else []
     bread = get_bread([
         ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
@@ -912,11 +914,21 @@ def render_st_group(info, portrait=None):
     title = r'Sato-Tate group \(' + info['pretty'] + r'\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
     return render_template('st_display.html',
                            properties=prop,
+                           downloads=downloads,
                            info=info,
                            bread=bread,
                            learnmore=learnmore_list(),
                            title=title,
                            KNOWL_ID='st_group.%s'%(info['label']))
+
+@st_page.route("/data/<label>")
+def st_data(label):
+    data = db.gps_st.lookup(label)
+    if data is None:
+        return abort(404)
+    bread = get_bread([(f"Data - {label}", "")])
+    title = f"Sato-Tate group data - {label}"
+    return datapage([label, data["identity_component"], data["component_group"]], ["gps_st", "gps_st0", "gps_groups"], bread=bread, title=title, label_cols=["label", "name", "label"])
 
 @st_page.route('/Source')
 def source_page():

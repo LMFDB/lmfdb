@@ -12,6 +12,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
+from lmfdb.api import datapage
 from lmfdb.characters.web_character import (
     WebSmallDirichletCharacter,
     WebDBDirichletCharacter,
@@ -441,6 +442,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                     return redirect(url_for(".render_DirichletNavigation"))
 
                 info['show_orbit_label'] = True
+                info['downloads'] = [('Underlying data', url_for('API.api_query', table="char_dir_orbits") + f"?label={modulus}.{orbit_label}")]
                 info['learnmore'] = learn()
                 info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
                 info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
@@ -478,6 +480,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                                         orbit_label=real_orbit_label,
                                         number=number))
         args['orbit_label'] = real_orbit_label
+        downloads = [('Underlying data', url_for(".dirchar_data", label=f"{modulus}.{real_orbit_label}.{number}"))]
     else:
         if orbit_label is not None:
             flash_warning(
@@ -488,17 +491,26 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             return redirect(url_for("characters.render_Dirichletwebpage",
                                     modulus=modulus,
                                     number=number))
+        downloads = []
 
     args['number'] = number
     webchar, bread_crumbs = make_webchar(args, get_bread=True)
     info = webchar.to_dict()
     info['bread'] = bread_crumbs
     info['learnmore'] = learn()
+    info['downloads'] = downloads
     info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
 
+@characters_page.route("/Dirichlet/data/<label>")
+def dirchar_data(label):
+    if label.count(".") != 2:
+        return abort(404)
+    modulus, orbit_label, number = label.split(".")
+    title = f"Dirichlet character data - {modulus}.{number}"
+    return datapage([f"{modulus}.{orbit_label}", f"{modulus}.{number}"], ["char_dir_orbits", "char_dir_values"], title=title, bread=[], label_cols=["label", "label"])
 
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')

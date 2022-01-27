@@ -264,6 +264,7 @@ class WebNewformSpace(object):
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('.download_newspace', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
         if self.conrey_indexes[0] == 1:
@@ -418,7 +419,8 @@ class WebGamma1Space(object):
         # Downloads
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
+            ('All stored data to text', url_for('cmf.download_full_space', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
         self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
         self.friends = []

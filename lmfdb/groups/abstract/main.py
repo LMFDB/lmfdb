@@ -12,6 +12,7 @@ from flask import (
     request,
     send_file,
     url_for,
+    abort,
 )
 from six import BytesIO
 from string import ascii_lowercase
@@ -43,6 +44,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, SearchCol, MultiProcessedCol, ColGroup
+from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
     WebAbstractCharacter,
@@ -911,6 +913,7 @@ subgroup_columns.dummy_download = True
     columns=subgroup_columns,
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
+    url_for_label=url_for_subgroup_label,
 )
 def subgroup_search(info, query={}):
     info["search_type"] = "Subgroups"
@@ -1033,6 +1036,7 @@ def render_abstract_group(label, data=None):
                 url_for(".download_group", label=label, download_type="magma"),
             ),
             ("Code for Gap", url_for(".download_group", label=label, download_type="gap")),
+            ("Underlying data", url_for(".gp_data", label=label)),
         ]
 
         # "internal" friends
@@ -1134,6 +1138,9 @@ def render_abstract_subgroup(label):
         ("Index", factor_latex(seq.quotient_order)),
         ("Normal", "Yes" if seq.normal else "No"),
     ]
+    downloads = [
+        ("Underlying data", url_for(".sgp_data", label=label))
+    ]
 
     bread = get_bread([(label,)])
 
@@ -1145,6 +1152,7 @@ def render_abstract_subgroup(label):
         seq=seq,
         properties=properties,
         # friends=friends,
+        downloads=downloads,
         learnmore=learnmore_list(),
     )
 
@@ -1256,6 +1264,23 @@ def how_computed_page():
         learnmore=learnmore_list_remove("Source"),
     )
 
+@abstract_page.route("/data/<label>")
+def gp_data(label):
+    bread = get_bread(f"Data - {label}")
+    title = f"Abstract group data - {label}"
+    return datapage(label, ["gps_groups", "gps_groups_cc", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", "group", "group", "group", "ambient"])
+
+@abstract_page.route("/sdata/<label>")
+def sgp_data(label):
+    bread = get_bread(f"Data - {label}")
+    title = f"Abstract subgroup data - {label}"
+    data = db.gps_subgroups.lookup(label, ["ambient", "subgroup", "quotient"])
+    if data is None:
+        return abort(404)
+    if data["quotient"] is None:
+        return datapage([label, data["subgroup"], data["ambient"]], ["gps_subgroups", "gps_groups", "gps_groups"], bread=bread, title=title)
+    else:
+        return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 @abstract_page.route("/<label>/download/<download_type>")
 def download_group(**args):
@@ -1747,9 +1772,9 @@ class SubgroupSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("Subgroups", "List of subgroups"), ("Random", "Random subgroup")]
+            return [("Subgroups", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]
         else:
-            return [("Subgroups", "Search again"), ("Random", "Random subgroup")]
+            return [("Subgroups", "Search again"), ("RandomSubgroup", "Random subgroup")]
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
     # Note that, when called by knowl_cache from transitive_group.py,

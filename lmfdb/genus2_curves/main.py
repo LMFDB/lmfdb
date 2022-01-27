@@ -34,6 +34,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
+from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name
@@ -310,6 +311,7 @@ def render_curve_webpage(label):
     return render_template(
         "g2c_curve.html",
         properties=g2c.properties,
+        downloads=g2c.downloads,
         info={"aut_grp_dict": aut_grp_dict, "geom_aut_grp_dict": geom_aut_grp_dict},
         data=g2c.data,
         code=g2c.code,
@@ -357,6 +359,12 @@ def url_for_isogeny_class_label(label):
 def class_from_curve_label(label):
     return ".".join(label.split(".")[:2])
 
+@g2c_page.route("/data/<label>")
+def G2C_data(label):
+    bread = get_bread(f"Data - {label}")
+    sorts = [[], [], [], ["prime"], ["p"], []]
+    label_cols = ["label", "label", "label", "lmfdb_label", "label", "label"]
+    return datapage(label, ["g2c_curves", "g2c_endomorphisms", "g2c_ratpts", "g2c_galrep", "g2c_tamagawa", "g2c_plots"], title=f"Genus 2 curve data - {label}", bread=bread, sorts=sorts, label_cols=label_cols)
 
 ################################################################################
 # Searching

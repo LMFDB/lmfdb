@@ -29,3 +29,7 @@ class LocalFieldTest(LmfdbTest):
         assert 'Not computed' in L.get_data(as_text=True)
         L = self.tc.get('/padicField/2.8.0.1')
         assert 'Does not exist' in L.get_data(as_text=True)
+
+    def test_underlying_data(self):
+        page = self.tc.get('/padicField/11.6.4.2').get_data(as_text=True)
+        assert 'Underlying data' in page and 'api/lf_fields/?label=11.6.4.2' in page

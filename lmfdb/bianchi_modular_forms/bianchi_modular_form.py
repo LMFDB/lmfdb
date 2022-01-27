@@ -600,8 +600,9 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         properties = data.properties
         friends = data.friends
         info['downloads'] = [
-        ('Modular form to Magma', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='magma')),
-        ('Eigenvalues to Sage', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='sage'))
+            ('Modular form to Magma', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='magma')),
+            ('Eigenvalues to Sage', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='sage')),
+            ('Underlying data', url_for("API.api_query", table="bmf_forms") + f"?label={label}"),
         ]
     except ValueError:
         flash_error("No Bianchi modular form in the database has label %s", label)

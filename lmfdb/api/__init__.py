@@ -14,4 +14,6 @@ def body_class():
 from . import api
 assert api # silence pyflakes
 
+from .api import datapage
+
 app.register_blueprint(api_page, url_prefix="/api")

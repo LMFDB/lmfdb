@@ -30,6 +30,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, MultiProcessedCol
+from lmfdb.api import datapage
 from . import belyi_page
 from .web_belyi import (
     WebBelyiGalmap,
@@ -581,6 +582,21 @@ def belyi_galmap_sage_download(label):
 @belyi_page.route("/download_galmap_to_text/<label>")
 def belyi_galmap_text_download(label):
     return Belyi_download().download_galmap_text(label)
+
+@belyi_page.route("/data/<label>")
+def belyi_data(label):
+    bread = get_bread(f"Data - {label}")
+    if label.count("-") == 1: # passport label length
+        labels = [label, label]
+        label_cols = ["plabel", "plabel"]
+        tables = ["belyi_passports_fixed", "belyi_galmaps_fixed"]
+    elif label.count("-") == 2: # galmap label length
+        labels = [label, "-".join(label.split("-")[:-1]), label]
+        label_cols = ["label", "plabel", "label"]
+        tables = ["belyi_galmaps_fixed", "belyi_passports_fixed", "belyi_galmap_portraits"]
+    else:
+        return abort(404)
+    return datapage(labels, tables, title=f"Belyi map data - {label}", bread=bread, label_cols=label_cols)
 
 def url_for_label(label):
     return url_for(".by_url_belyi_search_url", smthorlabel=label)

@@ -169,3 +169,8 @@ class BMFTest(LmfdbTest):
             magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
             magma_code += 'f;\n'
             self.assert_if_magma('success', magma_code, mode='in')
+
+    def test_underlying_data(self):
+        # We just check for the existence of the link, since it use the api
+        page = self.tc.get("/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/88.5/a").get_data(as_text=True)
+        assert "Underlying data" in page and "api/bmf_forms/?label=2.0.7.1-88.5-a" in page

@@ -358,6 +358,7 @@ def render_field_webpage(args):
         if db.nf_fields.exists({'local_algs': {'$contains': label}}):
             friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
+        downloads = [('Underlying data', url_for('API.api_query', table='lf_fields') + f'?label={label}')]
 
         bread = get_bread([(label, ' ')])
         return render_template(
@@ -368,6 +369,7 @@ def render_field_webpage(args):
             info=info,
             properties=prop2,
             friends=friends,
+            downloads=downloads,
             learnmore=learnmore_list(),
             KNOWL_ID="lf.%s" % label,
         )

@@ -628,6 +628,7 @@ def render_field_webpage(args):
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
         downloads.append(('Download {} code'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
+    downloads.append(('Underlying data', url_for("API.api_query", table="nf_fields") + f"?label={label}"))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     from lmfdb.artin_representations.math_classes import artin_label_pretty
     try:

@@ -68,3 +68,16 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/ab/3000", [ # large cyclic group
             r"C_2^3\times C_{100}", # automorphism group structure
         ])
+
+    def test_underlying_data(self):
+        self.check_args("/Groups/Abstract/data/256.33517", [
+            "gps_groups", "number_normal_subgroups",
+            "gps_groups_cc", "representative",
+            "gps_qchar", "cdim",
+            "gps_char", "indicator",
+            "gps_subgroups", "mobius_sub"])
+        self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
+            "gps_subgroups", "'label': '16.8.2.b1.a1'",
+            "gps_groups", "'label': '8.4'",
+            "'label': '16.8'",
+            "'label': '2.1'"])

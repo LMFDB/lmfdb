@@ -89,3 +89,6 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=3%2C6','4.4.1311025.1')
         self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=6%2C3','4.4.1311025.1')
         self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=5-6%2C3','4.4.485809.1')
+
+    def test_underlying_data(self):
+        self.check_args('NumberField/2.2.10069.1', ['Underlying data', 'api/nf_fields/?label=2.2.10069.1'])

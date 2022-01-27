@@ -876,6 +876,10 @@ class WebG2C(object):
             (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
+        if is_curve:
+            self.downloads = [("Underlying data", url_for(".G2C_data", label=data['label']))]
+        else:
+            self.downloads = []
 
         # Friends
         self.friends = friends = []

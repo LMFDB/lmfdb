@@ -44,6 +44,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
@@ -1285,6 +1286,8 @@ def set_bread_and_friends(info, L, request):
         info['factors_origins'] = L.factors_origins
         info['Linstances'] = L.instances
         info['downloads'] = L.downloads
+        info['downloads'].append(("Underlying data", url_for(".lfunc_data", label=L.label)))
+
 
         for elt in [info['origins'], info['friends'], info['factors_origins'], info['Linstances']]:
             if elt is not None:
@@ -1564,8 +1567,11 @@ def download(label, L=None): # the wrapper populates the L
     assert label
     return L.download()
 
-
-
+@l_function_page.route("/data/<label>")
+def lfunc_data(label):
+    title = f"Lfunction data - {label}"
+    bread = get_bread([(f"Data - {label}", " ")])
+    return datapage(label, ["lfunc_lfunctions", "lfunc_search", "lfunc_instances"], title=title, bread=bread)
 
 
 ################################################################################

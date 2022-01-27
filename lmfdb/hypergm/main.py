@@ -18,6 +18,7 @@ from lmfdb.utils import (
     to_dict, web_latex, integer_divisors)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
@@ -320,12 +321,20 @@ def hgm_family_constant_image(AB):
 
 @hypergm_page.route("/<label>")
 def by_family_label(label):
-    return render_hgm_family_webpage(normalize_family(label))
+    if HGM_FAMILY_LABEL_RE.match(label):
+        return render_hgm_family_webpage(normalize_family(label))
+    else:
+        flash_error('%s is not a valid label for a family of hypergeometric motives', label)
+        return redirect(url_for(".index"))
 
 @hypergm_page.route("/<label>/<t>")
 def by_label(label, t):
-    full_label = normalize_family(label) + "_" + t
-    return render_hgm_webpage(full_label)
+    if HGM_FAMILY_LABEL_RE.match(label):
+        full_label = normalize_family(label) + "_" + t
+        return render_hgm_webpage(full_label)
+    else:
+        flash_error('%s is not a valid label for a family of hypergeometric motives', label)
+        return redirect(url_for(".index"))
 
 def hgm_jump(info):
     label = clean_input(info['jump'])
@@ -504,7 +513,7 @@ def render_hgm_webpage(label):
     friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t'+t_data)))
 #    if rffriend != '':
 #        friends.append(('Discriminant root field', rffriend))
-
+    downloads = [("Underlying data", url_for(".hgm_data", label=data["label"]))]
 
     AB = 'A = '+str(A)+', B = '+str(B)
     t_data = str(QQ(data['t']))
@@ -517,11 +526,20 @@ def render_hgm_webpage(label):
         info=info,
         properties=prop2,
         friends=friends,
+        downloads=downloads,
         learnmore=learnmore_list(),
         KNOWL_ID="hgm.%s" % label,
     )
 
-
+@hypergm_page.route("/data/<label>")
+def hgm_data(label):
+    title = f"Hypergeometric motive data - {label}"
+    bread = get_bread([(f"Data - {label}", " ")])
+    if "_t" in label:
+        fam_label = label.split("_t")[0]
+        return datapage([label, fam_label], ["hgm_motives", "hgm_families"], bread=bread, title=title)
+    else:
+        return datapage(label, "hgm_families", bread=bread, title=title)
 
 
 def parse_pandt(info, family):
@@ -567,6 +585,7 @@ def render_hgm_family_webpage(label):
                            bread=family.bread,
                            title=family.title,
                            friends=family.friends,
+                           downloads=family.downloads,
                            KNOWL_ID="hgm.%s" % label,
                            learnmore=learnmore_list())
 

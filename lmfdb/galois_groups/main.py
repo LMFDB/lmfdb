@@ -308,9 +308,19 @@ def render_group_webpage(args):
         data['nilpotency'] = '$%s$' % data['nilpotency']
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] += ' (not nilpotent)'
+        downloads = [('Underlying data', url_for("API.api_query", table="gps_transitive") + f"?label={label}")]
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%label, learnmore=learnmore_list())
+        return render_template(
+            "gg-show-group.html",
+            title=title,
+            bread=bread,
+            info=data,
+            properties=prop2,
+            friends=friends,
+            downloads=downloads,
+            KNOWL_ID="gg.%s"%label,
+            learnmore=learnmore_list())
 
 
 @galois_groups_page.route("/random")

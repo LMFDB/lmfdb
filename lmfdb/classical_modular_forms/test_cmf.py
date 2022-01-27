@@ -548,3 +548,33 @@ class CmfTest(LmfdbTest):
         assert 'Only' in page.get_data(as_text=True)
         assert 'up to 1000 are available' in page.get_data(as_text=True)
         assert 'a_{1000}' in page.get_data(as_text=True)
+
+    def test_underlying_data(self):
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
+        assert ('mf_gamma1' in data and 'newspace_dims' in data and
+                'mf_gamma1_subspaces' in data and 'sub_mult' in data and
+                'mf_gamma1_portraits' in data and "'portrait'" in data)
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)
+        assert ('mf_newspaces' in data and 'num_forms' in data and
+                'mf_subspaces' in data and 'sub_mult' in data and
+                'mf_newspace_portraits' in data and "'portrait'" in data and
+                'mf_hecke_newspace_traces' in data and 'trace_an' in data)
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a').get_data(as_text=True)
+        assert ('mf_newforms' in data and 'field_disc_factorization' in data and
+                'mf_hecke_nf' in data and 'hecke_ring_character_values' in data and
+                'mf_newspaces' in data and 'num_forms' in data and
+                'mf_twists_nf' in data and 'twisting_char_label' in data and
+                'mf_hecke_charpolys' in data and 'charpoly_factorization' in data and
+                'mf_newform_portraits' in data and "'portrait'" in data and
+                'mf_hecke_traces' in data and 'trace_an' in data)
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a.4.1').get_data(as_text=True)
+        assert ('mf_newforms' in data and 'field_disc_factorization' in data and
+                'mf_hecke_cc' in data and 'an_normalized' in data and
+                'mf_newspaces' in data and 'num_forms' in data and
+                'mf_twists_cc' in data and 'twisting_conrey_index' in data and
+                'mf_hecke_charpolys' in data and 'charpoly_factorization' in data and
+                'mf_newform_portraits' in data and "'portrait'" in data and
+                'mf_hecke_traces' in data and 'trace_an' in data)

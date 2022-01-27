@@ -91,8 +91,8 @@ class DirichletCharactersTest(LmfdbTest):
         assert r'\chi_{999999999}(234567902,' in W.get_data(as_text=True) and r'\chi_{999999999}(432432433,' in W.get_data(as_text=True) and r'\chi_{999999999}(332999668,' in W.get_data(as_text=True)
 
     def test_dirichletgalorbs(self):
-        W = self.tc.get('/Character/Dirichlet/289/j')
-        assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W.get_data(as_text=True)
+        W = self.tc.get('/Character/Dirichlet/289/j').get_data(as_text=True)
+        assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W
         table_row = (r'<td class="center">\(-1\)</td>  '
                     r'<td class="center">\(1\)</td>  '
                     r'<td class="center">\(e\left(\frac{57}{136}\right)\)</td>  '
@@ -105,7 +105,8 @@ class DirichletCharactersTest(LmfdbTest):
                     r'<td class="center">\(e\left(\frac{55}{136}\right)\)</td>  '
                     r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
                     r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
-        assert table_row in W.get_data(as_text=True)
+        assert table_row in W
+        assert "Underlying data" in W and "api/char_dir_orbits/?label=289.j" in W
 
         W = self.tc.get('/Character/Dirichlet/7145/da')
         assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(as_text=True)
@@ -231,3 +232,7 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/91/3')
         assert 'H = DirichletGroup(91, base_ring=CyclotomicField(6))' in W.get_data(as_text=True), "sage code group is wrong"
         assert 'chi = DirichletCharacter(H, M([1,2]))' in W.get_data(as_text=True), "sage code generator is wrong"
+
+    def test_underlying_data(self):
+        W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
+        assert 'is_minimal' in W and 'values_gens' in W
