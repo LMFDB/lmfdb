@@ -77,7 +77,7 @@ class AbGpsTest(LmfdbTest):
             "gps_char", "indicator",
             "gps_subgroups", "mobius_sub"])
         self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
-            "gps_subgroups", "'label': '16.8.2.b1.a1'",
-            "gps_groups", "'label': '8.4'",
-            "'label': '16.8'",
-            "'label': '2.1'"])
+            "gps_subgroups", "16.8.2.b1.a1",
+            "gps_groups", "[28776, 16577, 5167]", # perm_gens
+            "[16582, 136, 5167, 40176]", # perm_gens
+            "[[1, 1, 1]]"]) # faithful_reps

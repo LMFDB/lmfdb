@@ -358,4 +358,4 @@ class Genus2Test(LmfdbTest):
                 'g2c_ratpts' in data and 'mw_gens_v' in data and
                 'g2c_galrep' in data and 'modell_image' in data and
                 'g2c_tamagawa' in data and 'tamagawa_number' in data and
-                'g2c_plots' in data and "'plot'" in data)
+                'g2c_plots' in data and "data:image/png;base64" in data)

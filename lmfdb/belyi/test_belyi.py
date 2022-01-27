@@ -151,7 +151,7 @@ class BelyiTest(LmfdbTest):
 
         # Underlying data link
         data = self.tc.get("/Belyi/data/7T5-7_7_3.3.1", follow_redirects=True).get_data(as_text=True)
-        assert "maxdegbf" in data and "'map'" in data
+        assert "maxdegbf" in data and "orbit_size" in data
 
         data = self.tc.get("/Belyi/data/7T5-7_7_3.3.1", follow_redirects=True).get_data(as_text=True)
         assert "friends" in data and "maxdegbf" in data and "portrait" in data

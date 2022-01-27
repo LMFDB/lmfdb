@@ -361,7 +361,7 @@ def url_for_isogeny_class_label(label):
 def class_from_curve_label(label):
     return ".".join(label.split(".")[:2])
 
-@g2c_page.route("/data/<label>")
+@g2c_page.route("/Q/data/<label>")
 def G2C_data(label):
     bread = get_bread(f"Data - {label}")
     sorts = [[], [], [], ["prime"], ["p"], []]
