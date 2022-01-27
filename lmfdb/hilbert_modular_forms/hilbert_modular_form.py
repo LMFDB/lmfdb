@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, url_for, request, redirect, make_response, abort
+from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (

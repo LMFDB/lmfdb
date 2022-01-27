@@ -451,7 +451,6 @@ def render_full_gamma1_space_webpage(label):
 @cmf.route("/data/<label>")
 def mf_data(label):
     slabel = label.split(".")
-    data = None
     if len(slabel) == 6:
         emb_label = label
         form_label = ".".join(slabel[:4])
