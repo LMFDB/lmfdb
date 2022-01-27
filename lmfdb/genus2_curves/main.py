@@ -169,9 +169,9 @@ def learnmore_list():
     ]
 
 
-# Return the learnmore list with the fullmatchstring entry removed
-def learnmore_list_remove(fullmatchstring):
-    return [t for t in learnmore_list() if t[0].find(fullmatchstring) < 0]
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 def get_bread(tail=[]):
