@@ -468,15 +468,18 @@ def geom_inv_to_G2(inv):
 
 
 
+LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
+LHASH_RE = re.compile(r"\#\d+")
 
 
 def genus2_jump(info):
     jump = info["jump"].replace(" ", "")
-    if re.fullmatch(r"^\d+\.[a-z]+\.\d+\.\d+$", jump):
+    if LABEL_RE.fullmatch(jump):
         return redirect(url_for_curve_label(jump), 301)
-    elif re.fullmatch(r"^\d+\.[a-z]+$", jump):
+    elif ISOGENY_LABEL_RE.fullmatch(jump):
         return redirect(url_for_isogeny_class_label(jump), 301)
-    elif re.fullmatch(r"^\#\d+$", jump) and ZZ(jump[1:]) < 2 ** 61:
+    elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves.lucky({"Lhash": jump[1:].strip()}, projection="class")
         if c:
