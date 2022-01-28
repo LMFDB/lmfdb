@@ -5,7 +5,7 @@ from lmfdb import db
 
 from sage.all import ZZ, gap, cached_function
 
-from lmfdb.utils import list_to_latex_matrix
+from lmfdb.utils import list_to_latex_matrix, integer_divisors
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 
 def knowl_cache(galois_labels=None, results=None):
@@ -457,7 +457,7 @@ def galois_module_knowl_guts(n, t, index):
 def subfield_display(n, subs):
     if n == 1:
         return 'Degree 1 - None'
-    degs = ZZ(str(n)).divisors()[1:-1]
+    degs = integer_divisors(ZZ(str(n)))[1:-1]
     if len(degs) == 0:
         return 'Prime degree - none'
     ans = ''

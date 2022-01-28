@@ -19,7 +19,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
-    StatsDisplay, proportioners, totaler,
+    StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
@@ -679,7 +679,7 @@ def common_parse(info, query, na_check=False):
             if not isinstance(query.get('level'), int):
                 raise ValueError("You must specify a single level")
             else:
-                query['level'] = {'$in': ZZ(query['level']).divisors()}
+                query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
         else:
             query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")

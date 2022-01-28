@@ -211,27 +211,12 @@ class KnowlBackend(PostgresBase):
         """
         restrictions = []
         values = []
-        if category:
-            restrictions.append(SQL("cat = %s"))
-            values.append(category)
         if 'in progress' not in filters:
             restrictions.append(SQL("status != %s"))
             values.append(-1)
-        if keywords:
-            if regex:
-                restrictions.append(SQL("content ~ %s OR title ~ %s OR id ~ %s"))
-                values.extend([keywords, keywords, keywords])
-            else:
-                keywords = [w for w in keywords.split(" ") if len(w) >= 3]
-                if keywords:
-                    restrictions.append(SQL("_keywords @> %s"))
-                    values.append(keywords)
-        if author is not None:
-            restrictions.append(SQL("authors @> %s"))
-            values.append([author])
         # In order to be able to sort by arbitrary columns, we have to select everything here.
         # We therefore do the projection in Python, which is fine for the knowls table since it's tiny
-        fields = ['id'] + self._default_fields
+        fields = ['id', '_keywords'] + self._default_fields
         sqlfields = SQL(", ").join(map(Identifier, fields))
         projfields = [(col, fields.index(col)) for col in projection]
         if restrictions:
@@ -246,6 +231,21 @@ class KnowlBackend(PostgresBase):
         else:
             secondary_restrictions.append(SQL("status >= %s"))
             values.append(0)
+        if category:
+            secondary_restrictions.append(SQL("cat = %s"))
+            values.append(category)
+        if keywords:
+            if regex:
+                secondary_restrictions.append(SQL("content ~ %s OR title ~ %s OR id ~ %s"))
+                values.extend([keywords, keywords, keywords])
+            else:
+                keywords = [w for w in keywords.split(" ") if len(w) >= 3]
+                if keywords:
+                    secondary_restrictions.append(SQL("_keywords @> %s"))
+                    values.append(keywords)
+        if author is not None:
+            secondary_restrictions.append(SQL("authors @> %s"))
+            values.append([author])
         if not types:
             # default to just showing normal knowls
             types = ["normal"]

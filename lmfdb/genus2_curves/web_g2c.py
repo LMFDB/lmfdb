@@ -7,7 +7,7 @@ import yaml
 from lmfdb import db
 from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
-                         display_knowl, web_latex_factored_integer)
+                         display_knowl, web_latex_factored_integer, integer_squarefree_part, integer_prime_divisors)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
@@ -54,7 +54,7 @@ def simplify_hyperelliptic(fh):
     xR = PolynomialRing(QQ,'x')
     f = 4*xR(fh[0]) + xR(fh[1])**2
     n = gcd(f.coefficients())
-    f = (n.squarefree_part() * f) / n
+    f = (integer_squarefree_part(n) * f) / n
     return f.coefficients(sparse=False)
 
 def simplify_hyperelliptic_point(fh, pt):
@@ -586,7 +586,7 @@ def local_table(N,D,tama,bad_lpolys,cluster_pics):
               th_wrap('g2c.bad_lfactors', 'L-factor'),
               th_wrap('ag.cluster_picture', 'Cluster picture'),
               '</tr>', '</thead>', '<tbody>']
-    for p in D.prime_divisors():
+    for p in integer_prime_divisors(D):
         loctab.append('  <tr>')
         cplist = [r for r in tama if r[0] == p]
         if cplist:
@@ -900,7 +900,7 @@ class WebG2C(object):
         # Friends
         self.friends = friends = []
         if is_curve:
-            friends.append(('Genus 2 curve %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+            friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
         # first deal with ECs and MFs
         ecs = []

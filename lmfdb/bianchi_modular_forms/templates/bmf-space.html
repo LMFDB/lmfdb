@@ -61,12 +61,12 @@
 {%if info.nnewforms > 0 %}
 This space contains the following
 {%if info.nnewforms == 1 %}
-newform.
+newform of {{ KNOWL('mf.bianchi.newform', title='dimension') }} 1.
 {%else%}
-newforms.
+newforms of {{ KNOWL('mf.bianchi.newform', title='dimension') }} 1.
 {%endif%}
 {%if info.nnf_missing>0 %}
-Newforms of higher dimension are not yet in the database.
+Newforms of higher {{ KNOWL('mf.bianchi.newform', title='dimension') }} are not yet in the database.
 {%endif%}
 
 {#
@@ -77,20 +77,14 @@ is one newform
 are {{info.nnewforms}} newforms
 {%endif%}
 at this level,
-{%if info.nnf2 == 0 %}
 {%if info.nnf1 == 1 %}which has{%else%}all of which have{%endif%} rational coefficients.
-{%elif info.nnf1 == 0 %}
-{%if info.nnf2 == 1 %}which has{%else%}all of which have{%endif%} quadratic coefficients.
-{%else%}
-{{info.nnf1}} with rational coefficients and
-{{info.nnf2}} with quadratic coefficients.
 {%endif%}
 #}
 <table border=1 class="ntdata">
   <tr>
     <th>{{ KNOWL('mf.bianchi.labels', title='label') }}
     <th>{{ KNOWL('mf.bianchi.weight', title='weight') }}
-    <th>{{ KNOWL('mf.bianchi.newform', title='dimension') }}
+    {#<th>{{ KNOWL('mf.bianchi.newform', title='dimension') }}#}
     <th>{{ KNOWL('mf.bianchi.sign', title='sign') }}
     <th>{{ KNOWL('mf.bianchi.base_change', title='base change') }}
     <th>{{ KNOWL('mf.bianchi.cm', title='CM') }}
@@ -99,7 +93,7 @@ at this level,
   <tr>
     <td><a href={{nf.url}}>{{nf.label}}</a>
       <td align='center'>{{nf.wt}}
-      <td align='center'>{{nf.dim}}
+    {#<td align='center'>{{nf.dim}}#}
       <td align='center'>{{nf.sfe}}</td>
       <td align='center'>{{nf.bc}}
       <td align='center'>{{nf.cm}}

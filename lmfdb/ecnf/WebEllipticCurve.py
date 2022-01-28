@@ -4,7 +4,7 @@ from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
-                         web_latex_split_on)
+                         web_latex_split_on, integer_squarefree_part)
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
@@ -240,7 +240,7 @@ class ECNF(object):
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
         self.field = FIELD(self.field_label)
-        self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
+        self.nonmax_primes = dbdata.get('nonmax_primes',None)
         self.make_E()
 
     @staticmethod
@@ -356,11 +356,11 @@ class ECNF(object):
         if not hasattr(self,'galois_images'):
             #print "No Galois image data"
             self.galois_images = "?"
-            self.non_surjective_primes = "?"
+            self.nonmax_primes = "?"
             self.galois_data = []
         else:
             self.galois_data = [{'p': p,'image': im }
-                                for p,im in zip(self.non_surjective_primes,
+                                for p,im in zip(self.nonmax_primes,
                                                 self.galois_images)]
 
         # CM and End(E)
@@ -374,7 +374,7 @@ class ECNF(object):
                 self.cm = -self.cm
             else:
                 self.rational_cm = K(self.cm).is_square()
-            self.cm_sqf = ZZ(self.cm).squarefree_part()
+            self.cm_sqf = integer_squarefree_part(ZZ(self.cm))
             self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
                 d4 = ZZ(self.cm) // 4
@@ -384,7 +384,7 @@ class ECNF(object):
 
         # Galois images in CM case:
         if self.cm and self.galois_images != '?':
-            self.cm_ramp = [p for p in ZZ(self.cm).support() if p not in self.non_surjective_primes]
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if p not in self.nonmax_primes]
             self.cm_nramp = len(self.cm_ramp)
             if self.cm_nramp==1:
                 self.cm_ramp = self.cm_ramp[0]

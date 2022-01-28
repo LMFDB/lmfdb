@@ -293,7 +293,17 @@ def common_parse(info, query):
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
     parse_spectral(info,query,'spectral_label')
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
+    if 'instance_types' in query:
+        for s in query['instance_types']['$contains']:
+            if s in ['DIR', 'Artin', 'ECQ', 'ECNF', 'G2Q', 'CMF', 'HMF', 'BMF', 'MaassGL3', 'MaassGL4', 'MaassGSp4', 'NF']:
+                 query['is_instance_' + s] = 'true'
+        del query['instance_types']
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
+    if 'instance_types' in query:
+        for s in query['instance_types']['$notcontains']:
+            if s in ['DIR', 'Artin', 'ECQ', 'ECNF', 'G2Q', 'CMF', 'HMF', 'BMF', 'MaassGL3', 'MaassGL4', 'MaassGSp4', 'NF']:
+                 query['is_instance_' + s] = 'false'
+        del query['instance_types']
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
     parse_sort(info, query)
@@ -778,7 +788,7 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
             info['spectral_label'] = spectral_label
         else:
             info['bread'] = info['bread'][:-1]
-            return l_function_search(info)
+        return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
 @l_function_page.route("/CuspForms/")

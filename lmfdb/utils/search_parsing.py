@@ -11,7 +11,7 @@ from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
 from lmfdb.backend.utils import SearchParsingError
-from .utilities import coeff_to_poly
+from .utilities import coeff_to_poly, integer_squarefree_part
 from math import log2
 import ast
 
@@ -749,7 +749,7 @@ def parse_rats(inp, query, qfield, process=None):
     else:
         raise SearchParsingError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-def _parse_subset(inp, query, qfield, mode, radical, product):
+def _parse_subset(inp, query, qfield, mode, radical, product, cardinality):
     def add_condition(kwd):
         if qfield in query:
             query[qfield][kwd] = inp
@@ -768,6 +768,10 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         #        raise SearchParsingError("Cannot specify containment and equality simultaneously")
         #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
         # else:
+        if radical is not None and not(radical in query):
+            query[radical] = {'$lte': product(inp)}
+        if cardinality is not None and not(cardinality in query):
+            query[cardinality] = {'$lte': len(inp)}
         add_condition("$containedin")
     elif mode == "include" or not mode:  # include is the default
         add_condition("$contains")
@@ -790,13 +794,13 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         raise ValueError("Unrecognized mode: programming error in LMFDB code")
 
 @search_parser
-def parse_subset(inp, query, qfield, parse_singleton=None, mode=None, radical=None, product=prod):
+def parse_subset(inp, query, qfield, parse_singleton=None, mode=None, radical=None, product=prod, cardinality=None):
     # Note that you can do sanity checking using parse_singleton
     # Just raise a ValueError if it fails.
     inp = inp.split(",")
     if parse_singleton is not None:
         inp = [parse_singleton(x) for x in inp]
-    _parse_subset(inp, query, qfield, mode, radical, product)
+    _parse_subset(inp, query, qfield, mode, radical, product, cardinality)
 
 def _multiset_code(n):
     # We encode multiplicities by appending consecutive letters: A, B,..., BA, BB, BC,...
@@ -826,18 +830,18 @@ def parse_submultiset(inp, query, qfield, mode=None):
         }
     else:
         # radical doesn't make sense (you should use subset instead of multiset)
-        _parse_subset(_multiset_encode(inp.split(",")), query, qfield, mode, None, None)
+        _parse_subset(_multiset_encode(inp.split(",")), query, qfield, mode, None, None, None)
 
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True)
-def parse_primes(inp, query, qfield, mode=None, radical=None):
+def parse_primes(inp, query, qfield, mode=None, radical=None, cardinality=None):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(",")]
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if not format_ok:
         raise SearchParsingError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
-    _parse_subset(primes, query, qfield, mode, radical, prod)
+    _parse_subset(primes, query, qfield, mode, radical, prod, cardinality)
 
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True)
@@ -1176,7 +1180,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             F = F.replace("(", "").replace(")", "")
         if F[1:5] in ["sqrt", "root"]:
             try:
-                d = ZZ(str(F[5:])).squarefree_part()
+                d = integer_squarefree_part(ZZ(str(F[5:])))
             except (TypeError, ValueError):
                 d = 0
             if d == 0:
@@ -1296,7 +1300,7 @@ def input_to_subfield(inp):
             inp = inp.replace("(", "").replace(")", "")
         if F[1:5] in ["sqrt", "root"]:
             try:
-                d = ZZ(str(F[5:])).squarefree_part()
+                d = integer_squarefree_part(ZZ(str(F[5:])))
             except (TypeError, ValueError):
                 d = 0
             if d == 0 or d == 1:
