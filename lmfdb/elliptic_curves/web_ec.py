@@ -58,6 +58,12 @@ def gl2_subgroup_data(label):
         data = db.gps_gl2zhat.lookup(label)
     except ValueError:
         return "Invalid label for subgroup of GL(2,Zhat): %s" % label
+    if data is None:
+        try:
+            data = db.gps_gl2zhat.lucky({'Slabel':label})
+        except ValueError:
+            return "Invalid label for subgroup of GL(2,Zhat): %s" % label
+
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
@@ -80,10 +86,14 @@ def gl2_subgroup_data(label):
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
+    if label != data['label']:
+        info += row_wrap('LMFDB label', data['label'])   
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
         info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+    if data.get('Slabel') and label != data.get('Slabel'):
+        info += row_wrap('Sutherland label', data['Slabel'])
     if data.get('SZlabel'):
         info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     N = ZZ(data['level'])
@@ -267,7 +277,6 @@ class WebEC(object):
         # mod-p Galois images:
         
         data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
-        
         # CM and Endo ring:
         
         data['CMD'] = self.cm
@@ -529,6 +538,9 @@ class WebEC(object):
             mwbsd['lder_name'] = "L'(E,1)"
         else:
             mwbsd['lder_name'] = "L(E,1)"
+
+    def display_modell_image(self,label):
+        return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
 
     def display_elladic_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})

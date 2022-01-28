@@ -15,7 +15,7 @@ from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    to_dict, flash_error,
+    to_dict, flash_error, display_knowl,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
@@ -504,9 +504,8 @@ ecnf_columns = SearchColumns([
     CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),    
     ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]), short_title="Nonmaximal primes",
                  default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
-    ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
-                 default=lambda info: info.get("galois_image"),
-                 align="center"),
+    ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
     MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),

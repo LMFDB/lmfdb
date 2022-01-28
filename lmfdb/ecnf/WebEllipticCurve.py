@@ -3,7 +3,7 @@ from urllib.parse import quote
 from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
-from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
+from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
                          web_latex_split_on, integer_squarefree_part)
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
@@ -669,6 +669,9 @@ class ECNF(object):
                 self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]
+
+    def display_modell_image(self,label):
+        return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
 
     def code(self):
         if self._code is None:
