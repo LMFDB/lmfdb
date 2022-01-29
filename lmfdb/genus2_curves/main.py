@@ -523,7 +523,7 @@ g2c_columns = SearchColumns([
                  short_title="Qbar-end algebra", default=True, align="center"),
     ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
     CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
-    ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", lambda v: st_display_knowl(v), short_title='Sato-Tate group', align="center"),
+    ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center"),
     CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
     CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
