@@ -13,7 +13,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.sato_tate_groups.main import st_link_by_name, st_pretty
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
@@ -718,7 +718,7 @@ class WebG2C(object):
         data['analytic_rank_proved'] = curve['analytic_rank_proved']
         data['hasse_weil_proved'] = curve['hasse_weil_proved']
         data['st_group'] = curve['st_group']
-        data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
+        data['st_group_link'] = display_knowl('st_group.data', title="$%s$"%st_pretty(curve['st_group']), kwargs={'label': curve['st_label']})
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
         data['is_gl2_type'] = curve['is_gl2_type']
         data['root_number'] = ZZ(curve['root_number'])
