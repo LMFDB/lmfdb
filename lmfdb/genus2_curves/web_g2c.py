@@ -13,7 +13,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from lmfdb.sato_tate_groups.main import st_link_by_name, st_pretty
+from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
@@ -439,7 +439,7 @@ def end_lattice_statement(lattice):
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1])))
         statement += ":\n"
         statement += end_statement(ED[1], ED[2], field='F', ring=ED[3])
-        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_link_by_name(1,4,ED[4])
+        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_display_knowl(ED[4])
         statement += "<br>&nbsp;&nbsp;"
         statement += gl2_simple_statement(ED[1], ED[2])
         statement += "</p>\n"
@@ -718,7 +718,7 @@ class WebG2C(object):
         data['analytic_rank_proved'] = curve['analytic_rank_proved']
         data['hasse_weil_proved'] = curve['hasse_weil_proved']
         data['st_group'] = curve['st_group']
-        data['st_group_link'] = display_knowl('st_group.data', title="$%s$"%st_pretty(curve['st_group']), kwargs={'label': curve['st_label']})
+        data['st_group_link'] = st_display_knowl(curve['st_label'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
         data['is_gl2_type'] = curve['is_gl2_type']
         data['root_number'] = ZZ(curve['root_number'])

@@ -26,6 +26,7 @@ from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
+from lmfdb.sato_tate_groups.main import st_display_knowl
 
 q = ZZ['x'].gen()
 the_ECstats = None
@@ -346,8 +347,7 @@ ec_columns = SearchColumns([
                   short_title="Qbar-end algebra", align="center", orig="cm"),
      ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                   short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
-     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
-                  lambda v: display_knowl('st_group.data', title=r"$\mathrm{SU}(2)$" if v==0 else r"$N(\mathrm{U}(1))$", kwargs={'label':'1.2.A.1.1a' if v==0 else '1.2.B.2.1a'}),
+     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
                   short_title="Sato-Tate group", align="center", orig="cm"),
      CheckCol("semistable", "ec.reduction", "Semistable"),
      CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),

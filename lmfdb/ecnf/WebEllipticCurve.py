@@ -8,6 +8,7 @@ from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
+from lmfdb.sato_tate_groups.main import st_display_knowl
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -391,13 +392,7 @@ class ECNF(object):
                 self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
 
         # Sato-Tate:
-        if self.cm:
-            if self.cm < 0:
-                self.ST = display_knowl('st_group.data', title=r"$N(\mathrm{U}(1))$", kwargs={'label':'1.2.B.2.1a'})
-            else:
-                self.ST = display_knowl('st_group.data', title=r"$\mathrm{U}(1)$", kwargs={'label':'1.2.B.1.1a'})
-        else:
-            self.ST = display_knowl('st_group.data', title=r"$\mathrm{SU}(2)$", kwargs={'label':'1.2.A.1.1a'})
+        self.ST = st_display_knowl('1.2.A.1.1a' if not self.cm else ('1.2.B.2.1a' if self.cm < 0 else '1.2.B.1.1a'))
 
         # Q-curve / Base change
         try:
