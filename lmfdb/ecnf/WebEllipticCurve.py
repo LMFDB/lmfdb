@@ -6,7 +6,6 @@ from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
                          web_latex_split_on, integer_squarefree_part)
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
 
@@ -392,15 +391,13 @@ class ECNF(object):
                 self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
 
         # Sato-Tate:
-        # The lines below will need to change once we have curves over non-quadratic fields
-        # that contain the Hilbert class field of an imaginary quadratic field
         if self.cm:
-            if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
-                self.ST = st_link_by_name(1,2,'U(1)')
+            if self.cm < 0:
+                self.ST = display_knowl('st_group.data', title=r"$N(\mathrm{U}(1))$", kwargs={'label':'1.2.B.2.1a'})
             else:
-                self.ST = st_link_by_name(1,2,'N(U(1))')
+                self.ST = display_knowl('st_group.data', title=r"$\mathrm{U}(1)$", kwargs={'label':'1.2.B.1.1a'})
         else:
-            self.ST = st_link_by_name(1,2,'SU(2)')
+            self.ST = display_knowl('st_group.data', title=r"$\mathrm{SU}(2)$", kwargs={'label':'1.2.A.1.1a'})
 
         # Q-curve / Base change
         try:

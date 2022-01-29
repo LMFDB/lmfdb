@@ -7,7 +7,7 @@ from psycopg2.extensions import QueryCanceledError
 from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_function
 
 from lmfdb import db
-from lmfdb.app import ctx_proc_userdata
+from lmfdb.app import ctx_proc_userdata, app
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error, display_knowl,
     SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
@@ -214,13 +214,6 @@ def get_name(label):
         name = (data['pretty'] if data['pretty'] else data['name']) if data else None
     return name, label
 
-def st_link(label):
-    name, label = get_name(label)
-    if name is None:
-        return label
-    else:
-        return '<a href=%s>$%s$</a>' % (url_for('st.by_label', label=label), name)
-
 def st_ambient(weight, degree):
     return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree
 
@@ -256,8 +249,41 @@ def st_pretty(st_name):
     st_name = st_name.replace("U(",r"\mathrm{U}(")
     return st_name
 
+def st_link(label,name=None):
+    if not name:
+        name, label = get_name(label)
+    return '<a href=%s>%s</a>' % (url_for('st.by_label', label=label), "$%s$"%name if (name and name != label) else label)
+
 def st_link_by_name(weight,degree,name):
     return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
+
+def st_data(label):
+    try:
+        data = db.gps_st.lookup(label)
+        if data is None:
+            raise ValueError
+    except ValueError:
+        return "Unable to locate data for Sato-Tate group with label %s" % label
+    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    math_mode = lambda s: '$%s$'%s
+    info = '<table>\n'
+    info += row_wrap('Sato-Tate group <b>%s</b>'%label, math_mode(data['pretty']))
+    info += "<tr><td></td><td></td></tr>\n"
+    info += row_wrap(display_knowl('st_group.weight','Weight'), math_mode(data['weight']))
+    info += row_wrap(display_knowl('st_group.degree','Degree'), math_mode(data['degree']))
+    info += row_wrap(display_knowl('st_group.real_dimension',r'$\mathbb R$-dimension'), math_mode(data['real_dimension']))
+    if data['identity_component'] != data['name']:
+        info += row_wrap(display_knowl('st_group.ambient','Ambient group'), math_mode(st_ambient(data['weight'], data['degree'])))
+    info += row_wrap(display_knowl('st_group.identity_component','Identity component'), math_mode(st0_dict[data['identity_component']]))
+    info += row_wrap(display_knowl('st_group.component_group','Component group'), abstract_group_display_knowl(data['component_group'], data['component_group'], pretty=True))
+    info += row_wrap(display_knowl('st_group.rational','Rational'), 'yes' if data['rational'] else 'no')
+    info += row_wrap(display_knowl('st_group.trace_zero_density','Trace zero density'), math_mode(data['trace_zero_density']))
+    info += row_wrap(display_knowl('st_group.moments','Trace moments'), math_mode(data['moments'][0][1:]))
+    if data.get('character_diagonal'):
+        info += row_wrap(display_knowl('st_group.moment_matrix','Character diagonal'), math_mode(data['character_diagonal']))
+    info += "</table>\n"
+    info += '<br><div style="float:right;">Sato-Tate group %s home page</div>'%st_link(label,name=label)
+    return info
 
 # We want to support aliases like S3.  The following table is an analogue of the list of aliases in lmfdb/galois_groups/transitive_group.py, but with GAP ids as output.
 aliases = {'C1': '1.1',
@@ -317,6 +343,10 @@ def parse_component_group(inp, query, qfield):
         query[qfield] = ans[0]
     else:
         query[qfield] = {"$in": ans}
+
+@app.context_processor
+def ctx_sato_tate_group_data():
+    return {'sato_tate_group_data': st_data}
 
 ###############################################################################
 # Learnmore display functions

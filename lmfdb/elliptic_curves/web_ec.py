@@ -8,7 +8,6 @@ from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
 from lmfdb.logger import make_logger
-from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
@@ -56,13 +55,12 @@ logger = make_logger("ec")
 def gl2_subgroup_data(label):
     try:
         data = db.gps_gl2zhat.lookup(label)
-    except ValueError:
-        return "Invalid label for subgroup of GL(2,Zhat): %s" % label
-    if data is None:
-        try:
+        if data is None:
             data = db.gps_gl2zhat.lucky({'Slabel':label})
-        except ValueError:
-            return "Invalid label for subgroup of GL(2,Zhat): %s" % label
+            if data is None:
+                raise ValueError
+    except ValueError:
+        return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
@@ -297,10 +295,9 @@ class WebEC(object):
                 data['EndE'] = r"\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = r"\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
-            data['ST'] = st_link_by_name(1,2,'N(U(1))')
+            data['ST'] = display_knowl('st_group.data', title=r"$N(\mathrm{U}(1))$", kwargs={'label':'1.2.B.2.1a'})
         else:
-            data['ST'] = st_link_by_name(1,2,'SU(2)')
-
+            data['ST'] = display_knowl('st_group.data', title=r"$\mathrm{SU}(2)$", kwargs={'label':'1.2.A.1.1a'})
         # Isogeny degrees:
         
         cond, iso, num = split_lmfdb_label(lmfdb_label)
