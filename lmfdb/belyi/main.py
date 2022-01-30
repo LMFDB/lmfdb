@@ -647,7 +647,7 @@ def belyi_search(info, query):
 
     parse_bool(info, query, "is_primitive", name="is_primitive")
     if info.get("primitivization"):
-        primitivization = info["primitivization"] 
+        primitivization = info["primitivization"]
         if re.match(GALMAP_RE, primitivization):
             # 7T6-7_4.2.1_4.2.1-b
             query["primitivization"] = primitivization
@@ -726,9 +726,10 @@ def how_computed_page():
     t = "Source and acknowledgments for Belyi map data"
     bread = get_bread("Source")
     return render_template(
-        "double.html",
-        kid="rcs.source.belyi",
-        kid2="rcs.ack.belyi",
+        "multi.html",
+        kids=["rcs.source.belyi",
+              "rcs.ack.belyi",
+              "rcs.cite.belyi"],
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),

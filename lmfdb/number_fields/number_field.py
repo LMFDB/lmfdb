@@ -135,7 +135,9 @@ def source():
     learnmore = learnmore_list_remove('Source')
     t = 'Source and acknowledgments for number field pages'
     bread = bread_prefix() + [('Source', ' ')]
-    return render_template("double.html", kid='rcs.source.nf', kid2='rcs.ack.nf',
+    return render_template("multi.html", kids=['rcs.source.nf',
+                                               'rcs.ack.nf',
+                                               'rcs.ack.nf'],
         title=t, bread=bread, learnmore=learnmore)
 
 
@@ -797,7 +799,7 @@ nf_columns = SearchColumns([
                  lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label)),
                  default=True),
     SearchCol("poly", "nf.defining_polynomial", "Polynomial", default=True),
-    MathCol("degree", "nf.degree", "Degree", align="center"), 
+    MathCol("degree", "nf.degree", "Degree", align="center"),
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
     CheckCol("cm", "nf.cm_field", "Is CM field?"),

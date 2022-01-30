@@ -786,9 +786,10 @@ def how_computed_page():
     t = "Source and acknowledgments for Weil polynomial data"
     bread = get_bread(("Source", " "))
     return render_template(
-        "double.html",
-        kid="rcs.source.av.fq",
-        kid2="rcs.ack.av.fq",
+        "multi.html",
+        kids=["rcs.source.av.fq",
+              "rcs.ack.av.fq",
+              "rcs.cite.av.fq"],
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),

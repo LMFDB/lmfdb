@@ -348,7 +348,7 @@ def render_artin_representation_webpage(label):
     if proj_wnf.is_in_db():
         proj_coefs = [int(z) for z in proj_wnf.coeffs()]
         if proj_coefs != the_nf.polynomial():
-            friends.append(("Field {}".format(proj_wnf.get_label()), 
+            friends.append(("Field {}".format(proj_wnf.get_label()),
                 str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
     if case == 'rep':
         cc = the_rep.central_character()
@@ -464,9 +464,11 @@ def source():
     t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
-    return render_template("double.html", kid='rcs.source.artin',
-                           kid2='rcs.ack.artin',
-                           title=t, bread=bread, 
+    return render_template("multi.html",
+                           kids=['rcs.source.artin',
+                                 'rcs.ack.artin',
+                                 'rcs.cite.artin'],
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Reliability")
@@ -475,7 +477,7 @@ def reliability():
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
@@ -484,7 +486,7 @@ def cande():
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 class ArtinSearchArray(SearchArray):

@@ -592,7 +592,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     except Exception:
         numeigs = 20
     info['numeigs'] = numeigs
-    
+
     try:
         data = WebBMF.by_label(label, max_eigs=numeigs)
         title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
@@ -646,8 +646,12 @@ def bianchi_modular_form_by_label(lab):
 def how_computed_page():
     t = 'Source of Bianchi modular form data'
     bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.mf.bianchi', kid2='rcs.ack.mf.bianchi',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("multi.html", kids=['rcs.source.mf.bianchi',
+                            'rcs.ack.mf.bianchi',
+                            'rcs.cite.mf.bianchi'],
+                            title=t,
+                            bread=bread,
+                            learnmore=learnmore_list_remove('Source'))
 
 @bmf_page.route("/Completeness")
 def completeness_page():

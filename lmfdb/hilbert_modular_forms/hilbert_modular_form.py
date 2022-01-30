@@ -536,7 +536,9 @@ def render_hmf_webpage(**args):
 def how_computed_page():
     t = 'Source and acknowledgments for Hilbert modular form data'
     bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.mf.hilbert', kid2='rcs.ack.mf.hilbert',
+    return render_template("multi.html", kids=['rcs.source.mf.hilbert',
+                                               'rcs.ack.mf.hilbert',
+                                               'rcs.cite.mf.hilbert'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @hmf_page.route("/Completeness")

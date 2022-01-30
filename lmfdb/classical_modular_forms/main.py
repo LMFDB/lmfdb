@@ -1142,8 +1142,9 @@ def space_search(info, query):
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("double.html", kid='rcs.source.cmf',
-                           kid2='rcs.ack.cmf', title=t,
+    return render_template("multi.html", kids=['rcs.source.cmf',
+                           'rcs.ack.cmf',
+                           'rcs.cite.cmf'], title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 

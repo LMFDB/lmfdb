@@ -184,7 +184,7 @@ def process_euler(res, info, query):
 
 def url_for_lfunction(label):
     try:
-        kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'), 
+        kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'),
 label.split('-')))
         kwargs['degree'] = int(kwargs['degree'])
     except Exception:
@@ -1911,8 +1911,11 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 def generic_source():
     t = 'Source and acknowledgments for L-function data'
     bread = get_bread(breads=[('Source', ' ')])
-    return render_template("double.html", kid='rcs.source.lfunction', kid2='rcs.ack.lfunction', title=t, 
-        bread=bread)
+    return render_template("multi.html", kids=['rcs.source.lfunction',
+                                               'rcs.ack.lfunction',
+                                               'rcs.cite.lfunction'],
+                                         title=t,
+                                         bread=bread)
 
 @l_function_page.route("/Completeness")
 def generic_completeness():

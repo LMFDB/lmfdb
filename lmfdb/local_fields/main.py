@@ -443,8 +443,9 @@ def source():
     t = 'Source and acknowledgments for $p$-adic field pages'
     ttag = 'Source and acknowledgments for p-adic field pages'
     bread = get_bread([("Source", '')])
-    return render_template("double.html", kid='rcs.source.lf',
-                           kid2='rcs.ack.lf', title=t,
+    return render_template("multi.html", kids=['rcs.source.lf',
+                           'rcs.ack.lf','rcs.cite.lf'],
+                           title=t,
                            titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
@@ -548,10 +549,10 @@ class LFSearchArray(SearchArray):
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u], 
+        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u],
             [t], [gal], [inertia], [wild], [results]]
-        self.refine_array = [[degree, qp, gal, u], 
-            [e, c, inertia, t], 
+        self.refine_array = [[degree, qp, gal, u],
+            [e, c, inertia, t],
             [f, topslope, wild]]
 
 def ramdisp(p):
