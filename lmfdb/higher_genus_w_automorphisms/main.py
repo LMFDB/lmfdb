@@ -1091,7 +1091,7 @@ def reliability_page():
 def how_computed_page():
     t = 'Source of higher genus curve with automorphisms data'
     bread = get_bread("Source")
-    return render_template("double.html",
+    return render_template("multi.html",
                            kids=['rcs.source.curve.highergenus.aut',
                                  'rcs.ack.curve.highergenus.aut',
                                  'rcs.cite.curve.highergenus.aut'],
