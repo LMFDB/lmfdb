@@ -983,6 +983,7 @@ def diagram_js(gp, layers, display_opts, aut=False):
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
             grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
+            grp.diagram_aut_x if aut else grp.diagram_x
         ]
         for grp in layers[0]
     ]

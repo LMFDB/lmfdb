@@ -23,6 +23,7 @@
 */
 var ourg;
 var ambientlabel;
+var whoisshowing;
 var type="C"; // C for conjugacy class, A for up to aut
 
 /* The rest of the global variables are for debugging or page colors,
@@ -85,9 +86,9 @@ Graph = class {
     return node;
   }
 
-  addNodes(values, order_lookup) {
+  addNodes(values, order_lookup, xlocation) {
     for(var j=0, item; item = values[j]; j++) {
-      var myx = Math.max(j, item[6]);
+      var myx = Math.max(j, item[xlocation]);
 	  //console.log("Node ", myx, " ", item);
       this.addNode(item, myx, order_lookup, {});
     }
@@ -812,23 +813,39 @@ function newheight(rendr, numrows) {
 function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   // gdatalist is a list of [nodes, edges, orders]
   // Now make a list of graphs
-  var glist = Array(gdatalist.length);
+  var glist = Array(2 * gdatalist.length);
   var order_lookup = new Map();
+  var simpleorder = new Map();
   for (var k=0; k < orderdata.length; k++) {
     var trip = orderdata[k];
     order_lookup.set(trip[0], [trip[1], trip[2]]);
+    simpleorder.set(trip[0], [k,0]);
   }
-  for(var j=0; j<glist.length; j++) {
+  // The following is to make two graphs for each entry in gdatalist
+  // which have two sets of coordinates
+  for(var j=0; j<gdatalist.length; j++) {
     var nodes, edges;
-    [nodes, edges] = gdatalist[j]
+    [nodes, edges] = gdatalist[j];
     glist[j] = new Graph(ambient);
     if(gdatalist[j].length>0) {
-      glist[j].addNodes(nodes, order_lookup);
+      // x-coord for by # primes is in 6
+      glist[j].addNodes(nodes, order_lookup, 6);
       for(var k=0, edge; edge=edges[k]; k++) {
         glist[j].addEdge(edge[0],edge[1]);
       }
       var layout = new Layout(glist[j]);
-      //layout.setiter(nodes[0][0][7]==0);
+      layout.layout();
+    }
+    // Now repeat for the other graph
+    jj = gdatalist.length+j;
+    glist[jj] = new Graph(ambient);
+    if(gdatalist[j].length>0) {
+      // x-coord for by # primes is in 7
+      glist[jj].addNodes(nodes, simpleorder, 7);
+      for(var k=0, edge; edge=edges[k]; k++) {
+        glist[jj].addEdge(edge[0],edge[1]);
+      }
+      var layout = new Layout(glist[jj]);
       layout.layout();
     }
   }
@@ -852,6 +869,19 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
 function redraw() {
   sdiagram.draw();
 }
+
+function mytoggleheights(use_order_for_height) {
+  if (use_order_for_height && (whoisshowing < 2)) {
+    whoisshowing += 2;
+  } 
+  if ((! use_order_for_height) && whoisshowing > 1) {
+    whoisshowing -= 2;
+  }
+  sdiagram.newgraph(glist[whoisshowing]);
+  sdiagram.setSize();
+  sdiagram.draw();
+}
+
 
 function getpositions() {
   var mylist="[\""+ambientlabel+"\",[";

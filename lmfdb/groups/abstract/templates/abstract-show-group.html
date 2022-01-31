@@ -52,6 +52,10 @@
     button_on(style);
     other_buttons_off(style);
   }
+  function toggleheight()
+  {
+    mytoggleheights($("#orderForHeight").prop('checked'));
+  }
 
 </script>
 
@@ -375,6 +379,10 @@
       <div id="positions">
       </div>
     {% endif %}
+  <div>
+    Each subgroup order has its own line?
+    <input type="checkbox" id="orderForHeight" onchange="toggleheight()" />
+  </div>
   <div class="subgroup_diagram">
     <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
   </div>
