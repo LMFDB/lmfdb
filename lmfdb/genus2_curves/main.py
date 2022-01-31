@@ -342,7 +342,6 @@ def render_curve_webpage(label):
         learnmore=learnmore_list(),
         title=g2c.title,
         friends=g2c.friends,
-        downloads=g2c.downloads,
         KNOWL_ID="g2c.%s" % label,
     )
 
