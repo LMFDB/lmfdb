@@ -4,10 +4,11 @@ import re
 from ast import literal_eval
 from collections import defaultdict
 
-from flask import render_template, url_for, request, redirect, abort
+from flask import render_template, url_for, request, redirect, make_response, abort
 from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     CountBox,
     Downloader,
@@ -40,7 +41,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label
 
 ###############################################################################
 # List and dictionaries needed for routing and searching
@@ -307,6 +308,22 @@ def by_label(label):
         return redirect(url_for(".index"))
     return genus2_curve_search({"jump": label})
 
+def genus2_jump_error(label, args, missing_curve=False, missing_class=False, invalid_class=False):
+    query = to_dict(args, search_array=G2CSearchArray())
+    for field in ['cond', 'abs_disc']:
+        query[field] = args.get(field, '')
+    query['count'] = args.get('count', '100')
+    if missing_curve:
+        query['title'] = "The genus 2 curve %s is not in the database" % (label)
+    elif missing_class:
+        query['title'] = "The isogeny class %s is not in the database" % (label)
+    elif invalid_class:
+        query['title'] = r"%s is not a valid label for an isogeny class of genus 2 curves over $\mathbb{Q}$" % (label)
+    elif not label:
+        query['title'] = "Please enter a non-empty label %s" % (label)
+    else:
+        query['title'] = r"%s is not a valid label for a genus 2 curve or isogeny class over $\mathbb{Q}$" % (label)
+    return genus2_curve_search(query)
 
 def render_curve_webpage(label):
     try:
@@ -323,6 +340,7 @@ def render_curve_webpage(label):
         learnmore=learnmore_list(),
         title=g2c.title,
         friends=g2c.friends,
+        downloads=g2c.downloads,
         KNOWL_ID="g2c.%s" % label,
     )
 
@@ -780,6 +798,18 @@ def statistics():
         learnmore=learnmore_list(),
     )
 
+#TODO: get all the data from all the relevant tables, not just the search table.
+
+@g2c_page.route("/download_all/<label>")
+def download_G2C_all(label):
+    data = db.g2c_curves.lookup(label, label_col='label')
+    if data is None:
+        return genus2_jump_error(label, {})
+    data_list = [data]
+
+    response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @g2c_page.route("/Q/Source")
 def source_page():
@@ -833,6 +863,48 @@ def labels_page():
         learnmore=learnmore_list_remove("labels"),
     )
 
+sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
+
+code_names = {'curve': 'Define the curve',
+                 'tors': 'Torsion subgroup',
+                 'cond': 'Conductor',
+                 'disc': 'Discriminant',
+                 'ntors': 'Torsion order of Jacobian',
+                 'jacobian': 'Jacobian',
+                 'aut': 'Automorphism group',
+                 'mwgroup': 'Mordell-Weil group'}
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def g2c_code(**args):
+    label = g2c_lmfdb_label(args['conductor'], args['iso'], args['discriminant'], args['number'])
+    try:
+        C = WebG2C.by_label(label)
+    except ValueError:
+        return genus2_jump_error(label, {}), False
+    except KeyError:
+        return genus2_jump_error(label, {}, missing_curve=True), False
+    Ccode = C.get_code()
+    lang = args['download_type']
+    code = "%s %s code for working with genus 2 curve %s\n\n" % (Comment[lang],Fullname[lang],label)
+    if lang=='gp':
+        lang = 'pari'
+    for k in sorted_code_names:
+        if lang in Ccode[k]:
+            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
+            code += Ccode[k][lang] + ('\n' if '\n' not in Ccode[k][lang] else '')
+    return code, True
+
+@g2c_page.route('/Q/<conductor>/<iso>/<discriminant>/<number>/download/<download_type>')
+def g2c_code_download(**args):
+    code, valid = g2c_code(**args)
+    response = make_response(code)
+    if valid:
+        response.headers['Content-type'] = 'text/plain'
+    else:
+        response.headers['Content-type'] = 'text/html'
+    return response
 
 class G2CSearchArray(SearchArray):
     noun = "curve"
