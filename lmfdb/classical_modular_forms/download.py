@@ -430,8 +430,10 @@ class CMF_download(Downloader):
         level = newform.level
         order = newform.char_values[1]
         char_gens = newform.char_values[2]
+        explain = '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"' % (newform.level, newform.char_orbit_label)
+        self.explain.append(explain)
         out = [
-                '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"' % (newform.level, newform.char_orbit_label),
+                explain,
                 'function MakeCharacter_%d_%s()' % (newform.level, newform.char_orbit_label),
                 '    ' + self.assign('magma', 'N', level).rstrip('\n'), # level
                 '    ' + self.assign('magma', 'order', order).rstrip('\n'), # order of the character
@@ -459,8 +461,10 @@ class CMF_download(Downloader):
             #   [[c,e]] encoding c x zeta_m^e where m is hecke_ring_cyclotomic_generator
             assert char_gens == [elt[0] for elt in hecke_nf['hecke_ring_character_values']]
             char_values = [elt[1] for elt in hecke_nf['hecke_ring_character_values']]
+            explain = '// To make the character of type GrpDrchElt with Codomain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label)
+            self.explain.append(explain)
             out += [
-                '// To make the character of type GrpDrchElt with Codamain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label),
+                explain,
                 'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
                     '    ' + self.assign('magma', 'N', level).rstrip('\n'), # level
                     '    ' + self.assign('magma', 'order', order).rstrip('\n'), # order of the character
@@ -517,9 +521,11 @@ class CMF_download(Downloader):
                 ]
 
     def _magma_qexpCoeffs(self, newform, hecke_nf):
+        explain = '// To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"'
+        self.explain.append(explain)
         return [
             'function qexpCoeffs()',
-            '    // To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"',
+            '    ' + explain,
             '    ' + self.assign('magma', 'weight', newform.weight).rstrip('\n'),
             '    ' + self.assign('magma', 'raw_aps', hecke_nf['ap'], prepend = '    '*2).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
@@ -542,11 +548,12 @@ class CMF_download(Downloader):
         assert k >= 2   # modular symbols only in weight >= 2
 
         cutters = "[" + ",".join(["<%d,R!%s"%(c[0],c[1])+">" for c in newform.hecke_cutters]) + "]"
-
-        return [
-                '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
-                '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
-                '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.',
+        explain = [ '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
+                    '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
+                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.'
+        ]
+        self.explain += explain
+        return explain + [
                 "function MakeNewformModSym_%s()"  % (newform.label.replace(".","_"), ),
                 "    R<x> := PolynomialRing(Rationals());",
                 "    chi := MakeCharacter_%d_%s();" % (N, o),
@@ -571,11 +578,14 @@ class CMF_download(Downloader):
         returns a string containing magma code to create the newform
         as a representative q-expansion (type ModFrm) in magma.
         """
-        return [
+        explain = [
                 '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (newform.label.replace(".", "_"), ),
                 '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.',
                 '// The precision argument determines an initial guess on how many Fourier coefficients to use.',
-                '// This guess is increased enough to uniquely determine the newform.',
+                '// This guess is increased enough to uniquely determine the newform.'
+        ]
+        self.explain += explain
+        return explain + [
                 'function MakeNewformModFrm_%s(:prec:=%d)' % (newform.label.replace(".","_"), newform.dim),
                 '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                 '    f_vec := qexpCoeffs();',
@@ -611,6 +621,7 @@ class CMF_download(Downloader):
         newform = WebNewform(data)
         hecke_nf = self._get_hecke_nf(label)
 
+        self.explain = []
         out = []
         newlines = [''] * 2
         if newform.has_exact_qexp:
@@ -633,8 +644,7 @@ class CMF_download(Downloader):
         if newform.hecke_cutters is not None and newform.weight > 1:
             out += self._magma_MakeNewformModSym(newform, hecke_nf)
 
-        outstr = "\n".join(out)
-
+        outstr = "\n".join(self.explain + out)
 
         return self._wrap(outstr,
                           label,

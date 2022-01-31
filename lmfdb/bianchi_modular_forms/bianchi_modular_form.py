@@ -12,7 +12,7 @@ from lmfdb.utils import (
     teXify_pol, search_wrap)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
 from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
 from lmfdb.nfutils.psort import ideal_from_label, primes_iter
 from lmfdb.bianchi_modular_forms import bmf_page
@@ -145,7 +145,8 @@ bmf_columns = SearchColumns([
                                   label_suffix=suff),
                           short),
                       default=True),
-    MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
+    # See Issue #4170
+    #MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
                  lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else "?"),
                  default=True, align="center"),
@@ -170,7 +171,8 @@ def bianchi_modular_form_search(info, query):
     """
     parse_nf_string(info, query, 'field_label', name='base number field')
     parse_noop(info, query, 'label')
-    parse_ints(info, query, 'dimension')
+    #parse_ints(info, query, 'dimension')
+    query['dimension'] = 1
     parse_ints(info, query, 'level_norm')
     parse_primes(info, query, 'field_bad_primes', name='field bad primes',
          qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
@@ -195,27 +197,29 @@ def bmf_search_field(field_label):
     return bianchi_modular_form_search({'field_label':field_label, 'search_array':BMFSearchArray()})
 
 # For statistics, it's useful to be able to pass the field label via a request argument
-@bmf_page.route('/gl2dims/')
+@bmf_page.route('/gl2dims')
 def gl2dims():
-    if "field_label" not in request.args:
-        flash_error("You must specify a field label to access dimension tables")
-        return redirect(url_for(".index"))
-    return redirect(url_for(".render_bmf_field_dim_table_gl2", **request.args))
+    flash_error("You must specify a field label to access dimension tables")
+    return redirect(url_for(".index"))
 
-@bmf_page.route('/sl2dims/')
+@bmf_page.route('/sl2dims')
 def sl2dims():
-    if "field_label" not in request.args:
-        flash_error("You must specify a field label to access dimension tables")
-        return redirect(url_for(".index"))
-    return redirect(url_for(".render_bmf_field_dim_table_sl2", **request.args))
+    flash_error("You must specify a field label to access dimension tables")
+    return redirect(url_for(".index"))
 
 @bmf_page.route('/gl2dims/<field_label>')
-def render_bmf_field_dim_table_gl2(**args):
-    return bmf_field_dim_table(gl_or_sl='gl2_dims', **args)
+def render_bmf_field_dim_table_gl2(field_label):
+    if not field_label_regex.match(field_label):
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
+        return redirect(url_for(".index"))
+    return bmf_field_dim_table(gl_or_sl='gl2_dims', field_label=field_label)
 
 @bmf_page.route('/sl2dims/<field_label>')
-def render_bmf_field_dim_table_sl2(**args):
-    return bmf_field_dim_table(gl_or_sl='sl2_dims', **args)
+def render_bmf_field_dim_table_sl2(field_label):
+    if not field_label_regex.match(field_label):
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
+        return redirect(url_for(".index"))
+    return bmf_field_dim_table(gl_or_sl='sl2_dims', field_label=field_label)
 
 def bmf_field_dim_table(**args):
     argsdict = to_dict(args)
@@ -312,7 +316,7 @@ def render_bmf_space_webpage(field_label, level_label):
     properties = []
 
     if not field_label_regex.match(field_label):
-        info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
     else:
         pretty_field_label = field_pretty(field_label)
         if not db.bmf_dims.exists({'field_label': field_label}):
@@ -360,9 +364,10 @@ def render_bmf_space_webpage(field_label, level_label):
                     } for f in newforms]
                 info['nnewforms'] = len(info['nfdata'])
                 # currently we have newforms of dimension 1 and 2 only (mostly dimension 1)
+                # but the dimension 2 data is untrustworthy so is ignored here
                 info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim']==1)
-                info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
-                info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] - 2*info['nnf2']
+                #info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
+                info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] # - 2*info['nnf2']
                 properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
@@ -687,12 +692,14 @@ class BMFSearchArray(SearchArray):
             knowl='mf.bianchi.level',
             example='1',
             example_span='e.g. 1 or 1-100')
-        dimension = TextBox(
-            name='dimension',
-            label='Dimension',
-            knowl='mf.bianchi.spaces',
-            example='1',
-            example_span='e.g. 1 or 2')
+
+        # See Issue #4170
+        # dimension = TextBox(
+        #     name='dimension',
+        #     label='Dimension',
+        #     knowl='mf.bianchi.spaces',
+        #     example='1',
+        #     example_span='e.g. 1 or 2')
 
         sign = SelectBox(
             name='sfe',
@@ -704,7 +711,8 @@ class BMFSearchArray(SearchArray):
         base_change = ExcludeOnlyBox(
             name='include_base_change',
             label='Base change',
-            knowl='mf.bianchi.base_change'
+            knowl='mf.bianchi.base_change',
+            example="exclude"
         )
         CM = ExcludeOnlyBox(
             name='include_cm',
@@ -732,13 +740,13 @@ class BMFSearchArray(SearchArray):
         self.browse_array = [
             [field],
             [level, sign],
-            [dimension, base_change],
-            [count, CM],
-            [field_bad_primes, level_bad_primes]
+            [base_change, CM],
+            [field_bad_primes, level_bad_primes],
+            [count]
         ]
         self.refine_array = [
-            [field, level, dimension, field_bad_primes],
-            [sign, base_change, CM, level_bad_primes]
+            [field, level, CM],
+            [sign, base_change, field_bad_primes, level_bad_primes]
         ]
 
 label_finder = re.compile(r"label=([0-9.]+)")
@@ -765,6 +773,7 @@ class BianchiStats(StatsDisplay):
                            "Bianchi modular forms"),
              display_knowl('nf', 'base field'),
              display_knowl('mf.bianchi.level', 'level norm')),
+         'constraint': {"dimension": 1},
          'totaler': totaler(),
          'proportioner': proportioners.per_row_total},
         {'cols': ['field_label', 'level_norm'],
@@ -792,12 +801,12 @@ class BianchiStats(StatsDisplay):
          'table': db.bmf_dims,
          'totaler': totaler(col_counts=False),
          'proportioner': proportioners.per_row_total},
-        {'cols': ['dimension', 'level_norm'],
-         'totaler': totaler(),
-         'proportioner': proportioners.per_col_total},
-        {'cols': ['dimension', 'field_label'],
-         'totaler': totaler(),
-         'proportioner': proportioners.per_col_total},
+        # {'cols': ['dimension', 'level_norm'],
+        #  'totaler': totaler(),
+        #  'proportioner': proportioners.per_col_total},
+        # {'cols': ['dimension', 'field_label'],
+        #  'totaler': totaler(),
+        #  'proportioner': proportioners.per_col_total},
     ]
 
     buckets = {'level_norm': ['1-100', '101-1000', '1001-10000', '10001-50000', '50001-100000', '100001-150000']}

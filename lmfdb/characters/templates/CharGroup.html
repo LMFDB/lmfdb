@@ -29,7 +29,7 @@
   <tr> <td>{{KNOWL('character.dirichlet.group.order',title='Order')}}</td> <td>=</td> <td>{{ order }}</td> </tr>
 {% if order > 1 %}
   <tr> <td colspan="3"> {{ place_code('struct') }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.group.structure',title='Structure')}}</td> <td>=</td> <td>{{ structure }}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.group.structure',title='Structure')}}</td> <td>=</td> <td>{{ structure_group_knowl | safe }}</td> </tr>
   <tr> <td colspan="3"> {{ place_code('gen') }} </td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.group.generators',title='Generators')}}</td> <td>=</td> <td>{{ generators | safe }}</td> </tr>
 {% endif %}
@@ -81,6 +81,10 @@ and several values of the character.
     {% endfor %}
   </tbody>
 </table>
+
+{%if rowtruncate%}
+Click <a href="{{url_for('characters.render_DirichletNavigation')}}?modulus={{modulus}}">here</a> to search among the remaining {{order - contents|count}} characters.
+{% endif %}
 {% endif %}
 
 {% endblock %}

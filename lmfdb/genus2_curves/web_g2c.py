@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from ast import literal_eval
+import os
+import re
+import yaml
 from lmfdb import db
 from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
-                         display_knowl, web_latex_factored_integer)
+                         display_knowl, web_latex_factored_integer, integer_squarefree_part, integer_prime_divisors)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
@@ -51,7 +54,7 @@ def simplify_hyperelliptic(fh):
     xR = PolynomialRing(QQ,'x')
     f = 4*xR(fh[0]) + xR(fh[1])**2
     n = gcd(f.coefficients())
-    f = (n.squarefree_part() * f) / n
+    f = (integer_squarefree_part(n) * f) / n
     return f.coefficients(sparse=False)
 
 def simplify_hyperelliptic_point(fh, pt):
@@ -113,6 +116,14 @@ def ec_label_class(ec_label):
     while x[-1].isdigit():
         x = x[:-1]
     return x
+
+def g2c_lmfdb_label(cond, alpha, disc, num):
+    return "%s.%s.%s.%s" % (cond, alpha, disc, num)
+
+g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)\.(\d+)\.(\d+)')
+
+def split_g2c_lmfdb_label(lab):
+    return g2c_lmfdb_label_regex.match(lab).groups()
 
 def factorsRR_raw_to_pretty(factorsRR):
     if factorsRR == ['RR']:
@@ -575,7 +586,7 @@ def local_table(N,D,tama,bad_lpolys,cluster_pics):
               th_wrap('g2c.bad_lfactors', 'L-factor'),
               th_wrap('ag.cluster_picture', 'Cluster picture'),
               '</tr>', '</thead>', '<tbody>']
-    for p in D.prime_divisors():
+    for p in integer_prime_divisors(D):
         loctab.append('  <tr>')
         cplist = [r for r in tama if r[0] == p]
         if cplist:
@@ -793,6 +804,15 @@ class WebG2C(object):
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'],clus)
 
+            lmfdb_label = data['label']
+            cond, alpha, disc, num = split_g2c_lmfdb_label(lmfdb_label)
+            self.downloads = [#('Frobenius eigenvalues to text', url_for(".download_G2C_fouriercoeffs", label=self.lmfdb_label, limit=1000)),
+                          ('All stored data to text', url_for(".download_G2C_all", label=lmfdb_label)),
+                          ('Code to Magma', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='magma'))#,
+                          #('Code to SageMath', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='sage')),
+                          #('Code to GP', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='gp'))
+            ]
+            #TODO (?) also for the isogeny class
         else:
             # invariants specific to isogeny class
             curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
@@ -880,7 +900,7 @@ class WebG2C(object):
         # Friends
         self.friends = friends = []
         if is_curve:
-            friends.append(('Genus 2 curve %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+            friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
         # first deal with ECs and MFs
         ecs = []
@@ -978,3 +998,18 @@ class WebG2C(object):
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
         code['locally_solvable'] = {'magma':'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsEverywhereLocally(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'}
         code['torsion_subgroup'] = {'magma':'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'}
+
+        self._code = None
+
+    def get_code(self):
+        if self._code is None:
+
+            # read in code.yaml from current directory:
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+            # Fill in placeholders for this specific curve:
+            for lang in ['magma']: #TODO: 'sage', 'pari', 
+                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['min_eqn'])
+
+        return self._code

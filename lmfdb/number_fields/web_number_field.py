@@ -10,7 +10,7 @@ from sage.all import (
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
-        raw_typeset, display_multiset, factor_base_factor, 
+        raw_typeset, display_multiset, factor_base_factor, integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
@@ -201,10 +201,10 @@ def string2list(s):
 def is_fundamental_discriminant(d):
     if d in [0, 1]:
         return False
-    if d.is_squarefree():
+    if integer_is_squarefree(d):
         return d % 4 == 1
     else:
-        return d % 16 in [8, 12] and (d // 4).is_squarefree()
+        return d % 16 in [8, 12] and integer_is_squarefree(d // 4)
 
 
 @cached_function
@@ -232,7 +232,7 @@ def field_pretty(label):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
-                labels = [[ZZ(z[2]).squarefree_part(), - int(z[1])] for z in labels]
+                labels = [[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels]
                 labels.sort()
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]

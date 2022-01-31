@@ -4,10 +4,11 @@ import re
 from ast import literal_eval
 from collections import defaultdict
 
-from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ, QQ, PolynomialRing, magma, prod
+from flask import render_template, url_for, request, redirect, make_response, abort
+from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     CountBox,
     Downloader,
@@ -19,9 +20,11 @@ from lmfdb.utils import (
     TextBox,
     TextBoxWithSelect,
     YesNoBox,
+    coeff_to_poly,
     comma,
     display_knowl,
     flash_error,
+    flash_info,
     formatters,
     parse_bool,
     parse_bracketed_posints,
@@ -31,12 +34,14 @@ from lmfdb.utils import (
     redirect_no_cache,
     search_wrap,
     to_dict,
+    web_latex,
+    web_latex_factored_integer,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, ProcessedLinkCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label
 
 ###############################################################################
 # List and dictionaries needed for routing and searching
@@ -149,6 +154,8 @@ geom_aut_grp_dict_pretty = {
     "48.29": r"$\GL(2,3)$",
 }
 
+
+
 ###############################################################################
 # Routing for top level and random_curve
 ###############################################################################
@@ -201,7 +208,6 @@ def index_Q():
         "10000-99999",
         "100000-1000000",
     )
-    info["equation_search"] = has_magma
     title = r"Genus 2 curves over $\Q$"
     return render_template(
         "g2c_browse.html",
@@ -302,6 +308,22 @@ def by_label(label):
         return redirect(url_for(".index"))
     return genus2_curve_search({"jump": label})
 
+def genus2_jump_error(label, args, missing_curve=False, missing_class=False, invalid_class=False):
+    query = to_dict(args, search_array=G2CSearchArray())
+    for field in ['cond', 'abs_disc']:
+        query[field] = args.get(field, '')
+    query['count'] = args.get('count', '100')
+    if missing_curve:
+        query['title'] = "The genus 2 curve %s is not in the database" % (label)
+    elif missing_class:
+        query['title'] = "The isogeny class %s is not in the database" % (label)
+    elif invalid_class:
+        query['title'] = r"%s is not a valid label for an isogeny class of genus 2 curves over $\mathbb{Q}$" % (label)
+    elif not label:
+        query['title'] = "Please enter a non-empty label %s" % (label)
+    else:
+        query['title'] = r"%s is not a valid label for a genus 2 curve or isogeny class over $\mathbb{Q}$" % (label)
+    return genus2_curve_search(query)
 
 def render_curve_webpage(label):
     try:
@@ -318,6 +340,7 @@ def render_curve_webpage(label):
         learnmore=learnmore_list(),
         title=g2c.title,
         friends=g2c.friends,
+        downloads=g2c.downloads,
         KNOWL_ID="g2c.%s" % label,
     )
 
@@ -362,40 +385,63 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
-try:
-    magma.eval('2')
-    has_magma = True
-except (TypeError, RuntimeError):
-    has_magma = False
 
-def genus2_lookup_equation(f):
-    if not has_magma:
-        return None
-    f.replace(" ", "")
-    # TODO allow other variables, if so, fix the error message accordingly
+### Regex patterns used in lookup
+TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
+STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
+POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
+POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
+ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
+ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
+G2_LOOKUP_RE = re.compile(
+    r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")"
+)
+
+
+def genus2_lookup_equation(input_str):
+    # retuns:
+    # label, C_str
+    # None, C_str when it couldn't find it in the DB
+    # "", input_str when it fails to parse
+    # 0, C_str when it fails to start magma
     R = PolynomialRing(QQ, "x")
-    if ("x" in f and "," in f) or "],[" in f:
-        if "],[" in f:
-            e = f.split("],[")
-            f = [R(literal_eval(e[0][1:] + "]")), R(literal_eval("[" + e[1][0:-1]))]
+    y = PolynomialRing(R, "y").gen()
+    def read_list_coeffs(elt):
+        if not elt:
+            return R(0)
         else:
-            e = f.split(",")
-            f = [R(str(e[0][1:])), R(str(e[1][0:-1]))]
+            return R([int(c) for c in elt.split(",")])
+
+    if ZLLIST_RE.fullmatch(input_str):
+        input_str = input_str.strip('[').strip(']')
+        fg = [read_list_coeffs(elt) for elt in input_str.split('],[')]
+    elif ZLIST_RE.fullmatch(input_str):
+        input_str = input_str.strip('[').strip(']')
+        fg = [read_list_coeffs(input_str), R(0)]
     else:
-        f = R(str(f))
+        print(input_str)
+        input_str = input_str.strip('[').strip(']')
+        fg = [R(list(coeff_to_poly(elt))) for elt in input_str.split(",")]
+    if len(fg) == 1:
+        fg.append(R(0));
+
+    C_str_latex= fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
     try:
-        C = magma.HyperellipticCurve(f)
+        C = magma.HyperellipticCurve(fg)
         g2 = magma.G2Invariants(C)
     except TypeError:
-        return None
+        raise ValueError(f'{C_str_latex} invalid genus 2 curve')
     g2 = str([str(i) for i in g2]).replace(" ", "")
     for r in db.g2c_curves.search({"g2_inv": g2}):
         eqn = literal_eval(r["eqn"])
-        D = magma.HyperellipticCurve(R(eqn[0]), R(eqn[1]))
+        fgD = [R(eqn[0]), R(eqn[1])]
+        D = magma.HyperellipticCurve(fgD)
         # there is recursive bug in sage
         if str(magma.IsIsomorphic(C, D)) == "true":
-            return r["label"]
-    return None
+            if fgD != fg:
+                flash_info(f"The requested genus 2 curve {C_str_latex} is isomorphic to the one below, but uses a different defining polynomial.")
+            return r["label"], ""
+    return None, C_str_latex
 
 
 def geom_inv_to_G2(inv):
@@ -439,43 +485,40 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-TERM_RE = r"(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?"
-STERM_RE = r"(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?"
-POLY_RE = TERM_RE + "(" + STERM_RE + ")*"
-ZLIST_RE = r"\[\d+(,\d+)*\]"
+
+LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
+LHASH_RE = re.compile(r"\#\d+")
 
 
 def genus2_jump(info):
     jump = info["jump"].replace(" ", "")
-    if re.match(r"^\d+\.[a-z]+\.\d+\.\d+$", jump):
+    if LABEL_RE.fullmatch(jump):
         return redirect(url_for_curve_label(jump), 301)
-    elif re.match(r"^\d+\.[a-z]+$", jump):
+    elif ISOGENY_LABEL_RE.fullmatch(jump):
         return redirect(url_for_isogeny_class_label(jump), 301)
-    elif re.match(r"^\#\d+$", jump) and ZZ(jump[1:]) < 2 ** 61:
+    elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves.lucky({"Lhash": jump[1:].strip()}, projection="class")
         if c:
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-    elif has_magma and (
-        re.match(r"^" + POLY_RE + r"$", jump)
-        or re.match(r"^\[" + POLY_RE + r"," + POLY_RE + r"\]$", jump)
-        or re.match(r"^" + ZLIST_RE + r"$", jump)
-        or re.match(r"^\[" + ZLIST_RE + r"," + ZLIST_RE + r"\]$", jump)
-    ):
-        label = genus2_lookup_equation(jump)
+    elif G2_LOOKUP_RE.fullmatch(jump):
+        label, eqn_str = genus2_lookup_equation(jump)
         if label:
             return redirect(url_for_curve_label(label), 301)
-        errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
+        elif label is None:
+            # the input was parsed
+            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve in the database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
-        if has_magma:
-            errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
-        else:
-            errmsg += "."
+        errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
+        errmsg += "."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
+
+
 
 
 class G2C_download(Downloader):
@@ -518,11 +561,36 @@ def parse_sort(info, query):
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
+    ProcessedCol("cond", "g2c.conductor", "Conductor", lambda v: web_latex(factor(v)), align="center", default=True),
+    MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["disc_sign", "abs_disc"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
+                      default=lambda info: info.get("abs_disc"), align="center"),
+
+    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
+    MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
+    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
+              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
+    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", default=True, align="center"),
+    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
+    CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
+    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), align="left"),
+    CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
+    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
+    MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
+    MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-Automorphisms"),
+    MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
+    MathCol("num_rat_wpts", "g2c.num_rat_wpts",  r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
+    CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
+    CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
+    MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
+    ProcessedCol("tamagawa_product", "g2c.tamagawa", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
+    ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),
+    ProcessedCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), mathmode=True),
+    ProcessedCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), mathmode=True),
+    ProcessedCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), mathmode=True),
     ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
-    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), default=True, align="center"),
-    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", default=True),
-    CheckCol("is_gl2_type", "g2c.gl2type", r"\(\GL_2\)", default=True),
-    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True)])
+])
 
 @search_wrap(
     table=db.g2c_curves,
@@ -730,6 +798,18 @@ def statistics():
         learnmore=learnmore_list(),
     )
 
+#TODO: get all the data from all the relevant tables, not just the search table.
+
+@g2c_page.route("/download_all/<label>")
+def download_G2C_all(label):
+    data = db.g2c_curves.lookup(label, label_col='label')
+    if data is None:
+        return genus2_jump_error(label, {})
+    data_list = [data]
+
+    response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @g2c_page.route("/Q/Source")
 def source_page():
@@ -783,6 +863,48 @@ def labels_page():
         learnmore=learnmore_list_remove("labels"),
     )
 
+sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
+
+code_names = {'curve': 'Define the curve',
+                 'tors': 'Torsion subgroup',
+                 'cond': 'Conductor',
+                 'disc': 'Discriminant',
+                 'ntors': 'Torsion order of Jacobian',
+                 'jacobian': 'Jacobian',
+                 'aut': 'Automorphism group',
+                 'mwgroup': 'Mordell-Weil group'}
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def g2c_code(**args):
+    label = g2c_lmfdb_label(args['conductor'], args['iso'], args['discriminant'], args['number'])
+    try:
+        C = WebG2C.by_label(label)
+    except ValueError:
+        return genus2_jump_error(label, {}), False
+    except KeyError:
+        return genus2_jump_error(label, {}, missing_curve=True), False
+    Ccode = C.get_code()
+    lang = args['download_type']
+    code = "%s %s code for working with genus 2 curve %s\n\n" % (Comment[lang],Fullname[lang],label)
+    if lang=='gp':
+        lang = 'pari'
+    for k in sorted_code_names:
+        if lang in Ccode[k]:
+            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
+            code += Ccode[k][lang] + ('\n' if '\n' not in Ccode[k][lang] else '')
+    return code, True
+
+@g2c_page.route('/Q/<conductor>/<iso>/<discriminant>/<number>/download/<download_type>')
+def g2c_code_download(**args):
+    code, valid = g2c_code(**args)
+    response = make_response(code)
+    if valid:
+        response.headers['Content-type'] = 'text/plain'
+    else:
+        response.headers['Content-type'] = 'text/html'
+    return response
 
 class G2CSearchArray(SearchArray):
     noun = "curve"
@@ -1041,8 +1163,7 @@ class G2CSearchArray(SearchArray):
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
         info["jump_egspan"] = "e.g. 169.a.169.1 or 169.a or 1088.b"
+        info["jump_egspan"] += " or x^5 + 1"
         info["jump_knowl"] = "g2c.search_input"
-        info["jump_prompt"] = "Label"
-        if info.get("equation_search"):
-            info["jump_egspan"] += " or x^5 + 1"
+        info["jump_prompt"] = "Label or polynomial"
         return SearchArray.jump_box(self, info)
