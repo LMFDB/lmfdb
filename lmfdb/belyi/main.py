@@ -585,7 +585,7 @@ def belyi_galmap_text_download(label):
 
 @belyi_page.route("/data/<label>")
 def belyi_data(label):
-    bread = get_bread(f"Data - {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     if label.count("-") == 1: # passport label length
         labels = [label, label]
         label_cols = ["plabel", "plabel"]

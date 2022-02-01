@@ -442,7 +442,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                     return redirect(url_for(".render_DirichletNavigation"))
 
                 info['show_orbit_label'] = True
-                info['downloads'] = [('Underlying data', url_for('API.api_query', table="char_dir_orbits") + f"?label={modulus}.{orbit_label}")]
+                info['downloads'] = [('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))]
                 info['learnmore'] = learn()
                 info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
                 info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
@@ -506,11 +506,18 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 
 @characters_page.route("/Dirichlet/data/<label>")
 def dirchar_data(label):
-    if label.count(".") != 2:
-        return abort(404)
-    modulus, orbit_label, number = label.split(".")
-    title = f"Dirichlet character data - {modulus}.{number}"
-    return datapage([f"{modulus}.{orbit_label}", f"{modulus}.{number}"], ["char_dir_orbits", "char_dir_values"], title=title, bread=[], label_cols=["label", "label"])
+    if label.count(".") == 2:
+        modulus, orbit_label, number = label.split(".")
+        title = f"Dirichlet character data - {modulus}.{number}"
+        tail = [(f"{modulus}.{number}", url_for(".render_Dirichletwebpage", modulus=modulus, number=number)),
+                ("Data", " ")]
+        return datapage([f"{modulus}.{orbit_label}", f"{modulus}.{number}"], ["char_dir_orbits", "char_dir_values"], title=title, bread=bread(tail), label_cols=["label", "label"])
+    elif label.count(".") == 1:
+        modulus, orbit_label = label.split(".")
+        title = f"Dirichlet character data - {modulus}.{orbit_label}"
+        tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
+                ("Data", " ")]
+        return datapage(label, "char_dir_orbits", title=title, bread=bread(tail))
 
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')

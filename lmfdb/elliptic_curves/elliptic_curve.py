@@ -652,7 +652,7 @@ def render_curve_webpage_by_label(label):
 
 @ec_page.route("/data/<label>")
 def EC_data(label):
-    bread = get_bread(f"Data - {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     if match_lmfdb_label(label):
         conductor, iso_class, number = split_lmfdb_label(label)
         if not number: # isogeny class

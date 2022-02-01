@@ -28,7 +28,10 @@ def get_bread(**kwds):
     bread = [('Modular forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
-        return bread + [(kwds['other'], ' ')]
+        if isinstance(kwds['other'], str):
+            return bread + [(kwds['other'], ' ')]
+        else:
+            return bread + kwds['other']
     url_kwds = {}
     for key, display, link in links:
         if key not in kwds:

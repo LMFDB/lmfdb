@@ -32,14 +32,14 @@ Formats:
         <code>{{ pretty(recs[0], id=False) }}</code>
       {% else %}
         <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a></br/>
-        <ol>
+        <ul>
           {% for entry in recs %}
             <li>
               id: <a href="{{ url_for('API.api_query_id', table=table, id=entry.get('id')) }}">{{ entry.get('id') }}</a></br/>
               <code>{{ pretty(entry, id=False) }}</code>
             </li>
           {% endfor %}
-        </ol>
+        </ul>
       {% endif %}
     </li>
   {% endfor %}

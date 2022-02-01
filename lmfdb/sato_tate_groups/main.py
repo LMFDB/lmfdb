@@ -942,7 +942,7 @@ def st_data(label):
     data = db.gps_st.lookup(label)
     if data is None:
         return abort(404)
-    bread = get_bread([(f"Data - {label}", "")])
+    bread = get_bread([(label, url_for('.by_label', label=label)), ("Data", "")])
     title = f"Sato-Tate group data - {label}"
     return datapage([label, data["identity_component"], data["component_group"]], ["gps_st", "gps_st0", "gps_groups"], bread=bread, title=title, label_cols=["label", "name", "label"])
 

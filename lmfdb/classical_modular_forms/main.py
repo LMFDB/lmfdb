@@ -484,10 +484,10 @@ def mf_data(label):
         tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
         labels = label
         label_cols = None
-        title = f"$Gamma_1$ data - {label}"
+        title = fr"$\Gamma_1$ data - {label}"
     else:
         return abort(404, "Invalid label")
-    bread = get_bread(other=f"Data - {label}")
+    bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
 

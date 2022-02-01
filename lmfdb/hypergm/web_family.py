@@ -274,7 +274,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def downloads(self):
-        return [("Underlying data", url_for("API.api_query", table="hgm_families") + f"?label={self.label}")]
+        return [("Underlying data", url_for(".hgm_data", label=self.label))]
 
     @lazy_attribute
     def title(self):

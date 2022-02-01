@@ -13,6 +13,7 @@ from lmfdb.utils import (
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
 from lmfdb.nfutils.psort import ideal_from_label, primes_iter
 from lmfdb.bianchi_modular_forms import bmf_page
@@ -371,9 +372,25 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] # - 2*info['nnf2']
                 properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
-                downloads = [('Underlying data', url_for("API.api_query", table="bmf_dims") + f"?label={info['label']}")]
+                downloads = [('Underlying data', url_for(".bmf_data", label=info['label']))]
 
     return render_template("bmf-space.html", info=info, title=t, bread=bread, properties=properties, friends=friends, downloads=downloads, learnmore=learnmore_list())
+
+@bmf_page.route('/data/<label>')
+def bmf_data(label):
+    pieces = label.split("-")
+    if len(pieces) == 2:
+        url = url_for(".render_bmf_space_webpage", field_label=pieces[0], level_label=pieces[1])
+        title = f"Bianchi modular space data - {label}"
+        table = "bmf_dims"
+    elif len(pieces) == 3:
+        url = url_for_label(label)
+        title = f"Bianchi modular form data - {label}"
+        table = "bmf_forms"
+    else:
+        return abort(404, f"Invalid label {label}")
+    bread = get_bread([(label, url), ("Data", " ")])
+    return datapage(label, table, title=title, bread=bread)
 
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
@@ -607,7 +624,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         info['downloads'] = [
             ('Modular form to Magma', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='magma')),
             ('Eigenvalues to Sage', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='sage')),
-            ('Underlying data', url_for("API.api_query", table="bmf_forms") + f"?label={label}"),
+            ('Underlying data', url_for(".bmf_data", label=label)),
         ]
     except ValueError:
         flash_error("No Bianchi modular form in the database has label %s", label)

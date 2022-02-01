@@ -17,6 +17,7 @@ from lmfdb.utils import (
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
+from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -308,7 +309,7 @@ def render_group_webpage(args):
         data['nilpotency'] = '$%s$' % data['nilpotency']
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] += ' (not nilpotent)'
-        downloads = [('Underlying data', url_for("API.api_query", table="gps_transitive") + f"?label={label}")]
+        downloads = [('Underlying data', url_for(".gg_data", label=label))]
 
         bread = get_bread([(label, ' ')])
         return render_template(
@@ -322,6 +323,11 @@ def render_group_webpage(args):
             KNOWL_ID="gg.%s"%label,
             learnmore=learnmore_list())
 
+@galois_groups_page.route("/data/<label>")
+def gg_data(label):
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    title = f"Transitive group data - {label}"
+    return datapage(label, "gps_transitive", title=title, bread=bread)
 
 @galois_groups_page.route("/random")
 @redirect_no_cache

@@ -271,7 +271,8 @@ def maass_data(label):
     title = f"Maass form data - {label}"
     bread = [("Modular forms", url_for("modular_forms")),
              ("Maass", url_for(".index")),
-             (f"Data - {label}", " ")]
+             (label, url_for(".by_label", label=label)),
+             ("Data", " ")]
     tables = ["maass_newforms", "maass_portraits"]
     label_cols = ["maass_id", "maass_id"]
     return datapage(label, tables, bread=bread, title=title, label_cols=label_cols)

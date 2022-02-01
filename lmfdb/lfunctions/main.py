@@ -1580,7 +1580,7 @@ def download(label, L=None): # the wrapper populates the L
 @l_function_page.route("/data/<label>")
 def lfunc_data(label):
     title = f"Lfunction data - {label}"
-    bread = get_bread([(f"Data - {label}", " ")])
+    bread = get_bread([(label, url_for_lfunction(label)), ("Data", " ")])
     return datapage(label, ["lfunc_lfunctions", "lfunc_search", "lfunc_instances"], title=title, bread=bread)
 
 

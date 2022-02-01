@@ -22,6 +22,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
+from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
@@ -777,13 +778,25 @@ def render_family(args):
                          ('Code to Gap', None),
                          (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='gap')),
                          (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))]
-        downloads.append(('Underlying data', url_for("API.api_query", table="hgcwa_passports") + f"?label={label}"))
+        downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
                                KNOWL_ID="curve.highergenus.aut.%s" % label,
                                learnmore=learnmore_list(), downloads=downloads)
 
+@higher_genus_w_automorphisms_page.route("/data/<label>")
+def hgcwa_data(label):
+    if label_is_one_family(label):
+        label_col = "label"
+        title = f"Higher genus family - {label}"
+    elif label_is_one_passport(label):
+        label_col = "passport_label"
+        title = f"Higher genus passport - {label}"
+    else:
+        return abort(404, f"Invalid label {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage(label, "hgcwa_passports", title=title, bread=bread, label_cols=[label_col])
 
 def render_passport(args):
     info = {}
@@ -975,7 +988,7 @@ def render_passport(args):
                              ('Code to Gap', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
                              (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))]
-        downloads.append(('Underlying data', url_for("API.api_query", table="hgcwa_passports") + f"?passport_label={label}"))
+        downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
 
 
         return render_template("hgcwa-show-passport.html",

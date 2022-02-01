@@ -1266,13 +1266,13 @@ def how_computed_page():
 
 @abstract_page.route("/data/<label>")
 def gp_data(label):
-    bread = get_bread(f"Data - {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Abstract group data - {label}"
     return datapage(label, ["gps_groups", "gps_groups_cc", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", "group", "group", "group", "ambient"])
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
-    bread = get_bread(f"Data - {label}")
+    bread = get_bread([(label, url_for_subgroup_label(label)), ("Data", " ")])
     title = f"Abstract subgroup data - {label}"
     data = db.gps_subgroups.lookup(label, ["ambient", "subgroup", "quotient"])
     if data is None:

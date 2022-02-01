@@ -204,7 +204,7 @@ def download_search(info):
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):
-    bread = get_bread((f"Data - {label}", " "))
+    bread = get_bread((label, url_for_label(label)), ("Data", " "))
     extension_labels = list(db.av_fq_endalg_factors.search({"base_label": label}, "extension_label", sort=["extension_degree"]))
     tables = ["av_fq_isog", "av_fq_endalg_factors"] + ["av_fq_endalg_data"] * len(extension_labels)
     labels = [label, label] + extension_labels

@@ -533,12 +533,13 @@ def render_hgm_webpage(label):
 
 @hypergm_page.route("/data/<label>")
 def hgm_data(label):
-    title = f"Hypergeometric motive data - {label}"
-    bread = get_bread([(f"Data - {label}", " ")])
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     if "_t" in label:
+        title = f"Hypergeometric motive data - {label}"
         fam_label = label.split("_t")[0]
         return datapage([label, fam_label], ["hgm_motives", "hgm_families"], bread=bread, title=title)
     else:
+        title = f"Hypergeometric motive family data - {label}"
         return datapage(label, "hgm_families", bread=bread, title=title)
 
 

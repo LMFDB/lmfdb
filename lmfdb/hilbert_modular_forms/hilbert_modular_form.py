@@ -537,7 +537,7 @@ def render_hmf_webpage(**args):
 def hmf_data(label):
     field_label = label.split("-")[0]
     title = f"Hilbert modular form data - {label}"
-    bread = get_bread(f"Data - {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     return datapage([label, label, field_label, field_label], ["hmf_forms", "hmf_hecke", "hmf_fields", "nf_fields"], title=title, bread=bread)
 
 #data quality pages
