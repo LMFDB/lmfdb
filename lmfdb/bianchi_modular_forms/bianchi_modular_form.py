@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from flask import render_template, url_for, request, redirect, make_response
+from flask import render_template, url_for, request, redirect, make_response, abort
 from sage.all import latex, QQ, PolynomialRing
 
 from lmfdb import db
