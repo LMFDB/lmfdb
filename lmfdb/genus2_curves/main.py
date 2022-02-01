@@ -8,6 +8,7 @@ from flask import render_template, url_for, request, redirect, make_response, ab
 from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
+from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     CountBox,
