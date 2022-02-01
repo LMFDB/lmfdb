@@ -15,7 +15,7 @@ from flask import (
 )
 from six import BytesIO
 from string import ascii_lowercase
-from sage.all import ZZ, latex, factor, Permutations
+from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
