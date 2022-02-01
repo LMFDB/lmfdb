@@ -28,10 +28,10 @@ Formats:
       {% if (recs|length) == 0 %}
         {{ label_col }} {{ label }} does not appear in <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a>
       {% elif (recs|length) == 1 %}
-        <a href="{{ url_for('API.api_query_id', table=table, id=recs[0].get('id')) }}">{{ table }}</a></br/>
+        <a href="{{ url_for('API.api_query_id', table=table, id=recs[0].get('id')) }}">{{ table }}</a> &bull; {% include "apischema.html" %} </br/>
         <code>{{ pretty(recs[0], id=False) }}</code>
       {% else %}
-        <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a></br/>
+        <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a> &bull; {% include "apischema.html" %} </br/>
         <ul>
           {% for entry in recs %}
             <li>

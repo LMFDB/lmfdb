@@ -339,8 +339,8 @@ def api_query(table, id = None):
                         for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
-                               search_schema=search_schema,
-                               extra_schema=extra_schema,
+                               search_schema={table: search_schema},
+                               extra_schema={table: extra_schema},
                                single_object=single_object,
                                query_unquote = query_unquote,
                                url_args = url_args,
@@ -380,8 +380,8 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         else:
             return abort(code, msg % tuple(flash_extras))
     data = []
-    search_schemas = []
-    extra_schemas = []
+    search_schema = {}
+    extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
         q = {col: label}
         coll = db[table]
@@ -393,10 +393,10 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
             return apierror("No key %s in table %s", [err, table], table=table)
         except Exception as err:
             return apierror(str(err), table=table)
-        search_schemas.append([(col, coll.col_type[col])
-                               for col in sorted(coll.search_cols)])
-        extra_schemas.append([(col, coll.col_type[col])
-                              for col in sorted(coll.extra_cols)])
+        search_schema[table] = [(col, coll.col_type[col])
+                                for col in sorted(coll.search_cols)]
+        extra_schema[table] = [(col, coll.col_type[col])
+                               for col in sorted(coll.extra_cols)]
     data = Json.prep(data)
 
     # the collected result
@@ -418,8 +418,8 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     else:
         return render_template("apidata.html",
                                title=title,
-                               search_schemas=search_schemas,
-                               extra_schemas=extra_schemas,
+                               search_schema=search_schema,
+                               extra_schema=extra_schema,
                                bread=bread,
                                pretty=pretty_document,
                                **data)
