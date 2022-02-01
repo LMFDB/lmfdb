@@ -32,4 +32,4 @@ class LocalFieldTest(LmfdbTest):
 
     def test_underlying_data(self):
         page = self.tc.get('/padicField/11.6.4.2').get_data(as_text=True)
-        assert 'Underlying data' in page and 'api/lf_fields/?label=11.6.4.2' in page
+        assert 'Underlying data' in page and 'data/11.6.4.2' in page

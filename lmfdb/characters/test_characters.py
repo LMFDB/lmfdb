@@ -106,7 +106,7 @@ class DirichletCharactersTest(LmfdbTest):
                     r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
                     r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
         assert table_row in W
-        assert "Underlying data" in W and "api/char_dir_orbits/?label=289.j" in W
+        assert "Underlying data" in W and "data/289.j" in W
 
         W = self.tc.get('/Character/Dirichlet/7145/da')
         assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(as_text=True)
@@ -236,3 +236,5 @@ class DirichletCharactersTest(LmfdbTest):
     def test_underlying_data(self):
         W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
         assert 'is_minimal' in W and 'values_gens' in W
+        W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
+        assert 'is_minimal' in W
