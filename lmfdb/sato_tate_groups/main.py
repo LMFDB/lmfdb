@@ -363,17 +363,17 @@ def st_anchor(label):
 def st_lookup(label):
     """wrapper to gps_st table, handles dynamically generated groups not stored in the database"""
     if re.match(MU_LABEL_RE, label):
-        return mu_data(ZZ(label.split('.')[2]))
+        return mu_data(ZZ(label.split('.')[2])), False
     elif re.match(NU1_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
         n = ZZ(label.split('.')[3][1:])
-        return nu1_mu_data(w,n)
+        return nu1_mu_data(w,n), False
     elif re.match(SU2_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
         n = ZZ(label.split('.')[3][1:])
-        return su2_mu_data(w,n)
+        return su2_mu_data(w,n), False
     else:
-        return db.gps_st.lookup(label)
+        return db.gps_st.lookup(label), True
 
 def st_knowl(label):
     try:
@@ -932,7 +932,7 @@ def nu1_mu_portrait(n):
 
 def render_by_label(label):
     """ render html page for Sato-Tate group specified by label """
-    data = st_lookup(label)
+    data, in_database = st_lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
@@ -1041,7 +1041,7 @@ def render_by_label(label):
         c=data['counts']
         T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
         info['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
-    return render_st_group(info, portrait=data.get('trace_histogram'), in_database=True)
+    return render_st_group(info, portrait=data.get('trace_histogram'), in_database=in_database)
 
 def render_st_group(info, portrait=None, in_database=False):
     """ render html page for Sato-Tate group described by info """
