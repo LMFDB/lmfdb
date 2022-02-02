@@ -16,7 +16,7 @@ from flask import (
 )
 from six import BytesIO
 from string import ascii_lowercase
-from sage.all import ZZ, latex, factor, Permutations
+from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
@@ -622,6 +622,25 @@ def by_label(label):
 
 
 AB_LABEL_RE = re.compile(r"\d+(_\d+)?(\.\d+(_\d+)?)*")
+def canonify_abelian_label(label, smith=False):
+    parts = defaultdict(list)
+    for piece in label.split("."):
+        if "_" in piece:
+            base, exp = map(ZZ, piece.split("_"))
+        else:
+            base = ZZ(piece)
+            exp = 1
+        for p, e in base.factor():
+            parts[p].extend([p ** e] * exp)
+    for v in parts.values():
+        v.sort()
+    if smith:
+        M = max(len(v) for v in parts.values())
+        for p, qs in parts.items():
+            parts[p] = [1] * (M - len(qs)) + qs
+        return [prod(qs) for qs in zip(*parts.values())]
+    else:
+        return sum((parts[p] for p in sorted(parts)), [])
 
 
 @abstract_page.route("/ab/<label>")
@@ -634,18 +653,7 @@ def by_abelian_label(label):
             label,
         )
         return redirect(url_for(".index"))
-    parts = defaultdict(list)
-    for piece in label.split("."):
-        if "_" in piece:
-            base, exp = map(ZZ, piece.split("_"))
-        else:
-            base = ZZ(piece)
-            exp = 1
-        for p, e in base.factor():
-            parts[p].extend([p ** e] * exp)
-    for v in parts.values():
-        v.sort()
-    primary = sum((parts[p] for p in sorted(parts)), [])
+    primary = canonify_abelian_label(label)
     dblabel = db.gps_groups.lucky(
         {"abelian": True, "primary_abelian_invariants": primary}, "label"
     )
@@ -744,29 +752,37 @@ def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     else:
         return f'Non-Solvable - {clen}'
 
-
+CYCLIC_PRODUCT_RE = re.compile(r"[Cc][0-9]+(\^[0-9]+)?(\s*[*Xx]\s*[Cc][0-9]+(\^[0-9]+)?)*")
 #### Searching
 def group_jump(info):
+    jump = info["jump"]
     # by label
-    if abstract_group_label_regex.match(info["jump"]):
-        return redirect(url_for(".by_label", label=info["jump"]))
+    if abstract_group_label_regex.match(jump):
+        return redirect(url_for(".by_label", label=jump))
+    # by abelian label
+    if jump.startswith("ab/") and AB_LABEL_RE.match(jump[3:]):
+        return redirect(url_for(".by_abelian_label", label=jump[3:]))
+    # or as product of cyclic groups
+    if CYCLIC_PRODUCT_RE.match(jump):
+        invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
+        return redirect(url_for(".by_abelian_label", label = ".".join(invs)))
     # by name
-    labs = db.gps_groups.search({"name":info["jump"].replace(" ", "")}, projection="label", limit=2)
+    labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
         return redirect(url_for(".by_label", label=labs[0]))
     elif len(labs) == 2:
-        return redirect(url_for(".index", name=info["jump"].replace(" ", "")))
+        return redirect(url_for(".index", name=jump.replace(" ", "")))
     # by special name
     for family in db.gps_families.search():
-        m = re.match(family["input"], info["jump"])
+        m = re.match(family["input"], jump)
         if m:
             m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
             lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")
             if lab:
                 return redirect(url_for(".by_label", label=lab))
             else:
-                raise RuntimeError("The group %s has not yet been added to the database." % info["jump"])
-    raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (info["jump"], display_knowl('group.families', 'here')))
+                raise RuntimeError("The group %s has not yet been added to the database." % jump)
+    raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
 
 def group_download(info):
     t = "Stub"
@@ -1966,44 +1982,49 @@ def sub_data(label):
 
 
 def group_data(label, ambient=None, aut=False):
-    gp = WebAbstractGroup(label)
+    if label.startswith("ab/"):
+        data = canonify_abelian_label(label[3:])
+        url = url_for("abstract.by_abelian_label", label=label[3:])
+    else:
+        data = None
+        url = url_for("abstract.by_label", label=label)
+    gp = WebAbstractGroup(label, data=data)
     ans = f"Group ${gp.tex_name}$: "
     ans += create_boolean_string(gp, type="knowl")
     ans += f"<br />Label: {gp.label}<br />"
     ans += f"Order: {gp.order}<br />"
     ans += f"Exponent: {gp.exponent}<br />"
 
-    if ambient is None:
-        ans += "It has {} subgroups".format(gp.number_subgroups)
-        if gp.number_normal_subgroups < gp.number_subgroups:
-            ans += " in {} conjugacy classes, {} normal, ".format(
-                gp.number_subgroup_classes, gp.number_normal_subgroups
-            )
+    if not gp.live():
+        if ambient is None:
+            ans += "It has {} subgroups".format(gp.number_subgroups)
+            if gp.number_normal_subgroups < gp.number_subgroups:
+                ans += " in {} conjugacy classes, {} normal, ".format(
+                    gp.number_subgroup_classes, gp.number_normal_subgroups
+                )
+            else:
+                ans += ", all normal, "
+            if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
+                ans += str(gp.number_characteristic_subgroups)
+            else:
+                ans += "all"
+            ans += " characteristic.<br />"
         else:
-            ans += ", all normal, "
-        if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
-            ans += str(gp.number_characteristic_subgroups)
-        else:
-            ans += "all"
-        ans += " characteristic.<br />"
-    else:
-        ambient = WebAbstractGroup(ambient)
-        subs = [H for H in ambient.subgroups.values() if H.subgroup == label]
-        if aut and not ambient.outer_equivalence:
-            subs = [H for H in subs if H.label.split(".")[-1] == "a1"]
-        subs.sort(
-            key=lambda H: H.label
-        )  # It would be better to split the label apart and sort numerically, but that's too much work
-        ans += '<div align="right">'
-        ans += "Subgroups with this isomorphism type: "
-        for H in subs:
-            ans += '<a href="{}">{}</a>&nbsp;'.format(
-                url_for("abstract.by_subgroup_label", label=H.label), H.label
-            )
-        ans += "</div><br />"
-    ans += '<div align="right"><a href="{}">{} home page</a></div>'.format(
-        url_for("abstract.by_label", label=label), label
-    )
+            ambient = WebAbstractGroup(ambient)
+            subs = [H for H in ambient.subgroups.values() if H.subgroup == label]
+            if aut and not ambient.outer_equivalence:
+                subs = [H for H in subs if H.label.split(".")[-1] == "a1"]
+            subs.sort(
+                key=lambda H: H.label
+            )  # It would be better to split the label apart and sort numerically, but that's too much work
+            ans += '<div align="right">'
+            ans += "Subgroups with this isomorphism type: "
+            for H in subs:
+                ans += '<a href="{}">{}</a>&nbsp;'.format(
+                    url_for("abstract.by_subgroup_label", label=H.label), H.label
+                )
+            ans += "</div><br />"
+    ans += f'<div align="right"><a href="{url}">{label} home page</a></div>'
     return Markup(ans)
 
 def semidirect_data(label):
