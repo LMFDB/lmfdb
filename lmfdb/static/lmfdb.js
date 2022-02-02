@@ -671,3 +671,16 @@ function show_moreless(ml) {
   $('.'+ml).show();
 }
 
+function show_schema(tbl) {
+  $("div."+tbl+"-schema-holder").show();
+  $("#"+tbl+"-schema-hider").show();
+  $("#"+tbl+"-schema-shower").hide();
+  return false;
+}
+
+function hide_schema(tbl) {
+  $("div."+tbl+"-schema-holder").hide();
+  $("#"+tbl+"-schema-hider").hide();
+  $("#"+tbl+"-schema-shower").show();
+  return false;
+}

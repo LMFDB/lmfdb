@@ -1,0 +1,46 @@
+prompt:
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
+
+logo:
+  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+curve:
+  magma: |
+    R<x> := PolynomialRing(Rationals());
+    fh := %s;
+    f := R![a : a in fh[1]];
+    h := R![a : a in fh[2]];
+    C := HyperellipticCurve(f, h);
+
+aut:
+  magma: AutomorphismGroup(C);
+
+jacobian:
+  magma: J := Jacobian(SimplifiedModel(C));
+
+tors:
+  magma: TorsionSubgroup(J);
+
+cond:
+  magma: Conductor(LSeries(C));
+
+disc:
+  magma: Discriminant(C);
+
+ntors:
+  magma: Order(TorsionSubgroup(J));
+
+mwgroup:
+  magma: MordellWeilGroupGenus2(J);

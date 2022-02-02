@@ -25,6 +25,7 @@ from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol
+from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.sato_tate_groups.main import st_display_knowl
@@ -373,6 +374,12 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            info=info,
                            KNOWL_ID="ec.%s"%label,
                            learnmore=learnmore_list())
+
+@ecnf_page.route("/data/<label>")
+def ecnf_data(label):
+    bread = get_bread((label, url_for_label(label)), ("Data", " "))
+    title = f"Elliptic curve data - {label}"
+    return datapage(label, "ec_nfcurves", title=title, bread=bread)
 
 def download_search(info):
     dltype = info['Submit']

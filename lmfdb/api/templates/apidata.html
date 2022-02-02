@@ -1,0 +1,48 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<style>
+  .api-entries > li { margin-bottom: 14px; }
+  #schema-table {
+    width: 95%;
+  }
+  div.schema-holder {
+    height: 300px;
+    width: 97%;
+    overflow-y: scroll;
+  }
+</style>
+
+<div>
+Formats:
+- <a href="{{ url }}">HTML</a>
+- <a href="{{ url }}?_format=yaml">YAML</a>
+- <a href="{{ url }}?_format=json">JSON</a>
+- {{ timestamp }}
+</div>
+
+<ul class="api-entries">
+  {% for table, recs, label, label_col in zip(tables, data, labels, label_cols) %}
+    <li>
+      {% if (recs|length) == 0 %}
+        {{ label_col }} {{ label }} does not appear in <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a>
+      {% elif (recs|length) == 1 %}
+        <a href="{{ url_for('API.api_query_id', table=table, id=recs[0].get('id')) }}">{{ table }}</a> &bull; {% include "apischema.html" %} </br/>
+        <code>{{ pretty(recs[0], id=False) }}</code>
+      {% else %}
+        <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a> &bull; {% include "apischema.html" %} </br/>
+        <ul>
+          {% for entry in recs %}
+            <li>
+              id: <a href="{{ url_for('API.api_query_id', table=table, id=entry.get('id')) }}">{{ entry.get('id') }}</a></br/>
+              <code>{{ pretty(entry, id=False) }}</code>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

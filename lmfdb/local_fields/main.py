@@ -17,6 +17,7 @@ from lmfdb.utils import (
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
@@ -358,6 +359,7 @@ def render_field_webpage(args):
         if db.nf_fields.exists({'local_algs': {'$contains': label}}):
             friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
+        downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
         bread = get_bread([(label, ' ')])
         return render_template(
@@ -368,6 +370,7 @@ def render_field_webpage(args):
             info=info,
             properties=prop2,
             friends=friends,
+            downloads=downloads,
             learnmore=learnmore_list(),
             KNOWL_ID="lf.%s" % label,
         )
@@ -396,6 +399,11 @@ def printquad(code, p):
         s = str(s) + r'\cdot '+str(u)
     return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
+@local_fields_page.route("/data/<label>")
+def lf_data(label):
+    title = f"Local field data - {label}"
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage(label, "lf_fields", title=title, bread=bread)
 
 @local_fields_page.route("/random")
 @redirect_no_cache

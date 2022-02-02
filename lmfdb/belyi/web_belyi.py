@@ -261,8 +261,8 @@ class WebBelyiGalmap(object):
                     data["curve_url"] = url
 
         # Downloads
+        data_label = data["label"]
         if galmap["g"] <= 2:
-            data_label = data["label"]
             if triple:
                 spl = data_label.split("-")
                 data_label = "-".join(spl[0:-1])
@@ -283,6 +283,7 @@ class WebBelyiGalmap(object):
             ]
         else:
             self.downloads = []
+        self.downloads.append(("Underlying data", url_for(".belyi_data", label=data_label)))
 
         # Breadcrumbs
         label_spl = data["label"].split("-")

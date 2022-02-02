@@ -79,6 +79,7 @@ class HomePageTest(LmfdbTest):
     def test_downloadstring2(self):
         L = self.tc.get("/Lattice/2.156.312.1.2").get_data(as_text=True)
         assert 'vector' in L
+        assert 'Underlying data' in L and 'data/2.156.312.1.2' in L
 
     def test_downloadstring_search(self):
         L = self.tc.get("/Lattice/?class_number=8").get_data(as_text=True)
@@ -104,7 +105,3 @@ class HomePageTest(LmfdbTest):
                     "/Lattice/{}".format(elt),
                     follow_redirects=True)
             assert elt in L.get_data(as_text=True)
-
-
-
-
