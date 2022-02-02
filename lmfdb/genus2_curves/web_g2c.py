@@ -697,8 +697,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, ratpts, clus, is_curve=True, galrep):
-        self.make_object(curve, endo, tama, ratpts, clus, is_curve, galrep)
+    def __init__(self, curve, endo, tama, ratpts, clus, galrep, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, clus, galrep, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -748,9 +748,9 @@ class WebG2C(object):
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
-        return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4), galrep)
+        return WebG2C(curve, endo, tama, ratpts, clus, galrep, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, ratpts, clus, is_curve, galrep):
+    def make_object(self, curve, endo, tama, ratpts, clus, galrep, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
