@@ -3,12 +3,12 @@ from urllib.parse import quote
 from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
-from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
+from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
                          web_latex_split_on, integer_squarefree_part)
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
+from lmfdb.sato_tate_groups.main import st_display_knowl
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -392,15 +392,7 @@ class ECNF(object):
                 self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
 
         # Sato-Tate:
-        # The lines below will need to change once we have curves over non-quadratic fields
-        # that contain the Hilbert class field of an imaginary quadratic field
-        if self.cm:
-            if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
-                self.ST = st_link_by_name(1,2,'U(1)')
-            else:
-                self.ST = st_link_by_name(1,2,'N(U(1))')
-        else:
-            self.ST = st_link_by_name(1,2,'SU(2)')
+        self.ST = st_display_knowl('1.2.A.1.1a' if not self.cm else ('1.2.B.2.1a' if self.cm < 0 else '1.2.B.1.1a'))
 
         # Q-curve / Base change
         try:
@@ -669,6 +661,9 @@ class ECNF(object):
                 self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]
+
+    def display_modell_image(self,label):
+        return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
 
     def code(self):
         if self._code is None:

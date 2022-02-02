@@ -434,7 +434,7 @@ except those listed.
 {% for pr in ec.galois_data %}
 <tr>
 <td align=center> \({{pr.p}}\)</td>
-<td align=center>{{pr.image}}</td>
+<td align=center>{{ec.display_modell_image(pr.image) | safe}}</td>
 </tr>
 {% endfor %}
 </tbody>
