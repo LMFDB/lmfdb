@@ -369,17 +369,20 @@ class WebNewform(object):
     def downloads(self):
         downloads = []
         if self.embedding_label is None:
+            label = self.label
             if self.hecke_cutters or self.has_exact_qexp:
-                downloads.append(('Modular form to Magma', url_for('.download_newform_to_magma', label=self.label)))
+                downloads.append(('Modular form to Magma', url_for('.download_newform_to_magma', label=label)))
             if self.has_exact_qexp:
-                downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=self.label)))
-            downloads.append(('Trace form to text', url_for('.download_traces', label=self.label)))
+                downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=label)))
+            downloads.append(('Trace form to text', url_for('.download_traces', label=label)))
             #if self.has_complex_qexp:
-            #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
-            #    downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
-            downloads.append(('All stored data to text', url_for('.download_newform', label=self.label)))
+            #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=label)))
+            #    downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=label)))
+            downloads.append(('All stored data to text', url_for('.download_newform', label=label)))
         else:
-            downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
+            label = '%s.%s'%(self.label, self.embedding_label)
+            downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
+        downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
 
     @lazy_attribute

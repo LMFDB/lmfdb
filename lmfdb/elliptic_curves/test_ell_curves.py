@@ -188,3 +188,24 @@ class EllCurveTest(LmfdbTest):
         """
         L = self.tc.get('/EllipticCurve/Q/Completeness')
         assert 'Currently, the database includes' in L.get_data(as_text=True)
+
+    def test_underlying_data(self):
+        #data = self.tc.get('/EllipticCurve/Q/data/65/a/1', follow_redirects=True).get_data(as_text=True)
+        self.check_args('/EllipticCurve/Q/data/65.a1', [
+            'ec_curvedata', 'stable_faltings_height',
+            'ec_classdata', 'isogeny_matrix',
+            'ec_mwbsd', 'torsion_generators',
+            'ec_iwasawa', 'iwdata',
+            'ec_torsion_growth', 'field',
+            'ec_localdata', 'tamagawa_number',
+            'ec_galrep', "modell_image",
+            'ec_padic', 'unit',
+        ])
+        #assert ('ec_curvedata' in data and 'stable_faltings_height' in data and
+        #        'ec_classdata' in data and 'isogeny_matrix' in data and
+        #        'ec_mwbsd' in data and 'torsion_generators' in data and
+        #        'ec_iwasawa' in data and 'iwdata' in data and
+        #        'ec_torsion_growth' in data and 'field' in data and
+        #        'ec_localdata' in data and 'tamagawa_number' in data and
+        #        'ec_galrep' in data and "'modell_image'" in data and
+        #        'ec_padic' in data and 'unit' in data)

@@ -272,7 +272,9 @@ class WebHyperGeometricFamily(object):
                  url_for('hypergm.index') +
                  "?A={}&B={}".format(str(self.A), str(self.B)))]
 
-
+    @lazy_attribute
+    def downloads(self):
+        return [("Underlying data", url_for(".hgm_data", label=self.label))]
 
     @lazy_attribute
     def title(self):

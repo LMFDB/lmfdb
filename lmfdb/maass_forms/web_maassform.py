@@ -127,6 +127,7 @@ class WebMaassForm(object):
     def downloads(self):
         return [("Coefficients to text", url_for (".download_coefficients", label=self.label)),
                 ("All stored data to text", url_for (".download", label=self.label)),
+                ("Underlying data", url_for(".maass_data", label=self.label)),
                 ]
 
     @property
