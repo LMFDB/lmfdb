@@ -20,6 +20,7 @@ from lmfdb.utils import (
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
+from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
@@ -649,6 +650,22 @@ def render_curve_webpage_by_label(label):
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
 
+@ec_page.route("/data/<label>")
+def EC_data(label):
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    if match_lmfdb_label(label):
+        conductor, iso_class, number = split_lmfdb_label(label)
+        if not number: # isogeny class
+            return datapage(label, ["ec_classdata", "ec_padic"], bread=bread, label_col="lmfdb_iso", sorts=[[], ["p"]])
+        iso_label = class_lmfdb_label(conductor, iso_class)
+        labels = [label] * 8
+        label_cols = ["lmfdb_label"] * 8
+        labels[1] = labels[7] = iso_label
+        label_cols[1] = label_cols[7] = "lmfdb_iso"
+        sorts = [[], [], [], [], ["degree", "field"], ["prime"], ["prime"], ["p"]]
+        return datapage(labels, ["ec_curvedata", "ec_classdata", "ec_mwbsd", "ec_iwasawa", "ec_torsion_growth", "ec_localdata", "ec_galrep", "ec_padic"], title=f"Elliptic curve data - {label}", bread=bread, label_cols=label_cols, sorts=sorts)
+    return abort(404)
+
 @ec_page.route("/padic_data/<label>/<int:p>")
 def padic_data(label, p):
     try:
@@ -690,7 +707,6 @@ def download_EC_qexp(label, limit):
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 #TODO: get all the data from all the relevant tables, not just the search table.
 

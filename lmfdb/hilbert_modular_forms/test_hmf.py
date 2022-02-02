@@ -161,3 +161,9 @@ class HMFTest(LmfdbTest):
             magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
             magma_code += 'f;\n'
             self.assert_if_magma('success', magma_code, mode='in')
+
+    def test_underlying_data(self):
+        data = self.tc.get('/ModularForm/GL2/TotallyReal/data/2.2.5.1-31.1-a').get_data(as_text=True)
+        assert ('hmf_forms' in data and 'level_bad_primes' in data and
+                'hmf_hecke' in data and 'AL_eigenvalues' in data and
+                'hmf_fields' in data and 'ideals' in data)

@@ -18,6 +18,7 @@ from lmfdb.utils import (
     search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
 )
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.api import datapage
 from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
@@ -130,6 +131,7 @@ def abelian_varieties_by_gqi(g, q, iso):
 
     if hasattr(cl, "curves") and cl.curves:
         downloads.append(('Curves to text', url_for('.download_curves', label=label)))
+    downloads.append(("Underlying data", url_for('.AV_data', label=label)))
 
     return render_template(
         "show-abvarfq.html",
@@ -199,6 +201,16 @@ def download_search(info):
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+@abvarfq_page.route("/data/<label>")
+def AV_data(label):
+    bread = get_bread((label, url_for_label(label)), ("Data", " "))
+    extension_labels = list(db.av_fq_endalg_factors.search({"base_label": label}, "extension_label", sort=["extension_degree"]))
+    tables = ["av_fq_isog", "av_fq_endalg_factors"] + ["av_fq_endalg_data"] * len(extension_labels)
+    labels = [label, label] + extension_labels
+    label_cols = ["label", "base_label"] + ["extension_label"] * len(extension_labels)
+    sorts = [[], ["extension_degree"]] + [[]] * len(extension_labels)
+    return datapage(labels, tables, title=f"Abelian variety isogeny class data - {label}", bread=bread, label_cols=label_cols, sorts=sorts)
 
 class AbvarSearchArray(SearchArray):
     sorts = [("", "dimension", ['g', 'q', 'poly']),
