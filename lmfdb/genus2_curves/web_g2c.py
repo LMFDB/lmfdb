@@ -889,13 +889,14 @@ class WebG2C(object):
         else:
             properties += [('Conductor', prop_int_pretty(data['cond']))]
         properties += [
-            ('Sato-Tate group', st_anchor(data['st_label'])),
+            ('Sato-Tate group', st_anchor(curve['st_label'])),
             (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', r'\(%s\)' % data['geom_end_alg_name']),
             (r'\(\End(J) \otimes \Q\)', r'\(%s\)' % data['end_alg_name']),
             (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
+
         if is_curve:
             self.downloads = [("Underlying data", url_for(".G2C_data", label=data['label']))]
         else:

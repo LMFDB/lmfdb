@@ -360,7 +360,7 @@ def st_anchor(label):
     else:
         return label
 
-def st_data(label):
+def st_lookup(label):
     """wrapper to gps_st table, handles dynamically generated groups not stored in the database"""
     if re.match(MU_LABEL_RE, label):
         return mu_data(ZZ(label.split('.')[2]))
@@ -377,7 +377,7 @@ def st_data(label):
 
 def st_knowl(label):
     try:
-        data = st_data(label)
+        data = st_lookup(label)
         if not data:
             raise ValueError
     except ValueError:
@@ -932,7 +932,7 @@ def nu1_mu_portrait(n):
 
 def render_by_label(label):
     """ render html page for Sato-Tate group specified by label """
-    data = st_data(label)
+    data = st_lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
