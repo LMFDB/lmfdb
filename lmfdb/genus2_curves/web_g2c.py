@@ -13,7 +13,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
@@ -869,7 +869,7 @@ class WebG2C(object):
         else:
             properties += [('Conductor', prop_int_pretty(data['cond']))]
         properties += [
-            ('Sato-Tate group', data['st_group_link']),
+            ('Sato-Tate group', st_anchor(data['st_label'])),
             (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', r'\(%s\)' % data['geom_end_alg_name']),
             (r'\(\End(J) \otimes \Q\)', r'\(%s\)' % data['end_alg_name']),
