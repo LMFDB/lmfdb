@@ -178,7 +178,7 @@ class ECstats(StatsDisplay):
     @property
     def summary(self):
         return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
-    
+
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
 
@@ -209,7 +209,7 @@ class ECstats(StatsDisplay):
         #
         # It's a theorem that the complete set of possible degrees is this:
         return list(range(1,20)) + [21,25,27,37,43,67,163]
-        
+
 # NB the context processor wants something callable and the summary is a *property*
 
 @app.context_processor
@@ -701,7 +701,7 @@ def download_EC_qexp(label, limit):
     else:
         ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_iso')
     if ainvs is None:
-        return elliptic_curve_jump_error(label, {})        
+        return elliptic_curve_jump_error(label, {})
     if limit > 100000:
         return redirect(url_for('.download_EC_qexp',label=label,limit=10000), 301)
     E = EllipticCurve(ainvs)
@@ -735,7 +735,10 @@ def download_EC_all(label):
 def how_computed_page():
     t = r'Source and acknowledgments for elliptic curve data over $\Q$'
     bread = get_bread('Source')
-    return render_template("double.html", kid='rcs.source.ec.q', kid2='rcs.ack.ec.q',
+    return render_template("multi.html",
+                           kids=['rcs.source.ec.q',
+                           'rcs.ack.ec.q',
+                           'rcs.cite.ec.q'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Completeness")

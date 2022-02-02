@@ -824,9 +824,10 @@ def source_page():
     t = r"Source and acknowledgments for genus 2 curve data over $\Q$"
     bread = get_bread("Source")
     return render_template(
-        "double.html",
-        kid="rcs.source.g2c",
-        kid2="rcs.ack.g2c",
+        "multi.html",
+        kids=["rcs.source.g2c",
+              "rcs.ack.g2c",
+              "rcs.cite.g2c"],
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),
