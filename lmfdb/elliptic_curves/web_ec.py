@@ -23,6 +23,7 @@ CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clab
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
+lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
@@ -426,7 +427,8 @@ class WebEC(object):
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
         try:

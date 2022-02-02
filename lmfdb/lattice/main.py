@@ -15,6 +15,7 @@ from lmfdb.utils import (
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
+from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.lattice_stats import Lattice_stats
@@ -324,11 +325,20 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     else:
         info['properties']=[('Class number', prop_int_pretty(info['class_number']))]+info['properties']
     info['properties']=[('Label', '%s' % info['label'])]+info['properties']
+    downloads = [("Underlying data", url_for(".lattice_data", label=lab))]
 
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
+    return render_template(
+        "lattice-single.html",
+        info=info,
+        title=t,
+        bread=bread,
+        properties=info['properties'],
+        downloads=downloads,
+        learnmore=learnmore_list(),
+        KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):
@@ -342,6 +352,11 @@ def vect_to_sym(v):
             k=k+1
     return [[int(M[i,j]) for i in range(n)] for j in range(n)]
 
+@lattice_page.route('/data/<label>')
+def lattice_data(label):
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    title = f"Lattice data - {label}"
+    return datapage(label, "lat_lattices", title=title, bread=bread)
 
 #auxiliary function for displaying more coefficients of the theta series
 @lattice_page.route('/theta_display/<label>/<number>')
