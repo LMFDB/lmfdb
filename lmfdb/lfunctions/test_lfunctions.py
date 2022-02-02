@@ -621,3 +621,8 @@ class LfunctionTest(LmfdbTest):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
 
+    def test_underlying_data(self):
+        data = self.tc.get("/L/data/2-289379-1.1-c1-0-0").get_data(as_text=True)
+        assert ("lfunc_lfunctions" in data and "st_group" in data and
+                "lfunc_search" in data and "euler19" in data and
+                "lfunc_instances" in data and "Lhash_array" in data)

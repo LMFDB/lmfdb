@@ -644,7 +644,7 @@ class ECNF(object):
             self.downloads.append(('Code to {}'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
-
+        self.downloads.append(('Underlying data', url_for(".ecnf_data", label=self.label)))
 
         if 'Lfunction' in self.urls:
             Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])

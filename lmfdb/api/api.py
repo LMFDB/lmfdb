@@ -339,10 +339,87 @@ def api_query(table, id = None):
                         for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
-                               search_schema=search_schema,
-                               extra_schema=extra_schema,
+                               search_schema={table: search_schema},
+                               extra_schema={table: extra_schema},
                                single_object=single_object,
                                query_unquote = query_unquote,
                                url_args = url_args,
                                bread=bc,
+                               **data)
+
+# This function is used to show the data associated to a given homepage, which could possibly be from multiple tables.
+def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
+    """
+    INPUT:
+
+    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table)
+    - ``tables`` -- a search table or list of search tables (as strings)
+    - ``title`` -- title for the page
+    - ``bread`` -- bread for the page
+    - ``label_cols`` -- a list of column names of the same length; defaults to using ``label`` everywhere
+    - ``sorts`` -- lists for sorting each table; defaults to None
+    """
+    format = request.args.get("_format", "html")
+    if not isinstance(tables, list):
+        tables = [tables]
+    if not isinstance(labels, list):
+        labels = [labels for table in tables]
+    if label_cols is None:
+        label_cols = ["label" for table in tables]
+    if sorts is None:
+        sorts = [None for table in tables]
+    assert len(labels) == len(tables) == len(label_cols)
+
+    def apierror(msg, flash_extras=[], code=404, table=False):
+        if format == "html":
+            flash_error(msg, *flash_extras)
+            if table:
+                return redirect(url_for("API.api_query", table=table))
+            else:
+                return redirect(url_for("API.index"))
+        else:
+            return abort(code, msg % tuple(flash_extras))
+    data = []
+    search_schema = {}
+    extra_schema = {}
+    for label, table, col, sort in zip(labels, tables, label_cols, sorts):
+        q = {col: label}
+        coll = db[table]
+        try:
+            data.append(list(coll.search(q, projection=3, sort=sort)))
+        except QueryCanceledError:
+            return apierror("Query %s exceeded time limit.", [q], code=500, table=table)
+        except KeyError as err:
+            return apierror("No key %s in table %s", [err, table], table=table)
+        except Exception as err:
+            return apierror(str(err), table=table)
+        search_schema[table] = [(col, coll.col_type[col])
+                                for col in sorted(coll.search_cols)]
+        extra_schema[table] = [(col, coll.col_type[col])
+                               for col in sorted(coll.extra_cols)]
+    data = Json.prep(data)
+
+    # the collected result
+    data = {
+        "labels": labels,
+        "tables": tables,
+        "label_cols": label_cols,
+        "timestamp": datetime.utcnow().isoformat(),
+        "data": data,
+    }
+    if format.lower() == "json":
+        return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
+    elif format.lower() == "yaml":
+        y = yaml.dump(data,
+                      default_flow_style=False,
+                      canonical=False,
+                      allow_unicode=True)
+        return Response(y, mimetype='text/plain')
+    else:
+        return render_template("apidata.html",
+                               title=title,
+                               search_schema=search_schema,
+                               extra_schema=extra_schema,
+                               bread=bread,
+                               pretty=pretty_document,
                                **data)

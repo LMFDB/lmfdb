@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from ast import literal_eval
+import os
+import re
+import yaml
 from lmfdb import db
 from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
@@ -113,6 +116,14 @@ def ec_label_class(ec_label):
     while x[-1].isdigit():
         x = x[:-1]
     return x
+
+def g2c_lmfdb_label(cond, alpha, disc, num):
+    return "%s.%s.%s.%s" % (cond, alpha, disc, num)
+
+g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)\.(\d+)\.(\d+)')
+
+def split_g2c_lmfdb_label(lab):
+    return g2c_lmfdb_label_regex.match(lab).groups()
 
 def factorsRR_raw_to_pretty(factorsRR):
     if factorsRR == ['RR']:
@@ -793,6 +804,15 @@ class WebG2C(object):
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'],clus)
 
+            lmfdb_label = data['label']
+            cond, alpha, disc, num = split_g2c_lmfdb_label(lmfdb_label)
+            self.downloads = [#('Frobenius eigenvalues to text', url_for(".download_G2C_fouriercoeffs", label=self.lmfdb_label, limit=1000)),
+                          ('All stored data to text', url_for(".download_G2C_all", label=lmfdb_label)),
+                          ('Code to Magma', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='magma'))#,
+                          #('Code to SageMath', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='sage')),
+                          #('Code to GP', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='gp'))
+            ]
+            #TODO (?) also for the isogeny class
         else:
             # invariants specific to isogeny class
             curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
@@ -876,6 +896,10 @@ class WebG2C(object):
             (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
+        if is_curve:
+            self.downloads = [("Underlying data", url_for(".G2C_data", label=data['label']))]
+        else:
+            self.downloads = []
 
         # Friends
         self.friends = friends = []
@@ -978,3 +1002,18 @@ class WebG2C(object):
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
         code['locally_solvable'] = {'magma':'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsEverywhereLocally(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'}
         code['torsion_subgroup'] = {'magma':'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'}
+
+        self._code = None
+
+    def get_code(self):
+        if self._code is None:
+
+            # read in code.yaml from current directory:
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+            # Fill in placeholders for this specific curve:
+            for lang in ['magma']: #TODO: 'sage', 'pari', 
+                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['min_eqn'])
+
+        return self._code
