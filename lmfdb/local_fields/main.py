@@ -468,6 +468,12 @@ def reliability():
 class LFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
+    sorts = [("", "prime", ['p', 'n', 'c', 'label']),
+             ("n", "degree", ['n', 'p', 'c', 'label']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
+             ("e", "ramification index", ['e', 'p', 'n', 'c', 'label']),
+             ("f", "residue degree", ['f', 'p', 'n', 'c', 'label']),
+             ("s", "top slope", ['s', 'p', 'n', 'c', 'label'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
