@@ -391,8 +391,7 @@ def st_knowl(label):
     info += row_wrap(display_knowl('st_group.weight','Weight'), math_mode(data['weight']))
     info += row_wrap(display_knowl('st_group.degree','Degree'), math_mode(data['degree']))
     info += row_wrap(display_knowl('st_group.real_dimension',r'$\mathbb R$-dimension'), math_mode(data['real_dimension']))
-    if data['identity_component'] != data['name']:
-        info += row_wrap(display_knowl('st_group.ambient','Ambient group'), math_mode(st_ambient(data['weight'], data['degree'])))
+    info += row_wrap(display_knowl('st_group.ambient','Ambient group'), math_mode(st_ambient(data['weight'], data['degree'])))
     info += row_wrap(display_knowl('st_group.identity_component','Identity component'), math_mode(st0_dict[data['identity_component']]))
     info += row_wrap(display_knowl('st_group.component_group','Component group'), abstract_group_display_knowl(data['component_group'], data['component_group'], pretty=True))
     info += row_wrap(display_knowl('st_group.rational','Rational'), 'yes' if data['rational'] else 'no')
