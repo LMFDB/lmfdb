@@ -15,7 +15,7 @@ from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    to_dict, flash_error,
+    to_dict, flash_error, display_knowl,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
@@ -28,6 +28,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, Mul
 from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
+from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
@@ -494,7 +495,8 @@ ecnf_columns = SearchColumns([
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center"),
     ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
     ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
-    ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
+    ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes",
+                 lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
@@ -505,15 +507,18 @@ ecnf_columns = SearchColumns([
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="Has CM", align="center", orig="cm"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
                  default=True, short_title="CM discriminant", mathmode=True, align="center"),
+    ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
+                 lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
+                 short_title="Sato-Tate group", align="center", orig="cm"),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
     CheckCol("base_change", "ec.base_change", "Base change"),
     CheckCol("semistable", "ec.semistable", "Semistable"),
     CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),    
-    ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]), short_title="Nonmaximal primes",
-                 default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
-    ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
-                 default=lambda info: info.get("galois_image"),
-                 align="center"),
+    ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
+                 short_title="Nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
+    ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
+                 lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
     MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),

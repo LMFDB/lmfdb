@@ -21,7 +21,7 @@ from lmfdb.utils import (
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
-from lmfdb.sato_tate_groups.main import st_link, get_name
+from lmfdb.sato_tate_groups.main import st_display_knowl
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
@@ -317,9 +317,6 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
-        if self.sato_tate_group:
-            res.append((r'Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
-                        '/SatoTateGroup/' + self.sato_tate_group))
         if self.embedding_label is not None:
             res.append(('Newform orbit ' + self.label, nf_url))
             if (self.dual_label is not None and
@@ -1152,10 +1149,7 @@ function switch_basis(btype) {
         return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
-        if self.sato_tate_group:
-            return st_link(self.sato_tate_group)
-        else:
-            return ''
+        return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else ''
 
     def eigs_as_seqseq_to_qexp(self, prec_max):
         # Takes a sequence of sequence of integers (or pairs of integers in the hecke_ring_cyclotomic_generator != 0 case) and returns a string for the corresponding q expansion
