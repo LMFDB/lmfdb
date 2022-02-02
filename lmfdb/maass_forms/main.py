@@ -12,6 +12,7 @@ from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils.utilities import display_knowl
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 from sage.all import gcd
@@ -264,6 +265,17 @@ def search_by_label(label):
                            title=mf.title,
                            friends=mf.friends,
                            KNOWL_ID="mf.maass.mwf.%s"%mf.label)
+
+@maass_page.route("/data/<label>")
+def maass_data(label):
+    title = f"Maass form data - {label}"
+    bread = [("Modular forms", url_for("modular_forms")),
+             ("Maass", url_for(".index")),
+             (label, url_for(".by_label", label=label)),
+             ("Data", " ")]
+    tables = ["maass_newforms", "maass_portraits"]
+    label_cols = ["maass_id", "maass_id"]
+    return datapage(label, tables, bread=bread, title=title, label_cols=label_cols)
 
 class MaassStats(StatsDisplay):
     table = db.maass_newforms

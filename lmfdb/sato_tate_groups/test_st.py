@@ -111,3 +111,10 @@ class SatoTateGroupTest(LmfdbTest):
             L = self.tc.get('/SatoTateGroup/'+label)
             assert "Moment sequences" in L.get_data(as_text=True)
 
+    def test_underlying_data(self):
+        data = self.tc.get('/SatoTateGroup/data/1.6.L.8.3j').get_data(as_text=True)
+        assert ('gps_st0' in data and 'character_diagonal' in data and
+                'symplectic_form' in data and
+                'gps_groups' in data and 'number_normal_subgroups' in data)
+        page = self.tc.get('/SatoTateGroup/0.1.2').get_data(as_text=True)
+        assert 'Underlying data' not in page

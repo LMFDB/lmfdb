@@ -39,6 +39,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
+from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label
@@ -333,6 +334,7 @@ def render_curve_webpage(label):
     return render_template(
         "g2c_curve.html",
         properties=g2c.properties,
+        downloads=g2c.downloads,
         info={"aut_grp_dict": aut_grp_dict, "geom_aut_grp_dict": geom_aut_grp_dict},
         data=g2c.data,
         code=g2c.code,
@@ -340,7 +342,6 @@ def render_curve_webpage(label):
         learnmore=learnmore_list(),
         title=g2c.title,
         friends=g2c.friends,
-        downloads=g2c.downloads,
         KNOWL_ID="g2c.%s" % label,
     )
 
@@ -381,6 +382,12 @@ def url_for_isogeny_class_label(label):
 def class_from_curve_label(label):
     return ".".join(label.split(".")[:2])
 
+@g2c_page.route("/Q/data/<label>")
+def G2C_data(label):
+    bread = get_bread([(label, url_for_curve_label(label)), ("Data", " ")])
+    sorts = [[], [], [], ["prime"], ["p"], []]
+    label_cols = ["label", "label", "label", "lmfdb_label", "label", "label"]
+    return datapage(label, ["g2c_curves", "g2c_endomorphisms", "g2c_ratpts", "g2c_galrep", "g2c_tamagawa", "g2c_plots"], title=f"Genus 2 curve data - {label}", bread=bread, sorts=sorts, label_cols=label_cols)
 
 ################################################################################
 # Searching
@@ -419,7 +426,6 @@ def genus2_lookup_equation(input_str):
         input_str = input_str.strip('[').strip(']')
         fg = [read_list_coeffs(input_str), R(0)]
     else:
-        print(input_str)
         input_str = input_str.strip('[').strip(']')
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str.split(",")]
     if len(fg) == 1:

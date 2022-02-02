@@ -25,6 +25,7 @@ from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
+from lmfdb.api import datapage
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
     WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
@@ -446,6 +447,49 @@ def render_full_gamma1_space_webpage(label):
                            learnmore=learnmore_list(),
                            title=space.title,
                            friends=space.friends)
+
+@cmf.route("/data/<label>")
+def mf_data(label):
+    slabel = label.split(".")
+    if len(slabel) == 6:
+        emb_label = label
+        form_label = ".".join(slabel[:4])
+        space_label = ".".join(slabel[:3])
+        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Embedded newform data - {label}"
+    elif len(slabel) == 4:
+        form_label = label
+        space_label = ".".join(slabel[:3])
+        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms", "mf_hecke_nf", "mf_newspaces", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Newform data - {label}"
+    elif len(slabel) == 3:
+        ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits", "mf_hecke_newspace_traces"]
+        labels = [label, label, label, ocode]
+        label_cols = ["label", "label", "label", "hecke_orbit_code"]
+        title = f"Newspace data - {label}"
+    elif len(slabel) == 2:
+        tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
+        labels = label
+        label_cols = None
+        title = fr"$\Gamma_1$ data - {label}"
+    else:
+        return abort(404, "Invalid label")
+    bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
+    return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
+
 
 @cmf.route("/<level>/")
 def by_url_level(level):
