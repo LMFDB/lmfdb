@@ -595,11 +595,13 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
+    sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1))
     noun = "result"
     plural_noun = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
-        return None
+        if self.sorts is not None:
+            return [(name, display) for (name, display, prefix) in self.sorts]
 
     def _search_again(self, info, search_types):
         if info is None:

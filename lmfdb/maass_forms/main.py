@@ -143,6 +143,9 @@ def reliability_page():
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 class MaassSearchArray(SearchArray):
+    sorts = [("", "level", ['level', 'weight', 'conrey_index', 'spectral_parameter']),
+             ("weight", "weight", ['weight', 'level', 'conrey_index', 'spectral_parameter']),
+             ("R", "spectral parameter", ['spectral_parameter', 'weight', 'level', 'conrey_index'])]
     noun = "Maass form"
     plural_noun = "Maass forms"
     def __init__(self):       

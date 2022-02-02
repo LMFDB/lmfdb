@@ -201,6 +201,14 @@ def download_search(info):
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 class AbvarSearchArray(SearchArray):
+    sorts = [("", "dimension", ['g', 'q', 'poly']),
+             ("q", "field", ['q', 'g', 'poly']),
+             ("prank1", "p-rank", ['p_rank', 'g', 'q', 'poly']),
+             ("prank-1", "p-rank deficit", ['p_rank_deficit', 'g', 'q', 'poly']),
+             ("points1", "curve points (asc)", ['curve_count', 'g', 'q', 'poly']),
+             ("points-1", "curve points (dec)", [('curve_count',-1), 'g', 'q', 'poly']),
+             ("avpoints1", "abvar points (asc)", ['abvar_count', 'g', 'q', 'poly']),
+             ("avpoints-1", "abvar points (dec)", [('abvar_count',-1), 'g', 'q', 'poly'])]
     jump_example = "2.16.am_cn"
     jump_egspan = "e.g. 2.16.am_cn or 1 - x + 2x^2 or x^2 - x + 2"
     jump_knowl = "av.fq.search_input"

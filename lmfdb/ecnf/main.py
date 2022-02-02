@@ -830,6 +830,12 @@ def disp_tor(t):
 class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
+    sorts = [("", "field", ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("cond", "conductor", ['conductor_norm', 'conductor_label', 'field_label', 'iso_nlabel', 'number']),
+             ("rank1", "rank (asc)", ['rank', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("rank-1", "rank (dec)", [('rank', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("torsion1", "torsion (asc)", ['torsion_order', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("torsion-1", "torsion (dec)", [('torsion_order', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])]
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     jump_knowl = "ec.search_input"

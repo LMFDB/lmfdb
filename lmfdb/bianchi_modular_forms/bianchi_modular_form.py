@@ -674,6 +674,9 @@ def labels_page():
 class BMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
+    sorts = [("", "level norm", ['level_norm', 'label']),
+             ("field-1", "field (asc)", ['field_deg', ('field_disc', -1), 'level_norm', 'label']),
+             ("field1", "field (dec)", ['field_deg', 'field_disc', 'level_norm', 'label'])]
     jump_example = "2.0.4.1-65.2-a"
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"

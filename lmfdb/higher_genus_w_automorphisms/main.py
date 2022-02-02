@@ -651,28 +651,6 @@ def higher_genus_w_automorphisms_search(info, query):
     info['group_display'] = group_display
     info['sign_display'] = sign_display
 
-    if 'sort_order' in info:
-        if info['sort_order'] == '':
-            query['__sort__'] = ['genus', 'group_order', 'g0','dim']
-        elif info['sort_order'] == 'descgenus':
-            query['__sort__'] = [('genus',-1), 'group_order', 'g0', 'dim']
-        elif info['sort_order'] == 'g0':
-            query['__sort__'] = ['g0', 'genus', 'group_order', 'dim']
-        elif info['sort_order'] == 'descg0':
-            query['__sort__'] = [('g0',-1), 'genus', 'group_order', 'dim']
-        elif info.get('sort_order') == 'dim':
-            query['__sort__'] = ['dim', 'genus', 'group_order', 'g0']
-        elif info.get('sort_order') == 'descdim':
-            query['__sort__'] = [('dim',-1), 'genus', 'group_order', 'g0']
-        elif info.get('sort_order') == 'group_order':
-            query['__sort__'] = ['group_order', 'genus', 'g0', 'dim']
-        elif info.get('sort_order') == 'descgroup_order':
-            query['__sort__'] = [('group_order',-1), 'genus', 'g0', 'dim']
-
-    else:
-        query['__sort__'] = ['genus', 'group_order',  'g0', 'dim']
-
-
 
 def render_family(args):
     info = {}
@@ -1317,13 +1295,11 @@ class HGCWASearchArray(SearchArray):
             [g0, signature, group, inc_cyc_trig]]
 
     sort_knowl = "curve.highergenus.aut.sort_order"
-    def sort_order(self, info):
-        return [("", "genus"),
-                ("g0", "quotient genus"),
-                ("group_order", "group order"),
-                ("dim", "dimension"),
-                ("descgenus", "genus descending"),
-                ("descg0", "quotient genus descending"),
-                ("descgroup_order", "group order descending"),
-                ("descdim", "dimension descending")]
-
+    sorts = [("", "genus (asc)", ['genus', 'group_order',  'g0', 'dim']),
+             ("g0", "quotient genus (asc)", ['g0', 'genus', 'group_order', 'dim']),
+             ("group_order", "group order (asc)", ['group_order', 'genus', 'g0', 'dim']),
+             ("dim", "dimension (asc)", ['dim', 'genus', 'group_order', 'g0']),
+             ("descgenus", "genus (dec)", [('genus',-1), 'group_order', 'g0', 'dim']),
+             ("descg0", "quotient genus (dec)", [('g0',-1), 'genus', 'group_order', 'dim']),
+             ("descgroup_order", "group order (dec)", [('group_order',-1), 'genus', 'g0', 'dim']),
+             ("descdim", "dimension (dec)", [('dim',-1), 'genus', 'group_order', 'g0'])]

@@ -57,8 +57,13 @@ class Wrapper(object):
             err_title = query.pop("__err_title__", self.err_title)
         if errpage is not None:
             return errpage
-        sort = query.pop("__sort__", None)
         table = query.pop("__table__", self.table)
+        sort = query.pop("__sort__", None)
+        if sort is None and "search_array" in info and info["search_array"].sorts is not None and info.get('sort_order'):
+            for name, display, S in info["search_array"].sorts:
+                if name == info['sort_order']:
+                    sort = S
+                    break
         # We want to pop __title__ even if overridden by info.
         title = query.pop("__title__", self.title)
         title = info.get("title", title)

@@ -539,24 +539,6 @@ class G2C_download(Downloader):
         "gp": ["[apply(Polrev,c)|c<-data];"],
     }
 
-
-def parse_sort(info, query):
-    default = ["cond", "class", "abs_disc", "disc_sign", "label"]
-    d = defaultdict(
-        lambda: default, (
-            ("", default),
-            ("abs_disc", ["abs_disc"] + default),
-            ("num_rat_pts1", [("num_rat_pts", 1)] + default),
-            ("num_rat_pts-1", [("num_rat_pts", -1)] + default),
-            ("num_rat_wpts1", [("num_rat_wpts", 1)] + default),
-            ("num_rat_wpts-1", [("num_rat_wpts", -1)] + default),
-            ("torsion_order1", [("torsion_order", 1)] + default),
-            ("torsion_order-1", [("torsion_order", -1)] + default),
-            ("analytic_sha1", [("analytic_sha", 1)] + default),
-            ("analytic_sha-1", [("analytic_sha", -1)] + default),
-        ))
-    query["__sort__"] = d[info.get("sort_order")]
-
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
@@ -673,7 +655,6 @@ def genus2_curve_search(info, query):
         qfield="bad_primes",
         mode=info.get("bad_quantifier"),
     )
-    parse_sort(info, query)
 
 
 ################################################################################
@@ -1142,22 +1123,18 @@ class G2CSearchArray(SearchArray):
             [geometric_invariants],
         ]
 
+    _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
     sort_knowl = "g2c.sort_order"
-
-    def sort_order(self, info):
-        X = [
-            ("", "label"),
-            ("abs_disc", "absolute discriminant"),
-            ("num_rat_pts1", "rational points (inc)"),
-            ("num_rat_pts-1", "rational points (dec)"),
-            ("num_rat_wpts1", "Weierstrass points (inc)"),
-            ("num_rat_wpts-1", "Weierstrass points (dec)"),
-            ("torsion_order1", "torsion order (inc)"),
-            ("torsion_order-1", "torsion order (dec)"),
-            ("analytic_sha1", "analytic sha (inc)"),
-            ("analytic_sha-1", "analytic sha (dec)"),
-        ]
-        return X
+    sorts = [("", "label", _default),
+             ("abs_disc", "absolute discriminant", ["abs_disc"] + _default),
+             ("num_rat_pts1", "rational points (inc)", [("num_rat_pts", 1)] + _default),
+             ("num_rat_pts-1", "rational points (dec)", [("num_rat_pts", -1)] + _default),
+             ("num_rat_wpts1", "Weierstrass points (inc)", [("num_rat_wpts", 1)] + _default),
+             ("num_rat_wpts-1", "Weierstrass points (dec)", [("num_rat_wpts", -1)] + _default),
+             ("torsion_order1", "torsion order (inc)", [("torsion_order", 1)] + _default),
+             ("torsion_order-1", "torsion order (dec)", [("torsion_order", -1)] + _default),
+             ("analytic_sha1", "analytic sha (inc)", [("analytic_sha", 1)] + _default),
+             ("analytic_sha-1", "analytic sha (dec)", [("analytic_sha", -1)] + _default)]
 
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
