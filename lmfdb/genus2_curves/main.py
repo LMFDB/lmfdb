@@ -1143,7 +1143,7 @@ class G2CSearchArray(SearchArray):
              ("analytic_sha-1", "analytic sha (dec)", [("analytic_sha", -1)] + _default),
              ("two_sel", "2-Selmer rank", ["two_selmer_rank"] + _default),
              ("rank", "analytic rank", ["analytic_rank"] + _default),
-             ("st_label", "Sato-Tate group", ["st_label"] + _default)]
+             ("st_label", "Sato-Tate group", [("st_label", -1)] + _default)]
 
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
