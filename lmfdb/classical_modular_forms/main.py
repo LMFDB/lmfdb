@@ -1661,7 +1661,7 @@ class CMFSearchArray(SearchArray):
         X = [
             ('', 'analytic conductor'),
             ('N', 'level'),
-            ('k', 'weight')
+            ('k', 'weight'),
             ('char', 'character'),
             ('prim', 'primitive character'),
             ('char_order', 'character order'),

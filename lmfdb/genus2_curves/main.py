@@ -2,7 +2,6 @@
 
 import re
 from ast import literal_eval
-from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, make_response, abort
 from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
