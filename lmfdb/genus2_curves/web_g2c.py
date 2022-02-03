@@ -637,8 +637,8 @@ def local_table(N,D,tama,bad_lpolys,cluster_pics):
 
 def galrep_table(galrep):  
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
-              th_wrap('', r'Prime \(ell\)'),
-              th_wrap('g2c.galois_rep_image', r'mod-\(ell\) image'),
+              th_wrap('', r'Prime \(\ell\)'),
+              th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
         p = galrep[i]['prime']
