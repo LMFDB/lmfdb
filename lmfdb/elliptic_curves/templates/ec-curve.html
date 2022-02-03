@@ -505,7 +505,9 @@ $p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-opti
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 {% for pdata in data.iw.data %}
 <td>
+{% if pdata[1] == "ss" %}&nbsp;{% endif %}
 {{ KNOWL('ec.q.reduction_type', title=pdata[1]) }}
+{% if pdata[1] == "ss" %}<br>$+$, $-${% endif %}
 </td>
 {% endfor %}
 </tr>
