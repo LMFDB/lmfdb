@@ -507,7 +507,8 @@ def gsp4_subgroup_data(label):
     if e == 1:
         info += row_wrap("(%s,%s)-isogeny field degree" % (ell,ell), min([r[1] for r in data['isogeny_orbits'] if r[0] == ell]))
         info += row_wrap("Cyclic %s-torsion field degree" % (ell), min([r[1] for r in data['orbits'] if r[0] == ell]))
-        info += row_wrap("Full %s-torsion field degree" % (ell), ell^4*(ell^4-1)*(ell^2-1)*(ell-1) // data['index'])
+        fulltorsflddeg = ell**4*(ell**4-1)*(ell**2-1)*(ell-1) // data['index']
+        info += row_wrap("Full %s-torsion field degree" % (ell), fulltorsflddeg)
     info += "</table>\n"
     return info
 
