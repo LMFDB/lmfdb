@@ -471,8 +471,11 @@ class LFSearchArray(SearchArray):
     sorts = [("", "prime", ['p', 'n', 'c', 'label']),
              ("n", "degree", ['n', 'p', 'c', 'label']),
              ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
-             ("e", "ramification index", ['e', 'p', 'n', 'c', 'label']),
-             ("f", "residue degree", ['f', 'p', 'n', 'c', 'label']),
+             ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
+             ("galu", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
+             ("galt", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
              ("s", "top slope", ['s', 'p', 'n', 'c', 'label'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"

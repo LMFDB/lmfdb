@@ -746,24 +746,39 @@ def parse_discriminant(d, sign = 0):
     return d
 
 def parse_sort(info, query, spaces=False):
-    if info.get('sort_order') == '':
-        query['__sort__'] = ['analytic_conductor', 'level']
-    elif info.get('sort_order') == 'Nk2':
-        query['__sort__'] = ['Nk2', 'level']
-    elif info.get('sort_order') == 'dim':
-        query['__sort__'] = ['dim', 'level', 'weight']
-    elif info.get('sort_order') == 'reldim':
-        query['__sort__'] = ['relative_dim', 'level', 'weight']
-    elif info.get('sort_order') == 'N':
-        query['__sort__'] = ['level', 'weight']
-    elif info.get('sort_order') == 'k':
-        query['__sort__'] = ['weight', 'level']
+    S = info.get('sort_order')
+    if S == '':
+        L = ['analytic_conductor', 'level']
+    elif S == 'Nk2':
+        L = ['Nk2', 'level']
+    elif S == 'char':
+        L = ['level', 'char_orbit_index', 'weight']
+    elif S == 'prim':
+        L = ['char_conductor', 'prim_orbit_index', 'level', 'weight']
+    elif S == 'char_order':
+        L = ['char_order', 'level', 'char_orbit_index', 'weight']
+    elif S == 'dim':
+        L = ['dim', 'level', 'weight']
+    elif S == 'reldim':
+        L = ['relative_dim', 'level', 'weight']
+    elif S == 'N':
+        L = ['level', 'weight']
+    elif S == 'k':
+        L = ['weight', 'level']
+    elif S == 'twists':
+        L = ['inner_twist_count', 'level', 'weight']
+    elif S == 'rank':
+        L = ['analytic_rank', 'level', 'weight']
+    elif S == 'coeff_index':
+        L = ['hecke_ring_index', 'level', 'weight']
     else:
         return
+    if 'char_orbit_index' not in L:
+        L.append('char_orbit_index')
     if spaces:
-        query['__sort__'].append('char_orbit_index')
+        query['__sort__'] = L
     else:
-        query['__sort__'].extend(['char_orbit_index', 'hecke_orbit'])
+        query['__sort__'] = L + ['hecke_orbit']
 
 def newform_parse(info, query):
     common_parse(info, query)
@@ -1645,11 +1660,17 @@ class CMFSearchArray(SearchArray):
         st = self._st(info)
         X = [
             ('', 'analytic conductor'),
+            ('N', 'level'),
+            ('k', 'weight')
+            ('char', 'character'),
+            ('prim', 'primitive character'),
+            ('char_order', 'character order'),
             ('Nk2', 'Nk^2'),
             ('dim', 'dimension'),
             ('reldim', 'relative dimension'),
-            ('N', 'level'),
-            ('k', 'weight')
+            ('rank', 'analytic rank'),
+            ('twists', 'inner twist count'),
+            ('coeff_index', 'coeff ring index'),
         ]
         if st in ['List', 'Traces']:
             return X

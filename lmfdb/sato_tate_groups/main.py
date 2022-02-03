@@ -590,8 +590,9 @@ def search(info):
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
         start2 = start - nres if start > nres else 0
+        sort = parse_sort(info)
         try:
-            res = db.gps_st.search(query, limit=max(count - len(results), 0), offset=start2, info=info)
+            res = db.gps_st.search(query, limit=max(count - len(results), 0), offset=start2, sort=sort, info=info)
         except QueryCanceledError as err:
             ctx = ctx_proc_userdata()
             flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
@@ -613,6 +614,12 @@ def search(info):
     info['results'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
     return render_template('search_results.html', info=info, title=title, **template_kwds)
+
+def parse_sort(info):
+    sorts = info['search_array'].sorts
+    for name, display, S in sorts:
+        if name == info.get('sort_order', ''):
+            return S
 
 ###############################################################################
 # Rendering
@@ -977,6 +984,13 @@ def labels_page():
 class STSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
+    sorts = [("", "weight", ["weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("degree", "degree", ["degree", "weight", "st0_label", "components", "component_group_number", "label"]),
+             ("dim", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("st0", "identity component", ["st0_label", "weight", "degree", "components", "component_group_number", "label"]),
+             ("comp", "component group", ["components", "component_group_number", "st0_label", "weight", "degree", "label"]),
+             ("tr0", "trace zero density", ["trace_zero_density", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("diag", "character diagonal", ["character_diagonal", "weight", "degree", "st0_label", "components", "component_group_number", "label"])]
     jump_example = "1.4.USp(4)"
     jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.B.2.1a or N(U(1)), or 1.4.A.1.1a or 1.4.USp(4)"
     jump_knowl = "st_group.search_input"

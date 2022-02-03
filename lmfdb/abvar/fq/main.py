@@ -215,6 +215,7 @@ def AV_data(label):
 class AbvarSearchArray(SearchArray):
     sorts = [("", "dimension", ['g', 'q', 'poly']),
              ("q", "field", ['q', 'g', 'poly']),
+             ("p", "charactersitic", ['p', 'q', 'g', 'poly']),
              ("prank1", "p-rank", ['p_rank', 'g', 'q', 'poly']),
              ("prank-1", "p-rank deficit", ['p_rank_deficit', 'g', 'q', 'poly']),
              ("points1", "curve points (asc)", ['curve_count', 'g', 'q', 'poly']),

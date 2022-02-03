@@ -855,11 +855,19 @@ app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
 
 class ECSearchArray(SearchArray):
     noun = "curve"
-    sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
+    sorts = [("", "label", ["conductor", "iso_nlabel", "lmfdb_number"]),
+             ("cremona", "cremona label", ["conductor", "Ciso", "Cnumber"]),
              ("rank1", "rank (inc)", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("rank-1", "rank (dec)", [("rank", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
              ("torsion1", "torsion (inc)", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("torsion-1", "torsion (dec)", [("torsion", -1), "conductor", "iso_nlabel", "lmfdb_number"])]
+             ("torsion-1", "torsion (dec)", [("torsion", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("cm", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("R", "regulator", ["regulator", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("sha", "analytic &#1064;", ["sha", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("class_size", "isogeny class size", ["class_size", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("class_deg", "isogeny class degree", ["class_deg", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("num_int_pts", "integral points", ["num_int_pts", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("faltings", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
     plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"

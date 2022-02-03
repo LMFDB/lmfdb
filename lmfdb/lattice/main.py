@@ -464,6 +464,12 @@ def download_lattice_full_lists_g(**args):
 class LatSearchArray(SearchArray):
     noun = "lattice"
     plural_noun = "lattices"
+    sorts = [("", "dimension", ['dim', 'det', 'level', 'class_number', 'label']),
+             ("det", "determinant", ['det', 'dim', 'level', 'class_number', 'label']),
+             ("level", "level", ['level', 'dim', 'det', 'class_number', 'label']),
+             ("h", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
+             ("min", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
+             ("aut", "automorphism group", ['aut', 'dim', 'det', 'level', 'class_number', 'label'])]
     def __init__(self):
         dim = TextBox(
             name="dim",

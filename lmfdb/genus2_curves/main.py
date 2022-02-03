@@ -1141,7 +1141,10 @@ class G2CSearchArray(SearchArray):
              ("torsion_order1", "torsion order (inc)", [("torsion_order", 1)] + _default),
              ("torsion_order-1", "torsion order (dec)", [("torsion_order", -1)] + _default),
              ("analytic_sha1", "analytic sha (inc)", [("analytic_sha", 1)] + _default),
-             ("analytic_sha-1", "analytic sha (dec)", [("analytic_sha", -1)] + _default)]
+             ("analytic_sha-1", "analytic sha (dec)", [("analytic_sha", -1)] + _default),
+             ("two_sel", "2-Selmer rank", ["two_selmer_rank"] + _default),
+             ("rank", "analytic rank", ["analytic_rank"] + _default),
+             ("st_label", "Sato-Tate group", ["st_label"] + _default)]
 
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"

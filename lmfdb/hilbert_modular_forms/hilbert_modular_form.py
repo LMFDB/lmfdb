@@ -621,7 +621,7 @@ def statistics_by_degree(d):
 class HMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
-    sorts = [("", "degree", ['deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
+    sorts = [("", "label", ['deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
              ("level", "level norm", ['level_norm', 'deg', 'disc', 'level_label', 'label_nsuffix']),
              ("dim", "dimension (inc)", ['dimension', 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
              ("dim", "dimension (dec)", [('dimension', -1), 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix'])]

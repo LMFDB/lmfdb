@@ -501,6 +501,12 @@ def cande():
 class ArtinSearchArray(SearchArray):
     noun = "representation"
     plural_noun = "representations"
+    sorts = [("", "dimension", ["Dim", "Conductor", "Galn", "Galt", "Baselabel"]),
+             ("con", "conductor", ["Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
+             ("group", "group", ["Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
+             ("container", "container", ["Container", "Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
+             ("ramps", "number ramified primes", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
+             ("projective", "projective image", ["Proj_nTj", "Proj_Polynomial", "Dim", "Conductor", "Galn", "Galt", "Baselabel"])]
     jump_example = "4.5648.6t13.b.a"
     jump_egspan = "e.g. 4.5648.6t13.b.a"
     jump_knowl = "artin.search_input"

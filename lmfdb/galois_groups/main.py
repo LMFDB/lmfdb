@@ -387,6 +387,10 @@ def reliability():
 class GalSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
+    sorts = [("", "label", ["n", "t"]),
+             ("gp", "abstract group", ["order", "gapid", "n", "t"]),
+             ("nilp", "nilpotency class", ["nilpotency", "n", "t"]),
+             ("conj", "num. conjugacy classes", ["num_conj_classes", "order", "gapid", "n", "t"])]
     jump_example = "8T14"
     jump_egspan = "e.g. 8T14"
     jump_knowl = "gg.search_input"

@@ -74,6 +74,9 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     noun = "character"
     plural_noun = "characters"
+    sorts = [("", "modulus", ["modulus", "orbit_index"]),
+             ("cond", "conductor", ["conductor", "prim_orbit_index", "modulus", "orbit_index"]),
+             ("order", "order", ["order", "modulus", "orbit_index"])]
     jump_example = "13.2"
     jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl = "character.dirichlet.search_input"

@@ -842,7 +842,12 @@ class ECNFSearchArray(SearchArray):
              ("rank1", "rank (asc)", ['rank', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("rank-1", "rank (dec)", [('rank', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("torsion1", "torsion (asc)", ['torsion_order', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("torsion-1", "torsion (dec)", [('torsion_order', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])]
+             ("torsion-1", "torsion (dec)", [('torsion_order', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("cm", "CM discriminant", ["cm", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("R", "regulator", ["reg", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("sha", "analytic &#1064;", ["sha", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("class_size", "isogeny class size", ["class_size", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("class_deg", "isogeny class degree", ["class_deg", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])]
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     jump_knowl = "ec.search_input"
