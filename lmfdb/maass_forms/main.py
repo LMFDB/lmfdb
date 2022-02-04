@@ -12,6 +12,7 @@ from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils.utilities import display_knowl
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 from sage.all import gcd
@@ -125,7 +126,9 @@ def download_coefficients(label):
 def source_page():
     t = 'Source of Maass form data'
     bread = bread_prefix() + [('Source','')]
-    return render_template('double.html', kid='rcs.source.maass',kid2='rcs.ack.maass',
+    return render_template('multi.html', kids=['rcs.source.maass',
+                                               'rcs.ack.maass',
+                                               'rcs.cite.maass'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @maass_page.route('/Completeness')
@@ -145,7 +148,7 @@ def reliability_page():
 class MaassSearchArray(SearchArray):
     noun = "Maass form"
     plural_noun = "Maass forms"
-    def __init__(self):       
+    def __init__(self):
         level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="997 or 1-10")
         weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 (only weight 0 currently available)")
         character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.1 (only trivial character currently available)")
@@ -264,6 +267,17 @@ def search_by_label(label):
                            title=mf.title,
                            friends=mf.friends,
                            KNOWL_ID="mf.maass.mwf.%s"%mf.label)
+
+@maass_page.route("/data/<label>")
+def maass_data(label):
+    title = f"Maass form data - {label}"
+    bread = [("Modular forms", url_for("modular_forms")),
+             ("Maass", url_for(".index")),
+             (label, url_for(".by_label", label=label)),
+             ("Data", " ")]
+    tables = ["maass_newforms", "maass_portraits"]
+    label_cols = ["maass_id", "maass_id"]
+    return datapage(label, tables, bread=bread, title=title, label_cols=label_cols)
 
 class MaassStats(StatsDisplay):
     table = db.maass_newforms

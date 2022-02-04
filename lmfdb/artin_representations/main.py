@@ -5,7 +5,7 @@
 import re
 import random
 
-from flask import render_template, request, url_for, redirect
+from flask import render_template, request, url_for, redirect, abort
 from sage.all import ZZ, cached_function
 
 from lmfdb import db
@@ -19,6 +19,7 @@ from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, rang
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol
+from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import (
     complete_group_code, knowl_cache, galdata, galunformatter,
@@ -348,7 +349,7 @@ def render_artin_representation_webpage(label):
     if proj_wnf.is_in_db():
         proj_coefs = [int(z) for z in proj_wnf.coeffs()]
         if proj_coefs != the_nf.polynomial():
-            friends.append(("Field {}".format(proj_wnf.get_label()), 
+            friends.append(("Field {}".format(proj_wnf.get_label()),
                 str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
     if case == 'rep':
         cc = the_rep.central_character()
@@ -405,6 +406,7 @@ def render_artin_representation_webpage(label):
             wnf=wnf,
             proj_wnf=proj_wnf,
             properties=properties,
+            downloads=[("Underlying data", url_for(".artin_data", label=orblabel))],
             info=info,
             learnmore=learnmore_list(),
             KNOWL_ID="artin.%s" % label,
@@ -421,10 +423,19 @@ def render_artin_representation_webpage(label):
         wnf=wnf,
         proj_wnf=proj_wnf,
         properties=properties,
+        downloads=[("Underlying data", url_for(".artin_data", label=label))],
         info=info,
         learnmore=learnmore_list(),
         KNOWL_ID="artin.%s" % label,
     )
+
+@artin_representations_page.route("/data/<label>")
+def artin_data(label):
+    poly = db.artin_reps.lookup(label, "NFGal")
+    if poly is None:
+        return abort(404)
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage([label, poly], ["artin_reps", "artin_field_data"], bread=bread, title=f"Artin representation data - {label}", label_cols=["Baselabel", "Polynomial"])
 
 @artin_representations_page.route("/random")
 @redirect_no_cache
@@ -464,9 +475,11 @@ def source():
     t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
-    return render_template("double.html", kid='rcs.source.artin',
-                           kid2='rcs.ack.artin',
-                           title=t, bread=bread, 
+    return render_template("multi.html",
+                           kids=['rcs.source.artin',
+                                 'rcs.ack.artin',
+                                 'rcs.cite.artin'],
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Reliability")
@@ -475,7 +488,7 @@ def reliability():
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
@@ -484,7 +497,7 @@ def cande():
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 class ArtinSearchArray(SearchArray):

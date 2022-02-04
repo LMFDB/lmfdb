@@ -22,6 +22,7 @@ from lmfdb.utils import (
     raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data, transitive_group_display_knowl,
@@ -135,7 +136,9 @@ def source():
     learnmore = learnmore_list_remove('Source')
     t = 'Source and acknowledgments for number field pages'
     bread = bread_prefix() + [('Source', ' ')]
-    return render_template("double.html", kid='rcs.source.nf', kid2='rcs.ack.nf',
+    return render_template("multi.html", kids=['rcs.source.nf',
+                                               'rcs.ack.nf',
+                                               'rcs.ack.nf'],
         title=t, bread=bread, learnmore=learnmore)
 
 
@@ -628,6 +631,7 @@ def render_field_webpage(args):
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
         downloads.append(('Download {} code'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
+    downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     from lmfdb.artin_representations.math_classes import artin_label_pretty
     try:
@@ -686,6 +690,11 @@ def by_label(label):
         flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
         return redirect(url_for(".number_field_render_webpage"))
 
+@nf_page.route("/data/<label>")
+def nf_datapage(label):
+    title = f"Number field data - {label}"
+    bread = bread_prefix() + [(label, url_for(".by_label", label=label)), ("Data", " ")]
+    return datapage(label, "nf_fields", title=title, bread=bread)
 
 @nf_page.route("/interesting")
 def interesting():
@@ -797,7 +806,7 @@ nf_columns = SearchColumns([
                  lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label)),
                  default=True),
     SearchCol("poly", "nf.defining_polynomial", "Polynomial", default=True),
-    MathCol("degree", "nf.degree", "Degree", align="center"), 
+    MathCol("degree", "nf.degree", "Degree", align="center"),
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
     CheckCol("cm", "nf.cm_field", "Is CM field?"),

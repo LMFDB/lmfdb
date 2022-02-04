@@ -20,12 +20,14 @@ from lmfdb.utils import (
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
+from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
+from lmfdb.sato_tate_groups.main import st_display_knowl
 
 q = ZZ['x'].gen()
 the_ECstats = None
@@ -176,7 +178,7 @@ class ECstats(StatsDisplay):
     @property
     def summary(self):
         return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
-    
+
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
 
@@ -207,7 +209,7 @@ class ECstats(StatsDisplay):
         #
         # It's a theorem that the complete set of possible degrees is this:
         return list(range(1,20)) + [21,25,27,37,43,67,163]
-        
+
 # NB the context processor wants something callable and the summary is a *property*
 
 @app.context_processor
@@ -346,16 +348,16 @@ ec_columns = SearchColumns([
                   short_title="Qbar-end algebra", align="center", orig="cm"),
      ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                   short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
+     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
+                  short_title="Sato-Tate group", align="center", orig="cm"),
      CheckCol("semistable", "ec.reduction", "Semistable"),
      CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
      ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
                   default=lambda info: info.get("nonmax_primes"), short_title="Nonmaximal primes", mathmode=True, align="center"),
-     ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", ", ".join, short_title="ℓ-adic images",
-                  default=lambda info: info.get("galois_image"),
-                  align="center"),
-     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", ", ".join, short_title="mod-ℓ images",
-                  default=lambda info: info.get("galois_image"),
-                  align="center"),
+     ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                  short_title="ℓ-adic images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
+     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                  short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
      ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
      MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
      ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
@@ -649,6 +651,22 @@ def render_curve_webpage_by_label(label):
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
 
+@ec_page.route("/data/<label>")
+def EC_data(label):
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    if match_lmfdb_label(label):
+        conductor, iso_class, number = split_lmfdb_label(label)
+        if not number: # isogeny class
+            return datapage(label, ["ec_classdata", "ec_padic"], bread=bread, label_col="lmfdb_iso", sorts=[[], ["p"]])
+        iso_label = class_lmfdb_label(conductor, iso_class)
+        labels = [label] * 8
+        label_cols = ["lmfdb_label"] * 8
+        labels[1] = labels[7] = iso_label
+        label_cols[1] = label_cols[7] = "lmfdb_iso"
+        sorts = [[], [], [], [], ["degree", "field"], ["prime"], ["prime"], ["p"]]
+        return datapage(labels, ["ec_curvedata", "ec_classdata", "ec_mwbsd", "ec_iwasawa", "ec_torsion_growth", "ec_localdata", "ec_galrep", "ec_padic"], title=f"Elliptic curve data - {label}", bread=bread, label_cols=label_cols, sorts=sorts)
+    return abort(404)
+
 @ec_page.route("/padic_data/<label>/<int:p>")
 def padic_data(label, p):
     try:
@@ -683,14 +701,13 @@ def download_EC_qexp(label, limit):
     else:
         ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_iso')
     if ainvs is None:
-        return elliptic_curve_jump_error(label, {})        
+        return elliptic_curve_jump_error(label, {})
     if limit > 100000:
         return redirect(url_for('.download_EC_qexp',label=label,limit=10000), 301)
     E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 #TODO: get all the data from all the relevant tables, not just the search table.
 
@@ -718,7 +735,10 @@ def download_EC_all(label):
 def how_computed_page():
     t = r'Source and acknowledgments for elliptic curve data over $\Q$'
     bread = get_bread('Source')
-    return render_template("double.html", kid='rcs.source.ec.q', kid2='rcs.ack.ec.q',
+    return render_template("multi.html",
+                           kids=['rcs.source.ec.q',
+                           'rcs.ack.ec.q',
+                           'rcs.cite.ec.q'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Completeness")

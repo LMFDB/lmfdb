@@ -658,7 +658,7 @@ Statistics
    refresh them manually using, for example, `db.g2c_curves.stats.refresh_statistics()`.
    Sometimes this isn't sufficient (if there are extra stats that shouldn't
    be present for example).  A more drastic option is to call
-   `db.g2c_curves._clear_stats_counts()`.  If you do this, make sure to
+   `db.g2c_curves.stats._clear_stats_counts()`.  If you do this, make sure to
    visit the relevant statistics page while logged in as editor,
    in order to regenerate the statistics used there.
 

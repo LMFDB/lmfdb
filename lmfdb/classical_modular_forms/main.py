@@ -25,6 +25,7 @@ from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
+from lmfdb.api import datapage
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
     WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
@@ -34,7 +35,7 @@ from lmfdb.classical_modular_forms.web_space import (
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
-from lmfdb.sato_tate_groups.main import st_link
+from lmfdb.sato_tate_groups.main import st_display_knowl
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -447,6 +448,49 @@ def render_full_gamma1_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
+@cmf.route("/data/<label>")
+def mf_data(label):
+    slabel = label.split(".")
+    if len(slabel) == 6:
+        emb_label = label
+        form_label = ".".join(slabel[:4])
+        space_label = ".".join(slabel[:3])
+        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Embedded newform data - {label}"
+    elif len(slabel) == 4:
+        form_label = label
+        space_label = ".".join(slabel[:3])
+        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms", "mf_hecke_nf", "mf_newspaces", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Newform data - {label}"
+    elif len(slabel) == 3:
+        ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits", "mf_hecke_newspace_traces"]
+        labels = [label, label, label, ocode]
+        label_cols = ["label", "label", "label", "hecke_orbit_code"]
+        title = f"Newspace data - {label}"
+    elif len(slabel) == 2:
+        tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
+        labels = label
+        label_cols = None
+        title = fr"$\Gamma_1$ data - {label}"
+    else:
+        return abort(404, "Invalid label")
+    bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
+    return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
+
+
 @cmf.route("/<level>/")
 def by_url_level(level):
     if not POSINT_RE.match(level):
@@ -773,16 +817,17 @@ newform_columns = SearchColumns([
     MathCol("weight", "cmf.weight", "Weight"),
     MultiProcessedCol("character", "cmf.character", "Char",
                       ["level", "char_orbit_label"],
-                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"})),
-    MathCol("char_order", "character.dirichlet.order", "Char Order"),
-    MathCol("dim", "cmf.dimension", "Dim.", default=True, align="left"),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="left"),
+                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
+                      short_title="Character"),
+    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="Character order"),
+    MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="Dimension"),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="Analytic conductor"),
     MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
                  lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
                  contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                  default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
-                 align="center"),
+                 align="center", short_title="Projective image"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
                       lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
@@ -793,7 +838,7 @@ newform_columns = SearchColumns([
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                       default=True),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual"),
-    MathCol("inner_twist_count", "cmf.inner_twist_count", "Twists"),
+    MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists"),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*"),
     ColGroup("traces", "cmf.trace_form", "Traces",
              [_trace_col(i) for i in range(4)],
@@ -805,9 +850,9 @@ newform_columns = SearchColumns([
     ProcessedCol("fricke_eigenval", "cmf.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
-    ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coeff. ring index",
+    ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
                  lambda fac: "" if fac=="?" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
-    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_link),
+    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)],
@@ -1142,8 +1187,9 @@ def space_search(info, query):
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("double.html", kid='rcs.source.cmf',
-                           kid2='rcs.ack.cmf', title=t,
+    return render_template("multi.html", kids=['rcs.source.cmf',
+                           'rcs.ack.cmf',
+                           'rcs.cite.cmf'], title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 

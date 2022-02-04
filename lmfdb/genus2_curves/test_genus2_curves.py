@@ -195,15 +195,10 @@ class Genus2Test(LmfdbTest):
         assert "\\infty" in L.get_data(as_text=True)
         assert "6.2.1658432.2" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/969306/a/969306/1")
-        assert "\\Z \\times \\Z \\times \\Z \\times \\Z/{2}\\Z" in L.get_data(
-            as_text=True
-        )
-        assert "16y" in L.get_data(as_text=True) and "2xz^2 + 11z^3" in L.get_data(
-            as_text=True
-        )
+        assert "\\Z \\times \\Z \\times \\Z \\times \\Z/{2}\\Z" in L.get_data(as_text=True)
+        assert "16y" in L.get_data(as_text=True) and "2xz^2 + 11z^3" in L.get_data(as_text=True)
         assert "3.259671" in L.get_data(as_text=True)
         assert "\\infty" in L.get_data(as_text=True)
-        assert "D_4\\times C_2" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/461/a/461/2")
         assert "trivial" in L.get_data(as_text=True)
 
@@ -350,3 +345,12 @@ class Genus2Test(LmfdbTest):
             data = self.tc.get(url).get_data(as_text=True)
             for friend in friends:
                 assert friend in data
+
+    def test_underlying_data(self):
+        data = self.tc.get("/Genus2Curve/Q/data/576.a.576.1").get_data(as_text=True)
+        assert ('g2c_curves' in data and 'bad_lfactors' in data and
+                'g2c_endomorphisms' in data and 'factorsQQ_base' in data and
+                'g2c_ratpts' in data and 'mw_gens_v' in data and
+                'g2c_galrep' in data and 'modell_image' in data and
+                'g2c_tamagawa' in data and 'tamagawa_number' in data and
+                'g2c_plots' in data and "data:image/png;base64" in data)

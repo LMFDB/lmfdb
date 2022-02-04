@@ -17,6 +17,7 @@ from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
 def get_bread(tail=[]):
@@ -394,7 +395,8 @@ def render_hmf_webpage(**args):
 
     info['downloads'] = [
         ('Modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
-        ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
+        ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage')),
+        ('Underlying data', url_for(".hmf_data", label=info['label'])),
         ]
 
 
@@ -531,12 +533,21 @@ def render_hmf_webpage(**args):
         KNOWL_ID="mf.hilbert.%s"%label,
     )
 
+@hmf_page.route("/data/<label>")
+def hmf_data(label):
+    field_label = label.split("-")[0]
+    title = f"Hilbert modular form data - {label}"
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage([label, label, field_label, field_label], ["hmf_forms", "hmf_hecke", "hmf_fields", "nf_fields"], title=title, bread=bread)
+
 #data quality pages
 @hmf_page.route("/Source")
 def how_computed_page():
     t = 'Source and acknowledgments for Hilbert modular form data'
     bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.mf.hilbert', kid2='rcs.ack.mf.hilbert',
+    return render_template("multi.html", kids=['rcs.source.mf.hilbert',
+                                               'rcs.ack.mf.hilbert',
+                                               'rcs.cite.mf.hilbert'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @hmf_page.route("/Completeness")

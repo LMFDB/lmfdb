@@ -28,3 +28,7 @@ class ArtinRepTest(LmfdbTest):
     def test_big_degree_new(self):
         L = self.tc.get('/ArtinRepresentation/2.3806401.120.b.a')
         assert '24T201' in L.get_data(as_text=True) # Galois group
+
+    def test_underlying_data(self):
+        data = self.tc.get('/ArtinRepresentation/data/2.3806401.120.b').get_data(as_text=True)
+        assert 'ArtinReps' in data and 'GalConjSigns' in data

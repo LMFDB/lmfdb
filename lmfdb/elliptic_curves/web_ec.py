@@ -8,7 +8,6 @@ from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
 from lmfdb.logger import make_logger
-from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
@@ -22,6 +21,7 @@ OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990
 CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
+lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
@@ -56,8 +56,13 @@ logger = make_logger("ec")
 def gl2_subgroup_data(label):
     try:
         data = db.gps_gl2zhat.lookup(label)
+        if data is None:
+            data = db.gps_gl2zhat.lucky({'Slabel':label})
+            if data is None:
+                raise ValueError
     except ValueError:
-        return "Invalid label for subgroup of GL(2,Zhat): %s" % label
+        return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
+
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
@@ -80,10 +85,14 @@ def gl2_subgroup_data(label):
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
+    if label != data['label']:
+        info += row_wrap('LMFDB label', data['label'])   
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
         info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+    if data.get('Slabel') and label != data.get('Slabel'):
+        info += row_wrap('Sutherland label', data['Slabel'])
     if data.get('SZlabel'):
         info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     N = ZZ(data['level'])
@@ -267,7 +276,6 @@ class WebEC(object):
         # mod-p Galois images:
         
         data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
-        
         # CM and Endo ring:
         
         data['CMD'] = self.cm
@@ -288,10 +296,9 @@ class WebEC(object):
                 data['EndE'] = r"\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = r"\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
-            data['ST'] = st_link_by_name(1,2,'N(U(1))')
+            data['ST'] = display_knowl('st_group.data', title=r"$N(\mathrm{U}(1))$", kwargs={'label':'1.2.B.2.1a'})
         else:
-            data['ST'] = st_link_by_name(1,2,'SU(2)')
-
+            data['ST'] = display_knowl('st_group.data', title=r"$\mathrm{SU}(2)$", kwargs={'label':'1.2.A.1.1a'})
         # Isogeny degrees:
         
         cond, iso, num = split_lmfdb_label(lmfdb_label)
@@ -426,7 +433,8 @@ class WebEC(object):
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
         try:
@@ -530,6 +538,9 @@ class WebEC(object):
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
+    def display_modell_image(self,label):
+        return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
+
     def display_elladic_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
 
@@ -550,34 +561,43 @@ class WebEC(object):
         iw['missing_flag'] = False # flags that there is at least one "?" in the table
         iw['additive_shown'] = False # flags that there is at least one additive prime in table
         for p in sorted(pp):
-            rtype = ""
+            rtype = ''
+            rtknowl = 'ec.q.reduction_type'
             if p in badp:
                 red = rtypes[badp.index(p)]
                 # Additive primes are excluded from the table
-                rtype = ["nonsplit","add", "split"][1+red]
+                rtype = ['nonsplit', 'add', 'split'][1+red]
+                rtknowl = ['ec.nonsplit_multiplicative_reduction', 'ec.additive_reduction', 'ec.split_multiplicative_reduction'][1+red]
             p = str(p)
             pdata = iwdata[p]
             if isinstance(pdata, type(u'?')):
                 if not rtype:
-                    rtype = "ordinary" if pdata=="o?" else "ss"
+                    if pdata=="o?":
+                        rtype = "ord"
+                        rtknowl = "ec.good_ordinary_reduction"
+                    else:
+                        rtype = "ss"
+                        rtknowl = "ec.good_supersingular_reduction"
                 if rtype == "add":
-                    iw['data'] += [[p,rtype,"-","-"]]
+                    iw['data'] += [[p, rtype, "-", "-", rtknowl]]
                     iw['additive_shown'] = True
                 else:
-                    iw['data'] += [[p,rtype,"?","?"]]
+                    iw['data'] += [[p, rtype, "?", "?", rtknowl]]
                     iw['missing_flag'] = True
             else:
                 if len(pdata)==2:
                     if not rtype:
-                        rtype = "ordinary"
+                        rtype = "ord"
+                        rtknowl = "ec.good_ordinary_reduction"
                     lambdas = str(pdata[0])
                     mus = str(pdata[1])
                 else:
                     rtype = "ss"
+                    rtknowl = "ec.good_supersingular_reduction"
                     lambdas = ",".join([str(pdata[0]), str(pdata[1])])
                     mus = str(pdata[2])
                     mus = ",".join([mus,mus])
-                iw['data'] += [[p,rtype,lambdas,mus]]
+                iw['data'] += [[p, rtype, lambdas, mus, rtknowl]]
 
     def make_torsion_growth(self):
         # The torsion growth table has one row per extension field

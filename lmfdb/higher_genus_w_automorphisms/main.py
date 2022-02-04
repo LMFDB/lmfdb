@@ -22,6 +22,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
+from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
@@ -769,21 +770,33 @@ def render_family(args):
 
         if len(Ltopo_rep) == 0 or len(dataz) == 1:
             downloads = [('Code to Magma', url_for(".hgcwa_code_download", label=label, download_type='magma')),
-                             ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+                         ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
             downloads = [('Code to Magma', None),
-                             (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                             (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
-                             ('Code to Gap', None),
-                             (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='gap')),
-                             (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))]
-
+                         (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                         (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
+                         ('Code to Gap', None),
+                         (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='gap')),
+                         (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))]
+        downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
                                KNOWL_ID="curve.highergenus.aut.%s" % label,
                                learnmore=learnmore_list(), downloads=downloads)
 
+@higher_genus_w_automorphisms_page.route("/data/<label>")
+def hgcwa_data(label):
+    if label_is_one_family(label):
+        label_col = "label"
+        title = f"Higher genus family - {label}"
+    elif label_is_one_passport(label):
+        label_col = "passport_label"
+        title = f"Higher genus passport - {label}"
+    else:
+        return abort(404, f"Invalid label {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage(label, "hgcwa_passports", title=title, bread=bread, label_cols=[label_col])
 
 def render_passport(args):
     info = {}
@@ -975,6 +988,7 @@ def render_passport(args):
                              ('Code to Gap', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
                              (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))]
+        downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
 
 
         return render_template("hgcwa-show-passport.html",
@@ -1091,9 +1105,10 @@ def reliability_page():
 def how_computed_page():
     t = 'Source of higher genus curve with automorphisms data'
     bread = get_bread("Source")
-    return render_template("double.html",
-                           kid='rcs.source.curve.highergenus.aut',
-                           kid2='rcs.ack.curve.highergenus.aut',
+    return render_template("multi.html",
+                           kids=['rcs.source.curve.highergenus.aut',
+                                 'rcs.ack.curve.highergenus.aut',
+                                 'rcs.cite.curve.highergenus.aut'],
                            title=t,
                            bread=bread,
                            learnmore=learnmore_list_remove('Source'))
