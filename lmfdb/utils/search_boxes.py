@@ -133,7 +133,9 @@ class SearchBox(TdElt):
     def _label(self, info):
         label = self.label if info is None else self.short_label
         if self.knowl is not None:
-            label = display_knowl(self.knowl, label)
+            knowl = display_knowl(self.knowl, label)
+            if knowl is not None:
+                return knowl
         return label
 
     def has_label(self, info):
@@ -406,7 +408,9 @@ class DoubleSelectBox(SearchBox):
     def __init__(self, label, select_box1, select_box2, **kwds):
         self.select_box1 = select_box1
         self.select_box2 = select_box2
-        SearchBox.__init__(self, label, **kwds)
+        if 'name' not in kwds:
+            kwds['name'] = label
+        SearchBox.__init__(self, label=label, **kwds)
 
     def _input(self, info):
         return (
@@ -601,7 +605,10 @@ class SearchArray(UniqueRepresentation):
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         if self.sorts is not None:
-            return [(name, display) for (name, display, prefix) in self.sorts]
+            #for name, display, prefix in self.sorts:
+            #    yield (name, display + " &#9650;")
+            #    yield (name + "op", display + " &#9660;")
+            return [(name, display) for (name, display, sort_order) in self.sorts]
 
     def _search_again(self, info, search_types):
         if info is None:
@@ -759,11 +766,19 @@ class SearchArray(UniqueRepresentation):
                     spacer = RowSpacer(6)
                     sort_box = SelectBox(
                         name='sort_order',
+                        options=list(sort),
+                        width=95)
+                    sort_dir = SelectBox(
+                        name='sort_dir',
+                        options=[('', '&#9650;'), ('op', '&#9660;')],
+                        width=10)
+                    sort_ord = DoubleSelectBox(
+                        name='sort_combo',
                         label='Sort order',
                         knowl=self.sort_knowl,
-                        options=sort,
-                        width=170)
-                    buttons.append(sort_box)
+                        select_box1=sort_box,
+                        select_box2=sort_dir)
+                    buttons.append(sort_ord)
             buttons.append(ColumnController())
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 

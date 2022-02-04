@@ -839,10 +839,9 @@ class ECNFSearchArray(SearchArray):
     plural_noun = "curves"
     sorts = [("", "field", ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("cond", "conductor", ['conductor_norm', 'conductor_label', 'field_label', 'iso_nlabel', 'number']),
-             ("rank1", "rank (asc)", ['rank', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("rank-1", "rank (dec)", [('rank', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("torsion1", "torsion (asc)", ['torsion_order', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("torsion-1", "torsion (dec)", [('torsion_order', -1), 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("rtA", "root analytic conductor", ['root_analytic_conductor', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("rank", "rank", ['rank', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("torsion", "torsion", ['torsion_order', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("cm", "CM discriminant", ["cm", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("R", "regulator", ["reg", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("sha", "analytic &#1064;", ["sha", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),

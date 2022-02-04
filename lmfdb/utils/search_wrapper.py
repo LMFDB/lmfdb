@@ -61,8 +61,18 @@ class Wrapper(object):
         sort = query.pop("__sort__", None)
         if sort is None and "search_array" in info and info["search_array"].sorts is not None:
             for name, display, S in info["search_array"].sorts:
-                if name == info.get('sort_order', ''):
-                    sort = S
+                sord = info.get('sort_order', '')
+                if name == sord:
+                    sop = info.get('sort_dir', '')
+                    if sop == 'op':
+                        sort = []
+                        for col in S:
+                            if isinstance(col, str):
+                                sort.append((col, -1))
+                            else:
+                                sort.append((col[0], -col[1]))
+                    else:
+                        sort = S
                     break
         # We want to pop __title__ even if overridden by info.
         title = query.pop("__title__", self.title)
