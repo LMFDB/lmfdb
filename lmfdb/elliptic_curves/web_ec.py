@@ -570,7 +570,7 @@ class WebEC(object):
             pdata = iwdata[p]
             if isinstance(pdata, type(u'?')):
                 if not rtype:
-                    rtype = "ordinary" if pdata=="o?" else "ss"
+                    rtype = "ord" if pdata=="o?" else "ss"
                 if rtype == "add":
                     iw['data'] += [[p,rtype,"-","-"]]
                     iw['additive_shown'] = True
@@ -580,7 +580,7 @@ class WebEC(object):
             else:
                 if len(pdata)==2:
                     if not rtype:
-                        rtype = "ordinary"
+                        rtype = "ord"
                     lambdas = str(pdata[0])
                     mus = str(pdata[1])
                 else:

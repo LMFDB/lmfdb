@@ -495,7 +495,7 @@ $p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-opti
 <tr style="border-bottom: 1px solid #000;">
 <th>$p$</th>
 {% for pdata in data.iw.data %}
-<td>
+<td align=center>
 {{pdata[0]}}
 </td>
 {% endfor %}
@@ -504,10 +504,8 @@ $p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-opti
 <tr>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 {% for pdata in data.iw.data %}
-<td>
-{% if pdata[1] == "ss" %}&nbsp;{% endif %}
+<td align=center>
 {{ KNOWL('ec.q.reduction_type', title=pdata[1]) }}
-{% if pdata[1] == "ss" %}<br>$+$, $-${% endif %}
 </td>
 {% endfor %}
 </tr>
@@ -515,7 +513,7 @@ $p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-opti
 <tr>
 <th>{{ KNOWL('ec.lambda_invariant', title='$\lambda$-invariant(s)')  }} </th>
 {% for pdata in data.iw.data %}
-<td>
+<td align=center>
 {{ pdata[2] }}
 </td>
 {% endfor %}
@@ -524,7 +522,7 @@ $p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-opti
 <tr>
 <th>{{ KNOWL('ec.mu_invariant', title='$\mu$-invariant(s)') }} </th>
 {% for pdata in data.iw.data %}
-<td>
+<td align=center>
 {{ pdata[3] }}
 </td>
 {% endfor %}
