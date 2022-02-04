@@ -566,7 +566,7 @@ def raw_typeset_qexp(coeffs_list,
                 raw = plus + raw
                 tset = plus + tset
         rawq = f" * q^{i}" if i > 1 else " * q"
-        tsetq = f"q^{{{i}}}" if i > 1 else "q"
+        tsetq = f" q^{{{i}}}" if i > 1 else "q"
         tset += tsetq
         raw += rawq
         return raw, tset
