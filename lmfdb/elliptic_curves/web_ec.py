@@ -561,34 +561,43 @@ class WebEC(object):
         iw['missing_flag'] = False # flags that there is at least one "?" in the table
         iw['additive_shown'] = False # flags that there is at least one additive prime in table
         for p in sorted(pp):
-            rtype = ""
+            rtype = ''
+            rtknowl = 'ec.q.reduction_type'
             if p in badp:
                 red = rtypes[badp.index(p)]
                 # Additive primes are excluded from the table
-                rtype = ["nonsplit","add", "split"][1+red]
+                rtype = ['nonsplit', 'add', 'split'][1+red]
+                rtknowl = ['ec.nonsplit_multiplicative_reduction', 'ec.additive_reduction', 'ec.split_multiplicative_reduction'][1+red]
             p = str(p)
             pdata = iwdata[p]
             if isinstance(pdata, type(u'?')):
                 if not rtype:
-                    rtype = "ordinary" if pdata=="o?" else "ss"
+                    if pdata=="o?":
+                        rtype = "ord"
+                        rtknowl = "ec.good_ordinary_reduction"
+                    else:
+                        rtype = "ss"
+                        rtknowl = "ec.good_supersingular_reduction"
                 if rtype == "add":
-                    iw['data'] += [[p,rtype,"-","-"]]
+                    iw['data'] += [[p, rtype, "-", "-", rtknowl]]
                     iw['additive_shown'] = True
                 else:
-                    iw['data'] += [[p,rtype,"?","?"]]
+                    iw['data'] += [[p, rtype, "?", "?", rtknowl]]
                     iw['missing_flag'] = True
             else:
                 if len(pdata)==2:
                     if not rtype:
-                        rtype = "ordinary"
+                        rtype = "ord"
+                        rtknowl = "ec.good_ordinary_reduction"
                     lambdas = str(pdata[0])
                     mus = str(pdata[1])
                 else:
                     rtype = "ss"
+                    rtknowl = "ec.good_supersingular_reduction"
                     lambdas = ",".join([str(pdata[0]), str(pdata[1])])
                     mus = str(pdata[2])
                     mus = ",".join([mus,mus])
-                iw['data'] += [[p,rtype,lambdas,mus]]
+                iw['data'] += [[p, rtype, lambdas, mus, rtknowl]]
 
     def make_torsion_growth(self):
         # The torsion growth table has one row per extension field
