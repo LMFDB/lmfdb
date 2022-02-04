@@ -143,7 +143,9 @@ def how_computed_page():
     t = 'Source of elliptic curve data over number fields'
     bread = [('Elliptic curves', url_for("ecnf.index")),
              ('Source', '')]
-    return render_template("double.html", kid='rcs.source.ec', kid2='rcs.ack.ec',
+    return render_template("multi.html", kids=['rcs.source.ec',
+                                               'rcs.ack.ec',
+                                               'rcs.cite.ec'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ecnf_page.route("/Reliability")

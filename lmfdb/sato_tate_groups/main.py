@@ -1086,7 +1086,9 @@ def st_data(label):
 def source_page():
     t = 'Source and acknowledgments for Sato-Tate group data'
     bread = get_bread("Source")
-    return render_template('double.html', kid='rcs.source.st_group', kid2='rcs.ack.st_group',
+    return render_template('multi.html', kids=['rcs.source.st_group',
+                                               'rcs.ack.st_group',
+                                               'rcs.cite.st_group'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Completeness')
