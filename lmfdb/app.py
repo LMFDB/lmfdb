@@ -145,6 +145,7 @@ def ctx_proc_userdata():
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
+    vars['zip'] = zip
 
     return vars
 

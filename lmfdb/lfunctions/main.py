@@ -44,6 +44,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
@@ -184,7 +185,7 @@ def process_euler(res, info, query):
 
 def url_for_lfunction(label):
     try:
-        kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'), 
+        kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'),
 label.split('-')))
         kwargs['degree'] = int(kwargs['degree'])
     except Exception:
@@ -1295,6 +1296,8 @@ def set_bread_and_friends(info, L, request):
         info['factors_origins'] = L.factors_origins
         info['Linstances'] = L.instances
         info['downloads'] = L.downloads
+        info['downloads'].append(("Underlying data", url_for(".lfunc_data", label=L.label)))
+
 
         for elt in [info['origins'], info['friends'], info['factors_origins'], info['Linstances']]:
             if elt is not None:
@@ -1574,8 +1577,11 @@ def download(label, L=None): # the wrapper populates the L
     assert label
     return L.download()
 
-
-
+@l_function_page.route("/data/<label>")
+def lfunc_data(label):
+    title = f"Lfunction data - {label}"
+    bread = get_bread([(label, url_for_lfunction(label)), ("Data", " ")])
+    return datapage(label, ["lfunc_lfunctions", "lfunc_search", "lfunc_instances"], title=title, bread=bread)
 
 
 ################################################################################
@@ -1921,8 +1927,11 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 def generic_source():
     t = 'Source and acknowledgments for L-function data'
     bread = get_bread(breads=[('Source', ' ')])
-    return render_template("double.html", kid='rcs.source.lfunction', kid2='rcs.ack.lfunction', title=t, 
-        bread=bread)
+    return render_template("multi.html", kids=['rcs.source.lfunction',
+                                               'rcs.ack.lfunction',
+                                               'rcs.cite.lfunction'],
+                                         title=t,
+                                         bread=bread)
 
 @l_function_page.route("/Completeness")
 def generic_completeness():

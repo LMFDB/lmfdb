@@ -1,0 +1,24 @@
+  <a id="{{table}}-schema-shower" onclick="return show_schema('{{table}}');" href="#">Show schema</a>
+  <a id="{{table}}-schema-hider" onclick="return hide_schema('{{table}}');" href="#" style="display: none;">Hide schema</a>
+  <div class="{{table}}-schema-holder" style="display: none;">
+    <table id="schema-table" class="ntdata">
+      <tr>
+        <th>Column</th>
+        <th>Type</th>
+      </tr>
+      {% for col, typ in search_schema[table] %}
+        <tr>
+          <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
+          <td>{{typ}}</td>
+        </tr>
+      {% endfor %}
+      {% if extra_schema %}
+        {% for col, typ in extra_schema[table] %}
+          <tr{% if loop.index == 1 %} class="toplined"{% endif %}>
+            <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
+            <td>{{typ}}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>

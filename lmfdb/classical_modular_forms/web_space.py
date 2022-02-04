@@ -28,7 +28,10 @@ def get_bread(**kwds):
     bread = [('Modular forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
-        return bread + [(kwds['other'], ' ')]
+        if isinstance(kwds['other'], str):
+            return bread + [(kwds['other'], ' ')]
+        else:
+            return bread + kwds['other']
     url_kwds = {}
     for key, display, link in links:
         if key not in kwds:
@@ -264,6 +267,7 @@ class WebNewformSpace(object):
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('.download_newspace', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
         if self.conrey_indexes[0] == 1:
@@ -418,7 +422,8 @@ class WebGamma1Space(object):
         # Downloads
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
+            ('All stored data to text', url_for('cmf.download_full_space', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
         self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
         self.friends = []

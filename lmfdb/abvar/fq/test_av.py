@@ -138,6 +138,9 @@ class AVTest(LmfdbTest):
         page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
         assert '"curve_counts": [21, 283, 4719, 84395' in page.get_data(as_text=True)
 
+        text = self.tc.get('Variety/Abelian/Fq/data/3.17.d_b_act', follow_redirects=True).get_data(as_text=True)
+        assert 'dim4_factors' in text and 'multiplicity' in text and 'brauer_invariants' in text
+
     def test_download_curves(self):
         r"""
         Test downloading all stored data to text
