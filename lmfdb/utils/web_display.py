@@ -538,6 +538,7 @@ def raw_typeset_qexp(coeffs_list,
     rawvar = "beta"
     R = PolynomialRing(ZZ, rawvar)
 
+
     def rawtset_coeff(i, coeffs):
         poly = R(coeffs)
         if poly == 0:
@@ -570,17 +571,24 @@ def raw_typeset_qexp(coeffs_list,
     tset = ''
     raw = ''
     add_to_tset = True
+    prec = len(coeffs_list)
+    lastt = None
     for i, coeffs in enumerate(coeffs_list):
         r, t = rawtset_coeff(i, coeffs)
-        raw += r
-        if add_to_tset or i == len(coeffs_list) - 1:
+        if t:
+            lastt = t
+        raw += " " + r
+        if add_to_tset:
             tset += t
         if add_to_tset and "cdots" in tset:
             add_to_tset = False
             if i < len(coeffs_list) - 2:
                 tset += "+ \cdots "
     else:
-        tset += rf'+O(q^{{{i+1}}})'
+        if lastt and not add_to_tset:
+            tset += lastt
+
+    tset += rf'+O(q^{{{prec}}})'
 
 
 
