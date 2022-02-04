@@ -544,15 +544,18 @@ def raw_typeset_qexp(coeffs_list,
         if poly == 0:
             return "", ""
         raw = str(poly)
-        tset = compress_polynomial(
+        if poly == 1:
+            tset = ""
+        elif poly == -1:
+            tset = "-"
+        else:
+            tset = compress_polynomial(
                 poly,
                 coeff_compress_threshold,
                 decreasing=True)
         raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
         tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
         if poly.is_homogeneous(): # aka, has only one term
-            if poly == 1:
-                tset = ""
             if i > 1 and not raw.startswith('-'):
                 raw = plus + raw
                 tset = plus + tset
