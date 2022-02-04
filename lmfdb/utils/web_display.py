@@ -116,7 +116,7 @@ def web_latex(x, enclose=True):
     return rf"\( {latex_str} \)" if enclose else latex_str
 
 
-def compress_int(n, cutoff=10, sides=2):
+def compress_int(n, cutoff=15, sides=2):
     res = str(n)
     if abs(n) >= 10**cutoff:
         short = res[:sides + (1 if n < 0 else 0)] + r'\!\cdots\!' + res[-sides:]
@@ -490,7 +490,7 @@ def raw_typeset_poly(coeffs,
 
 
     if compress_poly:
-        # thirs forces the box
+        # this forces the box
         kwargs['textarea'] = True
         kwargs['textarea_threshold'] =compress_threshold
 
@@ -528,6 +528,68 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
     return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
 
 
+def raw_typeset_qexp(coeffs_list,
+                     compress_threshold=100,
+                     coeff_compress_threshold=20,
+                     **kwargs):
+    plus = r" + "
+
+    var = r"\beta"
+    rawvar = "beta"
+    R = PolynomialRing(ZZ, rawvar)
+
+    def rawtset_coeff(i, coeffs):
+        poly = R(coeffs)
+        if poly == 0:
+            return "", ""
+        raw = str(poly)
+        tset = compress_polynomial(
+                poly,
+                coeff_compress_threshold,
+                decreasing=True)
+        raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
+        tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+        if i == 1:
+            print(coeffs, raw, poly, poly.is_monomial())
+        if poly.is_homogeneous(): # aka, has only one term
+            if poly == 1:
+                tset = ""
+            if i > 1 and not raw.startswith('-'):
+                raw = plus + raw
+                tset = plus + tset
+        else:
+            tset = f"({tset})"
+            raw = f"({raw})"
+            if i > 1:
+                raw = plus + raw
+                tset = plus + tset
+        rawq = f" * q^{i}" if i > 1 else " * q"
+        tsetq = f"q^{{{i}}}" if i > 1 else "q"
+        tset += tsetq
+        raw += rawq
+        return raw, tset
+
+    tset = ''
+    raw = ''
+    add_to_tset = True
+    for i, coeffs in enumerate(coeffs_list):
+        r, t = rawtset_coeff(i, coeffs)
+        raw += r
+        if add_to_tset or i == len(coeffs_list) - 1:
+            tset += t
+        if add_to_tset and "cdots" in tset:
+            add_to_tset = False
+            if i < len(coeffs_list) - 2:
+                tset += "+ \cdots "
+    else:
+        tset += rf'+O(q^{{{i+1}}})'
+
+
+
+    kwargs['textarea'] = True
+    kwargs['textarea_threshold'] = compress_threshold
+
+    return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
 
 
 

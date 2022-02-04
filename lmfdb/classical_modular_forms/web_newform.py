@@ -18,7 +18,7 @@ from lmfdb.utils import (
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
     integer_squarefree_part,
-    raw_typeset_poly, raw_typeset_poly_factor,
+    raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp
 )
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -1151,39 +1151,6 @@ function switch_basis(btype) {
         else:
             return ''
 
-    def eigs_as_seqseq_to_qexp(self, prec_max):
-        # Takes a sequence of sequence of integers (or pairs of integers in the hecke_ring_cyclotomic_generator != 0 case) and returns a string for the corresponding q expansion
-        # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
-        prec = min(self.qexp_prec, prec_max)
-        if prec == 0:
-            return 'O(1)'
-        eigseq = self.qexp[:prec]
-        use_knowl = too_big(eigseq, 10**24)
-        s = ''
-        for j in range(len(eigseq)):
-            term = self._elt(eigseq[j])
-            if term != 0:
-                latexterm = latex(term)
-                if use_knowl:
-                    latexterm = make_bigint(latexterm)
-                if term.number_of_terms() > 1:
-                    latexterm = r"(" +  latexterm + r")"
-                if j > 0:
-                    if term == 1:
-                        latexterm = ''
-                    elif term == -1:
-                        latexterm = '-'
-                    if j == 1:
-                        latexterm += ' q'
-                    else:
-                        latexterm += ' q^{%d}' % j
-                if s != '' and latexterm[0] != '-':
-                    latexterm = '+' + latexterm
-                s += '' + latexterm + ' '
-        # Work around bug in Sage's latex
-        s = s.replace('betaq', 'beta q')
-        return r'\(' + s + r'+O(q^{%d})\)' % prec
-
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
         prec = min(max(eigseq.keys()) + 1, prec_max)
@@ -1213,20 +1180,13 @@ function switch_basis(btype) {
             return self.q_expansion_cc(prec_max)
         elif self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
-            if self.dim == 1:
-                s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=True)
-            else:
-                s = self.eigs_as_seqseq_to_qexp(prec)
-            return s
+            return raw_typeset_qexp(self.qexp[:prec])
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
-        s = web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=True)
-        if too_big(self.texp[:prec], 10**24):
-            s = make_bigint(s)
-        return s
+        return raw_typeset_qexp([[elt] for elt in self.texp[:prec]])
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':
