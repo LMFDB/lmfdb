@@ -58,7 +58,7 @@ style="line-height: 1; height: 13px";
     raw=escape(raw)
     out = f"""
 <span class="tset-container">
-    <span class="tset-raw tset" raw="{raw}" ondblclick="ondouble(this)">
+    <span class="tset-raw tset" raw="{raw}" ondblclick="setraw_safe(this)">
     {typeset}
     </span>
     {extra}
@@ -549,8 +549,6 @@ def raw_typeset_qexp(coeffs_list,
                 decreasing=True)
         raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
         tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
-        if i == 1:
-            print(coeffs, raw, poly, poly.is_monomial())
         if poly.is_homogeneous(): # aka, has only one term
             if poly == 1:
                 tset = ""

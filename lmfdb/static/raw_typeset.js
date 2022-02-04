@@ -58,9 +58,6 @@ function setalltset(iconpath) {
   $("span.tset-raw").each(settset_safe);
 }
 
-function ondouble(elt) {
-  setraw(elt);
-}
 
 function iconrawtset(elt) {
   toggle(elt.parentElement.children[0]);
