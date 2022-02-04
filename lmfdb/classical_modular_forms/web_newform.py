@@ -1177,7 +1177,23 @@ function switch_basis(btype) {
             return self.q_expansion_cc(prec_max)
         elif self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
-            return raw_typeset_qexp(self.qexp[:prec])
+            m = self.hecke_ring_cyclotomic_generator
+            if m is None or m == 0:
+                # normal representation: as a list of coefficients
+                return raw_typeset_qexp(self.qexp[:prec])
+            else:
+                # sum of powers of zeta_m
+                zeta = self._PrintRing.gen(0)
+                # convert into a normal representation
+                def to_list(data):
+                    if not data:
+                        return []
+                    out = [0]*(max(e for _, e in data) + 1)
+                    for c, e in data:
+                        out[e] = c
+                    return out
+                coeffs = [to_list(data) for data in self.qexp[:prec]]
+                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print)
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 

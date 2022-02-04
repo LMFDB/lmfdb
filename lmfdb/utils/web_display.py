@@ -530,12 +530,13 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
 
 def raw_typeset_qexp(coeffs_list,
                      compress_threshold=100,
-                     coeff_compress_threshold=20,
+                     coeff_compress_threshold=40,
+                     var=r"\beta",
+                     superscript=False,
                      **kwargs):
     plus = r" + "
 
-    var = r"\beta"
-    rawvar = "beta"
+    rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
 
 
@@ -553,8 +554,9 @@ def raw_typeset_qexp(coeffs_list,
                 poly,
                 coeff_compress_threshold,
                 decreasing=True)
-        raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
-        tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+        if not superscript:
+            raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
+            tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
         if poly.is_homogeneous(): # aka, has only one term
             if i > 1 and not raw.startswith('-'):
                 raw = plus + raw
@@ -584,10 +586,10 @@ def raw_typeset_qexp(coeffs_list,
             tset += t
         if add_to_tset and "cdots" in tset:
             add_to_tset = False
-            if i < len(coeffs_list) - 2:
-                tset += "+ \cdots "
+            lastt = None
     else:
         if lastt and not add_to_tset:
+            tset += r"+ \cdots "
             tset += lastt
 
     tset += rf'+O(q^{{{len(coeffs_list)}}})'
