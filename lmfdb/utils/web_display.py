@@ -571,7 +571,6 @@ def raw_typeset_qexp(coeffs_list,
     tset = ''
     raw = ''
     add_to_tset = True
-    prec = len(coeffs_list)
     lastt = None
     for i, coeffs in enumerate(coeffs_list):
         r, t = rawtset_coeff(i, coeffs)
@@ -588,7 +587,7 @@ def raw_typeset_qexp(coeffs_list,
         if lastt and not add_to_tset:
             tset += lastt
 
-    tset += rf'+O(q^{{{prec}}})'
+    tset += rf'+O(q^{{{len(coeffs_list)}}})'
 
 
 
