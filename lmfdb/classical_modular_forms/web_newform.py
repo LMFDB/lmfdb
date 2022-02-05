@@ -172,7 +172,6 @@ class WebNewform(object):
                     zero = []
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
-                m = self.field_poly_root_of_unity
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
                 # This is not enough, for some reason
                 #if (m != 0) and (not self.single_generator):
