@@ -283,7 +283,7 @@ def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, str):
         return x
     else:
-        A = r"\( %s \)" % latex(x)
+        A = rf"\( {latex(x)} \)"
         for s in on:
             A = A.replace(s, r'\) ' + s + r' \( ')
     return A
@@ -301,7 +301,6 @@ def web_latex_split_on_pm(x):
     '\\(x^{2} \\) \\(\\mathstrut +\\mathstrut  1 \\)'
     """
     on = ['+', '-']
- #   A = "\( %s \)" % latex(x)
     try:
         A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
     except Exception:
