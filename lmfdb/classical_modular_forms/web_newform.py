@@ -658,20 +658,20 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
+        acting_on = f"acting on {self.display_newspace()}"
         # using dummy variable TTTT to workaround T_{p} not being a valid var for sage
-        polynomials = [raw_typeset_poly(F, var='TTTT').replace('TTTT', f'T_{p}') for p, F in self.hecke_cutters]
+        extra = (acting_on + ".") if len(self.hecke_cutters) == 1 else ""
+        polynomials = [raw_typeset_poly(F, var='TTTT', extra=extra).replace('TTTT', f'T_{{{p}}}') for p, F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
         knowl = display_knowl('cmf.hecke_cutter', title=title)
-        desc = "<p>This %s can be constructed as the "%(display_knowl('cmf.newform_subspace','newform subspace'))
+        desc = f"<p>This {display_knowl('cmf.newform_subspace','newform subspace')} can be constructed as the "
         if len(polynomials) > 1:
-            desc += "intersection of the kernels of the following %s acting on %s:</p>\n<table>"
-            desc = desc % (knowl, self.display_newspace())
+            desc += f"intersection of the kernels of the following {knowl} {acting_on}:</p>\n<table>"
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
         elif len(polynomials) == 1:
-            desc += "kernel of the %s %s acting on %s."
-            desc = desc % (knowl, polynomials[0], self.display_newspace())
+            desc += f"kernel of the {knowl} {polynomials[0]}"
         else:
             desc = r"<p>This %s is the entire %s %s.</p> "%(display_knowl('cmf.newform_subspace','newform subspace'),
                                                           display_knowl('cmf.newspace','newspace'),self.display_newspace())
