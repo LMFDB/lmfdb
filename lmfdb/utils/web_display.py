@@ -534,7 +534,7 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
 
 def raw_typeset_qexp(coeffs_list,
                      compress_threshold=100,
-                     coeff_compress_threshold=40,
+                     coeff_compress_threshold=30,
                      var=r"\beta",
                      superscript=False,
                      **kwargs):
