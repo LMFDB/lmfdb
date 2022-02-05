@@ -112,8 +112,7 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, str):
         return x
-    latex_str =" %s " % latex(x) 
-    return rf"\( {latex_str} \)" if enclose else latex_str
+    return rf"\( {latex(x)} \)" if enclose else latex(x) 
 
 
 def compress_int(n, cutoff=15, sides=2):
