@@ -126,8 +126,8 @@ def name_and_object_from_url(url, check_existence=False):
         if check_existence:
             obj_exists = db.number_fields.label_exists(label)
     elif url_split[0] == "SatoTateGroup":
-        from lmfdb.sato_tate_groups.main import get_name
-        name, label = get_name(url_split[1])
+        from lmfdb.sato_tate_groups.main import st_name
+        name, label = st_name(url_split[1])
         if name is None:
             name = label
             obj_exists = False

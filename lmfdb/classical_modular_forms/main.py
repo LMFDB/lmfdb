@@ -35,7 +35,7 @@ from lmfdb.classical_modular_forms.web_space import (
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
-from lmfdb.sato_tate_groups.main import st_link
+from lmfdb.sato_tate_groups.main import st_display_knowl
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -817,16 +817,17 @@ newform_columns = SearchColumns([
     MathCol("weight", "cmf.weight", "Weight"),
     MultiProcessedCol("character", "cmf.character", "Char",
                       ["level", "char_orbit_label"],
-                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"})),
-    MathCol("char_order", "character.dirichlet.order", "Char Order"),
-    MathCol("dim", "cmf.dimension", "Dim.", default=True, align="left"),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="left"),
+                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
+                      short_title="Character"),
+    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="Character order"),
+    MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="Dimension"),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="Analytic conductor"),
     MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
                  lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
                  contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                  default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
-                 align="center"),
+                 align="center", short_title="Projective image"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
                       lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
@@ -837,7 +838,7 @@ newform_columns = SearchColumns([
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                       default=True),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual"),
-    MathCol("inner_twist_count", "cmf.inner_twist_count", "Twists"),
+    MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists"),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*"),
     ColGroup("traces", "cmf.trace_form", "Traces",
              [_trace_col(i) for i in range(4)],
@@ -849,9 +850,9 @@ newform_columns = SearchColumns([
     ProcessedCol("fricke_eigenval", "cmf.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
-    ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coeff. ring index",
+    ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
                  lambda fac: "" if fac=="?" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
-    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_link),
+    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)],
@@ -1186,8 +1187,9 @@ def space_search(info, query):
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("double.html", kid='rcs.source.cmf',
-                           kid2='rcs.ack.cmf', title=t,
+    return render_template("multi.html", kids=['rcs.source.cmf',
+                           'rcs.ack.cmf',
+                           'rcs.cite.cmf'], title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 

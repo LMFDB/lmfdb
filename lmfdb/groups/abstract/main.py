@@ -1272,9 +1272,10 @@ def how_computed_page():
     t = "Source of the abstract group data"
     bread = get_bread("Source")
     return render_template(
-        "double.html",
-        kid="rcs.source.groups.abstract",
-        kid2="rcs.ack.groups.abstract",
+        "multi.html",
+        kids=["rcs.source.groups.abstract",
+              "rcs.ack.groups.abstract",
+              "rcs.cite.groups.abstract"],
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),
