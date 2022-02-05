@@ -12,8 +12,7 @@ from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
 from lmfdb.utils import (
-    coeff_to_power_series, web_latex,
-    bigint_knowl, too_big, make_bigint,
+    coeff_to_power_series,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
@@ -695,21 +694,6 @@ class WebNewform(object):
         else:
             return r"\(=\)"
 
-    def _make_frac(self, num, den):
-        paren = ('+' in num or '-' in num)
-        if den == 1:
-            return num
-        elif den < 10**8:
-            if paren:
-                return r"\((\)%s\()/%s\)" % (num, den)
-            else:
-                return r"%s\(/%s\)" % (num, den)
-        else:
-            if paren:
-                return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
-            else:
-                return r"%s\(/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
-
     @property
     def _nu_latex(self):
         if self.field_poly_is_cyclotomic:
@@ -801,20 +785,6 @@ function switch_basis(btype) {
             return html % (" nodisplay", self._order_basis_forward(), self._nu_latex, "", self._order_basis_inverse(), self._nu_latex)
         else:
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
-
-    def order_basis_table(self):
-        s = '<table class="ntdata">\n  <tr>\n'
-        for i in range(self.dim):
-            s += r'    <td>\(\nu^{%s}\)</td>\n'%i
-        s += '    <td>Denominator</td>\n  </tr>\n'
-        for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
-            s += '  <tr>\n'
-            for coeff in num:
-                s += '    <td>%s</td>\n' % (bigint_knowl(coeff))
-            s += '    <td>%s</td>\n' % (bigint_knowl(den))
-            s += '  </tr>\n'
-        s += '</table>'
-        return s
 
     def order_gen(self):
         if self.field_poly_root_of_unity == 4:
@@ -1183,7 +1153,6 @@ function switch_basis(btype) {
                 return raw_typeset_qexp(self.qexp[:prec])
             else:
                 # sum of powers of zeta_m
-                zeta = self._PrintRing.gen(0)
                 # convert into a normal representation
                 def to_list(data):
                     if not data:
