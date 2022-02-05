@@ -1309,11 +1309,7 @@ class HGCWASearchArray(SearchArray):
             [g0, signature, group, inc_cyc_trig]]
 
     sort_knowl = "curve.highergenus.aut.sort_order"
-    sorts = [("", "genus (asc)", ['genus', 'group_order',  'g0', 'dim']),
-             ("g0", "quotient genus (asc)", ['g0', 'genus', 'group_order', 'dim']),
-             ("group_order", "group order (asc)", ['group_order', 'group', 'genus', 'g0', 'dim']),
-             ("dim", "dimension (asc)", ['dim', 'genus', 'group_order', 'g0']),
-             ("descgenus", "genus (dec)", [('genus',-1), 'group_order', 'g0', 'dim']),
-             ("descg0", "quotient genus (dec)", [('g0',-1), 'genus', 'group_order', 'dim']),
-             ("descgroup_order", "group order (dec)", [('group_order',-1), 'group', 'genus', 'g0', 'dim']),
-             ("descdim", "dimension (dec)", [('dim',-1), 'genus', 'group_order', 'g0'])]
+    sorts = [("", "genus", ['genus', 'group_order',  'g0', 'dim']),
+             ("g0", "quotient genus", ['g0', 'genus', 'group_order', 'dim']),
+             ("group_order", "group order", ['group_order', 'group', 'genus', 'g0', 'dim']),
+             ("dim", "dimension", ['dim', 'genus', 'group_order', 'g0'])]

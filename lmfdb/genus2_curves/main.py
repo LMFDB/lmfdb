@@ -1133,14 +1133,10 @@ class G2CSearchArray(SearchArray):
     sort_knowl = "g2c.sort_order"
     sorts = [("", "label", _default),
              ("abs_disc", "absolute discriminant", ["abs_disc"] + _default),
-             ("num_rat_pts1", "rational points (inc)", [("num_rat_pts", 1)] + _default),
-             ("num_rat_pts-1", "rational points (dec)", [("num_rat_pts", -1)] + _default),
-             ("num_rat_wpts1", "Weierstrass points (inc)", [("num_rat_wpts", 1)] + _default),
-             ("num_rat_wpts-1", "Weierstrass points (dec)", [("num_rat_wpts", -1)] + _default),
-             ("torsion_order1", "torsion order (inc)", [("torsion_order", 1)] + _default),
-             ("torsion_order-1", "torsion order (dec)", [("torsion_order", -1)] + _default),
-             ("analytic_sha1", "analytic sha (inc)", [("analytic_sha", 1)] + _default),
-             ("analytic_sha-1", "analytic sha (dec)", [("analytic_sha", -1)] + _default),
+             ("num_rat_pts", "rational points", ["num_rat_pts"] + _default),
+             ("num_rat_wpts", "Weierstrass points", ["num_rat_wpts"] + _default),
+             ("torsion_order", "torsion order", ["torsion_order"] + _default),
+             ("analytic_sha", "analytic sha", ["analytic_sha"] + _default),
              ("two_sel", "2-Selmer rank", ["two_selmer_rank"] + _default),
              ("rank", "analytic rank", ["analytic_rank"] + _default),
              ("st_label", "Sato-Tate group", [("st_label", -1)] + _default)]

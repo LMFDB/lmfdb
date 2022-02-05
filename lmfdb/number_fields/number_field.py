@@ -1055,10 +1055,8 @@ class NFSearchArray(SearchArray):
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("disc", "absolute discriminant", ['disc_abs', 'disc_sign', 'degree', 'iso_number']),
              ("ramps", "ramified prime count", ['num_ram', 'disc_abs', 'disc_sign', 'degree', 'iso_number']),
-             ("h", "class number (asc)", ['class_number', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("hdesc", "class number (dec)", [('class_number', -1), 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("R", "regulator (asc)", ['regulator', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("Rdesc", "regulator (dec)", [('regulator', -1), 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
+             ("h", "class number", ['class_number', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
+             ("R", "regulator", ['regulator', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("gal", "Galois group", ['degree', 'galt', 'disc_abs', 'disc_sign', 'iso_number'])]
     jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"

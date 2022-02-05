@@ -24,7 +24,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
@@ -494,6 +494,7 @@ ecnf_columns = SearchColumns([
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center"),
     ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
     ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
+    FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes", lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),         
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
@@ -837,16 +838,16 @@ def disp_tor(t):
 class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
-    sorts = [("", "field", ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("cond", "conductor", ['conductor_norm', 'conductor_label', 'field_label', 'iso_nlabel', 'number']),
-             ("rtA", "root analytic conductor", ['root_analytic_conductor', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("rank", "rank", ['rank', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("torsion", "torsion", ['torsion_order', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("cm", "CM discriminant", ["cm", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("R", "regulator", ["reg", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("sha", "analytic &#1064;", ["sha", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("class_size", "isogeny class size", ["class_size", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("class_deg", "isogeny class degree", ["class_deg", 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])]
+    sorts = [("", "field", ['degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("cond", "conductor norm", ['conductor_norm', 'conductor_label', 'degree', 'signature', 'abs_disc', 'field_label', 'iso_nlabel', 'number']),
+             ("rtA", "root analytic conductor", ['root_analytic_conductor', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("rank", "rank", ['rank', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("torsion", "torsion", ['torsion_order', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("cm", "CM discriminant", ["cm", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("R", "regulator", ["reg", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("sha", "analytic &#1064;", ["sha", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("class_size", "isogeny class size", ["class_size", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("class_deg", "isogeny class degree", ["class_deg", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])]
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     jump_knowl = "ec.search_input"

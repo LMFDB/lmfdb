@@ -1389,24 +1389,19 @@ def display_profile_line(data, ambient, aut):
 class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
-    sorts = [("", "order (asc)", ["order", "counter"]),
-             ("ord-1", "order (dec)", [("order", -1), "counter"]),
+    sorts = [("", "order", ["order", "counter"]),
              ("exp", "exponent", ["exponent", "order", "counter"]),
-             ("nilp1", "nilpotency class (asc)", ["nilpotency_class", "order", "counter"]),
-             ("nilp-1", "nilpotency class (dec)", [("nilpotency_class", -1), "order", "counter"]),
+             ("nilp", "nilpotency class", ["nilpotency_class", "order", "counter"]),
              ("der", "derived length", ["derived_length", "order", "counter"]),
              ("comp", "composition length", ["composition_length", "order", "counter"]),
-             ("rank1", "rank (asc)", ["rank", "eulerian_function", "order", "counter"]),
-             ("rank-1", "rank (dec)", [("rank", -1), "eulerian_function", "order", "counter"]),
+             ("rank", "rank", ["rank", "eulerian_function", "order", "counter"]),
              ("center", "center", ["center_label", "order", "counter"]),
              ("comm", "commutator", ["commutator_label", "order", "counter"]),
              ("centquo", "central quotient", ["central_quotient", "order", "counter"]),
              ("ab", "abelianization", ["abelian_quotient", "order", "counter"]),
              ("aut", "automorphism group", ["aut_order", "aut_group", "order", "counter"]),
-             ("nconj1", "num. conj. classes (asc)", ["number_conjugacy_classes", "order", "counter"]),
-             ("nconj-1", "num. conj. classes (dec)", [("number_conjugacy_classes", -1), "order", "counter"]),
-             ("nsubs1", "num. subgroup classes (asc)", ["number_subgroup_classes", "order", "counter"]),
-             ("nsubs-1", "num. subgroup classes (dec)", [("number_subgroup_classes", -1), "order", "counter"])]
+             ("nconj", "num. conj. classes", ["number_conjugacy_classes", "order", "counter"]),
+             ("nsubs", "num. subgroup classes", ["number_subgroup_classes", "order", "counter"])]
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
     jump_prompt = "Label or name"
@@ -1704,6 +1699,9 @@ class GroupsSearchArray(SearchArray):
     sort_knowl = "group.sort_order"
 
 class SubgroupSearchArray(SearchArray):
+    sorts = [("", "ambient order", ['ambient_order', 'ambient', 'quotient_order', 'subgroup']),
+             ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient', 'subgroup']),
+             ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient', 'subgroup'])]
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")

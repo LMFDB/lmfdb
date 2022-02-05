@@ -857,16 +857,15 @@ class ECSearchArray(SearchArray):
     noun = "curve"
     sorts = [("", "label", ["conductor", "iso_nlabel", "lmfdb_number"]),
              ("cremona", "cremona label", ["conductor", "Ciso", "Cnumber"]),
-             ("rank1", "rank (inc)", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("rank-1", "rank (dec)", [("rank", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("torsion1", "torsion (inc)", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("torsion-1", "torsion (dec)", [("torsion", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("cm", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
              ("R", "regulator", ["regulator", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("sha", "analytic &#1064;", ["sha", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("class_size", "isogeny class size", ["class_size", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("class_deg", "isogeny class degree", ["class_deg", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("num_int_pts", "integral points", ["num_int_pts", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("degree", "modular degree", ["degree", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("faltings", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
     plural_noun = "curves"
     jump_example = "11.a2"
