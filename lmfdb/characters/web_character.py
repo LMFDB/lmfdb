@@ -719,29 +719,31 @@ class WebCharGroup(WebCharObject):
     @lazy_attribute
     def structure(self):
         inv = self.H.invariants()
-        inv_list = list(inv)
-        inv_list.sort()
-        return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
+        if inv:
+            inv_list = list(inv)
+            inv_list.sort()
+            return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
+        else:
+            return r"\(C_1\)"
 
     @lazy_attribute
     def structure_group_knowl(self):
         inv = self.H.invariants()
         label = ".".join(str(v) for v in inv)
         parts = defaultdict(list)
-        for piece in label.split("."):
-            if "_" in piece:
-                base, exp = map(ZZ, piece.split("_"))
-            else:
-                base = ZZ(piece)
-                exp = 1
-            for p, e in base.factor():
-                parts[p].extend([p ** e] * exp)
+        if label:
+            for piece in label.split("."):
+                if "_" in piece:
+                    base, exp = map(ZZ, piece.split("_"))
+                else:
+                    base = ZZ(piece)
+                    exp = 1
+                for p, e in base.factor():
+                    parts[p].extend([p ** e] * exp)
         for v in parts.values():
             v.sort()
         primary = sum((parts[p] for p in sorted(parts)), [])
-        dblabel = db.gps_groups.lucky(
-            {"abelian": True, "primary_abelian_invariants": primary}, "label"
-        )
+        dblabel = db.gps_groups.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
         if dblabel is None:
             abgp_url = url_for('abstract.by_abelian_label', label=label)
             return f'<a href= %s >{self.structure}</a>' % abgp_url

@@ -335,7 +335,9 @@ def how_computed_page():
     info['title'] = 'Source and acknowledgments for Dirichlet character data'
     info['bread'] = bread('Source')
     info['learnmore'] = learn('source')
-    return render_template("double.html", kid='rcs.source.character.dirichlet', kid2='rcs.ack.character.dirichlet',
+    return render_template("multi.html", kids=['rcs.source.character.dirichlet',
+                            'rcs.ack.character.dirichlet',
+                            'rcs.cite.character.dirichlet'],
                            **info)
 
 

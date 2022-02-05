@@ -39,7 +39,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
 from lmfdb.api import datapage
-from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label
 
@@ -555,11 +555,13 @@ g2c_columns = SearchColumns([
     MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
     MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
     ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
-              lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
-    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v), short_title="Qbar-end algebra", default=True, align="center"),
+                 lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}",
+                 default=True, mathmode=True, align="center"),
+    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v),
+                 short_title="Qbar-end algebra", default=True, align="center"),
     ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
     CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
-    ProcessedCol("st_group", "g2c.st_group", "Sato-Tate", lambda v: st_link_by_name(1, 4, v), align="left"),
+    ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center"),
     CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
     CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
@@ -802,9 +804,10 @@ def source_page():
     t = r"Source and acknowledgments for genus 2 curve data over $\Q$"
     bread = get_bread("Source")
     return render_template(
-        "double.html",
-        kid="rcs.source.g2c",
-        kid2="rcs.ack.g2c",
+        "multi.html",
+        kids=["rcs.source.g2c",
+              "rcs.ack.g2c",
+              "rcs.cite.g2c"],
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),

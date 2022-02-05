@@ -128,7 +128,7 @@ def ab2gammas(A,B):
             if d in ab[wh]:
                 subdict(ab[wh],d)
             else:
-                incdict(ab[1-wh], d) 
+                incdict(ab[1-wh], d)
     gamma[1] = [-1*z for z in gamma[1]]
     gamma = gamma[1]+gamma[0]
     gamma.sort()
@@ -294,7 +294,7 @@ def hgm_family_circle_image(AB):
     A, B = AB.split("_")
     from .plot import circle_image
     A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]    
+    B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
     return image_callback(G)
 
@@ -304,7 +304,7 @@ def hgm_family_linear_image(AB):
     A, B = AB.split("_")
     from .plot import piecewise_linear_image
     A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]    
+    B = [int(n) for n in B[1:].split(".")]
     G = piecewise_linear_image(A, B)
     return image_callback(G)
 
@@ -314,7 +314,7 @@ def hgm_family_constant_image(AB):
     A, B = AB.split("_")
     from .plot import piecewise_constant_image
     A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]    
+    B = [int(n) for n in B[1:].split(".")]
     G = piecewise_constant_image(A, B)
     return image_callback(G)
 
@@ -650,7 +650,9 @@ def interesting_motives():
 def how_computed_page():
     t = r'Source and acknowledgments for hypergeometric motives over $\Q$'
     bread = get_bread(('Source',''))
-    return render_template("double.html", kid='rcs.source.hgm', kid2='rcs.ack.hgm',
+    return render_template("multi.html", kids=['rcs.source.hgm',
+                                               'rcs.ack.hgm',
+                                               'rcs.cite.hgm'],
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Source'))
 

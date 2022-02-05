@@ -1,0 +1,8 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{% for kid in kids%}
+{{ KNOWL_INC(kid) }}
+{% endfor %}
+
+{% endblock %}
