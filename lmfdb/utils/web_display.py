@@ -521,10 +521,10 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
         tsetf = compress_polynomial(f, compress_threshold, decreasing)
         if '+' in rawf or '-' in rawf:
             raw.append(f'({rawf})^{e}')
-            tset.append(f'({tsetf})^{e}')
+            tset.append(f'({tsetf})^{{{e}}}')
         else:
             raw.append(f'{rawf}^{e}')
-            tset.append(f'{tsetf}^{e}')
+            tset.append(f'{tsetf}^{{{e}}}')
 
     tset = " ".join(tset)
     raw = " ".join(raw)
