@@ -390,13 +390,16 @@ def compress_polynomial(poly, threshold, decreasing=True):
     if abs(lastc) != 1 or d == 0:
         tsetend += short
 
+    monomial_length = 0
     if d > 0:
-        tsetend += latex(var**d)
+        monomial = latex(var**d)
+        tsetend += monomial
+        monomial_length += len(monomial)
 
     tset = ""
     for n in (reversed(range(d + 1, poly.degree() + 1)) if decreasing else range(d)):
         c = poly[n]
-        if tset and len(tset) + len(cdots) + len(tsetend) > threshold:
+        if tset and len(tset) + len(tsetend) - monomial_length > threshold:
             tset += cdots
             break
 
@@ -417,9 +420,10 @@ def compress_polynomial(poly, threshold, decreasing=True):
             tset += compress_int(abs(c))[0] + " "
 
         if n >= 1:
-            monomial = latex(var**n) 
+            monomial = latex(var**n)
         else:
             monomial = "1" if abs(c) == 1 else ""
+        monomial_length += len(monomial)
         tset += monomial
 
     tset += tsetend
