@@ -767,11 +767,13 @@ class SearchArray(UniqueRepresentation):
                     sort_box = SelectBox(
                         name='sort_order',
                         options=list(sort),
-                        width=95)
+                        width=130)
                     sort_dir = SelectBox(
                         name='sort_dir',
                         options=[('', '&#9650;'), ('op', '&#9660;')],
-                        width=10)
+                        width=None,
+                        extra=['style="min-width: 40px; max-width: 40px;"'],
+                    )
                     sort_ord = DoubleSelectBox(
                         name='sort_combo',
                         label='Sort order',
