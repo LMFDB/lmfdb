@@ -2497,7 +2497,6 @@ span.copy, span.rawtset-btn {
     border-radius: 3px;
     appearance: none;
     line-height: 12px;
-    bottom: 3px;
     position: relative;
     transition: .2s cubic-bezier(0.3, 0, 0.5, 1);
     transition-property: color,background-color,border-color;
