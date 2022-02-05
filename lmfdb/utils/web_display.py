@@ -485,6 +485,11 @@ def raw_typeset_poly(coeffs,
     if not superscript:
         raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
         tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+        # in case the last replace doesn't trigger because is at the end
+        if raw.endswith(rawvar):
+            raw += "_1"
+        if tset.endswith(var):
+            raw += "_1"
 
     if denominator != 1:
         tset = f"( {tset} ) {denominatortset}"
@@ -559,7 +564,12 @@ def raw_typeset_qexp(coeffs_list,
         if not superscript:
             raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
             tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
-        if poly.is_homogeneous(): # aka, has only one term
+            # in case the last replace doesn't trigger because is at the end
+            if raw.endswith(rawvar):
+                raw += "_1"
+            if tset.endswith(var):
+                raw += "_1" 
+        if poly.number_of_terms() == 1:
             if i > 1 and not raw.startswith('-'):
                 raw = plus + raw
                 tset = plus + tset
