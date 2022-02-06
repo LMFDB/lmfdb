@@ -489,7 +489,7 @@ def raw_typeset_poly(coeffs,
         if raw.endswith(rawvar):
             raw += "_1"
         if tset.endswith(var):
-            raw += "_1"
+            tset += "_1"
 
     if denominator != 1:
         tset = f"( {tset} ) {denominatortset}"
@@ -575,7 +575,7 @@ def raw_typeset_qexp(coeffs_list,
             if raw.endswith(rawvar):
                 raw += "_1"
             if tset.endswith(var):
-                raw += "_1"
+                tset += "_1"
         if poly.number_of_terms() == 1:
             if i > 1 and not raw.startswith('-'):
                 raw = plus + raw
