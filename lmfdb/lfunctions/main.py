@@ -219,18 +219,6 @@ def jump_box(info):
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
-def parse_sort(info, query):
-    if info.get('sort_order') == '':
-        query['__sort__'] = ['root_analytic_conductor', 'label']
-    elif info.get('sort_order') == 'zero':
-        query['__sort__'] = [('z1', -1)]
-    elif info.get('sort_order') == 'izero':
-        query['__sort__'] = ['z1']
-    elif info.get('sort_order') == 'A':
-        query['__sort__'] = ['analytic_conductor', 'label']
-    elif info.get('sort_order') == 'cond':
-        query['__sort__'] = ['conductor', 'root_analytic_conductor', 'label']
-
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_spectral(inp, query, qfield):
     if '-' not in inp:
@@ -307,7 +295,6 @@ def common_parse(info, query):
         del query['instance_types']
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
-    parse_sort(info, query)
     info['bigint_knowl'] = bigint_knowl
 
 lfunc_columns = SearchColumns([
@@ -429,6 +416,10 @@ def euler_search(info, query):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s'%p, p=p, d=d)
 
 class LFunctionSearchArray(SearchArray):
+    sorts = [('', 'root analytic conductor', ['root_analytic_conductor', 'label']),
+             ('A', 'analytic conductor', ['analytic_conductor', 'label']),
+             ('zero', 'first zero', [('z1', -1)]),
+             ('conductor', 'conductor', ['conductor', 'root_analytic_conductor', 'label'])]
     jump_example="1-1-1.1-r0-0-0"
     jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
     jump_knowl="lfunction.search_input"
@@ -655,15 +646,6 @@ class LFunctionSearchArray(SearchArray):
             euler_table = self._print_table(self.euler_array, info, layout_type="box")
             layout.append(euler_table)
         return "\n".join(layout)
-
-    def sort_order(self, info):
-        return [
-            ('', 'root analytic conductor'),
-            ('A', 'analytic conductor'),
-            ('zero', 'first zero (decreasing)'),
-            ('izero', 'first zero (increasing)'),
-            ('cond', 'conductor')
-        ]
 
 @l_function_page.route("/interesting")
 def interesting():

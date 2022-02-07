@@ -599,16 +599,17 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
-    sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1))
+    sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
     noun = "result"
     plural_noun = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         if self.sorts is not None:
+            sorts = self.sorts if isinstance(self.sorts, list) else self.sorts[self._st(info)]
             #for name, display, prefix in self.sorts:
             #    yield (name, display + " &#9650;")
             #    yield (name + "op", display + " &#9660;")
-            return [(name, display) for (name, display, sort_order) in self.sorts]
+            return [(name, display) for (name, display, sort_order) in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:

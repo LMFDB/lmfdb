@@ -424,7 +424,6 @@ def hgm_search(info, query):
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
 
-    parse_sort(info, query, search_type)
     # Should search on analytic conductor when available
     # Sorts A and B first by length, then by the elements of the list; could go another way
 
@@ -433,21 +432,6 @@ def hgm_search(info, query):
     info['ab_label'] = ab_label
     info['display_t'] = display_t
     info['factorint'] = factorint
-
-def parse_sort(info, query, search_type):
-    S = info.get('sort_order', '')
-    if S == '':
-        L = ['degree', 'weight', 'A', 'B', 'label']
-    elif S == 'weight':
-        L = ['weight', 'degree', 'A', 'B', 'label']
-    elif S == 'cond':
-        L = ['cond', 'degree', 'weight', 'A', 'B', 'label']
-    elif S == 'hodge':
-        L = ['degree', 'famhodge', 'weight', 'A', 'B', 'label']
-    else:
-        return
-    query['__sort__'] = L
-
 
 def render_hgm_webpage(label):
     data = None
@@ -681,6 +665,14 @@ def labels_page():
            learnmore=learnmore_list_remove('labels'))
 
 class HGMSearchArray(SearchArray):
+    _sort = [('', 'degree', ['degree', 'weight', 'A', 'B', 'label']),
+            ('weight', 'weight', ['weight', 'degree', 'A', 'B', 'label']),
+            ('cond', 'conductor', ['cond', 'degree', 'weight', 'A', 'B', 'label']),
+            ('hodge', 'Family Hodge vector', ['degree', 'famhodge', 'weight', 'A', 'B', 'label'])]
+    sorts = {
+        "Family": _sort[:2] + _sort[3:],
+        "Motive": _sort,
+    }
     jump_example = "A2.2_B1.1_t1.2"
     jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
     jump_knowl = 'hgm.search_input'
@@ -839,15 +831,3 @@ class HGMSearchArray(SearchArray):
         table = self._print_table(self.motive_array, None, "horizontal")
         buttons = self.buttons()
         return "\n".join([table, buttons])
-
-    def sort_order(self, info):
-        st = self._st(info)
-        X = [
-            ('', 'degree'),
-            ('weight', 'weight'),
-            ('cond', 'conductor'),
-            ('hodge', 'Family Hodge vector')
-        ]
-        if st == "Family":
-            del X[2]
-        return X

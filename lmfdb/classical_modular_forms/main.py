@@ -745,41 +745,6 @@ def parse_discriminant(d, sign = 0):
         raise ValueError('%d != 0 or 1 mod 4' % d)
     return d
 
-def parse_sort(info, query, spaces=False):
-    S = info.get('sort_order')
-    if S == '':
-        L = ['analytic_conductor', 'level']
-    elif S == 'Nk2':
-        L = ['Nk2', 'level']
-    elif S == 'char':
-        L = ['level', 'char_orbit_index', 'weight']
-    elif S == 'prim':
-        L = ['char_conductor', 'prim_orbit_index', 'level', 'weight']
-    elif S == 'char_order':
-        L = ['char_order', 'level', 'char_orbit_index', 'weight']
-    elif S == 'dim':
-        L = ['dim', 'level', 'weight']
-    elif S == 'reldim':
-        L = ['relative_dim', 'level', 'weight']
-    elif S == 'N':
-        L = ['level', 'weight']
-    elif S == 'k':
-        L = ['weight', 'level']
-    elif S == 'twists':
-        L = ['inner_twist_count', 'level', 'weight']
-    elif S == 'rank':
-        L = ['analytic_rank', 'level', 'weight']
-    elif S == 'coeff_index':
-        L = ['hecke_ring_index', 'level', 'weight']
-    else:
-        return
-    if 'char_orbit_index' not in L:
-        L.append('char_orbit_index')
-    if spaces:
-        query['__sort__'] = L
-    else:
-        query['__sort__'] = L + ['hecke_orbit']
-
 def newform_parse(info, query):
     common_parse(info, query)
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
@@ -797,7 +762,6 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
-    parse_sort(info, query)
 
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
@@ -818,7 +782,6 @@ def newspace_parse(info, query):
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
             # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
             query['num_forms'] = {'$exists':True}
-    parse_sort(info, query, spaces=True)
 
 def _trace_col(i):
     return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
@@ -1399,6 +1362,30 @@ def dynamic_statistics():
     return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 class CMFSearchArray(SearchArray):
+    sort_knowl = 'cmf.sort_order'
+    _sort = [
+        ('', 'analytic conductor', ['analytic_conductor', 'level']),
+        ('N', 'level', ['level', 'weight']),
+        ('k', 'weight', ['weight', 'level']),
+        ('char', 'character', ['level', 'char_orbit_index', 'weight']),
+        ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
+        ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
+        ('Nk2', 'Nk^2', ['Nk2', 'level']),
+        ('dim', 'dimension', ['dim', 'level', 'weight']),
+        ('reldim', 'relative dimension', ['relative_dim', 'level', 'weight']),
+        ('rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
+        ('twists', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
+        ('coeff_index', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
+    ]
+    for name, disp, sord in _sort:
+        if 'char_orbit_index' not in sord:
+            sord.append('char_orbit_index')
+    _sort_spaces = _sort[:-3]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    sorts = {'List': _sort_forms,
+             'Traces': _sort_forms,
+             'Spaces': _sort_spaces,
+             'SpaceTraces': _sort_spaces}
     jump_example="3.6.a.a"
     jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     jump_knowl="cmf.search_input"
@@ -1656,29 +1643,6 @@ class CMFSearchArray(SearchArray):
             RowSpacer(22),
             [trace_coldisplay, trace_primality],
             [trace_an_constraints, trace_an_moduli, trace_view]]
-
-    sort_knowl = 'cmf.sort_order'
-    def sort_order(self, info):
-        st = self._st(info)
-        X = [
-            ('', 'analytic conductor'),
-            ('N', 'level'),
-            ('k', 'weight'),
-            ('char', 'character'),
-            ('prim', 'primitive character'),
-            ('char_order', 'character order'),
-            ('Nk2', 'Nk^2'),
-            ('dim', 'dimension'),
-            ('reldim', 'relative dimension'),
-            ('rank', 'analytic rank'),
-            ('twists', 'inner twist count'),
-            ('coeff_index', 'coeff ring index'),
-        ]
-        if st in ['List', 'Traces']:
-            return X
-        elif st in ['Spaces', 'SpaceTraces']:
-            del X[3]
-            return X
 
     def hidden(self, info):
         ans = [("start", "start"), ("count", "count"), ("hst", "search_type")]
