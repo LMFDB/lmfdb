@@ -772,7 +772,7 @@ class SearchArray(UniqueRepresentation):
                         name='sort_dir',
                         options=[('', '&#9650;'), ('op', '&#9660;')],
                         width=None,
-                        extra=['style="min-width: 40px; max-width: 40px;"'],
+                        extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
                     )
                     sort_ord = DoubleSelectBox(
                         name='sort_combo',
