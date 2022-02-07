@@ -15,7 +15,7 @@ from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, display_float, factor_base_factorization_latex,
-    flash_error, to_dict, comma, display_knowl, bigint_knowl,
+    flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
@@ -797,6 +797,10 @@ newform_columns = SearchColumns([
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
                       short_title="Character"),
+    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
+                      ["char_conductor", "prim_orbit_index"],
+                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
+                      short_title="Primitive character"),
     MathCol("char_order", "character.dirichlet.order", "Char order", short_title="Character order"),
     MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="Dimension"),
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="Analytic conductor"),
@@ -834,7 +838,7 @@ newform_columns = SearchColumns([
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)],
-    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.mf_newforms,
@@ -1365,9 +1369,9 @@ class CMFSearchArray(SearchArray):
     sort_knowl = 'cmf.sort_order'
     _sort = [
         ('', 'analytic conductor', ['analytic_conductor', 'level']),
-        ('N', 'level', ['level', 'weight']),
-        ('k', 'weight', ['weight', 'level']),
-        ('char', 'character', ['level', 'char_orbit_index', 'weight']),
+        ('level', 'level', ['level', 'weight']),
+        ('weight', 'weight', ['weight', 'level']),
+        ('character', 'character', ['level', 'char_orbit_index', 'weight']),
         ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
         ('Nk2', 'Nk^2', ['Nk2', 'level']),

@@ -45,8 +45,10 @@ class Wrapper(object):
 
     def get_sort(self, info, query):
         sort = query.pop("__sort__", None)
-        if sort is None and "search_array" in info and info["search_array"].sorts is not None:
-            for name, display, S in info["search_array"].sorts:
+        SA = info.get("search_array")
+        if sort is None and SA is not None and SA.sorts is not None:
+            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            for name, display, S in sorts:
                 sord = info.get('sort_order', '')
                 if name == sord:
                     sop = info.get('sort_dir', '')
