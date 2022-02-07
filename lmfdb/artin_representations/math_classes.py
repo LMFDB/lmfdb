@@ -81,6 +81,7 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
+        self._knowl_cache = data_dict.get("knowl_cache")
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
@@ -186,6 +187,9 @@ class ArtinRepresentation(object):
         tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
         return tmp
 
+    def num_ramps(self):
+        return self._data["NumBadPrimes"]
+
     def hard_primes(self):
         try:
             return self._hard_primes
@@ -218,12 +222,15 @@ class ArtinRepresentation(object):
         gapid = self._data['Proj_GAP']
         if gapid[0]:
             label = f"{gapid[0]}.{gapid[1]}"
-            name = db.gps_groups.lookup(label, "tex_name")
+            if self._knowl_cache is None:
+                name = db.gps_groups.lookup(label, "tex_name")
+            else:
+                name = self._knowl_cache.get(label, {}).get("tex_name")
             if name:
                 return abstract_group_display_knowl(label, f"${name}$")
         ntj = self._data['Proj_nTj']
         if ntj[1]:
-            return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}")
+            return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}", cache=self._knowl_cache)
         if gapid:
             return f'Group({gapid[0]}.{gapid[1]})'
         return 'data not computed'
@@ -257,11 +264,11 @@ class ArtinRepresentation(object):
             self._small_nt = [int(z) for z in bits]
         return self._small_nt
 
-    def smallest_gal_t_format(self):
+    def container(self):
         galnt = self.smallest_gal_t()
-        if len(galnt)==1:
+        if len(galnt) == 1:
             return galnt[0]
-        return transitive_group_display_knowl(f"{galnt[0]}T{galnt[1]}")
+        return transitive_group_display_knowl(f"{galnt[0]}T{galnt[1]}", cache=self._knowl_cache)
 
     def is_ramified(self, p):
         return self.is_bad_prime(p)
@@ -420,7 +427,7 @@ class ArtinRepresentation(object):
         return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        return transitive_group_display_knowl(self._data['GaloisLabel'])
+        return transitive_group_display_knowl(self._data['GaloisLabel'], cache=self._knowl_cache)
 
     def __str__(self):
         try:

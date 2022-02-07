@@ -1,5 +1,22 @@
 from .utilities import display_knowl
 
+def get_default_func(default, name):
+    def f(info):
+        if "hidecol" in info and name in info["hidecol"].split("."):
+            return False
+        if "showcol" in info and name in info["showcol"].split("."):
+            return True
+        sort_order = info.get('sort_order', '')
+        if (sort_order and
+            sort_order == name and
+            "search_array" in info and
+            info["search_array"].sorts is not None):
+            return True
+        if isinstance(default, bool):
+            return default
+        return default(info)
+    return f
+
 class SearchCol:
     def __init__(self, name, knowl, title, default=False, align="left", contingent=None, short_title=None, **kwds):
         # Both contingent and default can be functions that take info as an input (if default is a boolean it's translated to the constant function with that value)
@@ -12,10 +29,7 @@ class SearchCol:
         if short_title is None:
             short_title = title
         self.short_title = short_title
-        if isinstance(default, bool):
-            self.default = lambda info: not ("hidecol" in info and name in info["hidecol"].split(".")) and ("showcol" in info and name in info["showcol"].split(".") or default)
-        else:
-            self.default = lambda info: not ("hidecol" in info and name in info["hidecol"].split(".")) and ("showcol" in info and name in info["showcol"].split(".") or default(info))
+        self.default = get_default_func(default, name)
         self.orig = [name]
         self.height = 1
         self.contingent = contingent

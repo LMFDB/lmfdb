@@ -230,14 +230,22 @@ artin_columns = SearchColumns([
     SearchCol("galois_links", "artin.label", "Label", default=True),
     MathCol("dimension", "artin.dimension", "Dimension", default=True),
     MathCol("factored_conductor_latex", "artin.conductor", "Conductor", default=True),
+    MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count"),
     SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True),
     SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center"),
+    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center"),
+    SearchCol("container", "artin.permutation_container", "Smallest permutation container", align="center"),
     MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True),
     MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True)],[
-        "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even"])
+        "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
 
 artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
 artin_columns.dummy_download = True
+
+def artin_postprocess(res, info, query):
+    gp_labels = list(set([rec["GaloisLabel"] for rec in res] + [rec["Container"].upper() for rec in res] + ["T".join(str(c) for c in rec["Proj_nTj"]) for rec in res]))
+    cache = knowl_cache(gp_labels)
+    return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
 
 @search_wrap(table=db.artin_reps,
              title='Artin representation search results',
@@ -247,7 +255,7 @@ artin_columns.dummy_download = True
              learnmore=learnmore_list,
              url_for_label=url_for_label,
              shortcuts={'jump':artin_representation_jump},
-             postprocess=lambda res, info, query: [ArtinRepresentation(data=x) for x in res],
+             postprocess=artin_postprocess,
              bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')])
 def artin_representation_search(info, query):
     query['Hide'] = 0
@@ -507,8 +515,8 @@ class ArtinSearchArray(SearchArray):
              ("con", "conductor", ["Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
              ("group", "group", ["Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
              ("container", "container", ["Container", "Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
-             ("ramps", "number ramified primes", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
-             ("projective", "projective image", ["Proj_nTj", "Proj_Polynomial", "Dim", "Conductor", "Galn", "Galt", "Baselabel"])]
+             ("num_ramps", "number ramified primes", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
+             ("projective_group", "projective image", ["Proj_nTj", "Proj_Polynomial", "Dim", "Conductor", "Galn", "Galt", "Baselabel"])]
     jump_example = "4.5648.6t13.b.a"
     jump_egspan = "e.g. 4.5648.6t13.b.a"
     jump_knowl = "artin.search_input"

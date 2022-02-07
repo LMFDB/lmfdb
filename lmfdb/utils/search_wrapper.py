@@ -43,6 +43,19 @@ class Wrapper(object):
         self.one_per = one_per
         self.kwds = kwds
 
+    def get_sort(self, info, query):
+        sort = query.pop("__sort__", None)
+        if sort is None and "search_array" in info and info["search_array"].sorts is not None:
+            for name, display, S in info["search_array"].sorts:
+                sord = info.get('sort_order', '')
+                if name == sord:
+                    sop = info.get('sort_dir', '')
+                    if sop == 'op':
+                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
+                    else:
+                        return S
+        return sort
+
     def make_query(self, info, random=False):
         query = {}
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -58,22 +71,7 @@ class Wrapper(object):
         if errpage is not None:
             return errpage
         table = query.pop("__table__", self.table)
-        sort = query.pop("__sort__", None)
-        if sort is None and "search_array" in info and info["search_array"].sorts is not None:
-            for name, display, S in info["search_array"].sorts:
-                sord = info.get('sort_order', '')
-                if name == sord:
-                    sop = info.get('sort_dir', '')
-                    if sop == 'op':
-                        sort = []
-                        for col in S:
-                            if isinstance(col, str):
-                                sort.append((col, -1))
-                            else:
-                                sort.append((col[0], -col[1]))
-                    else:
-                        sort = S
-                    break
+        sort = self.get_sort(info, query)
         # We want to pop __title__ even if overridden by info.
         title = query.pop("__title__", self.title)
         title = info.get("title", title)

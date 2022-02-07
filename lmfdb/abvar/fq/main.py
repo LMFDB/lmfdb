@@ -216,12 +216,10 @@ class AbvarSearchArray(SearchArray):
     sorts = [("", "dimension", ['g', 'q', 'poly']),
              ("q", "field", ['q', 'g', 'poly']),
              ("p", "charactersitic", ['p', 'q', 'g', 'poly']),
-             ("prank1", "p-rank", ['p_rank', 'g', 'q', 'poly']),
-             ("prank-1", "p-rank deficit", ['p_rank_deficit', 'g', 'q', 'poly']),
-             ("points1", "curve points (asc)", ['curve_count', 'g', 'q', 'poly']),
-             ("points-1", "curve points (dec)", [('curve_count',-1), 'g', 'q', 'poly']),
-             ("avpoints1", "abvar points (asc)", ['abvar_count', 'g', 'q', 'poly']),
-             ("avpoints-1", "abvar points (dec)", [('abvar_count',-1), 'g', 'q', 'poly'])]
+             ("p_rank", "p-rank", ['p_rank', 'g', 'q', 'poly']),
+             ("p_rank_deficit", "p-rank deficit", ['p_rank_deficit', 'g', 'q', 'poly']),
+             ("curve_count", "curve points", ['curve_count', 'g', 'q', 'poly']),
+             ("abvar_count", "abvar points", ['abvar_count', 'g', 'q', 'poly'])]
     jump_example = "2.16.am_cn"
     jump_egspan = "e.g. 2.16.am_cn or 1 - x + 2x^2 or x^2 - x + 2"
     jump_knowl = "av.fq.search_input"
@@ -667,9 +665,13 @@ abvar_columns = SearchColumns([
     LinkCol("label", "ab.fq.lmfdb_label", "Label", url_for_label, default=True),
     MathCol("g", "ag.dimension", "Dimension", default=True),
     MathCol("field", "ag.base_field", "Base field", default=True),
+    MathCol("p", "ag.base_field", "Base char."),
     MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", default=True),
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank", default=True),
-    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors")],
+    MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-rank deficit"),
+    MathCol("curve_count", "av.fq.curve_point_counts", "points on curve"),
+    MathCol("abvar_count", "ag.fq.point_counts", "points on variety"),
+    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", default=True)],
     db_cols=["label", "g", "q", "poly", "p_rank", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models"])
 
 @search_wrap(
