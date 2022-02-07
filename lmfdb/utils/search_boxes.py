@@ -606,10 +606,11 @@ class SearchArray(UniqueRepresentation):
         # Override this method to add a dropdown for sort order
         if self.sorts is not None:
             sorts = self.sorts if isinstance(self.sorts, list) else self.sorts[self._st(info)]
-            #for name, display, prefix in self.sorts:
-            #    yield (name, display + " &#9650;")
-            #    yield (name + "op", display + " &#9660;")
-            return [(name, display) for (name, display, sort_order) in sorts]
+            if sorts is not None:
+                #for name, display, prefix in self.sorts:
+                #    yield (name, display + " &#9650;")
+                #    yield (name + "op", display + " &#9660;")
+                return [(name, display) for (name, display, sort_order) in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:
