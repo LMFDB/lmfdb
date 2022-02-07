@@ -448,7 +448,7 @@ def raw_typeset_poly(coeffs,
 
     - ``coeffs`` -- a list of integers
     - ``denominator`` -- a integer
-    - ``var`` -- a variable name
+    - ``var`` -- a variable name, we count on sage to properly convert it to latex
     - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
     - ``compress_threshold`` -- the number of characters by which we would need to reduce the output of the typeset"""
     if denominator == 1:
@@ -456,14 +456,15 @@ def raw_typeset_poly(coeffs,
     else:
         denominatortset = denominatorraw = f"/ {denominator}"
 
-    # figure out if we will compress the polynomial
-    # 3 = var + sign + exp
-    rawvar = var.lstrip("\\")
-    R = PolynomialRing(ZZ, rawvar)
+    R = PolynomialRing(ZZ, var)
+    tset_var = latex(R.gen())
+    raw_var = var
     poly = R(coeffs)
     if poly == 0:
         return r"\(0\)"
     raw = str(poly)
+
+    # figure out if we will compress the polynomial
     compress_poly = len(raw) + len(denominatorraw) > compress_threshold
     if compress_poly:
         denominatortset = f"/ {compress_int(denominator)[0]}"
@@ -478,17 +479,17 @@ def raw_typeset_poly(coeffs,
             tset = latex(poly)
         else:
             # to lazy to reverse it by hand
-            Rfake = PolynomialRing(ZZ, [f'{var}fake', var], order=TermOrder('M(0,-1,0,-1)'))
+            Rfake = PolynomialRing(ZZ, [f'{raw_var}fake', raw_var], order=TermOrder('M(0,-1,0,-1)'))
             polytoprint = Rfake({(0, i): c for i, c in enumerate(poly)})
             tset = latex(polytoprint)
 
     if not superscript:
-        raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
-        tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+        raw = raw.replace('^', '_').replace(raw_var + " ", raw_var + "_1 ")
+        tset = tset.replace('^', '_').replace(tset_var + " ", tset_var + "_1 ")
         # in case the last replace doesn't trigger because is at the end
-        if raw.endswith(rawvar):
+        if raw.endswith(raw_var):
             raw += "_1"
-        if tset.endswith(var):
+        if tset.endswith(tset_var):
             tset += "_1"
 
     if denominator != 1:

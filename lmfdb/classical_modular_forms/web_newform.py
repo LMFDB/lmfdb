@@ -659,9 +659,8 @@ class WebNewform(object):
 
     def display_hecke_cutters(self):
         acting_on = f"acting on {self.display_newspace()}"
-        # using dummy variable TTTT to workaround T_{p} not being a valid var for sage
         extra = (acting_on + ".") if len(self.hecke_cutters) == 1 else ""
-        polynomials = [raw_typeset_poly(F, var='TTTT', extra=extra).replace('TTTT', f'T_{{{p}}}') for p, F in self.hecke_cutters]
+        polynomials = [raw_typeset_poly(F, var=f'T{p}', extra=extra) for p, F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
@@ -737,7 +736,7 @@ class WebNewform(object):
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
             basis.append(
                 (rf'\(\beta_{{{i}}}\)',
-                 raw_typeset_poly(num, denominator=den, var=self._nu_latex, superscript=True))
+                 raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True))
             )
         return self._make_table(basis)
 
@@ -750,7 +749,7 @@ class WebNewform(object):
                 nupow = r'\(%s^{%s}\)' % (self._nu_latex, i+1)
             basis.append(
                 (nupow,
-                 raw_typeset_poly(num, denominator=den, var=r'\beta', superscript=False))
+                 raw_typeset_poly(num, denominator=den, var='beta', superscript=False))
             )
         return self._make_table(basis)
 
