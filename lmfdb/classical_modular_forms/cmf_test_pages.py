@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-from lmfdb.lmdfb_database import LMFDBDatabase
+from lmfdb.lmdfdb_database import LMFDBDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt, ceil
 import multiprocessing
