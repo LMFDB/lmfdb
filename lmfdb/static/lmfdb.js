@@ -503,7 +503,7 @@ function blur_sort(S) {
   S.size = 0;
   for (var i = 0; i < S.length; i++) {
     t = S.options[i].text;
-    if (t.slice(0, 1) != ' ') { // unicode space
+    if (t.slice(0, 1) != ' ') { // unicode space
       S.selectedIndex = i;
       console.log("Blurring at ", i);
       break;
