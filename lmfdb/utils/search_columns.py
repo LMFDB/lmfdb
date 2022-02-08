@@ -1,4 +1,4 @@
-from .utilities import display_knowl
+from .web_display import display_knowl
 
 class SearchCol:
     def __init__(self, name, knowl, title, default=False, align="left", contingent=None, short_title=None, **kwds):

@@ -366,14 +366,9 @@ class ECNF(object):
         # CM and End(E)
         self.cm_bool = "no"
         self.End = r"\(\Z\)"
+        self.rational_cm = self.cm_type>0
         if self.cm:
-            # When we switch to storing rational cm by having |D| in
-            # the column, change the following lines:
-            if self.cm>0:
-                self.rational_cm = True
-                self.cm = -self.cm
-            else:
-                self.rational_cm = K(self.cm).is_square()
+            self.cm = -abs(self.cm) # this line can be deleted when we no longer store abs(-D) for rational CM by -D
             self.cm_sqf = integer_squarefree_part(ZZ(self.cm))
             self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
@@ -392,7 +387,7 @@ class ECNF(object):
                 self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
 
         # Sato-Tate:
-        self.ST = st_display_knowl('1.2.A.1.1a' if not self.cm else ('1.2.B.2.1a' if self.cm < 0 else '1.2.B.1.1a'))
+        self.ST = st_display_knowl('1.2.A.1.1a' if not self.cm_type else ('1.2.B.2.1a' if self.cm_type < 0 else '1.2.B.1.1a'))
 
         # Q-curve / Base change
         try:

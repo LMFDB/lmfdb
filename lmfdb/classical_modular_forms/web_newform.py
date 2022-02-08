@@ -12,12 +12,13 @@ from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
 from lmfdb.utils import (
-    coeff_to_poly, coeff_to_power_series, web_latex,
-    web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
+    coeff_to_power_series,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
-    list_factored_to_factored_poly_otherorder, integer_squarefree_part)
+    integer_squarefree_part,
+    raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp
+)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -555,7 +556,7 @@ class WebNewform(object):
         """
         This function is used to display the polynomial defining the coefficient field.
         """
-        return web_latex_poly(self.field_poly)
+        return raw_typeset_poly(self.field_poly)
 
     @property
     def artin_field_display(self):
@@ -656,27 +657,27 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
-        polynomials = [bigpoly_knowl(F, var='T%s'%p) for p,F in self.hecke_cutters]
+        acting_on = f"acting on {self.display_newspace()}"
+        extra = (acting_on + ".") if len(self.hecke_cutters) == 1 else ""
+        polynomials = [raw_typeset_poly(F, var=f'T{p}', extra=extra) for p, F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
         knowl = display_knowl('cmf.hecke_cutter', title=title)
-        desc = "<p>This %s can be constructed as the "%(display_knowl('cmf.newform_subspace','newform subspace'))
+        desc = f"<p>This {display_knowl('cmf.newform_subspace','newform subspace')} can be constructed as the "
         if len(polynomials) > 1:
-            desc += "intersection of the kernels of the following %s acting on %s:</p>\n<table>"
-            desc = desc % (knowl, self.display_newspace())
+            desc += f"intersection of the kernels of the following {knowl} {acting_on}:</p>\n<table>"
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
         elif len(polynomials) == 1:
-            desc += "kernel of the %s %s acting on %s."
-            desc = desc % (knowl, polynomials[0], self.display_newspace())
+            desc += f"kernel of the {knowl} {polynomials[0]}"
         else:
             desc = r"<p>This %s is the entire %s %s.</p> "%(display_knowl('cmf.newform_subspace','newform subspace'),
                                                           display_knowl('cmf.newspace','newspace'),self.display_newspace())
         return desc
 
-    def defining_polynomial(self):
+    def defining_polynomial(self, separator=''):
         if self.field_poly:
-            return web_latex_poly(self.field_poly, superscript=True)
+            return raw_typeset_poly(self.field_poly, superscript=True, extra=separator)
         return None
 
     def Qnu(self):
@@ -690,21 +691,6 @@ class WebNewform(object):
             return ""
         else:
             return r"\(=\)"
-
-    def _make_frac(self, num, den):
-        paren = ('+' in num or '-' in num)
-        if den == 1:
-            return num
-        elif den < 10**8:
-            if paren:
-                return r"\((\)%s\()/%s\)" % (num, den)
-            else:
-                return r"%s\(/%s\)" % (num, den)
-        else:
-            if paren:
-                return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
-            else:
-                return r"%s\(/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
 
     @property
     def _nu_latex(self):
@@ -747,24 +733,23 @@ class WebNewform(object):
     def _order_basis_forward(self):
         basis = []
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
-            numsize = sum(len(str(c)) for c in num if c)
-            if numsize > 80:
-                num = web_latex_poly(num, self._nu_latex, superscript=True)
-            else:
-                num = web_latex(coeff_to_poly(num, self._nu_var))
-            betai = r'\(\beta_{%s}\)'%i
-            basis.append((betai, self._make_frac(num, den)))
+            basis.append(
+                (rf'\(\beta_{{{i}}}\)',
+                 raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True))
+            )
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
         basis = [(r'\(1\)', r'\(\beta_0\)')]
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
-            num = web_latex_poly(num, r'\beta', superscript=False)
             if i == 0:
                 nupow = r'\(%s\)' % self._nu_latex
             else:
                 nupow = r'\(%s^{%s}\)' % (self._nu_latex, i+1)
-            basis.append((nupow, self._make_frac(num, den)))
+            basis.append(
+                (nupow,
+                 raw_typeset_poly(num, denominator=den, var='beta', superscript=False))
+            )
         return self._make_table(basis)
 
     def order_basis(self):
@@ -798,20 +783,6 @@ function switch_basis(btype) {
             return html % (" nodisplay", self._order_basis_forward(), self._nu_latex, "", self._order_basis_inverse(), self._nu_latex)
         else:
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
-
-    def order_basis_table(self):
-        s = '<table class="ntdata">\n  <tr>\n'
-        for i in range(self.dim):
-            s += r'    <td>\(\nu^{%s}\)</td>\n'%i
-        s += '    <td>Denominator</td>\n  </tr>\n'
-        for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
-            s += '  <tr>\n'
-            for coeff in num:
-                s += '    <td>%s</td>\n' % (bigint_knowl(coeff))
-            s += '    <td>%s</td>\n' % (bigint_knowl(den))
-            s += '  </tr>\n'
-        s += '</table>'
-        return s
 
     def order_gen(self):
         if self.field_poly_root_of_unity == 4:
@@ -859,9 +830,9 @@ function switch_basis(btype) {
     def order_gen_below(self):
         m = self.field_poly_root_of_unity
         if m == 0:
-            return r" in terms of a root \(\nu\) of %s" % self.defining_polynomial()
+            return r" in terms of a root \(\nu\) of %s" % self.defining_polynomial(separator=":")
         elif self.field_poly_is_real_cyclotomic:
-            return r" in terms of \(\nu = \zeta_{%s} + \zeta_{%s}^{-1}\)" % (m, m)
+            return r" in terms of \(\nu = \zeta_{%s} + \zeta_{%s}^{-1}\):" % (m, m)
         else:
             return ""
 
@@ -991,15 +962,10 @@ function switch_basis(btype) {
         - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
         """
 
-        hecke_polys_orbits = {}
+        hecke_polys_orbits = defaultdict(list)
+        R = PolynomialRing(ZZ, 'T');
         for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : self.hecke_orbit_code}):
-            coeffs = poly_item['charpoly_factorization']
-            F_p = list_factored_to_factored_poly_otherorder(coeffs)
-            F_p = make_bigint(r'\( %s \)' % F_p)
-            if (F_p != r"\( 1 \)") and (len(F_p) > 6):
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
-            else:
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
+            hecke_polys_orbits[poly_item['p']] += [(R(f), e) for f, e in poly_item['charpoly_factorization']]
         if not hecke_polys_orbits:
             return None
         polys = ['<div style="max-width: 100%; overflow-x: auto;">',
@@ -1008,9 +974,9 @@ function switch_basis(btype) {
                  th_wrap('charpoly', '$F_p(T)$'),
                  '  </tr>', '</thead>', '<tbody>']
         loop_count = 0
-        for p, charpoly in hecke_polys_orbits.items():
-            if charpoly.strip() == "":
-                charpoly = "1"
+        for p, factorisation in hecke_polys_orbits.items():
+            factorisation.sort(key=lambda elt: (elt[0].degree(), elt[1]))
+            charpoly = raw_typeset_poly_factor(factorisation, decreasing=True)
             if loop_count < num_disp:
                 polys.append('  <tr>')
             else:
@@ -1150,39 +1116,6 @@ function switch_basis(btype) {
     def sato_tate_display(self):
         return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else ''
 
-    def eigs_as_seqseq_to_qexp(self, prec_max):
-        # Takes a sequence of sequence of integers (or pairs of integers in the hecke_ring_cyclotomic_generator != 0 case) and returns a string for the corresponding q expansion
-        # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
-        prec = min(self.qexp_prec, prec_max)
-        if prec == 0:
-            return 'O(1)'
-        eigseq = self.qexp[:prec]
-        use_knowl = too_big(eigseq, 10**24)
-        s = ''
-        for j in range(len(eigseq)):
-            term = self._elt(eigseq[j])
-            if term != 0:
-                latexterm = latex(term)
-                if use_knowl:
-                    latexterm = make_bigint(latexterm)
-                if term.number_of_terms() > 1:
-                    latexterm = r"(" +  latexterm + r")"
-                if j > 0:
-                    if term == 1:
-                        latexterm = ''
-                    elif term == -1:
-                        latexterm = '-'
-                    if j == 1:
-                        latexterm += ' q'
-                    else:
-                        latexterm += ' q^{%d}' % j
-                if s != '' and latexterm[0] != '-':
-                    latexterm = '+' + latexterm
-                s += '' + latexterm + ' '
-        # Work around bug in Sage's latex
-        s = s.replace('betaq', 'beta q')
-        return r'\(' + s + r'+O(q^{%d})\)' % prec
-
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
         prec = min(max(eigseq.keys()) + 1, prec_max)
@@ -1212,20 +1145,32 @@ function switch_basis(btype) {
             return self.q_expansion_cc(prec_max)
         elif self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
-            if self.dim == 1:
-                s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=True)
+            m = self.hecke_ring_cyclotomic_generator
+            if m is not None and m != 0:
+                # sum of powers of zeta_m
+                # convert into a normal representation
+                def to_list(data):
+                    if not data:
+                        return []
+                    out = [0]*(max(e for _, e in data) + 1)
+                    for c, e in data:
+                        out[e] = c
+                    return out
+                coeffs = [to_list(data) for data in self.qexp[:prec]]
+                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print)
+            elif self.single_generator:
+                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=str(self._PrintRing.gen(0)))
             else:
-                s = self.eigs_as_seqseq_to_qexp(prec)
-            return s
+                # in this case str(self._PrintRing.gen(0)) = beta1
+                # and thus the extra case
+                return raw_typeset_qexp(self.qexp[:prec])
+
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
-        s = web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=True)
-        if too_big(self.texp[:prec], 10**24):
-            s = make_bigint(s)
-        return s
+        return raw_typeset_qexp([[elt] for elt in self.texp[:prec]])
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':

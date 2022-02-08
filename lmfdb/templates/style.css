@@ -2444,13 +2444,7 @@ span.normgp {
 span.activesubgp {
     background: {{color.col_main_ll}};
 }
-.tset-icon {
-  visibility: hidden;
-}
 
-.tset-container:hover .tset-icon {
-  visibility: visible;
-}
 
 #group-diagram-selected {
     color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
@@ -2460,3 +2454,60 @@ span.activesubgp {
 #column-selector {
   overflow-y: auto;
 }
+
+
+/* raw type set styling */
+
+textarea.tset-raw {
+    font-size: 95%;
+    padding: 1px;
+    border: 1px solid {{color.input_border}};
+}
+
+img.tset-icon {
+  visibility: hidden;
+  position:relative;
+}
+
+.all > img.tset-icon,  span.tset-container:hover > span > img.tset-icon, span.tset-container:hover > span.rawtset-btn {
+  visibility: visible;
+  cursor: pointer;
+}
+
+.tset > img.tset-icon {
+  content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
+}
+
+.raw > img.tset-icon {
+  content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
+}
+
+span.copy > img {
+    content: url({{url_for('static', filename='images/copy.svg')}});
+    vertical-align: middle;
+    height: 11px;
+}
+span.copy, span.rawtset-btn {
+    box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+    display: inline-block;
+    padding: 2px;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid;
+    border-radius: 3px;
+    appearance: none;
+    line-height: 12px;
+    position: relative;
+    transition: .2s cubic-bezier(0.3, 0, 0.5, 1);
+    transition-property: color,background-color,border-color;
+    color: rgb(36, 41, 47);
+}
+span.copy:active, span.rawtset-btn:active {
+    box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
+}
+
+span.tset-container > span.rawtset-btn {
+    visibility: hidden;
+}
+
+
