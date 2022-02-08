@@ -540,6 +540,7 @@ class ColumnController(SelectBox):
         )
 
 class SortController(SelectBox):
+    wrap_mixins = {'width': '170px'}
     def __init__(self, options, knowl):
         extra = [
             '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
@@ -548,7 +549,7 @@ class SortController(SelectBox):
             '''onblur="blur_sort(this);"''',
             '''oninput="control_sort(this);"''',
             '''id="sort-selecter"''',
-            '''style="width: 170px; z-index: 9999;"''',
+            '''style="width: 170px; position: absolute; z-index: 9999;"''',
         ]
         super().__init__(
             name="sort_order",
@@ -809,13 +810,13 @@ class SearchArray(UniqueRepresentation):
                     for name, disp in sort:
                         if name == cur_sort:
                             if cur_dir == 'op':
-                                options.append((name, '▼ ' + disp)) # The space is a unicode space the size of an emdash
+                                options.append((name, '▼ ' + disp)) # the space is U+2006, a 1/6 em space
                             else:
-                                options.append((name, '▲ ' + disp)) # The space is a unicode space the size of an emdash
+                                options.append((name, '▲ ' + disp)) # the space is U+2006, a 1/6 em space
                         else:
-                            options.append((name, '  ' + disp)) # The spaces are unicode, the sizes of an endash and a thinspace
+                            options.append((name, '  ' + disp)) # the spaces are U+2006 and U+2003, totaling 7/6 em
                     buttons.append(SortController(options, self.sort_knowl))
-            buttons.append(ColumnController())
+                buttons.append(ColumnController())
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 
     def html(self, info=None):

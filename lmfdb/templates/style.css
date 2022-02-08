@@ -2457,6 +2457,10 @@ span.activesubgp {
     background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
 }
 
-#column-selector {
-  overflow-y: auto;
+#column-selector, #sort-selecter {
+  scrollbar-width: none; /*For Firefox*/;
+  -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
+}
+#column-selector:-webkit-scrollbar, #sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
+    width: 0;
 }

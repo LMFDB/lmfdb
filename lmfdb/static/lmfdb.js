@@ -477,9 +477,9 @@ function control_sort(S) {
   console.log("Starting control");
   var n = S.selectedIndex;
   var t, label = S.options[n].text;
-  var spaces = '  '; // unicode, the sizes of an endash and a thinspace
-  var asc = '▲ '; // the space is a unicode space the size of an emdash
-  var dec = '▼ '; // the space is a unicode space the size of an emdash
+  var spaces = '  '; // the spaces are U+2006 and U+2003, totaling 7/6 em
+  var asc = '▲ '; // the space is U+2006, a 1/6 em space
+  var dec = '▼ '; // the space is U+2006, a 1/6 em space
   var curdir = label.slice(0, 2);
   label = label.slice(2, label.length);
   for (var i = 0; i < S.length; i++) {
