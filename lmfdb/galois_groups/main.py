@@ -116,7 +116,7 @@ gg_columns = SearchColumns([
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
                       default=True)
 ],
-    db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields"])
+    db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
 gg_columns.dummy_download = True
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
@@ -205,8 +205,6 @@ def galois_group_search(info, query):
     elif info.get("parity") == "odd":
         query["parity"] = -1
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
-    if 'order' in query and 'n' not in query:
-        query['__sort__'] = ['order', 'gapid', 'n', 't']
 
     degree_str = prep_ranges(info.get('n'))
     info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
@@ -391,8 +389,8 @@ def reliability():
 class GalSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
-    sorts = [("", "label", ["n", "t"]),
-             ("gp", "abstract group", ["order", "gapid", "n", "t"]),
+    sorts = [("", "degree", ["n", "t"]),
+             ("gp", "order", ["order", "gapid", "n", "t"]),
              ("nilpotency", "nilpotency class", ["nilpotency", "n", "t"]),
              ("num_conj_classes", "num. conjugacy classes", ["num_conj_classes", "order", "gapid", "n", "t"])]
     jump_example = "8T14"

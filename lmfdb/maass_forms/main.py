@@ -239,7 +239,6 @@ def search(info, query):
     parse_floats(info, query, 'spectral_parameter', name='Spectral parameter')
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
-    query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }

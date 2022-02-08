@@ -1134,7 +1134,7 @@ class G2CSearchArray(SearchArray):
 
     _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
     sort_knowl = "g2c.sort_order"
-    sorts = [("", "label", _default),
+    sorts = [("", "conductor", _default),
              ("disc", "absolute discriminant", ["abs_disc"] + _default),
              ("num_rat_pts", "rational points", ["num_rat_pts"] + _default),
              ("num_rat_wpts", "Weierstrass points", ["num_rat_wpts"] + _default),

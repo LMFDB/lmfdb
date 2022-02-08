@@ -859,7 +859,7 @@ app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
 
 class ECSearchArray(SearchArray):
     noun = "curve"
-    sorts = [("", "label", ["conductor", "iso_nlabel", "lmfdb_number"]),
+    sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
              #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
              ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),

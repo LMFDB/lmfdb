@@ -480,7 +480,7 @@ class LFSearchArray(SearchArray):
              ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
              ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
              ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
-             ("s", "top slope", ['s', 'p', 'n', 'c', 'label'])]
+             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'label'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
