@@ -472,7 +472,9 @@ def make_cm_query(cm_disc_str):
     cm_list = parse_ints_to_list_flash(cm_disc_str, "CM discriminant", max_val=None)
     for d in cm_list:
         if not ((d < 0) and (d % 4 in [0,1])):
-            raise ValueError("A CM discriminant must be a fundamental discriminant of an imaginary quadratic field.")
+            raise ValueError("CM discriminants are negative and congruent to 0 or 1 mod 4.")
+    # the next line is because actual CM with disc -D is stored as +D in the table;
+    # it can be removed once we only store -D itself.
     cm_list += [-el for el in cm_list]
     return cm_list
 
@@ -506,12 +508,12 @@ ecnf_columns = SearchColumns([
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
-                 default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="Has CM", align="center", orig="cm"),
+                 default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="Has CM", align="center", orig="cm_type"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
                  default=True, short_title="CM discriminant", mathmode=True, align="center"),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
                  lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
-                 short_title="Sato-Tate group", align="center", orig="cm"),
+                 short_title="Sato-Tate group", align="center", orig="cm_type"),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
     CheckCol("base_change", "ec.base_change", "Base change"),
     CheckCol("semistable", "ec.semistable", "Semistable"),
