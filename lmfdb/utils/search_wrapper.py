@@ -54,8 +54,7 @@ class Wrapper(object):
                     sop = info.get('sort_dir', '')
                     if sop == 'op':
                         return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
-                    else:
-                        return S
+                    return S
         return sort
 
     def make_query(self, info, random=False):

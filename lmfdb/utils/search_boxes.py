@@ -539,6 +539,43 @@ class ColumnController(SelectBox):
             "".join("\n" + " " * 10 + opt for opt in options),
         )
 
+class SortController(SelectBox):
+    def __init__(self, options, knowl):
+        extra = [
+            '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
+            '''onmousemove="return false;"''',
+            '''onmouseup="this.focus();"''',
+            '''onblur="blur_sort(this);"''',
+            '''oninput="control_sort(this);"''',
+            '''id="sort-selecter"''',
+            '''style="width: 170px; z-index: 9999;"''',
+        ]
+        super().__init__(
+            name="sort_order",
+            label="Sort order",
+            options=options,
+            knowl=knowl,
+            width=None,
+            extra=extra,
+        )
+
+    #sort_box = SelectBox(
+    #    name='sort_order',
+    #    options=list(sort),
+    #    width=130)
+    #sort_dir = SelectBox(
+    #    name='sort_dir',
+    #    options=[('', '&#9650;'), ('op', '&#9660;')],
+    #    width=None,
+    #    extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
+    #)
+    #sort_ord = DoubleSelectBox(
+    #    name='sort_combo',
+    #    label='Sort order',
+    #    knowl=self.sort_knowl,
+    #    select_box1=sort_box,
+    #    select_box2=sort_dir)
+
 class SearchButton(SearchBox):
     _default_width = 170
     def __init__(self, value, description, **kwds):
@@ -766,23 +803,18 @@ class SearchArray(UniqueRepresentation):
                 sort = self.sort_order(info)
                 if sort:
                     spacer = RowSpacer(6)
-                    sort_box = SelectBox(
-                        name='sort_order',
-                        options=list(sort),
-                        width=130)
-                    sort_dir = SelectBox(
-                        name='sort_dir',
-                        options=[('', '&#9650;'), ('op', '&#9660;')],
-                        width=None,
-                        extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
-                    )
-                    sort_ord = DoubleSelectBox(
-                        name='sort_combo',
-                        label='Sort order',
-                        knowl=self.sort_knowl,
-                        select_box1=sort_box,
-                        select_box2=sort_dir)
-                    buttons.append(sort_ord)
+                    cur_sort = info.get('sort_order', '')
+                    cur_dir = info.get('sort_dir', '')
+                    options = []
+                    for name, disp in sort:
+                        if name == cur_sort:
+                            if cur_dir == 'op':
+                                options.append((name, '▼ ' + disp)) # The space is a unicode space the size of an emdash
+                            else:
+                                options.append((name, '▲ ' + disp)) # The space is a unicode space the size of an emdash
+                        else:
+                            options.append((name, '  ' + disp)) # The spaces are unicode, the sizes of an endash and a thinspace
+                    buttons.append(SortController(options, self.sort_knowl))
             buttons.append(ColumnController())
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 

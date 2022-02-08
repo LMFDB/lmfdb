@@ -772,6 +772,9 @@ def parse_sort(info):
     sorts = info['search_array'].sorts
     for name, display, S in sorts:
         if name == info.get('sort_order', ''):
+            sop = info.get('sort_dir', '')
+            if sop == 'op':
+                return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
             return S
 
 ###############################################################################

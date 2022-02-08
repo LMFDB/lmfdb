@@ -469,7 +469,45 @@ function control_columns(S) {
         show.val(shown_cols.join("."));
       }
     }
-    S.value = '';
+  }
+  S.value = '';
+};
+
+function control_sort(S) {
+  console.log("Starting control");
+  var n = S.selectedIndex;
+  var t, label = S.options[n].text;
+  var spaces = '  '; // unicode, the sizes of an endash and a thinspace
+  var asc = '▲ '; // the space is a unicode space the size of an emdash
+  var dec = '▼ '; // the space is a unicode space the size of an emdash
+  var curdir = label.slice(0, 2);
+  label = label.slice(2, label.length);
+  for (var i = 0; i < S.length; i++) {
+    t = S.options[i].text;
+    S.options[i].text = spaces + t.slice(2, t.length);
+  }
+  if (curdir == asc) {
+    console.log("Setting dir op");
+    S.options[n].text = dec + label;
+    $("input[name=sort_dir]").val('op');
+  } else {
+    console.log("Setting dir std");
+    S.options[n].text = asc + label;
+    $("input[name=sort_dir]").val('');
+  }
+  $("input[name=sort_order]").val(S.value);
+  S.selectedIndex = -1;
+};
+
+function blur_sort(S) {
+  S.size = 0;
+  for (var i = 0; i < S.length; i++) {
+    t = S.options[i].text;
+    if (t.slice(0, 1) != ' ') { // unicode space
+      S.selectedIndex = i;
+      console.log("Blurring at ", i);
+      break;
+    }
   }
 };
 
