@@ -1135,13 +1135,13 @@ class G2CSearchArray(SearchArray):
     _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
     sort_knowl = "g2c.sort_order"
     sorts = [("", "label", _default),
-             ("abs_disc", "absolute discriminant", ["abs_disc"] + _default),
+             ("disc", "absolute discriminant", ["abs_disc"] + _default),
              ("num_rat_pts", "rational points", ["num_rat_pts"] + _default),
              ("num_rat_wpts", "Weierstrass points", ["num_rat_wpts"] + _default),
-             ("torsion_order", "torsion order", ["torsion_order"] + _default),
+             ("torsion", "torsion order", ["torsion_order"] + _default),
              ("analytic_sha", "analytic sha", ["analytic_sha"] + _default),
-             ("two_sel", "2-Selmer rank", ["two_selmer_rank"] + _default),
-             ("rank", "analytic rank", ["analytic_rank"] + _default),
+             ("two_selmer_rank", "2-Selmer rank", ["two_selmer_rank"] + _default),
+             ("analytic_rank", "analytic rank", ["analytic_rank"] + _default),
              ("st_label", "Sato-Tate group", [("st_label", -1)] + _default)]
 
     def jump_box(self, info):

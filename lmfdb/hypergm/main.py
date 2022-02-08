@@ -668,7 +668,7 @@ class HGMSearchArray(SearchArray):
     _sort = [('', 'degree', ['degree', 'weight', 'A', 'B', 'label']),
             ('weight', 'weight', ['weight', 'degree', 'A', 'B', 'label']),
             ('cond', 'conductor', ['cond', 'degree', 'weight', 'A', 'B', 'label']),
-            ('hodge', 'Family Hodge vector', ['degree', 'famhodge', 'weight', 'A', 'B', 'label'])]
+            ('famhodge', 'Family Hodge vector', ['degree', 'famhodge', 'weight', 'A', 'B', 'label'])]
     sorts = {
         "Family": _sort[:2] + _sort[3:],
         "Motive": _sort,

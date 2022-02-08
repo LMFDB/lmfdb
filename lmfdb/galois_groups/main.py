@@ -105,6 +105,8 @@ gg_columns = SearchColumns([
     MathCol("order", "group.order", "Order", default=True, align="right"),
     MathCol("parity", "gg.parity", "Parity", default=True, align="right"),
     CheckCol("solv", "group.solvable", "Solvable", default=True),
+    MathCol("nilpotency", "group.nilpotent", "Nil. class"),
+    MathCol("num_conj_classes", "gg.conjugacy_classes", "Num. conj. classes"),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
                       lambda subs, cache: WebGaloisGroup(None, {"subfields": subs}).subfields(cache=cache),
@@ -391,8 +393,8 @@ class GalSearchArray(SearchArray):
     plural_noun = "groups"
     sorts = [("", "label", ["n", "t"]),
              ("gp", "abstract group", ["order", "gapid", "n", "t"]),
-             ("nilp", "nilpotency class", ["nilpotency", "n", "t"]),
-             ("conj", "num. conjugacy classes", ["num_conj_classes", "order", "gapid", "n", "t"])]
+             ("nilpotency", "nilpotency class", ["nilpotency", "n", "t"]),
+             ("num_conj_classes", "num. conjugacy classes", ["num_conj_classes", "order", "gapid", "n", "t"])]
     jump_example = "8T14"
     jump_egspan = "e.g. 8T14"
     jump_knowl = "gg.search_input"

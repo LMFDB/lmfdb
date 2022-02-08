@@ -200,6 +200,7 @@ class LF_download(Downloader):
 
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
+    MathCol("n", "lf.degree", "$n$"),
     ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
     MathCol("p", "lf.qp", "$p$", default=True),
     MathCol("e", "lf.ramification_index", "$e$", default=True),
@@ -209,6 +210,8 @@ lf_columns = SearchColumns([
                       ["n", "gal", "cache"],
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
                       default=True),
+    MathCol("u", "lf.unramified_degree", "$u$"),
+    MathCol("t", "lf.tame_degree", "$t$"),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
@@ -475,8 +478,8 @@ class LFSearchArray(SearchArray):
              ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
              ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
              ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
-             ("galu", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
-             ("galt", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
+             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
+             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
              ("s", "top slope", ['s', 'p', 'n', 'c', 'label'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"

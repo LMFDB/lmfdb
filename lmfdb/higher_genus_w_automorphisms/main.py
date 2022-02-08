@@ -600,6 +600,7 @@ hgcwa_columns = SearchColumns([
             lambda label: f"/HigherGenus/C/Aut/{label}",
             default=True),
     MathCol("genus", "ag.curve.genus", "Genus", default=True),
+    MathCol("g0", "curve.highergenus.aut.quotientgenus", "Quotient genus"),
     ProcessedCol("group", "group.small_group_label", "Group", group_display, mathmode=True, align="center", default=True),
     MathCol("group_order", "group.order", "Group order", default=True),
     MathCol("dim", "curve.highergenus.aut.dimension", "Dimension", default=True),

@@ -809,6 +809,8 @@ nf_columns = SearchColumns([
     MathCol("degree", "nf.degree", "Degree", align="center"),
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
+    MathCol("num_ram", "nf.ramified_primes", "Num. ram. primes"),
+    MathCol("rd", "nf.root_discriminant", "Root discriminant"),
     CheckCol("cm", "nf.cm_field", "Is CM field?"),
     CheckCol("is_galois", "nf.galois_group", "Is Galois?"),
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
@@ -816,7 +818,7 @@ nf_columns = SearchColumns([
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 + - 1, align="center", mathmode=True),
     MathCol("regulator", "nf.regulator", "Regulator", align="left")],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator"])
+    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -1053,13 +1055,13 @@ class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("sig", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
+             ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("disc", "absolute discriminant", ['disc_abs', 'disc_sign', 'degree', 'iso_number']),
-             ("ramps", "ramified prime count", ['num_ram', 'disc_abs', 'disc_sign', 'degree', 'iso_number']),
+             ("num_ram", "ramified prime count", ['num_ram', 'disc_abs', 'disc_sign', 'degree', 'iso_number']),
              ("h", "class number", ['class_number', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("R", "regulator", ['regulator', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("gal", "Galois group", ['degree', 'galt', 'disc_abs', 'disc_sign', 'iso_number'])]
+             ("regulator", "regulator", ['regulator', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
+             ("galois", "Galois group", ['degree', 'galt', 'disc_abs', 'disc_sign', 'iso_number'])]
     jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"

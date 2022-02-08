@@ -467,8 +467,8 @@ class LatSearchArray(SearchArray):
     sorts = [("", "dimension", ['dim', 'det', 'level', 'class_number', 'label']),
              ("det", "determinant", ['det', 'dim', 'level', 'class_number', 'label']),
              ("level", "level", ['level', 'dim', 'det', 'class_number', 'label']),
-             ("h", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
-             ("min", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
+             ("class_number", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
+             ("minimum", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
              ("aut", "automorphism group", ['aut', 'dim', 'det', 'level', 'class_number', 'label'])]
     def __init__(self):
         dim = TextBox(

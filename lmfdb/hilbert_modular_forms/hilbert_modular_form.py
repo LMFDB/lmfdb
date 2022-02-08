@@ -624,8 +624,8 @@ class HMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
     sorts = [("", "label", ['deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
-             ("level", "level norm", ['level_norm', 'deg', 'disc', 'level_label', 'label_nsuffix']),
-             ("dim", "dimension", ['dimension', 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix'])]
+             ("level_norm", "level norm", ['level_norm', 'deg', 'disc', 'level_label', 'label_nsuffix']),
+             ("dimension", "dimension", ['dimension', 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix'])]
     jump_example = "2.2.5.1-31.1-a"
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
     jump_knowl = "mf.hilbert.search_input"

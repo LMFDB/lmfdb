@@ -1124,11 +1124,11 @@ class STSearchArray(SearchArray):
     plural_noun = "groups"
     sorts = [("", "weight", ["weight", "degree", "st0_label", "components", "component_group_number", "label"]),
              ("degree", "degree", ["degree", "weight", "st0_label", "components", "component_group_number", "label"]),
-             ("dim", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("real_dimension", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
              ("st0", "identity component", ["st0_label", "weight", "degree", "components", "component_group_number", "label"]),
-             ("comp", "component group", ["components", "component_group_number", "st0_label", "weight", "degree", "label"]),
-             ("tr0", "trace zero density", ["trace_zero_density", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
-             ("diag", "character diagonal", ["character_diagonal", "weight", "degree", "st0_label", "components", "component_group_number", "label"])]
+             ("components", "component group", ["components", "component_group_number", "st0_label", "weight", "degree", "label"]),
+             ("trace_zero_density", "trace zero density", ["trace_zero_density", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("character_diagonal", "character diagonal", ["character_diagonal", "weight", "degree", "st0_label", "components", "component_group_number", "label"])]
     jump_example = "1.4.USp(4)"
     jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.B.2.1a or N(U(1)), or 1.4.A.1.1a or 1.4.USp(4)"
     jump_knowl = "st_group.search_input"

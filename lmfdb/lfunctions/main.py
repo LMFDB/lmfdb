@@ -417,8 +417,8 @@ def euler_search(info, query):
 
 class LFunctionSearchArray(SearchArray):
     sorts = [('', 'root analytic conductor', ['root_analytic_conductor', 'label']),
-             ('A', 'analytic conductor', ['analytic_conductor', 'label']),
-             ('zero', 'first zero', [('z1', -1)]),
+             ('analytic_conductor', 'analytic conductor', ['analytic_conductor', 'label']),
+             ('z1', 'first zero', [('z1', -1)]),
              ('conductor', 'conductor', ['conductor', 'root_analytic_conductor', 'label'])]
     jump_example="1-1-1.1-r0-0-0"
     jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"

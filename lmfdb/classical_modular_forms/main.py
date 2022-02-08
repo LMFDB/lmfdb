@@ -803,6 +803,7 @@ newform_columns = SearchColumns([
                       short_title="Primitive character"),
     MathCol("char_order", "character.dirichlet.order", "Char order", short_title="Character order"),
     MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="Dimension"),
+    MathCol("relative_dim", "cmf.relative_dimension", "Rel. Dim", align="right", short_title="Relative dimension"),
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="Analytic conductor"),
     MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
@@ -1376,10 +1377,10 @@ class CMFSearchArray(SearchArray):
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
         ('Nk2', 'Nk^2', ['Nk2', 'level']),
         ('dim', 'dimension', ['dim', 'level', 'weight']),
-        ('reldim', 'relative dimension', ['relative_dim', 'level', 'weight']),
-        ('rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
-        ('twists', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
-        ('coeff_index', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
+        ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
+        ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
+        ('inner_twist_count', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
+        ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
     ]
     for name, disp, sord in _sort:
         if 'char_orbit_index' not in sord:

@@ -364,7 +364,7 @@ ec_columns = SearchColumns([
                   default=lambda info: info.get("sha_primes"), mathmode=True, align="center"),
      MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
              default=lambda info: info.get("num_int_pts"), align="center"),
-     MathCol("manin_constant", "ec.q.modular_degree", "Modular degree", align="center"),
+     MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center"),
      ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
      ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
@@ -860,17 +860,17 @@ app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
 class ECSearchArray(SearchArray):
     noun = "curve"
     sorts = [("", "label", ["conductor", "iso_nlabel", "lmfdb_number"]),
-             ("cremona", "cremona label", ["conductor", "Ciso", "Cnumber"]),
+             #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
              ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("cm", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("R", "regulator", ["regulator", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("cm_discriminant", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("regulator", "regulator", ["regulator", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("sha", "analytic &#1064;", ["sha", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("class_size", "isogeny class size", ["class_size", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("class_deg", "isogeny class degree", ["class_deg", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("num_int_pts", "integral points", ["num_int_pts", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("degree", "modular degree", ["degree", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("faltings", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
+             ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
     plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"

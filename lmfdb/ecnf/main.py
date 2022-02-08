@@ -846,12 +846,12 @@ class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
     sorts = [("", "field", ['degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("cond", "conductor norm", ['conductor_norm', 'conductor_label', 'degree', 'signature', 'abs_disc', 'field_label', 'iso_nlabel', 'number']),
-             ("rtA", "root analytic conductor", ['root_analytic_conductor', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("conductor_norm", "conductor norm", ['conductor_norm', 'conductor_label', 'degree', 'signature', 'abs_disc', 'field_label', 'iso_nlabel', 'number']),
+             ("root_analytic_conductor", "root analytic conductor", ['root_analytic_conductor', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("rank", "rank", ['rank', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("torsion", "torsion", ['torsion_order', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("cm", "CM discriminant", ["cm", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
-             ("R", "regulator", ["reg", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
+             ("reg", "regulator", ["reg", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("sha", "analytic &#1064;", ["sha", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("class_size", "isogeny class size", ["class_size", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("class_deg", "isogeny class degree", ["class_deg", 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])]
