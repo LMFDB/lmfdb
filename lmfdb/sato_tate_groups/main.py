@@ -1128,7 +1128,7 @@ class STSearchArray(SearchArray):
     sorts = [("", "weight", ["weight", "degree", "st0_label", "components", "component_group_number", "label"]),
              ("degree", "degree", ["degree", "weight", "st0_label", "components", "component_group_number", "label"]),
              ("real_dimension", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
-             ("st0", "identity component", ["st0_label", "weight", "degree", "components", "component_group_number", "label"]),
+             #("st0", "identity component", ["st0_label", "weight", "degree", "components", "component_group_number", "label"]),
              ("components", "component group", ["components", "component_group_number", "st0_label", "weight", "degree", "label"]),
              ("trace_zero_density", "trace zero density", ["trace_zero_density", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
              ("character_diagonal", "character diagonal", ["character_diagonal", "weight", "degree", "st0_label", "components", "component_group_number", "label"])]

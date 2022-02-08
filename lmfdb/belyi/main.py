@@ -792,7 +792,7 @@ class BelyiSearchArray(SearchArray):
     plural_noun = "maps"
     sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
              ("g", "genus", ['g', 'deg', 'group_num', 'label']),
-             ("field", "base field", ['base_field_label', 'deg', 'group_num', 'g', 'label']),
+             #("field", "base field", ['base_field_label', 'deg', 'group_num', 'g', 'label']),
              ("orbit_size", "orbit size", ['orbit_size', 'deg', 'group_num', 'g', 'label'])]
     jump_example = "4T5-4_4_3.1-a"
     jump_egspan = "e.g. 4T5-4_4_3.1-a"

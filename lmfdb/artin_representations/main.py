@@ -514,7 +514,7 @@ class ArtinSearchArray(SearchArray):
     sorts = [("", "dimension", ["Dim", "Conductor", "Galn", "Galt", "Baselabel"]),
              ("con", "conductor", ["Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
              ("group", "group", ["Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
-             ("container", "container", ["Container", "Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
+             #("container", "container", ["Container", "Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
              ("num_ramps", "number ramified primes", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
              ("projective_group", "projective image", ["Proj_nTj", "Proj_Polynomial", "Dim", "Conductor", "Galn", "Galt", "Baselabel"])]
     jump_example = "4.5648.6t13.b.a"
