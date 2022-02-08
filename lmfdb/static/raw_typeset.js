@@ -5,7 +5,7 @@ function setraw(elt) {
     raw = $(raw);
     var ta = $(raw[0]); // the textarea element
     ta.width($this.width() - (21 + 2 + 2 + 5)); // icon + 2*border + ws +  (x->x)
-    ta.height($this.height() - 8); // 2*padding + 2*border
+    ta.height($this.height() - 8);
   }
 
   $this.attr("tset", $this.html());
