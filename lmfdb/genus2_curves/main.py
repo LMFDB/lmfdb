@@ -7,6 +7,7 @@ from flask import render_template, url_for, request, redirect, make_response, ab
 from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
+from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     CountBox,
@@ -41,7 +42,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label, gsp4_subgroup_data
 
 ###############################################################################
 # List and dictionaries needed for routing and searching
@@ -242,6 +243,9 @@ def interesting():
 # Curve and isogeny class pages
 ###############################################################################
 
+@app.context_processor
+def ctx_gsp4_subgroup():
+    return {'gsp4_subgroup_data' : gsp4_subgroup_data}
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
 def by_url_curve_label(cond, alpha, disc, num):
@@ -399,10 +403,7 @@ POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
 POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
 ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
 ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
-G2_LOOKUP_RE = re.compile(
-    r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")"
-)
-
+G2_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")")
 
 def genus2_lookup_equation(input_str):
     # retuns:
@@ -448,7 +449,6 @@ def genus2_lookup_equation(input_str):
             return r["label"], ""
     return None, C_str_latex
 
-
 def geom_inv_to_G2(inv):
     def igusa_clebsch_to_G2(Ilist):
         # first Igusa-Clebsch to Igusa, i.e., I |-> J
@@ -490,7 +490,6 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-
 LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")
@@ -522,9 +521,6 @@ def genus2_jump(info):
         errmsg += "."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
-
-
-
 
 class G2C_download(Downloader):
     table = db.g2c_curves

@@ -368,7 +368,6 @@ class ECNF(object):
         self.End = r"\(\Z\)"
         self.rational_cm = self.cm_type>0
         if self.cm:
-            self.cm = -abs(self.cm) # this line can be deleted when we no longer store abs(-D) for rational CM by -D
             self.cm_sqf = integer_squarefree_part(ZZ(self.cm))
             self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:

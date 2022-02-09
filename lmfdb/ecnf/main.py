@@ -473,9 +473,6 @@ def make_cm_query(cm_disc_str):
     for d in cm_list:
         if not ((d < 0) and (d % 4 in [0,1])):
             raise ValueError("CM discriminants are negative and congruent to 0 or 1 mod 4.")
-    # the next line is because actual CM with disc -D is stored as +D in the table;
-    # it can be removed once we only store -D itself.
-    cm_list += [-el for el in cm_list]
     return cm_list
 
 @search_parser
@@ -619,29 +616,13 @@ def elliptic_curve_search(info, query):
 
     if 'include_cm' in info:
         if info['include_cm'] == 'PCM':
-            tmp = {'$ne' : 0}
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = { '$ne': 0 }
         elif info['include_cm'] == 'PCMnoCM':
-            tmp = {'$lt' : 0}
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = -1
         elif info['include_cm'] == 'CM':
-            tmp = {'$gt' : 0}
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = 1
         elif info['include_cm'] == 'noPCM':
-            tmp = 0
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = 0
 
     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
