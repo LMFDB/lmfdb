@@ -615,29 +615,13 @@ def elliptic_curve_search(info, query):
 
     if 'include_cm' in info:
         if info['include_cm'] == 'PCM':
-            tmp = {'$ne' : 0}
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = { '$ne': 0 }
         elif info['include_cm'] == 'PCMnoCM':
-            tmp = {'$lt' : 0}
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = -1
         elif info['include_cm'] == 'CM':
-            tmp = {'$gt' : 0}
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = 1
         elif info['include_cm'] == 'noPCM':
-            tmp = 0
-            if 'cm' in query:
-                query['cm'] = {'$and': [tmp, query['cm']]}
-            else:
-                query['cm'] = tmp
+            query['cm_type'] = 0
 
     parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                  qfield='nonmax_primes', mode=info.get('nonmax_quantifier'), radical='nonmax_rad')
