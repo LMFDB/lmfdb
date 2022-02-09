@@ -3,7 +3,8 @@ from collections import defaultdict
 from flask import url_for
 from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
-from lmfdb.utils.utilities import format_percentage, display_knowl
+from .utilities import format_percentage
+from .web_display import display_knowl
 from lmfdb.backend.utils import KeyedDefaultDict, range_formatter
 
 class formatters(object):

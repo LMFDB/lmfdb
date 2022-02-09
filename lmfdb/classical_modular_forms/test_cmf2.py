@@ -371,27 +371,25 @@ class CmfTest(LmfdbTest):
         Fourier coefficients of each respective homepage."""
 
         test_data = {# Dimension 1
-                    '11/2/a/a' : {2: r'\( 2 + T \)',
-                                 17: r'\( 2 + T \)',
+                    '11/2/a/a' : {2: r'\( T + 2 \)',
+                                 17: r'\( T + 2 \)',
                                  29: r'\( T \)'},
 
                     # Dimension 2
-                    '10/3/c/a' :  {5: r'\( 25 + T^{2} \)',
-                                  11: r'\( ( 8 + T )^{2} \)',
-                                  97: r'\( 7938 + 126 T + T^{2} \)'},
+                    '10/3/c/a' :  {5: r'\( T^{2} + 25 \)',
+                                  11: r'\( (T + 8)^{2} \)',
+                                  97: r'\( T^{2} + 126T + 7938 \)'},
 
                     # Dimension 5
-                    '/294/5/b/f' : {2: r'\( ( 8 + T^{2} )^{5} \)',
+                    '294/5/b/f' : {2: r'\( (T^{2} + 8)^{5} \)',
                                     # The following test checks that monomials do not have superfluous parentheses
                                     7: r'\( T^{10} \)'},
                     }
 
-        charpoly_test_string = '<td align="left">${}$</td>\n<td>{}</td>'
-
         for label, some_expected_charpolys in test_data.items():
             page_as_text = self.tc.get('/ModularForm/GL2/Q/holomorphic/{}/'.format(label), follow_redirects=True).get_data(as_text=True)
-            for p, expected_pth_charpoly in some_expected_charpolys.items():
-                assert charpoly_test_string.format(p, expected_pth_charpoly) in page_as_text
+            for _, expected_pth_charpoly in some_expected_charpolys.items():
+                assert expected_pth_charpoly in page_as_text
 
         # Check large dimensions behave as we expect. The following is a form of dimension 108
 

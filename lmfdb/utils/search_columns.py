@@ -1,4 +1,4 @@
-from .utilities import display_knowl
+from .web_display import display_knowl
 
 def get_default_func(default, name):
     def f(info):
