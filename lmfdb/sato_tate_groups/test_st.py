@@ -46,10 +46,10 @@ class SatoTateGroupTest(LmfdbTest):
         assert 'both matches' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4&include_irrational=yes&components=48')
         assert 'unique match' in L.get_data(as_text=True)
-        # L = self.tc.get('SatoTateGroup/?components=48&include_irrational=yes') # temporarily disable, reenable once irrational groups have been added to db
-        # assert '27 matches' in L.get_data(as_text=True)
-        # L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25&include_irrational=yes')
-        # assert 'matches 1001-1025' in L.get_data(as_text=True)
+        L = self.tc.get('SatoTateGroup/?components=48&include_irrational=yes')
+        assert '27 matches' in L.get_data(as_text=True)
+        L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25&include_irrational=yes')
+        assert '1001-1025 of' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?degree=1')
         assert 'both matches' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?count=47')
@@ -90,8 +90,8 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
             assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
-        # L = self.tc.get('/SatoTateGroup/?components=99999&include_irrational=yes') # temporarily disable, reenable once irrational groups have been added to db
-        # assert 'unique match' in L.get_data(as_text=True) and 'mu(99999)' in L.get_data(as_text=True)
+        L = self.tc.get('/SatoTateGroup/?components=9999&include_irrational=yes')
+        assert 'unique match' in L.get_data(as_text=True) and 'mu(9999)' in L.get_data(as_text=True)
 
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')

@@ -639,7 +639,8 @@ st_columns.dummy_download = True
 def sato_tate_search(info, query):
     parse_ints(info, query, 'weight', 'weight')
     parse_ints(info, query, 'degree', 'degree')
-    parse_bool(info, query, "rational", "is rational")
+    if info.get('include_irrational') != 'yes':
+        query['rational'] = True
     if info.get('identity_component'):
         query['identity_component'] = info['identity_component']
     parse_bool(info, query, "maximal", "is maximal")
