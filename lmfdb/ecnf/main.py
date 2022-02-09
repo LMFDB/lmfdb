@@ -473,9 +473,6 @@ def make_cm_query(cm_disc_str):
     for d in cm_list:
         if not ((d < 0) and (d % 4 in [0,1])):
             raise ValueError("CM discriminants are negative and congruent to 0 or 1 mod 4.")
-    # the next line is because actual CM with disc -D is stored as +D in the table;
-    # it can be removed once we only store -D itself.
-    cm_list += [-el for el in cm_list]
     return cm_list
 
 @search_parser
