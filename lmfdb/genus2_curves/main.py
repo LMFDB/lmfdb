@@ -404,10 +404,7 @@ POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
 POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
 ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
 ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
-G2_LOOKUP_RE = re.compile(
-    r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")"
-)
-
+G2_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")")
 
 def genus2_lookup_equation(input_str):
     # retuns:
@@ -453,7 +450,6 @@ def genus2_lookup_equation(input_str):
             return r["label"], ""
     return None, C_str_latex
 
-
 def geom_inv_to_G2(inv):
     def igusa_clebsch_to_G2(Ilist):
         # first Igusa-Clebsch to Igusa, i.e., I |-> J
@@ -495,7 +491,6 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-
 LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")
@@ -527,9 +522,6 @@ def genus2_jump(info):
         errmsg += "."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
-
-
-
 
 class G2C_download(Downloader):
     table = db.g2c_curves
