@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
-import itertools
 import re
 
-from flask import render_template, url_for, redirect, request, jsonify, abort
-from psycopg2.extensions import QueryCanceledError
+from flask import render_template, url_for, redirect, request, abort
 from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_function
 
 from lmfdb import db
-from lmfdb.app import ctx_proc_userdata, app
+from lmfdb.app import app
 from lmfdb.utils import (
-    to_dict, encode_plot, flash_error, display_knowl,
+    to_dict, encode_plot, flash_error, display_knowl, search_wrap,
     SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty,
-    parse_ints, parse_rational, parse_bool, parse_count, parse_start,
-    parse_ints_to_list_flash, clean_input, redirect_no_cache)
+    parse_ints, parse_rational, parse_bool, clean_input, redirect_no_cache)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol
@@ -32,9 +29,19 @@ SU2_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.[3A]\.c[1-9][0-9]*$'
 ST_OLD_LABEL_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
 ST_OLD_LABEL_SHORT_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+$'
 ST_LABEL_RE = r'^\d+\.\d+\.[A-Z]+\.\d+\.\d+[a-z]+$'
+ST_LABEL_SPLIT_RE = r'(^\d+)\.(\d+)\.([A-Z]+)\.(\d+)\.(\d+)([a-z])+$'
 ST_LABEL_SHORT_RE = r'^\d+\.\d+\.[A-Z]+\.\d+\.\d+$'
-ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-Z0-9\{\}\(\)\[\]\_\,]+'
+ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-Z0-9\{\}\(\)\[\]\_\,]+$'
 INFINITY = -1
+
+def st_label_components(label):
+    """ returns a list of integers representing the components of the label """
+    if re.match(MU_LABEL_RE,label):
+        return [0,1,0,int(label.split('.')[2])]
+    else:
+        from sage.databases.cremona import class_to_int
+        a = re.match(ST_LABEL_SPLIT_RE,label)
+        return [int(a[1]),int(a[2]),class_to_int(a[3].lower()),int(a[4]),int(a[5]),class_to_int(a[6])]
 
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
 st0_list = (
@@ -500,7 +507,7 @@ def get_bread(tail=[]):
 def index():
     info = to_dict(request.args, search_array=STSearchArray(), stats=STStats())
     if request.args:
-        return search(info)
+        return sato_tate_search(info)
     weight_list= [0, 1]
     degree_list = list(range(1, 7, 1))
 
@@ -593,7 +600,7 @@ st_columns = SearchColumns([
     MathCol("weight", "st_group.weight", "Wt", default=True),
     MathCol("degree", "st_group.degree", "Deg", default=True),
     MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="dim_R", default=True),
-    MathCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", short_title="G^0", default=True),
+    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", lambda v: st0_pretty(v), short_title="G^0", mathmode=True, default=True, align="center"),
     MathCol("pretty", "st_group.name", "Name", default=True),
     MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="G/G^0", default=True),
     MathCol("trace_zero_density", "st_group.trace_zero_density", r"$\mathrm{Pr}[t\!=\!0]$", short_title="Pr[t=0]", default=True),
@@ -619,153 +626,29 @@ st_columns = SearchColumns([
 ])
 st_columns.dummy_download = True
 
-# This search function doesn't fit the model of search_wrapper very well,
-# So we don't use it.
-def search(info):
-    """ query processing for Sato-Tate groups -- returns rendered results page """
-    if 'jump' in info:
-        return redirect(url_for('.by_label', label=info['jump']), 301)
-    if 'label' in info:
-        return redirect(url_for('.by_label', label=info['label']), 301)
-    info["columns"] = st_columns
-    search_type = info.get("search_type", info.get("hst", "List"))
-    template_kwds = {'bread':get_bread("Search results"),
-                     'learnmore':learnmore_list()}
-    title = 'Sato-Tate group search results'
-    err_title = 'Sato-Tate group search input error'
-    count = parse_count(info, 50)
-    start = parse_start(info)
-    # if user clicked refine search always restart at 0
-    if 'refine' in info:
-        start = 0
-    ratonly = (info.get('include_irrational','no').strip().lower() == 'no')
-    if search_type == "Random" and not ratonly:
-        info['err'] = err = 'Cannot select random irrational Sato-Tate group'
-        flash_error(err)
-        return render_template('search_results.html', info=info, title=err_title, **template_kwds)
-    query = {'rational':True} if ratonly else {}
-    try:
-        parse_ints(info,query,'weight','weight')
-        if 'weight' in query:
-            weight_list = parse_ints_to_list_flash(info.get('weight'), 'weight', max_val=1)
-        parse_ints(info,query,'degree','degree')
-        if 'degree' in query:
-            degree_list = parse_ints_to_list_flash(info.get('degree'), 'degree', max_val=1)
-        if info.get('identity_component'):
-            query['identity_component'] = info['identity_component']
-        parse_ints(info,query,'components','components')
-        def refine_components(current, condition):
-            if current is None:
-                return condition
-            return [x for x in condition if x in current]
-        # The following are used to constraint which mu(n) will show up in search results
-        components_list = None
-        omitted = set()
-        if 'components' in query:
-            components_list = parse_ints_to_list_flash(info.get('components'), 'components')
-        parse_component_group(info,query)
-        gps = query.get("component_group")
-        if gps:
-            if isinstance(gps, dict):
-                gps = gps["$in"]
-            else:
-                gps = [gps]
-            if not ratonly:
-                cyclic_labels = set(db.gps_groups.search({"cyclic": True}, "label"))
-            irrat = []
-            for code in gps:
-                if code in cyclics:
-                    irrat.append(cyclics[code])
-                elif re.match(cyclicre, code):
-                    irrat.append(int(code[1:]))
-                elif not ratonly and code in cyclic_labels:
-                    irrat.append(int(code.split(".")[0]))
-            components_list = refine_components(components_list, irrat)
-        parse_rational(info,query,'trace_zero_density','trace zero density')
-        parse_ints(info,query,'second_trace_moment')
-        parse_ints(info,query,'fourth_trace_moment')
-        for name, ones in [('second_trace_moment', [1, 2]),
-                           ('fourth_trace_moment', [1, 2, 4])]:
-            if name in query:
-                # E(x^2) for mu(1) and mu(2) are 1; others are 0
-                # E(x^4) for mu(1), mu(2) and mu(4) are 1; others are 0
-                E = parse_ints_to_list_flash(info.get(name), name.replace("_", " "), max_val=1)
-                if 0 not in E:
-                    components_list = refine_components(components_list, ones)
-                if 1 not in E:
-                    omitted.update(ones)
-        parse_ints(info,query,'first_a2_moment')
-        parse_bool(info,query,'maximal')
-        if "first_a2_moment" in query or query.get("maximal"):
-            # mu(n) do not have a2 moments and none are maximal
-            components_list = []
-    except ValueError as err:
-        info['err'] = str(err)
-        return render_template('search_results.html', info=info, title=err_title, **template_kwds)
-
-    # Check mu(n) groups first (these are not stored in the database)
-    results = []
-    if (('weight' not in query or 0 in weight_list) and
-        ('degree' not in query or 1 in degree_list) and
-        ('identity_component' not in query or query['identity_component'] == 'SO(1)') and
-        ('trace_zero_density' not in query or query['trace_zero_density'] == '0')):
-        nres = None
-        if components_list is None:
-            components_list = list(range(1, 3 if ratonly else (start + count + 1 + len(omitted))))
-            nres = None if ratonly else INFINITY
-        elif ratonly:
-            components_list = [n for n in range(1,3) if n in components_list]
-        components_list = [n for n in components_list if n not in omitted]
-        if nres is None:
-            nres = len(components_list)
-        if search_type == "Random" and nres > 0:
-            # Need to return mu(1), mu(2) or mu(4) sometimes
-            otherlen = db.gps_st.count(query)
-            r = ZZ.random_element(nres + otherlen)
-            if r < nres:
-                return redirect(url_for(".by_label", label="0.1.%d" % components_list[r]), 307)
-        for n in itertools.islice(components_list,start,start+count):
-            v = mu_data(n)
-            v['identity_component'] = st0_pretty(v['identity_component'])
-            v['component_group'] = sg_pretty(v['component_group'])
-            results.append(v)
-    else:
-        nres = 0
-
-    if 'result_count' in info:
-        nres += db.gps_st.count(query)
-        return jsonify({"nres":str(nres)})
-    if search_type == "Random":
-        label = db.gps_st.random(query, "label")
-        if label is not None:
-            return redirect(url_for(".by_label", label=label), 307)
-
-    # Now lookup other (rational) ST groups in database
-    if nres != INFINITY:
-        start2 = start - nres if start > nres else 0
-        try:
-            res = db.gps_st.search(query, limit=max(count - len(results), 0), offset=start2, info=info)
-        except QueryCanceledError as err:
-            ctx = ctx_proc_userdata()
-            flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
-            info['err'] = str(err)
-            return render_template('search_results.html', info=info, title=err_title, **template_kwds)
-        info['number'] += nres
-        if start < info['number'] and len(results) < count:
-            for v in res:
-                v['identity_component'] = st0_pretty(v['identity_component'])
-                v['component_group'] = sg_pretty(v['component_group'])
-                results.append(v)
-    else:
-        info['number'] = 'infinity'
-    info['start'] = start
-    info['count'] = count
-
-    info['st0_list'] = st0_list
-    info['st0_dict'] = st0_dict
-    info['results'] = results
-    info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
-    return render_template('search_results.html', info=info, title=title, **template_kwds)
+@search_wrap(
+    table=db.gps_st,
+    title="Sato-Tate group search results",
+    err_title="Sato-Tate group search input error",
+    shortcuts={"jump": lambda v: search_by_label(v['jump'])},
+    columns=st_columns,
+    bread=lambda: get_bread("Search results"),
+    learnmore=learnmore_list,
+    url_for_label=lambda label: url_for(".by_label", label=label),
+)
+def sato_tate_search(info, query):
+    parse_ints(info, query, 'weight', 'weight')
+    parse_ints(info, query, 'degree', 'degree')
+    parse_bool(info, query, "rational", "is rational")
+    if info.get('identity_component'):
+        query['identity_component'] = info['identity_component']
+    parse_bool(info, query, "maximal", "is maximal")
+    parse_rational(info, query, "trace_zero_density", "trace zero density")
+    parse_ints(info, query, "second_trace_moment")
+    parse_ints(info, query, "fourth_trace_moment")
+    parse_ints(info, query, "first_a2_moment")
+    parse_ints(info, query, 'components', 'components')
+    parse_component_group(info, query)
 
 ###############################################################################
 # Rendering
@@ -777,9 +660,10 @@ def mu_data(n):
     n = ZZ(n)
     rec = {}
     rec['label'] = "0.1.%d"%n
+    rec['label_components'] = [int(0),int(1),int(0),int(n)]
     rec['weight'] = 0
     rec['degree'] = 1
-    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['rational'] = True if n <= 2 else False
     rec['name'] = 'mu(%d)'%n
     rec['pretty'] = r'\mu(%d)'%n
     rec['real_dimension'] = 0
@@ -810,7 +694,6 @@ def mu_data(n):
     rec['fourth_trace_moment'] = 1 if 4 % n == 0 else 0
     rec['counts'] = [['a_1', [[t,1] for t in ([1] if n%2 else [1,-1])]]]
     rec['zvector'] = []
-    rec['trace_histogram'] = mu_portrait(n)
     return rec
 
 def mu_portrait(n):
@@ -833,7 +716,7 @@ def su2_mu_data(w,n):
     rec['label'] = "%d.2.3.c%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['rational'] = True if n <= 2 else False
     rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
     rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
@@ -861,7 +744,6 @@ def su2_mu_data(w,n):
     rec['fourth_trace_moment'] = 2 if 4 % n == 0 else 0
     rec['counts'] = []
     rec['zvector'] = []
-    rec['trace_histogram'] = su2_mu_portrait(n)
     return rec
 
 def su2_mu_portrait(n):
@@ -886,7 +768,7 @@ def nu1_mu_data(w,n):
     rec['label'] = "%d.2.1.d%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['rational'] = True if n <= 2 else False
     rec['name'] = 'U(1)[C%d]'%n if n > 1 else 'N(U(1))'
     rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
@@ -913,7 +795,6 @@ def nu1_mu_data(w,n):
     rec['fourth_trace_moment'] = 3 if 4 % n == 0 else 0
     rec['counts'] = [['a_1', [[0,n]]]]
     rec['zvector'] = [int(n)]
-    rec['trace_histogram'] = nu1_mu_portrait(n)
     return rec
 
 def nu1_mu_portrait(n):
@@ -928,6 +809,15 @@ def nu1_mu_portrait(n):
     plot.set_aspect_ratio(4.0/3.0)
     plot.axes(False)
     return encode_plot(plot)
+
+def st_portrait(label):
+    if re.match(MU_LABEL_RE, label):
+        return mu_portrait(ZZ(label.split('.')[2]))
+    elif re.match(NU1_MU_LABEL_RE, label):
+        return nu1_mu_portrait(ZZ(label.split('.')[3][1:]))
+    elif re.match(SU2_MU_LABEL_RE, label):
+        return su2_mu_portrait(ZZ(label.split('.')[3][1:]))
+    return None
 
 def render_by_label(label):
     """ render html page for Sato-Tate group specified by label """
@@ -1045,6 +935,8 @@ def render_by_label(label):
 def render_st_group(info, portrait=None, in_database=False):
     """ render html page for Sato-Tate group described by info """
     prop = [('Label', '%s'%info['label'])]
+    if portrait is None:
+        portrait = st_portrait(info['label'])
     if portrait:
         prop += [(None, '&nbsp;&nbsp;<img src="%s" width="216" height="126"/>' % portrait)]
     prop += [
