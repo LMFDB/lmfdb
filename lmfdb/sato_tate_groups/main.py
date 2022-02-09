@@ -377,7 +377,7 @@ def st_lookup(label):
 
 def st_knowl(label):
     try:
-        data = st_lookup(label)
+        data,_ = st_lookup(label)
         if not data:
             raise ValueError
     except ValueError:
