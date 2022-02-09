@@ -486,6 +486,32 @@ def split_statement(coeffs, labels, condnorms):
             statement += "<br>&nbsp;&nbsp; Conductor norm: %s" % condnorms[n]
     return statement
 
+# function for displaying GSp4 subgroup data
+def gsp4_subgroup_data(label):
+    try:
+        data = db.gps_gsp4zhat.lookup(label)
+    except ValueError:
+        return "Invalid label for subgroup of GSp(4,Zhat): %s" % label
+    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    matrix = lambda m: r'$\begin{bmatrix}%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15])
+    info = '<table>\n'
+    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += "<tr><td></td><td></td></tr>\n"
+    info += row_wrap('Level', data['level'])
+    info += row_wrap('Index', data['index'])
+
+    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
+    N = ZZ(data['level'])
+    ell = N.prime_divisors()[0]
+    e = N.valuation(ell)
+    if e == 1:
+        info += row_wrap("(%s,%s)-isogeny field degree" % (ell,ell), min([r[1] for r in data['isogeny_orbits'] if r[0] == ell]))
+        info += row_wrap("Cyclic %s-torsion field degree" % (ell), min([r[1] for r in data['orbits'] if r[0] == ell]))
+        fulltorsflddeg = ell**4*(ell**4-1)*(ell**2-1)*(ell-1) // data['index']
+        info += row_wrap("Full %s-torsion field degree" % (ell), fulltorsflddeg)
+    info += "</table>\n"
+    return info
+
 # create friend entry from url (typically coming from lfunc_instances)
 def lfunction_friend_from_url(url):
     if url[0] == '/':
@@ -609,6 +635,21 @@ def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
+def galrep_table(galrep):  
+    galtab = ['<table class="ntdata">', '<thead>', '<tr>',
+              th_wrap('', r'Prime \(\ell\)'),
+              th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
+              '</tr>', '</thead>', '<tbody>']
+    for i in range(len(galrep)):
+        p = galrep[i]['prime']
+        modellimage_lbl = galrep[i]['modell_image']
+        galtab.append('  <tr>')
+        modellimg = display_knowl('gsp4.subgroup_data', title=modellimage_lbl, kwargs={'label':modellimage_lbl})
+        galtab.extend([td_wrapc(p),td_wrapcn(modellimg)])
+        galtab.append('  </tr>')
+    galtab.extend(['</tbody>', '</table>'])
+    return '\n'.join(galtab)
+
 def ratpts_table(pts,pts_v):
     def sorted_points(pts):
         return sorted(pts,key=lambda P:(max([abs(x) for x in P]),sum([abs(x) for x in P])))
@@ -657,8 +698,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, ratpts, clus, is_curve=True):
-        self.make_object(curve, endo, tama, ratpts, clus, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, clus, galrep, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, clus, galrep, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -707,9 +748,10 @@ class WebG2C(object):
                 except Exception:
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
-        return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
+        galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
+        return WebG2C(curve, endo, tama, ratpts, clus, galrep, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, ratpts, clus, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, clus, galrep, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -803,6 +845,7 @@ class WebG2C(object):
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'],clus)
+            data['galrep_table'] = galrep_table (galrep)
 
             lmfdb_label = data['label']
             cond, alpha, disc, num = split_g2c_lmfdb_label(lmfdb_label)
