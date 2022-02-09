@@ -223,7 +223,7 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.show_hecke_ring_basis %}
-    <p> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
+    <p> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
 </div>
