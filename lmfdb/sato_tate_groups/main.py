@@ -840,14 +840,21 @@ def render_by_label(label):
     info['st0_name']=st0['name']
     info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
-    G = db.gps_groups.lookup(data['component_group'])
-    if not G:
-        flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
-        return redirect(url_for(".index"))
-    info['component_group']=G['tex_name']
-    info['cyclic']=boolean_name(G['cyclic'])
-    info['abelian']=boolean_name(G['abelian'])
-    info['solvable']=boolean_name(G['solvable'])
+    print("hi there")
+    if data['component_group'][:2] == "ab":
+        info['component_group'] = r"C_{%s}"%info['components']
+        info['cyclic']=boolean_name(True)
+        info['abelian']=boolean_name(True)
+        info['solvable']=boolean_name(True)
+    else:
+        G = db.gps_groups.lookup(data['component_group'])
+        if not G:
+            flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
+            return redirect(url_for(".index"))
+        info['component_group']=G['tex_name']
+        info['cyclic']=boolean_name(G['cyclic'])
+        info['abelian']=boolean_name(G['abelian'])
+        info['solvable']=boolean_name(G['solvable'])
     if data.get('gens'):
         info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']]) if type(data['gens']) == list else data['gens']
         info['numgens'] = len(info['gens'])
