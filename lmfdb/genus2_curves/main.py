@@ -8,6 +8,7 @@ from flask import render_template, url_for, request, redirect, make_response, ab
 from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
+from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     CountBox,
@@ -42,7 +43,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label, gsp4_subgroup_data
 
 ###############################################################################
 # List and dictionaries needed for routing and searching
@@ -243,6 +244,9 @@ def interesting():
 # Curve and isogeny class pages
 ###############################################################################
 
+@app.context_processor
+def ctx_gsp4_subgroup():
+    return {'gsp4_subgroup_data' : gsp4_subgroup_data}
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
 def by_url_curve_label(cond, alpha, disc, num):
