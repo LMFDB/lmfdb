@@ -12,15 +12,15 @@ class SatoTateGroupTest(LmfdbTest):
         assert 'Browse' in L.get_data(as_text=True) and 'U(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True) and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
         
     def test_by_label(self):
-        L = self.tc.get('/SatoTateGroup/?label=1.4.A.1.1a', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/?jump=1.4.A.1.1a', follow_redirects=True)
         assert 'USp(4)' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/?jump=1.4.USp(4)', follow_redirects=True)
         assert '1.4.A.1.1a' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/?jump=1.2.N(U(1))', follow_redirects=True)
         assert '1.2.B.2.1a' in L.get_data(as_text=True) and '462' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/?label=0.1.37', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/?jump=0.1.37', follow_redirects=True)
         assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/?jump=0.1.mu(37)', follow_redirects=True)
         assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.get_data(as_text=True)
 
     def test_direct_access(self):
@@ -49,7 +49,7 @@ class SatoTateGroupTest(LmfdbTest):
         L = self.tc.get('SatoTateGroup/?components=48&include_irrational=yes')
         assert '27 matches' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25&include_irrational=yes')
-        assert 'matches 1001-1025' in L.get_data(as_text=True)
+        assert '1001-1025 of' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?degree=1')
         assert 'both matches' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?count=47')
@@ -90,8 +90,8 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
             assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/?components=999999999&include_irrational=yes')
-        assert 'unique match' in L.get_data(as_text=True) and 'mu(999999999)' in L.get_data(as_text=True)
+        L = self.tc.get('/SatoTateGroup/?components=9999&include_irrational=yes')
+        assert 'unique match' in L.get_data(as_text=True) and 'mu(9999)' in L.get_data(as_text=True)
 
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
