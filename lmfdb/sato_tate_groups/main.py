@@ -687,7 +687,8 @@ def mu_data(n):
         rec['supgroups'] = []
         rec['maximal'] = True
     elif n > 2:
-        rec['supgroups'] = ["0.1.%d"%(p*n) for p in [2,3,5]]
+        if n <= 200000:
+            rec['supgroups'] = ["0.1.%d"%(p*n) for p in [2,3,5]]
         rec['maximal'] = False
     rec['moments'] = [['a_1'] + [1 if m % n == 0 else 0 for m in range(13)]]
     rec['second_trace_moment'] = 1 if 2 % n == 0 else 0
@@ -840,7 +841,6 @@ def render_by_label(label):
     info['st0_name']=st0['name']
     info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
-    print("hi there")
     if data['component_group'][:2] == "ab":
         info['component_group'] = r"C_{%s}"%info['components']
         info['cyclic']=boolean_name(True)
@@ -872,6 +872,11 @@ def render_by_label(label):
         else:
             mults = ["" for s in data['supgroups']]
         info['supgroups'] = comma_separated_list([st_link(data['supgroups'][i]) + mults[i] for i in range(len(mults))])
+    if not data['rational']:
+        if info.get("supgroups"):
+            info['supgroups'] += ", $\\cdots$"
+        else:
+            info['supgroups'] = "$\\cdots$"
     if data.get('moments'):
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
