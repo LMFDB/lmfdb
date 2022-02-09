@@ -149,7 +149,7 @@ bmf_columns = SearchColumns([
     # See Issue #4170
     #MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
-                 lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else "?"),
+                 lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else ""),
                  default=True, align="center"),
     ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
     ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, align="center")])
