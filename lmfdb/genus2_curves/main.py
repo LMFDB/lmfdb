@@ -2,7 +2,6 @@
 
 import re
 from ast import literal_eval
-from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, make_response, abort
 from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
@@ -542,24 +541,6 @@ class G2C_download(Downloader):
         "gp": ["[apply(Polrev,c)|c<-data];"],
     }
 
-
-def parse_sort(info, query):
-    default = ["cond", "class", "abs_disc", "disc_sign", "label"]
-    d = defaultdict(
-        lambda: default, (
-            ("", default),
-            ("abs_disc", ["abs_disc"] + default),
-            ("num_rat_pts1", [("num_rat_pts", 1)] + default),
-            ("num_rat_pts-1", [("num_rat_pts", -1)] + default),
-            ("num_rat_wpts1", [("num_rat_wpts", 1)] + default),
-            ("num_rat_wpts-1", [("num_rat_wpts", -1)] + default),
-            ("torsion_order1", [("torsion_order", 1)] + default),
-            ("torsion_order-1", [("torsion_order", -1)] + default),
-            ("analytic_sha1", [("analytic_sha", 1)] + default),
-            ("analytic_sha-1", [("analytic_sha", -1)] + default),
-        ))
-    query["__sort__"] = d[info.get("sort_order")]
-
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
     ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
@@ -579,8 +560,8 @@ g2c_columns = SearchColumns([
     ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center"),
     CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
     CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
-    MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-Automorphisms"),
-    MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-Automorphisms"),
+    MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-automorphisms"),
+    MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-automorphisms"),
     MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
     MathCol("num_rat_wpts", "g2c.num_rat_wpts",  r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
     CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
@@ -590,9 +571,9 @@ g2c_columns = SearchColumns([
     ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),
-    ProcessedCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), mathmode=True),
-    ProcessedCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), mathmode=True),
-    ProcessedCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), mathmode=True),
+    ProcessedCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True),
+    ProcessedCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True),
+    ProcessedCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True),
     ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
 ])
 
@@ -678,7 +659,6 @@ def genus2_curve_search(info, query):
         qfield="bad_primes",
         mode=info.get("bad_quantifier"),
     )
-    parse_sort(info, query)
 
 
 ################################################################################
@@ -1148,22 +1128,18 @@ class G2CSearchArray(SearchArray):
             [geometric_invariants],
         ]
 
+    _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
     sort_knowl = "g2c.sort_order"
-
-    def sort_order(self, info):
-        X = [
-            ("", "label"),
-            ("abs_disc", "absolute discriminant"),
-            ("num_rat_pts1", "rational points (inc)"),
-            ("num_rat_pts-1", "rational points (dec)"),
-            ("num_rat_wpts1", "Weierstrass points (inc)"),
-            ("num_rat_wpts-1", "Weierstrass points (dec)"),
-            ("torsion_order1", "torsion order (inc)"),
-            ("torsion_order-1", "torsion order (dec)"),
-            ("analytic_sha1", "analytic sha (inc)"),
-            ("analytic_sha-1", "analytic sha (dec)"),
-        ]
-        return X
+    sorts = [("", "conductor", _default),
+             ("disc", "absolute discriminant", ["abs_disc"] + _default),
+             ("num_rat_pts", "rational points", ["num_rat_pts"] + _default),
+             ("num_rat_wpts", "Weierstrass points", ["num_rat_wpts"] + _default),
+             ("torsion", "torsion order", ["torsion_order"] + _default),
+             ("analytic_sha", "analytic sha", ["analytic_sha"] + _default),
+             ("two_selmer_rank", "2-Selmer rank", ["two_selmer_rank"] + _default),
+             ("analytic_rank", "analytic rank", ["analytic_rank"] + _default),
+             ("st_label", "Sato-Tate group", ["st_label_components"] + _default),
+             ]
 
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"

@@ -43,6 +43,20 @@ class Wrapper(object):
         self.one_per = one_per
         self.kwds = kwds
 
+    def get_sort(self, info, query):
+        sort = query.pop("__sort__", None)
+        SA = info.get("search_array")
+        if sort is None and SA is not None and SA.sorts is not None:
+            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            for name, display, S in sorts:
+                sord = info.get('sort_order', '')
+                if name == sord:
+                    sop = info.get('sort_dir', '')
+                    if sop == 'op':
+                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
+                    return S
+        return sort
+
     def make_query(self, info, random=False):
         query = {}
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -57,8 +71,8 @@ class Wrapper(object):
             err_title = query.pop("__err_title__", self.err_title)
         if errpage is not None:
             return errpage
-        sort = query.pop("__sort__", None)
         table = query.pop("__table__", self.table)
+        sort = self.get_sort(info, query)
         # We want to pop __title__ even if overridden by info.
         title = query.pop("__title__", self.title)
         title = info.get("title", title)

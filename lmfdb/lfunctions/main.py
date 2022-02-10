@@ -219,18 +219,6 @@ def jump_box(info):
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
-def parse_sort(info, query):
-    if info.get('sort_order') == '':
-        query['__sort__'] = ['root_analytic_conductor', 'label']
-    elif info.get('sort_order') == 'zero':
-        query['__sort__'] = [('z1', -1)]
-    elif info.get('sort_order') == 'izero':
-        query['__sort__'] = ['z1']
-    elif info.get('sort_order') == 'A':
-        query['__sort__'] = ['analytic_conductor', 'label']
-    elif info.get('sort_order') == 'cond':
-        query['__sort__'] = ['conductor', 'root_analytic_conductor', 'label']
-
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_spectral(inp, query, qfield):
     if '-' not in inp:
@@ -307,7 +295,6 @@ def common_parse(info, query):
         del query['instance_types']
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
-    parse_sort(info, query)
     info['bigint_knowl'] = bigint_knowl
 
 lfunc_columns = SearchColumns([
@@ -315,35 +302,35 @@ lfunc_columns = SearchColumns([
                          ["label", "url"],
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
                          default=True),
-    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", default=True),
-    MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", default=True),
-    MathCol("degree", "lfunction.degree", "$d$", default=True),
-    MathCol("factored_conductor", "lfunction.conductor", "$N$", default=True),
-    LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), default=True, align="center"),
+    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", short_title="root analytic conductor", default=True),
+    MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", short_title="analytic conductor", default=True),
+    MathCol("degree", "lfunction.degree", "$d$", short_title="degree", default=True),
+    MathCol("factored_conductor", "lfunction.conductor", "$N$", short_title="conductor", default=True),
+    LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), short_title="central character", default=True, align="center"),
     MathCol("mus", "lfunction.functional_equation", r"$\mu$", default=True),
     MathCol("nus", "lfunction.functional_equation", r"$\nu$", default=True),
     MultiProcessedCol("motivic_weight", "lfunction.motivic_weight", "$w$",
                       ["motivic_weight", "algebraic"],
                       lambda w, alg: w if alg else "",
-                      default=True, mathmode=True, align="center"),
-    CheckCol("primitive", "lfunction.primitive", "prim", default=True),
+                      default=True, short_title="motivic weight", mathmode=True, align="center"),
+    CheckCol("primitive", "lfunction.primitive", "prim", short_title="primitive", default=True),
     MathCol("root_number", "lfunction.sign", r"$\epsilon$",
             contingent=lambda info: info["search_array"].force_rational,
-            default=True),
+            short_title="root number", default=True),
     CheckCol("algebraic", "lfunction.arithmetic", "arith",
              contingent=lambda info: not info["search_array"].force_rational,
-             default=True),
+             short_title="algebraic", default=True),
     CheckCol("rational", "lfunction.rational", r"$\mathbb{Q}$", short_title="rational",
              contingent=lambda info: not info["search_array"].force_rational,
              default=True),
     CheckCol("self_dual", "lfunction.self-dual", "self-dual",
              contingent=lambda info: not info["search_array"].force_rational,
              default=True),
-    MathCol("root_angle", "lfunction.root_angle", r"$\operatorname{Arg}(\epsilon)$", short_title="Arg(eps)",
+    MathCol("root_angle", "lfunction.root_angle", r"$\operatorname{Arg}(\epsilon)$",
             contingent=lambda info: not info["search_array"].force_rational,
-            default=True),
-    MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", default=True),
-    MathCol("z1", "lfunction.zeros", "First zero", default=True),
+            short_title="root angle", default=True),
+    MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", short_title="order of vanishing", default=True),
+    MathCol("z1", "lfunction.zeros", "First zero", short_title="first zero", default=True),
     ProcessedCol("origins", "lfunction.underlying_object", "Origin",
                  lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
                  default=True)],
@@ -429,6 +416,10 @@ def euler_search(info, query):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s'%p, p=p, d=d)
 
 class LFunctionSearchArray(SearchArray):
+    sorts = [('', 'root analytic conductor', ['root_analytic_conductor', 'label']),
+             ('analytic_conductor', 'analytic conductor', ['analytic_conductor', 'label']),
+             ('z1', 'first zero', ['z1']),
+             ('conductor', 'conductor', ['conductor', 'root_analytic_conductor', 'label'])]
     jump_example="1-1-1.1-r0-0-0"
     jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
     jump_knowl="lfunction.search_input"
@@ -655,15 +646,6 @@ class LFunctionSearchArray(SearchArray):
             euler_table = self._print_table(self.euler_array, info, layout_type="box")
             layout.append(euler_table)
         return "\n".join(layout)
-
-    def sort_order(self, info):
-        return [
-            ('', 'root analytic conductor'),
-            ('A', 'analytic conductor'),
-            ('zero', 'first zero (decreasing)'),
-            ('izero', 'first zero (increasing)'),
-            ('cond', 'conductor')
-        ]
 
 @l_function_page.route("/interesting")
 def interesting():

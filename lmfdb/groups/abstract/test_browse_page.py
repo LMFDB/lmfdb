@@ -213,7 +213,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?direct_product=no", "30.3")
         self.check_args("/Groups/Abstract/?direct_product=yes", "32.22")
         self.not_check_args("/Groups/Abstract/?direct_product=yes", "8.1")
-        self.not_check_args("/Groups/Abstract/?direct_product=no", "8.2")
+        self.not_check_args("/Groups/Abstract/?direct_product=no", "16.11")
 
     def test_semidirect_product_search(self):
         r"""
@@ -222,7 +222,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?semidirect_product=no", "31.1")
         self.check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.7")
         self.not_check_args("/Groups/Abstract/?semidirect_product=no", "10.1")
-        self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "6.2")
+        self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.9")
 
     def test_order_stats_search(self):
         r"""
@@ -265,7 +265,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?metacyclic=yes&search_type=List", "1.1")
         self.not_check_args("/Groups/Abstract/?metacyclic=yes&search_type=List", "12.3")
         self.check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.3")
-        self.not_check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.4")
+        self.not_check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.2")
 
     def test_almost_simple_search(self):
         r"""
@@ -308,7 +308,7 @@ class AbGpsHomeTest(LmfdbTest):
         Check that we can search by derived length
         """
         self.check_args("/Groups/Abstract/?derived_length=3&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?derived_length=3&search_type=List", "16.11")
+        self.not_check_args("/Groups/Abstract/?derived_length=3&search_type=List", "16.13")
 
     def test_frattini_label_search(self):
         r"""
@@ -324,7 +324,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?supersolvable=yes&search_type=List", "1.1")
         self.not_check_args("/Groups/Abstract/?supersolvable=yes&search_type=List", "12.3")
         self.check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.3")
-        self.not_check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.2")
+        self.not_check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.4")
 
     def test_monomial_search(self):
         r"""
@@ -340,7 +340,7 @@ class AbGpsHomeTest(LmfdbTest):
         Check that we can restrict to rational groups or not only
         """
         self.check_args("/Groups/Abstract/?rational=yes&search_type=List", "2.1")
-        self.not_check_args("/Groups/Abstract/?rational=yes&search_type=List", "3.1")
+        self.not_check_args("/Groups/Abstract/?rational=yes&search_type=List", "7.1")
         self.check_args("/Groups/Abstract/?rational=no&search_type=List", "3.1")
         self.not_check_args("/Groups/Abstract/?rational=no&search_type=List", "12.4")
 
