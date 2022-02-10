@@ -809,18 +809,18 @@ group_columns = SearchColumns([
     MathCol("tex_name", "group.name", "Name", default=True),
     ProcessedCol("order", "group.order", "Order", show_factor, default=True, align="center"),
     ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, default=True, align="center"),
-    MathCol("nilpotency_class", "group.nilpotent", "Nilp. class"),
-    MathCol("derived_length", "group.derived_series", "Der. length"),
-    MathCol("composition_length", "group.chief_series", "Comp. length"),
+    MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class"),
+    MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length"),
+    MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length"),
     MathCol("rank", "group.rank", "Rank"),
-    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", default=True),
-    MathCol("number_subgroup_classes", "group.subgroup", r"Num. subgroup classes"),
+    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", default=True, short_title="conjugacy classes"),
+    MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes"),
     SearchCol("center_label", "group.center", "Center", default=True, align="center"),
     SearchCol("central_quotient", "group.central_quotient_isolabel", "Central quotient", align="center"),
     SearchCol("commutator_label", "group.commutator_isolabel", "Commutator", align="center"),
     SearchCol("abelian_quotient", "group.abelianization_isolabel", "Abelianization", align="center"),
-    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center"),
-    ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center"),
+    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
+    ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
@@ -1410,8 +1410,8 @@ class GroupsSearchArray(SearchArray):
              #("central_quotient", "central quotient", ["central_quotient", "order", "counter"]),
              #("abelian_quotient", "abelianization", ["abelian_quotient", "order", "counter"]),
              ("aut_order", "automorphism group", ["aut_order", "aut_group", "order", "counter"]),
-             ("number_conjugacy_classes", "num. conj. classes", ["number_conjugacy_classes", "order", "counter"]),
-             ("number_subgroup_classes", "num. subgroup classes", ["number_subgroup_classes", "order", "counter"])]
+             ("number_conjugacy_classes", "conjugacy classes", ["number_conjugacy_classes", "order", "counter"]),
+             ("number_subgroup_classes", "subgroup classes", ["number_subgroup_classes", "order", "counter"])]
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
     jump_prompt = "Label or name"

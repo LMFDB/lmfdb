@@ -605,7 +605,7 @@ belyi_columns = SearchColumns([
     LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label, default=True),
     MathCol("deg", "belyi.degree", "Degree", default=True),
     SearchCol("group", "belyi.group", "Group", default=True),
-    MathCol("abc", "belyi.abc", "abc", default=True, align="left"),
+    MathCol("abc", "belyi.abc", "abc", default=True, align="left", short_title="abc triple"),
     MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
     MathCol("g", "belyi.genus", "Genus", default=True),
     MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),

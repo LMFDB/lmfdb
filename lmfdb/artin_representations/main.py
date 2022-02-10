@@ -231,12 +231,12 @@ artin_columns = SearchColumns([
     MathCol("dimension", "artin.dimension", "Dimension", default=True),
     MathCol("factored_conductor_latex", "artin.conductor", "Conductor", default=True),
     MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count"),
-    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True),
-    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center"),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field"),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center", short_title="image"),
     SearchCol("projective_group", "artin.projective_image", "Projective image", align="center"),
-    SearchCol("container", "artin.permutation_container", "Smallest permutation container", align="center"),
-    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True),
-    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True)],[
+    SearchCol("container", "artin.permutation_container", "Container", align="center"),
+    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True, short_title="indicator"),
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True, short_title="trace of complex conj.")],[
         "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
 
 artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
@@ -515,7 +515,7 @@ class ArtinSearchArray(SearchArray):
              ("con", "conductor", ["Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
              ("group", "group", ["Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
              #("container", "container", ["Container", "Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
-             ("num_ramps", "number ramified primes", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
+             ("num_ramps", "ramified prime count", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
              ("projective_group", "projective image", ["Proj_nTj", "Proj_Polynomial", "Dim", "Conductor", "Galn", "Galt", "Baselabel"])]
     jump_example = "4.5648.6t13.b.a"
     jump_egspan = "e.g. 4.5648.6t13.b.a"

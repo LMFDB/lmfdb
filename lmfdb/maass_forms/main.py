@@ -207,7 +207,7 @@ maass_columns = SearchColumns([
     MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
                       ["level", "conrey_index"],
-                      character_link,
+                      character_link, short_title="character",
                       default=True, align="center"),
     MultiProcessedCol("spectral", "mf.maass.mwf.spectralparameter", "Spectral parameter",
                       ["maass_id", "spectral_parameter"],
@@ -217,7 +217,7 @@ maass_columns = SearchColumns([
                  symmetry_pretty,
                  default=True, align="center"),
     ProcessedCol("fricke_eigenvalue", "cmf.fricke", "Fricke",
-                 fricke_pretty,
+                 fricke_pretty, short_title="Fricke",
                  default=True, align="center")],
     db_cols=["maass_id", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
 

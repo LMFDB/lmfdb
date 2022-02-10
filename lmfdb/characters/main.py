@@ -210,7 +210,7 @@ def display_galois_orbit(orbit, modulus):
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],
-                      display_galois_orbit, default=True, align="center"),
+                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
     MathCol("order", "character.dirichlet.order", "Order", default=True),

@@ -809,7 +809,7 @@ nf_columns = SearchColumns([
     MathCol("degree", "nf.degree", "Degree", align="center"),
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
-    MathCol("num_ram", "nf.ramified_primes", "Num. ram. primes"),
+    MathCol("num_ram", "nf.ramified_primes", "Ram. prime count", short_title="ramified prime count"),
     MathCol("rd", "nf.root_discriminant", "Root discriminant"),
     CheckCol("cm", "nf.cm_field", "Is CM field?"),
     CheckCol("is_galois", "nf.galois_group", "Is Galois?"),

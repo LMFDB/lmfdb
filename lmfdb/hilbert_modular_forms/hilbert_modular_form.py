@@ -141,7 +141,7 @@ hmf_columns = SearchColumns([
     MathCol("level_norm", "mf.level_norm", "Level norm"),
     MathCol("weight", "mf.hilbert.weight_vector", "Weight"),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
-    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", align="center"),
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center"),
     ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center")])
 hmf_columns.dummy_download = True
 

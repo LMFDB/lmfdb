@@ -27,7 +27,7 @@ class SearchCol:
         self.knowl = knowl
         self.title = title
         if short_title is None:
-            short_title = title
+            short_title = None if title is None else title.lower()
         self.short_title = short_title
         self.default = get_default_func(default, name)
         self.orig = [name]

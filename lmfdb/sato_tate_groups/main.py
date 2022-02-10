@@ -597,12 +597,12 @@ def search_by_label(label):
 
 st_columns = SearchColumns([
     LinkCol("label", "st_group.label", "Label", lambda label: url_for('.by_label', label=label), default=True),
-    MathCol("weight", "st_group.weight", "Wt", default=True),
-    MathCol("degree", "st_group.degree", "Deg", default=True),
-    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="dim_R", default=True),
-    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", st0_pretty, short_title="G^0", mathmode=True, default=True, align="center"),
+    MathCol("weight", "st_group.weight", "Wt", default=True, short_title="weight"),
+    MathCol("degree", "st_group.degree", "Deg", default=True, short_title="degree"),
+    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="real dimension", default=True),
+    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", st0_pretty, short_title="identity component", mathmode=True, default=True, align="center"),
     MathCol("pretty", "st_group.name", "Name", default=True),
-    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="G/G^0", default=True),
+    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="components", default=True),
     MathCol("trace_zero_density", "st_group.trace_zero_density", r"$\mathrm{Pr}[t\!=\!0]$", short_title="Pr[t=0]", default=True),
     MathCol("second_trace_moment", "st_group.second_trace_moment", r"$\mathrm{E}[a_1^2]$", short_title="E[a_1^2]", default=True, align="right"),
     MathCol("fourth_trace_moment", "st_group.fourth_trace_moment", r"$\mathrm{E}[a_1^4]$", short_title="E[a_1^4]", default=True, align="right"),

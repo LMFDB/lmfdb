@@ -361,8 +361,8 @@ hgm_columns = SearchColumns([
                           ab_label(A, B) if t is None else
                           make_abt_label(A, B, t)),
                       default=True),
-    MathCol("A", None, "$A$", default=True),
-    MathCol("B", None, "$B$", default=True),
+    MathCol("A", None, "$A$", default=True, short_title="A"),
+    MathCol("B", None, "$B$", default=True, short_title="B"),
     ProcessedCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
     ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
     MathCol("degree", None, "Degree", default=True),
