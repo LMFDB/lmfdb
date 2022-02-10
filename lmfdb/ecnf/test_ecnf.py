@@ -97,7 +97,7 @@ class EllCurveTest(LmfdbTest):
         assert '1681' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/?jinv=0,1728')
         t = L.get_data(as_text=True)
-        assert '729.4-a3' in t and '1024.1-c1' in t and '11.1-a1' not in t
+        assert '729.1-CMb1' in t and '1024.1-a1' in t and '73.1-a1' not in t
         L = self.tc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
         assert '11.1-a1' not in L.get_data(as_text=True)
 
@@ -113,7 +113,7 @@ class EllCurveTest(LmfdbTest):
         Test that searching for isogeny degree works
         """
         L = self.tc.get('/EllipticCurve/?start=0&isodeg=2')
-        assert '27.2-a4' in L.get_data(as_text=True)
+        assert '73.1-a1' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/?start=0&torsion=1&isodeg=2')
         assert 'No matches' in L.get_data(as_text=True)
 
@@ -121,7 +121,7 @@ class EllCurveTest(LmfdbTest):
         r"""
         Test that searching for CM field discriminant works
         """
-        self.check_args('/EllipticCurve/?cm_disc=-4','1024.1-c1')
+        self.check_args('/EllipticCurve/?cm_disc=-4','1024.1-a1')
         self.not_check_args('/EllipticCurve/?cm_disc=-4','1.0.1-a1')
         
         # make sure it works with 4-way PCM, CM, PCMnoCM, noCM switch

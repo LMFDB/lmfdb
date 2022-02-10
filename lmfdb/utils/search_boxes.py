@@ -133,7 +133,9 @@ class SearchBox(TdElt):
     def _label(self, info):
         label = self.label if info is None else self.short_label
         if self.knowl is not None:
-            label = display_knowl(self.knowl, label)
+            knowl = display_knowl(self.knowl, label)
+            if knowl is not None:
+                return knowl
         return label
 
     def has_label(self, info):
@@ -406,7 +408,9 @@ class DoubleSelectBox(SearchBox):
     def __init__(self, label, select_box1, select_box2, **kwds):
         self.select_box1 = select_box1
         self.select_box2 = select_box2
-        SearchBox.__init__(self, label, **kwds)
+        if 'name' not in kwds:
+            kwds['name'] = label
+        SearchBox.__init__(self, label=label, **kwds)
 
     def _input(self, info):
         return (
@@ -535,6 +539,44 @@ class ColumnController(SelectBox):
             "".join("\n" + " " * 10 + opt for opt in options),
         )
 
+class SortController(SelectBox):
+    wrap_mixins = {'width': '170px'}
+    def __init__(self, options, knowl):
+        extra = [
+            '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
+            '''onmousemove="return false;"''',
+            '''onmouseup="this.focus();"''',
+            '''onblur="blur_sort(this);"''',
+            '''oninput="control_sort(this);"''',
+            '''id="sort-selecter"''',
+            '''style="width: 170px; position: absolute; z-index: 9999;"''',
+        ]
+        super().__init__(
+            name="sort_order",
+            label="Sort order",
+            options=options,
+            knowl=knowl,
+            width=None,
+            extra=extra,
+        )
+
+    #sort_box = SelectBox(
+    #    name='sort_order',
+    #    options=list(sort),
+    #    width=130)
+    #sort_dir = SelectBox(
+    #    name='sort_dir',
+    #    options=[('', '&#9650;'), ('op', '&#9660;')],
+    #    width=None,
+    #    extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
+    #)
+    #sort_ord = DoubleSelectBox(
+    #    name='sort_combo',
+    #    label='Sort order',
+    #    knowl=self.sort_knowl,
+    #    select_box1=sort_box,
+    #    select_box2=sort_dir)
+
 class SearchButton(SearchBox):
     _default_width = 170
     def __init__(self, value, description, **kwds):
@@ -595,11 +637,18 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
+    sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
     noun = "result"
     plural_noun = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
-        return None
+        if self.sorts is not None:
+            sorts = self.sorts if isinstance(self.sorts, list) else self.sorts.get(self._st(info))
+            if sorts is not None:
+                #for name, display, prefix in self.sorts:
+                #    yield (name, display + " &#9650;")
+                #    yield (name + "op", display + " &#9660;")
+                return [(name, display) for (name, display, sort_order) in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:
@@ -755,14 +804,19 @@ class SearchArray(UniqueRepresentation):
                 sort = self.sort_order(info)
                 if sort:
                     spacer = RowSpacer(6)
-                    sort_box = SelectBox(
-                        name='sort_order',
-                        label='Sort order',
-                        knowl=self.sort_knowl,
-                        options=sort,
-                        width=170)
-                    buttons.append(sort_box)
-            buttons.append(ColumnController())
+                    cur_sort = info.get('sort_order', '')
+                    cur_dir = info.get('sort_dir', '')
+                    options = []
+                    for name, disp in sort:
+                        if name == cur_sort:
+                            if cur_dir == 'op':
+                                options.append((name, '▼ ' + disp)) # the space is U+2006, a 1/6 em space
+                            else:
+                                options.append((name, '▲ ' + disp)) # the space is U+2006, a 1/6 em space
+                        else:
+                            options.append((name, '  ' + disp)) # the spaces are U+2006 and U+2003, totaling 7/6 em
+                    buttons.append(SortController(options, self.sort_knowl))
+                buttons.append(ColumnController())
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 
     def html(self, info=None):

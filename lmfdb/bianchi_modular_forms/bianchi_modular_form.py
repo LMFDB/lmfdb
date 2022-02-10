@@ -149,10 +149,10 @@ bmf_columns = SearchColumns([
     # See Issue #4170
     #MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
-                 lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else "?"),
+                 lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else ""),
                  default=True, align="center"),
     ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
-    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, align="center")])
+    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, short_title="CM", align="center")])
 
 bmf_columns.dummy_download = True
 
@@ -698,6 +698,8 @@ def labels_page():
 class BMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
+    sorts = [("", "level norm", ['level_norm', 'label']),
+             ("field", "field", ['field_deg', ('field_disc', -1), 'level_norm', 'label'])]
     jump_example = "2.0.4.1-65.2-a"
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"

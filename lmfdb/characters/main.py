@@ -74,6 +74,9 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     noun = "character"
     plural_noun = "characters"
+    sorts = [("", "modulus", ["modulus", "orbit_index"]),
+             ("conductor", "conductor", ["conductor", "prim_orbit_index", "modulus", "orbit_index"]),
+             ("order", "order", ["order", "modulus", "orbit_index"])]
     jump_example = "13.2"
     jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl = "character.dirichlet.search_input"
@@ -207,7 +210,7 @@ def display_galois_orbit(orbit, modulus):
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],
-                      display_galois_orbit, default=True, align="center"),
+                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
     MathCol("order", "character.dirichlet.order", "Order", default=True),

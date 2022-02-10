@@ -146,6 +146,8 @@ def reliability_page():
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 class MaassSearchArray(SearchArray):
+    sorts = [("", "level", ['level', 'weight', 'conrey_index', 'spectral_parameter']),
+             ("spectral", "spectral parameter", ['spectral_parameter', 'weight', 'level', 'conrey_index'])]
     noun = "Maass form"
     plural_noun = "Maass forms"
     def __init__(self):
@@ -205,7 +207,7 @@ maass_columns = SearchColumns([
     MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
                       ["level", "conrey_index"],
-                      character_link,
+                      character_link, short_title="character",
                       default=True, align="center"),
     MultiProcessedCol("spectral", "mf.maass.mwf.spectralparameter", "Spectral parameter",
                       ["maass_id", "spectral_parameter"],
@@ -215,7 +217,7 @@ maass_columns = SearchColumns([
                  symmetry_pretty,
                  default=True, align="center"),
     ProcessedCol("fricke_eigenvalue", "cmf.fricke", "Fricke",
-                 fricke_pretty,
+                 fricke_pretty, short_title="Fricke",
                  default=True, align="center")],
     db_cols=["maass_id", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
 
@@ -237,7 +239,6 @@ def search(info, query):
     parse_floats(info, query, 'spectral_parameter', name='Spectral parameter')
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
-    query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }

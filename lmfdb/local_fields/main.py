@@ -200,15 +200,18 @@ class LF_download(Downloader):
 
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
+    MathCol("n", "lf.degree", "$n$", short_title="degree"),
     ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
-    MathCol("p", "lf.qp", "$p$", default=True),
-    MathCol("e", "lf.ramification_index", "$e$", default=True),
-    MathCol("f", "lf.residue_field_degree", "$f$", default=True),
-    MathCol("c", "lf.discriminant_exponent", "$c$", default=True),
+    MathCol("p", "lf.qp", "$p$", default=True, short_title="prime"),
+    MathCol("e", "lf.ramification_index", "$e$", default=True, short_title="ramification index"),
+    MathCol("f", "lf.residue_field_degree", "$f$", default=True, short_title="residue field degree"),
+    MathCol("c", "lf.discriminant_exponent", "$c$", default=True, short_title="discriminant exponent"),
     MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                       ["n", "gal", "cache"],
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
                       default=True),
+    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
+    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
@@ -469,6 +472,15 @@ def reliability():
 class LFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
+    sorts = [("", "prime", ['p', 'n', 'c', 'label']),
+             ("n", "degree", ['n', 'p', 'c', 'label']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
+             ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
+             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
+             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
+             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'label'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
