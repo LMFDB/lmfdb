@@ -733,6 +733,8 @@ class WebNewform(object):
     def _order_basis_forward(self):
         basis = []
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
+            if i == 0:
+                continue
             basis.append(
                 (rf'\(\beta_{{{i}}}\)',
                  raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True))
@@ -740,7 +742,7 @@ class WebNewform(object):
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
-        basis = [(r'\(1\)', r'\(\beta_0\)')]
+        basis = []
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
             if i == 0:
                 nupow = r'\(%s\)' % self._nu_latex
