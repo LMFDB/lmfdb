@@ -4,7 +4,7 @@ function setraw(elt) {
   if( raw.startsWith("<textarea") ) {
     raw = $(raw);
     var ta = $(raw[0]); // the textarea element
-    ta.width($this.width() - (21 + 2 + 2 + 5)); // icon + 2*border + ws +  (x->x)
+    ta.width(Math.min(15, $this.width() - (21 + 2 + 2 + 5))); // icon + 2*border + ws +  (x->x)
     ta.height($this.height() - 8);
   }
 
