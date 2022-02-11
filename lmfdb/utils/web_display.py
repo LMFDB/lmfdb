@@ -17,7 +17,7 @@ from . import coeff_to_poly
 ################################################################################
 
 
-def raw_typeset(raw, typeset='', extra='', textarea=False, textarea_threshold=150):
+def raw_typeset(raw, typeset='', extra=''):
     r"""
     Return a span with typeset material which will toggle to raw material
     when an icon is clicked on.
@@ -38,10 +38,8 @@ def raw_typeset(raw, typeset='', extra='', textarea=False, textarea_threshold=15
     if not typeset:
         typeset = r'\({}\)'.format(latex(raw))
 
-    textarea = textarea and len(str(raw)) > textarea_threshold
-    if textarea and len(str(raw)) > textarea_threshold:
-        # no space is quite important, as we check on the start of this string in JS
-        raw = f"""<textarea
+    # no space is quite important, as we check on the start of this string in JS
+    raw = f"""<textarea
 class="tset-raw"
 readonly=""
 rows="1"
@@ -62,7 +60,6 @@ style="line-height: 1; height: 13px";
     {typeset}
     </span>
     {extra}
-    {"" if textarea else "&nbsp;&nbsp"}
     <span class="tset rawtset-btn" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
         class="tset-icon"
@@ -497,11 +494,6 @@ def raw_typeset_poly(coeffs,
         raw = f"({raw}) {denominatorraw}"
 
 
-    if compress_poly:
-        # this forces the box
-        kwargs['textarea'] = True
-        kwargs['textarea_threshold'] =compress_threshold
-
     return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
 
 def raw_typeset_poly_factor(factors, # list of pairs (f,e)
@@ -613,11 +605,6 @@ def raw_typeset_qexp(coeffs_list,
     tset += rf'+O(q^{{{len(coeffs_list)}}})'
     raw = raw.lstrip(" ")
 
-
-
-    kwargs['textarea'] = True
-    kwargs['textarea_threshold'] = compress_threshold
-
     return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
 
 
@@ -691,7 +678,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         res =  r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
         res = r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
-    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res, textarea_threshold=100)
+    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res)
 
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
