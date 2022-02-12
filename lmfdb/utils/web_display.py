@@ -6,8 +6,6 @@ from sage.all import (
     latex,
     ZZ,
     factor,
-    RR,
-    floor,
     PolynomialRing,
     TermOrder,
 )
