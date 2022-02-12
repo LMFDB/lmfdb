@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
-    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset)
+    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset_poly)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
@@ -721,10 +721,10 @@ class NumberFieldGaloisGroup(object):
         return self._data["Polynomial"]
 
     def polynomial_raw_typeset(self):
-        return raw_typeset(coeff_to_poly(self.polynomial()))
+        return raw_typeset_poly(coeff_to_poly(self.polynomial()))
 
-    def polynomial_latex(self):
-        return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
+    # def polynomial_latex(self):
+    #     return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
 
     # WebNumberField of the object
     def wnf(self):
@@ -825,7 +825,7 @@ class NumberFieldGaloisGroup(object):
 
     def computation_minimal_polynomial_raw_typeset(self):
         pol = coeff_to_poly(self._data["QpRts-minpoly"])
-        return raw_typeset(pol)
+        return raw_typeset_poly(pol)
 
     def computation_minimal_polynomial_latex(self):
         pol = coeff_to_poly(self._data["QpRts-minpoly"])
