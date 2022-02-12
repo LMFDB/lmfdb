@@ -37,7 +37,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
         typeset = r'\({}\)'.format(latex(raw))
 
     typeset = f'<span class="tset-container">{typeset}</span>'
-    raw=raw.strip()
+    raw = str(raw).strip()
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
 
