@@ -426,6 +426,7 @@ def raw_typeset_poly(coeffs,
                      superscript=True,
                      compress_threshold=100,
                      decreasing=True,
+                     final_rawvar=None,
                      **kwargs):
     """
     Generate a raw_typeset string a given integral polynomial, or a linear combination
@@ -473,17 +474,20 @@ def raw_typeset_poly(coeffs,
             tset = latex(polytoprint)
 
     if not superscript:
-        raw = raw.replace('^', '_').replace(raw_var + " ", raw_var + "_1 ")
+        raw = raw.replace('^', '').replace(raw_var + " ", raw_var + "1 ")
         tset = tset.replace('^', '_').replace(tset_var + " ", tset_var + "_1 ")
         # in case the last replace doesn't trigger because is at the end
         if raw.endswith(raw_var):
-            raw += "_1"
+            raw += "1"
         if tset.endswith(tset_var):
             tset += "_1"
 
     if denominator != 1:
         tset = f"( {tset} ) {denominatortset}"
         raw = f"({raw}) {denominatorraw}"
+
+    if final_rawvar:
+        raw = raw.replace(var, final_rawvar)
 
 
     return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
@@ -524,6 +528,7 @@ def raw_typeset_qexp(coeffs_list,
                      compress_threshold=100,
                      coeff_compress_threshold=30,
                      var=r"\beta",
+                     final_rawvar='b',
                      superscript=False,
                      **kwargs):
     plus = r" + "
@@ -554,11 +559,11 @@ def raw_typeset_qexp(coeffs_list,
                 coeff_compress_threshold,
                 decreasing=True)
         if not superscript:
-            raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
+            raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
             tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
             # in case the last replace doesn't trigger because is at the end
             if raw.endswith(rawvar):
-                raw += "_1"
+                raw += "1"
             if tset.endswith(var):
                 tset += "_1"
         if poly.number_of_terms() == 1:
@@ -596,6 +601,8 @@ def raw_typeset_qexp(coeffs_list,
 
     tset += rf'+O(q^{{{len(coeffs_list)}}})'
     raw = raw.lstrip(" ")
+    # use final_rawvar
+    raw = raw.replace(rawvar, final_rawvar)
 
     return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
 

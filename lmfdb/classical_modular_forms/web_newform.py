@@ -737,7 +737,7 @@ class WebNewform(object):
                 continue
             basis.append(
                 (rf'\(\beta_{{{i}}}\)',
-                 raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True))
+                 raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True, final_rawvar='v'))
             )
         return self._make_table(basis)
 
@@ -750,7 +750,7 @@ class WebNewform(object):
                 nupow = r'\(%s^{%s}\)' % (self._nu_latex, i+1)
             basis.append(
                 (nupow,
-                 raw_typeset_poly(num, denominator=den, var='beta', superscript=False))
+                 raw_typeset_poly(num, denominator=den, var='beta', superscript=False, final_rawvar='b'))
             )
         return self._make_table(basis)
 
