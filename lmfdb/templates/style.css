@@ -2490,13 +2490,14 @@ span.raw-tset-copy-btn:active, span.raw-tset-toggle:active {
     box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
 }
 
-/* textarea */
-span.raw-tset-container > textarea.raw-container {
+/* textarea/pre */
+span.raw-tset-container > .raw-container {
     font-size: 95%;
     line-height: 1;
     padding: 1.5px;
     border: 1px solid {{color.input_border}};
     margin: 0px;
+    font-family: monospace;
 }
 
 /* non static */

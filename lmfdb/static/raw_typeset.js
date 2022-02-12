@@ -1,12 +1,25 @@
+
 function setraw(elt) {
   var $this = $(elt);
-  // the textarea element
+  // typeset container
   var $tset = $this.children("span.tset-container").first();
-  // the "real" rectangle around tset, so we get dimensions as floating points
-  var rect = ($tset)[0].getBoundingClientRect();
+  var tset_rect = ($tset)[0].getBoundingClientRect();
   var $ta = $this.children("textarea.raw-container").first();
-  $ta.width(Math.max(25, rect.width - (2 + 3))); // 2*border + 2*padding
-  $ta.height(rect.height - (2 + 3));
+  if ( $this.hasClass("compressed") ) {
+    $ta.width(Math.max(25, tset_rect.width - (2 + 3))); // 2*border + 2*padding
+    $ta.height(tset_rect.height - (2 + 3));
+  } else {
+    var properties_rect = $("#properties")[0].getBoundingClientRect();
+    // we aim to avoid overlapping properties box
+    // we could check for properties_rect.bottom > tset_rect.top
+    // but that creates funny behaviour as the current line
+    // might have enough space, but not one the parents, e.g. a table
+    $ta.css('max-width', properties_rect.left - tset_rect.left - 75);
+    $ta.height(0);
+    // we need a delay to read the correct scrollHeight
+    setTimeout(function() {$ta.height($ta[0].scrollHeight - (2+3));}, 1);
+  }
+
   $this.removeClass("tset");
   $this.addClass("raw");
 }
@@ -14,11 +27,15 @@ function setraw(elt) {
 
 
 function double_rawtset(evt) {
-  var $this = $(evt.currentTarget);
+  console.log("double");
+  console.log(evt);
+  var $this = $(evt.currentTarget.parentElement);
   if( $this.hasClass("tset") ) {
+    console.log("inside");
     setraw($this);
     $ta = $this.children("textarea.raw-container").first();
     $ta.select();
+    // we need a delay to set the scrollHeight
     setTimeout(function() {$ta.scrollTop(0);}, 1);
   }
 }
