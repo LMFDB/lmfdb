@@ -1,44 +1,35 @@
 function setraw(elt) {
   var $this = $(elt);
-  var raw = $this.attr("raw");
-  if( raw.startsWith("<textarea") ) {
-    raw = $(raw);
-    var ta = $(raw[0]); // the textarea element
-    ta.width(Math.max(25, $this.width() - (21 + 2 + 2 + 5))); // icon + 2*border + ws +  (x->x)
-    ta.height($this.height() - 8);
-  }
-
-  $this.attr("tset", $this.html());
-  $this.html(raw);
-  $this.addClass("raw");
+  // the textarea element
+  var $tset = $this.children("span.tset-container").first();
+  // the "real" rectangle around tset, so we get dimensions as floating points
+  var rect = ($tset)[0].getBoundingClientRect();
+  var $ta = $this.children("textarea.raw-container").first();
+  $ta.width(Math.max(25, rect.width - (2 + 3))); // 2*border + 2*padding
+  $ta.height(rect.height - (2 + 3));
   $this.removeClass("tset");
-  $next = $this.next();
-  $next.addClass("raw");
-  $next.removeClass("tset");
+  $this.addClass("raw");
+}
+
+
+
+function double_rawtset(evt) {
+  var $this = $(evt.currentTarget);
+  if( $this.hasClass("tset") ) {
+    setraw($this);
+    $ta = $this.children("textarea.raw-container").first();
+    $ta.select();
+    setTimeout(function() {$ta.scrollTop(0);}, 1);
+  }
 }
 
 
 function settset(elt) {
   var $this = $(elt);
-  $this.html($this.attr("tset"));
-  $this.addClass("tset");
   $this.removeClass("raw");
-  $next = $this.next();
-  $next.addClass("tset");
-  $next.removeClass("raw");
+  $this.addClass("tset");
 }
 
-// safe versions to be used with each in setall*
-function setraw_safe(i, elt) {
-  if( $(elt).hasClass("tset") ) {
-    setraw(elt);
-  }
-}
-function settset_safe(i, elt) {
-  if( $(elt).hasClass("raw") ) {
-    settset(elt);
-  }
-}
 
 function toggle(elt) {
   if( $(elt).hasClass("raw") ) {
@@ -48,30 +39,22 @@ function toggle(elt) {
   }
 }
 
-function setallraw(iconpath) {
-  console.log("setallraw");
-  $("span.tset-raw").each(setraw_safe);
-}
-
-function setalltset(iconpath) {
-  console.log("setalltset");
-  $("span.tset-raw").each(settset_safe);
-}
-
 
 function iconrawtset(elt) {
-  toggle(elt.parentElement.children[0]);
+  toggle(elt.parentElement);
 }
 
 function iconrawtsetall(elt) {
   var $this = $(elt);
   if( $this.hasClass("raw") ) {
-    setalltset();
+    // we remove the class first, so it doesn't show up in the following selector
     $this.removeClass("raw");
+    $("span.raw-tset-container.raw").toArray().forEach(settset);
     $this.addClass("tset");
   } else {
-    setallraw();
+    // we remove the class first, so it doesn't show up in the following selector
     $this.removeClass("tset");
+    $("span.raw-tset-container.tset").toArray().forEach(setraw);
     $this.addClass("raw");
   }
 }
@@ -80,13 +63,22 @@ function iconrawtsetall(elt) {
 function copyTextOf(elt) {
   var copyText = $(elt);
   navigator.clipboard.writeText(copyText.text());
-  copyText.notify("Copied!",
+
+  copyText.parent().children('.raw-tset-copy-btn').notify("Copied!",
     {className: "success", position:"bottom right" }
 );
 }
 
-function copyuncle(elt) {
-  copyTextOf($(elt.parentElement.parentElement).children("textarea")[0]);
+function copyrawcontainer(elt) {
+  copyTextOf($(elt).parent().children("textarea.raw-container").first());
 }
 
+
+
+$(document).ready( function(){
+  if ($("span.raw-tset-container").length > 0) {
+    $("#rawtseticonspot").html('<span class="tset all raw-tset-container" onclick="iconrawtsetall(this)"><span class="raw-tset-toggle"><img class="tset-icon" alt="Toggle raw display"></span></span>');
+    $(".tset-container").dblclick(double_rawtset);
+  }
+});
 

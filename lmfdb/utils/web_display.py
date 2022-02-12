@@ -38,29 +38,21 @@ def raw_typeset(raw, typeset='', extra=''):
     if not typeset:
         typeset = r'\({}\)'.format(latex(raw))
 
-    # no space is quite important, as we check on the start of this string in JS
-    raw = f"""<textarea
-class="tset-raw"
-readonly=""
-rows="1"
-cols="60"
-style="line-height: 1; height: 13px";
->{raw}</textarea>
-<span class="copy">
-    <img
-    onclick="copyuncle(this)"
-    >
-</span>
-        """
+    typeset = f'<span class="tset-container">{typeset}</span>'
+    raw = f'<textarea class="raw-container">{raw}</textarea>'
 
-    raw=escape(raw)
+
+    # the doublesclick behavior is set on load in javascript
     out = f"""
-<span class="tset-container">
-    <span class="tset-raw tset" raw="{raw}" ondblclick="setraw_safe(this)">
+<span class="raw-tset-container tset">
     {typeset}
-    </span>
+    {raw}
     {extra}
-    <span class="tset rawtset-btn" onclick="iconrawtset(this)">
+    <span class="raw-tset-copy-btn" onclick="copyrawcontainer(this)">
+        <img alt="Copy content"
+        class="tset-icon">
+    </span>
+    <span class="raw-tset-toggle" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
         class="tset-icon"
     </span>
