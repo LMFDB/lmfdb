@@ -513,7 +513,7 @@ def render_field_webpage(args):
 
     info.update(data)
     rootof1raw = unlatex(nf.root_of_1_gen())
-    rootofunity = raw_typeset_poly(rootof1raw,
+    rootofunity = raw_typeset(rootof1raw, nf.root_of_1_gen(),
         extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
     safe_units = nf.units_safe()
     if 'too long' in safe_units:
