@@ -1159,9 +1159,10 @@ function switch_basis(btype) {
                         out[e] = c
                     return out
                 coeffs = [to_list(data) for data in self.qexp[:prec]]
-                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print)
+                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
             elif self.single_generator:
-                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=str(self._PrintRing.gen(0)))
+                var = str(self._PrintRing.gen(0))
+                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
             else:
                 # in this case str(self._PrintRing.gen(0)) = beta1
                 # and thus the extra case
