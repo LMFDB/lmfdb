@@ -38,7 +38,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
 
     typeset = f'<span class="tset-container">{typeset}</span>'
     # clean white space
-    raw = str(raw).strip().replace('  ', ' ')
+    raw = re.sub(r'\s+', ' ', str(raw).strip())
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
 
