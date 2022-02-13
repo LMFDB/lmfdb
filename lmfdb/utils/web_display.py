@@ -37,7 +37,8 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
         typeset = r'\({}\)'.format(latex(raw))
 
     typeset = f'<span class="tset-container">{typeset}</span>'
-    raw = str(raw).strip()
+    # clean white space
+    raw = str(raw).strip().replace('  ', ' ')
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
 
@@ -587,7 +588,7 @@ def raw_typeset_qexp(coeffs_list,
         r, t = rawtset_coeff(i, coeffs)
         if t:
             lastt = t
-        raw += " " + r
+        raw += r
         if add_to_tset:
             tset += t
         if add_to_tset and "cdots" in tset:
