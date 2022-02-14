@@ -567,9 +567,13 @@ def raw_typeset_qexp(coeffs_list,
             if tset.endswith(var):
                 tset += "_1"
         if poly.number_of_terms() == 1:
-            if i > 1 and not raw.startswith('-'):
-                raw = plus + raw
-                tset = plus + tset
+            if i > 1:
+                if not raw.startswith('-'):
+                    raw = plus + raw
+                    tset = plus + tset
+                else:
+                    raw = ' ' + raw
+                    tset = ' ' + tset
         else:
             tset = f"({tset})"
             raw = f"({raw})"
