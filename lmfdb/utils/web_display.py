@@ -570,7 +570,6 @@ def raw_typeset_qexp(coeffs_list,
             if i > 1:
                 if raw.startswith('-'):
                     raw = minus + raw[1:]
-                    tset = minus + tset[1:]
                 else:
                     raw = plus + raw
                     tset = plus + tset
