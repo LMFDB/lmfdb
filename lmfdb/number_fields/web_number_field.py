@@ -10,7 +10,7 @@ from sage.all import (
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
-        raw_typeset, display_multiset, factor_base_factor, integer_squarefree_part, integer_is_squarefree,
+        raw_typeset_poly, display_multiset, factor_base_factor, integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
@@ -307,7 +307,7 @@ def nf_knowl_guts(label):
     out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += raw_typeset(wnf.poly(), r"\(%s\)" % latex(wnf.poly()))
+    out += raw_typeset_poly(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:

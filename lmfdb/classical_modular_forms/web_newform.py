@@ -733,14 +733,16 @@ class WebNewform(object):
     def _order_basis_forward(self):
         basis = []
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
+            if i == 0:
+                continue
             basis.append(
                 (rf'\(\beta_{{{i}}}\)',
-                 raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True))
+                 raw_typeset_poly(num, denominator=den, var=self._nu_var, superscript=True, final_rawvar='v'))
             )
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
-        basis = [(r'\(1\)', r'\(\beta_0\)')]
+        basis = []
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
             if i == 0:
                 nupow = r'\(%s\)' % self._nu_latex
@@ -748,7 +750,7 @@ class WebNewform(object):
                 nupow = r'\(%s^{%s}\)' % (self._nu_latex, i+1)
             basis.append(
                 (nupow,
-                 raw_typeset_poly(num, denominator=den, var='beta', superscript=False))
+                 raw_typeset_poly(num, denominator=den, var='beta', superscript=False, final_rawvar='b'))
             )
         return self._make_table(basis)
 
@@ -1157,9 +1159,10 @@ function switch_basis(btype) {
                         out[e] = c
                     return out
                 coeffs = [to_list(data) for data in self.qexp[:prec]]
-                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print)
+                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
             elif self.single_generator:
-                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=str(self._PrintRing.gen(0)))
+                var = str(self._PrintRing.gen(0))
+                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
             else:
                 # in this case str(self._PrintRing.gen(0)) = beta1
                 # and thus the extra case

@@ -6,8 +6,6 @@ from sage.all import (
     latex,
     ZZ,
     factor,
-    RR,
-    floor,
     PolynomialRing,
     TermOrder,
 )
@@ -17,7 +15,7 @@ from . import coeff_to_poly
 ################################################################################
 
 
-def raw_typeset(raw, typeset='', extra='', textarea=False, textarea_threshold=150):
+def raw_typeset(raw, typeset='', extra='', compressed=False):
     r"""
     Return a span with typeset material which will toggle to raw material
     when an icon is clicked on.
@@ -38,32 +36,23 @@ def raw_typeset(raw, typeset='', extra='', textarea=False, textarea_threshold=15
     if not typeset:
         typeset = r'\({}\)'.format(latex(raw))
 
-    textarea = textarea and len(str(raw)) > textarea_threshold
-    if textarea and len(str(raw)) > textarea_threshold:
-        # no space is quite important, as we check on the start of this string in JS
-        raw = f"""<textarea
-class="tset-raw"
-readonly=""
-rows="1"
-cols="60"
-style="line-height: 1; height: 13px";
->{raw}</textarea>
-<span class="copy">
-    <img
-    onclick="copyuncle(this)"
-    >
-</span>
-        """
+    typeset = f'<span class="tset-container">{typeset}</span>'
+    # clean white space
+    raw = re.sub(r'\s+', ' ', str(raw).strip())
+    raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
-    raw=escape(raw)
+
+    # the doublesclick behavior is set on load in javascript
     out = f"""
-<span class="tset-container">
-    <span class="tset-raw tset" raw="{raw}" ondblclick="setraw_safe(this)">
+<span class="raw-tset-container tset {"compressed" if compressed else ""}">
     {typeset}
-    </span>
+    {raw}
     {extra}
-    {"" if textarea else "&nbsp;&nbsp"}
-    <span class="tset rawtset-btn" onclick="iconrawtset(this)">
+    <span class="raw-tset-copy-btn" onclick="copyrawcontainer(this)">
+        <img alt="Copy content"
+        class="tset-icon">
+    </span>
+    <span class="raw-tset-toggle" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
         class="tset-icon"
     </span>
@@ -437,6 +426,7 @@ def raw_typeset_poly(coeffs,
                      superscript=True,
                      compress_threshold=100,
                      decreasing=True,
+                     final_rawvar=None,
                      **kwargs):
     """
     Generate a raw_typeset string a given integral polynomial, or a linear combination
@@ -484,11 +474,11 @@ def raw_typeset_poly(coeffs,
             tset = latex(polytoprint)
 
     if not superscript:
-        raw = raw.replace('^', '_').replace(raw_var + " ", raw_var + "_1 ")
+        raw = raw.replace('^', '').replace(raw_var + " ", raw_var + "1 ")
         tset = tset.replace('^', '_').replace(tset_var + " ", tset_var + "_1 ")
         # in case the last replace doesn't trigger because is at the end
         if raw.endswith(raw_var):
-            raw += "_1"
+            raw += "1"
         if tset.endswith(tset_var):
             tset += "_1"
 
@@ -496,13 +486,11 @@ def raw_typeset_poly(coeffs,
         tset = f"( {tset} ) {denominatortset}"
         raw = f"({raw}) {denominatorraw}"
 
+    if final_rawvar:
+        raw = raw.replace(var, final_rawvar)
 
-    if compress_poly:
-        # this forces the box
-        kwargs['textarea'] = True
-        kwargs['textarea_threshold'] =compress_threshold
 
-    return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
 def raw_typeset_poly_factor(factors, # list of pairs (f,e)
                             compress_threshold=20, # this is per factor
@@ -533,13 +521,14 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
 
     tset = " ".join(tset)
     raw = " ".join(raw)
-    return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
 
 def raw_typeset_qexp(coeffs_list,
                      compress_threshold=100,
                      coeff_compress_threshold=30,
                      var=r"\beta",
+                     final_rawvar='b',
                      superscript=False,
                      **kwargs):
     plus = r" + "
@@ -570,17 +559,20 @@ def raw_typeset_qexp(coeffs_list,
                 coeff_compress_threshold,
                 decreasing=True)
         if not superscript:
-            raw = raw.replace('^', '_').replace(rawvar + " ", rawvar + "_1 ")
+            raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
             tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
             # in case the last replace doesn't trigger because is at the end
             if raw.endswith(rawvar):
-                raw += "_1"
+                raw += "1"
             if tset.endswith(var):
                 tset += "_1"
         if poly.number_of_terms() == 1:
-            if i > 1 and not raw.startswith('-'):
-                raw = plus + raw
-                tset = plus + tset
+            if i > 1:
+                if raw.startswith('-'):
+                    raw = minus + raw[1:]
+                else:
+                    raw = plus + raw
+                    tset = plus + tset
         else:
             tset = f"({tset})"
             raw = f"({raw})"
@@ -599,7 +591,7 @@ def raw_typeset_qexp(coeffs_list,
         r, t = rawtset_coeff(i, coeffs)
         if t:
             lastt = t
-        raw += " " + r
+        raw += r
         if add_to_tset:
             tset += t
         if add_to_tset and "cdots" in tset:
@@ -612,86 +604,11 @@ def raw_typeset_qexp(coeffs_list,
 
     tset += rf'+O(q^{{{len(coeffs_list)}}})'
     raw = raw.lstrip(" ")
+    # use final_rawvar
+    raw = raw.replace(rawvar, final_rawvar)
 
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
-
-    kwargs['textarea'] = True
-    kwargs['textarea_threshold'] = compress_threshold
-
-    return raw_typeset(raw, rf'\( {tset} \)', **kwargs)
-
-
-
-
-
-def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
-    """
-    Generate a web latex string for a given integral polynomial, or a linear combination
-    (using subscripts instead of exponents).  In either case, the constant term is printed
-    without a variable and bigint knowls are used if the coefficients are large enough.
-
-    INPUT:
-
-    - ``coeffs`` -- a list of integers
-    - ``var`` -- a variable name
-    - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
-    - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
-    - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
-    """
-    plus = r" + "
-    minus = r" - "
-    m = len(coeffs)
-    while m and coeffs[m-1] == 0:
-        m -= 1
-    if m == 0:
-        return r"\(0\)"
-    s = ""
-    # we will have under/overflows if we try to use floats
-    def cutout_digits(elt):
-        digits = 1 if elt == 0 else floor(RR(abs(elt)).log(10)) + 1
-        if digits > bigint_cutoff:
-            # a large number would be replaced by ab...cd
-            return digits - 7
-        else:
-            return 0
-
-    if sum(cutout_digits(elt) for elt in coeffs) < bigint_overallmin:
-        # this effectively disables the bigint
-        bigint_cutoff = bigint_overallmin + 7
-
-    for n in reversed(range(m)):
-        c = coeffs[n]
-        if n == 1:
-            if superscript:
-                varpow = "" + var
-            else:
-                varpow = r"%s_{1}"%var
-        elif n > 1:
-            if superscript:
-                varpow = r"%s^{%s}"%(var, n)
-            else:
-                varpow = r"%s_{%s}"%(var, n)
-        else:
-            if c > 0:
-                s += plus + str(c)
-            elif c < 0:
-                s += minus + str(-c)
-            break
-        if c > 0:
-            s += plus
-        elif c < 0:
-            s += minus
-        else:
-            continue
-        if abs(c) != 1:
-            s += str(abs(c)) + " "
-        s += varpow
-    s += r"\)"
-    if s.startswith(plus):
-        res =  r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
-    else:
-        res = r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
-    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res, textarea_threshold=100)
 
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
