@@ -60,6 +60,13 @@ Graph = class {
     this.edges = [];
     this.ambient = ambient;
     this.highlit = null;
+    this.order_border_x = 0;
+    this.order_border_y = 0;
+  }
+
+  setOrderBorder(obx,oby) {
+    this.order_border_x = obx;
+    this.order_border_y = oby;
   }
 
   addNode(value, posnx, order_lookup, options) {
@@ -147,22 +154,21 @@ class Renderer {
     this.setOptions(options);
 
     this.ctx = element.getContext("2d");
-    this.radius = 20;
+    this.radius = 20;  // if nodes were circles, this would be their radius
     this.arrowAngle = Math.PI/10;
 
     this.setSize();
   }
 
   setSize() {
-    this.factorX = (this.ctx.canvas.width - 2 * this.radius) / (this.graph.layoutMaxX - this.graph.layoutMinX+1);
-    this.factorY = (this.ctx.canvas.height - 2 * this.radius) / (this.graph.layoutMaxY - this.graph.layoutMinY+1);
+    this.factorX = (this.ctx.canvas.width - 2 * this.radius - this.graph.order_border_x) / (this.graph.layoutMaxX - this.graph.layoutMinX+1);
+    this.factorY = (this.ctx.canvas.height - 2 * this.radius - this.graph.order_border_y) / (this.graph.layoutMaxY - this.graph.layoutMinY+1);
     this.reposition();
   }
 
 
   setOptions(options) {
     this.options = {
-      radius: 20,
       arrowAngle: Math.PI/10,
       //font: tahoma8,
       edgeColor: 'blue'
@@ -172,17 +178,19 @@ class Renderer {
     }
   }
 
+  // virtual coordinates to pixels
   translate(point) {
     return [
-      (point[0] - this.graph.layoutMinX) * this.factorX + this.radius,
-      (point[1] - this.graph.layoutMinY) * this.factorY + this.radius
+      (point[0] - this.graph.layoutMinX) * this.factorX + this.radius + this.graph.order_border_x,
+      (point[1] - this.graph.layoutMinY) * this.factorY + this.radius + this.graph.order_border_y
     ];
   }
 
+  // pixels to virtual coordinates
   untranslate(point) {
     return [
-      (point[0] - this.options.radius)/ this.factorX +this.graph.layoutMinX,
-      (point[1] - this.options.radius)/ this.factorY +this.graph.layoutMinY
+      (point[0] - this.radius - this.graph.order_border_x)/ this.factorX +this.graph.layoutMinX,
+      (point[1] - this.radius - this.graph.order_border_y)/ this.factorY +this.graph.layoutMinY
     ];
   }
 
@@ -238,6 +246,23 @@ class Renderer {
     for (var i = 0; i < this.graph.edges.length; i++) {
       this.drawEdge(this.graph.edges[i]);
     }
+    if(whoisshowing > 1) { // heights are by order
+      var orderlist = this.options.orderlist;
+      for (var i = 0; i<orderlist.length; i++) {
+        var coords = this.translate([this.graph.layoutMinX+150, -10*(i-1)-6.5]);
+        coords[0] -= this.graph.order_border_x;
+        //this.drawOrder(orderlist[i], coords);
+      }
+    }
+  }
+
+  drawOrder(ord, posn) {
+    this.ctx.moveTo(0,0);
+    this.ctx.strokeStyle = 'black';
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = "16px Arial";
+    var textwidth = this.ctx.measureText(ord).width;
+    this.ctx.fillText(ord, posn[0]-textwidth, posn[1]);
   }
 
   drawNode(node) {
@@ -309,7 +334,7 @@ class Renderer {
   nodeAt(point) {
     var node = undefined;
     var mind = Infinity;
-    var rsquared = this.options.radius*this.options.radius;
+    var rsquared = this.radius*this.radius;
     for (var i = 0, n; n=this.graph.nodes[i]; i++) {
       var np = this.translate([n.layoutPosX, n.layoutPosY]);
       var dx = point[0] - np[0];
@@ -809,7 +834,6 @@ function newheight(rendr, numrows) {
   }
 }
 
-//function make_sdiagram(canv, ambient, nodes, edges, orders) {
 function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   // gdatalist is a list of [nodes, edges, orders]
   // Now make a list of graphs
@@ -821,8 +845,10 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
     order_lookup.set(trip[0], [trip[1], trip[2]]);
     simpleorder.set(trip[0], [k,0]);
   }
+  var order_list = orderdata.map(function(z) {return (z[0]);});
   // The following is to make two graphs for each entry in gdatalist
   // which have two sets of coordinates
+  // console.log(gdatalist[0]);
   for(var j=0; j<gdatalist.length; j++) {
     var nodes, edges;
     [nodes, edges] = gdatalist[j];
@@ -839,6 +865,7 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
     // Now repeat for the other graph
     jj = gdatalist.length+j;
     glist[jj] = new Graph(ambient);
+    //glist[jj].setOrderBorder(100, -100);
     if(gdatalist[j].length>0) {
       // x-coord for by # primes is in 7
       glist[jj].addNodes(nodes, simpleorder, 7);
@@ -852,7 +879,7 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   ourg = glist[glist.length-1];
   ambientlabel=ambient;
 
-  renderer = new Renderer(document.getElementById(canv),ourg);
+  renderer = new Renderer(document.getElementById(canv),ourg, {'orderlist': order_list});
 
   // Need to call Event.Handler here
   new EventHandler(renderer, {
@@ -871,11 +898,18 @@ function redraw() {
 }
 
 function mytoggleheights(use_order_for_height) {
+  var who_old = whoisshowing;
   if (use_order_for_height && (whoisshowing < 2)) {
     whoisshowing += 2;
   } 
   if ((! use_order_for_height) && whoisshowing > 1) {
     whoisshowing -= 2;
+  }
+  if(who_old != whoisshowing) {
+    glist[whoisshowing].highlit = null;
+    for(var i=0; i< sdiagram.graph.nodes.length; i++) {
+      glist[whoisshowing].nodes[i].selected = glist[who_old].nodes[i].selected;
+    }
   }
   sdiagram.newgraph(glist[whoisshowing]);
   sdiagram.setSize();
