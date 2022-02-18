@@ -504,7 +504,6 @@ def render_field_webpage(args):
         ram_primes = r'\textrm{None}'
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()
-    Ra = PolynomialRing(QQ, 'a')
     zk = [compress_poly_Q(x, 'a') for x in zkraw]
     zk = ['$%s$' % x for x in zk]
     zk = ', '.join(zk)
