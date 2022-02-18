@@ -20,7 +20,7 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly, 
-    raw_typeset_int)
+    raw_typeset_int, compress_poly_Q)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -505,7 +505,7 @@ def render_field_webpage(args):
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
-    zk = [latex(Ra(x)) for x in zkraw]
+    zk = [compress_poly_Q(x, 'a') for x in zkraw]
     zk = ['$%s$' % x for x in zk]
     zk = ', '.join(zk)
     zkraw = ', '.join(zkraw)

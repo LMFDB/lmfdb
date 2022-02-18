@@ -5,6 +5,7 @@ from sage.all import (
     Factorization,
     latex,
     ZZ,
+    QQ,
     factor,
     PolynomialRing,
     TermOrder,
@@ -621,6 +622,41 @@ def raw_typeset_qexp(coeffs_list,
     raw = raw.replace(rawvar, final_rawvar)
 
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
+
+def compress_poly_Q(rawpoly,
+                     var='x',
+                     compress_threshold=100):
+    """
+    Generate a raw_typeset string a polynomial over Q
+    The typeset compresses each numerator and denominator
+    """
+    R = PolynomialRing(QQ, var)
+    sagepol = R(rawpoly)
+    coefflist = sagepol.coefficients(sparse=False)
+    d = len(coefflist)
+
+    def frac_string(frac):
+        if frac.denominator()==1:
+            return compress_int(frac.numerator())[0]
+        return r'\frac{%s}{%s}'%(compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+
+    tset = ''
+    for j in range(1,d+1):
+        csign = coefflist[d-j].sign()
+        if csign:
+            cabs = coefflist[d-j].abs()
+            if csign>0:
+                tset += '+'
+            else:
+                tset += '-'
+            if cabs != 1 or d-j==0:
+                tset += frac_string(cabs)
+            if d-j>0:
+                if d-j == 1:
+                    tset += var
+                else:
+                    tset += r'%s^{%s}'%(var,d-j)
+    return tset[1:]
 
 
 
