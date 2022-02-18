@@ -19,7 +19,9 @@ from lmfdb.utils import (
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
-    raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly)
+    raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly, 
+    raw_typeset_int)
+from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
@@ -425,7 +427,7 @@ def render_field_webpage(args):
             data['conductor'] = r"\(%s\)" % str(data['conductor'])
         else:
             factored_conductor = factor_base_factor(data['conductor'], ram_primes)
-            factored_conductor = factor_base_factorization_latex(factored_conductor)
+            factored_conductor = factor_base_factorization_latex(factored_conductor, cutoff=30)
             data['conductor'] = r"\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_pretty_and_nTj(n,t,True)
     data['auts'] = db.gps_transitive.lookup(r'{}T{}'.format(n,t))['auts']
@@ -439,15 +441,15 @@ def render_field_webpage(args):
     D = nf.disc()
     data['disc_factor'] = nf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        data['discriminant'] = raw_typeset_poly(D, compress_threshold=150)
+        data['discriminant'] = raw_typeset_int(D)
     else:
-        data['discriminant'] = raw_typeset_poly(D, compress_threshold=150)
+        data['discriminant'] = raw_typeset_int(D, extra= r"\(\medspace = %s\)" % data['disc_factor'])
     if nf.frobs():
         data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
     else:  # fallback in case we haven't computed them in a case
         data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
-    data['rd'] = ('$%s$' % fixed_prec(nf.rd(),2)).replace(',','{,}')
+    data['rd'] = ('%s' % fixed_prec(nf.rd(),2)).replace(',','{,}')
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -458,13 +460,15 @@ def render_field_webpage(args):
         loc_alg = ''
         for j in range(npr):
             if ramified_algebras_data[j] is None:
-                loc_alg += '<tr><td>$%s$</td><td colspan="7">Data not computed</td></tr>'%str(ram_primes[j]).rstrip('L')
+                loc_alg += '<tr><td>%s</td><td colspan="7">Data not computed</td></tr>'%str(ram_primes[j]).rstrip('L')
             else:
                 from lmfdb.local_fields.main import show_slope_content
                 primefirstline=True
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
-                loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
+                pcomp = compress_int(p, cutoff=20)[0]
+                prawtyp = raw_typeset_int(p, cutoff=20)
+                loc_alg += '<tr><td rowspan="%d">%s</td>'%(len(mydat),prawtyp)
                 for mm in mydat:
                     if primefirstline:
                         primefirstline=False
@@ -472,7 +476,7 @@ def render_field_webpage(args):
                         loc_alg += '<tr>'
                     if len(mm)==4:         # not in database
                         if mm[1]*mm[2]==1: # Q_p
-                            loc_alg += '<td>$\\Q_{%d}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(p,transitive_group_display_knowl("1T1", "Trivial"), show_slope_content([],1,1))
+                            loc_alg += '<td>$\\Q_{%s}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(pcomp,transitive_group_display_knowl("1T1", "Trivial"), show_slope_content([],1,1))
                         elif mm[1]*mm[2]==2: # quadratic
                             loc_alg += '<td></td><td>Deg $2$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1],mm[2],mm[3],transitive_group_display_knowl("2T1", "$C_2$"), show_slope_content([],mm[1],mm[2]))
                         elif mm[1]==1: # unramified
@@ -491,9 +495,11 @@ def render_field_webpage(args):
             loc_alg += '</tr>\n'
         loc_alg += '</tbody></table>\n'
 
-    ram_primes = str(ram_primes)[1:-1]
+    ram_primes_raw = str(ram_primes).replace('L', '')[1:-1]
+    ram_primes = [rf'\({compress_int(z,cutoff=30)[0]}\)' for z in ram_primes]
+    ram_primes = (', ').join(ram_primes)
     # Get rid of python L for big numbers
-    ram_primes = ram_primes.replace('L', '')
+    #ram_primes = ram_primes.replace('L', '')
     if not ram_primes:
         ram_primes = r'\textrm{None}'
     data['phrase'] = group_phrase(n, t)
@@ -523,6 +529,8 @@ def render_field_webpage(args):
     else:
         myunits = raw_typeset(unlatex(safe_units), safe_units)
 
+    if ram_primes != 'None':
+        ram_primes = raw_typeset(ram_primes_raw, ram_primes)
     info.update({
         'label': pretty_label,
         'label_raw': label,

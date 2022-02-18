@@ -177,19 +177,26 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
     else:
         return lng
 
-def factor_base_factorization_latex(fbf):
+def factor_base_factorization_latex(fbf, cutoff=0):
+    """
+    cutoff is the threshold for compressing large integers
+    cutoff = 0 means we do not compress them
+    """
     if len(fbf) == 0:
         return '1'
     ans = ''
     sign = 1
     for p, e in fbf:
+        pdisp = str(p)
+        if cutoff:
+            pdisp = compress_int(p, cutoff)[0]
         if p == -1:
             if (e % 2) == 1:
                 sign *= -1
         elif e == 1:
-            ans += r'\cdot %d' % p
+            ans += r'\cdot %s' % pdisp
         elif e != 0:
-            ans += r'\cdot %d^{%d}' % (p, e)
+            ans += r'\cdot %s^{%d}' % (pdisp, e)
     # get rid of the initial '\cdot '
     ans = ans[6:]
     return '- ' + ans if sign == -1 else ans
@@ -418,6 +425,12 @@ def compress_polynomial(poly, threshold, decreasing=True):
         tset = tset[len(plus):]
     return tset
 
+def raw_typeset_int(n, cutoff=80, sides=3, extra=''):
+    """
+    Raw/typeset for integers with configurable parameters
+    """
+    compv, compb = compress_int(n, cutoff=cutoff, sides=sides)
+    return raw_typeset(n, rf'\({compv}\)', extra=extra, compressed=compb)
 
 
 def raw_typeset_poly(coeffs,
