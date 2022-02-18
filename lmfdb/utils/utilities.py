@@ -553,16 +553,18 @@ def splitcoeff(coeff):
 #  display and formatting utilities
 ################################################################################
 
-def comma(x):
+def comma(x, sep=","):
     """
     Input is an integer. Output is a string of that integer with commas.
     CAUTION: this misbehaves if the input is not an integer.
+
+    sep is an optional separator other than a comma
 
     Example:
     >>> comma("12345")
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
+    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000), sep, (x % 1000)))
 
 def latex_comma(x):
     """

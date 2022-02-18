@@ -18,7 +18,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl,
+    parse_floats, parse_subfield, search_wrap, parse_padicfields,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -79,11 +79,13 @@ def nf_label_pretty(label):
 
 # fixed precision display of float, rounding off
 def fixed_prec(r, digs=3):
+    if r>10**10:
+        return prop_int_pretty(r)
     n = RealField(200)(r)*(10**digs)
     n = str(n.round())
     head = int(n[:-digs])
     if head >= 10**4:
-        head = comma(head)
+        head = comma(head, r'\\,')
     return str(head) + '.' + n[-digs:]
 
 
@@ -437,9 +439,9 @@ def render_field_webpage(args):
     D = nf.disc()
     data['disc_factor'] = nf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        data['discriminant'] = bigint_knowl(D,cutoff=60,sides=3)
+        data['discriminant'] = raw_typeset_poly(D, compress_threshold=150)
     else:
-        data['discriminant'] = bigint_knowl(D,cutoff=60,sides=3) + r"\(\medspace = %s\)" % data['disc_factor']
+        data['discriminant'] = raw_typeset_poly(D, compress_threshold=150)
     if nf.frobs():
         data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
     else:  # fallback in case we haven't computed them in a case
@@ -616,7 +618,7 @@ def render_field_webpage(args):
                   ('Degree', prop_int_pretty(data['degree'])),
                   ('Signature', '$%s$' % data['signature']),
                   ('Discriminant', prop_int_pretty(D)),
-                  ('Root discriminant', '%s' % data['rd']),
+                  ('Root discriminant', data['rd']),
                   ('Ramified ' + primes + '', ram_primes),
                   ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                   ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
