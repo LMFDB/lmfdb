@@ -7,7 +7,7 @@ from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, euler_phi, PolynomialRing, QQ
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
-    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset,
+    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
     StatsDisplay, totaler, proportioners, comma, flash_warning)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
@@ -679,7 +679,7 @@ def dirichlet_group_table(**args):
     if info['poly'] != '???':
         try:
             info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
-            info['poly'] = raw_typeset(info['poly'])
+            info['poly'] = raw_typeset_poly(info['poly'])
         except Exception:
             pass
     return render_template("CharacterGroupTable.html", **info)

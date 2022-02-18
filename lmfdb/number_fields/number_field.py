@@ -19,7 +19,7 @@ from lmfdb.utils import (
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl,
-    raw_typeset, flash_info, input_string_to_poly)
+    raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
@@ -97,12 +97,7 @@ def ctx_galois_groups():
 @app.context_processor
 def ctx_number_fields():
     return {'number_field_data': number_field_data,
-            'global_numberfield_summary': global_numberfield_summary,
-            'ez_raw_typeset': ez_raw_typeset,
-            'raw_typeset': raw_typeset}
-
-def ez_raw_typeset(rawpol):
-    return raw_typeset(rawpol)
+            'global_numberfield_summary': global_numberfield_summary,}
 
 def global_numberfield_summary():
     init_nf_count()
@@ -529,7 +524,7 @@ def render_field_webpage(args):
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': raw_typeset(nf.poly()),
+        'polynomial': raw_typeset_poly(nf.poly()),
         'ram_primes': ram_primes,
         'integral_basis': raw_typeset(zkraw, zk),
         'regulator': web_latex(nf.regulator()),
