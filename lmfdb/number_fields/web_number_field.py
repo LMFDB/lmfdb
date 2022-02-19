@@ -692,10 +692,6 @@ class WebNumberField:
             return 1
         return na_text()
 
-    def units_raw(self):  # fundamental units, if they are not too long
-        units = self.units()
-        return units
-
     def units(self):  # fundamental units
         res = None
         if self.haskey('units'):

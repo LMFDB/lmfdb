@@ -523,14 +523,16 @@ def render_field_webpage(args):
     rootofunity = raw_typeset(rootof1raw, nf.root_of_1_gen(),
         extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
 
-    myunits = [unlatex(z) for z in nf.units()]
-    Ra = PolynomialRing(QQ,'a')
-    myunits = [Ra(z) for z in myunits]
-    unit_compress = [compress_poly_Q(x, 'a') for x in myunits]
-    unit_compress = ['$%s$' % x for x in unit_compress]
-    unit_compress = ', '.join(unit_compress)
-    myunits = str(myunits)[1:-1] # remove brackets
-    myunits = raw_typeset(myunits, unit_compress)
+    myunits = nf.units()
+    if 'not' not in myunits: 
+        myunits = [unlatex(z) for z in myunits]
+        Ra = PolynomialRing(QQ,'a')
+        myunits = [Ra(z) for z in myunits]
+        unit_compress = [compress_poly_Q(x, 'a') for x in myunits]
+        unit_compress = ['$%s$' % x for x in unit_compress]
+        unit_compress = ', '.join(unit_compress)
+        myunits = str(myunits)[1:-1] # remove brackets
+        myunits = raw_typeset(myunits, unit_compress)
 
     if ram_primes != 'None':
         ram_primes = raw_typeset(ram_primes_raw, ram_primes)
