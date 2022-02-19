@@ -692,23 +692,19 @@ class WebNumberField:
             return 1
         return na_text()
 
-    def units_safe(self):  # fundamental units, if they are not too long
+    def units_raw(self):  # fundamental units, if they are not too long
         units = self.units()
-        if len(units) > 500:
-            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
         return units
 
     def units(self):  # fundamental units
         res = None
         if self.haskey('units'):
-            res = ',&nbsp; '.join(self._data['units'])
+            return self._data['units']
         elif self.unit_rank() == 0:
-            res = ''
+            res = []
         elif self.haskey('class_number'):
             K = self.K()
-            units = [web_latex(u) for u in K.unit_group().fundamental_units()]
-            units = ',&nbsp; '.join(units)
-            res = units
+            res = K.unit_group().fundamental_units()
         if res:
             res = res.replace('\\\\', '\\')
             return res

@@ -522,11 +522,15 @@ def render_field_webpage(args):
     rootof1raw = unlatex(nf.root_of_1_gen())
     rootofunity = raw_typeset(rootof1raw, nf.root_of_1_gen(),
         extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
-    safe_units = nf.units_safe()
-    if 'too long' in safe_units:
-        myunits = safe_units
-    else:
-        myunits = raw_typeset(unlatex(safe_units), safe_units)
+
+    myunits = [unlatex(z) for z in nf.units()]
+    Ra = PolynomialRing(QQ,'a')
+    myunits = [Ra(z) for z in myunits]
+    unit_compress = [compress_poly_Q(x, 'a') for x in myunits]
+    unit_compress = ['$%s$' % x for x in unit_compress]
+    unit_compress = ', '.join(unit_compress)
+    myunits = str(myunits)[1:-1] # remove brackets
+    myunits = raw_typeset(myunits, unit_compress)
 
     if ram_primes != 'None':
         ram_primes = raw_typeset(ram_primes_raw, ram_primes)
@@ -960,7 +964,7 @@ def unlatex(s):
     s = re.sub(r'\\frac{(.+?)}{(.+?)}', r'(\1)/(\2)', s)
     s = s.replace(r'{',r'(')
     s = s.replace(r'}',r')')
-    s = re.sub(r'([^\s+-,])\s*a', r'\1*a',s)
+    s = re.sub(r'([^\s+,-])\s*a', r'\1*a',s)
     return s
 
 
