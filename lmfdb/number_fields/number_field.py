@@ -8,7 +8,7 @@ from io import BytesIO
 import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, RealField
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, RealField, log
 
 from lmfdb import db
 from lmfdb.app import app
@@ -81,13 +81,15 @@ def nf_label_pretty(label):
 
 # fixed precision display of float, rounding off
 def fixed_prec(r, digs=3):
-    if r>10**10:
-        return prop_int_pretty(r)
+    if r>10**7:
+        e = int(log(abs(r),10))
+        return r'%.3f\times 10^{%d}' % (r/10**e, e)
     n = RealField(200)(r)*(10**digs)
     n = str(n.round())
     head = int(n[:-digs])
     if head >= 10**4:
-        head = comma(head, r'\\,')
+        head = comma(head, r'\,')
+    print(head)
     return str(head) + '.' + n[-digs:]
 
 
@@ -449,7 +451,7 @@ def render_field_webpage(args):
     else:  # fallback in case we haven't computed them in a case
         data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
-    data['rd'] = ('%s' % fixed_prec(nf.rd(),2)).replace(',','{,}')
+    data['rd'] = '\(%s\)' % fixed_prec(nf.rd(),2)
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()

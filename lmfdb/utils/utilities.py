@@ -564,7 +564,7 @@ def comma(x, sep=","):
     >>> comma("12345")
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000), sep, (x % 1000)))
+    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000, sep), sep, (x % 1000)))
 
 def latex_comma(x):
     """
