@@ -10,7 +10,8 @@ from sage.all import (
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
-        raw_typeset_poly, display_multiset, factor_base_factor, integer_squarefree_part, integer_is_squarefree,
+        raw_typeset_poly, display_multiset, factor_base_factor, 
+        integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
@@ -691,23 +692,15 @@ class WebNumberField:
             return 1
         return na_text()
 
-    def units_safe(self):  # fundamental units, if they are not too long
-        units = self.units()
-        if len(units) > 500:
-            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
-        return units
-
     def units(self):  # fundamental units
         res = None
         if self.haskey('units'):
-            res = ',&nbsp; '.join(self._data['units'])
+            return self._data['units']
         elif self.unit_rank() == 0:
-            res = ''
+            res = []
         elif self.haskey('class_number'):
             K = self.K()
-            units = [web_latex(u) for u in K.unit_group().fundamental_units()]
-            units = ',&nbsp; '.join(units)
-            res = units
+            res = K.unit_group().fundamental_units()
         if res:
             res = res.replace('\\\\', '\\')
             return res
@@ -739,7 +732,7 @@ class WebNumberField:
         s = ''
         if D < 0:
             s = r'-\,'
-        return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()))
+        return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()), cutoff=30)
 
     def web_poly(self):
         return pol_to_html(str(coeff_to_poly(self.coeffs())))
