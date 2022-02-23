@@ -55,7 +55,7 @@ class LmfdbTest(unittest2.TestCase):
         if not isinstance(text, list):
             text = [text]
         for t in text:
-            assert not t in page, "%s in the %s" % (t, path)
+            assert t not in page, "%s in the %s" % (t, path)
 
     def check_external(self, homepage, path, text):
         headers = {"User-Agent": "Mozilla/5.0"}

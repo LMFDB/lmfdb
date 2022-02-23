@@ -456,10 +456,10 @@ def elliptic_curve_search(info, query):
             flash_error(err, "13.91.3.2", "13S4")
             raise ValueError(err)
         if elladic_labels:
-            query['elladic_images'] = { '$contains': elladic_labels }
+            query['elladic_images'] = {'$contains': elladic_labels}
         if modell_labels:
-            query['modell_images'] = { '$contains': modell_labels }
-        if not 'cm' in query:
+            query['modell_images'] = {'$contains': modell_labels}
+        if 'cm' not in query:
             query['cm'] = 0
             info['cm'] = "noCM"
         if query['cm']:
@@ -477,7 +477,7 @@ def elliptic_curve_search(info, query):
                     flash_error(err)
                     raise ValueError(err)
                 else:
-                    modell_labels = [a for a in modell_labels if not a in max_labels]
+                    modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
                         max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]

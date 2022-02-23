@@ -117,9 +117,9 @@ update_joint_unique_count(db, 'passports', 'dim', 'total_label', prefix='by')
 #  Sort bygenus group counts by group order #
 #############################################
 
-for entry in db.passports.stats.find({'_id' : {'$regex':'^bygenus/\d+/group$'}}):
+for entry in db.passports.stats.find({'_id': {'$regex': r'^bygenus/\d+/group$'}}):
     groups = entry['counts']
-    entry['counts'] = sorted(groups, key=lambda count: map(int, re.findall("\d+", count[0])))
-    db.passports.stats.replace_one({'_id':entry['_id']}, entry)
+    entry['counts'] = sorted(groups, key=lambda count: map(int, re.findall(r"\d+", count[0])))
+    db.passports.stats.replace_one({'_id': entry['_id']}, entry)
 
 C.close()

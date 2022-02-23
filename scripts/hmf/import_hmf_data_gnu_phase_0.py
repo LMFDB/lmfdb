@@ -421,9 +421,9 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
                 for apfix in data[6:]:
                     pp = apfix.rstrip()[1:-1].split('],')[0] + ']'
                     ap = apfix.rstrip()[1:-1].split('],')[1]
-                    if not ap in {'1','-1'}:
-                        print('?????   ',ap,label)
-                    assert ap in {'1','-1'}
+                    if ap not in {'1', '-1'}:
+                        print('?????   ', ap, label)
+                    assert ap in {'1', '-1'}
                     if clean_primes.index(pp) < len(f['hecke_eigenvalues']):
                         try: 
                             assert f['hecke_eigenvalues'][clean_primes.index(pp)] in {'0','1','-1'}

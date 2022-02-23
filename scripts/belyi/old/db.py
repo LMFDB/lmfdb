@@ -1,13 +1,16 @@
-
 import pymongo
 import os
 _C = None
-#server = "belyi.lmfdb.xyz:27017"
-server = "localhost:37010" # run warwick.sh first
+
+# server = "belyi.lmfdb.xyz:27017"
+server = "localhost:37010"  # run warwick.sh first
+
+
 def makeDBconnection():
     global _C
-    _C = pymongo.MongoClient(server);
-    _C.admin.authenticate("lmfdb","lmfdb")
+    _C = pymongo.MongoClient(server)
+    _C.admin.authenticate("lmfdb", "lmfdb")
+
 
 def getDBconnection():
     if _C is None:
@@ -16,10 +19,12 @@ def getDBconnection():
 
 
 _Cwrite = None
+
+
 def makeDBconnection_write():
     global _Cwrite
-    _Cwrite = pymongo.MongoClient(server);
-    #_Cwrite.admin.authenticate("lmfdb","lmfdb")
+    _Cwrite = pymongo.MongoClient(server)
+    # _Cwrite.admin.authenticate("lmfdb","lmfdb")
     path = os.path.join(os.getcwd(), "../../passwords.yaml")
     import yaml
     pw_dict = yaml.load(path)
@@ -33,9 +38,8 @@ def makeDBconnection_write():
     except Exception:
         print("Failed to login")
 
+
 def getDBconnection_write():
     if _Cwrite is None:
         makeDBconnection_write()
     return _Cwrite
-
-

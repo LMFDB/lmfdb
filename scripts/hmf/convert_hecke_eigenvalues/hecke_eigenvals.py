@@ -8,17 +8,20 @@ from sage.all import PolynomialRing, QQ, preparse, gp, NumberField, matrix, vect
 #P = subprocess.Popen(["ssh","mongo","-N"])
 _C = None
 
+
 def makeDBconnection():
     global _C
-    _C = pymongo.MongoClient("localhost:37010");
-    #_C = pymongo.MongoClient("m0.lmfdb.xyz:27017");
-    #_C = pymongo.MongoClient("readonly.lmfdb.xyz:27017");
-    _C.admin.authenticate("lmfdb","lmfdb")
+    _C = pymongo.MongoClient("localhost:37010")
+    # _C = pymongo.MongoClient("m0.lmfdb.xyz:27017")
+    # _C = pymongo.MongoClient("readonly.lmfdb.xyz:27017")
+    _C.admin.authenticate("lmfdb", "lmfdb")
+
 
 def getDBconnection():
     if _C is None:
         makeDBconnection()
     return _C
+
 
 def get_hmfs_hecke_field_and_eigenvals(label):
     """Get the Hecke field and eigenvalues for the Hilbert modular form with given label.
