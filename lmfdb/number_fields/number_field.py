@@ -452,7 +452,7 @@ def render_field_webpage(args):
     else:  # fallback in case we haven't computed them in a case
         data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
-    data['rd'] = '\(%s\)' % fixed_prec(nf.rd(),2)
+    data['rd'] = r'\(%s\)' % fixed_prec(nf.rd(),2)
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -551,7 +551,10 @@ def render_field_webpage(args):
         'fund_units': myunits,
         'cnf': nf.cnf(),
         'grh_label': grh_label,
-        'loc_alg': loc_alg
+        'loc_alg': loc_alg,
+        'monogenic': nf.monogenic(),
+        'index': nf.index(),
+        'inessential': nf.inessentialp()
     })
 
     bread.append(('%s' % nf_label_pretty(info['label_raw']), ' '))
@@ -826,6 +829,7 @@ nf_columns = SearchColumns([
     MathCol("rd", "nf.root_discriminant", "Root discriminant"),
     CheckCol("cm", "nf.cm_field", "Is CM field?"),
     CheckCol("is_galois", "nf.galois_group", "Is Galois?"),
+    CheckCol("monogenic", "nf.monogenic", "Is monogenic?"),
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
     SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
@@ -875,6 +879,10 @@ def number_field_search(info, query):
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad',cardinality='num_ram')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
+    parse_bool(info,query,'monogenic')
+    parse_ints(info,query,'index')
+    parse_primes(info,query,'inessentialp',name='Inessential primes',
+                 qfield='inessentialp')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1164,6 +1172,20 @@ class NFSearchArray(SearchArray):
             knowl="nf.padic_completion.search",
             example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
             example="2.4.10.7")
+        monogenic = YesNoBox(
+            name="monogenic",
+            label="Monogenic",
+            knowl="nf.monogenic")
+        index = TextBox(
+            name="index",
+            label="Index",
+            knowl="nf.zk_index",
+            example='2')
+        inessentialprimes = TextBox(
+            name="inessentialp",
+            label="Inessential primes",
+            knowl="nf.inessential_prime",
+            example="2,3")
         count = CountBox()
 
         self.browse_array = [
@@ -1174,9 +1196,12 @@ class NFSearchArray(SearchArray):
             [num_ram, cm_field],
             [ram_primes, ur_primes],
             [regulator, subfield],
-            [count, completion]]
+            [completion, monogenic],
+            [index, inessentialprimes],
+            [count]]
 
         self.refine_array = [
             [degree, signature, class_number, class_group, cm_field],
             [num_ram, ram_primes, ur_primes, gal, is_galois],
-            [discriminant, rd, regulator, subfield, completion]]
+            [discriminant, rd, regulator, subfield, completion],
+            [monogenic, index, inessentialprimes]]

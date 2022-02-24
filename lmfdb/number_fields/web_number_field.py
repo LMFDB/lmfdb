@@ -503,6 +503,26 @@ class WebNumberField:
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
 
+    def monogenic(self):
+        if self.haskey('monogenic'):
+            return 'Yes' if self._data['monogenic'] else 'No'
+        return 'Not computed'
+
+    def index(self):
+        if self.haskey('index'):
+            return r'$%d$'%self._data['index']
+        return 'Not computed'
+
+    def inessentialp(self):
+        if self.haskey('inessentialp'):
+            inep = self._data['inessentialp']
+            if inep:
+                return(', '.join([r'$%s$' % z for z in inep]))
+            else:
+                return('None')
+        return 'Not computed'
+
+
     # 2018-4-1: is this actually used?  grep -r doesn't find anywhere it's called....
     # Used by subfields and resolvent functions to
     # take coefficients for fields and either return
