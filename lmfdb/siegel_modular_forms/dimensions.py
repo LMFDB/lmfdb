@@ -508,11 +508,10 @@ def _dimension_Gamma0_3_psi_3(wt):
     else:
         return (H_all_odd[wt],)
 
-
-
 ####################################################################
-## Dimension formulas for Gamma0_4_psi_4
+#  Dimension formulas for Gamma0_4_psi_4
 ####################################################################
+
 
 def dimension_Gamma0_4_psi_4(wt_range):
     """
@@ -524,9 +523,10 @@ def dimension_Gamma0_4_psi_4(wt_range):
     headers = ['Total']
     dct = dict()
     for k in wt_range:
-        if is_odd(k): continue
-        dims =  _dimension_Gamma0_4_psi_4(k)
-        dct[k] = dict((headers[j],dims[j]) for j in range(len(headers)))
+        if is_odd(k):
+            continue
+        dims = _dimension_Gamma0_4_psi_4(k)
+        dct[k] = dict((headers[j], dims[j]) for j in range(len(headers)))
     return headers, dct
 
 

@@ -965,7 +965,7 @@ function switch_basis(btype) {
         """
 
         hecke_polys_orbits = defaultdict(list)
-        R = PolynomialRing(ZZ, 'T');
+        R = PolynomialRing(ZZ, 'T')
         for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : self.hecke_orbit_code}):
             hecke_polys_orbits[poly_item['p']] += [(R(f), e) for f, e in poly_item['charpoly_factorization']]
         if not hecke_polys_orbits:

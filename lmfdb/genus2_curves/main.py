@@ -413,6 +413,7 @@ def genus2_lookup_equation(input_str):
     # 0, C_str when it fails to start magma
     R = PolynomialRing(QQ, "x")
     y = PolynomialRing(R, "y").gen()
+
     def read_list_coeffs(elt):
         if not elt:
             return R(0)
@@ -429,9 +430,9 @@ def genus2_lookup_equation(input_str):
         input_str = input_str.strip('[').strip(']')
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str.split(",")]
     if len(fg) == 1:
-        fg.append(R(0));
+        fg.append(R(0))
 
-    C_str_latex= fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
+    C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
     try:
         C = magma.HyperellipticCurve(fg)
         g2 = magma.G2Invariants(C)

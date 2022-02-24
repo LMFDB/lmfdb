@@ -14,6 +14,7 @@ dims = db.bmf_dims
 print("setting forms")
 forms = db.bmf_forms
 
+
 def curve_check(fld, min_norm=1, max_norm=None):
     nfcurves = db.ec_nfcurves
     # first check numbers
@@ -25,8 +26,8 @@ def curve_check(fld, min_norm=1, max_norm=None):
     form_query = {'field_label':fld, 'dimension':1, 'level_norm':norm_range}
     curve_query = {'field_label':fld, 'number':1, 'conductor_norm':norm_range}
     nforms = forms.count(form_query)
-    ncurves = len([c for c in nfcurves.search(curve_query) if not 'CM' in c['label']])
-    if nforms==ncurves:
+    ncurves = len([c for c in nfcurves.search(curve_query) if 'CM' not in c['label']])
+    if nforms == ncurves:
         print("# curves = # forms = {}".format(ncurves))
     else:
         print("# curves = {} but # forms = {}".format(ncurves, nforms))
