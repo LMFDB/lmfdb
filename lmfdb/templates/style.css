@@ -2494,7 +2494,7 @@ span.raw-tset-copy-btn:active, span.raw-tset-toggle:active {
 span.raw-tset-container > .raw-container {
     font-size: 95%;
     line-height: 1.25;
-    padding: 2px 3px 2px 1px;
+    padding: 1.5px 3px 1.5px 2px;
     border: 1px solid {{color.input_border}};
     vertical-align: middle;
     margin: 0px;
