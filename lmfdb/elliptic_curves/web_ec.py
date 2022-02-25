@@ -86,7 +86,7 @@ def gl2_subgroup_data(label):
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
     if label != data['label']:
-        info += row_wrap('LMFDB label', data['label'])   
+        info += row_wrap('LMFDB label', data['label'])
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
@@ -245,7 +245,7 @@ class WebEC(object):
         # retrieve data about MW rank, generators, heights and
         # torsion, leading term of L-function & other BSD data from
         # table ec_mwbsd:
-        
+
         self.make_mwbsd()
 
         # latex equation:
@@ -261,7 +261,7 @@ class WebEC(object):
         data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
 
         # modular degree:
-        
+
         try:
             data['degree'] = ZZ(self.degree) # convert None to 0
         except AttributeError: # if not computed, db has Null and the attribute is missing
@@ -272,12 +272,12 @@ class WebEC(object):
         classdata = db.ec_classdata.lookup(self.lmfdb_iso)
         data['an'] = classdata['anlist']
         data['ap'] = classdata['aplist']
-        
+
         # mod-p Galois images:
-        
+
         data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
         # CM and Endo ring:
-        
+
         data['CMD'] = self.cm
         data['CM'] = "no"
         data['EndE'] = r"\(\Z\)"
@@ -300,7 +300,7 @@ class WebEC(object):
         else:
             data['ST'] = display_knowl('st_group.data', title=r"$\mathrm{SU}(2)$", kwargs={'label':'1.2.A.1.1a'})
         # Isogeny degrees:
-        
+
         cond, iso, num = split_lmfdb_label(lmfdb_label)
         self.class_deg  = classdata['class_deg']
         self.one_deg = ZZ(self.class_deg).is_prime()
@@ -372,9 +372,9 @@ class WebEC(object):
             data['optimality_known'] = False
             data['manin_known'] = False
             data['optimal_label'] = ''
-            
+
         # p-adic data:
-            
+
         data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) %p !=0]
 
@@ -391,7 +391,7 @@ class WebEC(object):
         self.make_torsion_growth()
 
         # Newform
-        
+
         rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
         data['newform'] =  raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
@@ -407,7 +407,7 @@ class WebEC(object):
             self.class_name = self.lmfdb_iso
         data['class_name'] = self.class_name
         data['Cnumber'] = self.Cnumber if N<CREMONA_BOUND else None
-        
+
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
@@ -471,7 +471,7 @@ class WebEC(object):
         mwbsd = self.mwbsd = db.ec_mwbsd.lookup(self.lmfdb_label)
 
         # Some components are in the main table:
-        
+
         mwbsd['analytic_rank'] = r = self.analytic_rank
         mwbsd['torsion'] = self.torsion
         tamagawa_numbers = [ld['tamagawa_number'] for ld in self.local_data]
@@ -527,7 +527,7 @@ class WebEC(object):
         else:
             mwbsd['tor_struct'] = r' \times '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
             tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
-            mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp), 
+            mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp),
                 ', '.join(web_latex(P) for P in tor_gens_tmp))
 
         # BSD invariants
@@ -616,7 +616,7 @@ class WebEC(object):
         bc_fields = [lab.split("-")[0] for lab in bcs]
         bc_pols = [db.nf_fields.lookup(lab, projection='coeffs') for lab in bc_fields]
         tg['fields_missing'] = False
-        
+
         for tgd in tgdata:
             tg1 = {}
             tg1['bc_label'] = "Not in database"
@@ -649,7 +649,7 @@ class WebEC(object):
         ## this number is used is in the ec-curve template where it
         ## says "The number fields ... of degree less than
         ## {{data.tg.maxd}} such that...".
-        
+
         tg['maxd'] = 24
 
     def code(self):
