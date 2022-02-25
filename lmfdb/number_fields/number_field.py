@@ -18,7 +18,6 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox, 
     TextBoxWithSelect, parse_bool_unknown, parse_posints,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
-    parse_posints,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly, 
