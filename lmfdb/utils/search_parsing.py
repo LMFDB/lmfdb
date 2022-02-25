@@ -26,7 +26,7 @@ QQ_RE = re.compile(r"^-?\d+(/\d+)?$")
 QQ_LIST_RE = re.compile(r"^-?\d+(/\d+)?(,-?\d+(/\d+)?)*$")
 # Single non-negative rational, allowing decimals, used in parse_range2rat
 QQ_DEC_RE = re.compile(r"^\d+((\.\d+)|(/\d+))?$")
-LIST_POSINT_RE = re.compile(r"^(0*[1-9]\d*)(,0*[1-9]\d*)*$")
+LIST_POSINT_RE = re.compile(r"^(0*[1-9]\d*|(\d*-(0*[1-9]\d*)?))(,(0*[1-9]\d*|(\d*-(0*[1-9]\d*)?)))*$")
 LIST_RAT_RE = re.compile(r"^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$")
 # to check if a string is comprised of just multiplication and exponentiation symbols
 MULT_PARSE = re.compile(r"^[0-9()*^]*$")
