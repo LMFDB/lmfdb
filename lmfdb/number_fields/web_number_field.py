@@ -505,7 +505,12 @@ class WebNumberField:
 
     def monogenic(self):
         if self.haskey('monogenic'):
-            return 'Yes' if self._data['monogenic'] else 'No'
+            if self._data['monogenic']==1:
+                return 'Yes' 
+            if self._data['monogenic']==0:
+                return 'Not computed'
+            if self._data['monogenic']==-1:
+                return 'No' 
         return 'Not computed'
 
     def index(self):

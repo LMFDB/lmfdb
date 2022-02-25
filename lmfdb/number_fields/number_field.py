@@ -15,7 +15,8 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
     flash_error, display_knowl, CountBox, prop_int_pretty,
-    SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
+    SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox, 
+    TextBoxWithSelect, parse_bool_unknown,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_posints,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
@@ -879,7 +880,7 @@ def number_field_search(info, query):
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad',cardinality='num_ram')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
-    parse_bool(info,query,'monogenic')
+    parse_bool_unknown(info,query,'monogenic')
     parse_ints(info,query,'index')
     parse_primes(info,query,'inessentialp',name='Inessential primes',
                  qfield='inessentialp')
@@ -1172,7 +1173,7 @@ class NFSearchArray(SearchArray):
             knowl="nf.padic_completion.search",
             example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
             example="2.4.10.7")
-        monogenic = YesNoBox(
+        monogenic = YesNoMaybeBox(
             name="monogenic",
             label="Monogenic",
             knowl="nf.monogenic")
