@@ -19,14 +19,14 @@ SPACES_RE = re.compile(r"\d\s+\d")
 LIST_RE = re.compile(r"^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$")
 FLOAT_STR = r"(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))"
 LIST_FLOAT_RE = re.compile(r"^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$".format(FLOAT_STR))
-BRACKETED_POSINT_RE = re.compile(r"^\[\]|\[[1-9]\d*(,[1-9]\d*)*\]$")
+BRACKETED_POSINT_RE = re.compile(r"^\[\]|\[0*[1-9]\d*(,0*[1-9]\d*)*\]$")
 BRACKETED_NN_RE = re.compile(r"^\[\]|\[\d+(,\d+)*\]$")
 BRACKETED_RAT_RE = re.compile(r"^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$")
 QQ_RE = re.compile(r"^-?\d+(/\d+)?$")
 QQ_LIST_RE = re.compile(r"^-?\d+(/\d+)?(,-?\d+(/\d+)?)*$")
 # Single non-negative rational, allowing decimals, used in parse_range2rat
 QQ_DEC_RE = re.compile(r"^\d+((\.\d+)|(/\d+))?$")
-LIST_POSINT_RE = re.compile(r"^(\d+)(,\d+)*$")
+LIST_POSINT_RE = re.compile(r"^(0*[1-9]\d*)(,0*[1-9]\d*)*$")
 LIST_RAT_RE = re.compile(r"^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$")
 # to check if a string is comprised of just multiplication and exponentiation symbols
 MULT_PARSE = re.compile(r"^[0-9()*^]*$")

@@ -20,8 +20,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'Pagination', 'to_ordinal',
            'debug', 'flash_error', 'flash_warning', 'flash_info',
            'image_callback', 'encode_plot',
-           'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_mod1',
-           'parse_rational', 'parse_padicfields',
+           'parse_ints', 'parse_posints', 'parse_signed_ints', 'parse_floats',
+           'parse_mod1', 'parse_rational', 'parse_padicfields',
            'parse_rational_to_list', 'parse_inertia',
            'parse_rats', 'parse_bracketed_posints', 'parse_bracketed_rats', 'parse_bool',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of', 'parse_not_element_of',
@@ -125,7 +125,8 @@ from .web_display import (
 )
 
 from .search_parsing import (
-    parse_ints, parse_signed_ints, parse_floats, parse_mod1, parse_rational,
+    parse_ints, parse_signed_ints, parse_posints, parse_floats, parse_mod1, 
+    parse_rational,
     parse_rational_to_list, parse_padicfields, parse_rats, parse_inertia,
     parse_bracketed_posints, parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
     parse_element_of, parse_not_element_of, parse_subset, parse_submultiset, parse_list,
