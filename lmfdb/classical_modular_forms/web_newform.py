@@ -395,13 +395,11 @@ class WebNewform(object):
     def primes_cc_bound(self):
         return prime_pi(self.an_cc_bound)
 
-
     @lazy_attribute
     def one_column_display(self):
         if self.embedding_m:
             an = self.cc_data[self.embedding_m]['an_normalized'].values()
-            return all([x == 0 or y == 0 for x, y in an])
-
+            return all(x == 0 or y == 0 for x, y in an)
 
     def setup_cc_data(self, info):
         """
@@ -965,7 +963,7 @@ function switch_basis(btype) {
         """
 
         hecke_polys_orbits = defaultdict(list)
-        R = PolynomialRing(ZZ, 'T');
+        R = PolynomialRing(ZZ, 'T')
         for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : self.hecke_orbit_code}):
             hecke_polys_orbits[poly_item['p']] += [(R(f), e) for f, e in poly_item['charpoly_factorization']]
         if not hecke_polys_orbits:

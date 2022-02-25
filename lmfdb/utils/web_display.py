@@ -5,6 +5,7 @@ from sage.all import (
     Factorization,
     latex,
     ZZ,
+    QQ,
     factor,
     PolynomialRing,
     TermOrder,
@@ -177,19 +178,26 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
     else:
         return lng
 
-def factor_base_factorization_latex(fbf):
+def factor_base_factorization_latex(fbf, cutoff=0):
+    """
+    cutoff is the threshold for compressing large integers
+    cutoff = 0 means we do not compress them
+    """
     if len(fbf) == 0:
         return '1'
     ans = ''
     sign = 1
     for p, e in fbf:
+        pdisp = str(p)
+        if cutoff:
+            pdisp = compress_int(p, cutoff)[0]
         if p == -1:
             if (e % 2) == 1:
                 sign *= -1
         elif e == 1:
-            ans += r'\cdot %d' % p
+            ans += r'\cdot %s' % pdisp
         elif e != 0:
-            ans += r'\cdot %d^{%d}' % (p, e)
+            ans += r'\cdot %s^{%d}' % (pdisp, e)
     # get rid of the initial '\cdot '
     ans = ans[6:]
     return '- ' + ans if sign == -1 else ans
@@ -418,6 +426,12 @@ def compress_polynomial(poly, threshold, decreasing=True):
         tset = tset[len(plus):]
     return tset
 
+def raw_typeset_int(n, cutoff=80, sides=3, extra=''):
+    """
+    Raw/typeset for integers with configurable parameters
+    """
+    compv, compb = compress_int(n, cutoff=cutoff, sides=sides)
+    return raw_typeset(n, rf'\({compv}\)', extra=extra, compressed=compb)
 
 
 def raw_typeset_poly(coeffs,
@@ -608,6 +622,41 @@ def raw_typeset_qexp(coeffs_list,
     raw = raw.replace(rawvar, final_rawvar)
 
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
+
+def compress_poly_Q(rawpoly,
+                     var='x',
+                     compress_threshold=100):
+    """
+    Generate a raw_typeset string a polynomial over Q
+    The typeset compresses each numerator and denominator
+    """
+    R = PolynomialRing(QQ, var)
+    sagepol = R(rawpoly)
+    coefflist = sagepol.coefficients(sparse=False)
+    d = len(coefflist)
+
+    def frac_string(frac):
+        if frac.denominator()==1:
+            return compress_int(frac.numerator())[0]
+        return r'\frac{%s}{%s}'%(compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+
+    tset = ''
+    for j in range(1,d+1):
+        csign = coefflist[d-j].sign()
+        if csign:
+            cabs = coefflist[d-j].abs()
+            if csign>0:
+                tset += '+'
+            else:
+                tset += '-'
+            if cabs != 1 or d-j==0:
+                tset += frac_string(cabs)
+            if d-j>0:
+                if d-j == 1:
+                    tset += var
+                else:
+                    tset += r'%s^{%s}'%(var,d-j)
+    return tset[1:]
 
 
 

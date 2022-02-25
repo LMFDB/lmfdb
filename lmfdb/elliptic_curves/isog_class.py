@@ -60,7 +60,7 @@ class ECisog_class(object):
         # Extract the size of the isogeny class from the database
         classdata = db.ec_classdata.lucky({'lmfdb_iso': self.lmfdb_iso})
         self.class_size = ncurves = classdata['class_size']
-        
+
         # Create a list of the curves in the class from the database
         number_key = 'Cnumber' if self.label_type=='Cremona' else 'lmfdb_number'
         self.curves = [db.ec_curvedata.lucky({'lmfdb_iso':self.lmfdb_iso, number_key: i+1})
@@ -108,7 +108,7 @@ class ECisog_class(object):
             c['FH'] = RealField(20)(c['faltings_height'])
             c['j_inv'] = QQ(tuple(c['jinv'])) # convert [num,den] to rational for display
             c['disc'] = c['signD'] * c['absD']
-            
+
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
 
@@ -123,7 +123,7 @@ class ECisog_class(object):
         self.isogeny_matrix_str = latex(M)
 
         # Create isogeny graph with appropriate vertex labels:
-        
+
         self.graph = make_graph(M, [c['short_label'] for c in self.curves])
         P = self.graph.plot(edge_labels=True, vertex_size=1000)
         self.graph_img = encode_plot(P)

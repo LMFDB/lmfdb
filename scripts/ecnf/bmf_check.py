@@ -71,7 +71,7 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
     same label.  If so, and if check_ap is True, check that the a_P agree.
 
     """
-    if not field_label in fields:
+    if field_label not in fields:
         print("No BMF data available for field {}".format(field_label))
         return
     else:
@@ -91,7 +91,7 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
     labels = [f['short_label'] for f in cursor]
     nforms = len(labels)
     print("found {} newforms".format(nforms))
-    labels = [lab for lab in labels if not lab in false_curves[field_label]]
+    labels = [lab for lab in labels if lab not in false_curves[field_label]]
     nforms = len(labels)
     print("  of which {} should have associated curves (not false ones)".format(nforms))
     nfound = 0

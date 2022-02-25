@@ -219,7 +219,7 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
     pretty = group_obj.display_short(True) if group else ''
     if pretty != '':
         # modify if we use knowls and have the gap id
-        if useknowls:
+        if useknowls and group['gapid']:
             gp_label = f"{group['order']}.{group['gapid']}"
             pretty = abstract_group_display_knowl(gp_label, cache=cache)
         if skip_nTj:

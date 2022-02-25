@@ -20,6 +20,7 @@ fields = C.numberfields.fields
 P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
 
+
 def find_Galois_squarefull_forms():
     forms_labels = []
     for F in hmf_fields.find():
@@ -28,7 +29,7 @@ def find_Galois_squarefull_forms():
         if magma('IsNormal(F) and Degree(F) mod 2 eq 1;'):
             magma.eval('ZF := Integers(F);')
             for f in hmf_forms.find({'field_label' : F['label']}):
-                magma.eval('NN := ideal<ZF | SequenceToSet(' + f['level_ideal'] + ')>;');
+                magma.eval('NN := ideal<ZF | SequenceToSet(' + f['level_ideal'] + ')>;')
                 if magma('Min([2] cat [ff[2] : ff in Factorization(NN)]) ge 2;'):
                     forms_labels.append(f['label'])
                     print(f['label'])

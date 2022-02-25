@@ -177,8 +177,10 @@ def hilbert_modular_form_search(info, query):
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
 
+
 def search_input_error(info=None, bread=None):
-    if info is None: info = {'err':''}
+    if info is None:
+        info = {'err': ''}
     info['search_array'] = HMFSearchArray()
     info['columns'] = hmf_columns
     if bread is None:
@@ -187,6 +189,7 @@ def search_input_error(info=None, bread=None):
                            info=info,
                            title="Hilbert modular forms search error",
                            bread=bread)
+
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
 def render_hmf_webpage_download(**args):
