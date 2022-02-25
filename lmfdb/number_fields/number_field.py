@@ -17,6 +17,7 @@ from lmfdb.utils import (
     flash_error, display_knowl, CountBox, prop_int_pretty,
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
+    parse_posints,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly, 
@@ -857,13 +858,13 @@ def nf_postprocess(res, info, query):
                            ('Search results', '.')],
              learnmore=learnmore_list)
 def number_field_search(info, query):
-    parse_ints(info,query,'degree')
+    parse_posints(info,query,'degree')
     parse_galgrp(info,query, qfield=('galois_label', 'degree'))
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
     parse_floats(info, query, 'regulator')
-    parse_ints(info,query,'class_number')
+    parse_posints(info,query,'class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bool(info,query,'is_galois')
