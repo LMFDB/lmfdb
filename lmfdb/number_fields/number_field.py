@@ -16,7 +16,7 @@ from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
     flash_error, display_knowl, CountBox, prop_int_pretty,
     SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox, 
-    TextBoxWithSelect, parse_bool_unknown,
+    TextBoxWithSelect, parse_bool_unknown, parse_posints,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_posints,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
@@ -881,7 +881,7 @@ def number_field_search(info, query):
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
     parse_bool_unknown(info,query,'monogenic')
-    parse_ints(info,query,'index')
+    parse_posints(info,query,'index')
     parse_primes(info,query,'inessentialp',name='Inessential primes',
                  qfield='inessentialp')
     info['wnf'] = WebNumberField.from_data
