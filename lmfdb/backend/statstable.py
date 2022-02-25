@@ -1690,7 +1690,7 @@ ORDER BY v.ord LIMIT %s"""
         - ``header`` -- a list of lists giving the values to print along the top or side of the table
         - ``data`` -- a dictionary with data on counts
         """
-        selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
+        selecter_constraints = [SQL("split = %s"), SQL("cols = %s"), SQL("count > 0")]
         if constraint:
             allcols = sorted(set(cols + list(constraint)))
             selecter_values = [split_list, Json(allcols)]
@@ -1720,8 +1720,6 @@ ORDER BY v.ord LIMIT %s"""
                     else:
                         selecter_constraints.append(SQL("values->{0} = %s".format(i)))
                         selecter_values.append(Json(cx))
-                    # count 0 rows shouldn't be added usually, but if they get in it can cause havoc since some formatters hard-code the valid inputs
-                    selecter_constraints.append(SQL("count > 0"))
         else:
             allcols = sorted(cols)
             selecter_values = [split_list, Json(allcols)]
