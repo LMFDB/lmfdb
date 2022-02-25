@@ -263,9 +263,10 @@ class SearchWrapper(Wrapper):
                     col_display = {}
                     if "search_array" in info:
                         for row in info["search_array"].refine_array:
-                            for item in row:
-                                if hasattr(item, "name") and hasattr(item, "label"):
-                                    col_display[item.name] = item.label
+                            if isinstance(row, (list, tuple)):
+                                for item in row:
+                                    if hasattr(item, "name") and hasattr(item, "label"):
+                                        col_display[item.name] = item.label
                     if nulls:
                         msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
                         msg += ", ".join(f"{col_display.get(col, col)} ({cnt} objects)" for col, cnt in nulls.items())
