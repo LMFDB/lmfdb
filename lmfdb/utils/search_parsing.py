@@ -838,7 +838,7 @@ def parse_primes(inp, query, qfield, mode=None, radical=None, cardinality=None):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(",")]
-        format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
+        format_ok = all(ZZ(p).is_prime(proof=False) for p in primes)
     if not format_ok:
         raise SearchParsingError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
     _parse_subset(primes, query, qfield, mode, radical, prod, cardinality)

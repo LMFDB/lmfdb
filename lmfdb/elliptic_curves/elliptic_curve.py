@@ -464,7 +464,7 @@ def elliptic_curve_search(info, query):
             info['cm'] = "noCM"
         if query['cm']:
             # try to help the user out if they specify the normalizer of a Cartan in the CM case (these are either maximal or impossible
-            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
+            if any(a.endswith("Nn") for a in modell_labels) or any(a.endswith("Ns") for a in modell_labels):
                 err = "To search for maximal images, exclude non-maximal primes"
                 flash_error(err)
                 raise ValueError(err)

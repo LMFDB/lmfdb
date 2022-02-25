@@ -395,13 +395,11 @@ class WebNewform(object):
     def primes_cc_bound(self):
         return prime_pi(self.an_cc_bound)
 
-
     @lazy_attribute
     def one_column_display(self):
         if self.embedding_m:
             an = self.cc_data[self.embedding_m]['an_normalized'].values()
-            return all([x == 0 or y == 0 for x, y in an])
-
+            return all(x == 0 or y == 0 for x, y in an)
 
     def setup_cc_data(self, info):
         """
