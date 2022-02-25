@@ -278,6 +278,27 @@ class PostgresStatsTable(PostgresBase):
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
+    def null_counts(self, suffix=""):
+        """
+        Returns the columns with null values, together with the count of the number of null rows for each
+        """
+        selecter = SQL(
+            "SELECT cols, count FROM {0} WHERE values = %s AND split = %s"
+        ).format(Identifier(self.counts + suffix))
+        cur = self._execute(selecter, [Json([None]), False])
+        allcounts = {rec[0][0]: rec[1] for rec in cur}
+        for col in self.table.search_cols:
+            if col not in allcounts:
+                allcounts[col] = self._slow_count({col: None}, suffix=suffix, extra=False)
+        return {col: cnt for col,cnt in allcounts.items() if cnt > 0}
+
+    def refresh_null_counts(self, suffix=""):
+        """
+        Recomputes the counts of null values for all search columns
+        """
+        for col in self.table.search_cols:
+            self._slow_count({col: None}, suffix=suffix, extra=False)
+
     def _slow_count(self, query, split_list=False, record=True, suffix="", extra=True):
         """
         No shortcuts: actually count the rows in the search table.
@@ -320,15 +341,17 @@ class PostgresStatsTable(PostgresBase):
             used to store the count
         - ``extra`` -- see the discussion at the top of this class.
         """
+        # We only want to record 0 counts for value [NULL], since other cases can break stats
+        nullrec = (list(query.values()) == [None])
         cols, vals = self._split_dict(query)
         data = [count, cols, vals, split_list]
         if self.quick_count(query, suffix=suffix) is None:
-            if count == 0:
+            if count == 0 and not nullrec:
                 return # we don't want to store 0 counts since it can break stats
             updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            if count == 0:
+            if count == 0 and not nullrec:
                 updater = SQL("DELETE FROM {0} WHERE cols = %s AND values = %s AND split = %s")
                 data = [cols, vals, split_list]
             else:

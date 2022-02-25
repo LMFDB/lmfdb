@@ -6,7 +6,7 @@ from sage.misc.decorators import decorator_keywords
 
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
-from lmfdb.utils.utilities import flash_error, to_dict
+from lmfdb.utils.utilities import flash_error, flash_info, to_dict
 
 
 def use_split_ors(info, query, split_ors, offset, table):
@@ -254,6 +254,22 @@ class SearchWrapper(Wrapper):
                 if info.get(key, "").strip():
                     return func(res, info, query)
             info["results"] = res
+            # Display warning message if user searched on column(s) with null values
+            if query:
+                nulls = table.stats.null_counts()
+                if nulls:
+                    search_columns = table._columns_searched(query)
+                    nulls = {col: cnt for (col, cnt) in nulls.items() if col in search_columns}
+                    col_display = {}
+                    if "search_array" in info:
+                        for row in info["search_array"].refine_array:
+                            for item in row:
+                                if hasattr(item, "name") and hasattr(item, "label"):
+                                    col_display[item.name] = item.label
+                    if nulls:
+                        msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
+                        msg += ", ".join(f"{col_display.get(col, col)} ({cnt} objects)" for col, cnt in nulls.items())
+                        flash_info(msg)
             return render_template(template, info=info, title=title, **template_kwds)
 
 
