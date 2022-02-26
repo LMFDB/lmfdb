@@ -506,7 +506,7 @@ class PostgresStatsTable(PostgresBase):
             nres = self._slow_count_distinct(col, query, record=record)
         return int(nres)
 
-    def column_counts(self, cols, constraint=None, threshold=None, split_list=False):
+    def column_counts(self, cols, constraint=None, threshold=1, split_list=False):
         """
         Returns all of the counts for a given column or set of columns.
 

@@ -452,7 +452,7 @@ def render_field_webpage(args):
     else:  # fallback in case we haven't computed them in a case
         data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
-    data['rd'] = '\(%s\)' % fixed_prec(nf.rd(),2)
+    data['rd'] = r'\(%s\)' % fixed_prec(nf.rd(),2)
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
