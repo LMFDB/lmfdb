@@ -71,11 +71,11 @@ def by_label(label):
 #Should this be "Bad label instead?"
 
 # Take a list of list of integers and make a latex matrix
-def dispmat(n,mat):
+def dispmat(n, mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join([sparse_cyclotomic_to_latex(n, z) for z in row])
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
 

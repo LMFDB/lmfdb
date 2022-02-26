@@ -864,7 +864,7 @@ class Knowl(object):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
-                     self.previous_review_spot = elt['ms_timestamp']
+                    self.previous_review_spot = elt['ms_timestamp']
 
     def save(self, who, most_recent=None, minor=False):
         """
