@@ -1207,6 +1207,8 @@ def projective_image_sort_key(im_type):
         return -2
     elif im_type == 'A5':
         return -1
+    elif im_type is None:
+        return 10000
     else:
         return int(im_type[1:])
 
@@ -1307,7 +1309,7 @@ class CMF_stats(StatsDisplay):
                      'rm_discs': 'RM disc',
                      'dim': 'abs. dimension',
                      'relative_dim': 'rel. dimension'}
-    formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
+    formatters = {'projective_image': (lambda t: 'Unknown' if t is None else r'\(%s_{%s}\)' % (t[0], t[1:])),
                   'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
@@ -1336,7 +1338,8 @@ class CMF_stats(StatsDisplay):
          'totaler':{'avg':True}},
         {'cols':'projective_image',
          'top_title':[('projective images', 'cmf.projective_image'),
-                      ('for weight 1 forms', None)]},
+                      ('for weight 1 forms', None)],
+         'constraint':{'weight': 1}},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': [('number of newforms', 'cmf.galois_orbit'), (r'in \(S_k(N, \chi)\)', None)],
