@@ -611,6 +611,7 @@ belyi_columns = SearchColumns([
     MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
     MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True)])
 
+
 @search_wrap(
     table=db.belyi_galmaps_fixed,
     title="Belyi map search results",
@@ -621,8 +622,6 @@ belyi_columns = SearchColumns([
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
 )
-
-
 def belyi_search(info, query):
     if "group" in query:
         info["group"] = query["group"]
