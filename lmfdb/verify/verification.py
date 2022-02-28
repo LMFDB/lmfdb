@@ -149,11 +149,13 @@ class TableChecker(object):
         return MethodType(check, self), check.__class__
 
     def get_total(self, check, ratio):
-        if ratio is None: ratio=check.ratio
+        if ratio is None:
+            ratio = check.ratio
         return int(self.table.count(check.constraint) * ratio)
 
     def get_iter(self, check, label, ratio):
-        if ratio is None: ratio = check.ratio
+        if ratio is None:
+            ratio = check.ratio
         projection = check.projection
         if self.label_col not in projection:
             projection = [self.label_col] + projection

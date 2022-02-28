@@ -48,6 +48,10 @@
   {
     can_move_vertically = $("#allMove").prop('checked');
   }
+  function toggleheight()
+  {
+    mytoggleheights($("#orderForHeight").prop('checked'));
+  }
 </script>
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
@@ -63,12 +67,13 @@
 {{ info.dojs|safe }}
 
 {% if info.type == "aut" %}
-  sdiagram.newgraph(glist[1]);
+  whoisshowing=1;
   type="A";
   {% else %}
-  sdiagram.newgraph(glist[0]);
+  whoisshowing=0;
   type="C";
 {% endif %}
+  sdiagram.newgraph(glist[whoisshowing]);
   sdiagram.setSize();
   sdiagram.draw();
 </script>
@@ -83,6 +88,10 @@
 <div>
 Subgroups can be dragged in all directions?
 <input type="checkbox" id="allMove" onchange="togglemovement()" />
+</div>
+<div>
+Each subgroup order has its own level?
+<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />
 </div>
 
 <h4>Subgroup information</h4>

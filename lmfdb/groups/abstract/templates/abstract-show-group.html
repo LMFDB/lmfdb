@@ -29,19 +29,32 @@
     }
   }
 
+  var heightstyle='div'; // alternative is 'order'
   function show_info(style) {
     $('.subgroup_diagram').hide();
     $('.subgroup_profile').hide();
     $('.subgroup_autdiagram').hide();
     $('.subgroup_autprofile').hide();
     if(style=="diagram") {
-      sdiagram.newgraph(glist[0]);
       type="C";
+      whoisshowing=0;
+      if(heightstyle=='order') {
+        whoisshowing += 2;
+      }
+      sdiagram.newgraph(glist[whoisshowing]);
       $('.subgroup_diagram').show();
+      sdiagram.setSize();
+      sdiagram.draw();
     } else if(style=="autdiagram") {
-      sdiagram.newgraph(glist[1]);
       type="A";
+      whoisshowing=1;
+      if(heightstyle=='order') {
+        whoisshowing += 2;
+      }
+      sdiagram.newgraph(glist[whoisshowing]);
       $('.subgroup_autdiagram').show();
+      sdiagram.setSize();
+      sdiagram.draw();
     } else {
       $('.subgroup_'+style).show();
     }
@@ -51,6 +64,15 @@
     $('button.autprofile').show();
     button_on(style);
     other_buttons_off(style);
+  }
+  function toggleheight()
+  {
+    if (heightstyle=='div') {
+      heightstyle = 'order';
+    } else {
+      heightstyle = 'div';
+    }
+    mytoggleheights($("#orderForHeight").prop('checked'));
   }
 
 </script>
@@ -375,6 +397,10 @@
       <div id="positions">
       </div>
     {% endif %}
+  <div>
+    Each subgroup order has its own level?
+    <input type="checkbox" id="orderForHeight" onchange="toggleheight()" />
+  </div>
   <div class="subgroup_diagram">
     <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
   </div>
@@ -405,6 +431,10 @@
       <div id="positions">
       </div>
     {% endif %}
+  <div>
+    Each subgroup order has its own level?
+    <input type="checkbox" id="orderForHeight" onchange="toggleheight()" />
+  </div>
   <div class="subgroup_diagram">
     <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
   </div>

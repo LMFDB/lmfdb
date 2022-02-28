@@ -13,7 +13,7 @@ Initial version (University of Warwick 2015) Aurel Page
 """
 
 import sys
-sys.path.append("../..");
+sys.path.append("../..")
 from copy import copy
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
@@ -22,7 +22,7 @@ from sage.all import oo
 
 from lmfdb.base import getDBConnection
 print("getting connection")
-C= getDBConnection()
+C = getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
 # Run the following function to authenticate on the hmfs database
@@ -49,18 +49,22 @@ nfcurves = C.elliptic_curves.nfcurves
 WNFs = {}
 Fdata = {}
 
+
 def get_WNF(label, gen_name):
-    if not label in WNFs:
+    if label not in WNFs:
         WNFs[label] = WebNumberField(label, gen_name=gen_name)
     return WNFs[label]
 
+
 def get_Fdata(label):
-    if not label in Fdata:
-        Fdata[label] = fields.find_one({'label':label})
+    if label not in Fdata:
+        Fdata[label] = fields.find_one({'label': label})
     return Fdata[label]
+
 
 def nautos(label):
     return len(get_WNF(label, 'a').K().automorphisms())
+
 
 def checkprimes(label):
     Fdata = get_Fdata(label)
@@ -223,8 +227,8 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
                 if buildform:
                     fg, hg = conjform(f, h, g, ig, cideals, cprimes, F)
                 if fix:
-                    if fg != None: #else: is a lift (self-conjugate), should have been detected
-                        print("adding it : "+fg['label'])
+                    if fg is not None:  # else: is a lift (self-conjugate), should have been detected
+                        print("adding it : " + fg['label'])
                         forms.insert_one(fg)
                         hecke.insert_one(fg)
                         count += 1

@@ -61,9 +61,11 @@ def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
     return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
 
+
 def integer_is_squarefree(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return all([e == 1 for _, e in ZZ(n).factor()])
+    return all(e == 1 for _, e in ZZ(n).factor())
+
 
 def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
@@ -938,8 +940,3 @@ def datetime_to_timestamp_in_ms(dt):
 
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
-
-
-
-
-

@@ -3,14 +3,16 @@ from lmfdb.tests import LmfdbTest
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
+
 class WebCharacterTest(LmfdbTest):
 
-  def test_Dirichletmethods(self):
-      modlabel, numlabel = 14, 5
-      mod = WebDirichlet.label2ideal(modlabel)
-      assert WebDirichlet.ideal2label(mod) == modlabel
-      num = WebDirichlet.label2number(numlabel)
-      assert WebDirichlet.number2label(num) == numlabel
+    def test_Dirichletmethods(self):
+        modlabel, numlabel = 14, 5
+        mod = WebDirichlet.label2ideal(modlabel)
+        assert WebDirichlet.ideal2label(mod) == modlabel
+        num = WebDirichlet.label2number(numlabel)
+        assert WebDirichlet.number2label(num) == numlabel
+
 
 class DirichletSearchTest(LmfdbTest):
 

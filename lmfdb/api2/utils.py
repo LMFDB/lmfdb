@@ -13,19 +13,22 @@ api_type_inventory = 'API_INVENTORY'
 api_type_records = 'API_RECORDS'
 api_type_error = 'API_ERROR'
 
+
 class test_obj:
     def _toJSON(self):
-        return ['TEST','OBJECT']
+        return ['TEST', 'OBJECT']
+
 
 class APIEncoder(json.JSONEncoder):
     def default(self, obj):
-      try:
-        return obj._toJSON()
-      except Exception:
-          try:
-              return str(obj)
-          except Exception:
-              return json.JSONEncoder.default(self, obj)
+        try:
+            return obj._toJSON()
+        except Exception:
+            try:
+                return str(obj)
+            except Exception:
+                return json.JSONEncoder.default(self, obj)
+
 
 def create_search_dict(table='', query=None, view_start=0, request = None):
     """
@@ -354,7 +357,7 @@ def interpret(query, qkey, qval, type_info):
             if not user_infer and comparator: qval = {comparator:qval}
 
         except Exception:
-          user_infer = True
+            user_infer = True
     else:
         if qval.startswith("|"): qval = qval[1:]
 
@@ -417,7 +420,7 @@ def simple_search_postgres(search_dict, projection=None):
 
     metadata = {}
     C = db[search_dict['table']]
-    info={}
+    info = {}
     try:
         data = C.search(search_dict['query'], projection = projection, limit = rcount, 
             offset = offset, info = info)
@@ -429,7 +432,8 @@ def simple_search_postgres(search_dict, projection=None):
     metadata['record_count'] = info['number']
     metadata['correct_count'] = info['exact_count']
     if data:
-      data_out = list(list(data))
-    else: data_out = []
+        data_out = list(list(data))
+    else:
+        data_out = []
     metadata['view_count'] = len(data_out)
     return metadata, list(data_out), search_dict

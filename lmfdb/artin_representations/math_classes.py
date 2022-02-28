@@ -328,16 +328,16 @@ class ArtinRepresentation(object):
         n = 2*self.character_field()
         p = 2
         hard_primes = self.hard_primes()
-        while len(artfull)>1:
+        while len(artfull) > 1:
             if p not in hard_primes:
-              k=0
-              while k<len(artfull):
-                  if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
-                      k += 1
-                  else:
-                      # Quick deletion of k-th term
-                      artfull[k] = artfull[-1]
-                      del artfull[-1]
+                k = 0
+                while k < len(artfull):
+                    if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
+                        k += 1
+                    else:
+                        # Quick deletion of k-th term
+                        artfull[k] = artfull[-1]
+                        del artfull[-1]
             p = next_prime(p)
         self._data['central_character_as_artin_rep'] = artfull[0][0]
         return artfull[0][0]
@@ -362,7 +362,7 @@ class ArtinRepresentation(object):
         return wc
 
     def det_display(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
             return 'Not available'
         if cc.order == 2:
@@ -373,9 +373,9 @@ class ArtinRepresentation(object):
         return self.central_character_as_artin_rep().label()
 
     def det_url(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
-           return 'Not available'
+            return 'Not available'
         return url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)
 
     def central_char_old(self, p):
