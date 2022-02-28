@@ -713,12 +713,15 @@ def mu_portrait(n):
         plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n,axes=False)
     else:
         plot = circle((0,0),1,thickness=3)
-    plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
-    plot.set_aspect_ratio(4.0/3.0)
+    plot.xmin(-1)
+    plot.xmax(1)
+    plot.ymin(-1)
+    plot.ymax(1)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
-def su2_mu_data(w,n):
+def su2_mu_data(w, n):
     """ data for ST group SU(2) x mu(n) (of any wt > 0); these groups are not stored in the database """
     assert w > 0 and n > 0
     if w == 1 and n == 1:
@@ -764,9 +767,12 @@ def su2_mu_portrait(n):
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
-        plot = circle((0,0),2,fill=True)
-    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+        plot = circle((0, 0), 2, fill=True)
+    plot.xmin(-2)
+    plot.xmax(2)
+    plot.ymin(-2)
+    plot.ymax(2)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -815,9 +821,12 @@ def nu1_mu_portrait(n):
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(0,0,0),fill=True)
     else:
-        plot = circle((0,0),2,fill=True)
-    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+        plot = circle((0, 0), 2, fill=True)
+    plot.xmin(-2)
+    plot.xmax(2)
+    plot.ymin(-2)
+    plot.ymax(2)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
