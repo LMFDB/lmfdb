@@ -1027,18 +1027,18 @@ def topological_action(fam, cc):
     Lbraid = {}
 
     for element in topo_class:
-       if str(element['braid']) in Lbraid:
-           Lbraid[str(element['braid'])].append(
-               (element['passport_label'],
-                element['total_label'],
-                ' '))
-           # We include the space so that we don't have duplicate conjugacy
-           # classes displayed
-       else:
-           Lbraid[str(element['braid'])] = [
-               (element['passport_label'],
-                element['total_label'],
-                cc_display(ast.literal_eval(element['con'])))]
+        if str(element['braid']) in Lbraid:
+            Lbraid[str(element['braid'])].append(
+                (element['passport_label'],
+                 element['total_label'],
+                 ' '))
+            # We include the space so that we don't have duplicate conjugacy
+            # classes displayed
+        else:
+            Lbraid[str(element['braid'])] = [
+                (element['passport_label'],
+                 element['total_label'],
+                 cc_display(ast.literal_eval(element['con'])))]
 
     # Sort braid ascending
     key_for_sorted = sorted(ast.literal_eval(key) for key in Lbraid)

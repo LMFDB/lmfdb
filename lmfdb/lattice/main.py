@@ -26,14 +26,17 @@ from lmfdb import db
 
 # utilitary functions for displays
 
+
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
 
-def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
-     return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
+
+def print_q_expansion(lst):
+    lst = [str(c) for c in lst]
+    Qa = PolynomialRing(QQ, 'a')
+    Qq = PowerSeriesRing(Qa, 'q')
+    return web_latex_split_on_pm(Qq([c for c in lst]).add_bigoh(len(lst)))
+
 
 def my_latex(s):
     ss = ""

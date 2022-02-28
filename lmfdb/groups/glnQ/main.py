@@ -70,18 +70,21 @@ def by_label(label):
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
+
 # Take a list of list of integers and make a latex matrix
 def dispmat(mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([str(z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join([str(z) for z in row])
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
+
 
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
+
 
 def group_download(info):
     t = 'Stub'

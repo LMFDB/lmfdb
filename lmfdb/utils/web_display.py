@@ -760,25 +760,24 @@ def sparse_cyclotomic_to_latex(n, dat):
     return ans
 
 
-
 def dispZmat(mat):
     r""" Display a matrix with integer entries
     """
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([str(z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join([str(z) for z in row])
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
 
-def dispcyclomat(n,mat):
+
+def dispcyclomat(n, mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join(sparse_cyclotomic_to_latex(n, z) for z in row)
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
-
 
 
 def list_to_latex_matrix(li):
