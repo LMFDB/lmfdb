@@ -629,11 +629,11 @@ class WebEC(object):
             tg1['t'] = r'\(' + r' \times '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
             bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:
-                   from lmfdb.ecnf.main import split_full_label
-                   F, NN, I, C = split_full_label(bcc)
-                   tg1['bc_label'] = bcc
-                   tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
-            tg1['m'] = 0 # holds multiplicity per degree
+                from lmfdb.ecnf.main import split_full_label
+                F, NN, I, C = split_full_label(bcc)
+                tg1['bc_label'] = bcc
+                tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
+            tg1['m'] = 0  # holds multiplicity per degree
             tgextra.append(tg1)
 
         tgextra.sort(key = lambda x: x['d'])

@@ -60,18 +60,18 @@ class RayClassGroup(AbelianGroup_class):
         return HeckeCharGroup(self, base_ring)
 
     def __str__(self):
-      return "Ray class group of modulus %s over %s" \
-           %(self.modulus(),self.__number_field)
+        return "Ray class group of modulus %s over %s" \
+            % (self.modulus(), self.__number_field)
 
     def __repr__(self):
-      return self.__str__()
+        return self.__str__()
 
     def gen_ideals(self):
         return self.__generators
 
-    def exp(self,x):
+    def exp(self, x):
         gens = self.gen_ideals()
-        return prod( g**e for g,e in zip(gens,x) )
+        return prod(g**e for g, e in zip(gens, x))
 
     def lift(self, x):
         return self.exp(x.exponents())

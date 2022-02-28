@@ -1529,7 +1529,7 @@ class PostgresTable(PostgresBase):
                 self.drop_pkeys(suffix=suffix)
                 for table in [search_table, extra_table]:
                     if table is not None:
-                       self._execute(SQL(
+                        self._execute(SQL(
                             "UPDATE {0} SET id = {1}.newid "
                             "FROM {1} WHERE {0}.id = {1}.oldid"
                         ).format(table, tmp_table))
@@ -1539,7 +1539,7 @@ class PostgresTable(PostgresBase):
                 print("Resorted %s in %.3f secs" % (self.search_table, time.time() - now))
             elif self._id_ordered and not self._out_of_order:
                 print(f"Table {self.search_table} already sorted")
-            else: # not self._id_ordered
+            else:  # not self._id_ordered
                 print("Data does not have an id column to be sorted")
         return True
 
@@ -1785,7 +1785,7 @@ class PostgresTable(PostgresBase):
                 # tracks the success of resort
                 ordered = self.resort(suffix=suffix)
             else:
-               ordered = False
+                ordered = False
 
 
             if restat and self.stats.saving:

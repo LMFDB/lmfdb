@@ -97,13 +97,11 @@ class WebGaloisGroup:
         return self._data['t']
 
     def is_abelian(self):
-        if self._data['ab'] == 1:
-            return True
-        return False
+        return self._data['ab'] == 1
 
     def arith_equivalent(self):
         if 'arith_equiv' in self._data:
-          return self._data['arith_equiv']
+            return self._data['arith_equiv']
         return 0
 
     def gapid(self):

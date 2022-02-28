@@ -285,13 +285,13 @@ def common_parse(info, query):
     if 'instance_types' in query:
         for s in query['instance_types']['$contains']:
             if s in ['DIR', 'Artin', 'ECQ', 'ECNF', 'G2Q', 'CMF', 'HMF', 'BMF', 'MaassGL3', 'MaassGL4', 'MaassGSp4', 'NF']:
-                 query['is_instance_' + s] = 'true'
+                query['is_instance_' + s] = 'true'
         del query['instance_types']
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
     if 'instance_types' in query:
         for s in query['instance_types']['$notcontains']:
             if s in ['DIR', 'Artin', 'ECQ', 'ECNF', 'G2Q', 'CMF', 'HMF', 'BMF', 'MaassGL3', 'MaassGL4', 'MaassGSp4', 'NF']:
-                 query['is_instance_' + s] = 'false'
+                query['is_instance_' + s] = 'false'
         del query['instance_types']
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')

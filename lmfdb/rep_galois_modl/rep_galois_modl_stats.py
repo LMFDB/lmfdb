@@ -9,10 +9,11 @@ logger = make_logger("rep_galois_modls")
 
 the_rep_galois_modlstats = None
 
+
 def get_stats():
     global the_rep_galois_modlstats
     if the_rep_galois_modlstats is None:
-       the_rep_galois_modlstats = rep_galois_modlstats()
+        the_rep_galois_modlstats = rep_galois_modlstats()
     return the_rep_galois_modlstats
 
 
@@ -24,6 +25,7 @@ def rep_galois_modl_summary():
 @app.context_processor
 def ctx_rep_galois_modl_summary():
     return {'rep_galois_modl_summary': rep_galois_modl_summary}
+
 
 class rep_galois_modlstats(object):
     """

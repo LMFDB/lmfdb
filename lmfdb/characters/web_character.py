@@ -173,9 +173,9 @@ class WebDirichlet(WebCharObject):
     def char2tex(modulus, number, val=r'\cdot', tag=True):
         c = r'\chi_{%s}(%s,%s)'%(modulus,number,val)
         if tag:
-           return r'\(%s\)' % c
+            return r'\(%s\)' % c
         else:
-           return c
+            return c
 
     group2tex = int
     group2label = int
@@ -203,7 +203,7 @@ class WebDirichlet(WebCharObject):
                 n += 1
             k += 1
         if n > self.maxcols:
-          self.coltruncate = True
+            self.coltruncate = True
 
         return [-1] + res
 
@@ -480,19 +480,19 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def vflabel(self):
-      order2 = self.order if self.order % 4 != 2 else self.order / 2
-      nf =  WebNumberField.from_cyclo(order2)
-      if not nf.is_null():
-          return nf.label
-      else:
-          return ''
+        order2 = self.order if self.order % 4 != 2 else self.order / 2
+        nf = WebNumberField.from_cyclo(order2)
+        if not nf.is_null():
+            return nf.label
+        else:
+            return ''
 
     @lazy_attribute
     def valuefield(self):
         order2 = self.order if self.order % 4 != 2 else self.order / 2
-        nf =  WebNumberField.from_cyclo(order2)
+        nf = WebNumberField.from_cyclo(order2)
         if not nf.is_null():
-            return nf_display_knowl(nf.get_label(),nf.field_pretty())
+            return nf_display_knowl(nf.get_label(), nf.field_pretty())
         else:
             return r'$\Q(\zeta_{%d})$' % order2
 
@@ -827,7 +827,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @lazy_attribute
     def title(self):
-      return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
+        return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
 
     @lazy_attribute
     def codegen(self):
