@@ -351,6 +351,7 @@ def l_function_search(info, query):
         info["title"] = "Rational L-function search results"
     common_parse(info, query)
 
+
 @search_wrap(template="LfunctionTraceSearchResults.html",
              table=db.lfunc_search,
              title="L-function trace search",
@@ -359,11 +360,11 @@ def l_function_search(info, query):
              postprocess=process_trace,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
-
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
     process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
+
 
 @search_parser
 def parse_euler(inp, query, qfield, p=None, d=None):

@@ -568,9 +568,11 @@ def point_string(P):
 
 def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
     def divisor_data(P):
-        R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
-        xP,yP = P[0],P[1]
-        xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
+        R = PolynomialRing(QQ, ['x','z'])
+        x = R('x')
+        z = R('z')
+        xP, yP = P[0], P[1]
+        xden, yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
         xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD

@@ -2468,7 +2468,7 @@ span.raw-tset-copy-btn > img {
     content: url({{url_for('static', filename='images/copy.svg')}});
 }
 span.raw-tset-copy-btn > img, span.raw-tset-toggle > img {
-    vertical-align: middle;
+    vertical-align: top;
     height: 11px;
 }
 span.raw-tset-copy-btn, span.raw-tset-toggle {
@@ -2493,9 +2493,10 @@ span.raw-tset-copy-btn:active, span.raw-tset-toggle:active {
 /* textarea/pre */
 span.raw-tset-container > .raw-container {
     font-size: 95%;
-    line-height: 1;
-    padding: 1.5px;
+    line-height: 1.25;
+    padding: 1px 3px 1.5px 2px;
     border: 1px solid {{color.input_border}};
+    vertical-align: middle;
     margin: 0px;
     font-family: monospace;
 }

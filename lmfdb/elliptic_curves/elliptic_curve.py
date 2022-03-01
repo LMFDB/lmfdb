@@ -384,10 +384,9 @@ ec_columns = SearchColumns([
              shortcuts={'jump':elliptic_curve_jump,
                         'download':EC_download()},
              bread=lambda:get_bread('Search results'))
-
 def elliptic_curve_search(info, query):
-    parse_rational_to_list(info,query,'jinv','j-invariant')
-    parse_ints(info,query,'conductor')
+    parse_rational_to_list(info, query, 'jinv', 'j-invariant')
+    parse_ints(info, query, 'conductor')
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['num_bad_primes'] = 1
