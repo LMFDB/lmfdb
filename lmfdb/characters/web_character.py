@@ -115,9 +115,10 @@ class WebCharObject(object):
             return s
 
     @staticmethod
-    def textuple(l,tag=True):
+    def textuple(l, tag=True):
         t = ','.join(l)
-        if len(l) > 1: t='(%s)'%t
+        if len(l) > 1:
+            t = '(%s)' % t
         if tag:
             t = r'\(%s\)' % t
         return t

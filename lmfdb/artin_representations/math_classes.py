@@ -944,9 +944,10 @@ class NumberFieldGaloisGroup(object):
         try:
             fn_to_use = dict_to_use[cycle_type]
         except KeyError:
-            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
-                (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
+            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s"
+                           % (cycle_type, type(cycle_type[0]),
+                              self._from_cycle_type_to_conjugacy_class_index_dict,
+                              type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):
