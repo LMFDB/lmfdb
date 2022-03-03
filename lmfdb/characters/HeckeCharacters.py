@@ -147,7 +147,8 @@ class HeckeChar(DualAbelianGroupElement):
         F = self.exponents()
         D = self.parent().gens_orders()
         r = sum( e*f/d for e,f,d in zip( E, F, D) )
-        if isinstance(r, (int,Integer)): return 0
+        if isinstance(r, (int,Integer)):
+            return 0
         n,d = r.numerator(), r.denominator()
         return n%d/d
 
@@ -172,12 +173,13 @@ class HeckeChar(DualAbelianGroupElement):
             if F[i] == D[i]:
                 F[i] = 0
                 i -= 1
-                if i < 0: return None
+                if i < 0:
+                    return None
             else:
                 c = HeckeChar(self.parent(), F)
                 if not only_primitive or c.is_primitive():
                     return c
-               
+
     def prev_character(self, only_primitive=False):
         D = self.parent().gens_orders()
         F = list(self.exponents())
@@ -187,7 +189,8 @@ class HeckeChar(DualAbelianGroupElement):
             if F[i] < 0:
                 F[i] = D[i] - 1
                 i -= 1
-                if i < 0: return None
+                if i < 0:
+                    return None
             else:
                 c = HeckeChar(self.parent(), F)
                 if not only_primitive or c.is_primitive():

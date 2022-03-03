@@ -13,11 +13,13 @@ class searcher:
         return self.desc
 
     def get_info(self):
-        if (self._full_info): return self._full_info()
+        if (self._full_info):
+            return self._full_info()
         return utils.get_filtered_fields(self._inv)
 
     def get_inventory(self):
-        if(self._full_inventory): return self._full_inventory()
+        if(self._full_inventory):
+            return self._full_inventory()
         return utils.get_filtered_fields(self._inv)
 
     def auto_search(self, request):
@@ -37,7 +39,8 @@ class searcher:
         return self.get_search(sd, proj)
 
     def get_search(self, query, projection):
-        if(self._full_search): return self._full_search(query, projection)
+        if(self._full_search):
+            return self._full_search(query, projection)
         return utils.simple_search(query, projection)
 
     def __init__(self, human_name, desc, auto_search = None, full_info=None, full_inventory=None, full_search=None, inv=None ):
@@ -45,7 +48,8 @@ class searcher:
         self.desc = desc
         self.auto = auto_search
         self._inv = inv
-        if not self._inv and self.auto: self._inv = [self.auto.split("_",1)[0], self.auto]
+        if not self._inv and self.auto:
+            self._inv = [self.auto.split("_", 1)[0], self.auto]
         self._full_info = full_info
         self._full_inventory = full_inventory
         self._full_search = full_search
