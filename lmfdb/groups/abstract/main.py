@@ -100,11 +100,11 @@ def learnmore_list_remove(matchstring):
 
 
 def subgroup_label_is_valid(lab):
-    return abstract_subgroup_label_regex.match(lab)
+    return abstract_subgroup_label_regex.fullmatch(lab)
 
 
 def label_is_valid(lab):
-    return abstract_group_label_regex.match(lab)
+    return abstract_group_label_regex.fullmatch(lab)
 
 
 def get_bread(tail=[]):
@@ -647,7 +647,7 @@ def canonify_abelian_label(label, smith=False):
 def by_abelian_label(label):
     # For convenience, we provide redirects for abelian groups:
     # m1_e1.m2_e2... represents C_{m1}^e1 x C_{m2}^e2 x ...
-    if not AB_LABEL_RE.match(label):
+    if not AB_LABEL_RE.fullmatch(label):
         flash_error(
             r"The abelian label %s is invalid; it must be of the form m1_e1.m2_e2... representing $C_{m_1}^{e_1} \times C_{m_2}^{e_2} \times \cdots$",
             label,
@@ -757,13 +757,13 @@ CYCLIC_PRODUCT_RE = re.compile(r"[Cc][0-9]+(\^[0-9]+)?(\s*[*Xx]\s*[Cc][0-9]+(\^[
 def group_jump(info):
     jump = info["jump"]
     # by label
-    if abstract_group_label_regex.match(jump):
+    if abstract_group_label_regex.fullmatch(jump):
         return redirect(url_for(".by_label", label=jump))
     # by abelian label
-    if jump.startswith("ab/") and AB_LABEL_RE.match(jump[3:]):
+    if jump.startswith("ab/") and AB_LABEL_RE.fullmatch(jump[3:]):
         return redirect(url_for(".by_abelian_label", label=jump[3:]))
     # or as product of cyclic groups
-    if CYCLIC_PRODUCT_RE.match(jump):
+    if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
         return redirect(url_for(".by_abelian_label", label = ".".join(invs)))
     # by name
@@ -774,7 +774,7 @@ def group_jump(info):
         return redirect(url_for(".index", name=jump.replace(" ", "")))
     # by special name
     for family in db.gps_families.search():
-        m = re.match(family["input"], jump)
+        m = re.fullmatch(family["input"], jump)
         if m:
             m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
             lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")

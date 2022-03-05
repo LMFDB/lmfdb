@@ -13,7 +13,7 @@ pqr_re = re.compile(r"^(1)|(p(\^\{(\d+)\})?)(q(\^\{(\d+)\})?)?(r(\^\{(\d+)\})?)?
 def elist_qformatter(elist):
     if isinstance(elist, list):
         return "exponents_of_order=" + str(elist).replace(" ", "")
-    M = pqr_re.match(elist.replace("$",""))
+    M = pqr_re.fullmatch(elist.replace("$",""))
     if M is None:
         raise ValueError(elist)
     L = []
