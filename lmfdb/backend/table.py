@@ -1416,6 +1416,11 @@ class PostgresTable(PostgresBase):
         if self.extra_table is not None:
             search_cols = [col for col in self.search_cols if col in data[0]]
             extra_cols = [col for col in self.extra_cols if col in data[0]]
+            all_cols = set(search_cols + extra_cols)
+            if len(all_cols) != len(data[0]):
+                raise ValueError(f"Input has invalid columns: {', '.join(x for x in data[0] if x not in all_cols)}")
+            if not all(set(D) == all_cols for D in data):
+                raise ValueError("All dictionaries must have the same set of keys")
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
             search_cols = set(search_cols)
