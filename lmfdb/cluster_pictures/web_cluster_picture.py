@@ -3,12 +3,14 @@ from lmfdb import db
 from lmfdb.logger import make_logger
 wcplog = make_logger("WCP")
 
+
 def cp_display_knowl(label, name=None, img=None):
     if not name:
         name = "Cluster Picture %s" % label
     if not img:
         img = name
     return '<a title = "%s [clusterpicture.data]" knowl="clusterpicture.data" kwargs="label=%s">%s</a>' % (name, label, img)
+
 
 def cp_knowl_guts(label):
     out = ''
@@ -31,10 +33,11 @@ def cp_knowl_guts(label):
     out += '<br><a title="potential good reduction" knowl="ag.potential_good_reduction">Potential good reduction</a> of <a title="jacobian" knowl="ag.jacobian">Jacobian</a>: '
     out += str(wcp.potential_good_jacobian_reduction())
     out += '</div>'
-    #out += '<div align="right">' # Place holder in case we make a separate page later.
-    #out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
-    #out += '</div>'
+    # out += '<div align="right">' # Place holder in case we make a separate page later.
+    # out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
+    # out += '</div>'
     return out
+
 
 class WebClusterPicture:
     """
@@ -49,33 +52,33 @@ class WebClusterPicture:
 
     def _get_dbdata(self):
         return db.cluster_pictures.lookup(self.label)
-    
+
     def is_null(self):
         return self._data is None
-    
+
     def get_label(self):
         return self._data['label']
-        
+
     def image(self):
         return self._data['image']
-        
+
     def thumbnail(self):
         return self._data['thumbnail']
-        
+
     def depth(self):
         return self._data['depth']
-        
+
     def size(self):
         return self._data['size']
-        
+
     def potential_toric_rank(self):
         return self._data['potential_toric_rank']
-        
+
     def potential_good_reduction(self):
         return self._data['potential_good_reduction']
-        
+
     def potential_good_jacobian_reduction(self):
         return self._data['potential_good_jacobian_reduction']
-        
+
     def knowl(self):
         return cp_display_knowl(self.get_label())
