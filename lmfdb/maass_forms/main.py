@@ -18,7 +18,7 @@ from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, c
 from sage.all import gcd
 
 CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
-MAASS_ID_RE = re.compile(f"^[0-9a-f]+$")
+MAASS_ID_RE = re.compile(r"^[0-9a-f]+$")
 
 bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
