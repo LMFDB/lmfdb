@@ -1040,6 +1040,16 @@ class STSearchArray(SearchArray):
     jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.B.2.1a or N(U(1)), or 1.4.A.1.1a or 1.4.USp(4)"
     jump_knowl = "st_group.search_input"
     jump_prompt = "Label or name"
+    null_column_explanations = { # No need to display warnings for these
+        'trace_histogram': False,
+        'first_a2_moment': False,
+        'simplex': False,
+        'character_matrix': False,
+        'old_label': False,
+        'character_diagonal': False,
+        'supgroup_multiplicities': False,
+        'component_group_number': False,
+    }
     def __init__(self):
         weight = TextBox(
             name="weight",

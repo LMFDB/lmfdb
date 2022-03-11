@@ -267,9 +267,20 @@ class SearchWrapper(Wrapper):
                                 for item in row:
                                     if hasattr(item, "name") and hasattr(item, "label"):
                                         col_display[item.name] = item.label
+                        for col, cnt in list(nulls.items()):
+                            override = info["search_array"].null_column_explanations.get(col)
+                            if override is False:
+                                del nulls[col]
+                            elif override:
+                                nulls[col] = override
+                            else:
+                                nulls[col] = f"{col_display.get(col, col)} ({cnt} objects)"
+                    else:
+                        for col, cnt in list(nulls.items()):
+                            nulls[col] = f"{col} ({cnt} objects)"
                     if nulls:
                         msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
-                        msg += ", ".join(f"{col_display.get(col, col)} ({cnt} objects)" for col, cnt in nulls.items())
+                        msg += ", ".join(nulls.values())
                         flash_info(msg)
             return render_template(template, info=info, title=title, **template_kwds)
 
