@@ -16,7 +16,7 @@ from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
     flash_error, display_knowl, CountBox, prop_int_pretty,
     SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox, 
-    TextBoxWithSelect, parse_bool_unknown, parse_posints,
+    SubsetBox, TextBoxWithSelect, parse_bool_unknown, parse_posints,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
@@ -882,7 +882,7 @@ def number_field_search(info, query):
     parse_bool_unknown(info,query,'monogenic')
     parse_posints(info,query,'index')
     parse_primes(info,query,'inessentialp',name='Inessential primes',
-                 qfield='inessentialp')
+                 qfield='inessentialp', mode=info.get('inessential_quantifier'))
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1181,10 +1181,16 @@ class NFSearchArray(SearchArray):
             label="Index",
             knowl="nf.zk_index",
             example='2')
-        inessentialprimes = TextBox(
+        inessential_quantifier = SubsetBox(
+            name="inessential_quantifier",
+            min_width=115,
+        )
+        inessentialprimes = TextBoxWithSelect(
             name="inessentialp",
             label="Inessential primes",
+            short_label= r'Ines. \(p\)',
             knowl="nf.inessential_prime",
+            select_box=inessential_quantifier,
             example="2,3")
         count = CountBox()
 
