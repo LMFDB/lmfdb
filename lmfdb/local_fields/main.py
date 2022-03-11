@@ -243,6 +243,7 @@ def local_field_search(info,query):
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
+    parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
