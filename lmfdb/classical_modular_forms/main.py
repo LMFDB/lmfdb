@@ -1408,6 +1408,9 @@ class CMFSearchArray(SearchArray):
         'a5_dim': False,
         's4_dim': False,
         'dihedral_dim': False,
+        'hecke_ring_index': "coefficient ring index not computed when dimension larger than 20",
+        'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
+        'nf_label': "coefficient field not computed when dimension larger than 20",
     }
     def __init__(self):
         level_quantifier = SelectBox(
