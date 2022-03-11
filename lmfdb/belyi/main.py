@@ -595,7 +595,7 @@ def belyi_data(label):
         label_cols = ["label", "plabel", "label"]
         tables = ["belyi_galmaps_fixed", "belyi_passports_fixed", "belyi_galmap_portraits"]
     else:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     return datapage(labels, tables, title=f"Belyi map data - {label}", bread=bread, label_cols=label_cols)
 
 def url_for_label(label):

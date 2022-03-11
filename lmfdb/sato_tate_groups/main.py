@@ -1000,7 +1000,7 @@ def render_st_group(info, portrait=None, in_database=False):
 def st_data(label):
     data = db.gps_st.lookup(label)
     if data is None:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for('.by_label', label=label)), ("Data", "")])
     title = f"Sato-Tate group data - {label}"
     return datapage([label, data["identity_component"], data["component_group"]], ["gps_st", "gps_st0", "gps_groups"], bread=bread, title=title, label_cols=["label", "name", "label"])

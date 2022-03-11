@@ -486,7 +486,7 @@ def mf_data(label):
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
     else:
-        return abort(404, "Invalid label")
+        return abort(404, f"Invalid label {label}")
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
