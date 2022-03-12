@@ -1003,8 +1003,6 @@ def nf_data(**args):
     Ra = PolynomialRing(QQ, 'a')
     zk = [str(Ra(x)) for x in zk]
     zk = ', '.join(zk)
-    units = str(unlatex(nf.units()))
-    units = units.replace('&nbsp;', ' ')
     subs = nf.subfields()
     subs = [[coeff_to_poly(string2list(z[0])),z[1]] for z in subs]
 
@@ -1018,6 +1016,7 @@ def nf_data(**args):
     data += '[%s], '%zk
     data += '%s, '%str(1 if nf.is_cm_field() else 0)
     if nf.can_class_number():
+        units = ','.join(unlatex(z) for z in nf.units())
         data += '%s, '%nf.class_number()
         data += '%s, '%nf.class_group_invariants_raw()
         data += '%s, '%(1 if nf.used_grh() else 0)
