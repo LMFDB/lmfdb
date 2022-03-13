@@ -533,14 +533,15 @@ def render_hgm_webpage(label):
 @hypergm_page.route("/data/<label>")
 def hgm_data(label):
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
-    if "_t" in label:
+    if HGM_LABEL_RE.match(label):
         title = f"Hypergeometric motive data - {label}"
         fam_label = label.split("_t")[0]
         return datapage([label, fam_label], ["hgm_motives", "hgm_families"], bread=bread, title=title)
-    else:
+    elif HGM_FAMILY_LABEL_RE.match(label):
         title = f"Hypergeometric motive family data - {label}"
         return datapage(label, "hgm_families", bread=bread, title=title)
-
+    else:
+        return abort(404, f"Invalid label {label}")
 
 def parse_pandt(info, family):
     errs = []

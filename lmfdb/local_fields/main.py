@@ -2,7 +2,7 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
-from flask import render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, QQ, RR, latex, cached_function, Integers)
 
@@ -28,6 +28,7 @@ from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
 import re
+LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -256,7 +257,7 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lookup(label)
         if data is None:
-            if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            if LF_RE.fullmatch(label):
                 flash_error("Field %s was not found in the database.", label)
             else:
                 flash_error("%s is not a valid label for a $p$-adic field.", label)
@@ -405,6 +406,8 @@ def printquad(code, p):
 
 @local_fields_page.route("/data/<label>")
 def lf_data(label):
+    if not LF_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     title = f"Local field data - {label}"
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     return datapage(label, "lf_fields", title=title, bread=bread)

@@ -5,7 +5,7 @@ import re
 from io import BytesIO
 import time
 
-from flask import render_template, request, url_for, redirect, make_response, send_file
+from flask import abort, render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
@@ -357,6 +357,8 @@ def vect_to_sym(v):
 
 @lattice_page.route('/data/<label>')
 def lattice_data(label):
+    if not lattice_label_regex.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Lattice data - {label}"
     return datapage(label, "lat_lattices", title=title, bread=bread)

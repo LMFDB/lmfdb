@@ -425,6 +425,12 @@ class LFunctionSearchArray(SearchArray):
     jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
     jump_knowl="lfunction.search_input"
     jump_prompt="Label"
+    null_column_explanations = { # No need to display warnings for these
+        'dirichlet_coefficients': False,
+        'euler_factors': False,
+    }
+    for p in prime_range(100):
+        null_column_explanations[f'euler{p}'] = False
     def __init__(self, force_rational=False):
         z1 = TextBox(
             name="z1",
@@ -1562,6 +1568,8 @@ def download(label, L=None): # the wrapper populates the L
 
 @l_function_page.route("/data/<label>")
 def lfunc_data(label):
+    if not LFUNC_LABEL_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     title = f"Lfunction data - {label}"
     bread = get_bread([(label, url_for_lfunction(label)), ("Data", " ")])
     return datapage(label, ["lfunc_lfunctions", "lfunc_search", "lfunc_instances"], title=title, bread=bread)

@@ -4,7 +4,7 @@
 
 import re
 
-from flask import render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect
 from sage.all import ZZ, latex, gap
 
 from lmfdb import db
@@ -325,6 +325,8 @@ def render_group_webpage(args):
 
 @galois_groups_page.route("/data/<label>")
 def gg_data(label):
+    if not re.fullmatch(r'\d+T\d+', label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Transitive group data - {label}"
     return datapage(label, "gps_transitive", title=title, bread=bread)

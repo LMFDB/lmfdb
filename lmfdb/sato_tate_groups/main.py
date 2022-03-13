@@ -1000,7 +1000,7 @@ def render_st_group(info, portrait=None, in_database=False):
 def st_data(label):
     data = db.gps_st.lookup(label)
     if data is None:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for('.by_label', label=label)), ("Data", "")])
     title = f"Sato-Tate group data - {label}"
     return datapage([label, data["identity_component"], data["component_group"]], ["gps_st", "gps_st0", "gps_groups"], bread=bread, title=title, label_cols=["label", "name", "label"])
@@ -1049,6 +1049,16 @@ class STSearchArray(SearchArray):
     jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.B.2.1a or N(U(1)), or 1.4.A.1.1a or 1.4.USp(4)"
     jump_knowl = "st_group.search_input"
     jump_prompt = "Label or name"
+    null_column_explanations = { # No need to display warnings for these
+        'trace_histogram': False,
+        'first_a2_moment': False,
+        'simplex': False,
+        'character_matrix': False,
+        'old_label': False,
+        'character_diagonal': False,
+        'supgroup_multiplicities': False,
+        'component_group_number': False,
+    }
     def __init__(self):
         weight = TextBox(
             name="weight",

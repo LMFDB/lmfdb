@@ -664,7 +664,7 @@ def EC_data(label):
         label_cols[1] = label_cols[7] = "lmfdb_iso"
         sorts = [[], [], [], [], ["degree", "field"], ["prime"], ["prime"], ["p"]]
         return datapage(labels, ["ec_curvedata", "ec_classdata", "ec_mwbsd", "ec_iwasawa", "ec_torsion_growth", "ec_localdata", "ec_galrep", "ec_padic"], title=f"Elliptic curve data - {label}", bread=bread, label_cols=label_cols, sorts=sorts)
-    return abort(404)
+    return abort(404, f"Invalid label {label}")
 
 @ec_page.route("/padic_data/<label>/<int:p>")
 def padic_data(label, p):

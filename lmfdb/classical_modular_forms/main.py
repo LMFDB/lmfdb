@@ -486,7 +486,7 @@ def mf_data(label):
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
     else:
-        return abort(404, "Invalid label")
+        return abort(404, f"Invalid label {label}")
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
@@ -1400,6 +1400,18 @@ class CMFSearchArray(SearchArray):
     jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     jump_knowl="cmf.search_input"
     jump_prompt="Label"
+    null_column_explanations = { # No need to display warnings for these
+        'is_polredabs': False,
+        'projective_image': False,
+        'projective_image_type': False,
+        'a4_dim': False,
+        'a5_dim': False,
+        's4_dim': False,
+        'dihedral_dim': False,
+        'hecke_ring_index': "coefficient ring index not computed when dimension larger than 20",
+        'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
+        'nf_label': "coefficient field not computed when dimension larger than 20",
+    }
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',

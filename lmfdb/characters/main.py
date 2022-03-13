@@ -523,6 +523,8 @@ def dirchar_data(label):
         tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                 ("Data", " ")]
         return datapage(label, "char_dir_orbits", title=title, bread=bread(tail))
+    else:
+        return abort(404, f"Invalid label {label}")
 
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')

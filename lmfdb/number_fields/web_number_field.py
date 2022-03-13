@@ -723,9 +723,6 @@ class WebNumberField:
             return self._data['units']
         elif self.unit_rank() == 0:
             res = []
-        elif self.haskey('class_number'):
-            K = self.K()
-            res = K.unit_group().fundamental_units()
         if res:
             res = res.replace('\\\\', '\\')
             return res
