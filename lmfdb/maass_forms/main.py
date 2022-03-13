@@ -2,7 +2,7 @@
 
 import re
 from lmfdb import db
-from flask import render_template, request, url_for,  abort
+from flask import render_template, request, url_for, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
@@ -18,6 +18,7 @@ from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, c
 from sage.all import gcd
 
 CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
+MAASS_ID_RE = re.compile(r"^[0-9a-f]+$")
 
 bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
@@ -271,6 +272,8 @@ def search_by_label(label):
 
 @maass_page.route("/data/<label>")
 def maass_data(label):
+    if not MAASS_ID_RE.fullmatch(label):
+        return abort(404, f"Invalid id {label}")
     title = f"Maass form data - {label}"
     bread = [("Modular forms", url_for("modular_forms")),
              ("Maass", url_for(".index")),

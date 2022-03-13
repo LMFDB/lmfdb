@@ -387,6 +387,8 @@ def class_from_curve_label(label):
 
 @g2c_page.route("/Q/data/<label>")
 def G2C_data(label):
+    if not LABEL_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_curve_label(label)), ("Data", " ")])
     sorts = [[], [], [], ["prime"], ["p"], []]
     label_cols = ["label", "label", "label", "lmfdb_label", "label", "label"]

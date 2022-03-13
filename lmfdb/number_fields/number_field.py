@@ -7,7 +7,7 @@ from io import BytesIO
 
 import time
 
-from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
+from flask import abort, render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, RealField, log
 
 from lmfdb import db
@@ -708,6 +708,8 @@ def by_label(label):
 
 @nf_page.route("/data/<label>")
 def nf_datapage(label):
+    if not FIELD_LABEL_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     title = f"Number field data - {label}"
     bread = bread_prefix() + [(label, url_for(".by_label", label=label)), ("Data", " ")]
     return datapage(label, "nf_fields", title=title, bread=bread)
