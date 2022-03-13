@@ -393,6 +393,23 @@ class PostgresSearchTable(PostgresTable):
             else:
                 return None, None
 
+    def _columns_searched(self, D):
+        """
+        The list of columns included in a search query
+        """
+        if isinstance(D, list): # can happen recursively in $or queries
+            return sum((self._columns_searched(part) for part in D), [])
+        L = []
+        for key, value in D.items():
+            if key in ["$not", "$and", "$or"]:
+                L.extend(self._columns_searched(value))
+            else:
+                if "." in key:
+                    key = key.split(".")[0]
+                if key in self.search_cols:
+                    L.append(key)
+        return sorted(set(L))
+
     def _process_sort(self, query, limit, offset, sort):
         """
         OUTPUT:

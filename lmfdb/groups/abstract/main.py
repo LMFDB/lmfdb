@@ -1710,6 +1710,14 @@ class GroupsSearchArray(SearchArray):
     sort_knowl = "group.sort_order"
 
 class SubgroupSearchArray(SearchArray):
+    null_column_explanations = { # No need to display warnings for these
+        "quotient": False,
+        "quotient_abelian": False,
+        "quotient_solvable": False,
+        "quotient_cyclic": False,
+        "direct": False,
+        "split": False,
+    }
     sorts = [("", "ambient order", ['ambient_order', 'ambient', 'quotient_order', 'subgroup']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient', 'subgroup']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient', 'subgroup'])]
