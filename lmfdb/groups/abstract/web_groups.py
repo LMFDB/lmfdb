@@ -161,7 +161,7 @@ class WebAbstractGroup(WebObj):
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
             from .main import abstract_group_label_regex
-            m = abstract_group_label_regex.match(label)
+            m = abstract_group_label_regex.fullmatch(label)
             if m is not None and m.group(4) is not None:
                 n = ZZ(m.group(1))
                 if libgap.SmallGroupsAvailable(n):
@@ -189,7 +189,7 @@ class WebAbstractGroup(WebObj):
                 return libgap.AbelianGroup(primary_to_smith(self._data))
             elif isinstance(self._data, str):
                 s = self._data.replace(" ", "")
-                if perm_re.match(s):
+                if perm_re.fullmatch(s):
                     # a list of permutations
                     gens = [f"({g})" for g in s[1:-1].split("),(")]
                     G = PermutationGroup([Permutation(g) for g in gens])
@@ -284,9 +284,11 @@ class WebAbstractGroup(WebObj):
         return None
     @lazy_attribute
     def pgroup(self):
-        if self.order == 1: return 1
+        if self.order == 1:
+            return 1
         F = self.order.factor()
-        if len(F) == 1: return F[0][0]
+        if len(F) == 1:
+            return F[0][0]
         return ZZ(0)
     @lazy_attribute
     def elementary(self):
@@ -601,7 +603,8 @@ class WebAbstractGroup(WebObj):
                 by_disp = defaultdict(Counter)
                 name_lookup = defaultdict(dict)
                 for name, M in subdata.items():
-                    if not name.startswith(typ): continue
+                    if not name.startswith(typ):
+                        continue
                     Q = subdata.get(f"G/{name}")
                     if Q is None:
                         key = (ZZ(self.G.Index(self.G.Normalizer(M.G))), M.label, M.tex_name, None, None)
@@ -741,7 +744,7 @@ class WebAbstractGroup(WebObj):
         ser = []
         for lab, H in subs.items():
             for spec_lab in H.special_labels:
-                if ser_re.match(spec_lab):
+                if ser_re.fullmatch(spec_lab):
                     # ser.append((H.subgroup, spec_lab)) # returning right thing?
                     ser.append((H.short_label, spec_lab))
         # sort

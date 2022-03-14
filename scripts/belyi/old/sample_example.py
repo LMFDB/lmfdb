@@ -1,5 +1,5 @@
 import db
-Cw = db.getDBconnection_write();
+Cw = db.getDBconnection_write()
 
 belyidb = Cw['belyi']
 passports = belyidb['passports']
@@ -17,7 +17,7 @@ sample_pass = {
     'maxdegbf' : 2,
     'pass_size' : 8,
     'num_orbits' : 3
-};
+}
 
 # sample galmap
 sample_galmap = {
@@ -37,21 +37,21 @@ sample_galmap = {
     'abc_sorted' : [5,5,5],
     'lambdas' : [[5,1], [5,1], [5,1]],
     'g' : 1
-};
+}
 
-#insert the sample passport
-passports.insert_one(sample_pass);
+# insert the sample passport
+passports.insert_one(sample_pass)
 
-#insert the sample galmap
-galmaps.insert_one(sample_galmap);
+# insert the sample galmap
+galmaps.insert_one(sample_galmap)
 
-#loops over all passports
+# loops over all passports
 for elt in passports.find():
-    for key, val in  elt.items():
+    for key, val in elt.items():
         print("%s : %s") % (key, val.__repr__())
 
 for elt in galmaps.find():
-    for key, val in  elt.items():
+    for key, val in elt.items():
         print("%s : %s") % (key, val.__repr__())
 
     print("############")

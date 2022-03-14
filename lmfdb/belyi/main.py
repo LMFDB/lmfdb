@@ -595,7 +595,7 @@ def belyi_data(label):
         label_cols = ["label", "plabel", "label"]
         tables = ["belyi_galmaps_fixed", "belyi_passports_fixed", "belyi_galmap_portraits"]
     else:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     return datapage(labels, tables, title=f"Belyi map data - {label}", bread=bread, label_cols=label_cols)
 
 def url_for_label(label):
@@ -605,11 +605,12 @@ belyi_columns = SearchColumns([
     LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label, default=True),
     MathCol("deg", "belyi.degree", "Degree", default=True),
     SearchCol("group", "belyi.group", "Group", default=True),
-    MathCol("abc", "belyi.abc", "abc", default=True, align="left"),
+    MathCol("abc", "belyi.abc", "abc", default=True, align="left", short_title="abc triple"),
     MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
     MathCol("g", "belyi.genus", "Genus", default=True),
     MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
-    MultiProcessedCol("base_field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True)])
+    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True)])
+
 
 @search_wrap(
     table=db.belyi_galmaps_fixed,
@@ -621,8 +622,6 @@ belyi_columns = SearchColumns([
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
 )
-
-
 def belyi_search(info, query):
     if "group" in query:
         info["group"] = query["group"]
@@ -790,6 +789,10 @@ def labels_page():
 class BelyiSearchArray(SearchArray):
     noun = "map"
     plural_noun = "maps"
+    sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
+             ("g", "genus", ['g', 'deg', 'group_num', 'label']),
+             #("field", "base field", ['base_field_label', 'deg', 'group_num', 'g', 'label']),
+             ("orbit_size", "orbit size", ['orbit_size', 'deg', 'group_num', 'g', 'label'])]
     jump_example = "4T5-4_4_3.1-a"
     jump_egspan = "e.g. 4T5-4_4_3.1-a"
     jump_knowl = "belyi.search_input"

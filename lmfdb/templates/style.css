@@ -6,8 +6,6 @@
 
 {# end defs #}
 
-* { zoom: 0; }
-
 img { border: 0; }
 
 body {
@@ -2451,43 +2449,29 @@ span.activesubgp {
     background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
 }
 
-#column-selector {
-  overflow-y: auto;
+#column-selector, #sort-selecter {
+  scrollbar-width: none; /*For Firefox*/;
+  -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
+  overflow-y:auto;
+}
+#column-selector:-webkit-scrollbar, #sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
+    width: 0;
 }
 
 
-/* raw type set styling */
+/*************** raw type set styling ****************/
 
-textarea.tset-raw {
-    font-size: 95%;
-    padding: 1.5px;
-    border: 1px solid {{color.input_border}};
-}
+/** generic, i.e., static stuff **/
 
-img.tset-icon {
-  visibility: hidden;
-  position:relative;
-}
-
-.all > img.tset-icon,  span.tset-container:hover > span > img.tset-icon, span.tset-container:hover > span.rawtset-btn {
-  visibility: visible;
-  cursor: pointer;
-}
-
-.tset > img.tset-icon {
-  content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
-}
-
-.raw > img.tset-icon {
-  content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
-}
-
-span.copy > img {
+/* buttons */
+span.raw-tset-copy-btn > img {
     content: url({{url_for('static', filename='images/copy.svg')}});
-    vertical-align: middle;
+}
+span.raw-tset-copy-btn > img, span.raw-tset-toggle > img {
+    vertical-align: top;
     height: 11px;
 }
-span.copy, span.rawtset-btn {
+span.raw-tset-copy-btn, span.raw-tset-toggle {
     box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
     display: inline-block;
     padding: 2px;
@@ -2502,12 +2486,66 @@ span.copy, span.rawtset-btn {
     transition-property: color,background-color,border-color;
     color: rgb(36, 41, 47);
 }
-span.copy:active, span.rawtset-btn:active {
+span.raw-tset-copy-btn:active, span.raw-tset-toggle:active {
     box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
 }
 
-span.tset-container > span.rawtset-btn {
-    visibility: hidden;
+/* textarea/pre */
+span.raw-tset-container > .raw-container {
+    font-size: 95%;
+    line-height: 1.25;
+    padding: 1px 3px 1.5px 2px;
+    border: 1px solid {{color.input_border}};
+    vertical-align: middle;
+    margin: 0px;
+    font-family: monospace;
 }
+
+span.raw-tset-container.compressed > .raw-container {
+    min-width: 250px;
+    word-break: break-all;
+}
+
+/* non static */
+
+
+/* hide the opposite class enable */
+span.raw-tset-container.tset > .raw-container {
+    display: none;
+}
+span.raw-tset-container.raw > .tset-container {
+    display: none;
+}
+
+/* proper icon  based on the mode */
+span.raw-tset-container.tset > span.raw-tset-toggle > img.tset-icon {
+  content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
+}
+
+span.raw-tset-container.raw > span.raw-tset-toggle > img.tset-icon {
+  content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
+}
+
+/* do not show toggle buttons in general */
+span.raw-tset-container > span.raw-tset-toggle,
+span.raw-tset-container > span.raw-tset-copy-btn {
+  visibility: hidden;
+  position:relative;
+}
+
+/* when to show them */
+span.raw-tset-container.all > span.raw-tset-toggle,
+span.raw-tset-container.raw > span.raw-tset-copy-btn,
+span.raw-tset-container:hover > span.raw-tset-toggle,
+span.raw-tset-container:hover > span.raw-tset-copy-btn {
+  visibility: visible;
+  cursor: pointer;
+}
+
+
+
+
+
+
 
 

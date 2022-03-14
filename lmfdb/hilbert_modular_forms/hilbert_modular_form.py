@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, url_for, request, redirect, make_response
+from flask import abort, render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -9,7 +9,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache)
 from lmfdb.ecnf.main import split_class_label
-from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.number_field import field_pretty, FIELD_LABEL_RE
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
@@ -19,6 +19,9 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
+
+import re
+HMF_LABEL_RE = re.compile("^"+FIELD_LABEL_RE.pattern[1:-1] + r"-\d+\.\d+-[a-z]+$")
 
 def get_bread(tail=[]):
     base = [("Modular forms", url_for('modular_forms')),
@@ -141,7 +144,7 @@ hmf_columns = SearchColumns([
     MathCol("level_norm", "mf.level_norm", "Level norm"),
     MathCol("weight", "mf.hilbert.weight_vector", "Weight"),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
-    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", align="center"),
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center"),
     ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center")])
 hmf_columns.dummy_download = True
 
@@ -177,8 +180,10 @@ def hilbert_modular_form_search(info, query):
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
 
+
 def search_input_error(info=None, bread=None):
-    if info is None: info = {'err':''}
+    if info is None:
+        info = {'err': ''}
     info['search_array'] = HMFSearchArray()
     info['columns'] = hmf_columns
     if bread is None:
@@ -187,6 +192,7 @@ def search_input_error(info=None, bread=None):
                            info=info,
                            title="Hilbert modular forms search error",
                            bread=bread)
+
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
 def render_hmf_webpage_download(**args):
@@ -535,6 +541,8 @@ def render_hmf_webpage(**args):
 
 @hmf_page.route("/data/<label>")
 def hmf_data(label):
+    if not HMF_LABEL_RE.match(label):
+        return abort(404, f"Invalid label {label}")
     field_label = label.split("-")[0]
     title = f"Hilbert modular form data - {label}"
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
@@ -623,6 +631,9 @@ def statistics_by_degree(d):
 class HMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
+    sorts = [("", "base field", ['deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
+             ("level_norm", "level norm", ['level_norm', 'deg', 'disc', 'level_label', 'label_nsuffix']),
+             ("dimension", "dimension", ['dimension', 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix'])]
     jump_example = "2.2.5.1-31.1-a"
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
     jump_knowl = "mf.hilbert.search_input"

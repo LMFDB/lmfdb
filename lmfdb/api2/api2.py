@@ -58,10 +58,11 @@ def handle_singletons(path_var):
     label = val[2]
     baseurl = val[0]
     while baseurl not in singletons:
-       val = baseurl.rpartition('/')
-       if val[0] == '': break
-       baseurl = val[0]
-       label = val[2] + '/' + label
+        val = baseurl.rpartition('/')
+        if val[0] == '':
+            break
+        baseurl = val[0]
+        label = val[2] + '/' + label
 
     if baseurl in singletons:
         search = utils.create_search_dict(table = singletons[baseurl]['table'],

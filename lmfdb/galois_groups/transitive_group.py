@@ -97,13 +97,11 @@ class WebGaloisGroup:
         return self._data['t']
 
     def is_abelian(self):
-        if self._data['ab'] == 1:
-            return True
-        return False
+        return self._data['ab'] == 1
 
     def arith_equivalent(self):
         if 'arith_equiv' in self._data:
-          return self._data['arith_equiv']
+            return self._data['arith_equiv']
         return 0
 
     def gapid(self):
@@ -219,7 +217,7 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
     pretty = group_obj.display_short(True) if group else ''
     if pretty != '':
         # modify if we use knowls and have the gap id
-        if useknowls:
+        if useknowls and group['gapid']:
             gp_label = f"{group['order']}.{group['gapid']}"
             pretty = abstract_group_display_knowl(gp_label, cache=cache)
         if skip_nTj:

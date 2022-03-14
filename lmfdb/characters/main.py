@@ -7,7 +7,7 @@ from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, euler_phi, PolynomialRing, QQ
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
-    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset,
+    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
     StatsDisplay, totaler, proportioners, comma, flash_warning)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
@@ -74,6 +74,9 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     noun = "character"
     plural_noun = "characters"
+    sorts = [("", "modulus", ["modulus", "orbit_index"]),
+             ("conductor", "conductor", ["conductor", "prim_orbit_index", "modulus", "orbit_index"]),
+             ("order", "order", ["order", "modulus", "orbit_index"])]
     jump_example = "13.2"
     jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl = "character.dirichlet.search_input"
@@ -207,7 +210,7 @@ def display_galois_orbit(orbit, modulus):
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],
-                      display_galois_orbit, default=True, align="center"),
+                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
     MathCol("order", "character.dirichlet.order", "Order", default=True),
@@ -520,6 +523,8 @@ def dirchar_data(label):
         tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                 ("Data", " ")]
         return datapage(label, "char_dir_orbits", title=title, bread=bread(tail))
+    else:
+        return abort(404, f"Invalid label {label}")
 
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')
@@ -676,7 +681,7 @@ def dirichlet_group_table(**args):
     if info['poly'] != '???':
         try:
             info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
-            info['poly'] = raw_typeset(info['poly'])
+            info['poly'] = raw_typeset_poly(info['poly'])
         except Exception:
             pass
     return render_template("CharacterGroupTable.html", **info)

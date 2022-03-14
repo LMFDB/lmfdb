@@ -28,7 +28,7 @@ table.ntdata a {
       <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
        <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant|safe}}<td>{{ place_code('discriminant') }}
        <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
-      <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
+      <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>{{info.ram_primes|safe}}<td>{{ place_code('ramified_primes') }}
       <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
 {% if info.is_abelian %}
     <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
@@ -65,6 +65,13 @@ table.ntdata a {
             {{ info.integral_basis | safe }}
             {{ place_code('integral_basis') }}
         </p>
+        <p>
+          <table>
+            <tr><td>{{ KNOWL('nf.monogenic', title='Monogenic')}}:<td>&nbsp;&nbsp;<td>{{info.monogenic}}
+            <tr><td>{{ KNOWL('nf.zk_index', title='Index')}}:<td>&nbsp;&nbsp;<td>{{info.index}}
+            <tr><td>{{ KNOWL('nf.inessential_prime', title='Inessential primes')}}:<td>&nbsp;&nbsp;<td>{{info.inessential}}
+           </table>
+           </p>
 
         <h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
         <p>

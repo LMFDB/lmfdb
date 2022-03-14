@@ -361,8 +361,8 @@ hgm_columns = SearchColumns([
                           ab_label(A, B) if t is None else
                           make_abt_label(A, B, t)),
                       default=True),
-    MathCol("A", None, "$A$", default=True),
-    MathCol("B", None, "$B$", default=True),
+    MathCol("A", None, "$A$", default=True, short_title="A"),
+    MathCol("B", None, "$B$", default=True, short_title="B"),
     ProcessedCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
     ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
     MathCol("degree", None, "Degree", default=True),
@@ -424,7 +424,6 @@ def hgm_search(info, query):
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
 
-    query['__sort__'] = ['degree', 'weight', 'A', 'B', 'label']
     # Should search on analytic conductor when available
     # Sorts A and B first by length, then by the elements of the list; could go another way
 
@@ -534,14 +533,15 @@ def render_hgm_webpage(label):
 @hypergm_page.route("/data/<label>")
 def hgm_data(label):
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
-    if "_t" in label:
+    if HGM_LABEL_RE.match(label):
         title = f"Hypergeometric motive data - {label}"
         fam_label = label.split("_t")[0]
         return datapage([label, fam_label], ["hgm_motives", "hgm_families"], bread=bread, title=title)
-    else:
+    elif HGM_FAMILY_LABEL_RE.match(label):
         title = f"Hypergeometric motive family data - {label}"
         return datapage(label, "hgm_families", bread=bread, title=title)
-
+    else:
+        return abort(404, f"Invalid label {label}")
 
 def parse_pandt(info, family):
     errs = []
@@ -666,6 +666,14 @@ def labels_page():
            learnmore=learnmore_list_remove('labels'))
 
 class HGMSearchArray(SearchArray):
+    _sort = [('', 'degree', ['degree', 'weight', 'A', 'B', 'label']),
+            ('weight', 'weight', ['weight', 'degree', 'A', 'B', 'label']),
+            ('cond', 'conductor', ['cond', 'degree', 'weight', 'A', 'B', 'label']),
+            ('famhodge', 'Family Hodge vector', ['degree', 'famhodge', 'weight', 'A', 'B', 'label'])]
+    sorts = {
+        "Family": _sort[:2] + _sort[3:],
+        "Motive": _sort,
+    }
     jump_example = "A2.2_B1.1_t1.2"
     jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
     jump_knowl = 'hgm.search_input'

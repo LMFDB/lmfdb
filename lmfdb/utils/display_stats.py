@@ -301,9 +301,12 @@ class totaler(object):
                 if not corner_count and i == num_cols:
                     break
                 total = sum(elt['count'] for elt in col)
-                query = self.common_link([elt['query'] for elt in col if elt['count'] > 0]) if include_links else '?'
-                if query[-1] == '?': # no common search queries
+                if total == 0:
                     query = None
+                else:
+                    query = self.common_link([elt['query'] for elt in col if elt['count'] > 0]) if include_links else '?'
+                    if query[-1] == '?': # no common search queries
+                        query = None
                 if recursive_prop:
                     overall = sum(D['count'] for D in total_grid_cols[i])
                 proportion = _format_percentage(total, overall) if (col_proportions and i != num_cols or corner_prop and i == num_cols) else ''

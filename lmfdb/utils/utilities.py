@@ -61,9 +61,11 @@ def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
     return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
 
+
 def integer_is_squarefree(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return all([e == 1 for _, e in ZZ(n).factor()])
+    return all(e == 1 for _, e in ZZ(n).factor())
+
 
 def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
@@ -553,16 +555,18 @@ def splitcoeff(coeff):
 #  display and formatting utilities
 ################################################################################
 
-def comma(x):
+def comma(x, sep=","):
     """
     Input is an integer. Output is a string of that integer with commas.
     CAUTION: this misbehaves if the input is not an integer.
+
+    sep is an optional separator other than a comma
 
     Example:
     >>> comma("12345")
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
+    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000, sep), sep, (x % 1000)))
 
 def latex_comma(x):
     """
@@ -936,8 +940,3 @@ def datetime_to_timestamp_in_ms(dt):
 
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
-
-
-
-
-

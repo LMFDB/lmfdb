@@ -353,24 +353,24 @@ ec_columns = SearchColumns([
      CheckCol("semistable", "ec.reduction", "Semistable"),
      CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
      ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
-                  default=lambda info: info.get("nonmax_primes"), short_title="Nonmaximal primes", mathmode=True, align="center"),
+                  default=lambda info: info.get("nonmax_primes"), short_title="nonmaximal primes", mathmode=True, align="center"),
      ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="ℓ-adic images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
      ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
      ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
-     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="Analytic Ш"),
+     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
      ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
                   default=lambda info: info.get("sha_primes"), mathmode=True, align="center"),
      MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
              default=lambda info: info.get("num_int_pts"), align="center"),
-     MathCol("manin_constant", "ec.q.modular_degree", "Modular degree", align="center"),
-     ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)),
+     MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center"),
+     ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)), short_title="Faltings height",
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
      ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
                   short_title="j-invariant", align="center"),
      MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
-     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, align="left", orig="ainvs"),
+     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
 ])
 
 
@@ -384,10 +384,9 @@ ec_columns = SearchColumns([
              shortcuts={'jump':elliptic_curve_jump,
                         'download':EC_download()},
              bread=lambda:get_bread('Search results'))
-
 def elliptic_curve_search(info, query):
-    parse_rational_to_list(info,query,'jinv','j-invariant')
-    parse_ints(info,query,'conductor')
+    parse_rational_to_list(info, query, 'jinv', 'j-invariant')
+    parse_ints(info, query, 'conductor')
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['num_bad_primes'] = 1
@@ -456,15 +455,15 @@ def elliptic_curve_search(info, query):
             flash_error(err, "13.91.3.2", "13S4")
             raise ValueError(err)
         if elladic_labels:
-            query['elladic_images'] = { '$contains': elladic_labels }
+            query['elladic_images'] = {'$contains': elladic_labels}
         if modell_labels:
-            query['modell_images'] = { '$contains': modell_labels }
-        if not 'cm' in query:
+            query['modell_images'] = {'$contains': modell_labels}
+        if 'cm' not in query:
             query['cm'] = 0
             info['cm'] = "noCM"
         if query['cm']:
             # try to help the user out if they specify the normalizer of a Cartan in the CM case (these are either maximal or impossible
-            if any([a.endswith("Nn") for a in modell_labels]) or any([a.endswith("Ns") for a in modell_labels]):
+            if any(a.endswith("Nn") for a in modell_labels) or any(a.endswith("Ns") for a in modell_labels):
                 err = "To search for maximal images, exclude non-maximal primes"
                 flash_error(err)
                 raise ValueError(err)
@@ -477,7 +476,7 @@ def elliptic_curve_search(info, query):
                     flash_error(err)
                     raise ValueError(err)
                 else:
-                    modell_labels = [a for a in modell_labels if not a in max_labels]
+                    modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
                         max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
@@ -665,7 +664,7 @@ def EC_data(label):
         label_cols[1] = label_cols[7] = "lmfdb_iso"
         sorts = [[], [], [], [], ["degree", "field"], ["prime"], ["prime"], ["p"]]
         return datapage(labels, ["ec_curvedata", "ec_classdata", "ec_mwbsd", "ec_iwasawa", "ec_torsion_growth", "ec_localdata", "ec_galrep", "ec_padic"], title=f"Elliptic curve data - {label}", bread=bread, label_cols=label_cols, sorts=sorts)
-    return abort(404)
+    return abort(404, f"Invalid label {label}")
 
 @ec_page.route("/padic_data/<label>/<int:p>")
 def padic_data(label, p):
@@ -859,6 +858,18 @@ app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
 
 class ECSearchArray(SearchArray):
     noun = "curve"
+    sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
+             #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
+             ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("cm_discriminant", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("regulator", "regulator", ["regulator", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("sha", "analytic &#1064;", ["sha", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("class_size", "isogeny class size", ["class_size", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("class_deg", "isogeny class degree", ["class_deg", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("num_int_pts", "integral points", ["num_int_pts", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("degree", "modular degree", ["degree", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
     plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"
@@ -924,8 +935,8 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        torsion_opts = ([("", ""),("[]", "trivial")] +
-                        [("%s"%n, "order %s"%n) for  n in range(4,16,4)] +
+        torsion_opts = ([("", ""), ("[]", "trivial")] +
+                        [("%s"%n, "order %s"%n) for n in range(4,16,4)] +
                         [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
                         [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
         torsion = SelectBox(
@@ -997,7 +1008,7 @@ class ECSearchArray(SearchArray):
             select_box=nonmax_quant)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
                    [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+                   [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",

@@ -683,7 +683,7 @@ class PostgresBase(object):
             elif col[1] == 1:
                 L.append(Identifier(col[0]))
             else:
-                L.append(SQL("{0} DESC").format(Identifier(col[0])))
+                L.append(SQL("{0} DESC NULLS LAST").format(Identifier(col[0])))
         return SQL(", ").join(L)
 
     def _column_types(self, table_name, data_types=None):

@@ -5,7 +5,7 @@ import re
 from io import BytesIO
 import time
 
-from flask import render_template, request, url_for, redirect, make_response, send_file
+from flask import abort, render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
@@ -26,14 +26,17 @@ from lmfdb import db
 
 # utilitary functions for displays
 
+
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
 
-def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
-     return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
+
+def print_q_expansion(lst):
+    lst = [str(c) for c in lst]
+    Qa = PolynomialRing(QQ, 'a')
+    Qq = PowerSeriesRing(Qa, 'q')
+    return web_latex_split_on_pm(Qq([c for c in lst]).add_bigoh(len(lst)))
+
 
 def my_latex(s):
     ss = ""
@@ -354,6 +357,8 @@ def vect_to_sym(v):
 
 @lattice_page.route('/data/<label>')
 def lattice_data(label):
+    if not lattice_label_regex.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Lattice data - {label}"
     return datapage(label, "lat_lattices", title=title, bread=bread)
@@ -464,6 +469,12 @@ def download_lattice_full_lists_g(**args):
 class LatSearchArray(SearchArray):
     noun = "lattice"
     plural_noun = "lattices"
+    sorts = [("", "dimension", ['dim', 'det', 'level', 'class_number', 'label']),
+             ("det", "determinant", ['det', 'dim', 'level', 'class_number', 'label']),
+             ("level", "level", ['level', 'dim', 'det', 'class_number', 'label']),
+             ("class_number", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
+             ("minimum", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
+             ("aut", "automorphism group", ['aut', 'dim', 'det', 'level', 'class_number', 'label'])]
     def __init__(self):
         dim = TextBox(
             name="dim",

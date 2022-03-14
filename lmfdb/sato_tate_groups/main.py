@@ -597,12 +597,12 @@ def search_by_label(label):
 
 st_columns = SearchColumns([
     LinkCol("label", "st_group.label", "Label", lambda label: url_for('.by_label', label=label), default=True),
-    MathCol("weight", "st_group.weight", "Wt", default=True),
-    MathCol("degree", "st_group.degree", "Deg", default=True),
-    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="dim_R", default=True),
-    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", st0_pretty, short_title="G^0", mathmode=True, default=True, align="center"),
+    MathCol("weight", "st_group.weight", "Wt", default=True, short_title="weight"),
+    MathCol("degree", "st_group.degree", "Deg", default=True, short_title="degree"),
+    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="real dimension", default=True),
+    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", st0_pretty, short_title="identity component", mathmode=True, default=True, align="center"),
     MathCol("pretty", "st_group.name", "Name", default=True),
-    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="G/G^0", default=True),
+    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="components", default=True),
     MathCol("trace_zero_density", "st_group.trace_zero_density", r"$\mathrm{Pr}[t\!=\!0]$", short_title="Pr[t=0]", default=True),
     MathCol("second_trace_moment", "st_group.second_trace_moment", r"$\mathrm{E}[a_1^2]$", short_title="E[a_1^2]", default=True, align="right"),
     MathCol("fourth_trace_moment", "st_group.fourth_trace_moment", r"$\mathrm{E}[a_1^4]$", short_title="E[a_1^4]", default=True, align="right"),
@@ -650,6 +650,15 @@ def sato_tate_search(info, query):
     parse_ints(info, query, "first_a2_moment")
     parse_ints(info, query, 'components', 'components')
     parse_component_group(info, query)
+
+def parse_sort(info):
+    sorts = info['search_array'].sorts
+    for name, display, S in sorts:
+        if name == info.get('sort_order', ''):
+            sop = info.get('sort_dir', '')
+            if sop == 'op':
+                return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
+            return S
 
 ###############################################################################
 # Rendering
@@ -704,12 +713,15 @@ def mu_portrait(n):
         plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n,axes=False)
     else:
         plot = circle((0,0),1,thickness=3)
-    plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
-    plot.set_aspect_ratio(4.0/3.0)
+    plot.xmin(-1)
+    plot.xmax(1)
+    plot.ymin(-1)
+    plot.ymax(1)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
-def su2_mu_data(w,n):
+def su2_mu_data(w, n):
     """ data for ST group SU(2) x mu(n) (of any wt > 0); these groups are not stored in the database """
     assert w > 0 and n > 0
     if w == 1 and n == 1:
@@ -755,9 +767,12 @@ def su2_mu_portrait(n):
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
-        plot = circle((0,0),2,fill=True)
-    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+        plot = circle((0, 0), 2, fill=True)
+    plot.xmin(-2)
+    plot.xmax(2)
+    plot.ymin(-2)
+    plot.ymax(2)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -806,9 +821,12 @@ def nu1_mu_portrait(n):
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(0,0,0),fill=True)
     else:
-        plot = circle((0,0),2,fill=True)
-    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+        plot = circle((0, 0), 2, fill=True)
+    plot.xmin(-2)
+    plot.xmax(2)
+    plot.ymin(-2)
+    plot.ymax(2)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -982,7 +1000,7 @@ def render_st_group(info, portrait=None, in_database=False):
 def st_data(label):
     data = db.gps_st.lookup(label)
     if data is None:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for('.by_label', label=label)), ("Data", "")])
     title = f"Sato-Tate group data - {label}"
     return datapage([label, data["identity_component"], data["component_group"]], ["gps_st", "gps_st0", "gps_groups"], bread=bread, title=title, label_cols=["label", "name", "label"])
@@ -1020,10 +1038,27 @@ def labels_page():
 class STSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
+    sorts = [("", "weight", ["weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("degree", "degree", ["degree", "weight", "st0_label", "components", "component_group_number", "label"]),
+             ("real_dimension", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             #("st0", "identity component", ["st0_label", "weight", "degree", "components", "component_group_number", "label"]),
+             ("components", "component group", ["components", "component_group_number", "st0_label", "weight", "degree", "label"]),
+             ("trace_zero_density", "trace zero density", ["trace_zero_density", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
+             ("character_diagonal", "character diagonal", ["character_diagonal", "weight", "degree", "st0_label", "components", "component_group_number", "label"])]
     jump_example = "1.4.USp(4)"
     jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.B.2.1a or N(U(1)), or 1.4.A.1.1a or 1.4.USp(4)"
     jump_knowl = "st_group.search_input"
     jump_prompt = "Label or name"
+    null_column_explanations = { # No need to display warnings for these
+        'trace_histogram': False,
+        'first_a2_moment': False,
+        'simplex': False,
+        'character_matrix': False,
+        'old_label': False,
+        'character_diagonal': False,
+        'supgroup_multiplicities': False,
+        'component_group_number': False,
+    }
     def __init__(self):
         weight = TextBox(
             name="weight",

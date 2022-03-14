@@ -32,10 +32,10 @@ def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def sub_label_is_valid(lab):
-    return abstract_subgroup_label_regex.match(lab)
+    return abstract_subgroup_label_regex.fullmatch(lab)
 
 def label_is_valid(lab):
-    return glnq_label_regex.match(lab)
+    return glnq_label_regex.fullmatch(lab)
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")),("GLnC", url_for(".index"))]
@@ -71,11 +71,11 @@ def by_label(label):
 #Should this be "Bad label instead?"
 
 # Take a list of list of integers and make a latex matrix
-def dispmat(n,mat):
+def dispmat(n, mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join([sparse_cyclotomic_to_latex(n, z) for z in row])
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
 

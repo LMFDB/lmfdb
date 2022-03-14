@@ -4,7 +4,7 @@
 
 import re
 
-from flask import render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect
 from sage.all import ZZ, latex, gap
 
 from lmfdb import db
@@ -105,6 +105,8 @@ gg_columns = SearchColumns([
     MathCol("order", "group.order", "Order", default=True, align="right"),
     MathCol("parity", "gg.parity", "Parity", default=True, align="right"),
     CheckCol("solv", "group.solvable", "Solvable", default=True),
+    MathCol("nilpotency", "group.nilpotent", "Nil. class", short_title="nilpotency class"),
+    MathCol("num_conj_classes", "gg.conjugacy_classes", "Conj. classes", short_title="conjugacy classes"),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
                       lambda subs, cache: WebGaloisGroup(None, {"subfields": subs}).subfields(cache=cache),
@@ -114,7 +116,7 @@ gg_columns = SearchColumns([
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
                       default=True)
 ],
-    db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields"])
+    db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
 gg_columns.dummy_download = True
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
@@ -203,8 +205,6 @@ def galois_group_search(info, query):
     elif info.get("parity") == "odd":
         query["parity"] = -1
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
-    if 'order' in query and 'n' not in query:
-        query['__sort__'] = ['order', 'gapid', 'n', 't']
 
     degree_str = prep_ranges(info.get('n'))
     info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
@@ -325,6 +325,8 @@ def render_group_webpage(args):
 
 @galois_groups_page.route("/data/<label>")
 def gg_data(label):
+    if not re.fullmatch(r'\d+T\d+', label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Transitive group data - {label}"
     return datapage(label, "gps_transitive", title=title, bread=bread)
@@ -389,6 +391,10 @@ def reliability():
 class GalSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
+    sorts = [("", "degree", ["n", "t"]),
+             ("gp", "order", ["order", "gapid", "n", "t"]),
+             ("nilpotency", "nilpotency class", ["nilpotency", "n", "t"]),
+             ("num_conj_classes", "num. conjugacy classes", ["num_conj_classes", "order", "gapid", "n", "t"])]
     jump_example = "8T14"
     jump_egspan = "e.g. 8T14"
     jump_knowl = "gg.search_input"

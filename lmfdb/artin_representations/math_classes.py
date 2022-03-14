@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
-    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset)
+    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset, raw_typeset_poly)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
@@ -81,6 +81,7 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
+        self._knowl_cache = data_dict.get("knowl_cache")
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
@@ -186,6 +187,9 @@ class ArtinRepresentation(object):
         tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
         return tmp
 
+    def num_ramps(self):
+        return self._data["NumBadPrimes"]
+
     def hard_primes(self):
         try:
             return self._hard_primes
@@ -218,12 +222,15 @@ class ArtinRepresentation(object):
         gapid = self._data['Proj_GAP']
         if gapid[0]:
             label = f"{gapid[0]}.{gapid[1]}"
-            name = db.gps_groups.lookup(label, "tex_name")
+            if self._knowl_cache is None:
+                name = db.gps_groups.lookup(label, "tex_name")
+            else:
+                name = self._knowl_cache.get(label, {}).get("tex_name")
             if name:
                 return abstract_group_display_knowl(label, f"${name}$")
         ntj = self._data['Proj_nTj']
         if ntj[1]:
-            return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}")
+            return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}", cache=self._knowl_cache)
         if gapid:
             return f'Group({gapid[0]}.{gapid[1]})'
         return 'data not computed'
@@ -257,11 +264,11 @@ class ArtinRepresentation(object):
             self._small_nt = [int(z) for z in bits]
         return self._small_nt
 
-    def smallest_gal_t_format(self):
+    def container(self):
         galnt = self.smallest_gal_t()
-        if len(galnt)==1:
+        if len(galnt) == 1:
             return galnt[0]
-        return transitive_group_display_knowl(f"{galnt[0]}T{galnt[1]}")
+        return transitive_group_display_knowl(f"{galnt[0]}T{galnt[1]}", cache=self._knowl_cache)
 
     def is_ramified(self, p):
         return self.is_bad_prime(p)
@@ -321,16 +328,16 @@ class ArtinRepresentation(object):
         n = 2*self.character_field()
         p = 2
         hard_primes = self.hard_primes()
-        while len(artfull)>1:
+        while len(artfull) > 1:
             if p not in hard_primes:
-              k=0
-              while k<len(artfull):
-                  if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
-                      k += 1
-                  else:
-                      # Quick deletion of k-th term
-                      artfull[k] = artfull[-1]
-                      del artfull[-1]
+                k = 0
+                while k < len(artfull):
+                    if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
+                        k += 1
+                    else:
+                        # Quick deletion of k-th term
+                        artfull[k] = artfull[-1]
+                        del artfull[-1]
             p = next_prime(p)
         self._data['central_character_as_artin_rep'] = artfull[0][0]
         return artfull[0][0]
@@ -355,7 +362,7 @@ class ArtinRepresentation(object):
         return wc
 
     def det_display(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
             return 'Not available'
         if cc.order == 2:
@@ -366,9 +373,9 @@ class ArtinRepresentation(object):
         return self.central_character_as_artin_rep().label()
 
     def det_url(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
-           return 'Not available'
+            return 'Not available'
         return url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)
 
     def central_char_old(self, p):
@@ -420,7 +427,7 @@ class ArtinRepresentation(object):
         return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        return transitive_group_display_knowl(self._data['GaloisLabel'])
+        return transitive_group_display_knowl(self._data['GaloisLabel'], cache=self._knowl_cache)
 
     def __str__(self):
         try:
@@ -714,10 +721,10 @@ class NumberFieldGaloisGroup(object):
         return self._data["Polynomial"]
 
     def polynomial_raw_typeset(self):
-        return raw_typeset(coeff_to_poly(self.polynomial()))
+        return raw_typeset_poly(coeff_to_poly(self.polynomial()))
 
-    def polynomial_latex(self):
-        return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
+    # def polynomial_latex(self):
+    #     return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
 
     # WebNumberField of the object
     def wnf(self):
@@ -818,7 +825,7 @@ class NumberFieldGaloisGroup(object):
 
     def computation_minimal_polynomial_raw_typeset(self):
         pol = coeff_to_poly(self._data["QpRts-minpoly"])
-        return raw_typeset(pol)
+        return raw_typeset_poly(pol)
 
     def computation_minimal_polynomial_latex(self):
         pol = coeff_to_poly(self._data["QpRts-minpoly"])
@@ -937,9 +944,10 @@ class NumberFieldGaloisGroup(object):
         try:
             fn_to_use = dict_to_use[cycle_type]
         except KeyError:
-            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
-                (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
+            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s"
+                           % (cycle_type, type(cycle_type[0]),
+                              self._from_cycle_type_to_conjugacy_class_index_dict,
+                              type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):

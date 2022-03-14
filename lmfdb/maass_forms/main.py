@@ -2,7 +2,7 @@
 
 import re
 from lmfdb import db
-from flask import render_template, request, url_for,  abort
+from flask import render_template, request, url_for, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
@@ -18,6 +18,7 @@ from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, c
 from sage.all import gcd
 
 CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
+MAASS_ID_RE = re.compile(r"^[0-9a-f]+$")
 
 bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
@@ -146,6 +147,8 @@ def reliability_page():
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 class MaassSearchArray(SearchArray):
+    sorts = [("", "level", ['level', 'weight', 'conrey_index', 'spectral_parameter']),
+             ("spectral", "spectral parameter", ['spectral_parameter', 'weight', 'level', 'conrey_index'])]
     noun = "Maass form"
     plural_noun = "Maass forms"
     def __init__(self):
@@ -205,7 +208,7 @@ maass_columns = SearchColumns([
     MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
                       ["level", "conrey_index"],
-                      character_link,
+                      character_link, short_title="character",
                       default=True, align="center"),
     MultiProcessedCol("spectral", "mf.maass.mwf.spectralparameter", "Spectral parameter",
                       ["maass_id", "spectral_parameter"],
@@ -215,7 +218,7 @@ maass_columns = SearchColumns([
                  symmetry_pretty,
                  default=True, align="center"),
     ProcessedCol("fricke_eigenvalue", "cmf.fricke", "Fricke",
-                 fricke_pretty,
+                 fricke_pretty, short_title="Fricke",
                  default=True, align="center")],
     db_cols=["maass_id", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
 
@@ -237,7 +240,6 @@ def search(info, query):
     parse_floats(info, query, 'spectral_parameter', name='Spectral parameter')
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
-    query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }
@@ -270,6 +272,8 @@ def search_by_label(label):
 
 @maass_page.route("/data/<label>")
 def maass_data(label):
+    if not MAASS_ID_RE.fullmatch(label):
+        return abort(404, f"Invalid id {label}")
     title = f"Maass form data - {label}"
     bread = [("Modular forms", url_for("modular_forms")),
              ("Maass", url_for(".index")),

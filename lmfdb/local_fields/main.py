@@ -2,7 +2,7 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
-from flask import render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, QQ, RR, latex, cached_function, Integers)
 
@@ -28,6 +28,7 @@ from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
 import re
+LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -200,15 +201,18 @@ class LF_download(Downloader):
 
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
+    MathCol("n", "lf.degree", "$n$", short_title="degree"),
     ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
-    MathCol("p", "lf.qp", "$p$", default=True),
-    MathCol("e", "lf.ramification_index", "$e$", default=True),
-    MathCol("f", "lf.residue_field_degree", "$f$", default=True),
-    MathCol("c", "lf.discriminant_exponent", "$c$", default=True),
+    MathCol("p", "lf.qp", "$p$", default=True, short_title="prime"),
+    MathCol("e", "lf.ramification_index", "$e$", default=True, short_title="ramification index"),
+    MathCol("f", "lf.residue_field_degree", "$f$", default=True, short_title="residue field degree"),
+    MathCol("c", "lf.discriminant_exponent", "$c$", default=True, short_title="discriminant exponent"),
     MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                       ["n", "gal", "cache"],
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
                       default=True),
+    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
+    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
@@ -240,6 +244,7 @@ def local_field_search(info,query):
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
+    parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
@@ -252,7 +257,7 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lookup(label)
         if data is None:
-            if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            if LF_RE.fullmatch(label):
                 flash_error("Field %s was not found in the database.", label)
             else:
                 flash_error("%s is not a valid label for a $p$-adic field.", label)
@@ -401,6 +406,8 @@ def printquad(code, p):
 
 @local_fields_page.route("/data/<label>")
 def lf_data(label):
+    if not LF_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     title = f"Local field data - {label}"
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     return datapage(label, "lf_fields", title=title, bread=bread)
@@ -469,6 +476,15 @@ def reliability():
 class LFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
+    sorts = [("", "prime", ['p', 'n', 'c', 'label']),
+             ("n", "degree", ['n', 'p', 'c', 'label']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
+             ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
+             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
+             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
+             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'label'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"

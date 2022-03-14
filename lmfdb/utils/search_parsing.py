@@ -19,14 +19,14 @@ SPACES_RE = re.compile(r"\d\s+\d")
 LIST_RE = re.compile(r"^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$")
 FLOAT_STR = r"(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))"
 LIST_FLOAT_RE = re.compile(r"^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$".format(FLOAT_STR))
-BRACKETED_POSINT_RE = re.compile(r"^\[\]|\[[1-9]\d*(,[1-9]\d*)*\]$")
+BRACKETED_POSINT_RE = re.compile(r"^\[\]|\[0*[1-9]\d*(,0*[1-9]\d*)*\]$")
 BRACKETED_NN_RE = re.compile(r"^\[\]|\[\d+(,\d+)*\]$")
 BRACKETED_RAT_RE = re.compile(r"^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$")
 QQ_RE = re.compile(r"^-?\d+(/\d+)?$")
 QQ_LIST_RE = re.compile(r"^-?\d+(/\d+)?(,-?\d+(/\d+)?)*$")
 # Single non-negative rational, allowing decimals, used in parse_range2rat
 QQ_DEC_RE = re.compile(r"^\d+((\.\d+)|(/\d+))?$")
-LIST_POSINT_RE = re.compile(r"^(\d+)(,\d+)*$")
+LIST_POSINT_RE = re.compile(r"^(0*[1-9]\d*|(\d*-(0*[1-9]\d*)?))(,(0*[1-9]\d*|(\d*-(0*[1-9]\d*)?)))*$")
 LIST_RAT_RE = re.compile(r"^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$")
 # to check if a string is comprised of just multiplication and exponentiation symbols
 MULT_PARSE = re.compile(r"^[0-9()*^]*$")
@@ -838,7 +838,7 @@ def parse_primes(inp, query, qfield, mode=None, radical=None, cardinality=None):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(",")]
-        format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
+        format_ok = all(ZZ(p).is_prime(proof=False) for p in primes)
     if not format_ok:
         raise SearchParsingError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
     _parse_subset(primes, query, qfield, mode, radical, prod, cardinality)

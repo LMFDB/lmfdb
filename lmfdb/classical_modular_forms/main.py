@@ -15,7 +15,7 @@ from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, display_float, factor_base_factorization_latex,
-    flash_error, to_dict, comma, display_knowl, bigint_knowl,
+    flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
@@ -486,7 +486,7 @@ def mf_data(label):
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
     else:
-        return abort(404, "Invalid label")
+        return abort(404, f"Invalid label {label}")
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
@@ -745,26 +745,6 @@ def parse_discriminant(d, sign = 0):
         raise ValueError('%d != 0 or 1 mod 4' % d)
     return d
 
-def parse_sort(info, query, spaces=False):
-    if info.get('sort_order') == '':
-        query['__sort__'] = ['analytic_conductor', 'level']
-    elif info.get('sort_order') == 'Nk2':
-        query['__sort__'] = ['Nk2', 'level']
-    elif info.get('sort_order') == 'dim':
-        query['__sort__'] = ['dim', 'level', 'weight']
-    elif info.get('sort_order') == 'reldim':
-        query['__sort__'] = ['relative_dim', 'level', 'weight']
-    elif info.get('sort_order') == 'N':
-        query['__sort__'] = ['level', 'weight']
-    elif info.get('sort_order') == 'k':
-        query['__sort__'] = ['weight', 'level']
-    else:
-        return
-    if spaces:
-        query['__sort__'].append('char_orbit_index')
-    else:
-        query['__sort__'].extend(['char_orbit_index', 'hecke_orbit'])
-
 def newform_parse(info, query):
     common_parse(info, query)
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
@@ -782,7 +762,6 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
-    parse_sort(info, query)
 
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
@@ -803,7 +782,6 @@ def newspace_parse(info, query):
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
             # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
             query['num_forms'] = {'$exists':True}
-    parse_sort(info, query, spaces=True)
 
 def _trace_col(i):
     return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
@@ -818,24 +796,31 @@ newform_columns = SearchColumns([
     MultiProcessedCol("character", "cmf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
-                      short_title="Character"),
-    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="Character order"),
-    MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="Dimension"),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="Analytic conductor"),
+                      short_title="character"),
+    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
+                      ["char_conductor", "prim_orbit_index"],
+                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
+                      short_title="primitive character"),
+    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
+    MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="dimension"),
+    MathCol("relative_dim", "cmf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
     MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
                  lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
                  contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                  default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
-                 align="center", short_title="Projective image"),
+                 align="center", short_title="projective image"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
                       lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
+                      short_title="CM",
                       default=True),
     MultiProcessedCol("rm", "cmf.self_twist", "RM",
                       ["is_rm", "rm_discs"],
                       lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
+                      short_title="RM",
                       default=True),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual"),
     MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists"),
@@ -851,12 +836,12 @@ newform_columns = SearchColumns([
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
     ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
-                 lambda fac: "" if fac=="?" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
+                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
     ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)],
-    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.mf_newforms,
@@ -1162,14 +1147,14 @@ def dimension_space_search(info, query):
 
 space_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="left"),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
     MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_indexes"],
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
-                      default=True),
-    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", default=True),
-    MathCol("dim", "cmf.display_dim", "Dim.", default=True),
-    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, align="center", td_class=" nowrap")])
+                      short_title="character", default=True),
+    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
+    MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension", default=True),
+    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.mf_newspaces,
              title='Newspace search results',
@@ -1222,6 +1207,8 @@ def projective_image_sort_key(im_type):
         return -2
     elif im_type == 'A5':
         return -1
+    elif im_type is None:
+        return 10000
     else:
         return int(im_type[1:])
 
@@ -1322,7 +1309,7 @@ class CMF_stats(StatsDisplay):
                      'rm_discs': 'RM disc',
                      'dim': 'abs. dimension',
                      'relative_dim': 'rel. dimension'}
-    formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
+    formatters = {'projective_image': (lambda t: 'Unknown' if t is None else r'\(%s_{%s}\)' % (t[0], t[1:])),
                   'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
@@ -1351,7 +1338,8 @@ class CMF_stats(StatsDisplay):
          'totaler':{'avg':True}},
         {'cols':'projective_image',
          'top_title':[('projective images', 'cmf.projective_image'),
-                      ('for weight 1 forms', None)]},
+                      ('for weight 1 forms', None)],
+         'constraint':{'weight': 1}},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': [('number of newforms', 'cmf.galois_orbit'), (r'in \(S_k(N, \chi)\)', None)],
@@ -1384,10 +1372,46 @@ def dynamic_statistics():
     return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 class CMFSearchArray(SearchArray):
+    sort_knowl = 'cmf.sort_order'
+    _sort = [
+        ('', 'analytic conductor', ['analytic_conductor', 'level']),
+        ('level', 'level', ['level', 'weight']),
+        ('weight', 'weight', ['weight', 'level']),
+        ('character', 'character', ['level', 'char_orbit_index', 'weight']),
+        ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
+        ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
+        ('Nk2', 'Nk^2', ['Nk2', 'level']),
+        ('dim', 'dimension', ['dim', 'level', 'weight']),
+        ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
+        ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
+        ('inner_twist_count', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
+        ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
+    ]
+    for name, disp, sord in _sort:
+        if 'char_orbit_index' not in sord:
+            sord.append('char_orbit_index')
+    _sort_spaces = _sort[:-3]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    sorts = {'List': _sort_forms,
+             'Traces': _sort_forms,
+             'Spaces': _sort_spaces,
+             'SpaceTraces': _sort_spaces}
     jump_example="3.6.a.a"
     jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     jump_knowl="cmf.search_input"
     jump_prompt="Label"
+    null_column_explanations = { # No need to display warnings for these
+        'is_polredabs': False,
+        'projective_image': False,
+        'projective_image_type': False,
+        'a4_dim': False,
+        'a5_dim': False,
+        's4_dim': False,
+        'dihedral_dim': False,
+        'hecke_ring_index': "coefficient ring index not computed when dimension larger than 20",
+        'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
+        'nf_label': "coefficient field not computed when dimension larger than 20",
+    }
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
@@ -1641,23 +1665,6 @@ class CMFSearchArray(SearchArray):
             RowSpacer(22),
             [trace_coldisplay, trace_primality],
             [trace_an_constraints, trace_an_moduli, trace_view]]
-
-    sort_knowl = 'cmf.sort_order'
-    def sort_order(self, info):
-        st = self._st(info)
-        X = [
-            ('', 'analytic conductor'),
-            ('Nk2', 'Nk^2'),
-            ('dim', 'dimension'),
-            ('reldim', 'relative dimension'),
-            ('N', 'level'),
-            ('k', 'weight')
-        ]
-        if st in ['List', 'Traces']:
-            return X
-        elif st in ['Spaces', 'SpaceTraces']:
-            del X[3]
-            return X
 
     def hidden(self, info):
         ans = [("start", "start"), ("count", "count"), ("hst", "search_type")]
