@@ -159,7 +159,7 @@ class EllCurveTest(LmfdbTest):
         # The isogeny class 990h (Cremona labelling) or 990.i (LMFDB labelling)
         # has a different Gamma-optimal curve in its labelling than all others.
         L = self.tc.get('/EllipticCurve/Q/990/i/')
-        row = '\n'.join([
+        row = r'\n'.join([
             '<td class="center"><a href="/EllipticCurve/Q/990h3/">990h3</a></td>',
             r'<td class="center">\([1, -1, 1, -1568, -4669]\)</td>',
             r'<td class="center">\(15781142246787/8722841600\)</td>',
