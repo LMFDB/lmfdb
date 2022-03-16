@@ -92,10 +92,12 @@ def validate_integer_args(errmsg, args, *keys):
             if not isinstance(args[key],int) and not re.match(r'^\d+$',args[key].strip()):
                 raise ValueError(errmsg, "Unable to convert parameter '%s' with value '%s' to a nonnegative integer." % (key, args[key]))
 
-def constructor_logger(object, args):
+
+def constructor_logger(obj, args):
     ''' Executed when a object is constructed for debugging reasons
     '''
-    logger.debug(str(object.__class__) + str(args))
+    logger.debug(str(obj.__class__) + str(args))
+
 
 # Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):

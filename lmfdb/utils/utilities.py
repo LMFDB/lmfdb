@@ -787,9 +787,9 @@ def flash_info(errmsg, *args):
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
 
-    def __init__(self, value, next):
+    def __init__(self, value, nxt):
         self.value = value
-        self.next = next
+        self.next = nxt
         self.timestamp = time.time()
 
     def append(self, value):
