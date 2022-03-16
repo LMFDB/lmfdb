@@ -384,16 +384,3 @@ class WebHyperGeometricFamily(object):
             return [('p', p, 't', self.table_euler_factors_p(p)) for p in plist]
         else:
             return [('t', t, 'p', self.table_euler_factors_t(t, plist)) for t in tlist]
-
-
-
-
-
-
-
-
-
-
-
-
-

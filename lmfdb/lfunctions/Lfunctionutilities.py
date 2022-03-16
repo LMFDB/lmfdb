@@ -876,4 +876,3 @@ def parse_codename(text):
     ans = re.sub('(r|c)', ',', ans)
 
     return '(' + ans + ')'
-

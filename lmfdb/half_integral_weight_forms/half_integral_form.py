@@ -132,7 +132,3 @@ def render_hiwf_webpage(**args):
     else:
         info['theta']= data['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
-
-
-
-

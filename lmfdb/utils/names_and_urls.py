@@ -174,5 +174,3 @@ def names_and_urls(instances, exclude={}):
     # sort based on name + label
     res.sort(key=lambda x: key_for_numerically_sort(x[0]))
     return res
-
-

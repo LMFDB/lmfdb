@@ -741,4 +741,3 @@ def make_code(label, lang=None):
             Ecode['curve'][l] = Ecode['curve'][l] % ainvs_string[l]
 
     return Ecode
-

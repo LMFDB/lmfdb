@@ -49,5 +49,3 @@ def start_logging():
         cfg["postgresql_options"]["password"] = "****"
     info("Configuration = {}".format(cfg) )
     check_sage_version()
-
-

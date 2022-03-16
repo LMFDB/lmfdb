@@ -45,4 +45,3 @@ class GalGpTest(LmfdbTest):
     def test_underlying_data(self):
         data = self.tc.get('/GaloisGroup/8T44').get_data(as_text=True)
         assert "Underlying data" in data and "data/8T44" in data
-

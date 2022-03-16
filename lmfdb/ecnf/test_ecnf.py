@@ -153,4 +153,3 @@ class EllCurveTest(LmfdbTest):
             L = self.tc.get(url).get_data(as_text=True)
             for t in text:
                 assert t in L
-

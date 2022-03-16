@@ -7,4 +7,3 @@ def redirect_no_cache(f):
         response.headers['Cache-Control'] = 'no-cache, no-store'
         return response
     return wrapper
-
