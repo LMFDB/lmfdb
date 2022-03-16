@@ -170,9 +170,8 @@ def build_api_error(string, request = None):
     return build_api_wrapper('GLOBAL', api_type_error, string, request)
 
 
-def build_description(objlist, name, desc, type, h_name, 
-    db_name=None, coll_name=None, field_name=None, request=None):
-
+def build_description(objlist, name, desc, typ, h_name, db_name=None,
+                      coll_name=None, field_name=None, request=None):
     """
     Build a description object by specifying a new searchable field
     If this maps to searching a single database field then the user should supply
@@ -180,15 +179,13 @@ def build_description(objlist, name, desc, type, h_name,
     objlist -- searcher object(dictionary) that is being built
     name -- Name of search key, must be unique
     desc -- Description of searcher, if None will be obtained from inventory if is search on single field
-    type -- type of search that can be performed. Not used yet
+    typ -- type of search that can be performed. Not used yet
     h_name -- Short human readable name for search
     db_name -- Name of database to be searched by this searcher. Optional
     coll_name -- Name of collection to be searched by this searcher. Optional
     field_name -- Name of field to be searched by this searcher. Optional
     request -- Flask request object to query for needed data. Optional
     """
-    
-
     objlist[name] = {}
     objlist[name]['human_name'] = h_name
     if (db_name and coll_name and field_name):
@@ -201,6 +198,7 @@ def build_description(objlist, name, desc, type, h_name,
         desc_obj = desc
     objlist[name]['desc'] = desc_obj
     objlist[name]['type'] = type
+
 
 def get_filtered_fields(coll_pair):
 

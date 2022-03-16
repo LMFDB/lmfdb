@@ -300,7 +300,7 @@ def api_query(table, id = None):
     query = url_for(".api_query", table=table, **next_req)
     offset += len(data)
     next_req["_offset"] = offset
-    next = url_for(".api_query", table=table, **next_req)
+    nxt = url_for(".api_query", table=table, **next_req)
 
     # the collected result
     data = {
@@ -310,7 +310,7 @@ def api_query(table, id = None):
         "start": start,
         "offset": offset,
         "query": query,
-        "next": next,
+        "next": nxt,
         "rec_id": 'id' if coll._label_col is None else coll._label_col,
     }
 

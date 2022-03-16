@@ -200,11 +200,11 @@ class Downloader(object):
         if label_col:
             proj = [label_col] + proj
         # set up column wrappers
-        cw = self.get('column_wrappers',{})
-        id = lambda x: x
+        cw = self.get('column_wrappers', {})
+        identity = lambda x: x
         for col in wo_label:
             if col not in cw:
-                cw[col] = id
+                cw[col] = identity
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))

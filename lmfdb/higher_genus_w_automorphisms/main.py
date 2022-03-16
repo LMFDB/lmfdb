@@ -69,22 +69,22 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
+
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Labeling convention', url_for(".labels_page"))]
 
+
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
-def tfTOyn(bool):
-    if bool:
-        return "yes"
-    else:
-        return "no"
+def tfTOyn(b: bool):
+    return "yes" if b else "no"
+
 
 # Convert [4,1] to 4.1, then  apply sg_pretty
 def group_display(strg):
