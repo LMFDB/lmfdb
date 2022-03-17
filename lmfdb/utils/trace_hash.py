@@ -143,4 +143,3 @@ def TraceHashClass(iso, E):
     else:
         th = TH_dict[iso] = TraceHash(E)
         return th
-

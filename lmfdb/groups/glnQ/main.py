@@ -229,4 +229,3 @@ class GLnQSearchArray(SearchArray):
             [count]]
         self.refine_array = [
             [order, dim]]
-

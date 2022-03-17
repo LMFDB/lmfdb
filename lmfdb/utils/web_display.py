@@ -794,4 +794,3 @@ def list_to_latex_matrix(li):
     mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
     mm += r'\end{array}\right)'
     return mm
-

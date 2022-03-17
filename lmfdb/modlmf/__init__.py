@@ -16,4 +16,3 @@ from . import main
 assert main
 
 app.register_blueprint(modlmf_page, url_prefix="/ModularForm/GL2/ModL")
-
