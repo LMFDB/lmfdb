@@ -22,7 +22,7 @@ def print_q_expansion(lst):
     lst = [str(c) for c in lst]
     Qb = PolynomialRing(QQ, 'b')
     Qq = PowerSeriesRing(Qb['a'], 'q')
-    return web_latex(Qq([c for c in lst]).add_bigoh(len(lst)))
+    return web_latex(Qq(lst).add_bigoh(len(lst)))
 
 
 def my_latex(s):

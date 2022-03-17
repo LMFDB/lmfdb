@@ -14,7 +14,7 @@ from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
-l_range=[ell for ell in prime_range(14)]
+l_range = list(prime_range(14))
 
 #breadcrumbs and links for data quality entries
 
