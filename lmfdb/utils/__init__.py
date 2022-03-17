@@ -39,7 +39,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
            'SneakyTextBox',
-           'Downloader',
+           'Downloader', 'WebObj',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
            'Configuration',
            'names_and_urls', 'name_and_object_from_url',
@@ -93,6 +93,7 @@ from .utilities import (
     str_to_CBF,
     timestamp_in_ms_to_datetime,
     to_dict,
+    WebObj,
 )
 
 from .web_display import (

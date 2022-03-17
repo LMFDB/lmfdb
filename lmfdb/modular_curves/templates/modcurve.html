@@ -1,0 +1,71 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{# Add generators here #}
+
+<h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
+<table>
+  <tr><td>{{KNOWL("modcurve.level", "Level")}}:</td><td> ${{ curve.level }}$ </td></tr>
+  <tr><td>{{KNOWL("modcurve.index", "Index")}}:</td><td> ${{ curve.index }}$ </td></tr>
+  <tr><td>{{KNOWL("modcurve.genus", "Genus")}}:</td><td> ${{ curve.genus }}$ </td></tr>
+  {% if curve.rank != -1 %}
+  <tr><td>{{KNOWL("modcurve.rank", "Rank")}}:</td><td> ${{ curve.rank }}$ </td></tr>
+  {% endif %}
+  <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> ${{ curve.cusps }}$ </td></tr>
+  <tr><td>{{KNOWL("modcurve.rational_cusps", "$\\Q$-Cusps")}}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
+</table>
+
+{% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
+<h2> {{ KNOWL('modcurve.other_labels', 'Other labels') }} </h2>
+
+<table>
+  {% if curve.CPlabel %}
+  <tr><td>{{ KNOWL('modcurve.cp_label', 'Cummins & Pauli label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
+  {% endif %}
+  {% if curve.SZlabel %}
+  <tr><td>{{ KNOWL('modcurve.sz_label', 'Sutherland & Zywina label') }}:</td><td>{{curve.SZlabel}}</td></tr>
+  {% endif %}
+  {% if curve.RZBlabel %}
+  <tr><td>{{ KNOWL('modcurve.rzb_label', 'Rousse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
+  {% endif %}
+  {% if curve.Slabel %}
+  <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland label') }}:</td><td>{{curve.Slabel}}</td></tr>
+  {% endif %}
+</table>
+{% endif %}
+
+<h2> {{ KNOWL('modcurve.level_structure', 'Level structure') }} </h2>
+
+<table>
+  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>{{curve.cyclic_isogeny_field_degree() }}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.cyclic_torsion_field_degree() }}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.full_torsion_field_degree() }}</td></tr>
+</table>
+
+{% if curve.genus > 0 %}
+<h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
+
+<table>
+  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
+</table>
+{% endif %}
+
+<h2> {{ KNOWL('modcurve.models', 'Models') }} </h2>
+
+<h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
+
+{% if curve.obstructions == [0] %}
+<p> There are no real points, and thus no rational points. </p>
+{% elif 0 in curve.obstructions %}
+<p> There are no real points and no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
+{% elif curve.obstructions %}
+<p> There are no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
+{% else %}
+<p> This modular curve is {{ KNOWL('modcurve.locally_soluble', 'locally soluble') }}. </p>
+{% endif %}
+
+<h2> {{ KNOWL('modcurve.modular_quotients', 'Modular quotients') }} </h2>
+
+{% endblock %}
