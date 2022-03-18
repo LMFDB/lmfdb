@@ -51,10 +51,10 @@ def qexpansion(field_label=None):
             magma.eval('P<x> := PolynomialRing(Rationals());')
             magma.eval('F<w> := NumberField(Polynomial(' + str(coeffs) + '));')
             magma.eval('ZF := Integers(F);')
-            magma.eval('ideals_str := [' + ','.join([st for st in F_hmf["ideals"]]) + '];')
+            magma.eval('ideals_str := [' + ','.join(F_hmf["ideals"]) + '];')
             magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
 
-            magma.eval('primes_str := [' + ','.join([st for st in F_hmf["primes"]]) + '];')
+            magma.eval('primes_str := [' + ','.join(F_hmf["primes"]) + '];')
             magma.eval('primes := [ideal<ZF | {F!x : x in I}> : I in primes_str];')
 
             if F_hmf.get("narrow_class_number") is None:
@@ -67,7 +67,7 @@ def qexpansion(field_label=None):
             magma.eval('fpol := x;')
             magma.eval('K := Rationals(); e := 1;')
 
-        magma.eval('hecke_eigenvalues := [' + ','.join([st for st in v["hecke_eigenvalues"]]) + '];')
+        magma.eval('hecke_eigenvalues := [' + ','.join(v["hecke_eigenvalues"]) + '];')
 
         magma.eval('mCl := ClassGroupPrimeRepresentatives(ZF, 1*ZF, RealPlaces(F)); '
                    'Cl := [mCl(x) : x in Domain(mCl)]; '

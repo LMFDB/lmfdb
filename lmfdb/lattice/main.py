@@ -35,7 +35,7 @@ def print_q_expansion(lst):
     lst = [str(c) for c in lst]
     Qa = PolynomialRing(QQ, 'a')
     Qq = PowerSeriesRing(Qa, 'q')
-    return web_latex_split_on_pm(Qq([c for c in lst]).add_bigoh(len(lst)))
+    return web_latex_split_on_pm(Qq(lst).add_bigoh(len(lst)))
 
 
 def my_latex(s):

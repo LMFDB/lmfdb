@@ -276,10 +276,12 @@ def render_sample_page(family, sam, args, bread):
     except ValueError:
         evs_to_show = []
         fcs_to_show = []
-    info['evs_to_show'] = sorted([n for n in (evs_to_show if len(evs_to_show) else sam.available_eigenvalues()[:10])])
-    info['fcs_to_show'] = sorted([n for n in (fcs_to_show if len(fcs_to_show) else sam.available_Fourier_coefficients()[1:6])])
-    info['evs_avail'] = [n for n in sam.available_eigenvalues()]
-    info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
+    info['evs_to_show'] = sorted(evs_to_show if len(evs_to_show)
+                                 else sam.available_eigenvalues()[:10])
+    info['fcs_to_show'] = sorted(fcs_to_show if len(fcs_to_show)
+                                 else sam.available_Fourier_coefficients()[1:6])
+    info['evs_avail'] = list(sam.available_eigenvalues())
+    info['fcs_avail'] = list(sam.available_Fourier_coefficients())
 
     # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant

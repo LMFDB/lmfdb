@@ -909,9 +909,8 @@ def residue_field_degrees_function(nf):
 def see_frobs(frob_data):
     ans = []
     seeram = False
-    plist = [p for p in prime_range(2, 60)]
-    for i in range(len(plist)):
-        p = plist[i]
+    plist = prime_range(2, 60)
+    for i, p in enumerate(plist):
         dec = frob_data[i][1]
         if dec[0] == 0:
             ans.append([p, 'R'])
@@ -922,7 +921,7 @@ def see_frobs(frob_data):
             for j in dec:
                 if not firstone:
                     s += r'{,}\,'
-                if j[0]<15:
+                if j[0] < 15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label',
                         label="%d.%d.0.1"%(p,j[0])), j[0])
                 else:

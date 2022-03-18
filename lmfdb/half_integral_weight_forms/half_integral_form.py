@@ -62,7 +62,7 @@ def print_q_expansion(lst):
     lst = [str(c) for c in lst]
     Qa = PolynomialRing(QQ, 'a')
     Qq = PowerSeriesRing(Qa, 'q')
-    return str(Qq([c for c in lst]).add_bigoh(len(lst) + 1))
+    return str(Qq(lst).add_bigoh(len(lst) + 1))
 
 
 def my_latex_from_qexp(s):

@@ -245,7 +245,7 @@ def parse_ints_to_list(arg, max_val=None):
                 M = max_val
             else:
                 M = min(M, max_val)
-        return [k for k in range(int(m), int(M) + 1)]
+        return list(range(int(m), int(M) + 1))
     if ".." in s:
         i = s.index("..", 1)
         m, M = s[:i], s[i + 2 :]
@@ -256,8 +256,9 @@ def parse_ints_to_list(arg, max_val=None):
                 M = max_val
             else:
                 M = min(M, max_val)
-        return [k for k in range(int(m), int(M) + 1)]
+        return list(range(int(m), int(M) + 1))
     return [int(s)]
+
 
 def parse_ints_to_list_flash(arg, name, max_val=None):
     try:

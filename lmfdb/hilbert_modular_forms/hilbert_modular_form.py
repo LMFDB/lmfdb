@@ -238,7 +238,7 @@ def download_hmf_magma(**args):
 
     outstr += 'NN := ideal<ZF | {' + f["level_ideal"][1:-1] + '}>;\n\n'
 
-    outstr += 'primesArray := [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[', '],\n[') + '];\n'
+    outstr += 'primesArray := [\n' + ','.join(F_hmf["primes"]).replace('],[', '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
     if hecke_pol != 'x':
@@ -247,7 +247,7 @@ def download_hmf_magma(**args):
     else:
         outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
 
-    outstr += '\nheckeEigenvaluesArray := [' + ', '.join([st for st in hecke_eigs]) + '];'
+    outstr += '\nheckeEigenvaluesArray := [' + ', '.join(hecke_eigs) + '];'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i := 1 to #heckeEigenvaluesArray do\n  heckeEigenvalues[primes[i]] := heckeEigenvaluesArray[i];\nend for;\n\n'
 
@@ -347,7 +347,7 @@ def download_hmf_sage(**args):
 
     outstr += 'NN = ZF.ideal(' + f["level_ideal"] + ')\n\n'
 
-    outstr += 'primes_array = [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[',
+    outstr += 'primes_array = [\n' + ','.join(F_hmf["primes"]).replace('],[',
                                                                                       '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
@@ -357,7 +357,7 @@ def download_hmf_sage(**args):
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 
-    outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in hecke_eigs]) + ']'
+    outstr += '\nhecke_eigenvalues_array = [' + ', '.join(hecke_eigs) + ']'
     outstr += '\nhecke_eigenvalues = {}\n'
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 

@@ -1764,7 +1764,7 @@ class PostgresTable(PostgresBase):
                     table_name = _meta_table_name(meta_name)
                     table_name_idx = meta_cols.index(table_name)
                     with open(metafile, "r") as F:
-                        lines = [line for line in csv.reader(F, delimiter=str(sep))]
+                        lines = list(csv.reader(F, delimiter=str(sep)))
                         if len(lines) != 1:
                             raise RuntimeError(
                                 "%s has more than one line" % (metafile,)
