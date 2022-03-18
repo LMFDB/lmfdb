@@ -16,7 +16,7 @@ from lmfdb.utils import (
     parse_ints,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol
 
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import WebModCurve, get_bread
@@ -33,6 +33,9 @@ def index_Q():
     if len(info) > 1:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
+    info["level_list"] = ["1-10", "11-100", "101-"]
+    info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "20-100", "101-"]
+    info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "20-100", "101-"]
     return render_template(
         "modcurve_browse.html",
         info=info,
@@ -44,7 +47,18 @@ def index_Q():
 @redirect_no_cache
 def random_curve():
     label = db.gps_gl2zhat_test.random()
-    return url_for_curve_label(label)
+    return url_for_modcurve_label(label)
+
+@modcurve_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "modcurve",
+        db.gps_gl2zhat_test,
+        url_for_modcurve_label,
+        title="Some interesting modular curves",
+        bread=get_bread("Interesting"),
+        #learnmore=learnmore_list(),
+    )
 
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
@@ -75,7 +89,7 @@ modcurve_columns = SearchColumns([
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
-    MathCol("rank", "modcurve.rank", "Rank", default=True),
+    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else r, mathmode=True, default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
 ])
@@ -158,7 +172,10 @@ class ModCurveSearchArray(SearchArray):
             [cusps, rational_cusps],
         ]
 
-        sort_knowl = "modcurve.sort_order"
-        sorts = [("", "level", ["level", "index", "genus", "label"]),
-                 ("index", "index", ["index", "level", "genus", "label"]),
-                 ("genus", "genus", ["genus", "level", "index", "label"])]
+    sort_knowl = "modcurve.sort_order"
+    sorts = [
+        ("", "level", ["level", "index", "genus", "label"]),
+        ("index", "index", ["index", "level", "genus", "label"]),
+        ("genus", "genus", ["genus", "level", "index", "label"]),
+        ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
+    ]

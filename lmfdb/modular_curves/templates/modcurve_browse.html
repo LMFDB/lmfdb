@@ -1,6 +1,31 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<h2> Browse </h2>
+
+<p>
+  By {{KNOWL('modcurve.level', 'level')}}:
+  {% for rnge in info.level_list %}
+    <a href="?level={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{KNOWL('modcurve.genus', 'genus')}}:
+  {% for rnge in info.genus_list %}
+  <a href="?genus={{rnge}}&sort_order=genus">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{KNOWL('modcurve.rank', 'rank')}}:
+  {% for rnge in info.rank_list %}
+    <a href="?rank={{rnge}}&sort_order=rank">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  Some <a href="{{url_for('.interesting')}}">interesting modular curves</a> or a <a href={{url_for('.random_curve')}}>random curve</a>
+</p>
+
 <h2> {{ KNOWL('intro.search', 'Search') }} </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
