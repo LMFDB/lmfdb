@@ -20,6 +20,23 @@ def showexp(c):
     else:
         return f"$^{{{c}}}$"
 
+def canonicalize_name(name):
+    return "X" + name[1:].lower().replace("_", "").replace("^", "")
+
+def name_to_latex(name):
+    name = canonicalize_name(name)
+    if "+" in name:
+        name = name.replace("+", "^+")
+    if "ns" in name:
+        name = name.replace("ns", "{\mathrm{ns}}")
+    elif "sp" in name:
+        name = name.replace("sp", "{\mathrm{sp}}")
+    elif "S4" in name:
+        name = name.replace("S4", "{S_4}")
+    if name[1] != "(":
+        name = "X_" + name[1:]
+    return f"${name}$"
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
 
@@ -53,7 +70,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def title(self):
         #if self.name:
-        #    return f"Modular curve {self.name}"
+        #    return f"Modular curve {name_to_latex(self.name)}"
         #else:
         return f"Modular curve {self.label}"
 

@@ -8,20 +8,27 @@ from flask import render_template, url_for, request, redirect
 from lmfdb.utils import (
     SearchArray,
     TextBox,
+    SneakyTextBox,
     CountBox,
     redirect_no_cache,
     flash_error,
     search_wrap,
     to_dict,
     parse_ints,
+    parse_noop,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol
 
 from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import WebModCurve, get_bread
+from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
+CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
+SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
+RZB_LABEL_RE = re.compile(r"X\d+")
+S_LABEL_RE = re.compile(r"\d+(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
+NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S_?4)?\(\d+\)")
 
 @modcurve_page.route("/")
 def index():
@@ -62,7 +69,7 @@ def interesting():
 
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
-    if not LABEL_RE.match(label):
+    if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label")
         return redirect(".index")
     try:
@@ -81,7 +88,36 @@ def by_label(label):
 def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
-def modcurve_jump(label):
+def modcurve_jump(info):
+    label = info["jump"]
+    print("JUMPING", label)
+    if CP_LABEL_RE.fullmatch(label):
+        print("MATCHED")
+        return redirect(url_for(".index", CPlabel=label))
+    elif SZ_LABEL_RE.fullmatch(label):
+        lmfdb_label = db.gps_gl2zhat_test.lucky({"SZlabel": label}, "label")
+        if lmfdb_label is None:
+            flash_error("There is no modular curve in the database with Sutherland & Zywina label %s", label)
+            return redirect(url_for(".index"))
+        label = lmfdb_label
+    elif RZB_LABEL_RE.fullmatch(label):
+        lmfdb_label = db.gps_gl2zhat_test.lucky({"RZBlabel": label}, "label")
+        if lmfdb_label is None:
+            flash_error("There is no modular curve in the database with Rousse & Zureick-Brown label %s", label)
+            return redirect(url_for(".index"))
+        label = lmfdb_label
+    elif S_LABEL_RE.fullmatch(label):
+        lmfdb_label = db.gps_gl2zhat_test.lucky({"Slabel": label}, "label")
+        if lmfdb_label is None:
+            flash_error("There is no modular curve in the database with Sutherland label %s", label)
+            return redirect(url_for(".index"))
+        label = lmfdb_label
+    elif NAME_RE.fullmatch(label.upper()):
+        lmfdb_label = db.gps_gl2zhat_text.lucky({"name": canonicalize_name(label)}, "label")
+        if lmfdb_label is None:
+            flash_error("There is no modular curve in the database with name %s", label)
+            return redirect(url_for(".index"))
+        label = lmfdb_label
     return redirect(url_for_modcurve_label(label))
 
 modcurve_columns = SearchColumns([
@@ -89,7 +125,7 @@ modcurve_columns = SearchColumns([
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
-    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else r, mathmode=True, default=True),
+    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else f"${r}$", align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
 ])
@@ -110,6 +146,7 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rank")
     parse_ints(info, query, "cusps")
     parse_ints(info, query, "rational_cusps")
+    parse_noop(info, query, "CPlabel")
 
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
@@ -158,6 +195,11 @@ class ModCurveSearchArray(SearchArray):
             example="1",
             example_span="0, 4-8",
         )
+        CPlabel = SneakyTextBox(
+            name="CPlabel",
+            knowl="modcurve.cp_label",
+            label="CP label",
+            example="3B0")
         count = CountBox()
 
         self.browse_array = [
@@ -169,7 +211,7 @@ class ModCurveSearchArray(SearchArray):
 
         self.refine_array = [
             [ level, index, genus, rank],
-            [cusps, rational_cusps],
+            [cusps, rational_cusps, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
