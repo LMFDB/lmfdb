@@ -14,6 +14,12 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
+def showexp(c):
+    if c == 1:
+        return ""
+    else:
+        return f"$^{{{c}}}$"
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
 
@@ -54,18 +60,13 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def formatted_dims(self):
         C = Counter(self.dims)
-        return "$" + ",".join(f"{d}^{{{c}}}" for (d, c) in sorted(C.items())) + "$"
+        return "$" + ",".join(f"{d}{showexp(c)}" for (d, c) in sorted(C.items())) + "$"
 
     @lazy_attribute
     def formatted_newforms(self):
         C = Counter(self.newforms)
-        def showctr(c):
-            if c == 1:
-                return ""
-            else:
-                return f"$^{{{c}}}$"
         # Make sure that the Counter doesn't break the ordering
-        return ",".join(f'<a href="{url_for_mflabel(label)}">{label}</a>{showctr(c)}' for (label, c) in C.items())
+        return ",".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
     @lazy_attribute
     def obstruction_primes(self):
