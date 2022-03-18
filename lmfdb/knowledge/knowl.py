@@ -304,7 +304,7 @@ class KnowlBackend(PostgresBase):
         cols = ("id", "title", "timestamp", "last_author")
         selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
         cur = self._execute(selecter, [0, -2, limit])
-        return [{dict(zip(cols, res)) for res in cur]
+        return [dict(zip(cols, res)) for res in cur]
 
     def get_comment_history(self, limit=25):
         """
@@ -313,7 +313,7 @@ class KnowlBackend(PostgresBase):
         # We want to select the oldest version of each comment but the newest version of each knowl
         selecter = SQL("WITH k AS (SELECT DISTINCT ON (id) id, title, timestamp, last_author FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC), c AS (SELECT id, timestamp, last_author, source FROM (SELECT DISTINCT ON (id) id, timestamp, last_author, source FROM kwl_knowls WHERE status >= %s AND type = %s ORDER BY id, timestamp) ci ORDER BY timestamp DESC LIMIT %s) SELECT k.id, k.title, k.timestamp, k.last_author, c.id, c.timestamp, c.last_author FROM k, c WHERE k.id = c.source ORDER BY c.timestamp DESC")
         cur = self._execute(selecter, [0, -2, 0, -2, limit])
-        return [{dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in cur]
+        return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in cur]
 
     def get_edit_history(self, ID):
         selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls WHERE status >= %s AND id = %s ORDER BY timestamp")
