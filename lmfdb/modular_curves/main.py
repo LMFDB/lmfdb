@@ -232,7 +232,7 @@ class ModCurveSearchArray(SearchArray):
         genus_minus_rank = TextBox(
             name="genus_minus_rank",
             knowl="modcurve.genus_minus_rank",
-            label="Genus $-$ Rank",
+            label="Genus-rank difference",
             example="0",
             example_span="0, 1",
         )
