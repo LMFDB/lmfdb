@@ -296,6 +296,10 @@ class ModCurveSearchArray(SearchArray):
         ("genus", "genus", ["genus", "level", "index", "label"]),
         ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
     ]
+    null_column_explanations = {
+        'simple': False,
+        'semisimple': False,
+    }
 
 @modcurve_page.route("/Source")
 def how_computed_page():
