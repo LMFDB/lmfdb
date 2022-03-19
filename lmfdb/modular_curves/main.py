@@ -144,8 +144,8 @@ modcurve_columns = SearchColumns([
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
-    MathCol("genus_minus_rank", "modcurve.genus_minus_rank", "Genus$-$rank", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else f"${r}$", align="center", default=True),
+    ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s'%b[0] if b[0] == b[1] else r'$%s \le %s'%b,  default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
 ])
