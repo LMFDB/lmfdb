@@ -90,7 +90,10 @@
 <h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
 
 <table class="ntdata">
-  <tr><th>Modular curve</th><th>Level</th><th>Index</th><th>Genus</th></tr>
+  <thead>
+    <tr><th>Modular curve</th><th>Level</th><th>Index</th><th>Genus</th></tr>
+  </thead>
+  <tbody>
   {% for label, disp, level, index, genus in curve.modular_covers() %}
   <tr>
     <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
@@ -99,6 +102,7 @@
     <td>${{genus}}$</td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endif %}
 
