@@ -8,7 +8,10 @@ from flask import render_template, url_for, request, redirect
 from lmfdb.utils import (
     SearchArray,
     TextBox,
+    TextBoxWithSelect,
+    SelectBox,
     SneakyTextBox,
+    YesNoBox,
     CountBox,
     redirect_no_cache,
     flash_error,
@@ -16,6 +19,8 @@ from lmfdb.utils import (
     to_dict,
     parse_ints,
     parse_noop,
+    parse_bool,
+    integer_divisors,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol
@@ -29,6 +34,16 @@ SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+")
 S_LABEL_RE = re.compile(r"\d+(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
 NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S_?4)?\(\d+\)")
+
+def learnmore_list():
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Modular curve labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 @modcurve_page.route("/")
 def index():
@@ -48,6 +63,7 @@ def index_Q():
         info=info,
         title=title,
         bread=get_bread(),
+        learnmore=learnmore_list(),
     )
 
 @modcurve_page.route("/Q/random/")
@@ -64,7 +80,7 @@ def interesting():
         url_for_modcurve_label,
         title="Some interesting modular curves",
         bread=get_bread("Interesting"),
-        #learnmore=learnmore_list(),
+        learnmore=learnmore_list(),
     )
 
 @modcurve_page.route("/Q/<label>/")
@@ -83,6 +99,7 @@ def by_label(label):
         bread=curve.bread,
         title=curve.title,
         KNOWL_ID=f"modcurve.{label}",
+        learnmore=learnmore_list(),
     )
 
 def url_for_modcurve_label(label):
@@ -141,11 +158,30 @@ modcurve_columns = SearchColumns([
 )
 def modcurve_search(info, query):
     parse_ints(info, query, "level")
+    if info.get('level_type'):
+        if info['level_type'] == 'prime':
+            query['num_bad_primes'] = 1
+            query['level_is_squarefree'] = True
+        elif info['level_type'] == 'prime_power':
+            query['num_bad_primes'] = 1
+        elif info['level_type'] == 'squarefree':
+            query['level_is_squarefree'] = True
+        elif info['level_type'] == 'divides':
+            if not isinstance(query.get('level'), int):
+                err = "You must specify a single level"
+                flash_error(err)
+                raise ValueError(err)
+            else:
+                query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
     parse_ints(info, query, "rank")
+    parse_ints(info, query, "genus_minus_rank")
     parse_ints(info, query, "cusps")
+    parse_ints(info, query, "gonality")
     parse_ints(info, query, "rational_cusps")
+    parse_bool(info, query, "simple")
+    parse_bool(info, query, "semisimple")
     parse_noop(info, query, "CPlabel")
 
 class ModCurveSearchArray(SearchArray):
@@ -153,12 +189,22 @@ class ModCurveSearchArray(SearchArray):
     plural_noun = "curves"
 
     def __init__(self):
-        level = TextBox(
+        level_quantifier = SelectBox(
+            name="level_type",
+            options=[('', ''),
+                     ('prime', 'prime'),
+                     ('prime_power', 'p-power'),
+                     ('squarefree', 'sq-free'),
+                     ('divides', 'divides'),
+                     ],
+            min_width=85)
+        level = TextBoxWithSelect(
             name="level",
             knowl="modcurve.level",
             label="Level",
             example="11",
             example_span="2, 11-23",
+            select_box=level_quantifier,
         )
         index = TextBox(
             name="index",
@@ -181,6 +227,13 @@ class ModCurveSearchArray(SearchArray):
             example="1",
             example_span="0, 2-3",
         )
+        genus_minus_rank = TextBox(
+            name="genus_minus_rank",
+            knowl="modcurve.genus_minus_rank",
+            label="Genus-Rank",
+            example="0",
+            example_span="0, 1",
+        )
         cusps = TextBox(
             name="cusps",
             knowl="modcurve.cusps",
@@ -195,6 +248,25 @@ class ModCurveSearchArray(SearchArray):
             example="1",
             example_span="0, 4-8",
         )
+        gonality = TextBox(
+            name="gonality",
+            knowl="modcurve.gonality",
+            label="Gonality",
+            example="2",
+            example_span="2, 3-6",
+        )
+        simple = YesNoBox(
+            name="simple",
+            knowl="modcurve.simple",
+            label="Simple",
+            example_col=True,
+        )
+        semisimple = YesNoBox(
+            name="semisimple",
+            knowl="modcurve.semisimple",
+            label="Semisimple",
+            example_col=True,
+        )
         CPlabel = SneakyTextBox(
             name="CPlabel",
             knowl="modcurve.cp_label",
@@ -205,13 +277,16 @@ class ModCurveSearchArray(SearchArray):
         self.browse_array = [
             [level, index],
             [genus, rank],
+            [genus_minus_rank, gonality],
             [cusps, rational_cusps],
+            [simple, semisimple],
             [count],
         ]
 
         self.refine_array = [
-            [ level, index, genus, rank],
-            [cusps, rational_cusps, CPlabel],
+            [ level, index, genus, rank, genus_minus_rank],
+            [gonality, cusps, rational_cusps, simple, semisimple],
+            [CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
@@ -221,3 +296,34 @@ class ModCurveSearchArray(SearchArray):
         ("genus", "genus", ["genus", "level", "index", "label"]),
         ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
     ]
+
+@modcurve_page.route("/Source")
+def how_computed_page():
+    t = r'Source and acknowledgments for modular curve data'
+    bread = get_bread('Source')
+    return render_template("multi.html",
+                           kids=['rcs.source.modcurve',
+                           'rcs.ack.modcurve',
+                           'rcs.cite.modcurve'],
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@modcurve_page.route("/Completeness")
+def completeness_page():
+    t = r'Completeness of modular curve data'
+    bread = get_bread('Completeness')
+    return render_template("single.html", kid='rcs.cande.modcurve',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@modcurve_page.route("/Reliability")
+def reliability_page():
+    t = r'Reliability of modular curve data'
+    bread = get_bread('Reliability')
+    return render_template("single.html", kid='rcs.rigor.modcurve',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
+@modcurve_page.route("/Labels")
+def labels_page():
+    t = r'Labels for modular curves'
+    bread = get_bread('Labels')
+    return render_template("single.html", kid='modcurve.lmfdb_label',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))

@@ -15,10 +15,6 @@
   <tr><td>{{KNOWL("modcurve.rational_cusps", "$\\Q$-Cusps")}}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
 </table>
 
-<h2> {{ KNOWL('modcurve.group', 'Subgroup') }} </h2>
-
-<small>{{ curve.show_generators()}}</small>
-
 {% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
 <h2> {{ KNOWL('modcurve.other_labels', 'Other labels') }} </h2>
 
@@ -38,13 +34,16 @@
 </table>
 {% endif %}
 
+{% if curve.level != 1 %}
 <h2> {{ KNOWL('modcurve.level_structure', 'Level structure') }} </h2>
 
 <table>
+  <tr><td>{{ KNOWL('modcurve.level_structure', 'Generators') }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>{{curve.cyclic_isogeny_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.cyclic_torsion_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.full_torsion_field_degree() }}</td></tr>
 </table>
+{% endif %}
 
 {% if curve.genus > 0 %}
 <h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
@@ -56,7 +55,14 @@
 </table>
 {% endif %}
 
-<h2> {{ KNOWL('modcurve.models', 'Models') }} </h2>
+{% if curve.plane_model %}
+<h2> {{ KNOWL('modcurve.models', 'Model') }} </h2>
+{% if curve.plane_model == "P1" %}
+<p>$\mathbb{P}^1$</p>
+{% else %}
+<p>${{curve.latexed_plane_model}}$</p>
+{% endif %}
+{% endif %}
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
@@ -70,6 +76,20 @@
 <p> This modular curve is {{ KNOWL('modcurve.locally_solvable', 'locally solvable') }}. </p>
 {% endif %}
 
+{% if curve.parents %}
 <h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
+
+<table class="ntdata">
+  <tr><th>Modular curve</th><th>Level</th><th>Index</th><th>Genus</th></tr>
+  {% for label, disp, level, index, genus in curve.modular_covers() %}
+  <tr>
+    <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
+    <td>${{level}}$</td>
+    <td>${{index}}$</td>
+    <td>${{genus}}$</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
 
 {% endblock %}

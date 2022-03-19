@@ -5,6 +5,9 @@
 
 <p>
   By {{KNOWL('modcurve.level', 'level')}}:
+  <a href="?level_type=prime">prime</a>&nbsp;
+  <a href="?level_type=prime_power">prime power</a>&nbsp;
+  <a href="?level_type=squarefree">squarefree</a>&nbsp;
   {% for rnge in info.level_list %}
     <a href="?level={{rnge}}">{{rnge}}</a>&nbsp;
   {% endfor %}
