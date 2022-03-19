@@ -38,7 +38,7 @@
 <h2> {{ KNOWL('modcurve.level_structure', 'Level structure') }} </h2>
 
 <table>
-  <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL(\Z/%s\Z$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
+  <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>{{curve.cyclic_isogeny_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.cyclic_torsion_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.full_torsion_field_degree() }}</td></tr>
