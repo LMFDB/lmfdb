@@ -38,7 +38,7 @@
 <h2> {{ KNOWL('modcurve.level_structure', 'Level structure') }} </h2>
 
 <table>
-  <tr><td>{{ KNOWL('modcurve.level_structure', 'Generators') }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
+  <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>{{curve.cyclic_isogeny_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.cyclic_torsion_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.full_torsion_field_degree() }}</td></tr>
@@ -66,21 +66,34 @@
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
+{% if curve.rational_cusps %}
+{% if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0) %}
+<p> This modular curve has infinitely many rational points. </p>
+{% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
+<p> This modular curve has finitely many rational points, some of which are cusps. </p>
+{% endif %}
+{% else %}
 {% if curve.obstructions == [0] %}
 <p> There are no real points, and thus no rational points. </p>
 {% elif 0 in curve.obstructions %}
 <p> There are no real points and no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
 {% elif curve.obstructions %}
 <p> There are no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
-{% else %}
-<p> This modular curve is {{ KNOWL('modcurve.locally_solvable', 'locally solvable') }}. </p>
+{% elif curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1) %}
+<p> This modular curve has infinitely many rational points. </p>
+{% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
+<p> This modular curve has finitely many rational points, none of which are cusps. </p>
+{% endif %}
 {% endif %}
 
 {% if curve.parents %}
 <h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
 
 <table class="ntdata">
-  <tr><th>Modular curve</th><th>Level</th><th>Index</th><th>Genus</th></tr>
+  <thead>
+    <tr><th>Modular curve</th><th>Level</th><th>Index</th><th>Genus</th></tr>
+  </thead>
+  <tbody>
   {% for label, disp, level, index, genus in curve.modular_covers() %}
   <tr>
     <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
@@ -89,6 +102,7 @@
     <td>${{genus}}$</td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endif %}
 
