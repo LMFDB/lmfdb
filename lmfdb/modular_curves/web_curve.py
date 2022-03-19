@@ -14,11 +14,13 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
-def showexp(c):
+def showexp(c, wrap=True):
     if c == 1:
         return ""
-    else:
+    elif wrap:
         return f"$^{{{c}}}$"
+    else:
+        return f"^{{{c}}}"
 
 def canonicalize_name(name):
     return "X" + name[1:].lower().replace("_", "").replace("^", "")
@@ -77,7 +79,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def formatted_dims(self):
         C = Counter(self.dims)
-        return "$" + ",".join(f"{d}{showexp(c)}" for (d, c) in sorted(C.items())) + "$"
+        return "$" + ",".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
     @lazy_attribute
     def formatted_newforms(self):
@@ -100,3 +102,6 @@ class WebModCurve(WebObj):
         P = integer_prime_divisors(N)
         GL2size = euler_phi(N) * N * (N // prod(P))**2 * prod(p**2 - 1 for p in P)
         return GL2size // self.index
+
+    def show_generators(self):
+        return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)

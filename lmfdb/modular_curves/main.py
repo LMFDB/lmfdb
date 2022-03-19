@@ -71,11 +71,11 @@ def interesting():
 def by_label(label):
     if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label")
-        return redirect(".index")
-    try:
-        curve = WebModCurve(label)
-    except (KeyError, ValueError) as err:
-        return abort(404, err.args)
+        return redirect(url_for(".index"))
+    curve = WebModCurve(label)
+    if curve.is_null():
+        flash_error("There is no modular curve %s in the database", label)
+        return redirect(url_for(".index"))
     return render_template(
         "modcurve.html",
         curve=curve,
@@ -113,7 +113,7 @@ def modcurve_jump(info):
             return redirect(url_for(".index"))
         label = lmfdb_label
     elif NAME_RE.fullmatch(label.upper()):
-        lmfdb_label = db.gps_gl2zhat_text.lucky({"name": canonicalize_name(label)}, "label")
+        lmfdb_label = db.gps_gl2zhat_test.lucky({"name": canonicalize_name(label)}, "label")
         if lmfdb_label is None:
             flash_error("There is no modular curve in the database with name %s", label)
             return redirect(url_for(".index"))

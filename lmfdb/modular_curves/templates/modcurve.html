@@ -15,6 +15,10 @@
   <tr><td>{{KNOWL("modcurve.rational_cusps", "$\\Q$-Cusps")}}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
 </table>
 
+<h2> {{ KNOWL('modcurve.group', 'Subgroup') }} </h2>
+
+<small>{{ curve.show_generators()}}</small>
+
 {% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
 <h2> {{ KNOWL('modcurve.other_labels', 'Other labels') }} </h2>
 
@@ -46,7 +50,7 @@
 <h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
 
 <table>
-  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims | safe }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
 </table>
