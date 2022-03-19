@@ -28,7 +28,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol
 
 from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name
+from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
@@ -144,6 +144,7 @@ modcurve_columns = SearchColumns([
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
+    ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else f"${r}$", align="center", default=True),
     ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
