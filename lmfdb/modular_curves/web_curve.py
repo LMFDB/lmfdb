@@ -23,7 +23,10 @@ def showexp(c, wrap=True):
         return f"^{{{c}}}"
 
 def canonicalize_name(name):
-    return "X" + name[1:].lower().replace("_", "").replace("^", "")
+    cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
+    if cname[:4] == "Xs4(":
+        cname = cname.upper()
+    return cname
 
 def name_to_latex(name):
     if not name:
