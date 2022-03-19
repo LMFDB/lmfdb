@@ -5,6 +5,8 @@ from lmfdb import db
 
 from flask import render_template, url_for, request, redirect
 
+from sage.all import ZZ
+
 from lmfdb.utils import (
     SearchArray,
     TextBox,
