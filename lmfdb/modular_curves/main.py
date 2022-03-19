@@ -232,7 +232,7 @@ class ModCurveSearchArray(SearchArray):
         genus_minus_rank = TextBox(
             name="genus_minus_rank",
             knowl="modcurve.genus_minus_rank",
-            label="Genus-Rank",
+            label="Genus $-$ Rank",
             example="0",
             example_span="0, 1",
         )
@@ -246,7 +246,7 @@ class ModCurveSearchArray(SearchArray):
         rational_cusps = TextBox(
             name="rational_cusps",
             knowl="modcurve.rational_cusps",
-            label=r"$\Q$-Cusps",
+            label=r"$\Q$-cusps",
             example="1",
             example_span="0, 4-8",
         )
