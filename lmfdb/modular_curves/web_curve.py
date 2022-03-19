@@ -4,7 +4,7 @@ from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi
-from lmfdb.utils import WebObj, integer_prime_divisors
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 
@@ -14,11 +14,32 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
-def showexp(c):
+def showexp(c, wrap=True):
     if c == 1:
         return ""
-    else:
+    elif wrap:
         return f"$^{{{c}}}$"
+    else:
+        return f"^{{{c}}}"
+
+def canonicalize_name(name):
+    return "X" + name[1:].lower().replace("_", "").replace("^", "")
+
+def name_to_latex(name):
+    if not name:
+        return ""
+    name = canonicalize_name(name)
+    if "+" in name:
+        name = name.replace("+", "^+")
+    if "ns" in name:
+        name = name.replace("ns", "{\mathrm{ns}}")
+    elif "sp" in name:
+        name = name.replace("sp", "{\mathrm{sp}}")
+    elif "S4" in name:
+        name = name.replace("S4", "{S_4}")
+    if name[1] != "(":
+        name = "X_" + name[1:]
+    return f"${name}$"
 
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
@@ -52,15 +73,15 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def title(self):
-        #if self.name:
-        #    return f"Modular curve {self.name}"
-        #else:
-        return f"Modular curve {self.label}"
+        if self.name:
+            return f"Modular curve {name_to_latex(self.name)}"
+        else:
+            return f"Modular curve {self.label}"
 
     @lazy_attribute
     def formatted_dims(self):
         C = Counter(self.dims)
-        return "$" + ",".join(f"{d}{showexp(c)}" for (d, c) in sorted(C.items())) + "$"
+        return "$" + ",".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
     @lazy_attribute
     def formatted_newforms(self):
@@ -69,8 +90,12 @@ class WebModCurve(WebObj):
         return ",".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
     @lazy_attribute
+    def latexed_plane_model(self):
+        return teXify_pol(self.plane_model)
+
+    @lazy_attribute
     def obstruction_primes(self):
-        return ",".join(str(p) for p in self.obstructions if p != 0)
+        return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
@@ -83,3 +108,10 @@ class WebModCurve(WebObj):
         P = integer_prime_divisors(N)
         GL2size = euler_phi(N) * N * (N // prod(P))**2 * prod(p**2 - 1 for p in P)
         return GL2size // self.index
+
+    def show_generators(self):
+        return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
+
+    def modular_covers(self):
+        names = {rec["label"]: rec["name"] for rec in db.gps_gl2zhat_test.search({"label":{"$in": self.parents}}, ["label", "name"])}
+        return [(P, name_to_latex(names[P]) if names.get(P) else P, P.split(".")[0], P.split(".")[1], P.split(".")[2]) for P in self.parents]

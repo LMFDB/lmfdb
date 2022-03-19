@@ -958,3 +958,7 @@ class WebObj(object):
     def _get_dbdata(self):
         # self.table must be defined in subclasses
         return self.table.lookup(self.label)
+
+    def is_null(self):
+        return self._data is None
+

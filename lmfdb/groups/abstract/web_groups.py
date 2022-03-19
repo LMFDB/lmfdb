@@ -1271,9 +1271,6 @@ class WebAbstractGroup(WebObj):
         else:
             raise NotImplementedError
 
-    def is_null(self):
-        return self._data is None
-
     # TODO if prime factors get large, use factors in database
     def order_factor(self):
         return latex(factor(self.order))
