@@ -34,25 +34,35 @@
 </table>
 {% endif %}
 
+{% if curve.level != 1 %}
 <h2> {{ KNOWL('modcurve.level_structure', 'Level structure') }} </h2>
 
 <table>
+  <tr><td>{{ KNOWL('modcurve.level_structure', 'Generators') }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>{{curve.cyclic_isogeny_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.cyclic_torsion_field_degree() }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.full_torsion_field_degree() }}</td></tr>
 </table>
+{% endif %}
 
 {% if curve.genus > 0 %}
 <h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
 
 <table>
-  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims | safe }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
 </table>
 {% endif %}
 
-<h2> {{ KNOWL('modcurve.models', 'Models') }} </h2>
+{% if curve.plane_model %}
+<h2> {{ KNOWL('modcurve.models', 'Model') }} </h2>
+{% if curve.plane_model == "P1" %}
+<p>$\mathbb{P}^1$</p>
+{% else %}
+<p>${{curve.latexed_plane_model}}$</p>
+{% endif %}
+{% endif %}
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
@@ -69,13 +79,27 @@
 <p> There are no real points and no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
 {% elif curve.obstructions %}
 <p> There are no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
-{% eilf curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1) %}
+{% elif curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1) %}
 <p> This modular curve has infinitely many rational points. </p>
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
 <p> This modular curve has finitely many rational points, none of which are cusps. </p>
 {% endif %}
 {% endif %}
 
+{% if curve.parents %}
 <h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
+
+<table class="ntdata">
+  <tr><th>Modular curve</th><th>Level</th><th>Index</th><th>Genus</th></tr>
+  {% for label, disp, level, index, genus in curve.modular_covers() %}
+  <tr>
+    <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
+    <td>${{level}}$</td>
+    <td>${{index}}$</td>
+    <td>${{genus}}$</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
 
 {% endblock %}
