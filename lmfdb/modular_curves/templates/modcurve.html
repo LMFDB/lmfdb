@@ -56,14 +56,23 @@
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
+{% if curve.rational_cusps %}
+{% if curve.genus == 1 and curve.rank > 0 %}
+<p> This modular curve has infinitely many rational points. </p>
+{% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
+<p> This modular curve has finitely many rational points, some of which are cusps. </p>
+{% endif %}
+{% else %}
 {% if curve.obstructions == [0] %}
 <p> There are no real points, and thus no rational points. </p>
 {% elif 0 in curve.obstructions %}
 <p> There are no real points and no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
 {% elif curve.obstructions %}
 <p> There are no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
-{% else %}
-<p> This modular curve is {{ KNOWL('modcurve.locally_solvable', 'locally solvable') }}. </p>
+{% eilf curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1) %}
+<p> This modular curve has infinitely many rational points. </p>
+{% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
+<p> This modular curve has finitely many rational points, none of which are cusps. </p>
 {% endif %}
 
 <h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
