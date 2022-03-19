@@ -67,7 +67,7 @@
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
 {% if curve.rational_cusps %}
-{% if curve.genus == 1 and curve.rank > 0 %}
+{% if curve.genus == 0 and (curve.genus == 1 and curve.rank > 0) %}
 <p> This modular curve has infinitely many rational points. </p>
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
 <p> This modular curve has finitely many rational points, some of which are cusps. </p>
