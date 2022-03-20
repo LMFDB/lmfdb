@@ -55,7 +55,7 @@ class WebModCurve(WebObj):
             ("Index", str(self.index)),
             ("Genus", str(self.genus)),
         ]
-        if self.rank != -1:
+        if hasattr(self,"rank"):
             props.append(("Rank", str(self.rank)))
         props.extend([("Cusps", str(self.cusps)),
                       (r"$\Q$-cusps", str(self.rational_cusps))])

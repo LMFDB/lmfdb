@@ -9,7 +9,7 @@
   <tr><td>{{KNOWL("modcurve.index", "Index")}}:</td><td> ${{ curve.index }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.genus", "Genus")}}:</td><td> ${{ curve.genus }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
-  {% if curve.rank != -1 %}
+  {% if curve.rank %}
   <tr><td>{{KNOWL("modcurve.rank", "Rank")}}:</td><td> ${{ curve.rank }}$ </td></tr>
   {% endif %}
   <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> ${{ curve.cusps }}$ </td></tr>
