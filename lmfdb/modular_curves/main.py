@@ -31,10 +31,10 @@ from lmfdb.utils import (
     totaler
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol
 
 from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex
+from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, showexp
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
@@ -153,10 +153,14 @@ modcurve_columns = SearchColumns([
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
-    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else f"${r}$", align="center", default=True),
+    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r==-1 else f"${r}$", align="center", default=lambda info: info.get("rank") or info.get("genus_minus_rank")),
     ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
+    ProcessedCol("cm_discriminants", "modcurve.cm_points", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
+    ProcessedCol("conductor", "modcurve.conductor", "Conductor", lambda r: "$" + ",".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in r) + "$", mathmode=True),
+    CheckCol("simple", "modcurve.simple", "Simple"),
+    CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
 ])
 
 @search_wrap(
@@ -334,6 +338,7 @@ class ModCurveSearchArray(SearchArray):
     null_column_explanations = {
         'simple': False,
         'semisimple': False,
+        'genus_minus_rank': False,
     }
 
 class ModCurve_stats(StatsDisplay):
