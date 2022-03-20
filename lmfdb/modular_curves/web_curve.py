@@ -110,7 +110,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def factored_conductor(self):
-        return web_latex_factored_integer(ZZ(self.conductor))
+        return "$" + ",".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in self.conductor) + "$"
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
