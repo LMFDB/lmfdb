@@ -16,6 +16,7 @@ from lmfdb.utils import (
     YesNoBox,
     CountBox,
     redirect_no_cache,
+    display_knowl,
     flash_error,
     search_wrap,
     to_dict,
@@ -62,7 +63,7 @@ def index_Q():
     if len(info) > 1:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
-    info["level_list"] = ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
+    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "23-"]
     info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["stats"] = ModCurve_stats()
@@ -342,11 +343,21 @@ class ModCurve_stats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return rf'The modular curves database currently contains {self.ncurves} modular curves of level $N\le {self.max_level}$ parameterizing elliptic curve $E/\Q$ with level-$N$ structure.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+        modcurve_knowl = display_knowl("modcurve", title="modular curves")
+        level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
+        return (
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
+        )
 
     @property
     def summary(self):
-        return rf'The modular curves database currently contains {self.ncurves} modular curves of level $N\le {self.max_level}$ parameterizing elliptic curve $E/\Q$ with level-$N$ structure.'
+        modcurve_knowl = display_knowl("modcurve", title="modular curves")
+        level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
+        return (
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.'
+            % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
+        )
 
     table = db.gps_gl2zhat_test
     baseurl_func = ".index"
@@ -370,8 +381,6 @@ class ModCurve_stats(StatsDisplay):
         {'cols': ['genus', 'gonality'],
          'proportioner': proportioners.per_col_total,
          'totaler': totaler()},
-        {'cols': ['simple']},
-        {'cols': ['semisimple']}
     ]
 
 @modcurve_page.route("/stats")

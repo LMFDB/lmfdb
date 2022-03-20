@@ -3,8 +3,8 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ
-from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex_factored_integer
+from sage.all import lazy_attribute, prod, euler_phi
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 
