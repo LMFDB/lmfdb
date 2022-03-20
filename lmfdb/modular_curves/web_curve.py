@@ -88,13 +88,13 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def formatted_dims(self):
         C = Counter(self.dims)
-        return "$" + ",".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
+        return "$" + ", ".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
     @lazy_attribute
     def formatted_newforms(self):
         C = Counter(self.newforms)
         # Make sure that the Counter doesn't break the ordering
-        return ",".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+        return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
     @lazy_attribute
     def latexed_plane_model(self):
@@ -128,5 +128,9 @@ class WebModCurve(WebObj):
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
 
     def modular_covers(self):
-        names = {rec["label"]: rec["name"] for rec in db.gps_gl2zhat_test.search({"label":{"$in": self.parents}}, ["label", "name"])}
-        return [(P, name_to_latex(names[P]) if names.get(P) else P, P.split(".")[0], P.split(".")[1], P.split(".")[2]) for P in self.parents]
+        curves = db.gps_gl2zhat_test.search({"label":{"$in": self.parents}}, ["label", "name", "rank"])
+        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "") for C in curves]
+
+    def modular_covered_by(self):
+        curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label}}, ["label", "name", "rank"])
+        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "") for C in curves]
