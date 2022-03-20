@@ -163,7 +163,7 @@ modcurve_columns = SearchColumns([
     CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
     CheckCol("contains_negative_one", "modcurve.plane_model", "Contains -1", short_title="contains -1"),
     CheckCol("plane_model", "modcurve.plane_model", "Model"),
-    ProcessedCol("dims", "modcurve.jacobian_decomposition", "Decomposition", formatted_dims, align="center", mathmode=True),
+    ProcessedCol("dims", "modcurve.jacobian_decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
 @search_wrap(

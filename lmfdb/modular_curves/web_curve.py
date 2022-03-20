@@ -51,14 +51,21 @@ def formatted_dims(dims):
     if not dims:
         return ""
     C = Counter(dims)
-    return ", ".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items()))
+    return "$" + ",".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
 def formatted_newforms(newforms):
     if not newforms:
         return ""
     C = Counter(newforms)
     # Make sure that the Counter doesn't break the ordering
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+    return ",&nbsp;".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+
+def difference(A,B):
+    C = A.copy()
+    for f in B:
+        if f in C:
+            C.pop(C.index(f))
+    return C
 
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
@@ -79,7 +86,23 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        return []
+        friends = []
+        if self.simple:
+            friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
+            if self.genus == 1:
+                s = self.newforms[0].split(".")
+                label = s[0] + "." + s[2]
+                friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
+            if self.genus == 2:
+                g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
+                if g2c_url:
+                    s = g2c_url.split("/")
+                    label = s[2] + "." + s[3]
+                    friends.append(("Isogeny class " + label, url_for("g2c.by_label", label=label)))
+            friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
+        else:
+            friends.append(("L-function not available",""))
+        return friends
 
     @lazy_attribute
     def bread(self):
@@ -141,9 +164,9 @@ class WebModCurve(WebObj):
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
 
     def modular_covers(self):
-        curves = db.gps_gl2zhat_test.search({"label":{"$in": self.parents}}, ["label", "name", "rank"])
-        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "") for C in curves]
+        curves = db.gps_gl2zhat_test.search({"label":{"$in": self.parents}}, ["label", "name", "rank", "dims"])
+        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(self.dims,C.get("dims",[])))) for C in curves]
 
     def modular_covered_by(self):
-        curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label}}, ["label", "name", "rank"])
-        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "") for C in curves]
+        curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label}}, ["label", "name", "rank", "dims"])
+        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]

@@ -53,7 +53,7 @@
 <table>
   <tr><td>{{ KNOWL('modcurve.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
   <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
-  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> ${{ curve.formatted_dims }}$ </td></tr>
+  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
 </table>
 {% endif %}
@@ -95,43 +95,48 @@
 {% endif %}
 {% endif %}
 
-{% if curve.modular_covers or curve.modular_covered_by %}
+{% set covered_by = curve.modular_covered_by() %}
+{% if curve.parents or curve.modular_covered_by %}
 <h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
 
-{% if curve.modular_covers %}
+{% if curve.parents %}
 <p> This modular curve {{ KNOWL('modcurve.minmal_cover','minimally covers') }} the modular curves listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>Covered curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th></tr>
+    <tr><th>Covered curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th>{% if curve.genus > 0 %}<th>Kernel decomposition</th>{% endif %}</tr>
   </thead>
   <tbody>
-  {% for label, disp, level, degree, genus, rank in curve.modular_covers() %}
+  {% for label, disp, level, degree, genus, rank, kernel in curve.modular_covers() %}
   <tr>
     <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
-    <td align="center">${{level}}$</td>
-    <td align="center">${{degree}}$</td>
-    <td align="center">${{genus}}$</td>
-    <td align="center">${{rank}}$</td>
+    <td align="center">${{ level }}$</td>
+    <td align="center">${{ degree }}$</td>
+    <td align="center">${{ genus }}$</td>
+    <td align="center">${{ rank }}$</td>
+    {% if curve.genus > 0 %}
+    <td><span>{{ kernel | safe }}</span></td>
+    {% endif %}
   </tr>
   {% endfor %}
   </tbody>
 </table>
 {% endif %}
 
-{% if curve.modular_covers %}
-<p> This modular curve is {{ KNOWL('modcurve.minmal_cover','minimally covered by') }} the modular curves listed below.
+{% if covered_by %}
+<p> This modular curve is {{ KNOWL('modcurve.minmal_cover','minimally covered by') }} the modular curves in the database listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>Covering curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th></tr>
+    <tr><th>Covering curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th><th>Kernel decomposition</th></tr>
   </thead>
   <tbody>
-  {% for label, disp, level, degree, genus, rank in curve.modular_covered_by() %}
+  {% for label, disp, level, degree, genus, rank, kernel in covered_by %}
   <tr>
     <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
-    <td align="center">${{level}}$</td>
-    <td align="center">${{degree}}$</td>
-    <td align="center">${{genus}}$</td>
-    <td align="center">${{rank}}$</td>
+    <td align="center">${{ level }}$</td>
+    <td align="center">${{ degree }}$</td>
+    <td align="center">${{ genus }}$</td>
+    <td align="center">${{ rank }}$</td>
+    <td><span>{{ kernel | safe }}</span></td>
   </tr>
   {% endfor %}
   </tbody>
