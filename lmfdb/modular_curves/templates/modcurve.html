@@ -18,13 +18,13 @@
 
 <table>
   {% if curve.CPlabel %}
-  <tr><td>{{ KNOWL('modcurve.cp_label', 'Cummins & Pauli label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Cummins & Pauli label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
   {% endif %}
   {% if curve.SZlabel %}
-  <tr><td>{{ KNOWL('modcurve.sz_label', 'Sutherland & Zywina label') }}:</td><td>{{curve.SZlabel}}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Sutherland & Zywina label') }}:</td><td>{{curve.SZlabel}}</td></tr>
   {% endif %}
   {% if curve.RZBlabel %}
-  <tr><td>{{ KNOWL('modcurve.rzb_label', 'Rousse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rousse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.Slabel %}
   <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland label') }}:</td><td>{{curve.Slabel}}</td></tr>
