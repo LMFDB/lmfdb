@@ -49,7 +49,7 @@
 <table>
   <tr><td>{{ KNOWL('modcurve.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
   {% if curve.rank %}
-  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${ {curve.rank }}$ </td></tr>
   {% endif %}
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
