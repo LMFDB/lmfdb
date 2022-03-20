@@ -229,6 +229,10 @@ def modcurve_search(info, query):
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
+    jump_example = "13.78.3.1"
+    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, or 13A3"
+    jump_prompt = "Label or coefficients"
+    jump_knowl = "modcurve.search_input"
 
     def __init__(self):
         level_quantifier = SelectBox(
