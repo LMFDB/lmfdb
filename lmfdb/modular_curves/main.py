@@ -156,7 +156,7 @@ modcurve_columns = SearchColumns([
     MathCol("rank", "modcurve.rank", "Rank", default=lambda info: info.get("rank") or info.get("genus_minus_rank")),
     ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-    MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
+    MathCol("cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_points", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
     ProcessedCol("conductor", "modcurve.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
