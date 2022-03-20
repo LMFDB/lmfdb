@@ -51,9 +51,9 @@
 <h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
 
 <table>
-  <tr><td>{{ KNOWL('modcurve.conductor', 'Conductor') }}:</td><td> {{ curve.factored_conductor }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
   <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
-  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims | safe }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> ${{ curve.formatted_dims }}$ </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
 </table>
 {% endif %}

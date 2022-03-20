@@ -44,6 +44,22 @@ def name_to_latex(name):
         name = "X_" + name[1:]
     return f"${name}$"
 
+def factored_conductor(conductor):
+    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else "1"
+
+def formatted_dims(dims):
+    if not dims:
+        return ""
+    C = Counter(dims)
+    return ", ".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items()))
+
+def formatted_newforms(newforms):
+    if not newforms:
+        return ""
+    C = Counter(newforms)
+    # Make sure that the Counter doesn't break the ordering
+    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
 
@@ -63,7 +79,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        return [("Covered by", url_for(".index_Q", covers=self.label))]
+        return []
 
     @lazy_attribute
     def bread(self):
@@ -87,14 +103,11 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def formatted_dims(self):
-        C = Counter(self.dims)
-        return "$" + ", ".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
+        return formatted_dims(self.dims)
 
     @lazy_attribute
     def formatted_newforms(self):
-        C = Counter(self.newforms)
-        # Make sure that the Counter doesn't break the ordering
-        return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+        return formatted_newforms(self.newforms)
 
     @lazy_attribute
     def latexed_plane_model(self):
@@ -110,7 +123,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def factored_conductor(self):
-        return "$" + "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in self.conductor) + "$"
+        return factored_conductor(self.conductor)
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)

@@ -34,7 +34,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol
 
 from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, showexp
+from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor, formatted_dims
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
@@ -158,11 +158,12 @@ modcurve_columns = SearchColumns([
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_points", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
-    ProcessedCol("conductor", "modcurve.conductor", "Conductor", lambda r: 1 if not r else "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in r), align="center", mathmode=True),
+    ProcessedCol("conductor", "modcurve.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
     CheckCol("contains_negative_one", "modcurve.plane_model", "Contains -1", short_title="contains -1"),
     CheckCol("plane_model", "modcurve.plane_model", "Model"),
+    ProcessedCol("dims", "modcurve.jacobian_decomposition", "Decomposition", formatted_dims, align="center", mathmode=True),
 ])
 
 @search_wrap(
@@ -200,6 +201,19 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "semisimple")
+    if "cm_discriminants" in info:
+        if info["cm_discriminants"] == "yes":
+            query["cm_discriminants"] = {"$ne": []}
+        elif info["cm_discriminants"] == "no":
+            query["cm_discriminants"] = []
+        elif info["cm_discriminants"] == "-3,-12,-27":
+            query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-3,-12,-27]]}
+        elif info["cm_discriminants"] == "-4,-16":
+            query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-4,-16]]}
+        elif info["cm_discriminants"] == "-7,-28":
+            query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-7,-28]]}
+        else:
+            query["cm_discriminants"] = {"$contains": int(info["cm_discriminants"])}
     parse_noop(info, query, "CPlabel")
     parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
     #parse_element_of(info, query, "covered_by", qfield="children")
@@ -307,11 +321,22 @@ class ModCurveSearchArray(SearchArray):
             label="Semisimple",
             example_col=True,
         )
+        cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')] +
+                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
+                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm_discriminants = SelectBox(
+            name="cm_discriminants",
+            options=cm_opts,
+            knowl="modcurve.cm_discriminants",
+            label="CM points",
+            example="yes, no, CM discriminant -3"
+        )
         CPlabel = SneakyTextBox(
             name="CPlabel",
             knowl="modcurve.cp_label",
             label="CP label",
-            example="3B0")
+            example="3B0",
+        )
         count = CountBox()
 
         self.browse_array = [
@@ -321,13 +346,13 @@ class ModCurveSearchArray(SearchArray):
             [cusps, rational_cusps],
             [simple, semisimple],
             [covers, covered_by],
-            [count],
+            [count, cm_discriminants],
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, semisimple],
-            [covers, covered_by, CPlabel],
+            [covers, covered_by, cm_discriminants, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
