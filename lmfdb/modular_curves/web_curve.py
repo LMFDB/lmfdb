@@ -3,8 +3,8 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi
-from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol
+from sage.all import lazy_attribute, prod, euler_phi, ZZ
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex_factored_integer
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 
@@ -103,6 +103,14 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def obstruction_primes(self):
         return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
+
+    @lazy_attribute
+    def cm_discriminant_list(self):
+        return ",".join(str(D) for D in self.cm_discriminants)
+
+    @lazy_attribute
+    def factored_conductor(self):
+        return web_latex_factored_integer(ZZ(self.conductor))
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)

@@ -8,11 +8,13 @@
   <tr><td>{{KNOWL("modcurve.level", "Level")}}:</td><td> ${{ curve.level }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.index", "Index")}}:</td><td> ${{ curve.index }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.genus", "Genus")}}:</td><td> ${{ curve.genus }}$ </td></tr>
+  <tr><td>{{KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
   {% if curve.rank != -1 %}
   <tr><td>{{KNOWL("modcurve.rank", "Rank")}}:</td><td> ${{ curve.rank }}$ </td></tr>
   {% endif %}
   <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> ${{ curve.cusps }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.rational_cusps", "$\\Q$-cusps")}}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
+  <tr><td>{{KNOWL("modcurve.cm_discriminants", "CM points")}}:</td><td> {{ "yes (discriminant%s $%s$)"%("s" if (curve.cm_discriminants|length) > 1 else "",curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
 </table>
 
 {% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
@@ -49,36 +51,43 @@
 <h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
 
 <table>
+  <tr><td>{{ KNOWL('modcurve.conductor', 'Conductor') }}:</td><td> {{ curve.factored_conductor }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims | safe }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
-  <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
 </table>
 {% endif %}
 
 {% if curve.plane_model %}
-<h2> {{ KNOWL('modcurve.models', 'Model') }} </h2>
+<h2> {{ KNOWL('modcurve.models', 'Plane model') }} </h2>
 {% if curve.plane_model == "P1" %}
 <p>$\mathbb{P}^1$</p>
 {% else %}
-<p>${{curve.latexed_plane_model}}$</p>
+<p>${{curve.latexed_plane_model}} = 0$</p>
 {% endif %}
 {% endif %}
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
-{% if curve.rational_cusps %}
+{% if curve.rational_cusps or curve.cm_discriminants or curve.plane_model == "P1" %}
 {% if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0) %}
 <p> This modular curve has infinitely many rational points. </p>
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
-<p> This modular curve has finitely many rational points, some of which are cusps. </p>
+{% if curve.rational_cusps and curve.cm_discriminants %}
+<p> This modular curve has rational points, some of which are cusps and some of which are CM points. </p>
+{% elif curve.rational_cusps %}
+<p> This modular curve has rational points, some of which are cusps and none of which are CM points. </p>
+{% elif curve.cm_discriminants %}
+<p> This modular curve has rational points, none of which are cusps and some of which are CM points. </p>
+{% endif %}
 {% endif %}
 {% else %}
 {% if curve.obstructions == [0] %}
-<p> There are no real points, and thus no rational points. </p>
+<p> This modular curve has no real points, and therefore no rational points. </p>
 {% elif 0 in curve.obstructions %}
-<p> There are no real points and no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
+<p> This modular curve has no real points and no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and therefore no rational points. </p>
 {% elif curve.obstructions %}
-<p> There are no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and thus no rational points. </p>
+<p> This modular curve has no $\Q_p$ points for $p={{curve.obstruction_primes}}$, and therefore no rational points. </p>
 {% elif curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1) %}
 <p> This modular curve has infinitely many rational points. </p>
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
