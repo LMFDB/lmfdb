@@ -9,11 +9,7 @@
   <tr><td>{{KNOWL("modcurve.index", "Index")}}:</td><td> ${{ curve.index }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.genus", "Genus")}}:</td><td> ${{ curve.genus }}$ </td></tr>
   <tr><td>{{KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
-  {% if curve.rank %}
-  <tr><td>{{KNOWL("modcurve.rank", "Rank")}}:</td><td> ${{ curve.rank }}$ </td></tr>
-  {% endif %}
-  <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> ${{ curve.cusps }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.rational_cusps", "$\\Q$-cusps")}}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
+  <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> ${{ curve.cusps }}$ (of which ${{ curve.rational_cusps }}$ are rational) </td></tr>
   <tr><td>{{KNOWL("modcurve.cm_discriminants", "CM points")}}:</td><td> {{ "yes (discriminant%s $%s$)"%("s" if (curve.cm_discriminants|length) > 1 else "",curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
 </table>
 
@@ -41,9 +37,9 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
-  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>{{curve.cyclic_isogeny_field_degree() }}</td></tr>
-  <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.cyclic_torsion_field_degree() }}</td></tr>
-  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>{{curve.full_torsion_field_degree() }}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny degree') }}:</td><td>${{ curve.cyclic_isogeny_field_degree() }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion degree') }}:</td><td>${{ curve.cyclic_torsion_field_degree() }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion degree') }}:</td><td>${{ curve.full_torsion_field_degree() }}$</td></tr>
 </table>
 {% endif %}
 
@@ -52,7 +48,9 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
-  <tr><td>{{ KNOWL('modcurve.analytic_rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
+  {% if curve.rank %}
+  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> {{curve.rank}} </td></tr>
+  {% endif %}
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
 </table>
