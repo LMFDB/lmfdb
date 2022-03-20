@@ -303,13 +303,13 @@ class ModCurveSearchArray(SearchArray):
         )
         covers = TextBox(
             name="covers",
-            knowl="modcurve.modular_covers",
+            knowl="modcurve.modular_cover",
             label="Minimally covers",
             example="1.1.0.1",
         )
         covered_by = TextBox(
             name="covered_by",
-            knowl="modcurve.modular_covers",
+            knowl="modcurve.modular_cover",
             label="Minimally covered by",
             example="6.12.0.1",
         )
