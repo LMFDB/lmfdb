@@ -141,6 +141,19 @@ class WebModCurve(WebObj):
         return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
 
     @lazy_attribute
+    def cusp_display(self):
+        if self.cusps == 1:
+            return "$1$ (which is rational)"
+        elif self.rational_cusps == 0:
+            return f"${self.cusps}$ (none of which are rational)"
+        elif self.rational_cusps == 1:
+            return f"${self.cusps}$ (of which $1$ is rational)"
+        elif self.cusps == self.rational_cusps:
+            return f"${self.cusps}$ (all of which are rational)"
+        else:
+            return f"${self.cusps}$ (of which ${self.rational_cusps}$ are rational)"
+
+    @lazy_attribute
     def cm_discriminant_list(self):
         return ",".join(str(D) for D in self.cm_discriminants)
 
