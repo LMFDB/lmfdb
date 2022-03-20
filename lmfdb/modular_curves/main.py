@@ -158,9 +158,11 @@ modcurve_columns = SearchColumns([
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_points", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
-    ProcessedCol("conductor", "modcurve.conductor", "Conductor", lambda r: "$" + ",".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in r) + "$", mathmode=True),
+    ProcessedCol("conductor", "modcurve.conductor", "Conductor", lambda r: 1 if not r else "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in r), align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
+    CheckCol("contains_negative_one", "modcurve.plane_model", "Contains -1", short_title="contains -1"),
+    CheckCol("plane_model", "modcurve.plane_model", "Model"),
 ])
 
 @search_wrap(
