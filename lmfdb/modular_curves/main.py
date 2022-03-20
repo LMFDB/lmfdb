@@ -22,7 +22,12 @@ from lmfdb.utils import (
     parse_ints,
     parse_noop,
     parse_bool,
+    parse_element_of,
     integer_divisors,
+    StatsDisplay,
+    comma,
+    proportioners,
+    totaler
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol
@@ -57,9 +62,10 @@ def index_Q():
     if len(info) > 1:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
-    info["level_list"] = ["1-10", "11-100"]
-    info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "20-100", "101-"]
-    info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "20-100", "101-"]
+    info["level_list"] = ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
+    info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
+    info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
+    info["stats"] = ModCurve_stats()
     return render_template(
         "modcurve_browse.html",
         info=info,
@@ -98,6 +104,7 @@ def by_label(label):
         "modcurve.html",
         curve=curve,
         properties=curve.properties,
+        friends=curve.friends,
         bread=curve.bread,
         title=curve.title,
         KNOWL_ID=f"modcurve.{label}",
@@ -187,6 +194,16 @@ def modcurve_search(info, query):
     parse_bool(info, query, "simple")
     parse_bool(info, query, "semisimple")
     parse_noop(info, query, "CPlabel")
+    parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
+    #parse_element_of(info, query, "covered_by", qfield="children")
+    if "covered_by" in info:
+        # sort of hacky
+        parents = db.gps_gl2zhat_test.lookup(info["covered_by"], "parents")
+        if parents is None:
+            msg = "%s not the label of a modular curve in the database"
+            flash_error(msg, info["covered_by"])
+            raise ValueError(msg % info["covered_by"])
+        query["label"] = {"$in": parents}
 
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
@@ -259,6 +276,18 @@ class ModCurveSearchArray(SearchArray):
             example="2",
             example_span="2, 3-6",
         )
+        covers = TextBox(
+            name="covers",
+            knowl="modcurve.modular_covers",
+            label="Covers",
+            example="1.1.0.1",
+        )
+        covered_by = TextBox(
+            name="covered_by",
+            knowl="modcurve.modular_covers",
+            label="Covered by",
+            example="6.12.0.1",
+        )
         simple = YesNoBox(
             name="simple",
             knowl="modcurve.simple",
@@ -284,13 +313,14 @@ class ModCurveSearchArray(SearchArray):
             [genus_minus_rank, gonality],
             [cusps, rational_cusps],
             [simple, semisimple],
+            [covers, covered_by],
             [count],
         ]
 
         self.refine_array = [
-            [ level, index, genus, rank, genus_minus_rank],
+            [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, semisimple],
-            [CPlabel],
+            [covers, covered_by, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
@@ -304,6 +334,50 @@ class ModCurveSearchArray(SearchArray):
         'simple': False,
         'semisimple': False,
     }
+
+class ModCurve_stats(StatsDisplay):
+    def __init__(self):
+        self.ncurves = comma(db.gps_gl2zhat_test.count())
+        self.max_level = db.gps_gl2zhat_test.max("level")
+
+    @property
+    def short_summary(self):
+        return rf'The modular curves database currently contains {self.ncurves} modular curves of level $N\le {self.max_level}$ parameterizing elliptic curve $E/\Q$ with level-$N$ structure.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+
+    @property
+    def summary(self):
+        return rf'The modular curves database currently contains {self.ncurves} modular curves of level $N\le {self.max_level}$ parameterizing elliptic curve $E/\Q$ with level-$N$ structure.'
+
+    table = db.gps_gl2zhat_test
+    baseurl_func = ".index"
+    buckets = {'level': ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
+               'genus': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
+               'rank': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
+               'gonality': ['1', '2', '3', '4', '5-8', '9-'],
+               }
+    knowls = {'level': 'modcurve.level',
+              'genus': 'modcurve.genus',
+              'rank': 'modcurve.rank',
+              'gonality': 'modcurve.gonality',
+              }
+    stat_list = [
+        {'cols': ['level', 'genus'],
+         'proportioner': proportioners.per_col_total,
+         'totaler': totaler()},
+        {'cols': ['genus', 'rank'],
+         'proportioner': proportioners.per_col_total,
+         'totaler': totaler()},
+        {'cols': ['genus', 'gonality'],
+         'proportioner': proportioners.per_col_total,
+         'totaler': totaler()},
+        {'cols': ['simple']},
+        {'cols': ['semisimple']}
+    ]
+
+@modcurve_page.route("/stats")
+def statistics():
+    title = 'Modular curves: Statistics'
+    return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
 
 @modcurve_page.route("/Source")
 def how_computed_page():

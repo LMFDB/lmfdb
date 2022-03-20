@@ -1,9 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{# replace with info.stats.summary #}
 <div>
-The modular curves database currently contains 22416 modular curves of level $N\le 23$ parameterizing elliptic curve $E/\Q$ with level-$N$ structure.
+  {{ info.stats.short_summary | safe }}
 </div>
 
 <h2> Browse </h2>

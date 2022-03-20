@@ -62,6 +62,10 @@ class WebModCurve(WebObj):
         return props
 
     @lazy_attribute
+    def friends(self):
+        return [("Covered by", url_for(".index_Q", covers=self.label))]
+
+    @lazy_attribute
     def bread(self):
         tail = []
         A = ["level", "index", "genus"]
