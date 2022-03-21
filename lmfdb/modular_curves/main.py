@@ -95,7 +95,7 @@ def interesting():
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if not LABEL_RE.fullmatch(label):
-        flash_error("Invalid label %s", label)
+        flash_error("Invalid label")
         return redirect(url_for(".index"))
     curve = WebModCurve(label)
     if curve.is_null():
@@ -154,7 +154,7 @@ modcurve_columns = SearchColumns([
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le %s$'%(b[0],b[1]), align="center", default=True),
+    ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
@@ -382,7 +382,7 @@ class ModCurve_stats(StatsDisplay):
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            rf'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
             % (self.ncurves, modcurve_knowl, self.max_level)
         )
 
@@ -418,7 +418,7 @@ class ModCurve_stats(StatsDisplay):
          'totaler': totaler()},
     ]
 
-@modcurve_page.route("/Q/stats/")
+@modcurve_page.route("/stats")
 def statistics():
     title = 'Modular curves: Statistics'
     return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
