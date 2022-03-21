@@ -383,7 +383,7 @@ class ModCurve_stats(StatsDisplay):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$ with %s.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
             % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
         )
 
@@ -392,7 +392,7 @@ class ModCurve_stats(StatsDisplay):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.'
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$ with %s.'
             % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
         )
 
