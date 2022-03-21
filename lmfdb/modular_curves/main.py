@@ -453,3 +453,99 @@ def labels_page():
     bread = get_bread('Labels')
     return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+class ModCurve_download(Downloader):
+    table = db.gps_gl2zhat_test
+    title = "Modular curves"
+    #columns = 
+    #data_format = []
+    #data_description = []
+    data_format = ['N=level', 'defining polynomial', 'number field label']
+    #columns = ['level', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs',]
+
+    function_body = {
+        "magma": [
+            "N := level",
+                "jmap := jmap",
+            "cusps := "
+        ],
+        "sage": [
+            "N = level",
+            "R.<X,Y,Z> = PolynomialRing(QQ,3)",
+            "XX = Curve(plane_model)"
+        ],
+    }
+
+#'determinant_label',
+#'scalar_label',
+#'generators',
+#'reductions',
+#'orbits',
+#'kummer_orbits',
+#'isogeny_orbits',
+#'obstructions',
+#'gassmann_class',
+#'CPlabel',
+#'Slabel',
+#'SZlabel',
+#'RZBlabel',
+#'newforms',
+#'dims',
+#'name',
+#'simple',
+#'semisimple',
+#'trace_hash',
+#'traces',
+
+def download_modular_curve(self, label, lang):
+    s = ""
+    rec = db.gps_gl2zhat_test.lookup(label)
+    if rec is None:
+        return abort(404, "Label not found: %s" % label)
+    if lang == "magma":
+        s += "// Magma code for modular curve with label %s\n\n" % label
+        s += "// Group data\n"
+        s += "level := %s;\n" % rec['level']
+        s += "// Elements that, together with Gamma(level), generate the group\n"
+        s += "gens := %s;\n" % rec['generators']
+        s += "// Group contains -1?\n"
+        s += "ContainsMinus1 := %s;\n" % rec['contains_negative_one']
+        s += "// Index in Gamma(1)\n"
+        s += "index := %s;\n" % rec['index']
+        s += "\n// Curve data\n"
+        s += "conductor := %s;\n" % rec['conductor']
+        s += "bad_primes := %s;\n" % rec['bad_primes']
+        s += "// Make plane model, if computed;\n"
+        if rec["plane_model"]:
+            s += "QQ := Rationals();\n"
+            s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
+            s += "XX := Curve(AffineSpace(R), %s);\n" % rec['plane_model']
+        s += "// Genus\n"
+        s += "g := %s;\n" % rec['genus']
+        s += "// Rank\n"
+        s += "r := %s\n" % rec['rank']
+        if rec['gonality'] ne -1:
+            s += "// Exact gonality known\n"
+            s += "gamma := %s;\n" % rec['gonality']
+        else:
+            s += "// Exact gonality unknown, but contained in following interval\n"
+            s += "gamma_int := %s;\n" % rec['gonality_bounds']
+        s += "\n// Modular data\n"
+        s += "// Number of cusps\n"
+        s += "Ncusps := %s\n" % rec['cusps']
+        s += "// Number of rational cusps\n"
+        s += "Nrat_cusps := %s\n" % rec['cusps']
+        if rec['jmap']:
+            s += "// Map to j-line\n"
+            s += "jmap := %s;\n" % rec['jmap']
+        if rec['Emap']:
+            s += "// Map to j-line\n"
+            s += "Emap := %s;\n" % rec['Emap']
+        s += "// CM discriminants\n"
+        s += "CM_discs := %s;\n" % rec['cm_discriminants']
+        s += "// groups containing given group, corresponding to curves covered by given curve\n"
+        s += "covers := %s;\n" % rec['parents']
+
+    # once more with feeling
+    elif lang == "sage":
+        s += "# Sage code for modular curve with label %s\n\n" % label
