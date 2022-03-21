@@ -389,8 +389,8 @@ class ModCurve_stats(StatsDisplay):
     def summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.
-            )
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
+        )
 
     table = db.gps_gl2zhat_test
     baseurl_func = ".index"
