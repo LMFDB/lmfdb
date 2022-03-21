@@ -383,7 +383,7 @@ class ModCurve_stats(StatsDisplay):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
             r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
-            % (self.ncurves, modcurve_knowl, level_knowl, self.max_level)
+            % (self.ncurves, modcurve_knowl, self.max_level)
         )
 
     @property
@@ -391,7 +391,7 @@ class ModCurve_stats(StatsDisplay):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
             r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.'
-            % (self.ncurves, modcurve_knowl, level_knowl, self.max_level)
+            % (self.ncurves, modcurve_knowl, self.max_level)
         )
 
     table = db.gps_gl2zhat_test
