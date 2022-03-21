@@ -369,6 +369,7 @@ class ModCurveSearchArray(SearchArray):
     null_column_explanations = {
         'simple': False,
         'semisimple': False,
+        'rank': False,
         'genus_minus_rank': False,
     }
 
