@@ -453,5 +453,5 @@ def reliability_page():
 def labels_page():
     t = r'Labels for modular curves'
     bread = get_bread('Labels')
-    return render_template("single.html", kid='modcurve.lmfdb_label',
+    return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))

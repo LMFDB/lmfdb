@@ -5,12 +5,13 @@
 
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
 <table>
-  <tr><td>{{KNOWL("modcurve.level", "Level")}}:</td><td> ${{ curve.level }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.index", "Index")}}:</td><td> ${{ curve.index }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.genus", "Genus")}}:</td><td> ${{ curve.genus }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> ${{ curve.cusps }}$ (of which ${{ curve.rational_cusps }}$ are rational) </td></tr>
-  <tr><td>{{KNOWL("modcurve.cm_discriminants", "CM points")}}:</td><td> {{ "yes (discriminant%s $%s$)"%("s" if (curve.cm_discriminants|length) > 1 else "",curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
+  <tr><td>{{ KNOWL("modcurve.level", "Level") }}:</td><td> ${{ curve.level }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td> ${{ curve.genus }}$ </td></tr>
+  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "$\\textsf{yes}$ $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "$\\textsf{none}$" }} </td></tr>
 </table>
 
 {% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
@@ -37,6 +38,7 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
+  <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}: </td><td>${{ "\\textsf{yes}" if curve.contains_negative_one else "\\textsf{no}" }}$</td></tr>
   <tr><td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-isogeny field degree') }}:</td><td>${{ curve.cyclic_isogeny_field_degree() }}$</td></tr>
   <tr><td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.cyclic_torsion_field_degree() }}$</td></tr>
   <tr><td>{{ KNOWL('modcurve.level_structure', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.full_torsion_field_degree() }}$</td></tr>
@@ -48,9 +50,6 @@
 
 <table>
   <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
-  {% if curve.rank %}
-  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
-  {% endif %}
   <tr><td>{{ KNOWL('modcurve.decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
 </table>
