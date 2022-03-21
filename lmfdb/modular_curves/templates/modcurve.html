@@ -112,7 +112,7 @@
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
     {% if curve.genus > 0 %}
-    <td><span>{{ kernel | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "zero dimensional" | safe }}</span></td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -134,7 +134,7 @@
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
-    <td><span>{{ kernel | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "zero dimensional" | safe }}</span></td>
   </tr>
   {% endfor %}
   </tbody>
