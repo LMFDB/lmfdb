@@ -5,12 +5,13 @@
 
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
 <table>
-  <tr><td>{{KNOWL("modcurve.level", "Level")}}:</td><td> ${{ curve.level }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.index", "Index")}}:</td><td> ${{ curve.index }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.genus", "Genus")}}:</td><td> ${{ curve.genus }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
-  <tr><td>{{KNOWL("modcurve.cusps", "Cusps")}}:</td><td> {{ curve.cusp_display | safe }} </td></tr>
-  <tr><td>{{KNOWL("modcurve.cm_discriminants", "CM points")}}:</td><td> {{ "yes (discriminant%s $%s$)"%("s" if (curve.cm_discriminants|length) > 1 else "",curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
+  <tr><td>{{ KNOWL("modcurve.level", "Level") }}:</td><td> ${{ curve.level }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td> ${{ curve.genus }}$ </td></tr>
+  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "$\\textsf{yes}$ $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "$\\textsf{none}$" }} </td></tr>
 </table>
 
 {% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
@@ -18,13 +19,13 @@
 
 <table>
   {% if curve.CPlabel %}
-  <tr><td>{{ KNOWL('modcurve.cp_label', 'Cummins & Pauli label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Cummins & Pauli label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
   {% endif %}
   {% if curve.SZlabel %}
-  <tr><td>{{ KNOWL('modcurve.sz_label', 'Sutherland & Zywina label') }}:</td><td>{{curve.SZlabel}}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Sutherland & Zywina label') }}:</td><td>{{curve.SZlabel}}</td></tr>
   {% endif %}
   {% if curve.RZBlabel %}
-  <tr><td>{{ KNOWL('modcurve.rzb_label', 'Rousse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.Slabel %}
   <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland label') }}:</td><td>{{curve.Slabel}}</td></tr>
@@ -37,27 +38,25 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
-  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Cyclic '+(curve.level|string)+'-isogeny field degree') }}:</td><td>${{ curve.cyclic_isogeny_field_degree() }}$</td></tr>
-  <tr><td>{{ KNOWL('modcurve.cyclic_torsion_degree', 'Cyclic '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.cyclic_torsion_field_degree() }}$</td></tr>
-  <tr><td>{{ KNOWL('modcurve.cyclic_isogeny_degree', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.full_torsion_field_degree() }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}: </td><td>${{ "\\textsf{yes}" if curve.contains_negative_one else "\\textsf{no}" }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-isogeny field degree') }}:</td><td>${{ curve.cyclic_isogeny_field_degree() }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.cyclic_torsion_field_degree() }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.level_structure', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.full_torsion_field_degree() }}$</td></tr>
 </table>
 {% endif %}
 
 {% if curve.genus > 0 %}
-<h2> {{ KNOWL('modcurve.jacobian', 'Jacobian') }} </h2>
+<h2> {{ KNOWL('ag.jacobian', 'Jacobian') }} </h2>
 
 <table>
   <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
-  {% if curve.rank %}
-  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
-  {% endif %}
-  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
-  <tr><td>{{ KNOWL('modcurve.jacobian_decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
+  <tr><td>{{ KNOWL('modcurve.decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
 </table>
 {% endif %}
 
 {% if curve.plane_model %}
-<h2> {{ KNOWL('modcurve.models', 'Plane model') }} </h2>
+<h2> {{ KNOWL('modcurve.plane_model', 'Plane model') }} </h2>
 {% if curve.plane_model == "P1" %}
 <p>$\mathbb{P}^1$</p>
 {% else %}
@@ -95,13 +94,13 @@
 
 {% set covered_by = curve.modular_covered_by() %}
 {% if curve.parents or curve.modular_covered_by %}
-<h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
+<h2> {{ KNOWL('modcurve.modular_cover', 'Modular covers') }} </h2>
 
 {% if curve.parents %}
-<p> This modular curve {{ KNOWL('modcurve.minmal_cover','minimally covers') }} the modular curves listed below.
+<p> This modular curve {{ KNOWL('modcurve.modular_cover','minimally covers') }} the modular curves listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>Covered curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th>{% if curve.genus > 0 %}<th>Kernel decomposition</th>{% endif %}</tr>
+    <tr><th>{{ KNOWL('modcurve.modular_cover','Covered curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th></tr>
   </thead>
   <tbody>
   {% for label, disp, level, degree, genus, rank, kernel in curve.modular_covers() %}
@@ -112,7 +111,7 @@
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
     {% if curve.genus > 0 %}
-    <td><span>{{ kernel | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "zero dimensional" | safe }}</span></td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -121,10 +120,10 @@
 {% endif %}
 
 {% if covered_by %}
-<p> This modular curve is {{ KNOWL('modcurve.minmal_cover','minimally covered by') }} the modular curves in the database listed below.
+<p> This modular curve is {{ KNOWL('modcurve.modular_cover','minimally covered by') }} the modular curves in the database listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>Covering curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th><th>Kernel decomposition</th></tr>
+    <tr><th>{{ KNOWL('modcurve.modular_cover','Covering curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th></tr>
   </thead>
   <tbody>
   {% for label, disp, level, degree, genus, rank, kernel in covered_by %}
@@ -134,7 +133,7 @@
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
-    <td><span>{{ kernel | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "zero dimensional" | safe }}</span></td>
   </tr>
   {% endfor %}
   </tbody>

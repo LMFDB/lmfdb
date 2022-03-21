@@ -153,17 +153,17 @@ modcurve_columns = SearchColumns([
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
-    MathCol("rank", "modcurve.rank", "Rank", default=lambda info: info.get("rank") or info.get("genus_minus_rank")),
+    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
     ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-    MathCol("rational_cusps", "modcurve.rational_cusps", r"$\Q$-cusps", default=True),
-    ProcessedCol("cm_discriminants", "modcurve.cm_points", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
-    ProcessedCol("conductor", "modcurve.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
+    MathCol("cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
+    ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
+    ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
-    CheckCol("contains_negative_one", "modcurve.plane_model", "Contains -1", short_title="contains -1"),
+    CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
     CheckCol("plane_model", "modcurve.plane_model", "Model"),
-    ProcessedCol("dims", "modcurve.jacobian_decomposition", "Decomposition", formatted_dims, align="center"),
+    ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
 @search_wrap(
@@ -369,6 +369,7 @@ class ModCurveSearchArray(SearchArray):
     null_column_explanations = {
         'simple': False,
         'semisimple': False,
+        'rank': False,
         'genus_minus_rank': False,
     }
 
@@ -380,19 +381,17 @@ class ModCurve_stats(StatsDisplay):
     @property
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
-        level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
         return (
-            rf'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
-            % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
+            rf'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            % (self.ncurves, modcurve_knowl, self.max_level)
         )
 
     @property
     def summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
-        level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.'
-            % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.'
+            % (self.ncurves, modcurve_knowl, self.max_level)
         )
 
     table = db.gps_gl2zhat_test
@@ -452,5 +451,5 @@ def reliability_page():
 def labels_page():
     t = r'Labels for modular curves'
     bread = get_bread('Labels')
-    return render_template("single.html", kid='modcurve.lmfdb_label',
+    return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
