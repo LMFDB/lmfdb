@@ -57,7 +57,7 @@
 {% endif %}
 
 {% if curve.plane_model %}
-<h2> {{ KNOWL('modcurve.models', 'Plane model') }} </h2>
+<h2> {{ KNOWL('modcurve.plane_model', 'Plane model') }} </h2>
 {% if curve.plane_model == "P1" %}
 <p>$\mathbb{P}^1$</p>
 {% else %}
@@ -95,10 +95,10 @@
 
 {% set covered_by = curve.modular_covered_by() %}
 {% if curve.parents or curve.modular_covered_by %}
-<h2> {{ KNOWL('modcurve.modular_covers', 'Modular covers') }} </h2>
+<h2> {{ KNOWL('modcurve.modular_cover', 'Modular covers') }} </h2>
 
 {% if curve.parents %}
-<p> This modular curve {{ KNOWL('modcurve.minmal_cover','minimally covers') }} the modular curves listed below.
+<p> This modular curve {{ KNOWL('modcurve.modular_cover','minimally covers') }} the modular curves listed below.
 <table class="ntdata">
   <thead>
     <tr><th>Covered curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th>{% if curve.genus > 0 %}<th>Kernel decomposition</th>{% endif %}</tr>
@@ -121,7 +121,7 @@
 {% endif %}
 
 {% if covered_by %}
-<p> This modular curve is {{ KNOWL('modcurve.minmal_cover','minimally covered by') }} the modular curves in the database listed below.
+<p> This modular curve is {{ KNOWL('modcurve.modular_cover','minimally covered by') }} the modular curves in the database listed below.
 <table class="ntdata">
   <thead>
     <tr><th>Covering curve</th><th>Level</th><th>Degree</th><th>Genus</th><th>Rank</th><th>Kernel decomposition</th></tr>
