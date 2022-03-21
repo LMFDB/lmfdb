@@ -337,7 +337,7 @@ class ModCurveSearchArray(SearchArray):
         )
         CPlabel = SneakyTextBox(
             name="CPlabel",
-            knowl="modcurve.cp_label",
+            knowl="modcurve.other_labels",
             label="CP label",
             example="3B0",
         )

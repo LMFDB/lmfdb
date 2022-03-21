@@ -92,6 +92,20 @@
 {% endif %}
 {% endif %}
 
+{% if curve.db_rational_points %}
+{% if curve.genus == 0 or curve.genus == 1 and curve.rank > 0 %}
+<p> The following are the first few elliptic curves with this level structure that do not arise from a modular cover (one per $j$-invariant).</p>
+{% else %}
+<p> The following are the rational elliptic curves in the LMFDB with this level structure that do not arise from a modular cover (one per $j$-invariant).</p>
+{% endif %}
+<table class="ntdata">
+  <tr><th>Label</th><th>Equation</th><th>$j$-invariant</th></tr>
+  {% for label, url, eqn, jinv in curve.db_rational_points %}
+  <tr><td><a href="{{url}}">{{label}}</a></td><td>{{eqn}}</td><td>{{jinv}}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 {% set covered_by = curve.modular_covered_by() %}
 {% if curve.parents or curve.modular_covered_by %}
 <h2> {{ KNOWL('modcurve.modular_cover', 'Modular covers') }} </h2>

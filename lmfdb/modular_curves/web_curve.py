@@ -3,10 +3,12 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi
+from sage.all import lazy_attribute, prod, euler_phi, ZZ
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
+from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
+from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -183,3 +185,18 @@ class WebModCurve(WebObj):
     def modular_covered_by(self):
         curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label}}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
+
+    @lazy_attribute
+    def db_rational_points(self):
+        # Use the db.ec_curvedata table to automatically find rational points
+        limit = None if self.genus > 1 else 10
+        if ZZ(self.level).is_prime_power():
+            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r"$\tfrac{%s}{%s}$" % tuple(rec["jinv"]))
+                    for rec in db.ec_curvedata.search(
+                            {"elladic_images": {"$contains": self.label}},
+                            sort=["conductor", "iso_nlabel", "lmfdb_number"],
+                            one_per=["conductor", "iso_nlabel"],
+                            limit=limit,
+                            projection=["lmfdb_label", "ainvs", "jinv"])]
+        else:
+            return []

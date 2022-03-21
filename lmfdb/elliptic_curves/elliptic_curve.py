@@ -301,7 +301,7 @@ def elliptic_curve_jump(info):
 def url_for_label(label):
     if label == "random":
         return url_for(".random_curve")
-    return url_for(".by_ec_label", label=label)
+    return url_for("ec.by_ec_label", label=label)
 
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
