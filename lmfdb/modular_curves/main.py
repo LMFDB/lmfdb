@@ -95,7 +95,7 @@ def interesting():
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if not LABEL_RE.fullmatch(label):
-        flash_error("Invalid label")
+        flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
     curve = WebModCurve(label)
     if curve.is_null():
@@ -382,17 +382,15 @@ class ModCurve_stats(StatsDisplay):
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
-            % (self.ncurves, modcurve_knowl, self.max_level)
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
         )
 
     @property
     def summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.'
-            % (self.ncurves, modcurve_knowl, self.max_level)
-        )
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.
+            )
 
     table = db.gps_gl2zhat_test
     baseurl_func = ".index"
@@ -418,7 +416,7 @@ class ModCurve_stats(StatsDisplay):
          'totaler': totaler()},
     ]
 
-@modcurve_page.route("/stats")
+@modcurve_page.route("/Q/stats")
 def statistics():
     title = 'Modular curves: Statistics'
     return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
