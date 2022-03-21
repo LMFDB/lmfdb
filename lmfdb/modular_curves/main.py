@@ -381,18 +381,16 @@ class ModCurve_stats(StatsDisplay):
     @property
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
-        level_knowl = display_knowl("modcurve.level", title="level")
         return (
-            r'The database currently contains %s %s of %s $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
             % (self.ncurves, modcurve_knowl, level_knowl, self.max_level)
         )
 
     @property
     def summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
-        level_knowl = display_knowl("modcurve.level", title="level")
         return (
-            r'The database currently contains %s %s of %s $N\le %s$ parameterizing elliptic curves $E/\Q$.'
+            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.'
             % (self.ncurves, modcurve_knowl, level_knowl, self.max_level)
         )
 
