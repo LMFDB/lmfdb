@@ -158,7 +158,7 @@ modcurve_columns = SearchColumns([
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
-    ProcessedCol("conductor", "modcurve.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
+    ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
     CheckCol("contains_negative_one", "modcurve.plane_model", "Contains -1", short_title="contains -1"),
