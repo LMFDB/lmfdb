@@ -95,7 +95,7 @@ def interesting():
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if not LABEL_RE.fullmatch(label):
-        flash_error("Invalid label")
+        flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
     curve = WebModCurve(label)
     if curve.is_null():
@@ -382,7 +382,7 @@ class ModCurve_stats(StatsDisplay):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         level_structure_knowl = display_knowl("modcurve.level_structure", title="level-$N$ structure")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            rf'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curve $E/\Q$ with %s.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
             % (self.ncurves, modcurve_knowl, self.max_level, level_structure_knowl)
         )
 
@@ -419,7 +419,7 @@ class ModCurve_stats(StatsDisplay):
          'totaler': totaler()},
     ]
 
-@modcurve_page.route("/stats")
+@modcurve_page.route("/Q/stats/")
 def statistics():
     title = 'Modular curves: Statistics'
     return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
