@@ -156,7 +156,7 @@ modcurve_columns = SearchColumns([
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
     ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-    MathCol("cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
+    MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
@@ -197,7 +197,7 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rank")
     parse_ints(info, query, "genus_minus_rank")
     parse_ints(info, query, "cusps")
-    parse_ints(info, query, "gonality")
+    parse_interval(info, query, "gonality", quantifier_type=info.get("gonality_type", "exactly"))
     parse_ints(info, query, "rational_cusps")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "semisimple")
@@ -294,12 +294,20 @@ class ModCurveSearchArray(SearchArray):
             example="1",
             example_span="0, 4-8",
         )
-        gonality = TextBox(
+        gonality_quantifier = SelectBox(
+            name="gonality_type",
+            options=[('', 'exactly'),
+                     ('atleast', 'at least'),
+                     ('atmost', 'at most'),
+                     ],
+            min_width=85)
+        gonality = TextBoxWithSelect(
             name="gonality",
             knowl="modcurve.gonality",
             label="Gonality",
             example="2",
             example_span="2, 3-6",
+            select_box=gonality_quantifier,
         )
         covers = TextBox(
             name="covers",

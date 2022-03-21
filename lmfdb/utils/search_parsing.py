@@ -1695,6 +1695,17 @@ def parse_string_start(
     else:
         collapse_ors(["$or", [make_sub_query(part) for part in parts]], query)
 
+@search_parser
+def parse_interval(inp, query, qfield, quantifier_type, bounds_field=None, parse_singleton=int):
+    if bounds_field is None:
+        bounds_field = qfield + "_bounds"
+    if quantifier_type == "atmost":
+        query[bounds_field + ".2"] = {"$le": parse_singleton(inp)}
+    elif quantifier_type == "atleast":
+        query[bounds_field + ".1"] = {"$ge": parse_singleton(inp)}
+    elif quantifier_type == "exactly":
+        query[qfield] = parse_singleton(inp)
+
 def parse_count(info, default=50):
     try:
         info["count"] = int(info["count"])
