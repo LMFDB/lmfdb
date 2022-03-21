@@ -23,6 +23,7 @@ from lmfdb.utils import (
     parse_ints,
     parse_noop,
     parse_bool,
+    parse_interval,
     parse_element_of,
     integer_divisors,
     StatsDisplay,

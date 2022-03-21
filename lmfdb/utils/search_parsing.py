@@ -1700,9 +1700,9 @@ def parse_interval(inp, query, qfield, quantifier_type, bounds_field=None, parse
     if bounds_field is None:
         bounds_field = qfield + "_bounds"
     if quantifier_type == "atmost":
-        query[bounds_field + ".2"] = {"$le": parse_singleton(inp)}
+        query[bounds_field + ".2"] = {"$lte": parse_singleton(inp)}
     elif quantifier_type == "atleast":
-        query[bounds_field + ".1"] = {"$ge": parse_singleton(inp)}
+        query[bounds_field + ".1"] = {"$gte": parse_singleton(inp)}
     elif quantifier_type == "exactly":
         query[qfield] = parse_singleton(inp)
 
