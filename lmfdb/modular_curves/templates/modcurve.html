@@ -101,7 +101,7 @@
 <p> This modular curve {{ KNOWL('modcurve.modular_cover','minimally covers') }} the modular curves listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>{{ KNOWL('modcurve.modular_cover','Covered curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.kernel_decomposition','Kernel decomposition') }}</th></tr>
+    <tr><th>{{ KNOWL('modcurve.modular_cover','Covered curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.kernel_decomposition','Kernel decomposition') }}</th></tr>
   </thead>
   <tbody>
   {% for label, disp, level, degree, genus, rank, kernel in curve.modular_covers() %}
@@ -124,7 +124,7 @@
 <p> This modular curve is {{ KNOWL('modcurve.modular_cover','minimally covered by') }} the modular curves in the database listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>{{ KNOWL('modcurve.modular_cover','Covering curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.kernel_decomposition','Kernel decomposition') }}</th></tr>
+    <tr><th>{{ KNOWL('modcurve.modular_cover','Covering curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.kernel_decomposition','Kernel decomposition') }}</th></tr>
   </thead>
   <tbody>
   {% for label, disp, level, degree, genus, rank, kernel in covered_by %}
