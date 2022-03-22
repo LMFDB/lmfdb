@@ -202,6 +202,25 @@ class WebModCurve(WebObj):
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
 
     @lazy_attribute
+    def downloads(self):
+        self.downloads = [
+            (
+                "Code to Magma",
+                url_for(".modcurve_magma_download", label=self.label),
+            ),
+            (
+                "Code to SageMath",
+                url_for(".modcurve_sage_download", label=self.label),
+            ),
+            (
+                "All data to text",
+                url_for(".modcurve_text_download", label=self.label),
+            ),
+
+        ]
+        #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
+        return self.downloads
+
     def db_rational_points(self):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
