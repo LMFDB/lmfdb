@@ -202,6 +202,7 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "semisimple")
+    parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
             query["cm_discriminants"] = {"$ne": []}
@@ -298,6 +299,7 @@ class ModCurveSearchArray(SearchArray):
         gonality_quantifier = SelectBox(
             name="gonality_type",
             options=[('', 'exactly'),
+                     ('possibly', 'possibly'),
                      ('atleast', 'at least'),
                      ('atmost', 'at most'),
                      ],
@@ -344,6 +346,12 @@ class ModCurveSearchArray(SearchArray):
             label="CM points",
             example="yes, no, CM discriminant -3"
         )
+        contains_negative_one = YesNoBox(
+            name="contains_negative_one",
+            knowl="modcurve.contains_negative_one",
+            label="Contains $-I$",
+            example_col=True,
+        )
         CPlabel = SneakyTextBox(
             name="CPlabel",
             knowl="modcurve.other_labels",
@@ -359,13 +367,14 @@ class ModCurveSearchArray(SearchArray):
             [cusps, rational_cusps],
             [simple, semisimple],
             [covers, covered_by],
-            [count, cm_discriminants],
+            [cm_discriminants, contains_negative_one],
+            [count]
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, semisimple],
-            [covers, covered_by, cm_discriminants, CPlabel],
+            [covers, covered_by, cm_discriminants, contains_negative_one, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"

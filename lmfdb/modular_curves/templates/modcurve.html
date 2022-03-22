@@ -99,9 +99,9 @@
 <p> The following are the rational elliptic curves in the LMFDB with this level structure that do not arise from a modular cover (one per $j$-invariant).</p>
 {% endif %}
 <table class="ntdata">
-  <tr><th>Label</th><th>Equation</th><th style="text-align:center;" colspan="2">$j$-invariant</th></tr>
-  {% for label, url, eqn, jinv, jfac in curve.db_rational_points %}
-  <tr><td><a href="{{url}}">{{label}}</a></td><td>{{eqn}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</tr>
+  <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Label') }}</th><th>{{ KNOWL('ec.q.minimal_weierstrass_equation', 'Equation') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th></tr>
+  {% for label, url, eqn, cm, jinv, jfac in curve.db_rational_points %}
+  <tr><td><a href="{{url}}">{{label}}</a></td><td>{{eqn}}</td><td>{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</tr>
   {% endfor %}
 </table>
 {% endif %}

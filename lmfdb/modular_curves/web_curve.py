@@ -205,12 +205,12 @@ class WebModCurve(WebObj):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if self.genus > 1 else 10
         if ZZ(self.level).is_prime_power():
-            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), showj(rec["jinv"]), showj_fac(rec["jinv"]))
+            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r'$\textsf{no}$' if rec["cm"] == 0 else f'${rec["cm_discriminant"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
                     for rec in db.ec_curvedata.search(
                             {"elladic_images": {"$contains": self.label}},
                             sort=["conductor", "iso_nlabel", "lmfdb_number"],
                             one_per=["jinv"],
                             limit=limit,
-                            projection=["lmfdb_label", "ainvs", "jinv"])]
+                            projection=["lmfdb_label", "ainvs", "jinv", "cm"])]
         else:
             return []
