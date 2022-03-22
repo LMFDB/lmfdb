@@ -201,7 +201,6 @@ class WebModCurve(WebObj):
             ),
 
         ]
-    else:
-        self.downloads = []
-    #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
+        #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
+        return self.downloads
 
