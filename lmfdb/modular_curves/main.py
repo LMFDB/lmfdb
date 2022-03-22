@@ -34,6 +34,8 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol
 
+from lmfdb.backend.encoding import Json
+
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor, formatted_dims
 
@@ -495,19 +497,19 @@ class ModCurve_download(Downloader):
             return abort(404, "Label not found: %s" % label)
         if lang == "magma":
             s += "// Magma code for modular curve with label %s\n\n" % label
-        if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
-            s += "// other names and/or labels\n"
-            if rec['name']:
-                s += "// Curve name: %s\n" % rec['name']
-            if rec['CPlabel']:
-                s += "// Cummins-Pauli label: %s\n" % rec['CPlabel']
-            if rec['RZBlabel']:
-                s += "// Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
-            if rec['Slabel']:
-                s += "// Sutherland label: %s\n" % rec['Slabel']
-            if rec['SZlabel']:
-                s += "// Sutherland-Zywina label: %s\n" % rec['SZlabel']
-            s += "// Group data\n"
+            if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
+                s += "// other names and/or labels\n"
+                if rec['name']:
+                    s += "// Curve name: %s\n" % rec['name']
+                if rec['CPlabel']:
+                    s += "// Cummins-Pauli label: %s\n" % rec['CPlabel']
+                if rec['RZBlabel']:
+                    s += "// Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
+                if rec['Slabel']:
+                    s += "// Sutherland label: %s\n" % rec['Slabel']
+                if rec['SZlabel']:
+                    s += "// Sutherland-Zywina label: %s\n" % rec['SZlabel']
+            s += "\n// Group data\n"
             s += "level := %s;\n" % rec['level']
             s += "// Elements that, together with Gamma(level), generate the group\n"
             s += "gens := %s;\n" % rec['generators']
@@ -549,24 +551,25 @@ class ModCurve_download(Downloader):
             s += "CM_discs := %s;\n" % rec['cm_discriminants']
             s += "// groups containing given group, corresponding to curves covered by given curve\n"
             s += "covers := %s;\n" % rec['parents']
+            return(self._wrap(s, label, lang=lang))
 
         # once more with feeling
         elif lang == "sage":
             s += "# Sage code for modular curve with label %s\n\n" % label
 
-        if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
-            s += "# other names and/or labels\n"
-            if rec['name']:
-                s += "# Curve name: %s\n" % rec['name']
-            if rec['CPlabel']:
-                s += "# Cummins-Pauli label: %s\n" % rec['CPlabel']
-            if rec['RZBlabel']:
-                s += "# Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
-            if rec['Slabel']:
-                s += "# Sutherland label: %s\n" % rec['Slabel']
-            if rec['SZlabel']:
-                s += "# Sutherland-Zywina label: %s\n" % rec['SZlabel']
-            s += "# Group data\n"
+            if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
+                s += "# other names and/or labels\n"
+                if rec['name']:
+                    s += "# Curve name: %s\n" % rec['name']
+                if rec['CPlabel']:
+                    s += "# Cummins-Pauli label: %s\n" % rec['CPlabel']
+                if rec['RZBlabel']:
+                    s += "# Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
+                if rec['Slabel']:
+                    s += "# Sutherland label: %s\n" % rec['Slabel']
+                if rec['SZlabel']:
+                    s += "# Sutherland-Zywina label: %s\n" % rec['SZlabel']
+            s += "\n# Group data\n"
             s += "level = %s\n" % rec['level']
             s += "# Elements that, together with Gamma(level), generate the group\n"
             s += "gens = %s\n" % rec['generators']
@@ -608,7 +611,7 @@ class ModCurve_download(Downloader):
             s += "CM_discs = %s\n" % rec['cm_discriminants']
             s += "# groups containing given group, corresponding to curves covered by given curve\n"
             s += "covers = %s\n" % rec['parents']
-        return(s)
+            return(self._wrap(s, label, lang=lang))
         if lang == "text":
             data = db.gps_gl2zhat_test.lookup(label)
             if data is None:
