@@ -108,6 +108,7 @@ def by_label(label):
         friends=curve.friends,
         bread=curve.bread,
         title=curve.title,
+        downloads=curve.downloads
         KNOWL_ID=f"modcurve.{label}",
         learnmore=learnmore_list(),
     )
@@ -465,37 +466,26 @@ class ModCurve_download(Downloader):
 
     function_body = {
         "magma": [
-            "N := level",
-                "jmap := jmap",
-            "cusps := "
         ],
         "sage": [
-            "N = level",
-            "R.<X,Y,Z> = PolynomialRing(QQ,3)",
-            "XX = Curve(plane_model)"
         ],
     }
 
-#'determinant_label',
-#'scalar_label',
-#'generators',
-#'reductions',
-#'orbits',
-#'kummer_orbits',
-#'isogeny_orbits',
-#'obstructions',
-#'gassmann_class',
-#'CPlabel',
-#'Slabel',
-#'SZlabel',
-#'RZBlabel',
-#'newforms',
-#'dims',
-#'name',
-#'simple',
-#'semisimple',
-#'trace_hash',
-#'traces',
+# cols currently unused in individual page download
+    #'determinant_label',
+    #'scalar_label',
+    #'reductions',
+    #'orbits',
+    #'kummer_orbits',
+    #'isogeny_orbits',
+    #'obstructions',
+    #'gassmann_class',
+    #'newforms',
+    #'dims',
+    #'simple',
+    #'semisimple',
+    #'trace_hash',
+    #'traces',
 
 def download_modular_curve(self, label, lang):
     s = ""
@@ -504,6 +494,18 @@ def download_modular_curve(self, label, lang):
         return abort(404, "Label not found: %s" % label)
     if lang == "magma":
         s += "// Magma code for modular curve with label %s\n\n" % label
+    if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
+        s += "// other names and/or labels\n"
+        if rec['name']:
+            s += "// Curve name: %s\n" % rec['name']
+        if rec['CPlabel']:
+            s += "// Cummins-Pauli label: %s\n" % rec['CPlabel']
+        if rec['RZBlabel']:
+            s += "// Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
+        if rec['Slabel']:
+            s += "// Sutherland label: %s\n" % rec['Slabel']
+        if rec['SZlabel']:
+            s += "// Sutherland-Zywina label: %s\n" % rec['SZlabel']
         s += "// Group data\n"
         s += "level := %s;\n" % rec['level']
         s += "// Elements that, together with Gamma(level), generate the group\n"
@@ -537,6 +539,7 @@ def download_modular_curve(self, label, lang):
         s += "Nrat_cusps := %s\n" % rec['cusps']
         if rec['jmap']:
             s += "// Map to j-line\n"
+            # TODO: I think this is relative map; should compose to get map to PP1
             s += "jmap := %s;\n" % rec['jmap']
         if rec['Emap']:
             s += "// Map to j-line\n"
@@ -549,3 +552,79 @@ def download_modular_curve(self, label, lang):
     # once more with feeling
     elif lang == "sage":
         s += "# Sage code for modular curve with label %s\n\n" % label
+
+    if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
+        s += "# other names and/or labels\n"
+        if rec['name']:
+            s += "# Curve name: %s\n" % rec['name']
+        if rec['CPlabel']:
+            s += "# Cummins-Pauli label: %s\n" % rec['CPlabel']
+        if rec['RZBlabel']:
+            s += "# Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
+        if rec['Slabel']:
+            s += "# Sutherland label: %s\n" % rec['Slabel']
+        if rec['SZlabel']:
+            s += "# Sutherland-Zywina label: %s\n" % rec['SZlabel']
+        s += "# Group data\n"
+        s += "level = %s\n" % rec['level']
+        s += "# Elements that, together with Gamma(level), generate the group\n"
+        s += "gens = %s\n" % rec['generators']
+        s += "# Group contains -1?\n"
+        s += "ContainsMinus1 = %s\n" % rec['contains_negative_one']
+        s += "# Index in Gamma(1)\n"
+        s += "index = %s\n" % rec['index']
+        s += "\n# Curve data\n"
+        s += "conductor = %s\n" % rec['conductor']
+        s += "bad_primes = %s\n" % rec['bad_primes']
+        s += "# Make plane model, if computed\n"
+        if rec["plane_model"]:
+            s += "QQ = Rationals()\n"
+            s += "R<X,Y,Z> = PolynomialRing(QQ,3)\n"
+            s += "XX = Curve(AffineSpace(R), %s)\n" % rec['plane_model']
+        s += "# Genus\n"
+        s += "g = %s\n" % rec['genus']
+        s += "# Rank\n"
+        s += "r = %s\n" % rec['rank']
+        if rec['gonality'] ne -1:
+            s += "# Exact gonality known\n"
+            s += "gamma = %s\n" % rec['gonality']
+        else:
+            s += "# Exact gonality unknown, but contained in following interval\n"
+            s += "gamma_int = %s\n" % rec['gonality_bounds']
+        s += "\n# Modular data\n"
+        s += "# Number of cusps\n"
+        s += "Ncusps = %s\n" % rec['cusps']
+        s += "# Number of rational cusps\n"
+        s += "Nrat_cusps = %s\n" % rec['cusps']
+        if rec['jmap']:
+            s += "# Map to j-line\n"
+            # TODO: I think this is relative map; should compose to get map to PP1
+            s += "jmap = %s\n" % rec['jmap']
+        if rec['Emap']:
+            s += "# Map to j-line\n"
+            s += "Emap = %s\n" % rec['Emap']
+        s += "# CM discriminants\n"
+        s += "CM_discs = %s\n" % rec['cm_discriminants']
+        s += "# groups containing given group, corresponding to curves covered by given curve\n"
+        s += "covers = %s\n" % rec['parents']
+    return(s)
+    if lang == "text":
+        data = db.gps_gl2zhat_test.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s" % label)
+        return self._wrap(Json.dumps(data),
+                          label,
+                          title='Data for modular curve with label %s,'%label)
+
+@modcurve_page.route("/download_to_magma/<label>")
+def modcurve_magma_download(label):
+    return ModCurve_download().download_modular_curve(label, lang="magma")
+
+@modcurve_page.route("/download_to_sage/<label>")
+def modcurve_sage_download(label):
+    return ModCurve_download().download_modular_curve(label, lang="sage")
+
+@modcurve_page.route("/download_to_text/<label>")
+def modcurve_text_download(label):
+    return ModCurve_download().download_modular_curve(label, lang="text")
+

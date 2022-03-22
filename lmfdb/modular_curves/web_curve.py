@@ -183,3 +183,25 @@ class WebModCurve(WebObj):
     def modular_covered_by(self):
         curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label}}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
+
+    @lazy_attribute
+    def downloads(self):
+        self.downloads = [
+            (
+                "Code to Magma",
+                url_for(".modcurve_magma_download", label=self.label),
+            ),
+            (
+                "Code to SageMath",
+                url_for(".modcurve_sage_download", label=self.label),
+            ),
+            (
+                "All data to text",
+                url_for(".modcurve_text_download", label=self.label),
+            ),
+
+        ]
+    else:
+        self.downloads = []
+    #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
+
