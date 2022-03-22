@@ -9,7 +9,7 @@
   <tr><td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td> ${{ curve.genus }}$ </td></tr>
   <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
-  <tr><td>{{ KNOWL("modcurve.gonality", "Gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le \\gamma \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.gonality", "$K$-gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le \\gamma \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "$\\textsf{yes}$ $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "$\\textsf{none}$" }} </td></tr>
 </table>
@@ -90,6 +90,20 @@
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
 <p> This modular curve has finitely many rational points, none of which are cusps. </p>
 {% endif %}
+{% endif %}
+
+{% if curve.db_rational_points %}
+{% if curve.genus == 0 or curve.genus == 1 and curve.rank > 0 %}
+<p> The following are the rational elliptic curves corresponding to the first few {{ KNOWL('modcurve.nonliftable_point', 'non-liftable points') }} on this modular curve (one per $j$-invariant).</p>
+{% else %}
+<p> The following are the rational elliptic curves in the LMFDB corresponding to {{ KNOWL('modcurve.nonliftable_point', 'non-liftable points') }} on this modular curve (one per $j$-invariant).</p>
+{% endif %}
+<table class="ntdata">
+  <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Label') }}</th><th>{{ KNOWL('ec.q.minimal_weierstrass_equation', 'Equation') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th></tr>
+  {% for label, url, eqn, cm, jinv, jfac in curve.db_rational_points %}
+  <tr><td><a href="{{url}}">{{label}}</a></td><td>{{eqn}}</td><td>{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</tr>
+  {% endfor %}
+</table>
 {% endif %}
 
 {% set covered_by = curve.modular_covered_by() %}

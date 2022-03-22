@@ -23,6 +23,7 @@ from lmfdb.utils import (
     parse_ints,
     parse_noop,
     parse_bool,
+    parse_interval,
     parse_element_of,
     integer_divisors,
     StatsDisplay,
@@ -98,7 +99,7 @@ def interesting():
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if not LABEL_RE.fullmatch(label):
-        flash_error("Invalid label")
+        flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
     curve = WebModCurve(label)
     if curve.is_null():
@@ -158,9 +159,9 @@ modcurve_columns = SearchColumns([
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("gonality_bounds", "modcurve.gonality", "Gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
+    ProcessedCol("gonality_bounds", "modcurve.gonality", "$K$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-    MathCol("cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
+    MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
@@ -201,10 +202,11 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rank")
     parse_ints(info, query, "genus_minus_rank")
     parse_ints(info, query, "cusps")
-    parse_ints(info, query, "gonality")
+    parse_interval(info, query, "gonality", quantifier_type=info.get("gonality_type", "exactly"))
     parse_ints(info, query, "rational_cusps")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "semisimple")
+    parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
             query["cm_discriminants"] = {"$ne": []}
@@ -298,12 +300,21 @@ class ModCurveSearchArray(SearchArray):
             example="1",
             example_span="0, 4-8",
         )
-        gonality = TextBox(
+        gonality_quantifier = SelectBox(
+            name="gonality_type",
+            options=[('', 'exactly'),
+                     ('possibly', 'possibly'),
+                     ('atleast', 'at least'),
+                     ('atmost', 'at most'),
+                     ],
+            min_width=85)
+        gonality = TextBoxWithSelect(
             name="gonality",
             knowl="modcurve.gonality",
-            label="Gonality",
+            label="$K$-gonality",
             example="2",
             example_span="2, 3-6",
+            select_box=gonality_quantifier,
         )
         covers = TextBox(
             name="covers",
@@ -339,9 +350,15 @@ class ModCurveSearchArray(SearchArray):
             label="CM points",
             example="yes, no, CM discriminant -3"
         )
+        contains_negative_one = YesNoBox(
+            name="contains_negative_one",
+            knowl="modcurve.contains_negative_one",
+            label="Contains $-I$",
+            example_col=True,
+        )
         CPlabel = SneakyTextBox(
             name="CPlabel",
-            knowl="modcurve.cp_label",
+            knowl="modcurve.other_labels",
             label="CP label",
             example="3B0",
         )
@@ -354,13 +371,14 @@ class ModCurveSearchArray(SearchArray):
             [cusps, rational_cusps],
             [simple, semisimple],
             [covers, covered_by],
-            [count, cm_discriminants],
+            [cm_discriminants, contains_negative_one],
+            [count]
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, semisimple],
-            [covers, covered_by, cm_discriminants, CPlabel],
+            [covers, covered_by, cm_discriminants, contains_negative_one, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
@@ -386,16 +404,14 @@ class ModCurve_stats(StatsDisplay):
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
-            % (self.ncurves, modcurve_knowl, self.max_level)
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
         )
 
     @property
     def summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            r'The database currently contains %s %s of level $N\le %s$ parameterizing elliptic curves $E/\Q$.'
-            % (self.ncurves, modcurve_knowl, self.max_level)
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
         )
 
     table = db.gps_gl2zhat_test
@@ -422,7 +438,7 @@ class ModCurve_stats(StatsDisplay):
          'totaler': totaler()},
     ]
 
-@modcurve_page.route("/stats")
+@modcurve_page.route("/Q/stats")
 def statistics():
     title = 'Modular curves: Statistics'
     return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())

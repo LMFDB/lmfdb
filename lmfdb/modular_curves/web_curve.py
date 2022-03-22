@@ -3,10 +3,12 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, latex
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
+from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
+from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -21,6 +23,20 @@ def showexp(c, wrap=True):
         return f"$^{{{c}}}$"
     else:
         return f"^{{{c}}}"
+
+def showj(j):
+    if j[0] == 0:
+        return rf"$0$"
+    elif j[1] == 1:
+        return rf"${j[0]}$"
+    else:
+        return r"$\tfrac{%s}{%s}$" % tuple(j)
+
+def showj_fac(j):
+    if j[0] == 0 or j[1] == 1 and ZZ(j[0]).is_prime():
+        return ""
+    else:
+        return "$= %s$" % latex((ZZ(j[0]) / ZZ(j[1])).factor())
 
 def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
@@ -204,3 +220,24 @@ class WebModCurve(WebObj):
         #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
         return self.downloads
 
+    def db_rational_points(self):
+        # Use the db.ec_curvedata table to automatically find rational points
+        limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
+        if ZZ(self.level).is_prime_power():
+            curves = (list(db.ec_curvedata.search(
+                {"elladic_images": {"$contains": self.label}, "cm": 0},
+                sort=["conductor", "iso_nlabel", "lmfdb_number"],
+                one_per=["jinv"],
+                limit=limit,
+                projection=["lmfdb_label", "ainvs", "jinv", "cm"])) +
+                      list(db.ec_curvedata.search(
+                {"elladic_images": {"$contains": self.label}, "cm": {"$ne": 0}},
+                sort=["conductor", "iso_nlabel", "lmfdb_number"],
+                one_per=["jinv"],
+                limit=None,
+                projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])))
+            curves.sort(key=lambda x: (x["conductor"], x["iso_nlabel"], x["lmfdb_number"]))
+            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r'$\textsf{no}$' if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
+                    for rec in curves]
+        else:
+            return []
