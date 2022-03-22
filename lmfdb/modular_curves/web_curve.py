@@ -203,14 +203,22 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def db_rational_points(self):
         # Use the db.ec_curvedata table to automatically find rational points
-        limit = None if self.genus > 1 else 10
+        limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
         if ZZ(self.level).is_prime_power():
-            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r'$\textsf{no}$' if rec["cm"] == 0 else f'${rec["cm_discriminant"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
-                    for rec in db.ec_curvedata.search(
-                            {"elladic_images": {"$contains": self.label}},
-                            sort=["conductor", "iso_nlabel", "lmfdb_number"],
-                            one_per=["jinv"],
-                            limit=limit,
-                            projection=["lmfdb_label", "ainvs", "jinv", "cm"])]
+            curves = (list(db.ec_curvedata.search(
+                {"elladic_images": {"$contains": self.label}, "cm": 0},
+                sort=["conductor", "iso_nlabel", "lmfdb_number"],
+                one_per=["jinv"],
+                limit=limit,
+                projection=["lmfdb_label", "ainvs", "jinv", "cm"])) +
+                      list(db.ec_curvedata.search(
+                {"elladic_images": {"$contains": self.label}, "cm": {"$ne": 0}},
+                sort=["conductor", "iso_nlabel", "lmfdb_number"],
+                one_per=["jinv"],
+                limit=None,
+                projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])))
+            curves.sort(key=lambda x: (x["conductor"], x["iso_nlabel"], x["lmfdb_number"]))
+            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r'$\textsf{no}$' if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
+                    for rec in curves]
         else:
             return []
