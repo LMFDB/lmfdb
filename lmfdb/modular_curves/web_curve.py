@@ -221,6 +221,7 @@ class WebModCurve(WebObj):
         #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
         return self.downloads
 
+    @lazy_attribute
     def db_rational_points(self):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
