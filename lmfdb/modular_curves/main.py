@@ -565,7 +565,7 @@ class ModCurve_download(Downloader):
             s += "// CM discriminants\n"
             s += "CM_discs := %s;\n" % rec['cm_discriminants']
             s += "// groups containing given group, corresponding to curves covered by given curve\n"
-            s += "covers := %s;\n" % rec['parents'].replace("'",'"')
+            s += "covers := %s;\n" % str(rec['parents']).replace("'",'"')
             return(self._wrap(s, label, lang=lang))
 
         # once more with feeling
