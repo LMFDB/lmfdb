@@ -3,12 +3,13 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, latex
-from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
+from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -220,6 +221,7 @@ class WebModCurve(WebObj):
         #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
         return self.downloads
 
+    @lazy_attribute
     def db_rational_points(self):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
@@ -241,3 +243,24 @@ class WebModCurve(WebObj):
                     for rec in curves]
         else:
             return []
+
+    @lazy_attribute
+    def db_nf_points(self):
+        # Use the db.ec_curvedata table to automatically find rational points
+        #limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
+        if ZZ(self.level).is_prime():
+            curves = list(db.ec_nfcurves.search(
+                {"galois_images": {"$contains": self.Slabel},
+                 "degree": {"$lte": self.genus}},
+                one_per=["jinv"],
+                projection=["label", "degree", "equation", "jinv", "cm"]))
+            Ra = PolynomialRing(QQ,'a')
+            return [(rec["label"],
+                     url_for_ECNF_label(rec["label"]),
+                     rec["equation"],
+                     r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                     r"$\textsf{yes}$" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.is_simple and rec["degree"] < self.genus)) else r"$\textsf{maybe}$",
+                     web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
+        else:
+            return []
+

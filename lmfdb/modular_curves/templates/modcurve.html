@@ -104,7 +104,9 @@
 {% endif %}
 {% endif %}
 
-{% if curve.db_rational_points %}
+{% if curve.level == 1 %}
+<p> There are no {{ KNOWL('modcurve.nonliftable_point', 'non-liftable points') }} on this modular curve since the index of the adelic Galois representation associated to an elliptic curve over $\Q$ is always at least $2$.</p>
+{% elif curve.db_rational_points %}
 {% if curve.genus == 0 or curve.genus == 1 and curve.rank > 0 %}
 <p> The following are the rational elliptic curves corresponding to the first few {{ KNOWL('modcurve.nonliftable_point', 'non-liftable points') }} on this modular curve (one per $j$-invariant).</p>
 {% else %}
@@ -112,9 +114,25 @@
 {% endif %}
 <table class="ntdata">
   <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Label') }}</th><th>{{ KNOWL('ec.q.minimal_weierstrass_equation', 'Equation') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th></tr>
-  {% for label, url, eqn, cm, jinv, jfac in curve.db_rational_points() %}
+  {% for label, url, eqn, cm, jinv, jfac in curve.db_rational_points %}
   <tr><td><a href="{{url}}">{{label}}</a></td><td>{{eqn}}</td><td>{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</tr>
   {% endfor %}
+</table>
+{% endif %}
+
+{% if curve.db_nf_points %}
+<h2> {{ KNOWL('modcurve.isolated_point', 'Isolated points') }}</h2>
+
+<p> The following are the elliptic curves in the LMFDB over number fields that correspond to {{ KNOWL('modcurve.nonliftable_point', 'non-liftable points') }} on this modular curve (one per $j$-invariant) that may be {{ KNOWL('modcurve.isolated_point', 'isolated') }}.</p>
+<table class="ntdata">
+  <thead>
+    <tr><th>{{ KNOWL('ec.curve_label', 'Label') }}</th><th>{{ KNOWL('ec.weierstrass_coeffs', 'Equation') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('modcurve.isolated_point', 'Isolated') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th></tr>
+  </thead>
+  <tbody>
+    {% for label, url, eqn, cm, isolated, jinv in curve.db_nf_points %}
+      <tr><td><a href="{{url}}">{{label}}</a></td><td>${{eqn}}$</td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td><td>{{jinv | safe}}</td></tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% endif %}
 
