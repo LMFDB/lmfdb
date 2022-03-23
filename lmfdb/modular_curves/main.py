@@ -486,16 +486,16 @@ def modcurve_data(label):
 class ModCurve_download(Downloader):
     table = db.gps_gl2zhat_test
     title = "Modular curves"
-    #columns = 
+    #columns = ['level', 'genus', 'plane_model']
     #data_format = []
     #data_description = []
-    data_format = ['N=level', 'defining polynomial', 'number field label']
-    #columns = ['level', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs',]
 
     function_body = {
         "magma": [
+            #"return data[3];"
         ],
         "sage": [
+            #"return data[3]"
         ],
     }
 
@@ -553,7 +553,7 @@ class ModCurve_download(Downloader):
             s += "// Genus\n"
             s += "g := %s;\n" % rec['genus']
             s += "// Rank\n"
-            s += "r := %s\n" % rec['rank']
+            s += "r := %s;\n" % rec['rank']
             if rec['gonality'] != -1:
                 s += "// Exact gonality known\n"
                 s += "gamma := %s;\n" % rec['gonality']
@@ -562,12 +562,11 @@ class ModCurve_download(Downloader):
                 s += "gamma_int := %s;\n" % rec['gonality_bounds']
             s += "\n// Modular data\n"
             s += "// Number of cusps\n"
-            s += "Ncusps := %s\n" % rec['cusps']
+            s += "Ncusps := %s;\n" % rec['cusps']
             s += "// Number of rational cusps\n"
-            s += "Nrat_cusps := %s\n" % rec['cusps']
+            s += "Nrat_cusps := %s;\n" % rec['cusps']
             if rec['jmap']:
                 s += "// Map to j-line\n"
-                # TODO: I think this is relative map; should compose to get map to PP1
                 s += "jmap := %s;\n" % rec['jmap']
             if rec['Emap']:
                 s += "// Map to j-line\n"
@@ -575,7 +574,7 @@ class ModCurve_download(Downloader):
             s += "// CM discriminants\n"
             s += "CM_discs := %s;\n" % rec['cm_discriminants']
             s += "// groups containing given group, corresponding to curves covered by given curve\n"
-            s += "covers := %s;\n" % rec['parents']
+            s += "covers := %s;\n" % str(rec['parents']).replace("'",'"')
             return(self._wrap(s, label, lang=lang))
 
         # once more with feeling
@@ -627,7 +626,6 @@ class ModCurve_download(Downloader):
             s += "Nrat_cusps = %s\n" % rec['cusps']
             if rec['jmap']:
                 s += "# Map to j-line\n"
-                # TODO: I think this is relative map; should compose to get map to PP1
                 s += "jmap = %s\n" % rec['jmap']
             if rec['Emap']:
                 s += "# Map to j-line\n"

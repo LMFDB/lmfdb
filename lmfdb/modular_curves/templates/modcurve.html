@@ -50,6 +50,18 @@
 
 <table>
   <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
+  <tr>
+    <td>
+      {{ KNOWL('modcurve.semisimple', 'Semisimple') }}:
+    </td>
+    <td>
+      {% if curve.semisimple %}
+        yes
+      {% else %}
+        no
+      {% endif %}
+    </td>
+  </tr>
   <tr><td>{{ KNOWL('modcurve.decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
   <tr><td>{{ KNOWL('modcurve.decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td></tr>
 </table>
