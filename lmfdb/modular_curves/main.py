@@ -477,16 +477,16 @@ def labels_page():
 class ModCurve_download(Downloader):
     table = db.gps_gl2zhat_test
     title = "Modular curves"
-    #columns = 
+    #columns = ['level', 'genus', 'plane_model']
     #data_format = []
     #data_description = []
-    data_format = ['N=level', 'defining polynomial', 'number field label']
-    #columns = ['level', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs',]
 
     function_body = {
         "magma": [
+            #"return data[3];"
         ],
         "sage": [
+            #"return data[3]"
         ],
     }
 
