@@ -34,6 +34,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol
+from lmfdb.api import datapage
 
 from lmfdb.backend.encoding import Json
 
@@ -474,6 +475,14 @@ def labels_page():
     return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+@modcurve_page.route("/data/<label>")
+def modcurve_data(label):
+    bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
+    if LABEL_RE.fullmatch(label):
+        return datapage([label], ["gps_gl2zhat_test"], title=f"Modular curve data - {label}", bread=bread)
+    else:
+        return abort(404)
+
 class ModCurve_download(Downloader):
     table = db.gps_gl2zhat_test
     title = "Modular curves"
@@ -557,7 +566,6 @@ class ModCurve_download(Downloader):
         s += "Nrat_cusps := %s\n" % rec['cusps']
         if rec['jmap']:
             s += "// Map to j-line\n"
-            # TODO: I think this is relative map; should compose to get map to PP1
             s += "jmap := %s;\n" % rec['jmap']
         if rec['Emap']:
             s += "// Map to j-line\n"

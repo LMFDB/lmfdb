@@ -216,6 +216,10 @@ class WebModCurve(WebObj):
                 "All data to text",
                 url_for(".modcurve_text_download", label=self.label),
             ),
+            (
+                'Underlying data',
+                url_for(".modcurve_data", label=self.label),
+            )
 
         ]
         #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
