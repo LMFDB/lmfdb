@@ -637,7 +637,7 @@ def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
-def galrep_table(galrep):  
+def galrep_table(galrep):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
               th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
@@ -1059,7 +1059,7 @@ class WebG2C(object):
             self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
-            for lang in ['magma']: #TODO: 'sage', 'pari', 
+            for lang in ['magma']: #TODO: 'sage', 'pari',
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['min_eqn'])
 
         return self._code

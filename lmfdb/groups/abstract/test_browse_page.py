@@ -18,7 +18,7 @@ class AbGpsHomeTest(LmfdbTest):
     #  def test_stats_page(self):
     #  self.check_args("/Groups/Abstract/stats","Abstract groups: Statistics")
 
- 
+
     def test_completeness_page(self):
         r"""
         Check that Groups/Abstract/Completeness works

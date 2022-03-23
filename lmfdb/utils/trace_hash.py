@@ -112,7 +112,7 @@ def TraceHash(E):
     QQ or a number field.
 
     """
-    K = E.base_field() 
+    K = E.base_field()
     if K == QQ:
         E_pari = pari(E.a_invariants()).ellinit()
         return TraceHash_from_ap([E_pari.ellap(p) for p in TH_P])

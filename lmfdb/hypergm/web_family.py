@@ -139,7 +139,7 @@ class WebHyperGeometricFamily(object):
     @lazy_attribute
     def h1_latex(self):
         return(latex(self.h1))
-    
+
     @lazy_attribute
     def bezout_latex(self):
         return latex(self.bezout)

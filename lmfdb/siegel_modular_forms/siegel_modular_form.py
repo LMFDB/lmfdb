@@ -322,11 +322,11 @@ def render_sample_page(family, sam, args, bread):
         info['reduce'] = safe_reduce
     else:
         info['reduce'] = latex
-        
+
     # check that explicit formula is not ridiculously big
     if sam.explicit_formula():
         info['explicit_formula_bytes'] = len(sam.explicit_formula())
         if len(sam.explicit_formula()) < 100000:
             info['explicit_formula'] = sam.explicit_formula()
-        
+
     return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties=properties, info=info)
