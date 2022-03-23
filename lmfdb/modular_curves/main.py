@@ -544,7 +544,7 @@ class ModCurve_download(Downloader):
             s += "// Genus\n"
             s += "g := %s;\n" % rec['genus']
             s += "// Rank\n"
-            s += "r := %s\n" % rec['rank']
+            s += "r := %s;\n" % rec['rank']
             if rec['gonality'] != -1:
                 s += "// Exact gonality known\n"
                 s += "gamma := %s;\n" % rec['gonality']
@@ -553,12 +553,11 @@ class ModCurve_download(Downloader):
                 s += "gamma_int := %s;\n" % rec['gonality_bounds']
             s += "\n// Modular data\n"
             s += "// Number of cusps\n"
-            s += "Ncusps := %s\n" % rec['cusps']
+            s += "Ncusps := %s;\n" % rec['cusps']
             s += "// Number of rational cusps\n"
-            s += "Nrat_cusps := %s\n" % rec['cusps']
+            s += "Nrat_cusps := %s;\n" % rec['cusps']
             if rec['jmap']:
                 s += "// Map to j-line\n"
-                # TODO: I think this is relative map; should compose to get map to PP1
                 s += "jmap := %s;\n" % rec['jmap']
             if rec['Emap']:
                 s += "// Map to j-line\n"
@@ -618,7 +617,6 @@ class ModCurve_download(Downloader):
             s += "Nrat_cusps = %s\n" % rec['cusps']
             if rec['jmap']:
                 s += "# Map to j-line\n"
-                # TODO: I think this is relative map; should compose to get map to PP1
                 s += "jmap = %s\n" % rec['jmap']
             if rec['Emap']:
                 s += "# Map to j-line\n"
