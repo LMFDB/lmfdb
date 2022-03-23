@@ -540,7 +540,7 @@ class ModCurve_download(Downloader):
             if rec["plane_model"]:
                 s += "QQ := Rationals();\n"
                 s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
-                s += "XX := Curve(AffineSpace(R), %s);\n" % rec['plane_model']
+                s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
             s += "// Genus\n"
             s += "g := %s;\n" % rec['genus']
             s += "// Rank\n"
@@ -600,7 +600,7 @@ class ModCurve_download(Downloader):
             if rec["plane_model"]:
                 s += "QQ = Rationals()\n"
                 s += "R<X,Y,Z> = PolynomialRing(QQ,3)\n"
-                s += "XX = Curve(AffineSpace(R), %s)\n" % rec['plane_model']
+                s += "XX = Curve(ProjectiveSpace(R), %s)\n" % rec['plane_model']
             s += "# Genus\n"
             s += "g = %s\n" % rec['genus']
             s += "# Rank\n"
