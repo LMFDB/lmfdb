@@ -538,7 +538,10 @@ class ModCurve_download(Downloader):
         s += "// Elements that, together with Gamma(level), generate the group\n"
         s += "gens := %s;\n" % rec['generators']
         s += "// Group contains -1?\n"
-        s += "ContainsMinus1 := %s;\n" % rec['contains_negative_one']
+        if rec['contains_negative_one']:
+            s += "ContainsMinus1 := true;\n"
+        else:
+            s += "ContainsMinus1 := false;\n"
         s += "// Index in Gamma(1)\n"
         s += "index := %s;\n" % rec['index']
         s += "\n// Curve data\n"
@@ -547,12 +550,15 @@ class ModCurve_download(Downloader):
         s += "// Make plane model, if computed;\n"
         if rec["plane_model"]:
             s += "QQ := Rationals();\n"
-            s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
-            s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
+            if rec["plane_model"] == "P1":
+                s += "XX := Curve(ProjectiveSpace(QQ,1));\n"
+            else:
+                s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
+                s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
         s += "// Genus\n"
         s += "g := %s;\n" % rec['genus']
         s += "// Rank\n"
-        s += "r := %s\n" % rec['rank']
+        s += "r := %s\n;" % rec['rank']
         if rec['gonality'] != -1:
             s += "// Exact gonality known\n"
             s += "gamma := %s;\n" % rec['gonality']
@@ -561,19 +567,23 @@ class ModCurve_download(Downloader):
             s += "gamma_int := %s;\n" % rec['gonality_bounds']
         s += "\n// Modular data\n"
         s += "// Number of cusps\n"
-        s += "Ncusps := %s\n" % rec['cusps']
+        s += "Ncusps := %s\n;" % rec['cusps']
         s += "// Number of rational cusps\n"
-        s += "Nrat_cusps := %s\n" % rec['cusps']
+        s += "Nrat_cusps := %s\n;" % rec['cusps']
         if rec['jmap']:
             s += "// Map to j-line\n"
             s += "jmap := %s;\n" % rec['jmap']
         if rec['Emap']:
             s += "// Map to j-line\n"
-            s += "Emap := %s;\n" % rec['Emap']
+            Emap_mag = "%s" % rec['Emap']
+            Emap_mag = Emap_mag.replace("'", "\"")
+            s += "Emap := %s;\n" % Emap_mag
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
         s += "// groups containing given group, corresponding to curves covered by given curve\n"
-        s += "covers := %s;\n" % rec['parents']
+        parents_mag = "%s" % rec['parents']
+        parents_mag = parents_mag.replace("'", "\"")
+        s += "covers := %s;\n" % parents_mag
         return s
 
     def download_modular_curve_magma(self, label):
@@ -585,6 +595,7 @@ class ModCurve_download(Downloader):
         s = s.replace(":=", "=")
         s = s.replace(";", "")
         s = s.replace("//", "#")
+        s = s.replace("R<X,Y,Z>", "R.<X,Y,Z>")
         return self._wrap(s, label, lang="sage")
 
     def download_modular_curve(self, label, lang):
