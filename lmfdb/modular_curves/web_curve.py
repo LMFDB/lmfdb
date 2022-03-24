@@ -178,6 +178,26 @@ class WebModCurve(WebObj):
     def factored_conductor(self):
         return factored_conductor(self.conductor)
 
+    @lazy_attribute
+    def jmap_factored(self):
+        j_str = self.jmap
+        j_spl = j_str.split('/')
+        js_tex = []
+        if 't' in jmap_str:
+            R.<t> = PolynomialRing(QQ)
+        else:
+            assert ('x' in j_str or 'z' in j_str)
+            R.<x,z> = PolynomialRing(QQ,2)
+        jmap_parts = [R(el) for el in j_spl]
+        js_tex = [teXify_pol(factor(el)) for el in jmap_parts]
+        if len(jmap_parts) == 1: # no denom, so polynomial
+            j = jmap_parts[0]
+        else:
+            j = jmap_parts[0]/jmap_parts[1]
+        num1728 = numerator(j-1728)
+        js_tex.append(teXify_pol(factor(num1728))
+        return js_tex
+
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
 
