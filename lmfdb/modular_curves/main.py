@@ -166,7 +166,7 @@ modcurve_columns = SearchColumns([
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
-    CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
+    CheckCol("semisimple", "av.squarefree", "Squarefree"),
     CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
     CheckCol("plane_model", "ag.plane_model", "Model"),
     ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
@@ -337,7 +337,7 @@ class ModCurveSearchArray(SearchArray):
         )
         semisimple = YesNoBox(
             name="semisimple",
-            knowl="modcurve.semisimple",
+            knowl="av.squarefree",
             label="Semisimple",
             example_col=True,
         )
