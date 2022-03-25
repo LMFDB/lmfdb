@@ -109,7 +109,7 @@ class WebModCurve(WebObj):
         friends = []
         if self.genus > 0:
             for r in self.table.search({'trace_hash':self.trace_hash,'contains_negative_one':self.contains_negative_one},['label','name','newforms']):
-                if r['newforms'] == self.newforms:
+                if r['newforms'] == self.newforms and r['label'] != self.label:
                     friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
