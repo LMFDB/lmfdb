@@ -284,7 +284,7 @@ class WebModCurve(WebObj):
                      url_for_ECNF_label(rec["label"]),
                      rec["equation"],
                      r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                     r"$\textsf{yes}$" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.is_simple and rec["degree"] < self.genus)) else r"$\textsf{maybe}$",
+                     r"$\textsf{yes}$" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else r"$\textsf{maybe}$",
                      web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []
