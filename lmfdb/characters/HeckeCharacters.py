@@ -156,7 +156,7 @@ class HeckeChar(DualAbelianGroupElement):
         F = self.exponents()
         D = self.parent().gens_orders()
         return tuple( f/d for f,d in zip( F, D) )
-        
+
     def __call__(self, x):
         try:
             logx = self.parent().group()(x)

@@ -40,7 +40,7 @@ def create_search_dict(table='', query=None, view_start=0, request = None):
     else:
         query_alpha = query
 
-    search = {'table':table, 'query':query_alpha, 'view_start':view_start, 
+    search = {'table':table, 'query':query_alpha, 'view_start':view_start,
         'max_count':100, 'correct_count':False, 'count_only':False}
 
     if request:
@@ -61,7 +61,7 @@ def build_api_wrapper(api_key, api_type, data, request = None):
     request -- Flask request object to query for needed data
     """
 
-    return json.dumps({"key":api_key, 'built_at':str(datetime.datetime.now()), 
+    return json.dumps({"key":api_key, 'built_at':str(datetime.datetime.now()),
         'api_version':api_version, 'type':api_type, 'data':data},
         indent=4, sort_keys=False, cls = APIEncoder)
 
@@ -122,7 +122,7 @@ def build_api_search(api_key, mddtuple, max_count=None, request=None):
     search_dict = mddtuple[2]
     if metadata.get('error_string', None):
         return build_api_error(metadata['error_string'], request = request)
-    return build_api_records(api_key, metadata['record_count'], metadata['correct_count'], 
+    return build_api_records(api_key, metadata['record_count'], metadata['correct_count'],
         search_dict['view_start'], metadata['view_count'], data, max_count = max_count, request = request)
 
 def build_api_searchers(names, human_names, descriptions, request = None):
@@ -135,7 +135,7 @@ def build_api_searchers(names, human_names, descriptions, request = None):
     request -- Flask request object to query for needed data
     """
     item_list = [{n:{ 'human_name':h, 'desc':d}} for n, h, d in zip(names, human_names, descriptions)]
-    
+
     return build_api_wrapper('GLOBAL', api_type_searchers, item_list, request)
 
 
@@ -340,7 +340,7 @@ def interpret(query, qkey, qval, type_info):
     if type_info and not qval.startswith("|"):
         user_infer = False
         qval, comparator = trim_comparator(qval, [(">","$gt"),("<","$lt"), ("%","$in"), ("<=","$le"), (">=","$ge")])
-        
+
         try:
             if type_info == 'string':
                 pass #Already a string
@@ -433,7 +433,7 @@ def simple_search_postgres(search_dict, projection=None):
     C = db[search_dict['table']]
     info = {}
     try:
-        data = C.search(search_dict['query'], projection = projection, limit = rcount, 
+        data = C.search(search_dict['query'], projection = projection, limit = rcount,
             offset = offset, info = info)
     except Exception as e:
         data = []

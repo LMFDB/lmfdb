@@ -2,10 +2,11 @@
 import unittest2
 from lmfdb.tests import LmfdbTest
 
+
 class TensorProductTest(LmfdbTest):
     """
     These tests check whether we can still take tensor products of the things
-    we're supposed to be able to take tensor products of.  If naming 
+    we're supposed to be able to take tensor products of.  If naming
     conventions are changed for the objects we're forming tensor products of
     then these tests will fail.  The test is the assertion that the correct
     conductor is displayed somewhere on the page.

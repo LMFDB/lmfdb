@@ -112,7 +112,7 @@ def dimension_Gamma0_2(wt_range, j):
       <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
-    """    
+    """
     return _dimension_Gamma_2(wt_range, j, group = 'Gamma0(2)')
 
 def dimension_Sp4Z(wt_range):
@@ -179,14 +179,14 @@ def _dimension_Sp4Z(wt_range):
     H_MS = (x ** 10 + x ** 12) / (1 - x ** 4) / (1 - x ** 6)
 
     dct = dict((k,
-                 { 'Total': H_all[k], 
+                 { 'Total': H_all[k],
                    'Eisenstein': 1 if k >= 4 else 0,
                    'Klingen': H_Kl[k],
                    'Maass': H_MS[k],
                    'Interesting': H_all[k]-(1 if k >= 4 else 0)-H_Kl[k]-H_MS[k]
                    }
                  if is_even(k) else
-                 { 'Total': H_all[k-35], 
+                 { 'Total': H_all[k-35],
                    'Eisenstein': 0,
                    'Klingen': 0,
                    'Maass': 0,
@@ -220,7 +220,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
     if 'Sp4(Z)' == group and 2 == j and wt_range[0] < 4:
         wt_range1 = [ k for k in wt_range if k < 4]
         wt_range2 = [ k for k in wt_range if k >= 4]
-        if wt_range2 != []: 
+        if wt_range2 != []:
             headers, dct = _dimension_Gamma_2(wt_range2, j, group)
         else:
             headers, dct = ['Total', 'Non cusp', 'Cusp'], {}
@@ -239,7 +239,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
     db_cusp = db.smf_dims.lucky(query)
     if not db_cusp:
         raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
-    
+
     P = PowerSeriesRing(ZZ,  default_prec =wt_range[-1] + 1,  names = ('t'))
     Qt = FunctionField(QQ, names=('t'))
     total = dict()
@@ -249,13 +249,13 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         total[p] = P(f.numerator())/P(f.denominator())
         f = Qt(str(db_cusp[p]))
         cusp[p] = P(f.numerator())/P(f.denominator())
-    
+
     if 'Gamma(2)' == group:
         dct = dict((k, dict((p, [total[p][k], total[p][k]-cusp[p][k], cusp[p][k]])
                               for p in partitions)) for k in wt_range)
         for k in dct:
             dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]
-            
+
         partitions.insert(0,'All')
         headers = partitions
 
@@ -263,14 +263,14 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         ps = { '3': ['6', '42', '222'],
                '21': ['51', '42', '321'],
                '111': ['411', '33']}
-        
+
         dct = dict((k, dict((p,[
                             sum(total[q][k] for q in ps[p]),
                             sum(total[q][k]-cusp[q][k] for q in ps[p]),
                             sum(cusp[q][k] for q in ps[p]),
-                            ]) for p in ps)) for k in wt_range) 
+                            ]) for p in ps)) for k in wt_range)
         for k in dct:
-            dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]       
+            dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]
 
         headers = list(ps)
         headers.sort(reverse=True)

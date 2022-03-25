@@ -78,7 +78,7 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #
 
 #* This code is specific to tensor products of dimension \leq 2.  To handle
-# higher dimension there are several pieces of code which one must check 
+# higher dimension there are several pieces of code which one must check
 # still hold true.
 ########################################################################
 # (C) Alberto Camara, Martin Dickson, Mark Watkins, Chris Wuthrich 2014
@@ -256,7 +256,6 @@ class GaloisRepresentation( Lfunction):
     def init_artin_rep(self, rho):
         """
         Initiate with an Artin representation
- 
         """
         self.original_object = [rho]
         self.object_type = "Artin representation"
@@ -615,7 +614,7 @@ class GaloisRepresentation( Lfunction):
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
-        self.texnamecompleted1ms = "\\Lambda(1-s, \\widehat{\\rho})" 
+        self.texnamecompleted1ms = "\\Lambda(1-s, \\widehat{\\rho})"
         self.title = "$L(s,\\rho)$, where $\\rho$ is a Galois representation"
 
         self.credit = 'Workshop in Besancon, 2014'

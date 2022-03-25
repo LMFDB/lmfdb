@@ -15,12 +15,12 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
     flash_error, display_knowl, CountBox, prop_int_pretty,
-    SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox, 
+    SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox,
     SubsetBox, TextBoxWithSelect, parse_bool_unknown, parse_posints,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
-    raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly, 
+    raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
     raw_typeset_int, compress_poly_Q)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
@@ -527,7 +527,7 @@ def render_field_webpage(args):
         extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
 
     myunits = nf.units()
-    if 'not' not in myunits: 
+    if 'not' not in myunits:
         myunits = [unlatex(z) for z in myunits]
         Ra = PolynomialRing(QQ,'a')
         myunits = [Ra(z) for z in myunits]
