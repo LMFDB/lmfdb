@@ -69,11 +69,11 @@
 
 {% if curve.plane_model %}
 <h2> {{ KNOWL('modcurve.plane_model', 'Plane model') }} </h2>
-{% if curve.plane_model == "P1" %}
-<p>$\mathbb{P}^1$</p>
-{% else %}
-<p>${{curve.latexed_plane_model}} = 0$</p>
-{% endif %}
+  {% if curve.plane_model == "P1" %}
+    <p>$\mathbb{P}^1$</p>
+  {% else %}
+    <p>${{curve.latexed_plane_model}} = 0$</p>
+  {% endif %}
 {% endif %}
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
@@ -134,6 +134,11 @@
     {% endfor %}
   </tbody>
 </table>
+{% endif %}
+
+{% if curve.jmap_factored%}
+  <h2> {{ KNOWL('modcurve.j_invariant_map', 'j-invariant map') }}</h2>
+  $j = {{ curve['jmap_factored'][0] }} = {{ curve['jmap_factored'][1] }}$
 {% endif %}
 
 {% set covered_by = curve.modular_covered_by() %}

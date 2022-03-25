@@ -64,6 +64,32 @@ def name_to_latex(name):
 def factored_conductor(conductor):
     return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else "1"
 
+def jmap_factored(j_str):
+    j_spl = j_str.split('/')
+    if 't' in j_str:
+        R = PolynomialRing(QQ, 't')
+        t = R.gens()[0]
+    else:
+        #assert ('x' in j_str or 'z' in j_str)
+        R = PolynomialRing(QQ,2,'x,z')
+        x = R.gens()[0]
+        z = R.gens()[1]
+    jmap_parts = [R(el) for el in j_spl]
+    js_tex = [teXify_pol(factor(el)) for el in jmap_parts]
+    if len(jmap_parts) == 1: # no denom, so polynomial
+        j = jmap_parts[0]
+    else:
+        j = jmap_parts[0]/jmap_parts[1]
+    num1728 = numerator(j-1728)
+    js_tex.append(teXify_pol(factor(num1728)))
+    js_tex_frac = []
+    if len(js_tex) == 2: # no denom, so polynomial
+        js_tex_frac = js_tex
+    else: # with denom
+        js_tex_frac.append("frac{%s}{%s}" % (js_tex[0], js_tex[1]))
+        js_tex_frac.append("1728 + frac{%s}{%s}" % (js_tex[2], js_tex[1]))
+    return js_tex_frac
+
 def formatted_dims(dims):
     if not dims:
         return ""
@@ -180,23 +206,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def jmap_factored(self):
-        j_str = self.jmap
-        j_spl = j_str.split('/')
-        js_tex = []
-        if 't' in jmap_str:
-            R.<t> = PolynomialRing(QQ)
-        else:
-            assert ('x' in j_str or 'z' in j_str)
-            R.<x,z> = PolynomialRing(QQ,2)
-        jmap_parts = [R(el) for el in j_spl]
-        js_tex = [teXify_pol(factor(el)) for el in jmap_parts]
-        if len(jmap_parts) == 1: # no denom, so polynomial
-            j = jmap_parts[0]
-        else:
-            j = jmap_parts[0]/jmap_parts[1]
-        num1728 = numerator(j-1728)
-        js_tex.append(teXify_pol(factor(num1728))
-        return js_tex
+        return jmap_factored(self.jmap_factored)
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
