@@ -3,7 +3,7 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -110,6 +110,9 @@ def difference(A,B):
             C.pop(C.index(f))
     return C
 
+def modcurve_link(label):
+    return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
 
@@ -130,6 +133,10 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
+        if self.genus > 0:
+            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
+                if r['newforms'] == self.newforms and r['label'] != self.label:
+                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
@@ -184,6 +191,16 @@ class WebModCurve(WebObj):
         return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
 
     @lazy_attribute
+    def qtwist_description(self):
+        if self.contains_negative_one:
+            if len(self.qtwists) > 1:
+                return r"$\textsf{yes}\quad$ (see %s for level structures without $-I$)"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
+            else:
+                return ""
+        else:
+            return r"$\textsf{no}\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
+
+    @lazy_attribute
     def cusp_display(self):
         if self.cusps == 1:
             return "$1$ (which is rational)"
@@ -224,12 +241,16 @@ class WebModCurve(WebObj):
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
 
     def modular_covers(self):
-        curves = db.gps_gl2zhat_test.search({"label":{"$in": self.parents}, "contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
+        curves = self.table.search({"label":{"$in": self.parents}, "contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(self.dims,C.get("dims",[])))) for C in curves]
 
     def modular_covered_by(self):
-        curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label},"contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
+        curves = self.table.search({"parents":{"$contains": self.label},"contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
+
+    @lazy_attribute
+    def newform_level(self):
+        return lcm([int(f.split('.')[0]) for f in self.newforms])
 
     @lazy_attribute
     def downloads(self):

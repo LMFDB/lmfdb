@@ -3,7 +3,7 @@
 import re
 from lmfdb import db
 
-from flask import render_template, url_for, request, redirect
+from flask import render_template, url_for, request, redirect, abort
 
 from sage.all import ZZ
 
@@ -68,7 +68,7 @@ def index_Q():
     if len(info) > 1:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
-    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "23-"]
+    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
     info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["stats"] = ModCurve_stats()
@@ -123,9 +123,7 @@ def url_for_modcurve_label(label):
 
 def modcurve_jump(info):
     label = info["jump"]
-    print("JUMPING", label)
     if CP_LABEL_RE.fullmatch(label):
-        print("MATCHED")
         return redirect(url_for(".index", CPlabel=label))
     elif SZ_LABEL_RE.fullmatch(label):
         lmfdb_label = db.gps_gl2zhat_test.lucky({"SZlabel": label}, "label")
@@ -166,9 +164,9 @@ modcurve_columns = SearchColumns([
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
-    CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
+    CheckCol("squarefree", "av.squarefree", "Squarefree"),
     CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-    CheckCol("plane_model", "modcurve.plane_model", "Model"),
+    CheckCol("plane_model", "ag.plane_model", "Model"),
     ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
@@ -198,6 +196,16 @@ def modcurve_search(info, query):
                 raise ValueError(err)
             else:
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
+    if info.get('family'):
+        fam = info['family']
+        if fam not in ["X0", "X1", "X", "Xsp", "Xsp+", "Xns", "Xns+", "XS4", "any"]:
+            err = "%s is not a valid family name"
+            flash_error(err, fam)
+            raise ValueError(err)
+        if fam == "any":
+            query["name"] = {"$like": "X%"}
+        else:
+            query["name"] = {"$like": fam + "(%"}
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
     parse_ints(info, query, "rank")
@@ -206,7 +214,7 @@ def modcurve_search(info, query):
     parse_interval(info, query, "gonality", quantifier_type=info.get("gonality_type", "exactly"))
     parse_ints(info, query, "rational_cusps")
     parse_bool(info, query, "simple")
-    parse_bool(info, query, "semisimple")
+    parse_bool(info, query, "squarefree")
     parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
@@ -238,7 +246,7 @@ class ModCurveSearchArray(SearchArray):
     plural_noun = "curves"
     jump_example = "13.78.3.1"
     jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, or 13A3"
-    jump_prompt = "Label or coefficients"
+    jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
     def __init__(self):
@@ -335,10 +343,10 @@ class ModCurveSearchArray(SearchArray):
             label="Simple",
             example_col=True,
         )
-        semisimple = YesNoBox(
-            name="semisimple",
-            knowl="modcurve.semisimple",
-            label="Semisimple",
+        squarefree = YesNoBox(
+            name="squarefree",
+            knowl="av.squarefree",
+            label="Squarefree",
             example_col=True,
         )
         cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')] +
@@ -357,6 +365,21 @@ class ModCurveSearchArray(SearchArray):
             label="Contains $-I$",
             example_col=True,
         )
+        family = SelectBox(
+            name="family",
+            options=[("", ""),
+                     ("X0", "X0(N)"),
+                     ("X1", "X1(N)"),
+                     ("X", "X(N)"),
+                     ("Xsp", "Xsp(N)"),
+                     ("Xns", "Xns(N)"),
+                     ("Xsp+", "Xsp+(N)"),
+                     ("Xns+", "Xns+(N)"),
+                     ("XS4", "XS4(N)"),
+                     ("any", "any")],
+            knowl="modcurve.family",
+            label="Family",
+            example="X0(N), Xsp(N)")
         CPlabel = SneakyTextBox(
             name="CPlabel",
             knowl="modcurve.other_labels",
@@ -370,16 +393,17 @@ class ModCurveSearchArray(SearchArray):
             [genus, rank],
             [genus_minus_rank, gonality],
             [cusps, rational_cusps],
-            [simple, semisimple],
+            [simple, squarefree],
             [covers, covered_by],
             [cm_discriminants, contains_negative_one],
-            [count]
+            [count, family]
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
-            [gonality, cusps, rational_cusps, simple, semisimple],
-            [covers, covered_by, cm_discriminants, contains_negative_one, CPlabel],
+            [gonality, cusps, rational_cusps, simple, squarefree],
+            [covers, covered_by, cm_discriminants, contains_negative_one, family],
+            [CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
@@ -391,7 +415,7 @@ class ModCurveSearchArray(SearchArray):
     ]
     null_column_explanations = {
         'simple': False,
-        'semisimple': False,
+        'squarefree': False,
         'rank': False,
         'genus_minus_rank': False,
     }
@@ -511,7 +535,7 @@ class ModCurve_download(Downloader):
     #'newforms',
     #'dims',
     #'simple',
-    #'semisimple',
+    #'squarefree',
     #'trace_hash',
     #'traces',
 
