@@ -84,6 +84,9 @@ def difference(A,B):
             C.pop(C.index(f))
     return C
 
+def modcurve_link(label):
+    return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
 
@@ -160,6 +163,16 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def obstruction_primes(self):
         return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
+
+    @lazy_attribute
+    def qtwist_description(self):
+        if self.contains_negative_one:
+            if len(self.qtwists) > 1:
+                return r"$\textsf{yes}\quad$ (see %s for level structures without $-I$)"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
+            else:
+                return ""
+        else:
+            return r"$\textsf{no}\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
 
     @lazy_attribute
     def cusp_display(self):
