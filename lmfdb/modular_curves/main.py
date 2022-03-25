@@ -168,7 +168,7 @@ modcurve_columns = SearchColumns([
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
     CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-    CheckCol("plane_model", "modcurve.plane_model", "Model"),
+    CheckCol("plane_model", "ag.plane_model", "Model"),
     ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
