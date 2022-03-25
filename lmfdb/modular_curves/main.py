@@ -3,7 +3,7 @@
 import re
 from lmfdb import db
 
-from flask import render_template, url_for, request, redirect
+from flask import render_template, url_for, request, redirect, abort
 
 from sage.all import ZZ
 

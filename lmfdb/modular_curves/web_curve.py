@@ -3,7 +3,7 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -104,6 +104,10 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
+        if self.genus > 0:
+            for r in self.table.search({'trace_hash':self.trace_hash,'contains_negative_one':self.contains_negative_one},['label','name','newforms']):
+                if r['newforms'] == self.newforms:
+                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
@@ -194,12 +198,16 @@ class WebModCurve(WebObj):
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
 
     def modular_covers(self):
-        curves = db.gps_gl2zhat_test.search({"label":{"$in": self.parents}, "contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
+        curves = self.table.search({"label":{"$in": self.parents}, "contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(self.dims,C.get("dims",[])))) for C in curves]
 
     def modular_covered_by(self):
-        curves = db.gps_gl2zhat_test.search({"parents":{"$contains": self.label},"contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
+        curves = self.table.search({"parents":{"$contains": self.label},"contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
+
+    @lazy_attribute
+    def newform_level(self):
+        return lcm([int(f.split('.')[0]) for f in self.newforms])
 
     @lazy_attribute
     def downloads(self):
