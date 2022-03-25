@@ -1147,7 +1147,7 @@ class G2CSearchArray(SearchArray):
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
         info["jump_egspan"] = "e.g. 169.a.169.1 or 169.a or 1088.b"
-        info["jump_egspan"] += " or x^5 + 1"
+        info["jump_egspan"] += " or x^5 + 1 or x^5, x^2 + x + 1"
         info["jump_knowl"] = "g2c.search_input"
         info["jump_prompt"] = "Label or polynomial"
         return SearchArray.jump_box(self, info)
