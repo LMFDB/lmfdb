@@ -68,7 +68,7 @@ def index_Q():
     if len(info) > 1:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
-    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "23-"]
+    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
     info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["stats"] = ModCurve_stats()
