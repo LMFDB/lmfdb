@@ -136,9 +136,9 @@
 </table>
 {% endif %}
 
-{% if curve.jmap_factored%}
+{% if curve.jmap_factored %}
   <h2> {{ KNOWL('modcurve.j_invariant_map', 'j-invariant map') }}</h2>
-  $j = {{ curve['jmap_factored'][0] }} = {{ curve['jmap_factored'][1] }}$
+  $\displaystyle j = {{ curve['jmap_factored'][0] }} = {{ curve['jmap_factored'][1] }}$
 {% endif %}
 
 {% set covered_by = curve.modular_covered_by() %}

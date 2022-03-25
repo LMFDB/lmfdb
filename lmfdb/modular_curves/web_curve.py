@@ -3,7 +3,7 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, FractionField
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -65,29 +65,27 @@ def factored_conductor(conductor):
     return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else "1"
 
 def jmap_factored(j_str):
-    j_spl = j_str.split('/')
     if 't' in j_str:
         R = PolynomialRing(QQ, 't')
         t = R.gens()[0]
+        F = FractionField(R)
     else:
         #assert ('x' in j_str or 'z' in j_str)
         R = PolynomialRing(QQ,2,'x,z')
         x = R.gens()[0]
         z = R.gens()[1]
-    jmap_parts = [R(el) for el in j_spl]
-    js_tex = [teXify_pol(factor(el)) for el in jmap_parts]
-    if len(jmap_parts) == 1: # no denom, so polynomial
-        j = jmap_parts[0]
-    else:
-        j = jmap_parts[0]/jmap_parts[1]
-    num1728 = numerator(j-1728)
-    js_tex.append(teXify_pol(factor(num1728)))
-    js_tex_frac = []
-    if len(js_tex) == 2: # no denom, so polynomial
-        js_tex_frac = js_tex
-    else: # with denom
-        js_tex_frac.append("frac{%s}{%s}" % (js_tex[0], js_tex[1]))
-        js_tex_frac.append("1728 + frac{%s}{%s}" % (js_tex[2], js_tex[1]))
+        F = FractionField(R)
+    j = F(j_str)
+    jmap_parts = [j.numerator(), (j-1728).numerator(), j.denominator()]
+    js_tex = [teXify_pol(el.factor()) for el in jmap_parts]
+    if j.denominator() == 1: # no denom, so polynomial
+        js_tex_frac = []
+        js_tex_frac.append(r"%s" % js_tex[0])
+        js_tex_frac.append(r"1728 + %s" % js_tex[1])
+    else: # has denom
+        js_tex_frac = []
+        js_tex_frac.append(r"\frac{%s}{%s}" % (js_tex[0], js_tex[2]))
+        js_tex_frac.append(r"1728 + \frac{%s}{%s}" % (js_tex[1], js_tex[2]))
     return js_tex_frac
 
 def formatted_dims(dims):
@@ -223,7 +221,10 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def jmap_factored(self):
-        return jmap_factored(self.jmap_factored)
+        if self.jmap:
+            return jmap_factored(self.jmap)
+        else:
+            return ""
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
