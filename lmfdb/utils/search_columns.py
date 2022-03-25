@@ -122,7 +122,7 @@ class ProcessedCol(SearchCol):
         self.mathmode = mathmode
 
     def display(self, rec):
-        s = self.func(self.get(rec))
+        s = str(self.func(self.get(rec)))
         if s and self.mathmode:
             s = f"${s}$"
         return s

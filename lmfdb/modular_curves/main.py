@@ -123,9 +123,7 @@ def url_for_modcurve_label(label):
 
 def modcurve_jump(info):
     label = info["jump"]
-    print("JUMPING", label)
     if CP_LABEL_RE.fullmatch(label):
-        print("MATCHED")
         return redirect(url_for(".index", CPlabel=label))
     elif SZ_LABEL_RE.fullmatch(label):
         lmfdb_label = db.gps_gl2zhat_test.lucky({"SZlabel": label}, "label")
@@ -198,6 +196,16 @@ def modcurve_search(info, query):
                 raise ValueError(err)
             else:
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
+    if info.get('family'):
+        fam = info['family']
+        if fam not in ["X0", "X1", "X", "Xsp", "Xsp+", "Xns", "Xns+", "XS4", "any"]:
+            err = "%s is not a valid family name"
+            flash_error(err, fam)
+            raise ValueError(err)
+        if fam == "any":
+            query["name"] = {"$like": "X%"}
+        else:
+            query["name"] = {"$like": fam + "(%"}
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
     parse_ints(info, query, "rank")
@@ -238,7 +246,7 @@ class ModCurveSearchArray(SearchArray):
     plural_noun = "curves"
     jump_example = "13.78.3.1"
     jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, or 13A3"
-    jump_prompt = "Label or coefficients"
+    jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
     def __init__(self):
@@ -357,6 +365,21 @@ class ModCurveSearchArray(SearchArray):
             label="Contains $-I$",
             example_col=True,
         )
+        family = SelectBox(
+            name="family",
+            options=[("", ""),
+                     ("X0", "X0(N)"),
+                     ("X1", "X1(N)"),
+                     ("X", "X(N)"),
+                     ("Xsp", "Xsp(N)"),
+                     ("Xns", "Xns(N)"),
+                     ("Xsp+", "Xsp+(N)"),
+                     ("Xns+", "Xns+(N)"),
+                     ("XS4", "XS4(N)"),
+                     ("any", "any")],
+            knowl="modcurve.family",
+            label="Family",
+            example="X0(N), Xsp(N)")
         CPlabel = SneakyTextBox(
             name="CPlabel",
             knowl="modcurve.other_labels",
@@ -373,13 +396,14 @@ class ModCurveSearchArray(SearchArray):
             [simple, semisimple],
             [covers, covered_by],
             [cm_discriminants, contains_negative_one],
-            [count]
+            [count, family]
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, semisimple],
-            [covers, covered_by, cm_discriminants, contains_negative_one, CPlabel],
+            [covers, covered_by, cm_discriminants, contains_negative_one, family],
+            [CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
