@@ -68,7 +68,7 @@ def index_Q():
     if len(info) > 1:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
-    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "23-"]
+    info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
     info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["stats"] = ModCurve_stats()
@@ -164,7 +164,7 @@ modcurve_columns = SearchColumns([
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
-    CheckCol("semisimple", "modcurve.semisimple", "Semisimple"),
+    CheckCol("squarefree", "av.squarefree", "Squarefree"),
     CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
     CheckCol("plane_model", "ag.plane_model", "Model"),
     ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
@@ -214,7 +214,7 @@ def modcurve_search(info, query):
     parse_interval(info, query, "gonality", quantifier_type=info.get("gonality_type", "exactly"))
     parse_ints(info, query, "rational_cusps")
     parse_bool(info, query, "simple")
-    parse_bool(info, query, "semisimple")
+    parse_bool(info, query, "squarefree")
     parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
@@ -343,10 +343,10 @@ class ModCurveSearchArray(SearchArray):
             label="Simple",
             example_col=True,
         )
-        semisimple = YesNoBox(
-            name="semisimple",
-            knowl="modcurve.semisimple",
-            label="Semisimple",
+        squarefree = YesNoBox(
+            name="squarefree",
+            knowl="av.squarefree",
+            label="Squarefree",
             example_col=True,
         )
         cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')] +
@@ -393,7 +393,7 @@ class ModCurveSearchArray(SearchArray):
             [genus, rank],
             [genus_minus_rank, gonality],
             [cusps, rational_cusps],
-            [simple, semisimple],
+            [simple, squarefree],
             [covers, covered_by],
             [cm_discriminants, contains_negative_one],
             [count, family]
@@ -401,7 +401,7 @@ class ModCurveSearchArray(SearchArray):
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
-            [gonality, cusps, rational_cusps, simple, semisimple],
+            [gonality, cusps, rational_cusps, simple, squarefree],
             [covers, covered_by, cm_discriminants, contains_negative_one, family],
             [CPlabel],
         ]
@@ -415,7 +415,7 @@ class ModCurveSearchArray(SearchArray):
     ]
     null_column_explanations = {
         'simple': False,
-        'semisimple': False,
+        'squarefree': False,
         'rank': False,
         'genus_minus_rank': False,
     }
@@ -535,7 +535,7 @@ class ModCurve_download(Downloader):
     #'newforms',
     #'dims',
     #'simple',
-    #'semisimple',
+    #'squarefree',
     #'trace_hash',
     #'traces',
 

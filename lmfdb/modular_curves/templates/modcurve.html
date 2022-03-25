@@ -38,7 +38,7 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
-  <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}: </td><td>${{ "\\textsf{yes}" if curve.contains_negative_one else "\\textsf{no}" }}$</td></tr>
+  <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}:</td><td> {{ curve.qtwist_description | safe }}</td></tr>
   <tr><td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-isogeny field degree') }}:</td><td>${{ curve.cyclic_isogeny_field_degree() }}$</td></tr>
   <tr><td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.cyclic_torsion_field_degree() }}$</td></tr>
   <tr><td>{{ KNOWL('modcurve.level_structure', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.full_torsion_field_degree() }}$</td></tr>
@@ -52,7 +52,7 @@
   <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
   <tr>
     <td>
-      {{ KNOWL('modcurve.semisimple', 'Semisimple') }}:
+      {{ KNOWL('av.squarefree', 'Squarefree') }}:
     </td>
     <td>
       {% if curve.semisimple %}
