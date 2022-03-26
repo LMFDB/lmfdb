@@ -64,6 +64,12 @@ def name_to_latex(name):
 def factored_conductor(conductor):
     return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else "1"
 
+def remove_leading_coeff(jfac):
+    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ',''):
+        return "*".join(str(jfac).split("*")[1:])
+    else:
+        return str(jfac)
+
 def jmap_factored(j_str):
     if 't' in j_str:
         R = PolynomialRing(QQ, 't')
@@ -76,16 +82,37 @@ def jmap_factored(j_str):
         z = R.gens()[1]
         F = FractionField(R)
     j = F(j_str)
-    jmap_parts = [j.numerator(), (j-1728).numerator(), j.denominator()]
-    js_tex = [teXify_pol(el.factor()) for el in jmap_parts]
+    # deal with leading coefficient
+    j_lc = j.factor().unit()
+    j_no_lc = j/j_lc
+    jmap_parts = [j_no_lc.numerator(), j_no_lc.denominator()]
+    j_lc_1728 = (j-1728).factor().unit()
+    j_no_lc_1728 = (j-1728)/j_lc_1728
+    jmap_parts_1728 = [j_no_lc_1728.numerator(), j_no_lc_1728.denominator()]
+    js_tex = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts]
+    js_tex_1728 = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts_1728]
+    if j_lc != 1:
+        lc_str = "%s" % latex(j_lc)
+        #if lc_str[0] == "-": # parens if minus sign
+            #lc_str = "(%s)" % lc_str
+    else:
+        lc_str = ""
+    if j_lc_1728 != 1:
+        lc_str_1728 = "%s" % latex(j_lc_1728)
+        if lc_str_1728[0] == "-":
+            lc_str_1728 = "\\left(%s\\right)" % lc_str_1728
+    else:
+        lc_str_1728 = ""
+    # good test case for lc stuff: 8.96.1.183
+    # also 4.8.0.2
     if j.denominator() == 1: # no denom, so polynomial
         js_tex_frac = []
-        js_tex_frac.append(r"%s" % js_tex[0])
-        js_tex_frac.append(r"1728 + %s" % js_tex[1])
+        js_tex_frac.append(r"%s%s" % (lc_str, js_tex[0]))
+        js_tex_frac.append(r"1728 + %s%s" % (lc_str_1728, js_tex[1]))
     else: # has denom
         js_tex_frac = []
-        js_tex_frac.append(r"\frac{%s}{%s}" % (js_tex[0], js_tex[2]))
-        js_tex_frac.append(r"1728 + \frac{%s}{%s}" % (js_tex[1], js_tex[2]))
+        js_tex_frac.append(r"%s\frac{%s}{%s}" % (lc_str, js_tex[0], js_tex[1]))
+        js_tex_frac.append(r"1728 + %s\frac{%s}{%s}" % (lc_str_1728, js_tex_1728[0], js_tex_1728[1]))
     return js_tex_frac
 
 def formatted_dims(dims):
