@@ -382,7 +382,7 @@ class ModCurveSearchArray(SearchArray):
                      ("Xns+", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
                      ("any", "any")],
-            knowl="modcurve.family",
+            knowl="modcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
         CPlabel = SneakyTextBox(
