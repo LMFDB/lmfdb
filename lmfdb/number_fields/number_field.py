@@ -686,7 +686,7 @@ def format_coeffs(coeffs):
 
 
 def url_for_label(label):
-    return url_for(".by_label", label=label)
+    return url_for("number_fields.by_label", label=label)
 
 @nf_page.route("/<label>")
 def by_label(label):

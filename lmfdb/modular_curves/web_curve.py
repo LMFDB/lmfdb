@@ -3,13 +3,15 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
+from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
+
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -38,6 +40,40 @@ def showj_fac(j):
         return ""
     else:
         return "$= %s$" % latex((ZZ(j[0]) / ZZ(j[1])).factor())
+
+def showj_nf(j, nflabel):
+    Ra = PolynomialRing(QQ, 'a')
+    if "," in j:
+        f = Ra([QQ(c) for c in j.split(",")])
+        if nflabel.startswith("2."):
+            D = ZZ(nflabel.split(".")[2])
+            if nflabel.split(".")[1] == "0":
+                D = -D
+            x = Ra.gen()
+            if D % 4 == 1:
+                K = NumberField(x**2 - x - (D - 1)//4, 'a')
+            else:
+                K = NumberField(x**2 - D//4, 'a')
+            if K.class_number() == 1:
+                jj = K((f).padded_list(K.degree()))
+                jfac = latex(jj.factor())
+                if D % 4 == 0:
+                    jfac = jfac.replace("a", r"\sqrt{%s}" % (D // 4))
+                return f"${jfac}$"
+        d = f.denominator()
+        if d == 1:
+            return web_latex(f)
+        else:
+            return fr"$\tfrac{{1}}{{{latex(d.factor())}}} \left({latex(d*f)}\right)$"
+    if "/" in j:
+        fac = f" = {latex(QQ(j).factor())}"
+        a, b = j.split("/")
+        j = r"\tfrac{%s}{%s}" % (a, b)
+    elif j != "0":
+        fac = f" = {latex(ZZ(j).factor())}"
+    else:
+        fac = ""
+    return f"${j}{fac}$"
 
 def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
@@ -247,6 +283,18 @@ class WebModCurve(WebObj):
         return self.downloads
 
     @lazy_attribute
+    def known_degree1_points(self):
+        return db.modcurve_points.count({"label": self.label, "degree": 1})
+
+    @lazy_attribute
+    def known_degree1_noncm_points(self):
+        return db.modcurve_points.count({"label": self.label, "degree": 1, "cm": 0})
+
+    @lazy_attribute
+    def known_low_degree_points(self):
+        return db.modcurve_points.count({"label": self.label, "degree": {"$gt": 1}})
+
+    @lazy_attribute
     def db_rational_points(self):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
@@ -271,6 +319,23 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def db_nf_points(self):
+        pts = []
+        for rec in db.modcurve_points.search({"label": self.label, "degree": {"$gt": 1}}, sort=["degree"]):
+            pts.append(
+                (rec["Elabel"],
+                 url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
+                 r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                 r"$\textsf{yes}$" if rec["isolated"] is True else (r"$\textsf{no}$" if rec["isolated"] is False else r"$\textsf{maybe}$"),
+                 showj_nf(rec["jinv"], rec["j_field"]),
+                 rec["residue_field"],
+                 url_for_NF_label(rec["residue_field"]),
+                 rec["j_field"],
+                 url_for_NF_label(rec["j_field"]),
+                 rec["degree"]))
+        return pts
+
+    @lazy_attribute
+    def old_db_nf_points(self):
         # Use the db.ec_curvedata table to automatically find rational points
         #limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
         if ZZ(self.level).is_prime():

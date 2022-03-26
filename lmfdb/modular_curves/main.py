@@ -14,6 +14,7 @@ from lmfdb.utils import (
     SelectBox,
     SneakyTextBox,
     YesNoBox,
+    YesNoMaybeBox,
     CountBox,
     redirect_no_cache,
     display_knowl,
@@ -25,6 +26,9 @@ from lmfdb.utils import (
     parse_bool,
     parse_interval,
     parse_element_of,
+    parse_bool_unknown,
+    parse_nf_string,
+    parse_nf_jinv,
     integer_divisors,
     StatsDisplay,
     Downloader,
@@ -33,13 +37,14 @@ from lmfdb.utils import (
     totaler
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
-
 from lmfdb.backend.encoding import Json
 
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor, formatted_dims
+from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor, formatted_dims, url_for_NF_label, showj_nf
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
@@ -419,6 +424,100 @@ class ModCurveSearchArray(SearchArray):
         'rank': False,
         'genus_minus_rank': False,
     }
+
+@modcurve_page.route("/Q/low_degree_points")
+def low_degree_points():
+    info = to_dict(request.args, search_array=RatPointSearchArray())
+    return rational_point_search(info)
+
+ratpoint_columns = SearchColumns([
+    LinkCol("label", "modcurve.label", "Curve", url_for_modcurve_label, default=True),
+    MathCol("degree", "modcurve.point_degree", "Degree", default=True),
+    ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
+                 lambda x: r"$\textsf{yes}$" if x is True else (r"$\textsf{no}$" if x is False else r"$\textsf{maybe}$")),
+    ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
+    ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
+    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field"], showj_nf, default=True),
+    ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
+                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm")])
+
+@search_wrap(
+    table=db.modcurve_points,
+    title="Modular curve low-degree point search results",
+    err_title="Modular curves low-degree point search input error",
+    columns=ratpoint_columns,
+    bread=lambda: get_bread("Low-degree point search results"),
+)
+def rational_point_search(info, query):
+    parse_noop(info, query, "curve", qfield="label")
+    parse_ints(info, query, "degree")
+    parse_nf_string(info, query, "residue_field")
+    parse_nf_string(info, query, "j_field")
+    j_field = query.get("j_field")
+    if not j_field:
+        j_field = query.get("residue_field")
+    parse_nf_jinv(info, query, "jinv", field_label=j_field)
+    if 'cm' in info:
+        if info['cm'] == 'noCM':
+            query['cm'] = 0
+        elif info['cm'] == 'CM':
+            query['cm'] = {'$ne': 0}
+        else:
+            parse_ints(info, query, 'cm')
+    parse_bool_unknown(info, query, "isolated")
+
+class RatPointSearchArray(SearchArray):
+    noun = "point"
+    plural_noun = "points"
+    def __init__(self):
+        curve = TextBox(
+            name="curve",
+            knowl="modcurve.label",
+            label="Curve",
+            example="11.12.1.1",
+        )
+        degree = TextBox(
+            name="degree",
+            knowl="modcurve.degree",
+            label="Degree",
+            example="2-4",
+        )
+        residue_field = TextBox(
+            name="residue_field",
+            knowl="modcurve.point_residue_field",
+            label="Residue field",
+            example="2.0.4.1",
+        )
+        j_field = TextBox(
+            name="j_field",
+            knowl="modcurve.j_invariant",
+            label=r"$\Q(j)$",
+            example="2.0.4.1",
+        )
+        jinv = TextBox(
+            name="jinv",
+            knowl="modcurve.j_invariant",
+            label="$j$-invariant",
+            example="30887/73-9927/73*a",
+        )
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
+                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
+                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm = SelectBox(
+            name="cm",
+            label="Complex multiplication",
+            example="potential CM by Q(i)",
+            knowl="ec.complex_multiplication",
+            options=cm_opts,
+        )
+        isolated = YesNoMaybeBox(
+            "isolated",
+            label="Isolated",
+            knowl="modcurve.isolated_point",
+        )
+
+        self.refine_array = [[curve, degree, cm, isolated],
+                             [residue_field, j_field, jinv]]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
