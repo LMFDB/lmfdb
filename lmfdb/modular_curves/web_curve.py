@@ -117,6 +117,13 @@ def jmap_factored(j_str):
         js_tex_frac.append(r"1728 + %s\frac{%s}{%s}" % (lc_str_1728, js_tex_1728[0], js_tex_1728[1]))
     return js_tex_frac
 
+def j_table(j_str):
+    js_tex = jmap_factored(j_str)
+    s = "<table class='coeff_ring_basis'>\n"
+    s += r'<tr><td class="LHS">\( j \)</td><td class="eq">\(=\)</td><td class="RHS">\( %s \)</td></tr>' % js_tex[0] + '\n'
+    s += r'<tr><td class="LHS"> </td><td class="eq">\(=\)</td><td class="RHS">\( %s \)</td></tr>' % js_tex[1]
+    return s + "</table>"
+
 def formatted_dims(dims):
     if not dims:
         return ""
@@ -252,6 +259,13 @@ class WebModCurve(WebObj):
     def jmap_factored(self):
         if self.jmap:
             return jmap_factored(self.jmap)
+        else:
+            return ""
+
+    @lazy_attribute
+    def j_table(self):
+        if self.jmap:
+            return j_table(self.jmap)
         else:
             return ""
 

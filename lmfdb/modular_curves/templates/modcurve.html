@@ -138,7 +138,17 @@
 
 {% if curve.jmap_factored %}
   <h2> {{ KNOWL('modcurve.j_invariant_map', 'j-invariant map') }}</h2>
-  $\displaystyle j = {{ curve['jmap_factored'][0] }} = {{ curve['jmap_factored'][1] }}$
+  <table class='coeff_ring_basis'>
+    <tr>
+      <td class="LHS">\( j \)</td>
+      <td class="eq">\(=\)</td>
+      <td class="RHS">\(\displaystyle {{ curve['jmap_factored'][0] }} \)</td>
+    </tr>
+    <tr>
+      <td class="LHS"> </td>
+      <td class="eq">\(=\)</td>
+      <td class="RHS">\(\displaystyle {{ curve['jmap_factored'][1] }} \)</td>
+    </tr>
 {% endif %}
 
 {% set covered_by = curve.modular_covered_by() %}
