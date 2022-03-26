@@ -138,6 +138,7 @@
 
 {% if curve.jmap_factored %}
 <h2> {{ KNOWL('modcurve.j_invariant_map', 'j-invariant map') }}</h2>
+$\displaystyle j = {{ curve['jmap_factored'][0] }} = {{ curve['jmap_factored'][1] }}$
 <table class='coeff_ring_basis'>
   <tr>
     <td class="LHS">\( j \)</td>
