@@ -95,11 +95,13 @@ def jmap_factored(j_str):
         lc_str = "%s" % latex(j_lc)
         #if lc_str[0] == "-": # parens if minus sign
             #lc_str = "(%s)" % lc_str
+        if "+" in lc_str[1:] or "-" in lc_str[1:]:
+            lc_str = "\\left(%s\\right)" % lc_str
     else:
         lc_str = ""
     if j_lc_1728 != 1:
         lc_str_1728 = "%s" % latex(j_lc_1728)
-        if lc_str_1728[0] == "-":
+        if "+" in lc_str_1728 or "-" in lc_str_1728:
             lc_str_1728 = "\\left(%s\\right)" % lc_str_1728
     else:
         lc_str_1728 = ""
