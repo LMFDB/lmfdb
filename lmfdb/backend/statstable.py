@@ -290,7 +290,7 @@ class PostgresStatsTable(PostgresBase):
         for col in self.table.search_cols:
             if col not in allcounts:
                 allcounts[col] = self._slow_count({col: None}, suffix=suffix, extra=False)
-        return {col: cnt for col,cnt in allcounts.items() if cnt > 0}
+        return {col: cnt for col, cnt in allcounts.items() if cnt > 0}
 
     def refresh_null_counts(self, suffix=""):
         """
@@ -1781,7 +1781,7 @@ ORDER BY v.ord LIMIT %s"""
             data[values] = D
         # Ensure that we have all the statistics necessary
         ok = True
-        if buckets == {}:
+        if not buckets:
             # Just check that the results are nonempty
             if not data:
                 self.add_stats(cols, constraint, split_list=split_list)

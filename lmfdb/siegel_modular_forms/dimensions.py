@@ -218,14 +218,14 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         return partitions, dct
 
     if 'Sp4(Z)' == group and 2 == j and wt_range[0] < 4:
-        wt_range1 = [ k for k in wt_range if k < 4]
-        wt_range2 = [ k for k in wt_range if k >= 4]
-        if wt_range2 != []:
+        wt_range1 = [k for k in wt_range if k < 4]
+        wt_range2 = [k for k in wt_range if k >= 4]
+        if wt_range2:
             headers, dct = _dimension_Gamma_2(wt_range2, j, group)
         else:
             headers, dct = ['Total', 'Non cusp', 'Cusp'], {}
         for k in wt_range1:
-            dct[k] = dict([(h,0) for h in headers])
+            dct[k] = dict([(h, 0) for h in headers])
         return headers, dct
 
     if j >= 2 and wt_range[0] < 4:
