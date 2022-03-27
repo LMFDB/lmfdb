@@ -151,18 +151,17 @@
 {% endif %}
 
 {% if curve.jmap_factored %}
-<h2> {{ KNOWL('modcurve.j_invariant_map', 'j-invariant map') }}</h2>
-$\displaystyle j = {{ curve['jmap_factored'][0] }} = {{ curve['jmap_factored'][1] }}$
-<table class='coeff_ring_basis'>
+<h2> {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}</h2>
+<table valign="center">
   <tr>
-    <td class="LHS">\( j \)</td>
-    <td class="eq">\( = \)</td>
-    <td class="RHS">\(\displaystyle {{ curve['jmap_factored'][0] }} \)</td>
+    <td>$j$</td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td>$\displaystyle {{ curve['jmap_factored'][0] }}$</td>
   </tr>
   <tr>
-    <td class="LHS"> </td>
-    <td class="eq">\( = \)</td>
-    <td class="RHS">\(\displaystyle {{ curve['jmap_factored'][1] }} \)</td>
+    <td></td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td>$\displaystyle {{ curve['jmap_factored'][1] }}$</td>
   </tr>
 </table>
 {% endif %}
