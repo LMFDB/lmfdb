@@ -458,6 +458,7 @@ ratpoint_columns = SearchColumns([
 )
 def rational_point_search(info, query):
     parse_noop(info, query, "curve", qfield="curve_label")
+    parse_ints(info, query, "genus", qfield="curve_genus")
     parse_ints(info, query, "degree")
     parse_nf_string(info, query, "residue_field")
     parse_nf_string(info, query, "j_field")
@@ -483,6 +484,12 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.label",
             label="Curve",
             example="11.12.1.1",
+        )
+        genus = TextBox(
+            name="genus",
+            knowl="modcurve.genus",
+            label="Genus",
+            example="1-3",
         )
         degree = TextBox(
             name="degree",
@@ -524,7 +531,7 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.isolated_point",
         )
 
-        self.refine_array = [[curve, degree, cm, isolated],
+        self.refine_array = [[curve, genus, degree, cm, isolated],
                              [residue_field, j_field, jinv]]
 
 class ModCurve_stats(StatsDisplay):
