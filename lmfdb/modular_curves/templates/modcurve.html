@@ -81,11 +81,11 @@
 {% if curve.rational_cusps or curve.cm_discriminants or curve.known_degree1_noncm_points or curve.plane_model == "P1" %}
 {% if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0) %}
 {% if self.level == 1 %}
-<p> This modular curve has infinitely many rational points, corresponding to <a href="{{url_for('ec.index')}}&all=1">elliptic curves over $\Q$</a>. </p>
+<p> This modular curve has infinitely many rational points, corresponding to <a href="{{url_for('ec.rational_elliptic_curves')}}&all=1">elliptic curves over $\Q$</a>. </p>
 {% elif curve.known_degree1_points > 0 %}
 <p> This modular curve has infinitely many rational points, including {{ curve.known_degree1_points }} <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1)}}">stored non-cuspidal points</a>. </p>
 {% else %}
-<p> This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="{{url_for('ec.index')}}">database of elliptic curves over $\Q$</a>. </p>
+<p> This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="{{url_for('ec.rational_elliptic_curves')}}">database of elliptic curves over $\Q$</a>. </p>
 {% endif %}
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
 {% if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0 %}
@@ -147,6 +147,22 @@
       <tr><td>${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td><td><a href="{{url}}">{{label}}</a></td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}</tr>
     {% endfor %}
   </tbody>
+</table>
+{% endif %}
+
+{% if curve.jmap_factored %}
+<h2> {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}</h2>
+<table valign="center">
+  <tr>
+    <td>$j$</td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td>$\displaystyle {{ curve['jmap_factored'][0] }}$</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td>$\displaystyle {{ curve['jmap_factored'][1] }}$</td>
+  </tr>
 </table>
 {% endif %}
 

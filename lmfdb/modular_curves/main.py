@@ -387,7 +387,7 @@ class ModCurveSearchArray(SearchArray):
                      ("Xns+", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
                      ("any", "any")],
-            knowl="modcurve.family",
+            knowl="modcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
         CPlabel = SneakyTextBox(
@@ -536,7 +536,7 @@ class ModCurve_stats(StatsDisplay):
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E$ over $\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
         )
 
     @property
