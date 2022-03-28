@@ -449,7 +449,7 @@ ratpoint_columns = SearchColumns([
     bread=lambda: get_bread("Low-degree point search results"),
 )
 def rational_point_search(info, query):
-    parse_noop(info, query, "curve", qfield="label")
+    parse_noop(info, query, "curve", qfield="curve_label")
     parse_ints(info, query, "degree")
     parse_nf_string(info, query, "residue_field")
     parse_nf_string(info, query, "j_field")
