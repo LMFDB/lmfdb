@@ -345,15 +345,15 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def known_degree1_points(self):
-        return db.modcurve_points.count({"label": self.label, "degree": 1})
+        return db.modcurve_points.count({"curve_label": self.label, "degree": 1})
 
     @lazy_attribute
     def known_degree1_noncm_points(self):
-        return db.modcurve_points.count({"label": self.label, "degree": 1, "cm": 0})
+        return db.modcurve_points.count({"curve_label": self.label, "degree": 1, "cm": 0})
 
     @lazy_attribute
     def known_low_degree_points(self):
-        return db.modcurve_points.count({"label": self.label, "degree": {"$gt": 1}})
+        return db.modcurve_points.count({"curve_label": self.label, "degree": {"$gt": 1}})
 
     @lazy_attribute
     def db_rational_points(self):
@@ -381,7 +381,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def db_nf_points(self):
         pts = []
-        for rec in db.modcurve_points.search({"label": self.label, "degree": {"$gt": 1}}, sort=["degree"]):
+        for rec in db.modcurve_points.search({"curve_label": self.label, "degree": {"$gt": 1}}, sort=["degree"]):
             pts.append(
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",

@@ -37,14 +37,19 @@ from lmfdb.utils import (
     totaler
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import (
+    SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, SpacerCol, ColGroup
+)
 from lmfdb.api import datapage
 from lmfdb.backend.encoding import Json
 
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor, formatted_dims, url_for_NF_label, showj_nf
+from lmfdb.modular_curves.web_curve import (
+    WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
+    formatted_dims, url_for_NF_label, showj_nf
+)
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
@@ -431,15 +436,18 @@ def low_degree_points():
     return rational_point_search(info)
 
 ratpoint_columns = SearchColumns([
-    LinkCol("label", "modcurve.label", "Curve", url_for_modcurve_label, default=True),
+    LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
+    ProcessedCol("curve_name", "modcurve.family", "Name", name_to_latex, default=True),
+    MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"$\textsf{yes}$" if x is True else (r"$\textsf{no}$" if x is False else r"$\textsf{maybe}$")),
+                 lambda x: r"$\textsf{yes}$" if x == 1 else (r"$\textsf{no}$" if x == -1 else r"$\textsf{maybe}$")),
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field"], showj_nf, default=True),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
-                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm")])
+                 short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
+    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda x: "" if x is None else f"${x}$", default=True)])
 
 @search_wrap(
     table=db.modcurve_points,
@@ -449,7 +457,8 @@ ratpoint_columns = SearchColumns([
     bread=lambda: get_bread("Low-degree point search results"),
 )
 def rational_point_search(info, query):
-    parse_noop(info, query, "curve", qfield="label")
+    parse_noop(info, query, "curve", qfield="curve_label")
+    parse_ints(info, query, "genus", qfield="curve_genus")
     parse_ints(info, query, "degree")
     parse_nf_string(info, query, "residue_field")
     parse_nf_string(info, query, "j_field")
@@ -475,6 +484,12 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.label",
             label="Curve",
             example="11.12.1.1",
+        )
+        genus = TextBox(
+            name="genus",
+            knowl="modcurve.genus",
+            label="Genus",
+            example="1-3",
         )
         degree = TextBox(
             name="degree",
@@ -516,7 +531,7 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.isolated_point",
         )
 
-        self.refine_array = [[curve, degree, cm, isolated],
+        self.refine_array = [[curve, genus, degree, cm, isolated],
                              [residue_field, j_field, jinv]]
 
 class ModCurve_stats(StatsDisplay):
@@ -528,7 +543,7 @@ class ModCurve_stats(StatsDisplay):
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E$ over $\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
         )
 
     @property
