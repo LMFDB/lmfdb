@@ -4,7 +4,8 @@ from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
 
-hypergm_page = Blueprint("hypergm", __name__, template_folder='templates', static_folder="static")
+hypergm_page = Blueprint("hypergm", __name__, template_folder='templates',
+                         static_folder="static")
 hgm_logger = make_logger(hypergm_page)
 
 
@@ -12,7 +13,8 @@ hgm_logger = make_logger(hypergm_page)
 def body_class():
     return {'body_class': 'hypergm'}
 
+
 from . import main
-assert main # silence pyflakes
+assert main  # silence pyflakes
 
 app.register_blueprint(hypergm_page, url_prefix="/Motive/Hypergeometric/Q")
