@@ -38,7 +38,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, SpacerCol, ColGroup
+    SearchColumns, MathCol, FloatCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, SpacerCol, ColGroup
 )
 from lmfdb.api import datapage
 from lmfdb.backend.encoding import Json
@@ -48,7 +48,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
-    formatted_dims, url_for_NF_label, showj_nf
+    formatted_dims, url_for_NF_label, url_for_EC_label, url_for_ECNF_label, showj_nf,
 )
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
@@ -441,13 +441,15 @@ ratpoint_columns = SearchColumns([
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"$\textsf{yes}$" if x == 1 else (r"$\textsf{no}$" if x == -1 else r"$\textsf{maybe}$")),
-    ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
-    ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
-    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field"], showj_nf, default=True),
+                 lambda x: r"$\textsf{yes}$" if x == 1 else (r"$\textsf{no}$" if x == -1 else r"$\textsf{maybe}$"),
+                 default=True),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
-    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda x: "" if x is None else f"${x}$", default=True)])
+    LinkCol("Elabel", "modcurve.elliptic_curve_of_point", "Elliptic curve", lambda Elabel: url_for_ECNF_label(Elabel) if "-" in Elabel else url_for_EC_label(Elabel), default=True),
+    ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
+    ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
+    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
+    FloatCol("j_height", "modcurve.j_height", "$j$-height", default=True)])
 
 @search_wrap(
     table=db.modcurve_points,
@@ -459,6 +461,7 @@ ratpoint_columns = SearchColumns([
 def rational_point_search(info, query):
     parse_noop(info, query, "curve", qfield="curve_label")
     parse_ints(info, query, "genus", qfield="curve_genus")
+    parse_ints(info, query, "level", qfield="curve_level")
     parse_ints(info, query, "degree")
     parse_nf_string(info, query, "residue_field")
     parse_nf_string(info, query, "j_field")
@@ -478,6 +481,13 @@ def rational_point_search(info, query):
 class RatPointSearchArray(SearchArray):
     noun = "point"
     plural_noun = "points"
+    sorts = [("", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
+             ("j_height", "height of j-invariant", ["j_height", "jinv", "conductor_norm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
+             ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
+             ("curve_level", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
+             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
+             ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
+             ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"])]
     def __init__(self):
         curve = TextBox(
             name="curve",
@@ -490,6 +500,12 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.genus",
             label="Genus",
             example="1-3",
+        )
+        level = TextBox(
+            name="level",
+            knowl="modcurve.level",
+            label="Level",
+            example="37"
         )
         degree = TextBox(
             name="degree",
@@ -531,8 +547,8 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.isolated_point",
         )
 
-        self.refine_array = [[curve, genus, degree, cm, isolated],
-                             [residue_field, j_field, jinv]]
+        self.refine_array = [[curve, level, genus, degree, cm],
+                             [residue_field, j_field, jinv, isolated]]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):

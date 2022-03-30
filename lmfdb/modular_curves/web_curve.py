@@ -41,13 +41,14 @@ def showj_fac(j):
     else:
         return "$= %s$" % latex((ZZ(j[0]) / ZZ(j[1])).factor())
 
-def showj_nf(j, nflabel):
+def showj_nf(j, jfield, jorig, resfield):
     Ra = PolynomialRing(QQ, 'a')
     if "," in j:
+        s = None
         f = Ra([QQ(c) for c in j.split(",")])
-        if nflabel.startswith("2."):
-            D = ZZ(nflabel.split(".")[2])
-            if nflabel.split(".")[1] == "0":
+        if jfield.startswith("2."):
+            D = ZZ(jfield.split(".")[2])
+            if jfield.split(".")[1] == "0":
                 D = -D
             x = Ra.gen()
             if D % 4 == 1:
@@ -57,23 +58,32 @@ def showj_nf(j, nflabel):
             if K.class_number() == 1:
                 jj = K((f).padded_list(K.degree()))
                 jfac = latex(jj.factor())
-                if D % 4 == 0:
-                    jfac = jfac.replace("a", r"\sqrt{%s}" % (D // 4))
-                return f"${jfac}$"
-        d = f.denominator()
-        if d == 1:
-            return web_latex(f)
-        else:
-            return fr"$\tfrac{{1}}{{{latex(d.factor())}}} \left({latex(d*f)}\right)$"
-    if "/" in j:
-        fac = f" = {latex(QQ(j).factor())}"
-        a, b = j.split("/")
-        j = r"\tfrac{%s}{%s}" % (a, b)
-    elif j != "0":
-        fac = f" = {latex(ZZ(j).factor())}"
+                s = f"${jfac}$"
+        if s is None:
+            d = f.denominator()
+            if d == 1:
+                s = web_latex(f)
+            else:
+                s = fr"$\tfrac{{1}}{{{latex(d.factor())}}} \left({latex(d*f)}\right)$"
     else:
-        fac = ""
-    return f"${j}{fac}$"
+        if "/" in j:
+            fac = f" = {latex(QQ(j).factor())}"
+            a, b = j.split("/")
+            s = r"$\tfrac{%s}{%s}%s$" % (a, b, fac)
+        elif j != "0":
+            s = f"${j} = {latex(ZZ(j).factor())}$"
+        else:
+            s = "$0$"
+    if resfield == "1.1.1.1":
+        url = url_for("ec.rational_elliptic_curves", jinv=j, showcol="jinv")
+    else:
+        if jorig is None:
+            jorig = j
+        # ECNF search wants j-invariants formatted as a polynomial
+        if "," in j:
+            j = str(f).replace(" ", "")
+        url = url_for("ecnf.index", jinv=j, field=resfield, showcol="jinv")
+    return '<a href="%s">%s</a>' % (url, s)
 
 def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")

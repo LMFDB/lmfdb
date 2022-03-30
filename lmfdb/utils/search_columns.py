@@ -112,7 +112,10 @@ class LinkCol(SearchCol):
         self.url_for = url_for
 
     def display(self, rec):
-        return f'<a href="{self.url_for(self.get(rec))}">{self.get(rec)}</a>'
+        link = self.get(rec)
+        if link is None:
+            return ""
+        return f'<a href="{self.url_for(link)}">{link}</a>'
 
 class ProcessedCol(SearchCol):
     def __init__(self, name, knowl, title, func, default=False, orig=None, mathmode=False, align="left", **kwds):
