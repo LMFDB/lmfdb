@@ -24,6 +24,7 @@ from lmfdb.utils import (
     parse_ints,
     parse_noop,
     parse_bool,
+    parse_floats,
     parse_interval,
     parse_element_of,
     parse_bool_unknown,
@@ -469,6 +470,7 @@ def rational_point_search(info, query):
     if not j_field:
         j_field = query.get("residue_field")
     parse_nf_jinv(info, query, "jinv", field_label=j_field)
+    parse_floats(info, query, "j_height")
     if 'cm' in info:
         if info['cm'] == 'noCM':
             query['cm'] = 0
@@ -531,6 +533,12 @@ class RatPointSearchArray(SearchArray):
             label="$j$-invariant",
             example="30887/73-9927/73*a",
         )
+        j_height = TextBox(
+            name="j_height",
+            knowl="modcurve.j_height",
+            label="$j$-height",
+            example="1.0-4.0",
+        )
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
                    [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
                    [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
@@ -548,7 +556,7 @@ class RatPointSearchArray(SearchArray):
         )
 
         self.refine_array = [[curve, level, genus, degree, cm],
-                             [residue_field, j_field, jinv, isolated]]
+                             [residue_field, j_field, jinv, j_height, isolated]]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
