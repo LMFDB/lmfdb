@@ -153,22 +153,16 @@ def jmap_factored(j_str):
         lc_str_1728 = ""
     # good test case for lc stuff: 8.96.1.183
     # also 4.8.0.2
+    # TODO: model after cmfs, e.g., https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/11/7/d/a/
     if j.denominator() == 1: # no denom, so polynomial
         js_tex_frac = []
         js_tex_frac.append(r"%s%s" % (lc_str, js_tex[0]))
-        js_tex_frac.append(r"1728 + %s%s" % (lc_str_1728, js_tex[1]))
+        js_tex_frac.append(r"1728 + %s%s" % (lc_str_1728, js_tex_1728[0]))
     else: # has denom
         js_tex_frac = []
         js_tex_frac.append(r"%s\frac{%s}{%s}" % (lc_str, js_tex[0], js_tex[1]))
         js_tex_frac.append(r"1728 + %s\frac{%s}{%s}" % (lc_str_1728, js_tex_1728[0], js_tex_1728[1]))
     return js_tex_frac
-
-def j_table(j_str):
-    js_tex = jmap_factored(j_str)
-    s = "<table class='coeff_ring_basis'>\n"
-    s += r'<tr><td class="LHS">\( j \)</td><td class="eq">\(=\)</td><td class="RHS">\( %s \)</td></tr>' % js_tex[0] + '\n'
-    s += r'<tr><td class="LHS"> </td><td class="eq">\(=\)</td><td class="RHS">\( %s \)</td></tr>' % js_tex[1]
-    return s + "</table>"
 
 def formatted_dims(dims):
     if not dims:
@@ -305,13 +299,6 @@ class WebModCurve(WebObj):
     def jmap_factored(self):
         if self.jmap:
             return jmap_factored(self.jmap)
-        else:
-            return ""
-
-    @lazy_attribute
-    def j_table(self):
-        if self.jmap:
-            return j_table(self.jmap)
         else:
             return ""
 
