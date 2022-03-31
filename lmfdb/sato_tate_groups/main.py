@@ -1028,7 +1028,6 @@ def labels_page():
 
 class STSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     sorts = [("", "weight", ["weight", "degree", "st0_label", "components", "component_group_number", "label"]),
              ("degree", "degree", ["degree", "weight", "st0_label", "components", "component_group_number", "label"]),
              ("real_dimension", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),

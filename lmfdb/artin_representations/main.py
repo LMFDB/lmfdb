@@ -510,7 +510,6 @@ def cande():
 
 class ArtinSearchArray(SearchArray):
     noun = "representation"
-    plural_noun = "representations"
     sorts = [("", "dimension", ["Dim", "Conductor", "Galn", "Galt", "Baselabel"]),
              ("con", "conductor", ["Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
              ("group", "group", ["Galn", "Galt", "Dim", "Conductor", "Baselabel"]),

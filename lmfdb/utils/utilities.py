@@ -962,3 +962,15 @@ class WebObj(object):
     def is_null(self):
         return self._data is None
 
+def plural_form(noun):
+    return noun + "s"
+
+def pluralize(n, noun, omit_n=False):
+    if n == 1:
+        if omit_n:
+            return noun
+        return f"1 {noun}"
+    elif omit_n:
+        return plural_form(noun)
+    else:
+        return f"{n} {plural_form(noun)}"

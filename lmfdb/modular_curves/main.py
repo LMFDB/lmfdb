@@ -35,12 +35,13 @@ from lmfdb.utils import (
     Downloader,
     comma,
     proportioners,
-    totaler
+    totaler,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
     SearchColumns, MathCol, FloatCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, SpacerCol, ColGroup
 )
+from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
 from lmfdb.backend.encoding import Json
 
@@ -181,6 +182,15 @@ modcurve_columns = SearchColumns([
     ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
+@search_parser
+def parse_family(inp, query, qfield):
+    if inp not in ["X0", "X1", "X", "Xsp", "Xsp+", "Xns", "Xns+", "XS4", "any"]:
+        raise ValueError
+    if inp == "any":
+        query[qfield] = {"$like": "X%"}
+    else:
+        query[qfield] = {"$like": inp + "(%"}
+
 @search_wrap(
     table=db.gps_gl2zhat_test,
     title="Modular curve search results",
@@ -207,16 +217,7 @@ def modcurve_search(info, query):
                 raise ValueError(err)
             else:
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
-    if info.get('family'):
-        fam = info['family']
-        if fam not in ["X0", "X1", "X", "Xsp", "Xsp+", "Xns", "Xns+", "XS4", "any"]:
-            err = "%s is not a valid family name"
-            flash_error(err, fam)
-            raise ValueError(err)
-        if fam == "any":
-            query["name"] = {"$like": "X%"}
-        else:
-            query["name"] = {"$like": fam + "(%"}
+    parse_family(info, query, "family", qfield="name")
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
     parse_ints(info, query, "rank")
@@ -254,7 +255,6 @@ def modcurve_search(info, query):
 
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
-    plural_noun = "curves"
     jump_example = "13.78.3.1"
     jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, or 13A3"
     jump_prompt = "Label or name"
@@ -463,6 +463,7 @@ def rational_point_search(info, query):
     parse_noop(info, query, "curve", qfield="curve_label")
     parse_ints(info, query, "genus", qfield="curve_genus")
     parse_ints(info, query, "level", qfield="curve_level")
+    parse_family(info, query, "family", qfield="curve_name")
     parse_ints(info, query, "degree")
     parse_nf_string(info, query, "residue_field")
     parse_nf_string(info, query, "j_field")
@@ -482,12 +483,11 @@ def rational_point_search(info, query):
 
 class RatPointSearchArray(SearchArray):
     noun = "point"
-    plural_noun = "points"
-    sorts = [("", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
+    sorts = [("", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
+             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
+             ("degree", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
              ("j_height", "height of j-invariant", ["j_height", "jinv", "conductor_norm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
              ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
-             ("curve_level", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
-             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
              ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
              ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"])]
     def __init__(self):
@@ -554,8 +554,23 @@ class RatPointSearchArray(SearchArray):
             label="Isolated",
             knowl="modcurve.isolated_point",
         )
+        family = SelectBox(
+            name="family",
+            options=[("", ""),
+                     ("X0", "X0(N)"),
+                     ("X1", "X1(N)"),
+                     ("X", "X(N)"),
+                     ("Xsp", "Xsp(N)"),
+                     ("Xns", "Xns(N)"),
+                     ("Xsp+", "Xsp+(N)"),
+                     ("Xns+", "Xns+(N)"),
+                     ("XS4", "XS4(N)"),
+                     ("any", "any")],
+            knowl="modcurve.standard",
+            label="Family",
+            example="X0(N), Xsp(N)")
 
-        self.refine_array = [[curve, level, genus, degree, cm],
+        self.refine_array = [[curve, level, genus, degree, cm, family],
                              [residue_field, j_field, jinv, j_height, isolated]]
 
 class ModCurve_stats(StatsDisplay):

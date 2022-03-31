@@ -1,6 +1,6 @@
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
-
+from .utilities import plural_form
 
 class TdElt(object):
     _wrap_type = 'td'
@@ -640,7 +640,6 @@ class SearchArray(UniqueRepresentation):
     sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
     null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
-    plural_noun = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         if self.sorts is not None:
@@ -660,7 +659,7 @@ class SearchArray(UniqueRepresentation):
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         if info is None:
-            return [("List", "List of %s" % self.plural_noun), ("Random", "Random %s" % self.noun)]
+            return [("List", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
         else:
             return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
 

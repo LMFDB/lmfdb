@@ -834,7 +834,6 @@ def disp_tor(t):
 
 class ECNFSearchArray(SearchArray):
     noun = "curve"
-    plural_noun = "curves"
     sorts = [("", "field", ['degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),
              ("conductor_norm", "conductor norm", ['conductor_norm', 'conductor_label', 'degree', 'signature', 'abs_disc', 'field_label', 'iso_nlabel', 'number']),
              ("root_analytic_conductor", "root analytic conductor", ['root_analytic_conductor', 'degree', 'signature', 'abs_disc', 'field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']),

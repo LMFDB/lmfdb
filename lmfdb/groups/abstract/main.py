@@ -40,6 +40,7 @@ from lmfdb.utils import (
     dispcyclomat,
     search_wrap,
     web_latex,
+    pluralize,
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
@@ -1399,7 +1400,6 @@ def display_profile_line(data, ambient, aut):
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     sorts = [("", "order", ["order", "counter"]),
              ("exponent", "exponent", ["exponent", "order", "counter"]),
              ("nilpotency_class", "nilpotency class", ["nilpotency_class", "order", "counter"]),
@@ -1982,8 +1982,7 @@ def crep_data(label):
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
     ans += "<br>Irreducible: {}".format(info["irreducible"])
-    plural = "" if len(info["gens"]) == 1 else "s"
-    ans += "<br>Matrix generator{}: ".format(plural)
+    ans += "<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
     N = info["cyc_order_mat"]
     genlist = ["$" + dispcyclomat(N, gen) + "$" for gen in info["gens"]]
     ans += ",".join(genlist)
@@ -2000,8 +1999,7 @@ def qrep_data(label):
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
     ans += "<br>Irreducible: {}".format(info["irreducible"])
-    plural = "" if len(info["gens"]) == 1 else "s"
-    ans += "<br>Matrix generator{}: ".format(plural)
+    ans += "<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
     genlist = ["$" + dispZmat(gen) + "$" for gen in info["gens"]]
     ans += ",".join(genlist)
     return Markup(ans)

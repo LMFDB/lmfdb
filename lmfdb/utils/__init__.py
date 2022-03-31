@@ -41,7 +41,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SneakyTextBox',
            'Downloader', 'WebObj',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
-           'Configuration',
+           'Configuration', 'plural_form', 'pluralize',
            'names_and_urls', 'name_and_object_from_url',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
            'TraceHash', 'TraceHashClass',
@@ -94,6 +94,8 @@ from .utilities import (
     timestamp_in_ms_to_datetime,
     to_dict,
     WebObj,
+    plural_form,
+    pluralize,
 )
 
 from .web_display import (

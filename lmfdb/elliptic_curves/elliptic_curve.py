@@ -871,7 +871,6 @@ class ECSearchArray(SearchArray):
              ("num_int_pts", "integral points", ["num_int_pts", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("degree", "modular degree", ["degree", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
-    plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"
     jump_prompt = "Label or coefficients"

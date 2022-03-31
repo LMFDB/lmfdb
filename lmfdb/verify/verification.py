@@ -12,6 +12,7 @@ from sage.all import Integer, vector, ZZ
 
 from lmfdb.lmfdb_database import db
 from psycopg2.sql import SQL, Composable, Literal
+from lmfdb.utils import pluralize
 from lmfdb.backend.utils import IdentifierWrapper as Identifier
 
 integer_types = (int, Integer)
@@ -28,12 +29,6 @@ def accumulate_failures(L):
                 a = [a]
             ans.extend(a)
     return ans
-
-def pluralize(n, noun):
-    if n == 1:
-        return "1 %s"%(noun)
-    else:
-        return "%d %ss"%(n, noun)
 
 class TooManyFailures(AssertionError):
     pass

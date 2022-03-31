@@ -73,7 +73,6 @@ def render_characterNavigation():
 
 class DirichSearchArray(SearchArray):
     noun = "character"
-    plural_noun = "characters"
     sorts = [("", "modulus", ["modulus", "orbit_index"]),
              ("conductor", "conductor", ["conductor", "prim_orbit_index", "modulus", "orbit_index"]),
              ("order", "order", ["order", "modulus", "orbit_index"])]

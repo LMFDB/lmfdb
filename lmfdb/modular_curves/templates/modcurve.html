@@ -83,25 +83,25 @@
 {% if self.level == 1 %}
 <p> This modular curve has infinitely many rational points, corresponding to <a href="{{url_for('ec.rational_elliptic_curves')}}&all=1">elliptic curves over $\Q$</a>. </p>
 {% elif curve.known_degree1_points > 0 %}
-<p> This modular curve has infinitely many rational points, including {{ curve.known_degree1_points }} <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1)}}">stored non-cuspidal points</a>. </p>
+<p> This modular curve has infinitely many rational points, including <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1)}}">{{pluralize(curve.known_degree1_points, "stored non-cuspidal point")}}</a>. </p>
 {% else %}
 <p> This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="{{url_for('ec.rational_elliptic_curves')}}">database of elliptic curves over $\Q$</a>. </p>
 {% endif %}
 {% elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0) %}
 {% if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0 %}
-<p> This modular curve has rational points, including {{curve.rational_cusps}} rational_cusps, {{curve.cm_discriminants|length}} rational CM points and {{curve.known_degree1_noncm_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM')}}">known non-cuspidal non-CM points</a>. </p>
+<p> This modular curve has rational points, including {{pluralize(curve.rational_cusps, "rational cusp")}}, {{pluralize((curve.cm_discriminants|length), "rational CM point")}} and <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM')}}">{{pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point")}}</a>. </p>
 {% elif curve.rational_cusps and curve.cm_discriminants %}
-<p> This modular curve has {{curve.rational_cusps}} rational cusps and {{curve.cm_discriminants|length}} rational CM points, but no other known rational points. </p>
+<p> This modular curve has {{pluralize(curve.rational_cusps, "rational cusp")}} and {{pluralize(curve.cm_discriminants|length, "rational CM point")}}, but no other known rational points. </p>
 {% elif curve.rational_cusps and curve.known_degree1_noncm_points > 0 %}
-<p> This modular curve has rational points, including {{curve.rational_cusps}} rational_cusps and {{curve.known_degree1_noncm_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM')}}">known non-cuspidal non-CM points</a>.
+<p> This modular curve has rational points, including {{pluralize(curve.rational_cusps, "rational_cusp")}} and <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM')}}">{{pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point")}}</a>.
 {% elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0 %}
-<p> This modular curve has rational points, including {{curve.cm_discriminants|length}} rational CM points and {{curve.known_degree1_noncm_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM')}}">known non-cuspidal non-CM points</a>, but no rational cusps.</p>
+<p> This modular curve has rational points, including {{pluralize(curve.cm_discriminants|length, "rational CM point")}} and <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM')}}">{{pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point")}}</a>, but no rational cusps.</p>
 {% elif curve.rational_cusps %}
-<p> This modular curve has {{curve.rational_cusps}} rational cusps but no known non-cuspidal rational points. </p>
+<p> This modular curve has {{pluralize(curve.rational_cusps, "rational cusp")}} but no known non-cuspidal rational points. </p>
 {% elif curve.cm_discriminants %}
-<p> This modular curve has {{curve.cm_discriminants|length}} rational CM points but no rational cusps or other known rational points. </p>
+<p> This modular curve has {{pluralize(curve.cm_discriminants|length, "rational CM point")}} but no rational cusps or other known rational points. </p>
 {% elif curve.known_degree1_points > 0 %}
-<p> This modular curve has {{curve.known_degree1_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1)}}">known rational points</a> but no rational cusps or CM points. </p>
+<p> This modular curve has <a href="{{url_for('.low_degree_points', curve=curve.label, degree=1)}}">{{pluralize(curve.known_degree1_points, "known rational point")}}</a> but no rational cusps or CM points. </p>
 {% endif %}
 {% endif %}
 {% else %}
