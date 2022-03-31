@@ -258,7 +258,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def latexed_plane_model(self):
-        return teXify_pol(self.plane_model)
+        return teXify_pol(self.plane_model.lower())
 
     @lazy_attribute
     def obstruction_primes(self):
