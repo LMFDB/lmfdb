@@ -397,7 +397,7 @@ class WebModCurve(WebObj):
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
                  r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
                  r"$\textsf{yes}$" if rec["isolated"] is True else (r"$\textsf{no}$" if rec["isolated"] is False else r"$\textsf{maybe}$"),
-                 showj_nf(rec["jinv"], rec["j_field"]),
+                 showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
                  rec["residue_field"],
                  url_for_NF_label(rec["residue_field"]),
                  rec["j_field"],
