@@ -33,6 +33,11 @@
     <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
   {% endif %}
 
+{% if data.plane_model %}
+<h2>Plane model</h2>
+  \(\displaystyle {{ data.plane_model }}\)
+{% endif %}
+
 <h2>{{ KNOWL('nf.embedding', title="Embeddings") }}</h2>
   <p>
     Each permutation triple in the orbit corresponds to an embedded Belyi map with coefficients in $\mathbb{C}$. The table below gives this correspondence.

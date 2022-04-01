@@ -4,7 +4,7 @@ from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
-from lmfdb.utils import names_and_urls, prop_int_pretty
+from lmfdb.utils import names_and_urls, prop_int_pretty, teXify_pol
 from flask import url_for
 
 from lmfdb import db
@@ -44,7 +44,6 @@ def make_curve_latex(crv_str, nu=None):
         rhs = S(new_rhs)
     eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
-
 
 def make_map_latex(map_str, nu = None):
     if "nu" not in map_str:
@@ -111,6 +110,16 @@ def make_map_latex(map_str, nu = None):
     else:
         phi_str = lc_str + "\\frac{%s}{%s}" % (num_str, den_str)
     return phi_str
+
+def make_plane_model_latex(crv_str, nu=None):
+    if "nu" not in crv_str:
+        R0 = QQ
+    else:
+        R0 = PolynomialRing(QQ, "nu")
+    R = PolynomialRing(R0, 2, "t,x")
+    f = R(crv_str)
+    #return teXify_pol(f)
+    return latex(f)+"=0"
 
 
 ###############################################################################
@@ -231,6 +240,7 @@ class WebBelyiGalmap(object):
 
         data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
+        data["plane_model"] = make_plane_model_latex(galmap["plane_model"])
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
