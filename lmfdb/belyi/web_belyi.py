@@ -240,7 +240,8 @@ class WebBelyiGalmap(object):
 
         data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
-        data["plane_model"] = make_plane_model_latex(galmap["plane_model"])
+        if galmap.get("plane_model"):
+            data["plane_model"] = make_plane_model_latex(galmap["plane_model"])
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
