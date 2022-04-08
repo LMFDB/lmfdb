@@ -88,10 +88,10 @@ class HomePageTest(LmfdbTest):
     def test_download_shortest(self):
         L = self.tc.get("/Lattice/13.14.28.8.1/download/magma/shortest_vectors").get_data(as_text=True)
         assert 'data := ' in L
- 
+
     def test_download_genus(self):
         L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").get_data(as_text=True)
-        assert ']~)' in L 
+        assert ']~)' in L
 
 
     def test_favorite(self):

@@ -239,4 +239,3 @@ class Configuration(object):
         res = dict(self.default_args["postgresql"])
         res["port"] = int(res["port"])
         return res
-

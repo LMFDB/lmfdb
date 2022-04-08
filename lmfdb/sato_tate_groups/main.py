@@ -262,8 +262,10 @@ st_aliases = {
 def boolean_name(value):
     return 'yes' if value else 'no'
 
-def comma_separated_list(list):
-    return ', '.join(list)
+
+def comma_separated_list(lst):
+    return ', '.join(lst)
+
 
 def string_matrix(m):
     if len(m) == 0:

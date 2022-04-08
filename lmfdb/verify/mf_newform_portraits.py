@@ -10,4 +10,3 @@ class mf_newform_portraits(MfChecker):
 
     # attached to mf_newforms
     # check that there is exactly one record in mf_newform_portraits for each record in mf_newforms, uniquely identified by label
-

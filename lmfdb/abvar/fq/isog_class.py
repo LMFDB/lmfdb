@@ -386,7 +386,7 @@ class AbvarFq_isoclass(object):
             geometric_endo_info, do_describe = self.display_endo_info(self.geometric_extension_degree, do_describe)
             ans += g2_table(self.alg_clo_field(), geometric_endo_info, True)
         ans += "All geometric endomorphisms are defined over ${0}$.\n".format(self.ext_field(self.geometric_extension_degree))
-        if self.relevant_degs() != []:
+        if self.relevant_degs():
             ans += "<br>\n<b>Remainder of endomorphism lattice by field</b>\n"
             ans += "<ul>\n"
             for deg in self.relevant_degs():

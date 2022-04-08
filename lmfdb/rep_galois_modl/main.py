@@ -306,4 +306,3 @@ def download_rep_galois_modl_full_lists_g(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-

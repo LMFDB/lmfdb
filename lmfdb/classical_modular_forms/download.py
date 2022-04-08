@@ -650,4 +650,3 @@ class CMF_download(Downloader):
                           label,
                           lang=lang,
                           title='Make newform %s in Magma,'%(label))
-

@@ -17,11 +17,13 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 
 # utilitary functions for displays
 
-def print_q_expansion(list):
-    list = [str(c) for c in list]
-    Qb = PolynomialRing(QQ,'b')
-    Qq = PowerSeriesRing(Qb['a'],'q')
-    return web_latex(Qq([c for c in list]).add_bigoh(len(list)))
+
+def print_q_expansion(lst):
+    lst = [str(c) for c in lst]
+    Qb = PolynomialRing(QQ, 'b')
+    Qq = PowerSeriesRing(Qb['a'], 'q')
+    return web_latex(Qq(lst).add_bigoh(len(lst)))
+
 
 def my_latex(s):
     # This code was copy pasted and should be refactored

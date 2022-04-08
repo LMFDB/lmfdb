@@ -840,7 +840,7 @@ class NumberFieldGaloisGroup(object):
         self.lowered = self.lower_precision()
         def help_padic(n,p, prec):
             """
-              Take an integer n, prime p, and precision prec, and return a 
+              Take an integer n, prime p, and precision prec, and return a
               prec-tuple of the p-adic coefficients of j
             """
             n = ZZ(n)
@@ -860,7 +860,7 @@ class NumberFieldGaloisGroup(object):
         p = self._data['QpRts-p']
         prec = self._data['QpRts-prec']
         myroots = [[help_padic(z, p, prec) for z in t] for t in myroots]
-        myroots = [[[getel(root[j], r) 
+        myroots = [[[getel(root[j], r)
             for j in range(len(self._data['QpRts-minpoly'])-1)]
             for r in range(prec)]
             for root in myroots]

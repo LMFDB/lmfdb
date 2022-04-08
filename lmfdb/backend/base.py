@@ -1149,16 +1149,16 @@ class PostgresBase(object):
         meta_name_hist_sql = Identifier(meta_name + "_hist")
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter=str(sep))]
-            if len(lines) == 0:
-                return
-            for line in lines:
-                if line[table_name_idx] != search_table:
-                    raise RuntimeError(
-                        f"column {table_name_idx} (= {line[table_name_idx]}) "
-                        f"in the file {filename} doesn't match "
-                        f"the search table name {search_table}"
-                    )
+            lines = list(csv.reader(F, delimiter=str(sep)))
+        if not lines:
+            return
+        for line in lines:
+            if line[table_name_idx] != search_table:
+                raise RuntimeError(
+                    f"column {table_name_idx} (= {line[table_name_idx]}) "
+                    f"in the file {filename} doesn't match "
+                    f"the search table name {search_table}"
+                )
 
         with DelayCommit(self, silence=True):
             # delete the current columns
