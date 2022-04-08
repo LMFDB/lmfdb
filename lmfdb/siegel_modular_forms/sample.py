@@ -33,7 +33,7 @@ class Sample_class (SageObject):
         self.__is_integral = doc.get('is_integral')
         self.__representation = doc.get('representation')
         self.__id = doc.get('id_link')
- 
+
     def collection(self):
         return self.__collection
 

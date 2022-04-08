@@ -18,7 +18,7 @@ class AbGpsHomeTest(LmfdbTest):
     #  def test_stats_page(self):
     #  self.check_args("/Groups/Abstract/stats","Abstract groups: Statistics")
 
- 
+
     def test_completeness_page(self):
         r"""
         Check that Groups/Abstract/Completeness works
@@ -556,4 +556,3 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?minimal_normal=yes&search_type=Subgroups", "4.2.4.a1.a1")
         self.check_args("/Groups/Abstract/?minimal_normal=no&search_type=Subgroups", "4.2.4.a1.a1")
         self.not_check_args("/Groups/Abstract/?minimal_normal=no&search_type=Subgroups", "2.1.1.a1.a1")
-

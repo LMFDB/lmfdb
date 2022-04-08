@@ -63,4 +63,3 @@ def url_character(**kwargs):
             return url_for('characters.hc_calc',**kwargs)
         else:
             return url_for('characters.render_Heckewebpage',**kwargs)
-

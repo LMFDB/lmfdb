@@ -247,12 +247,12 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def Sylows(self):
         if self.solvable:
-            return [P for P in self.G.SylowSystem()]
+            return list(self.G.SylowSystem())
         else:
             return [self.G.SylowSubgroup(p) for p in self.order.prime_factors()]
     @lazy_attribute
     def SylowComplements(self):
-        return [H for H in self.G.ComplementSystem()]
+        return list(self.G.ComplementSystem())
     @lazy_attribute
     def Zgroup(self):
         return all(P.IsCyclic() for P in self.Sylows)

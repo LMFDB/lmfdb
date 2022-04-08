@@ -22,7 +22,7 @@ class HGCWAstats(StatsDisplay):
         self.dim_max = db.hgcwa_passports.max('dim')
         self.g0_max = db.hgcwa_passports.max('g0')
         self.refined_passports_knowl = display_knowl(
-            'curve.highergenus.aut.refinedpassport', 
+            'curve.highergenus.aut.refinedpassport',
             title='refined passports')
         self.generating_vectors_knowl = display_knowl(
             'curve.highergenus.aut.generatingvector',
@@ -42,9 +42,9 @@ class HGCWAstats(StatsDisplay):
             r'has genus 0, as well as genus 2 through 4 with quotient genus '
             r'greater than 0. There are %s distinct %s in the database. The '
             r'number of distinct %s is %s. Here are some '
-            r'<a href="%s">further statistics</a>.' % 
+            r'<a href="%s">further statistics</a>.' %
             (2, self.genus_max, self.distinct_refined_passports,
-            self.refined_passports_knowl, self.generating_vectors_knowl, 
+            self.refined_passports_knowl, self.generating_vectors_knowl,
             self.distinct_generating_vectors, stats_url)
         )
 

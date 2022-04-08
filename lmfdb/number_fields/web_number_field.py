@@ -9,8 +9,8 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
-        raw_typeset_poly, display_multiset, factor_base_factor, 
+from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+        raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
@@ -506,11 +506,11 @@ class WebNumberField:
     def monogenic(self):
         if self.haskey('monogenic'):
             if self._data['monogenic']==1:
-                return 'Yes' 
+                return 'Yes'
             if self._data['monogenic']==0:
                 return 'Not computed'
             if self._data['monogenic']==-1:
-                return 'No' 
+                return 'No'
         return 'Not computed'
 
     def index(self):
@@ -908,7 +908,7 @@ class WebNumberField:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
-                thisdat = [lab, f, LF['e'], LF['f'], LF['c'], 
+                thisdat = [lab, f, LF['e'], LF['f'], LF['c'],
                     transitive_group_display_knowl(LF['galois_label']),
                     LF['t'], LF['u'], LF['slopes']]
                 if str(p) not in local_algebra_dict:

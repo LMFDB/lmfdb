@@ -4,12 +4,17 @@ from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler, formatters
 from sage.misc.lazy_attribute import lazy_attribute
 
+
 def elist_formatter(elist):
-    if elist == []:
+    if not elist:
         return "1"
     edisp = ["^{%s}" % e if e != 1 else "" for e in elist]
     return f"${''.join(p+e for (p,e) in zip('pqrsl', edisp))}$"
+
+
 pqr_re = re.compile(r"^(1)|(p(\^\{(\d+)\})?)(q(\^\{(\d+)\})?)?(r(\^\{(\d+)\})?)?(s(\^\{(\d+)\})?)?(l(\^\{(\d+)\})?)?$")
+
+
 def elist_qformatter(elist):
     if isinstance(elist, list):
         return "exponents_of_order=" + str(elist).replace(" ", "")

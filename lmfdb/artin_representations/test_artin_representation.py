@@ -5,7 +5,7 @@ from lmfdb.tests import LmfdbTest
 class ArtinRepTest(LmfdbTest):
 
     # All tests should pass
-    # 
+    #
     def test_search_deg_condrange(self):
         L = self.tc.get('/ArtinRepresentation/?dimension=3&conductor=1988-2015&group=&ramified=&unramified=&root_number=&frobenius_schur_indicator=&count=15')
         assert '41' in L.get_data(as_text=True) # Only 1 result at the time this test was written, which has conductor 2009 = 7^2.41

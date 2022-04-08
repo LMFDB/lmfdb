@@ -233,4 +233,3 @@ class GLnCSearchArray(SearchArray):
             [count]]
         self.refine_array = [
             [order, dim, irreducible]]
-

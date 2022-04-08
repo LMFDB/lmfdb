@@ -583,7 +583,7 @@ def lfuncFEtex(L, fmt):
             else:
                 return 3
 
-        if L.mu_fe != []:
+        if L.mu_fe:
             mus = [
                 display_complex(
                     CDF(mu).real(), CDF(mu).imag(), mu_fe_prec(mu), method="round"
@@ -597,7 +597,7 @@ def lfuncFEtex(L, fmt):
         else:
             ans += r"\ "
         ans += ":"
-        if L.nu_fe != []:
+        if L.nu_fe:
             if len(L.nu_fe) >= 6 and L.nu_fe == [L.nu_fe[0]] * len(L.nu_fe):
                 ans += "[%s]^{%d}" % (L.nu_fe[0], len(L.nu_fe))
             else:
@@ -615,10 +615,10 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     ''' Returns the LaTex to display for L(s)
         Will eventually be replaced by specialValueTriple.
     '''
-    if normalization=="arithmetic":
-        _, tex, Lval =  specialValueTriple(L, s, '', sLatex)
+    if normalization == "arithmetic":
+        _, tex, Lval = specialValueTriple(L, s, '', sLatex)
     else:
-        tex, _, Lval =  specialValueTriple(L, s, sLatex, '')
+        tex, _, Lval = specialValueTriple(L, s, sLatex, '')
     if Lval == r"\infty":
         operator = " = "
     else:
@@ -876,4 +876,3 @@ def parse_codename(text):
     ans = re.sub('(r|c)', ',', ans)
 
     return '(' + ans + ')'
-

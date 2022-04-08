@@ -37,8 +37,8 @@
 from sage.all import Integer, lcm, PolynomialRing, Integers, FiniteField, AlternatingGroup, Permutation
 
 
-def polynomial_conjugacy_class_matcher_fn(input):
-    """ Given an input of the form
+def polynomial_conjugacy_class_matcher_fn(inp):
+    """ Given an input ``inp`` of the form
         [{"RootOf":["0","1"], "ConjugacyClass":3}, {"RootOf":["-7","1"], "ConjugacyClass":4}]
         returns a function that
             - takes an argument alpha
@@ -47,7 +47,7 @@ def polynomial_conjugacy_class_matcher_fn(input):
     """
     P = PolynomialRing(Integers(), "x")
     fn_cc_pairs = []
-    for d in input:
+    for d in inp:
         pol = P([Integer(int_val) for int_val in d["RootOf"]])
         fn_cc_pairs.append((pol, d["ConjugacyClass"]))
 
@@ -59,7 +59,7 @@ def polynomial_conjugacy_class_matcher_fn(input):
         for pol_fn, conjugacy_class_index in fn_cc_pairs:
             if pol_fn(alpha) == 0:
                 return conjugacy_class_index
-        raise AssertionError("alpha = %s is supposed to be root of one of %s" % (alpha, input))
+        raise AssertionError("alpha = %s is supposed to be root of one of %s" % (alpha, inp))
     return polynomial_conjugacy_class_matcher
 
 

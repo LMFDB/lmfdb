@@ -276,10 +276,12 @@ def render_sample_page(family, sam, args, bread):
     except ValueError:
         evs_to_show = []
         fcs_to_show = []
-    info['evs_to_show'] = sorted([n for n in (evs_to_show if len(evs_to_show) else sam.available_eigenvalues()[:10])])
-    info['fcs_to_show'] = sorted([n for n in (fcs_to_show if len(fcs_to_show) else sam.available_Fourier_coefficients()[1:6])])
-    info['evs_avail'] = [n for n in sam.available_eigenvalues()]
-    info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
+    info['evs_to_show'] = sorted(evs_to_show if len(evs_to_show)
+                                 else sam.available_eigenvalues()[:10])
+    info['fcs_to_show'] = sorted(fcs_to_show if len(fcs_to_show)
+                                 else sam.available_Fourier_coefficients()[1:6])
+    info['evs_avail'] = list(sam.available_eigenvalues())
+    info['fcs_avail'] = list(sam.available_Fourier_coefficients())
 
     # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant
@@ -320,11 +322,11 @@ def render_sample_page(family, sam, args, bread):
         info['reduce'] = safe_reduce
     else:
         info['reduce'] = latex
-        
+
     # check that explicit formula is not ridiculously big
     if sam.explicit_formula():
         info['explicit_formula_bytes'] = len(sam.explicit_formula())
         if len(sam.explicit_formula()) < 100000:
             info['explicit_formula'] = sam.explicit_formula()
-        
+
     return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties=properties, info=info)

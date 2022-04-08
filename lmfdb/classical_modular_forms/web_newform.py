@@ -206,9 +206,9 @@ class WebNewform(object):
 
         # lookup twists (of newform orbits or embedded newforms as appropriate)
         if self.embedding_label is None:
-            self.twists = [r for r in db.mf_twists_nf.search({'source_label':self.label})]
+            self.twists = list(db.mf_twists_nf.search({'source_label':self.label}))
         else:
-            self.embedded_twists = [r for r in db.mf_twists_cc.search({'source_label':self.label + '.' + self.embedding_label})]
+            self.embedded_twists = list(db.mf_twists_cc.search({'source_label':self.label + '.' + self.embedding_label}))
             if self.embedded_twists:
                 self.embedded_minimal_twist = self.embedded_twists[0]["twist_class_label"]
 

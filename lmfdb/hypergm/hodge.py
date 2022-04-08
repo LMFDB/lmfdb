@@ -2,10 +2,10 @@ def mu_nu(hodge, signature):
     """
         Computes the mu and nu given hodge numbers and signature
     """
-    #hodge = [int(a) for a in hodge.split(',')]
+    # hodge = [int(a) for a in hodge.split(',')]
     motivic_weight = len(hodge) - 1
     hodge_index = lambda p: hodge[p]
-            # The hodge number p,q
+    # The hodge number p,q
 
     q = lambda p: motivic_weight - p
 

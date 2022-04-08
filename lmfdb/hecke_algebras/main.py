@@ -14,7 +14,7 @@ from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
-l_range=[ell for ell in prime_range(14)]
+l_range = list(prime_range(14))
 
 #breadcrumbs and links for data quality entries
 
@@ -419,7 +419,7 @@ def render_hecke_algebras_webpage_download(**args):
         response = make_response(download_hecke_algebras_full_lists_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'gen': 
+    elif args['obj'] == 'gen':
         response = make_response(download_hecke_algebras_full_lists_gen(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
@@ -468,10 +468,10 @@ def download_hecke_algebras_full_lists_gen(**args):
 @hecke_algebras_page.route('/<orbit_label>/<index>/<prime>/download/<lang>/<obj>')
 def render_hecke_algebras_webpage_ell_download(**args):
     if args['obj'] == 'operators':
-        response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
+        response = make_response(download_hecke_algebras_full_lists_mod_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'idempotents': 
+    elif args['obj'] == 'idempotents':
         response = make_response(download_hecke_algebras_full_lists_id(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
@@ -488,7 +488,7 @@ def download_hecke_algebras_full_lists_mod_op(**args):
     lang = args['lang']
     c = download_comment_prefix[lang]
     field='GF(%s), %s, %s, '%(res['ell'], sqrt(len(res['operators'][0])), sqrt(len(res['operators'][0])))
-    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field 
+    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
 

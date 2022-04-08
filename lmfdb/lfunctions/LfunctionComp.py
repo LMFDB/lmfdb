@@ -25,15 +25,11 @@ def genus2_isogeny_class_table(Nmin, Nmax):
     ''' Returns a table of all isogeny classes of elliptic curves with
      conductor in the ranges NMin, NMax.
     '''
-    iso_list = []
-
     query = {'cond': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
     res = db.g2c_curves.search(query, 'class')
-    iso_list = sorted([iso.split('.') for iso in set([r for r in res])])
-
-    return iso_list
+    return sorted(iso.split('.') for iso in set(res))
 
 
 def isogeny_class_cm(label):
