@@ -132,7 +132,7 @@
 {% if curve.genus == 0 %}
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
 
-<p> Since this modular curve has genus 0, there are no {{ KNOWL('modcurve.isolated_point', 'isolated points') }} of any degree{% if curve.known_low_degree_points > 0 %}, but there are {{curve.known_low_degree_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree='2-')}}">stored points</a>{% else %}, and there are no stored points{% endif %} of degree at least 2. </p>
+<p> Since this modular curve has genus 0, there are no {{ KNOWL('ag.isolated_point', 'isolated points') }} of any degree{% if curve.known_low_degree_points > 0 %}, but there are {{curve.known_low_degree_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree='2-')}}">stored points</a>{% else %}, and there are no stored points{% endif %} of degree at least 2. </p>
 
 {% elif curve.db_nf_points %}
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
@@ -140,7 +140,7 @@
 <p> The following are the known low degree points on this modular curve (one per $j$-invariant).</p>
 <table class="ntdata">
   <thead>
-    <tr><th>{{ KNOWL('modcurve.point_degree', 'degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('modcurve.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}</tr>
+    <tr><th>{{ KNOWL('modcurve.point_degree', 'degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}</tr>
   </thead>
   <tbody>
     {% for ec_label, ec_url, cm, isolated, jinv, res_field, res_field_url, j_field, j_field_url, degree in curve.db_nf_points %}

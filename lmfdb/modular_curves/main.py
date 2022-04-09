@@ -184,8 +184,9 @@ modcurve_columns = SearchColumns([
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "X", "Xsp", "Xsp+", "Xns", "Xns+", "XS4", "any"]:
+    if inp not in ["X0", "X1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "any"]:
         raise ValueError
+    inp = inp.replace("plus", "+")
     if inp == "any":
         query[qfield] = {"$like": "X%"}
     else:
@@ -384,8 +385,8 @@ class ModCurveSearchArray(SearchArray):
                      ("X", "X(N)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
-                     ("Xsp+", "Xsp+(N)"),
-                     ("Xns+", "Xns+(N)"),
+                     ("Xspplus", "Xsp+(N)"),
+                     ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
@@ -562,8 +563,8 @@ class RatPointSearchArray(SearchArray):
                      ("X", "X(N)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
-                     ("Xsp+", "Xsp+(N)"),
-                     ("Xns+", "Xns+(N)"),
+                     ("Xspplus", "Xsp+(N)"),
+                     ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
