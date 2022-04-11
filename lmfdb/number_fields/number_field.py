@@ -24,7 +24,7 @@ from lmfdb.utils import (
     raw_typeset_int, compress_poly_Q)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol
 from lmfdb.api import datapage
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -831,7 +831,7 @@ nf_columns = SearchColumns([
     MathCol("rd", "nf.root_discriminant", "Root discriminant"),
     CheckCol("cm", "nf.cm_field", "Is CM field?"),
     CheckCol("is_galois", "nf.galois_group", "Is Galois?"),
-    CheckCol("monogenic", "nf.monogenic", "Is monogenic?"),
+    CheckMaybeCol("monogenic", "nf.monogenic", "Is monogenic?"),
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
     SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),

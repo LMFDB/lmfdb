@@ -106,6 +106,15 @@ class CheckCol(SearchCol):
     def display(self, rec):
         return "&#x2713;" if self.get(rec) else ""
 
+class CheckMaybeCol(SearchCol):
+    def __init__(self, name, knowl, title, default=False, align="center", **kwds):
+        super().__init__(name, knowl, title, default, align, **kwds)
+
+    def display(self, rec):
+        if self.get(rec)>0:
+            return "yes" 
+        return "no" if self.get(rec)<0 else "not computed"
+
 class LinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_for, default=False, align="left", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
