@@ -112,8 +112,8 @@ class CheckMaybeCol(SearchCol):
 
     def display(self, rec):
         if self.get(rec)>0:
-            return "yes" 
-        return "no" if self.get(rec)<0 else "not computed"
+            return "&#x2713;" 
+        return "" if self.get(rec)<0 else "not computed"
 
 class LinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_for, default=False, align="left", **kwds):
