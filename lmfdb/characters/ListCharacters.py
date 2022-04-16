@@ -188,12 +188,11 @@ class CharacterSearch:
         self.mmin = max(self.mmin,self.cmin,self.omin)
 
         if self.parity:
-            self.is_odd = True if self.parity == parity_string(-1) else False
+            self.is_odd = self.parity == parity_string(-1)
         if self.primitive:
-            self.is_primitive = True if self.primitive == bool_string(True) else False
+            self.is_primitive = self.primitive == bool_string(True)
 
         self.start = int(query.get('start', '0'))
-
 
     def results(self):
         info = {}
