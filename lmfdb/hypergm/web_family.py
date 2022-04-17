@@ -291,10 +291,10 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def euler_factors(self):
-        return dict([(elt['p'], elt['eulers']) for elt in
-                     db.hgm_euler_survey.search({'label': self.label},
-                                                projection=['p', 'eulers'],
-                                                sort=[])])
+        return {elt['p']: elt['eulers'] for elt in
+                db.hgm_euler_survey.search({'label': self.label},
+                                           projection=['p', 'eulers'],
+                                           sort=[])}
 
     @lazy_attribute
     def defaultp(self):
@@ -359,7 +359,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def display_galois_groups(self):
-        return False if self.degree <= 2 or self.degree >= 12 else True
+        return not(self.degree <= 2 or self.degree >= 12)
 
     def table_euler_factors_p(self, p):
         if p not in self.euler_factors:

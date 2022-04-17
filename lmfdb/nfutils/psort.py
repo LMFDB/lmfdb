@@ -115,7 +115,7 @@ def make_keys(K,p):
             hh = [h.lift() % p**k1 for h in gfact]
             #print("p-adic factors mod {}^{}: {}".format(p,k1,hh))
             degs = list(Set([h.degree() for h in gfact]))
-            hd = dict([(d,[h for h in hh if h.degree()==d]) for d in degs])
+            hd = {d: [h for h in hh if h.degree() == d] for d in degs}
 
             # Finally we find the index of each prime above p
             for P in PP:

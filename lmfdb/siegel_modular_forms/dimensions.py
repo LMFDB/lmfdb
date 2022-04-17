@@ -225,7 +225,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         else:
             headers, dct = ['Total', 'Non cusp', 'Cusp'], {}
         for k in wt_range1:
-            dct[k] = dict([(h, 0) for h in headers])
+            dct[k] = {h: 0 for h in headers}
         return headers, dct
 
     if j >= 2 and wt_range[0] < 4:
