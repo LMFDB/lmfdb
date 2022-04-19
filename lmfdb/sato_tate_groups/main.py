@@ -675,7 +675,7 @@ def mu_data(n):
     rec['label_components'] = [int(0),int(1),int(0),int(n)]
     rec['weight'] = 0
     rec['degree'] = 1
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'mu(%d)'%n
     rec['pretty'] = r'\mu(%d)'%n
     rec['real_dimension'] = 0
@@ -732,7 +732,7 @@ def su2_mu_data(w, n):
     rec['label'] = "%d.2.3.c%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
     rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
@@ -787,7 +787,7 @@ def nu1_mu_data(w,n):
     rec['label'] = "%d.2.1.d%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'U(1)[C%d]'%n if n > 1 else 'N(U(1))'
     rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1

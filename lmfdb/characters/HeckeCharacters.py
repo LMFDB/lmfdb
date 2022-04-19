@@ -17,8 +17,8 @@ class RayClassGroup(AbelianGroup_class):
         # Use PARI to compute ray class group
         bnr = bnf.bnrinit([mod_ideal, mod_archimedean],1)
         invariants = bnr[5][2]         # bnr.clgp.cyc
-        invariants = tuple([ Integer(x) for x in invariants ])
-        names = tuple([ "I%i"%i for i in range(len(invariants)) ])
+        invariants = tuple(Integer(x) for x in invariants)
+        names = tuple("I%i" % i for i in range(len(invariants)))
         generators = bnr[5][3]         # bnr.gen = bnr.clgp[3]
         generators = [ number_field.ideal(pari(x)) for x in generators ]
 
@@ -84,9 +84,10 @@ class RayClassGroup(AbelianGroup_class):
         for e in self.iter_exponents():
             yield self.exp(e)
 
+
 class HeckeCharGroup(DualAbelianGroup_class):
     def __init__(self, ray_class_group, base_ring):
-        names = tuple([ "chi%i"%i for i in range(ray_class_group.ngens()) ])
+        names = tuple("chi%i" % i for i in range(ray_class_group.ngens()))
         if base_ring is None:
             from sage.rings.number_field.number_field import CyclotomicField
             base_ring = CyclotomicField(LCM(ray_class_group.gens_orders()))

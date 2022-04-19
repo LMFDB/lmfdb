@@ -24,7 +24,7 @@ from lmfdb.utils import (
     raw_typeset_int, compress_poly_Q)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol
 from lmfdb.api import datapage
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -829,15 +829,15 @@ nf_columns = SearchColumns([
     MathCol("disc", "nf.discriminant", "Discriminant", default=True, align="left"),
     MathCol("num_ram", "nf.ramified_primes", "Ram. prime count", short_title="ramified prime count"),
     MathCol("rd", "nf.root_discriminant", "Root discriminant"),
-    CheckCol("cm", "nf.cm_field", "Is CM field?"),
-    CheckCol("is_galois", "nf.galois_group", "Is Galois?"),
-    CheckCol("monogenic", "nf.monogenic", "Is monogenic?"),
+    CheckCol("cm", "nf.cm_field", "CM field"),
+    CheckCol("is_galois", "nf.galois_group", "Galois"),
+    CheckMaybeCol("monogenic", "nf.monogenic", "Monogenic"),
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
     SearchCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 + - 1, align="center", mathmode=True),
     MathCol("regulator", "nf.regulator", "Regulator", align="left")],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd"])
+    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "monogenic"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
