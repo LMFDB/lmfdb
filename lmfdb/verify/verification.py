@@ -38,7 +38,7 @@ def pluralize(n, noun):
 class TooManyFailures(AssertionError):
     pass
 
-class speed_decorator(object):
+class speed_decorator():
     """
     Transparently wraps a function, so that functions can be classified by "isinstance".  Allow keyword arguments
     """
@@ -113,7 +113,7 @@ class overall_long(one_query):
     shortname = "long"
     timeout = 3600
 
-class TableChecker(object):
+class TableChecker():
     label_col = 'label' # default
 
     @staticmethod

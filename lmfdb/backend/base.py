@@ -204,7 +204,7 @@ def _meta_table_name(meta_name):
     return table_name
 
 
-class PostgresBase(object):
+class PostgresBase():
     """
     A base class for various objects that interact with Postgres.
 

@@ -118,7 +118,7 @@ def var_name(i):
         raise RuntimeError("too many variables in presentation")
 
 
-class WebObj(object):
+class WebObj():
     def __init__(self, label, data=None):
         self.label = label
         if data is None:
@@ -1762,7 +1762,7 @@ class WebAbstractConjClass(WebObj):
             name = self.label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
 
-class WebAbstractDivision(object):
+class WebAbstractDivision():
     def __init__(self, group, label, classes):
         self.group = group
         self.label = label
@@ -1774,7 +1774,7 @@ class WebAbstractDivision(object):
             name = self.label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Crational">{name}</a>'
 
-class WebAbstractAutjClass(object):
+class WebAbstractAutjClass():
     def __init__(self, group, label, classes):
         self.group = group
         self.label = label

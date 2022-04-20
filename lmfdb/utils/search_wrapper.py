@@ -32,7 +32,7 @@ def use_split_ors(info, query, split_ors, offset, table):
     )
 
 
-class Wrapper(object):
+class Wrapper():
     def __init__(self, f, template, table, title, err_title, postprocess=None, one_per=None, **kwds):
         self.f = f
         self.template = template

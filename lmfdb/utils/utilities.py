@@ -666,7 +666,7 @@ def code_snippet_knowl(D, full=True):
 #  pagination utilities
 ################################################################################
 
-class ValueSaver(object):
+class ValueSaver():
     """
     Takes a generator and saves values as they are generated so that values can be retrieved multiple times.
     """
@@ -691,7 +691,7 @@ class ValueSaver(object):
     def __len__(self):
         raise TypeError("Unknown length")
 
-class Pagination(object):
+class Pagination():
     """
     INPUT:
 
@@ -784,7 +784,7 @@ def flash_info(errmsg, *args):
 ################################################################################
 
 # LinkedList is used in Ajax below
-class LinkedList(object):
+class LinkedList():
     __slots__ = ('value', 'next', 'timestamp')
 
     def __init__(self, value, nxt):
@@ -797,7 +797,7 @@ class LinkedList(object):
         return self.next
 
 
-class AjaxPool(object):
+class AjaxPool():
     def __init__(self, size=1e4, expiration=3600):
         self._size = size
         self._key_list = self._head = LinkedList(None, None)

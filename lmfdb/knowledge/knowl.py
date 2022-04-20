@@ -764,7 +764,7 @@ knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
 reverse_status_code = {v:k for k,v in knowl_status_code.items()}
 knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2}
 
-class Knowl(object):
+class Knowl():
     """
     INPUT:
 

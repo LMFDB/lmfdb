@@ -31,7 +31,7 @@ LMFDB_VERSION = "LMFDB Release 1.2.1"
 ############################
 
 
-class ReverseProxied(object):
+class ReverseProxied():
     def __init__(self, app):
         self.app = app
 

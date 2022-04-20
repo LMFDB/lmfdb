@@ -6,7 +6,7 @@ from collections import defaultdict
 
 redline = re.compile(r"An exception in|Exception in|failed test|FAILED with")
 
-class Follower(object):
+class Follower():
     """
     A class for printing the output of a verification run while it's being generated in parallel.
 

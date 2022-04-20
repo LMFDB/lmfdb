@@ -27,7 +27,7 @@ def ctx_rep_galois_modl_summary():
     return {'rep_galois_modl_summary': rep_galois_modl_summary}
 
 
-class rep_galois_modlstats(object):
+class rep_galois_modlstats():
     """
     Class for creating and displaying statistics for integral rep_galois_modls
     """

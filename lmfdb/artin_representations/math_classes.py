@@ -79,7 +79,7 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
-class ArtinRepresentation(object):
+class ArtinRepresentation():
     def __init__(self, *x, **data_dict):
         self._knowl_cache = data_dict.get("knowl_cache")
         if len(x) == 0:
@@ -653,7 +653,7 @@ class CharacterValues(list):
         return "[" + ",".join(x.latex() for x in self) + "]"
 
 
-class ConjugacyClass(object):
+class ConjugacyClass():
     def __init__(self, G, data):
         self._G = G
         self._data = data
@@ -682,7 +682,7 @@ class G_gens(list):
         return self
 
 
-class NumberFieldGaloisGroup(object):
+class NumberFieldGaloisGroup():
     def __init__(self, *x, **data_dict):
         if len(x) == 0:
             # Just passing named arguments

@@ -53,7 +53,7 @@ else:
         def __repr__(self):
             return self.literal
 
-    class RealEncoder(object):
+    class RealEncoder():
         def __init__(self, value):
             self._value = value
 
@@ -96,7 +96,7 @@ def numeric_converter(value, cur=None):
         return Integer(value)
 
 
-class Array(object):
+class Array():
     """
     Since we use Json by default for lists, this class lets us
     get back the original behavior of encoding as a Postgres array when needed.

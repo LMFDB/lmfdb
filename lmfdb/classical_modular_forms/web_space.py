@@ -166,7 +166,7 @@ def trace_expansion_generic(space, prec_max=10):
     return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
 
-class DimGrid(object):
+class DimGrid():
     def __init__(self, grid=None):
         if grid is None:
             self._grid = {'M':{'all':0,'new':0,'old':0},
@@ -221,7 +221,7 @@ class DimGrid(object):
                      'old':data['eis_dim']-data['eis_new_dim']}}
         return DimGrid(grid)
 
-class WebNewformSpace(object):
+class WebNewformSpace():
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
@@ -367,7 +367,7 @@ class WebNewformSpace(object):
     def display_character_field(self):
         return cyc_display(self.char_order, self.char_degree, False)
 
-class WebGamma1Space(object):
+class WebGamma1Space():
     def __init__(self, level, weight):
         data = db.mf_gamma1.lucky({'level':level,'weight':weight})
         if data is None:
