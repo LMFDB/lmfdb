@@ -1,6 +1,6 @@
 
 
-class StandardColors(object):
+class StandardColors():
     white = 'white'
     black = 'black'
     purple = 'purple'
@@ -48,7 +48,7 @@ class StandardColors(object):
 
 c = StandardColors()
 
-class ColorScheme(object):
+class ColorScheme():
     colors = {
         'col_main_d':  None, # Header and footer
         'col_main_dl': None, # Header and footer text

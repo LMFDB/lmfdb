@@ -37,7 +37,7 @@ def cyc_to_QZ(A):
     return alpha
 
 
-class WebHyperGeometricFamily(object):
+class WebHyperGeometricFamily():
     def __init__(self, data):
         for elt in db.hgm_families.col_type:
             if elt not in data:

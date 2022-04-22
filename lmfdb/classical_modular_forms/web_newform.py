@@ -121,7 +121,7 @@ def parity_text(val):
     return 'odd' if val == -1 else 'even'
 
 
-class WebNewform(object):
+class WebNewform():
     def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal

@@ -58,7 +58,7 @@ class PowMulNodeVisitor(ast.NodeTransformer):
         def visit_Num(self, node):  # deprecated for python >= 3.8
             return self.visit_Constant(node)
 
-class SearchParser(object):
+class SearchParser():
     def __init__(
         self,
         f,
