@@ -225,7 +225,7 @@ def latex_equation(ainvs):
                     term(a6,''),
                     r''])
 
-class ECNF(object):
+class ECNF():
 
     """
     ECNF Wrapper

@@ -69,7 +69,7 @@ def validate_label(label):
     if not all(c.isalpha() and c == c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
-class AbvarFq_isoclass(object):
+class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
     """

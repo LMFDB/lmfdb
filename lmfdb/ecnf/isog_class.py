@@ -12,7 +12,7 @@ from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
 logger = make_logger("ecnf")
 
 
-class ECNF_isoclass(object):
+class ECNF_isoclass():
 
     """
     Class for an isogeny class of elliptic curves over Q

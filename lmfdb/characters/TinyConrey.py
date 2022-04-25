@@ -59,7 +59,7 @@ def get_sage_genvalues(modulus, order, genvalues, zeta_order):
         return [x * zeta_order / phi_mod for x in genvalues_exponent]
 
 
-class PariConreyGroup(object):
+class PariConreyGroup():
 
     def __init__(self, modulus):
         self.modulus = int(modulus)
@@ -72,7 +72,7 @@ class PariConreyGroup(object):
         return pari("znstar({},1).cyc".format(self.modulus))
 
 
-class ConreyCharacter(object):
+class ConreyCharacter():
     """
     tiny implementation on Conrey index only
     """

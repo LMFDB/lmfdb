@@ -689,7 +689,7 @@ def ratpts_simpletable(pts,pts_v,fh):
 # Genus 2 curve class definition
 ###############################################################################
 
-class WebG2C(object):
+class WebG2C():
     """
     Class for a genus 2 curve (or isogeny class) over Q.  Attributes include:
         data -- information about the curve and its Jacobian to be displayed (taken from db and polished)
