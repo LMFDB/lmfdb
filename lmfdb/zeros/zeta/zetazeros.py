@@ -21,7 +21,7 @@ def friends_list():
     return [('L-function', url_for("l_functions.l_function_riemann_page"))]
 
 def downloads():
-    return [('Bulk download', "https://beta.lmfdb.org/data/riemann-zeta-zeros/")]
+    return [('Bulk download', "https://beta.lmfdb.org/riemann-zeta-zeros/")]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
