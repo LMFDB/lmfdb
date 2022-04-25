@@ -85,7 +85,7 @@ def cremona_label_to_lmfdb_label(lab):
         return lab
     return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
-class WebBMF(object):
+class WebBMF():
     """
     Class for a Bianchi Newform
     """

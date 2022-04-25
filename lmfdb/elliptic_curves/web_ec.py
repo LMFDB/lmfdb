@@ -169,7 +169,7 @@ def latex_equation(ainvs):
                     r'\)'])
 
 
-class WebEC(object):
+class WebEC():
     """
     Class for an elliptic curve over Q
     """

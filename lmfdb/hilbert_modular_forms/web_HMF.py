@@ -24,7 +24,7 @@ def construct_full_label(field_label, weight, level_label, label_suffix):
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
 
 
-class WebHMF(object):
+class WebHMF():
     """
     Class for an Hilbert Modular Newform
     """

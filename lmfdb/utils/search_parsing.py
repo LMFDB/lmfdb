@@ -58,7 +58,7 @@ class PowMulNodeVisitor(ast.NodeTransformer):
         def visit_Num(self, node):  # deprecated for python >= 3.8
             return self.visit_Constant(node)
 
-class SearchParser(object):
+class SearchParser():
     def __init__(
         self,
         f,
@@ -1064,7 +1064,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
 
         galfield, nfield = qfield
         if nfield and nfield not in query:
-            nvals = list(set([s[0] for s in gcs]))
+            nvals = list(set(s[0] for s in gcs))
             if len(nvals) == 1:
                 query[nfield] = nvals[0]
             else:

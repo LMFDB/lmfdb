@@ -72,7 +72,7 @@ def bool_string(b):
 ###
 #############################################################################
 
-class WebCharObject(object):
+class WebCharObject():
     """ class for all characters and character groups """
     def __init__(self, **args):
         self.type = args.get('type',None)

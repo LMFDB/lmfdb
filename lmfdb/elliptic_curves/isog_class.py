@@ -8,7 +8,7 @@ from lmfdb import db
 
 from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
-class ECisog_class(object):
+class ECisog_class():
     """
     Class for an isogeny class of elliptic curves over Q
     """

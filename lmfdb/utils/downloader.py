@@ -7,7 +7,7 @@ from ast import literal_eval
 from io import BytesIO
 
 
-class Downloader(object):
+class Downloader():
     """
     A class for downloading data in a uniform way.
 

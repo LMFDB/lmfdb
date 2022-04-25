@@ -26,7 +26,7 @@ def modlmf_summary():
 def ctx_modlmf_summary():
     return {'modlmf_summary': modlmf_summary}
 
-class modlmf_stats(object):
+class modlmf_stats():
     """
     Class for creating and displaying statistics for integral modlmfs
     """
