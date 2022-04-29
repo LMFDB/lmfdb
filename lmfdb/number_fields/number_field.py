@@ -880,7 +880,7 @@ def number_field_search(info, query):
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad',cardinality='num_ram')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
-    parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
+    parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions', flag_unramified=True)
     parse_bool_unknown(info,query,'monogenic')
     parse_posints(info,query,'index')
     parse_primes(info,query,'inessentialp',name='Inessential primes',
