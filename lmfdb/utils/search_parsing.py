@@ -237,7 +237,7 @@ def parse_ints_to_list(arg, max_val=None):
         return [int(n) for n in s.split(",")]
     if "-" in s[1:]:
         i = s.index("-", 1)
-        m, M = s[:i], s[i + 1 :]
+        m, M = s[:i], s[i + 1:]
         if max_val is not None:
             try:
                 M = int(M)
@@ -248,7 +248,7 @@ def parse_ints_to_list(arg, max_val=None):
         return list(range(int(m), int(M) + 1))
     if ".." in s:
         i = s.index("..", 1)
-        m, M = s[:i], s[i + 2 :]
+        m, M = s[:i], s[i + 2:]
         if max_val is not None:
             try:
                 M = int(M)
@@ -310,7 +310,7 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
             return [parse_range(a) for a in arg.split(",")]
     elif "-" in arg[1:]:
         ix = arg.index("-", 1)
-        start, end = arg[:ix], arg[ix + 1 :]
+        start, end = arg[:ix], arg[ix + 1:]
         q = {}
         if start:
             q["$gte" if use_dollar_vars else "min"] = parse_singleton(start)
@@ -366,7 +366,7 @@ def parse_range2rat(arg, key, process):
         return ["$or", tmp]
     elif "-" in arg[1:]:
         ix = arg.index("-", 1)
-        start, end = arg[:ix], arg[ix + 1 :]
+        start, end = arg[:ix], arg[ix + 1:]
         q = {}
         if start:
             q["$gte"] = process(start)
@@ -385,7 +385,7 @@ def parse_range3(arg, split0=False):
         return sum([parse_range3(a, split0) for a in arg.split(",")], [])
     elif "-" in arg[1:]:
         ix = arg.index("-", 1)
-        start, end = arg[:ix], arg[ix + 1 :]
+        start, end = arg[:ix], arg[ix + 1:]
         if start:
             low = ZZ(str(start))
         else:
@@ -1512,7 +1512,7 @@ def parse_equality_constraints(inp, query, qfield, prefix="a", parse_singleton=i
         n = n.strip()
         if not n.startswith(prefix):
             raise SearchParsingError(f"{n} does not start with {prefix}")
-        n = int(n[len(prefix) :])
+        n = int(n[len(prefix):])
         if nshift is not None:
             n = nshift(n)
         t = parse_singleton(t.strip())

@@ -243,9 +243,9 @@ def groups_per_genus(genus):
         'genus': genus,
         'groups_0': groups_0,
         'groups_gt0': groups_gt0,
-        'show_top_braid' : show_top_braid,
-        'show_g0_gt0' : show_g0_gt0,
-        'group_display' : group_display
+        'show_top_braid': show_top_braid,
+        'show_g0_gt0': show_g0_gt0,
+        'group_display': group_display
     }
 
     title = 'Families of higher genus curves with automorphisms: Genus %s group statistics' % genus
@@ -1146,14 +1146,14 @@ def hgcwa_code_download(**args):
         data = [entry for entry in search_data if entry['topological'] == cc_list]
 
     elif label_is_one_passport(label):
-        search_data = list(db.hgcwa_passports.search({"passport_label" : label}))
+        search_data = list(db.hgcwa_passports.search({"passport_label": label}))
         if lang == args['download_type']:
             data = search_data
         else:
             data = [entry for entry in search_data if entry['braid'] == entry['cc']]
 
     elif label_is_one_family(label):
-        search_data = list(db.hgcwa_passports.search({"label" : label}))
+        search_data = list(db.hgcwa_passports.search({"label": label}))
         if lang == args['download_type']:
             data = search_data
         else:

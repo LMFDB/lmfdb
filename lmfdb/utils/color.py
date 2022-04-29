@@ -90,7 +90,7 @@ class ColorScheme():
         'knowl_db': '#66d', # knowl-qm.active
         'knowl_border_links': 'knowl_hyper_text',
         'knowl_border_hover': 'knowl_hyper_text',
-        'knowl_border_text' : c.grey,
+        'knowl_border_text': c.grey,
         # td.sorting
         'knowl_ld_1': '#c4c4ff',
         'knowl_l_1': '#D3D6FF',

@@ -192,14 +192,14 @@ class WebEC():
         """
         try:
             N, iso, number = split_lmfdb_label(label)
-            data = db.ec_curvedata.lucky({"lmfdb_label" : label})
+            data = db.ec_curvedata.lucky({"lmfdb_label": label})
             if not data:
                 return "Curve not found" # caller must catch this and raise an error
             data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
-                data = db.ec_curvedata.lucky({"Clabel" : label})
+                data = db.ec_curvedata.lucky({"Clabel": label})
                 if not data:
                     return "Curve not found" # caller must catch this and raise an error
                 data['label_type'] = 'Cremona'

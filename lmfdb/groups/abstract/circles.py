@@ -595,7 +595,7 @@ def arrange_rings(radii, colors, R0, rmax):
 
 def arrange(rdata, R0, rmax):
     radii = Counter([r for (r, o) in rdata])
-    colors = {r : Counter() for r in radii}
+    colors = {r: Counter() for r in radii}
     for (r, o) in rdata:
         colors[r][get_color(o)] += 1
     circles, R1 = arrange_ring(radii, colors, R0, rmax)
