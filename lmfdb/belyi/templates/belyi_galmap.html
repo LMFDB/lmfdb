@@ -1,6 +1,16 @@
 {% extends 'belyi_base.html' %}
 {% block subcontent %}
 
+<script>
+var cur_style = null;
+function show_eqns(eqnstyle) {
+    $('.std_eqn').hide();
+    $('.plane_eqn').hide();
+    $('.'+eqnstyle).show();
+  }
+</script>
+
+
 <h2>{{ KNOWL('belyi.base_field', title='Base field')}}</h2>
   <p>
     {% if data['in_LMFDB'] %}
@@ -16,29 +26,46 @@
 </h2>
 
 <h2>Curve</h2>
-  <p>
-    \(\displaystyle {{data.curve}}\)
-    {% if data.g == 0 %}
-      , with affine coordinate $x$
-    {% endif %}
-    {% if data["curve_label"] %}
-      , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
-    {% endif %}
-  </p>
+
+<table>
+  <tr class='std_eqn nodisplay'>
+    <td>
+      $\displaystyle {{ data.curve }}$
+      {% if data.g == 0 %}
+        , with affine coordinate $x$
+      {% endif %}
+      {% if data["curve_label"] %}
+        , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
+      {% endif %}
+    </td>
+    <td>
+      (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
+    </td>
+  </tr>
+  <tr class='plane_eqn'>
+    <td>
+      $\displaystyle {{ data.plane_model }}$
+      {% if data["curve_label"] %}
+        , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
+      {% endif %}
+    </td>
+    <td>
+      (<a onclick="show_eqns('std_eqn'); return false" href='#'>standard</a>)
+    </td>
+  </tr>
+</table>
 
 <h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
+<div class='std_eqn nodisplay'>
   {% if data.g == 0 %}
     <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
   {% else %}
     <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
   {% endif %}
-
-{% if data.plane_model %}
-<h2>Plane model</h2>
-  <p>
-    \(\displaystyle {{ data.plane_model }}\)
-  </p>
-{% endif %}
+</div>
+<div class='plane_eqn'>
+  <p> \(\displaystyle \phi(t,x) = {{data.plane_map}}\) </p>
+</div>
 
 <h2>{{ KNOWL('nf.embedding', title="Embeddings") }}</h2>
   <p>
