@@ -330,7 +330,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     info['properties']=[('Label', '%s' % info['label'])]+info['properties']
     downloads = [("Underlying data", url_for(".lattice_data", label=lab))]
 
-    if info['name'] != "" :
+    if info['name'] != "":
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template(

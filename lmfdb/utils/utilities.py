@@ -422,7 +422,7 @@ def display_float(x, digits, method = "truncate",
             if len(s) < digits + 2: # 2 = '/' + '-'
                 return str(x)
         k = round_to_half_int(x)
-        if k == x :
+        if k == x:
             k2 = None
             try:
                 k2 = ZZ(2*x)
@@ -717,7 +717,7 @@ class Pagination():
 
     @cached_property
     def entries(self):
-        return self.source[self.start : self.start+self.per_page]
+        return self.source[self.start: self.start+self.per_page]
 
     @cached_property
     def has_next(self):

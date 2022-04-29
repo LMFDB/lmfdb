@@ -1258,7 +1258,7 @@ class WebAbstractGroup(WebObj):
             ngens = len(used)
             for i in range(ngens):
                 a = used[i]
-                e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a : used[i + 1]])
+                e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
                 ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
                 if all(x == 0 for x in ae):
                     pure_powers.append("%s^{%s}" % (var_name(i), e))
