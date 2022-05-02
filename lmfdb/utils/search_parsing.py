@@ -4,7 +4,7 @@
 import re
 import sys
 from collections import Counter
-from lmfdb.utils.utilities import flash_error
+from lmfdb.utils.utilities import flash_error, flash_info
 from sage.all import ZZ, QQ, prod, PolynomialRing, pari
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
@@ -1138,11 +1138,17 @@ def parse_inertia(inp, query, qfield, err_msg=None):
 
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, error_is_safe=True)
-def parse_padicfields(inp, query, qfield):
+def parse_padicfields(inp, query, qfield, flag_unramified=False):
     labellist = inp.split(",")
+    doflash = False
     for label in labellist:
         if not LF_LABEL_RE.match(label):
             raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
+        splitlab = label.split('.')
+        if splitlab[2] == '0':
+            doflash = True
+    if flag_unramified and doflash:
+        flash_info("Search results may be incomplete.  Given $p$-adic completions contain an <a title='unramified' knowl='nf.unramified_prime'>unramified</a> field and completions are only searched for <a title='ramified' knowl='nf.ramified_primes'>ramified primes</a>.")
     query[qfield] = {"$contains": labellist}
 
 def input_string_to_poly(FF):
