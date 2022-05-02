@@ -245,7 +245,7 @@ def interesting():
 
 @app.context_processor
 def ctx_gsp4_subgroup():
-    return {'gsp4_subgroup_data' : gsp4_subgroup_data}
+    return {'gsp4_subgroup_data': gsp4_subgroup_data}
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
 def by_url_curve_label(cond, alpha, disc, num):

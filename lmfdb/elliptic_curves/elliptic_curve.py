@@ -436,7 +436,7 @@ def elliptic_curve_search(info, query):
         if info['cm'] == 'noCM':
             query['cm'] = 0
         elif info['cm'] == 'CM':
-            query['cm'] = {'$ne' : 0}
+            query['cm'] = {'$ne': 0}
         else:
             parse_ints(info,query,field='cm',qfield='cm')
     parse_element_of(info,query,'isogeny_degrees',split_interval=200,contained_in=get_stats().isogeny_degrees)

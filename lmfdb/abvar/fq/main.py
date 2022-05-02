@@ -642,7 +642,7 @@ def jump(info):
         lead = cdict[deg]
         if lead == 1: # accept monic normalization
             lead = cdict[0]
-            cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
+            cdict = {deg-exp: coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
             flash_error ("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
             return redirect(url_for(".abelian_varieties"))

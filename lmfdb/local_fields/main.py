@@ -361,7 +361,7 @@ def render_field_webpage(args):
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
-        if db.nf_fields.exists({'local_algs': {'$contains': label}}):
+        if data['is_completion']:
             friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]

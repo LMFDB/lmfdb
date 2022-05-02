@@ -404,7 +404,7 @@ def apply_coeff_info(L, coeff_info):
     base_power_int = int(coeff_info[0][2:-3])
     fix = False
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
-        L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
+        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
         # checks if we need to fix the Euler factors
         if is_prime(n) and L.dirichlet_coefficients_arithmetic[n] != 0:
             if fix:

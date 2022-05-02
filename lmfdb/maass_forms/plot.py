@@ -107,7 +107,7 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax, xfactor, yfactor, ticlen
         ans += "style='stroke:rgb(0,0,0);'/>\n"
 
     # ----------- Values and gridlines y axis
-    for i in range(yMin , yMax + 1, 2):
+    for i in range(yMin, yMax + 1, 2):
         yvalue = (i - yMin + 1) * yfactor
         ans += "<text x='5' y='{0}' ".format(str(yvalue + 3))
         ans += "style='fill:rgb(102,102,102);font-size:11px;'>"
@@ -120,7 +120,7 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax, xfactor, yfactor, ticlen
     # ----------- Axes labels
     ans += "<text x='5' y='{0}' ".format(str(height-5))
     ans += "style='fill:rgb(102,102,102);font-size:12px;'>Level</text>\n"
-    (xvalue, yvalue) = (str(width + 10) , 15)
+    (xvalue, yvalue) = (str(width + 10), 15)
     ans += "<text x='{0}' y='{1}' ".format(xvalue,yvalue)
     ans += "style='fill:rgb(102,102,102);font-size:14px;'>R</text>\n"
 

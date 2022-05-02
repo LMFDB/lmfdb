@@ -233,13 +233,13 @@ def api_query(table, id = None):
                 elif qval.startswith("py"):     # literal evaluation
                     qval = literal_eval(qval[2:])
                 elif qval.startswith("cs"):     # containing string in list
-                    qval = { "$contains" : [qval[2:]] }
+                    qval = { "$contains": [qval[2:]] }
                 elif qval.startswith("ci"):
-                    qval = { "$contains" : [int(qval[2:])] }
+                    qval = { "$contains": [int(qval[2:])] }
                 elif qval.startswith("cf"):
-                    qval = { "contains" : [float(qval[2:])] }
+                    qval = { "contains": [float(qval[2:])] }
                 elif qval.startswith("cpy"):
-                    qval = { "$contains" : [literal_eval(qval[3:])] }
+                    qval = { "$contains": [literal_eval(qval[3:])] }
             except Exception:
                 # no suitable conversion for the value, keep it as string
                 pass
