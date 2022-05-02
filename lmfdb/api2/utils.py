@@ -392,13 +392,13 @@ def interpret(query, qkey, qval, type_info):
             elif qval.startswith("py"):     # literal evaluation
                 qval = literal_eval(qval[2:])
             elif qval.startswith("cs"):     # containing string in list
-                qval = { "$in" : [qval[2:]] }
+                qval = { "$in": [qval[2:]] }
             elif qval.startswith("ci"):
-                qval = { "$in" : [int(qval[2:])] }
+                qval = { "$in": [int(qval[2:])] }
             elif qval.startswith("cf"):
-                qval = { "$in" : [float(qval[2:])] }
+                qval = { "$in": [float(qval[2:])] }
             elif qval.startswith("cpy"):
-                qval = { "$in" : [literal_eval(qval[3:])] }
+                qval = { "$in": [literal_eval(qval[3:])] }
         except Exception:
             # no suitable conversion for the value, keep it as string
             return

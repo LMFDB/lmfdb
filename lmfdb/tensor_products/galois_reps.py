@@ -188,7 +188,7 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             N = self.conductor
-            if N % p != 0 : # good reduction
+            if N % p != 0: # good reduction
                 return 1 - E.ap(p) * T + p * T**2
             elif N % (p**2) != 0: # multiplicative reduction
                 return 1 - E.ap(p) * T
@@ -334,7 +334,7 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(K, "T")
             T = R.gens()[0]
             N = self.conductor
-            if N % p != 0 : # good reduction
+            if N % p != 0: # good reduction
                 return 1 - ans[p-1][self.number] * T + T**2
             elif N % (p**2) != 0: # semistable reduction
                 return 1 - ans[p-1][self.number] * T
@@ -362,7 +362,7 @@ class GaloisRepresentation( Lfunction):
         bad2 = ZZ(W.conductor).prime_factors()
         bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
-            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes) :
+            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes):
                 # this condition above only applies to the current type of objects
                 # for general reps we would have to test the lines below
                 # to be certain that the formulae are correct.
@@ -373,7 +373,7 @@ class GaloisRepresentation( Lfunction):
                                           "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
         # check for the possibility of getting poles
-        if V.weight == W.weight and V.conductor == W.conductor :
+        if V.weight == W.weight and V.conductor == W.conductor:
             Vans = V.algebraic_coefficients(50)
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()

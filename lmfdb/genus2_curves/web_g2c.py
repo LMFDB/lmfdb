@@ -713,7 +713,7 @@ class WebG2C():
         try:
             slabel = label.split(".")
             if len(slabel) == 2:
-                curve = db.g2c_curves.lucky({"class" : label})
+                curve = db.g2c_curves.lucky({"class": label})
             elif len(slabel) == 4:
                 curve = db.g2c_curves.lookup(label)
             else:
@@ -860,10 +860,10 @@ class WebG2C():
             #TODO (?) also for the isogeny class
         else:
             # invariants specific to isogeny class
-            curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
+            curves_data = list(db.g2c_curves.search({"class": curve['class']}, ['label','eqn']))
             if not curves_data:
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
-            data['curves'] = [ {"label" : c['label'], "equation_formatted" : min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
+            data['curves'] = [ {"label": c['label'], "equation_formatted": min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
             lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
             if not lfunc_data:
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
@@ -975,7 +975,7 @@ class WebG2C():
 
         # then again EC from lfun
         instances = []
-        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
+        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type': 'ECQP'}, 'url'):
             instances.extend(elt.split('|'))
 
         # and then the other isogeny friends

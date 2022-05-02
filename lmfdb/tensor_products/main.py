@@ -36,7 +36,7 @@ def navigate():
 
     type1 = args.get('type1')
     type2 = args.get('type2')
-    return render_template("tensor_products_navigate.html", title="Tensor Products Navigation", bread=bread, type1=type1 , type2=type2)
+    return render_template("tensor_products_navigate.html", title="Tensor Products Navigation", bread=bread, type1=type1, type2=type2)
 
 @tensor_products_page.route("/show/")
 def show():
