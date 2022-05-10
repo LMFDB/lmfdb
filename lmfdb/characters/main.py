@@ -522,6 +522,8 @@ def dirchar_data(label):
         tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                 ("Data", " ")]
         return datapage(label, "char_dir_orbits", title=title, bread=bread(tail))
+    else:
+        return abort(404, f"Invalid label {label}")
 
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')
@@ -687,7 +689,7 @@ def dirichlet_group_table(**args):
 def get_group_table(modulus, char_list):
     # Move 1 to the front of the list
     char_list.insert(0, char_list.pop(next(j for j in range(len(char_list)) if char_list[j] == 1)))
-    headers = [j for j in char_list]  # Just a copy
+    headers = list(char_list)  # Just a copy
     if modulus == 1:
         rows = [[1]]
     else:

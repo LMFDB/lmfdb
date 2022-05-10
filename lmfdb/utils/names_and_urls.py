@@ -22,12 +22,12 @@ def name_and_object_from_url(url, check_existence=False):
                 # EllipticCurve/Q/341641/a
                 label_isogeny_class = ".".join(url_split[-2:])
                 if check_existence:
-                    obj_exists = db.ec_curvedata.exists({"lmfdb_iso" : label_isogeny_class})
+                    obj_exists = db.ec_curvedata.exists({"lmfdb_iso": label_isogeny_class})
             elif len(url_split) == 5: # curve
                 # EllipticCurve/Q/48/a/6
                 label_curve = ".".join(url_split[-3:-1]) + url_split[-1]
                 if check_existence:
-                    obj_exists = db.ec_curvedata.exists({"lmfdb_label" : label_curve})
+                    obj_exists = db.ec_curvedata.exists({"lmfdb_label": label_curve})
             else:
                 raise NotImplementedError
         else:
@@ -36,13 +36,13 @@ def name_and_object_from_url(url, check_existence=False):
                 field, cond, isog = url_split[-3:]
                 label_isogeny_class =  "-".join([field, cond, isog])
                 if check_existence:
-                    obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
+                    obj_exists = db.ec_nfcurves.exists({"class_label": label_isogeny_class})
             elif len(url_split) == 5: # curve
                 # EllipticCurve/2.0.4.1/1250.3/a/3
                 field, cond, isog, ind = url_split[-4:]
                 label_curve =  "-".join([field, cond, isog]) + ind
                 if check_existence:
-                    obj_exists = db.ec_nfcurves.exists({"label" : label_curve})
+                    obj_exists = db.ec_nfcurves.exists({"label": label_curve})
         if len(url_split) == 4: # isogeny class
             #name = 'Isogeny class ' + label_isogeny_class
             name = 'Elliptic curve ' + label_isogeny_class
@@ -57,7 +57,7 @@ def name_and_object_from_url(url, check_existence=False):
         label = ".".join(url_split[-2:])
         obj_exists = True
         if check_existence:
-            obj_exists = db.char_dir_values.exists({"label" : label})
+            obj_exists = db.char_dir_values.exists({"label": label})
 
     elif url_split[0] == "Genus2Curve":
         obj_exists = True
@@ -66,14 +66,14 @@ def name_and_object_from_url(url, check_existence=False):
             # Genus2Curve/Q/310329/a
             label_isogeny_class = ".".join(url_split[-2:])
             if check_existence:
-                obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
+                obj_exists = db.g2c_curves.exists({"class": label_isogeny_class})
             #name = 'Isogeny class ' + label_isogeny_class
             name = 'Genus 2 curve ' + label_isogeny_class
         if len(url_split) == 6: # curve
             # Genus2Curve/Q/1728/b/442368/1
             label_curve = ".".join(url_split[-4:])
             if check_existence:
-                obj_exists = db.g2c_curves.exists({"label" : label_curve})
+                obj_exists = db.g2c_curves.exists({"label": label_curve})
             #name = 'Curve ' + label_curve
             name = 'Genus 2 curve ' + label_curve
 
@@ -174,5 +174,3 @@ def names_and_urls(instances, exclude={}):
     # sort based on name + label
     res.sort(key=lambda x: key_for_numerically_sort(x[0]))
     return res
-
-

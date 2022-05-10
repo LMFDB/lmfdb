@@ -33,7 +33,7 @@ class Sample_class (SageObject):
         self.__is_integral = doc.get('is_integral')
         self.__representation = doc.get('representation')
         self.__id = doc.get('id_link')
- 
+
     def collection(self):
         return self.__collection
 
@@ -90,7 +90,7 @@ class Sample_class (SageObject):
     def available_Fourier_coefficients(self, det_list=None):
         query = {'owner_id': self.__id}
         if det_list:
-            query['det'] = {'$in' : det_list}
+            query['det'] = {'$in': det_list}
         return list(db.smf_fc.search(query, 'det'))
 
     def Fourier_coefficients(self, det_list):

@@ -66,7 +66,7 @@ def pretty_ideal(Kgen, s, enclose=True):
     if Kgen == 'phi':
         gens = gens.replace(Kgen, r"\phi")
     return r"\(" + gens + r"\)" if enclose else gens
-    
+
 def latex_factorization(plist, exponents, sign=+1):
     """plist is a list of strings representing prime ideals P (or other things) in latex without math delimiters.
     exponents is a list (of the same length) of non-negative integer exponents e, possibly  0.
@@ -99,7 +99,7 @@ def inflate_interval(a,b,r):
 def plot_zone_union(R,S):
     return(min(R[0],S[0]),max(R[1],S[1]),min(R[2],S[2]),max(R[3],S[3]))
 
-# Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x) 
+# Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x)
 def EC_R_plot_zone_piece(f,h,a,b):
     npts=50
     Y=[]
@@ -118,7 +118,7 @@ def EC_R_plot_zone_piece(f,h,a,b):
     (a,b)=inflate_interval(a,b,1.3)
     return (a,b,ymin,ymax)
 
-# Finds a suitable plotting zone for the EC y**2+h(x)*y=f(x) 
+# Finds a suitable plotting zone for the EC y**2+h(x)*y=f(x)
 def EC_R_plot_zone(f,h):
     F=f+h**2/4
     F1=F.derivative()
@@ -151,7 +151,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         S=K.embeddings(RDF)
         for s in S:
             A=[s(c) for c in ainvs]
-            R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]]))) 
+            R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]])))
         xmin = min([r[0] for r in R])
         xmax = max([r[1] for r in R])
         ymin = min([r[2] for r in R])
@@ -225,7 +225,7 @@ def latex_equation(ainvs):
                     term(a6,''),
                     r''])
 
-class ECNF(object):
+class ECNF():
 
     """
     ECNF Wrapper
@@ -258,7 +258,7 @@ class ECNF(object):
         #sys.stdout.flush()
         K = self.field.K()
         Kgen = str(K.gen())
-        
+
         # a-invariants
         # NB Here we construct the ai as elements of K, which are used as follows:
         # (1) to compute the model discriminant (if not stored)
@@ -502,7 +502,7 @@ class ECNF(object):
             self.Lvalue = web_latex(self.Lvalue)
         except (TypeError, AttributeError):
             self.Lvalue = "not available"
-            
+
         # Tamagawa product
         tamagawa_numbers = [ZZ(_ld['cp']) for _ld in self.local_data]
         cp_fac = [cp.factor() for cp in tamagawa_numbers]
@@ -518,8 +518,8 @@ class ECNF(object):
             self.sha = web_latex(self.sha) + " (rounded)"
         except AttributeError:
             self.sha = "not available"
-            
-        
+
+
         # Local data
 
         # The Kodaira symbol is stored as an int in pari encoding. The
@@ -700,11 +700,11 @@ def make_code(label, lang=None):
     all_langs = ['magma', 'pari', 'sage']
 
     # Get the base field label and a-invariants:
-    
+
     E = db.ec_nfcurves.lookup(label, projection = ['field_label', 'ainvs'])
-   
+
     # Look up the defining polynomial of the base field:
-    
+
     from lmfdb.utils import coeff_to_poly
     poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection = 'coeffs'))
 
@@ -741,4 +741,3 @@ def make_code(label, lang=None):
             Ecode['curve'][l] = Ecode['curve'][l] % ainvs_string[l]
 
     return Ecode
-

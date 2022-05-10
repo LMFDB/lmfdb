@@ -56,5 +56,3 @@ class EcnfIsogClassTest(LmfdbTest):
         assert 'Elliptic curve 2.2.44.1-16.1-a' in L
         assert 'Elliptic curve 2.2.44.1-16.1-c' in L
         assert 'L-function' in L
-
-

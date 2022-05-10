@@ -26,6 +26,7 @@ from .web_family import WebHyperGeometricFamily
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
 
+
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
@@ -33,6 +34,8 @@ def learnmore_list():
             ('Hypergeometric motive labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
+
+
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
@@ -40,7 +43,9 @@ def learnmore_list_remove(matchstring):
 def list2string(li):
     return ','.join(str(x) for x in li)
 
+
 GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
+
 
 def dogapthing(m1):
     mnew = str(m1[2])
@@ -58,6 +63,7 @@ def dogapthing(m1):
         m1[2] = re.sub(r'\\+', r'\\', m1[2])
         m1[2] = '$%s$'% m1[2]
     return m1
+
 
 def getgroup(m1, ell):
     pind = {2: 0, 3: 1, 5: 2, 7: 3, 11: 4, 13: 5}
@@ -77,15 +83,18 @@ def getgroup(m1, ell):
 # Helper functions
 
 # Take a family label and swap the roles of A and B
+
+
 def normalize_family(label):
     m = re.match(r'^A((\d+\.)*\d+)_B((\d+\.)*\d+)$', label)
     a = sorted([int(u) for u in m.group(1).split('.')], reverse=True)
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
     aas = '.'.join(str(u) for u in a)
     bs = '.'.join(str(u) for u in b)
-    if 1 in b or b[0]>a[0]:
-        return 'A%s_B%s'%(aas, bs)
-    return 'A%s_B%s'%(bs, aas)
+    if 1 in b or b[0] > a[0]:
+        return 'A%s_B%s' % (aas, bs)
+    return 'A%s_B%s' % (bs, aas)
+
 
 def normalize_motive(label):
     m = re.match(r'^A((\d+\.)*\d+)_B((\d+\.)*\d+)_t(-?)(\d+)\.(\d+)$', label)
@@ -93,18 +102,24 @@ def normalize_motive(label):
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
     aas = '.'.join(str(u) for u in a)
     bs = '.'.join(str(u) for u in b)
-    if 1 in b or b[0]>a[0]:
-        return 'A%s_B%s_t%s%s.%s'%(aas, bs,m.group(5),m.group(6),m.group(7))
-    return 'A%s_B%s_t%s%s.%s'%(bs, aas, m.group(5), m.group(7), m.group(6))
+    if 1 in b or b[0] > a[0]:
+        return 'A%s_B%s_t%s%s.%s' % (aas, bs,
+                                     m.group(5), m.group(6), m.group(7))
+    return 'A%s_B%s_t%s%s.%s' % (bs, aas,
+                                 m.group(5), m.group(7), m.group(6))
 
 # Convert cyclotomic indices to gamma data
 
 # 2 utilities
+
+
 def incdict(d, v):
     if v in d:
         d[v] += 1
     else:
         d[v] = 1
+
+
 def subdict(d, v):
     if d[v]>1:
         d[v] -= 1
@@ -112,8 +127,10 @@ def subdict(d, v):
         del d[v]
 
 # produce a pair of lists of integers
-def ab2gammas(A,B):
-    ab = [{},{}]
+
+
+def ab2gammas(A, B):
+    ab = [{}, {}]
     for x in A:
         incdict(ab[0], x)
     for x in B:
@@ -123,10 +140,10 @@ def ab2gammas(A,B):
         m = max(list(ab[0]) + list(ab[1]))
         wh = 0 if m in ab[0] else 1
         gamma[wh].append(m)
-        subdict(ab[wh],m)
+        subdict(ab[wh], m)
         for d in integer_divisors(m)[:-1]:
             if d in ab[wh]:
-                subdict(ab[wh],d)
+                subdict(ab[wh], d)
             else:
                 incdict(ab[1-wh], d)
     gamma[1] = [-1*z for z in gamma[1]]
@@ -135,27 +152,32 @@ def ab2gammas(A,B):
     return gamma
 
 # Convert cyclotomic indices to rational numbers
+
+
 def cyc_to_QZ(A):
     alpha = []
     for Ai in A:
-        alpha.extend([QQ(k)/Ai for k in range(1,Ai+1) if gcd(k,Ai) == 1])
+        alpha.extend([QQ(k)/Ai for k in range(1, Ai+1) if gcd(k, Ai) == 1])
     alpha.sort()
     return alpha
 
 # A and B are lists, tn and td are num/den for t
+
+
 def ab_label(A, B):
-    return "A%s_B%s"%('.'.join(str(c) for c in A),'.'.join(str(c) for c in B))
+    return "A%s_B%s" % ('.'.join(str(c) for c in A),
+                        '.'.join(str(c) for c in B))
 
 
 def list2Cnstring(li):
-    l2 = [a for a in li if a>1]
+    l2 = [a for a in li if a > 1]
     if not l2:
         return 'C_1'
     fa = [ZZ(a).factor() for a in l2]
     eds = []
     for b in fa:
         for pp in b:
-            eds.append([pp[0],pp[1]])
+            eds.append([pp[0], pp[1]])
     eds.sort()
     l2 = ['C_{%d}'% (a[0]**a[1]) for a in eds]
     return (r'\times ').join(l2)
@@ -166,10 +188,11 @@ def showlist(li):
         return r'[\ ]'
     return li
 
-def splitint(a,p):
+
+def splitint(a, p):
     if a==1:
         return ' '
-    j = valuation(a,p)
+    j = valuation(a, p)
     if j==0:
         return str(a)
     a = a/p**j
@@ -184,9 +207,11 @@ def make_abt_label(A, B, t):
     t_str = "_t%s.%s" % (t.numerator(), t.denominator())
     return AB_str + t_str
 
+
 def make_t_label(t):
     tsage = QQ(t)
     return "t%s.%s" % (tsage.numerator(), tsage.denominator())
+
 
 def get_bread(breads=[]):
     bc = [("Motives", url_for("motives")),
@@ -196,44 +221,51 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+
 def display_t(t):
     return str(QQ(t))
 
 # For displaying factored conductors
+
+
 def factorint(inp):
     return latex(ZZ(inp).factor())
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
+
+
 def factor_out_p(val, p):
     val = ZZ(val)
     if val == 0 or val == -1:
         return str(val)
-    if val==1:
+    if val == 1:
         return '+1'
     s = 1
-    if val<0:
+    if val < 0:
         s = -1
         val = -val
     ord = val.valuation(p)
-    val = val/p**ord
+    val = val / p**ord
     out = ''
     if s == -1:
         out += '-'
     else:
         out += '+'
-    if ord==1:
-        out +=  str(p)
-    elif ord>1:
-        out +=  '%d^{%d}' % (p, ord)
-    if val>1:
-        if ord ==1:
+    if ord == 1:
+        out += str(p)
+    elif ord > 1:
+        out += '%d^{%d}' % (p, ord)
+    if val > 1:
+        if ord == 1:
             out += r'\cdot '
         out += str(val)
     return out
 
 # c is a list of coefficients
+
+
 def poly_with_factored_coeffs(c, p):
-    c = [factor_out_p(b,p) for b in c]
+    c = [factor_out_p(b, p) for b in c]
     out = ''
     for j in range(len(c)):
         xpow = 'x^{'+ str(j) +'}'
@@ -261,6 +293,7 @@ def poly_with_factored_coeffs(c, p):
         out = out[1:]
     return out
 
+
 @hypergm_page.route("/")
 def index():
     info = to_dict(request.args, search_array=HGMSearchArray())
@@ -272,6 +305,7 @@ def index():
         bread=get_bread(),
         info=info,
         learnmore=learnmore_list())
+
 
 def hgm_family_circle_plot_data(AB):
     A, B = AB.split("_")
@@ -289,6 +323,7 @@ def hgm_family_circle_plot_data(AB):
     os.unlink(filename)
     return data
 
+
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
     A, B = AB.split("_")
@@ -297,6 +332,7 @@ def hgm_family_circle_image(AB):
     B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
     return image_callback(G)
+
 
 @hypergm_page.route("/plot/linear/<AB>")
 def hgm_family_linear_image(AB):
@@ -307,6 +343,7 @@ def hgm_family_linear_image(AB):
     B = [int(n) for n in B[1:].split(".")]
     G = piecewise_linear_image(A, B)
     return image_callback(G)
+
 
 @hypergm_page.route("/plot/constant/<AB>")
 def hgm_family_constant_image(AB):
@@ -327,6 +364,7 @@ def by_family_label(label):
         flash_error('%s is not a valid label for a family of hypergeometric motives', label)
         return redirect(url_for(".index"))
 
+
 @hypergm_page.route("/<label>/<t>")
 def by_label(label, t):
     if HGM_FAMILY_LABEL_RE.match(label):
@@ -335,6 +373,7 @@ def by_label(label, t):
     else:
         flash_error('%s is not a valid label for a family of hypergeometric motives', label)
         return redirect(url_for(".index"))
+
 
 def hgm_jump(info):
     label = clean_input(info['jump'])
@@ -345,12 +384,14 @@ def hgm_jump(info):
     flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
     return redirect(url_for(".index"))
 
+
 def url_for_label(label):
     if label.count("_") == 2:
         ab, t = label.rsplit("_", 1)
         return url_for(".by_label", label=ab, t=t)
     else:
         return url_for(".by_family_label", label=label)
+
 
 hgm_columns = SearchColumns([
     MultiProcessedCol("label", None, "Label",
@@ -370,7 +411,8 @@ hgm_columns = SearchColumns([
     MathCol("famhodge", None, "Hodge", default=True)])
 
 hgm_columns.dummy_download = True
-hgm_columns.db_cols = 1 # all cols, since the table varies
+hgm_columns.db_cols = 1  # all cols, since the table varies
+
 
 @search_wrap(table=db.hgm_motives,  # overridden if family search
              title=r'Hypergeometric motive over $\Q$ search resultS',
@@ -416,11 +458,11 @@ def hgm_search(info, query):
     # generic, irreducible not in DB yet
     parse_ints(info, query, 'degree')
     parse_ints(info, query, 'weight')
-    parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=True)
-    parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
+    parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector', split=True)
+    parse_restricted(info, query, 'sign', allowed=['+1', 1, -1], process=int)
     # Make a version to search reversed way
     if search_type not in ["Family", "RandomFamily"]:
-        parse_ints(info, query, 'conductor', 'Conductor' , 'cond')
+        parse_ints(info, query, 'conductor', 'Conductor', 'cond')
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
 
@@ -432,6 +474,7 @@ def hgm_search(info, query):
     info['ab_label'] = ab_label
     info['display_t'] = display_t
     info['factorint'] = factorint
+
 
 def render_hgm_webpage(label):
     data = None
@@ -445,15 +488,15 @@ def render_hgm_webpage(label):
 
     alpha = cyc_to_QZ(A)
     beta = cyc_to_QZ(B)
-    gammas = ab2gammas(A,B)
+    gammas = ab2gammas(A, B)
 
     det = db.hgm_families.lucky({'A': A, 'B': B}, 'det')
     if det is None:
         det = 'data not computed'
     else:
-        det = [det[0],str(det[1])]
+        det = [det[0], str(det[1])]
         d1 = det[1]
-        d1 = re.sub(r'\s','', d1)
+        d1 = re.sub(r'\s', '', d1)
         d1 = re.sub(r'(.)\(', r'\1*(', d1)
         R = PolynomialRing(ZZ, 't')
         if det[1]=='':
@@ -463,13 +506,13 @@ def render_hgm_webpage(label):
         det = d2(QQ(data['t']))*det[0]
     t = latex(QQ(data['t']))
     typee = 'Orthogonal'
-    if (data['weight'] % 2) == 1 and (data['degree'] % 2) == 0:
+    if data['weight'] % 2 and not data['degree'] % 2:
         typee = 'Symplectic'
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
     locinfo = data['locinfo']
     for j in range(len(locinfo)):
         locinfo[j] = [primes[j]] + locinfo[j]
-        #locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
+        # locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
         locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
     hodge = data['hodge']
     famhodge = data['famhodge']
@@ -478,8 +521,8 @@ def render_hgm_webpage(label):
         ('A', r'\(%s\)' % A),
         ('B', r'\(%s\)' % B),
         ('Degree', r'\(%s\)' % data['degree']),
-        ('Weight',  r'\(%s\)' % data['weight']),
-        ('Hodge vector',  r'\(%s\)' % hodge),
+        ('Weight', r'\(%s\)' % data['weight']),
+        ('Hodge vector', r'\(%s\)' % hodge),
         ('Conductor', r'\(%s\)' % data['cond']),
     ]
     # Now add factorization of conductor
@@ -508,7 +551,7 @@ def render_hgm_webpage(label):
                 'locinfo': locinfo
                 })
     AB_data, t_data = data["label"].split("_t")
-    friends = [("Motive family "+AB_data.replace("_"," "), url_for(".by_family_label", label = AB_data))]
+    friends = [("Motive family "+AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
     friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t'+t_data)))
 #    if rffriend != '':
 #        friends.append(('Discriminant root field', rffriend))
@@ -517,7 +560,7 @@ def render_hgm_webpage(label):
     AB = 'A = '+str(A)+', B = '+str(B)
     t_data = str(QQ(data['t']))
 
-    bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
+    bread = get_bread([('family '+str(AB), url_for(".by_family_label", label=AB_data)), ('t = '+t_data, ' ')])
     return render_template(
         "hgm-show-motive.html",
         title=title,
@@ -530,16 +573,19 @@ def render_hgm_webpage(label):
         KNOWL_ID="hgm.%s" % label,
     )
 
+
 @hypergm_page.route("/data/<label>")
 def hgm_data(label):
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
-    if "_t" in label:
+    if HGM_LABEL_RE.match(label):
         title = f"Hypergeometric motive data - {label}"
         fam_label = label.split("_t")[0]
         return datapage([label, fam_label], ["hgm_motives", "hgm_families"], bread=bread, title=title)
-    else:
+    elif HGM_FAMILY_LABEL_RE.match(label):
         title = f"Hypergeometric motive family data - {label}"
         return datapage(label, "hgm_families", bread=bread, title=title)
+    else:
+        return abort(404, f"Invalid label {label}")
 
 
 def parse_pandt(info, family):
@@ -567,6 +613,7 @@ def parse_pandt(info, family):
             errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
     return errs
 
+
 def render_hgm_family_webpage(label):
     try:
         family = WebHyperGeometricFamily.by_label(label)
@@ -576,7 +623,6 @@ def render_hgm_family_webpage(label):
     errs = parse_pandt(info, family)
     if errs:
         flash_error("<br>".join(errs))
-
 
     return render_template("hgm_family.html",
                            info=info,
@@ -595,16 +641,19 @@ def show_slopes(sl):
         return "None"
     return(sl)
 
+
 @hypergm_page.route("/random_family")
 def random_family():
     label = db.hgm_families.random()
     return redirect(url_for(".by_family_label", label=label))
+
 
 @hypergm_page.route("/random_motive")
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
     return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
+
 
 @hypergm_page.route("/interesting_families")
 def interesting_families():
@@ -618,6 +667,7 @@ def interesting_families():
         learnmore=learnmore_list()
     )
 
+
 @hypergm_page.route("/interesting_motives")
 def interesting_motives():
     return interesting_knowls(
@@ -630,15 +680,17 @@ def interesting_motives():
         learnmore=learnmore_list()
     )
 
+
 @hypergm_page.route("/Source")
 def how_computed_page():
     t = r'Source and acknowledgments for hypergeometric motives over $\Q$'
-    bread = get_bread(('Source',''))
+    bread = get_bread(('Source', ''))
     return render_template("multi.html", kids=['rcs.source.hgm',
                                                'rcs.ack.hgm',
                                                'rcs.cite.hgm'],
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Source'))
+
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
@@ -648,6 +700,7 @@ def completeness_page():
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
 
+
 @hypergm_page.route("/Reliability")
 def reliability_page():
     t = r'Reliability of hypergeometric motive data over $\Q$'
@@ -656,13 +709,15 @@ def reliability_page():
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Reliability'))
 
+
 @hypergm_page.route("/Labels")
 def labels_page():
     t = r'Labels for hypergeometric motives over $\Q$'
-    bread = get_bread(('Labels',''))
+    bread = get_bread(('Labels', ''))
     return render_template("single.html", kid='hgm.field.label',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))
+
 
 class HGMSearchArray(SearchArray):
     _sort = [('', 'degree', ['degree', 'weight', 'A', 'B', 'label']),
@@ -677,6 +732,7 @@ class HGMSearchArray(SearchArray):
     jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
     jump_knowl = 'hgm.search_input'
     jump_prompt = 'Label'
+
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -712,10 +768,10 @@ class HGMSearchArray(SearchArray):
             name="p",
             label="Prime $p$",
             example_col=True,
-            options=[("",2),
-                     ("3",3),
-                     ("5",5),
-                     ("7",7)])
+            options=[("", 2),
+                     ("3", 3),
+                     ("5", 5),
+                     ("7", 7)])
         Ap = TextBox(
             name="Ap",
             label="$A_p$",
@@ -766,11 +822,11 @@ class HGMSearchArray(SearchArray):
             example="-1",
             example_span="1 or -1, with -1 occurring only in the symplectic case")
         # The following two boxes are not yet enabled
-        #generic = YesNoBox(
+        # generic = YesNoBox(
         #    name="generic",
         #    label="Generic",
         #    knowl="hgm.generic")
-        #irreducible = YesNoBox(
+        # irreducible = YesNoBox(
         #    name="irreducible",
         #    label="Irreducible",
         #    knowl="hgm.irreducible")

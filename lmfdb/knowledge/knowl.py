@@ -165,7 +165,7 @@ class KnowlBackend(PostgresBase):
             selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
             cur = self._execute(selecter, [ID, timestamp])
             if cur.rowcount > 0:
-                return {k:v for k,v in zip(fields, cur.fetchone())}
+                return dict(zip(fields, cur.fetchone()))
             else:
                 return None
 
@@ -178,14 +178,14 @@ class KnowlBackend(PostgresBase):
                 return {k:v for k,v in zip(fields, cur.fetchone())}
         cur = self._execute(selecter, [ID, -2 if allow_deleted else 0])
         if cur.rowcount > 0:
-            return {k:v for k,v in zip(fields, cur.fetchone())}
+            return dict(zip(fields, cur.fetchone()))
 
     def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2]):
         if fields is None:
             fields = ['id'] + self._default_fields
         selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
         cur = self._execute(selecter, [0, types])
-        return [{k:v for k,v in zip(fields, res)} for res in cur]
+        return [dict(zip(fields, res)) for res in cur]
 
     def get_all_defines(self):
         selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
@@ -304,7 +304,7 @@ class KnowlBackend(PostgresBase):
         cols = ("id", "title", "timestamp", "last_author")
         selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
         cur = self._execute(selecter, [0, -2, limit])
-        return [{k:v for k,v in zip(cols, res)} for res in cur]
+        return [dict(zip(cols, res)) for res in cur]
 
     def get_comment_history(self, limit=25):
         """
@@ -313,12 +313,12 @@ class KnowlBackend(PostgresBase):
         # We want to select the oldest version of each comment but the newest version of each knowl
         selecter = SQL("WITH k AS (SELECT DISTINCT ON (id) id, title, timestamp, last_author FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC), c AS (SELECT id, timestamp, last_author, source FROM (SELECT DISTINCT ON (id) id, timestamp, last_author, source FROM kwl_knowls WHERE status >= %s AND type = %s ORDER BY id, timestamp) ci ORDER BY timestamp DESC LIMIT %s) SELECT k.id, k.title, k.timestamp, k.last_author, c.id, c.timestamp, c.last_author FROM k, c WHERE k.id = c.source ORDER BY c.timestamp DESC")
         cur = self._execute(selecter, [0, -2, 0, -2, limit])
-        return [{k:v for k,v in zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)} for res in cur]
+        return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in cur]
 
     def get_edit_history(self, ID):
         selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls WHERE status >= %s AND id = %s ORDER BY timestamp")
         cur = self._execute(selecter, [0, ID])
-        return [{k:v for k,v in zip(["timestamp", "last_author", "content", "status"], rec)} for rec in cur]
+        return [dict(zip(["timestamp", "last_author", "content", "status"], rec)) for rec in cur]
 
     def get_comments(self, ID):
         # Note that the subselect is sorted in ascending order by timestamp
@@ -330,7 +330,7 @@ class KnowlBackend(PostgresBase):
         fields = ['id'] + self._default_fields
         selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
         cur = self._execute(selecter, [f"columns.{table}.%", 2, 0])
-        return {rec[0].split(".")[-1]: Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur}
+        return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in cur}
 
     def set_column_description(self, table, col, description):
         from lmfdb import db
@@ -391,7 +391,7 @@ class KnowlBackend(PostgresBase):
         fields = ['id'] + self._default_fields
         selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND (type = 1 OR type = -1) ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
         cur = self._execute(selecter, [time, 0])
-        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+        knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in cur]
 
         kids = [k.id for k in knowls]
         selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
@@ -410,9 +410,9 @@ class KnowlBackend(PostgresBase):
             SQL(", ").join(SQL("b.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(map(Identifier, fields)))
         data = list(self._execute(selecter))
-        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in data]
+        knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in data]
         for knowl, rec in zip(knowls, data):
-            D = {k:v for k,v in zip(fields, rec[len(fields):])}
+            D = dict(zip(fields, rec[len(fields):]))
             knowl.reviewed_content = D["content"]
         self._set_referrers(knowls)
         return knowls
@@ -698,7 +698,7 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
         cur = self._execute(selecter, (knowlid, time))
         if cur.rowcount > 0:
-            return {k:v for k,v in zip(["username", "timestamp"], cur.fetchone())}
+            return dict(zip(["username", "timestamp"], cur.fetchone()))
 
     def set_locked(self, knowl, username):
         """
@@ -764,7 +764,7 @@ knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
 reverse_status_code = {v:k for k,v in knowl_status_code.items()}
 knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2}
 
-class Knowl(object):
+class Knowl():
     """
     INPUT:
 
@@ -843,7 +843,6 @@ class Knowl(object):
         if editing:
             self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
 
-
         if showing or editing:
             self.edit_history = knowldb.get_edit_history(ID)
             # Use to determine whether this is the most recent version of this knowl.
@@ -864,7 +863,7 @@ class Knowl(object):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
-                     self.previous_review_spot = elt['ms_timestamp']
+                    self.previous_review_spot = elt['ms_timestamp']
 
     def save(self, who, most_recent=None, minor=False):
         """

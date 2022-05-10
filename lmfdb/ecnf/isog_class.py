@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import encode_plot, names_and_urls, web_latex 
+from lmfdb.utils import encode_plot, names_and_urls, web_latex
 from lmfdb.logger import make_logger
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
@@ -12,7 +12,7 @@ from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
 logger = make_logger("ecnf")
 
 
-class ECNF_isoclass(object):
+class ECNF_isoclass():
 
     """
     Class for an isogeny class of elliptic curves over Q

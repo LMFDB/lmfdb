@@ -19,20 +19,25 @@ from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 
+
 def HMF_valid_label(label):
     return bool(HMF_LABEL_RE.match(label))
+
 
 GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
 # Convert cyclotomic indices to rational numbers
+
+
 def cyc_to_QZ(A):
     alpha = []
     for Ai in A:
-        alpha.extend([QQ(k)/Ai for k in range(1,Ai+1) if gcd(k,Ai) == 1])
+        alpha.extend([QQ(k)/Ai for k in range(1, Ai+1) if gcd(k, Ai) == 1])
     alpha.sort()
     return alpha
 
-class WebHyperGeometricFamily(object):
+
+class WebHyperGeometricFamily():
     def __init__(self, data):
         for elt in db.hgm_families.col_type:
             if elt not in data:
@@ -47,7 +52,7 @@ class WebHyperGeometricFamily(object):
         self.hinf = matrix(self.hinf)
         self.h0 = matrix(self.h0)
         self.h1 = matrix(self.h1)
-        #FIXME
+        # FIXME
         self.rotation_number = self.imprim
 
     @staticmethod
@@ -104,8 +109,6 @@ class WebHyperGeometricFamily(object):
     def wild_primes(self):
         return integer_prime_divisors(LCM(LCM(self.A), LCM(self.B)))
 
-
-
     @lazy_attribute
     def motivic_det_char(self):
         exp = -QQ(self.weight * self.degree)/2
@@ -139,7 +142,7 @@ class WebHyperGeometricFamily(object):
     @lazy_attribute
     def h1_latex(self):
         return(latex(self.h1))
-    
+
     @lazy_attribute
     def bezout_latex(self):
         return latex(self.bezout)
@@ -183,12 +186,12 @@ class WebHyperGeometricFamily(object):
             G = piecewise_constant_image(self.A, self.B)
 
         return encode_plot(
-                    G.plot(),
-                    pad=0,
-                    pad_inches=0,
-                    bbox_inches='tight',
-                    transparent = True,
-                    remove_axes=True)
+            G.plot(),
+            pad=0,
+            pad_inches=0,
+            bbox_inches='tight',
+            transparent=True,
+            remove_axes=True)
 
     @lazy_attribute
     def plot_link(self):
@@ -196,15 +199,13 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def properties(self):
-        return [
-                ('Label', self.label),
+        return [('Label', self.label),
                 (None, self.plot_link),
                 ('A', r'\({}\)'.format(self.A)),
                 ('B', r'\({}\)'.format(self.B)),
                 ('Degree', r'\({}\)'.format(self.degree)),
-                ('Weight',  r'\({}\)'.format(self.weight)),
-                ('Type', self.type)
-                ]
+                ('Weight', r'\({}\)'.format(self.weight)),
+                ('Type', self.type)]
 
     @lazy_attribute
     def monodromy(self):
@@ -219,7 +220,7 @@ class WebHyperGeometricFamily(object):
                 try:
                     m1[2] = abstract_group_display_knowl(f"{two[0]}.{two[1]}")
                 except TypeError:
-                    m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
+                    m1[2] = 'Gap[%d,%d]' % (two[0], two[1])
             else:
                 # Fix multiple backslashes
                 m1[2] = re.sub(r'\\+', r'\\', m1[2])
@@ -240,6 +241,7 @@ class WebHyperGeometricFamily(object):
             newthing = mono[pind[ell]]
             newthing = dogapthing(newthing[1])
             return [newthing[2], newthing[0]]
+
         def splitint(a, p):
             if a == 1:
                 return ' '
@@ -261,7 +263,7 @@ class WebHyperGeometricFamily(object):
 
         mono = [m for m in self.mono if m[1] != 0]
         mono = [[m[0], dogapthing(m[1]),
-          getgroup(m[1],m[0]),
+          getgroup(m[1], m[0]),
           latex(ZZ(m[1][0]).factor())] for m in mono]
         mono = [[m[0], m[1], m[2][0], splitint(ZZ(m[1][0])/m[2][1], m[0]), m[3]] for m in mono]
         return mono
@@ -289,29 +291,26 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def euler_factors(self):
-        return dict([(elt['p'], elt['eulers']) for elt in
-                     db.hgm_euler_survey.search({'label': self.label},
-                                                 projection=['p', 'eulers'],
-                                                 sort=[])])
+        return {elt['p']: elt['eulers'] for elt in
+                db.hgm_euler_survey.search({'label': self.label},
+                                           projection=['p', 'eulers'],
+                                           sort=[])}
 
     @lazy_attribute
     def defaultp(self):
         if not self.euler_factors:
             return []
-        else:
-            return sorted(self.euler_factors)[:4]
+        return sorted(self.euler_factors)[:4]
 
     @lazy_attribute
     def default_prange(self):
         if not self.defaultp:
             return ""
-        else:
-            return "{}-{}".format(self.defaultp[0], self.defaultp[-1])
-
+        return "{}-{}".format(self.defaultp[0], self.defaultp[-1])
 
     @lazy_attribute
     def maxp(self):
-        return -1 if not self.euler_factors else max(self.euler_factors) # max of keys
+        return -1 if not self.euler_factors else max(self.euler_factors)  # max of keys
 
     @lazy_attribute
     def hodge_polygon(self):
@@ -324,6 +323,7 @@ class WebHyperGeometricFamily(object):
     def ordinary(self):
         if self.weight > 0:
             middle = ceil(ZZ(len(self.hodge_polygon))/2)
+
             def ordinary(f, p):
                 return all(valuation(f[i], p) == v
                            for i, v in self.hodge_polygon[:middle])
@@ -337,6 +337,7 @@ class WebHyperGeometricFamily(object):
     @lazy_attribute
     def process_euler(self):
         galois = self.display_galois_groups
+
         def process_euler(f, p):
             fG = list_to_factored_poly_otherorder(f, galois=galois, p=p)
             if galois:
@@ -347,17 +348,18 @@ class WebHyperGeometricFamily(object):
             factors = make_bigint(r'\( %s \)' % factors)
 
             if gal_groups:
-                if gal_groups[0] == [0,0]:
+                if gal_groups[0] == [0, 0]:
                     gal_groups = ""
                 else:
                     gal_groups = r"$\times$".join(
-                            [transitive_group_display_knowl_C1_as_trivial(f"{n}T{t}")
-                                for n, t in gal_groups])
+                        transitive_group_display_knowl_C1_as_trivial(f"{n}T{t}")
+                        for n, t in gal_groups)
             return [gal_groups, factors, self.ordinary(f, p)]
         return process_euler
+
     @lazy_attribute
     def display_galois_groups(self):
-        return False if self.degree <= 2 or self.degree >= 12 else True
+        return not(self.degree <= 2 or self.degree >= 12)
 
     def table_euler_factors_p(self, p):
         if p not in self.euler_factors:
@@ -384,16 +386,3 @@ class WebHyperGeometricFamily(object):
             return [('p', p, 't', self.table_euler_factors_p(p)) for p in plist]
         else:
             return [('t', t, 'p', self.table_euler_factors_t(t, plist)) for t in tlist]
-
-
-
-
-
-
-
-
-
-
-
-
-

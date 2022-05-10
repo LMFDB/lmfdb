@@ -2,7 +2,7 @@ from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form
 
-class TdElt(object):
+class TdElt():
     _wrap_type = 'td'
     def _add_class(self, D, clsname):
         if 'class' in D:

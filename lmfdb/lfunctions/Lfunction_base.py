@@ -15,7 +15,7 @@ from lmfdb.utils import display_float
 # Please do not pollute with flask, postgres, logger or similar
 #############################################################################
 
-class Lfunction(object):
+class Lfunction():
     """
     Class representing a general L-function
     """
@@ -42,7 +42,7 @@ class Lfunction(object):
             from math import pi
             self.Q_fe = float(Integer(self.level).sqrt() / 2.**len(self.nu_fe) / pi**(len(self.mu_fe) / 2. + len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe]
-            self.lambda_fe = [m / 2. for m in self.mu_fe] + [n for n in self.nu_fe]
+            self.lambda_fe = [m / 2. for m in self.mu_fe] + list(self.nu_fe)
         except Exception as e:
             raise Exception("Expecting a mu and a nu to be defined" + str(e))
 

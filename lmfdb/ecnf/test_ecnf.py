@@ -123,7 +123,7 @@ class EllCurveTest(LmfdbTest):
         """
         self.check_args('/EllipticCurve/?cm_disc=-4','1024.1-a1')
         self.not_check_args('/EllipticCurve/?cm_disc=-4','1.0.1-a1')
-        
+
         # make sure it works with 4-way PCM, CM, PCMnoCM, noCM switch
         self.check_args('/EllipticCurve/?cm_disc=-11&include_cm=PCMnoCM','14641.1-a1')
         self.not_check_args('/EllipticCurve/?cm_disc=-11&include_cm=PCMnoCM','9.1-CMa1')
@@ -153,4 +153,3 @@ class EllCurveTest(LmfdbTest):
             L = self.tc.get(url).get_data(as_text=True)
             for t in text:
                 assert t in L
-

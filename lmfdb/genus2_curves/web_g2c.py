@@ -568,9 +568,11 @@ def point_string(P):
 
 def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
     def divisor_data(P):
-        R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
-        xP,yP = P[0],P[1]
-        xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
+        R = PolynomialRing(QQ, ['x','z'])
+        x = R('x')
+        z = R('z')
+        xP, yP = P[0], P[1]
+        xden, yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
         xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD
@@ -635,7 +637,7 @@ def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
-def galrep_table(galrep):  
+def galrep_table(galrep):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
               th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
@@ -687,7 +689,7 @@ def ratpts_simpletable(pts,pts_v,fh):
 # Genus 2 curve class definition
 ###############################################################################
 
-class WebG2C(object):
+class WebG2C():
     """
     Class for a genus 2 curve (or isogeny class) over Q.  Attributes include:
         data -- information about the curve and its Jacobian to be displayed (taken from db and polished)
@@ -711,7 +713,7 @@ class WebG2C(object):
         try:
             slabel = label.split(".")
             if len(slabel) == 2:
-                curve = db.g2c_curves.lucky({"class" : label})
+                curve = db.g2c_curves.lucky({"class": label})
             elif len(slabel) == 4:
                 curve = db.g2c_curves.lookup(label)
             else:
@@ -858,10 +860,10 @@ class WebG2C(object):
             #TODO (?) also for the isogeny class
         else:
             # invariants specific to isogeny class
-            curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
+            curves_data = list(db.g2c_curves.search({"class": curve['class']}, ['label','eqn']))
             if not curves_data:
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
-            data['curves'] = [ {"label" : c['label'], "equation_formatted" : min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
+            data['curves'] = [ {"label": c['label'], "equation_formatted": min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
             lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
             if not lfunc_data:
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
@@ -973,7 +975,7 @@ class WebG2C(object):
 
         # then again EC from lfun
         instances = []
-        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
+        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type': 'ECQP'}, 'url'):
             instances.extend(elt.split('|'))
 
         # and then the other isogeny friends
@@ -1057,7 +1059,7 @@ class WebG2C(object):
             self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
-            for lang in ['magma']: #TODO: 'sage', 'pari', 
+            for lang in ['magma']: #TODO: 'sage', 'pari',
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['min_eqn'])
 
         return self._code

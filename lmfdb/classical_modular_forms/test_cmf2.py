@@ -12,22 +12,14 @@ class CmfTest(LmfdbTest):
 
     def test_download_qexp(self):
         for label, exp in [
-                ['11.7.b.a'
-                    , '[0, 10, 64]'],
-                ['11.2.a.a'
-                    , '[-2, -1, 2]'],
-                ['21.2.g.a'
-                    , '[0, -a - 1, 2*a - 2]'],
-                ['59.2.a.a'
-                    , '[-a^4 + 7*a^2 + 3*a - 5, a^4 - a^3 - 6*a^2 + 2*a + 3, a^3 - a^2 - 4*a + 3]'],
-                ['13.2.e.a'
-                    , '[-a - 1, 2*a - 2, a]'],
-                ['340.1.ba.b'
-                    , '[z, 0, z^2]'],
-                ['24.3.h.a'
-                    , '[-2, 3, 4]'],
-                ['24.3.h.c'
-                    , '[a, -1/4*a^3 - a^2 - 1/2*a - 3, a^2]'],
+                ['11.7.b.a', '[0, 10, 64]'],
+                ['11.2.a.a', '[-2, -1, 2]'],
+                ['21.2.g.a', '[0, -a - 1, 2*a - 2]'],
+                ['59.2.a.a', '[-a^4 + 7*a^2 + 3*a - 5, a^4 - a^3 - 6*a^2 + 2*a + 3, a^3 - a^2 - 4*a + 3]'],
+                ['13.2.e.a', '[-a - 1, 2*a - 2, a]'],
+                ['340.1.ba.b', '[z, 0, z^2]'],
+                ['24.3.h.a', '[-2, 3, 4]'],
+                ['24.3.h.c', '[a, -1/4*a^3 - a^2 - 1/2*a - 3, a^2]'],
                 ]:
             sage_code = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label, follow_redirects=True).get_data(as_text=True)
             assert "make_data" in sage_code
@@ -355,7 +347,7 @@ class CmfTest(LmfdbTest):
                 assert 'Only for weight 1:' in page.get_data(as_text=True)
 
     def test_is_self_dual(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List' ,  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List',  follow_redirects=True)
         for elt in ['23.1.b.a', '31.1.b.a', '111.1.d.a']:
             assert elt in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List',  follow_redirects=True)
@@ -371,17 +363,17 @@ class CmfTest(LmfdbTest):
         Fourier coefficients of each respective homepage."""
 
         test_data = {# Dimension 1
-                    '11/2/a/a' : {2: r'\( T + 2 \)',
+                    '11/2/a/a': {2: r'\( T + 2 \)',
                                  17: r'\( T + 2 \)',
                                  29: r'\( T \)'},
 
                     # Dimension 2
-                    '10/3/c/a' :  {5: r'\( T^{2} + 25 \)',
+                    '10/3/c/a':  {5: r'\( T^{2} + 25 \)',
                                   11: r'\( (T + 8)^{2} \)',
                                   97: r'\( T^{2} + 126T + 7938 \)'},
 
                     # Dimension 5
-                    '294/5/b/f' : {2: r'\( (T^{2} + 8)^{5} \)',
+                    '294/5/b/f': {2: r'\( (T^{2} + 8)^{5} \)',
                                     # The following test checks that monomials do not have superfluous parentheses
                                     7: r'\( T^{10} \)'},
                     }

@@ -108,7 +108,7 @@ def stats():
             else:
                 link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
             if not sizes['toast_bytes']:
-                sizes['toast_bytes'] = 0 
+                sizes['toast_bytes'] = 0
             if sizes['nrows']:
                 avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
             else:
@@ -152,7 +152,7 @@ def api_query_id(table, id):
         </tr>
         """
         for c in sorted(col_type.keys()):
-            out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
+            out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c])
         return out
     else:
         return api_query(table, id=id)
@@ -233,13 +233,13 @@ def api_query(table, id = None):
                 elif qval.startswith("py"):     # literal evaluation
                     qval = literal_eval(qval[2:])
                 elif qval.startswith("cs"):     # containing string in list
-                    qval = { "$contains" : [qval[2:]] }
+                    qval = { "$contains": [qval[2:]] }
                 elif qval.startswith("ci"):
-                    qval = { "$contains" : [int(qval[2:])] }
+                    qval = { "$contains": [int(qval[2:])] }
                 elif qval.startswith("cf"):
-                    qval = { "contains" : [float(qval[2:])] }
+                    qval = { "contains": [float(qval[2:])] }
                 elif qval.startswith("cpy"):
-                    qval = { "$contains" : [literal_eval(qval[3:])] }
+                    qval = { "$contains": [literal_eval(qval[3:])] }
             except Exception:
                 # no suitable conversion for the value, keep it as string
                 pass
@@ -300,7 +300,7 @@ def api_query(table, id = None):
     query = url_for(".api_query", table=table, **next_req)
     offset += len(data)
     next_req["_offset"] = offset
-    next = url_for(".api_query", table=table, **next_req)
+    nxt = url_for(".api_query", table=table, **next_req)
 
     # the collected result
     data = {
@@ -310,7 +310,7 @@ def api_query(table, id = None):
         "start": start,
         "offset": offset,
         "query": query,
-        "next": next,
+        "next": nxt,
         "rec_id": 'id' if coll._label_col is None else coll._label_col,
     }
 

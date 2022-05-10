@@ -262,8 +262,10 @@ st_aliases = {
 def boolean_name(value):
     return 'yes' if value else 'no'
 
-def comma_separated_list(list):
-    return ', '.join(list)
+
+def comma_separated_list(lst):
+    return ', '.join(lst)
+
 
 def string_matrix(m):
     if len(m) == 0:
@@ -673,7 +675,7 @@ def mu_data(n):
     rec['label_components'] = [int(0),int(1),int(0),int(n)]
     rec['weight'] = 0
     rec['degree'] = 1
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'mu(%d)'%n
     rec['pretty'] = r'\mu(%d)'%n
     rec['real_dimension'] = 0
@@ -713,12 +715,15 @@ def mu_portrait(n):
         plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n,axes=False)
     else:
         plot = circle((0,0),1,thickness=3)
-    plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
-    plot.set_aspect_ratio(4.0/3.0)
+    plot.xmin(-1)
+    plot.xmax(1)
+    plot.ymin(-1)
+    plot.ymax(1)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
-def su2_mu_data(w,n):
+def su2_mu_data(w, n):
     """ data for ST group SU(2) x mu(n) (of any wt > 0); these groups are not stored in the database """
     assert w > 0 and n > 0
     if w == 1 and n == 1:
@@ -727,7 +732,7 @@ def su2_mu_data(w,n):
     rec['label'] = "%d.2.3.c%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
     rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
@@ -764,9 +769,12 @@ def su2_mu_portrait(n):
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
-        plot = circle((0,0),2,fill=True)
-    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+        plot = circle((0, 0), 2, fill=True)
+    plot.xmin(-2)
+    plot.xmax(2)
+    plot.ymin(-2)
+    plot.ymax(2)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -779,7 +787,7 @@ def nu1_mu_data(w,n):
     rec['label'] = "%d.2.1.d%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'U(1)[C%d]'%n if n > 1 else 'N(U(1))'
     rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
@@ -815,9 +823,12 @@ def nu1_mu_portrait(n):
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(0,0,0),fill=True)
     else:
-        plot = circle((0,0),2,fill=True)
-    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+        plot = circle((0, 0), 2, fill=True)
+    plot.xmin(-2)
+    plot.xmax(2)
+    plot.ymin(-2)
+    plot.ymax(2)
+    plot.set_aspect_ratio(4.0 / 3.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -991,7 +1002,7 @@ def render_st_group(info, portrait=None, in_database=False):
 def st_data(label):
     data = db.gps_st.lookup(label)
     if data is None:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for('.by_label', label=label)), ("Data", "")])
     title = f"Sato-Tate group data - {label}"
     return datapage([label, data["identity_component"], data["component_group"]], ["gps_st", "gps_st0", "gps_groups"], bread=bread, title=title, label_cols=["label", "name", "label"])

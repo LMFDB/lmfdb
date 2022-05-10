@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import random, time
+import random
+import time
 from itertools import islice
 
 from psycopg2.extensions import cursor as pg_cursor

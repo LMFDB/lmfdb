@@ -1416,6 +1416,11 @@ class PostgresTable(PostgresBase):
         if self.extra_table is not None:
             search_cols = [col for col in self.search_cols if col in data[0]]
             extra_cols = [col for col in self.extra_cols if col in data[0]]
+            all_cols = set(search_cols + extra_cols)
+            if len(all_cols) != len(data[0]):
+                raise ValueError(f"Input has invalid columns: {', '.join(x for x in data[0] if x not in all_cols)}")
+            if not all(set(D) == all_cols for D in data):
+                raise ValueError("All dictionaries must have the same set of keys")
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
             search_cols = set(search_cols)
@@ -1529,7 +1534,7 @@ class PostgresTable(PostgresBase):
                 self.drop_pkeys(suffix=suffix)
                 for table in [search_table, extra_table]:
                     if table is not None:
-                       self._execute(SQL(
+                        self._execute(SQL(
                             "UPDATE {0} SET id = {1}.newid "
                             "FROM {1} WHERE {0}.id = {1}.oldid"
                         ).format(table, tmp_table))
@@ -1539,7 +1544,7 @@ class PostgresTable(PostgresBase):
                 print("Resorted %s in %.3f secs" % (self.search_table, time.time() - now))
             elif self._id_ordered and not self._out_of_order:
                 print(f"Table {self.search_table} already sorted")
-            else: # not self._id_ordered
+            else:  # not self._id_ordered
                 print("Data does not have an id column to be sorted")
         return True
 
@@ -1759,7 +1764,7 @@ class PostgresTable(PostgresBase):
                     table_name = _meta_table_name(meta_name)
                     table_name_idx = meta_cols.index(table_name)
                     with open(metafile, "r") as F:
-                        lines = [line for line in csv.reader(F, delimiter=str(sep))]
+                        lines = list(csv.reader(F, delimiter=str(sep)))
                         if len(lines) != 1:
                             raise RuntimeError(
                                 "%s has more than one line" % (metafile,)
@@ -1785,7 +1790,7 @@ class PostgresTable(PostgresBase):
                 # tracks the success of resort
                 ordered = self.resort(suffix=suffix)
             else:
-               ordered = False
+                ordered = False
 
 
             if restat and self.stats.saving:

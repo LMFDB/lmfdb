@@ -28,7 +28,7 @@ def td_wrapr(val):
 def parity_text(val):
     return 'odd' if val == -1 else 'even'
 
-class WebMaassForm(object):
+class WebMaassForm():
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data

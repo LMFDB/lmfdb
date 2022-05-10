@@ -56,10 +56,14 @@ class Circle:
         self.o = o # order of corresponding conjugacy classe (for eventually determining color)
         self.touching = touching # the touching objects used to construct the center
         assert (x is not None and y is not None) or (R is not None and theta is not None)
-        if x is not None: self.x = x
-        if y is not None: self.y = y
-        if R is not None: self.R = R # distance of center from origin
-        if theta is not None: self.theta = theta
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if R is not None:
+            self.R = R  # distance of center from origin
+        if theta is not None:
+            self.theta = theta
 
     @lazy_attribute
     def x(self):
@@ -260,7 +264,8 @@ def find_touching_centers(C1, C2, r, o):
         c = E**2 - (r2S*yD)**2
         D = b**2 - 4*a*c
         assert D > -eps
-        if D < 0: D = RR(0)
+        if D < 0:
+            D = RR(0)
         D = D.sqrt()
         xprimeA = -(b+D)/(2*a)
         xprimeB = -(b-D)/(2*a)
@@ -273,7 +278,8 @@ def find_touching_centers(C1, C2, r, o):
         c = E**2 - (r2S*xD)**2
         D = b**2 - 4*a*c
         assert D > -eps
-        if D < 0: D = RR(0)
+        if D < 0:
+            D = RR(0)
         D = D.sqrt()
         yprimeA = -(b+D)/(2*a)
         yprimeB = -(b-D)/(2*a)
@@ -412,7 +418,8 @@ def pack(rdata, R0, rmax):
         thetamin = RR(0)
         for sctr, segment in enumerate(segments):
             ok, placements = place_segment(segment, R0, R1, thetamin, placed, sctr == len(segments) - 1)
-            if not ok: break
+            if not ok:
+                break
             thetamin = max(C.theta for C in placements)
             placed.extend(placements)
         else:
@@ -588,7 +595,7 @@ def arrange_rings(radii, colors, R0, rmax):
 
 def arrange(rdata, R0, rmax):
     radii = Counter([r for (r, o) in rdata])
-    colors = {r : Counter() for r in radii}
+    colors = {r: Counter() for r in radii}
     for (r, o) in rdata:
         colors[r][get_color(o)] += 1
     circles, R1 = arrange_ring(radii, colors, R0, rmax)

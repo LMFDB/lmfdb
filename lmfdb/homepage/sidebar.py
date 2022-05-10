@@ -43,7 +43,7 @@ def get_sidebar():
 
 # The SideBar class, created by reading the file sidebar.yaml
 
-class SideBar(object):
+class SideBar():
     """
     Class for holding the sidebar content.
     """

@@ -74,7 +74,7 @@ class MfChecker(TableChecker):
         """
         hecke_orbit_code is as defined
         """
-        if self.hecke_orbit_code != []:
+        if self.hecke_orbit_code:
             # test enabled
             assert len(self.hecke_orbit_code) == 2
             hoc_column = self.hecke_orbit_code[0]

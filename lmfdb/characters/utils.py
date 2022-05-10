@@ -24,7 +24,8 @@ def evalpolelt(label,gen,genlabel='a'):
             from sage.rings.rational import Rational
             c = str(c).replace('o','/')
             c = Rational(c)
-        if s == '-': c = -c
+        if s == '-':
+            c = -c
         if e is None:
             e = 0
         elif e == genlabel:
@@ -62,4 +63,3 @@ def url_character(**kwargs):
             return url_for('characters.hc_calc',**kwargs)
         else:
             return url_for('characters.render_Heckewebpage',**kwargs)
-

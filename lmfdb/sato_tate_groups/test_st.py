@@ -10,7 +10,7 @@ class SatoTateGroupTest(LmfdbTest):
     def test_main(self):
         L = self.tc.get('/SatoTateGroup/')
         assert 'Browse' in L.get_data(as_text=True) and 'U(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True) and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
-        
+
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/?jump=1.4.A.1.1a', follow_redirects=True)
         assert 'USp(4)' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)

@@ -79,7 +79,7 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
-class ArtinRepresentation(object):
+class ArtinRepresentation():
     def __init__(self, *x, **data_dict):
         self._knowl_cache = data_dict.get("knowl_cache")
         if len(x) == 0:
@@ -328,16 +328,16 @@ class ArtinRepresentation(object):
         n = 2*self.character_field()
         p = 2
         hard_primes = self.hard_primes()
-        while len(artfull)>1:
+        while len(artfull) > 1:
             if p not in hard_primes:
-              k=0
-              while k<len(artfull):
-                  if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
-                      k += 1
-                  else:
-                      # Quick deletion of k-th term
-                      artfull[k] = artfull[-1]
-                      del artfull[-1]
+                k = 0
+                while k < len(artfull):
+                    if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
+                        k += 1
+                    else:
+                        # Quick deletion of k-th term
+                        artfull[k] = artfull[-1]
+                        del artfull[-1]
             p = next_prime(p)
         self._data['central_character_as_artin_rep'] = artfull[0][0]
         return artfull[0][0]
@@ -362,7 +362,7 @@ class ArtinRepresentation(object):
         return wc
 
     def det_display(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
             return 'Not available'
         if cc.order == 2:
@@ -373,9 +373,9 @@ class ArtinRepresentation(object):
         return self.central_character_as_artin_rep().label()
 
     def det_url(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
-           return 'Not available'
+            return 'Not available'
         return url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)
 
     def central_char_old(self, p):
@@ -653,7 +653,7 @@ class CharacterValues(list):
         return "[" + ",".join(x.latex() for x in self) + "]"
 
 
-class ConjugacyClass(object):
+class ConjugacyClass():
     def __init__(self, G, data):
         self._G = G
         self._data = data
@@ -682,7 +682,7 @@ class G_gens(list):
         return self
 
 
-class NumberFieldGaloisGroup(object):
+class NumberFieldGaloisGroup():
     def __init__(self, *x, **data_dict):
         if len(x) == 0:
             # Just passing named arguments
@@ -840,7 +840,7 @@ class NumberFieldGaloisGroup(object):
         self.lowered = self.lower_precision()
         def help_padic(n,p, prec):
             """
-              Take an integer n, prime p, and precision prec, and return a 
+              Take an integer n, prime p, and precision prec, and return a
               prec-tuple of the p-adic coefficients of j
             """
             n = ZZ(n)
@@ -860,7 +860,7 @@ class NumberFieldGaloisGroup(object):
         p = self._data['QpRts-p']
         prec = self._data['QpRts-prec']
         myroots = [[help_padic(z, p, prec) for z in t] for t in myroots]
-        myroots = [[[getel(root[j], r) 
+        myroots = [[[getel(root[j], r)
             for j in range(len(self._data['QpRts-minpoly'])-1)]
             for r in range(prec)]
             for root in myroots]
@@ -944,9 +944,10 @@ class NumberFieldGaloisGroup(object):
         try:
             fn_to_use = dict_to_use[cycle_type]
         except KeyError:
-            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
-                (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
+            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s"
+                           % (cycle_type, type(cycle_type[0]),
+                              self._from_cycle_type_to_conjugacy_class_index_dict,
+                              type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):

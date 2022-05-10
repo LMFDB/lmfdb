@@ -10,6 +10,12 @@ class LocalFieldTest(LmfdbTest):
         L = self.tc.get('/padicField/?n=8&c=24&gal=8T5&p=2&e=8&count=20')
         assert '4 matches' in L.get_data(as_text=True)
 
+    def test_search_f(self):
+        L = self.tc.get('/padicField/?n=6&p=2&f=3&search_type=List')
+        dat = L.get_data(as_text=True)
+        assert '2.6.4.1' not in dat
+        assert '2.6.6.2' in dat
+
     def test_search_top_slope(self):
         L = self.tc.get('/padicField/?p=2&topslope=3.5')
         assert '81' in L.get_data(as_text=True) # number of matches

@@ -65,6 +65,13 @@ table.ntdata a {
             {{ info.integral_basis | safe }}
             {{ place_code('integral_basis') }}
         </p>
+        <p>
+          <table>
+            <tr><td>{{ KNOWL('nf.monogenic', title='Monogenic')}}:<td>&nbsp;&nbsp;<td>{{info.monogenic}}
+            <tr><td>{{ KNOWL('nf.zk_index', title='Index')}}:<td>&nbsp;&nbsp;<td>{{info.index}}
+            <tr><td>{{ KNOWL('nf.inessential_prime', title='Inessential primes')}}:<td>&nbsp;&nbsp;<td>{{info.inessential}}
+           </table>
+           </p>
 
         <h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
         <p>

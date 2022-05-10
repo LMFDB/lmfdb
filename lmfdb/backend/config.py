@@ -18,7 +18,7 @@ def strbool(s):
         raise ValueError(s)
 
 
-class Configuration(object):
+class Configuration():
     """
     This configuration object merges input from the command line and a configuration file.
 
@@ -239,4 +239,3 @@ class Configuration(object):
         res = dict(self.default_args["postgresql"])
         res["port"] = int(res["port"])
         return res
-

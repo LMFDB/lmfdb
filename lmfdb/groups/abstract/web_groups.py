@@ -143,7 +143,7 @@ class WebAbstractGroup(WebObj):
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
             from .main import abstract_group_label_regex
-            m = abstract_group_label_regex.match(label)
+            m = abstract_group_label_regex.fullmatch(label)
             if m is not None and m.group(4) is not None:
                 n = ZZ(m.group(1))
                 if libgap.SmallGroupsAvailable(n):
@@ -171,7 +171,7 @@ class WebAbstractGroup(WebObj):
                 return libgap.AbelianGroup(primary_to_smith(self._data))
             elif isinstance(self._data, str):
                 s = self._data.replace(" ", "")
-                if perm_re.match(s):
+                if perm_re.fullmatch(s):
                     # a list of permutations
                     gens = [f"({g})" for g in s[1:-1].split("),(")]
                     G = PermutationGroup([Permutation(g) for g in gens])
@@ -229,12 +229,12 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def Sylows(self):
         if self.solvable:
-            return [P for P in self.G.SylowSystem()]
+            return list(self.G.SylowSystem())
         else:
             return [self.G.SylowSubgroup(p) for p in self.order.prime_factors()]
     @lazy_attribute
     def SylowComplements(self):
-        return [H for H in self.G.ComplementSystem()]
+        return list(self.G.ComplementSystem())
     @lazy_attribute
     def Zgroup(self):
         return all(P.IsCyclic() for P in self.Sylows)
@@ -266,9 +266,11 @@ class WebAbstractGroup(WebObj):
         return None
     @lazy_attribute
     def pgroup(self):
-        if self.order == 1: return 1
+        if self.order == 1:
+            return 1
         F = self.order.factor()
-        if len(F) == 1: return F[0][0]
+        if len(F) == 1:
+            return F[0][0]
         return ZZ(0)
     @lazy_attribute
     def elementary(self):
@@ -583,7 +585,8 @@ class WebAbstractGroup(WebObj):
                 by_disp = defaultdict(Counter)
                 name_lookup = defaultdict(dict)
                 for name, M in subdata.items():
-                    if not name.startswith(typ): continue
+                    if not name.startswith(typ):
+                        continue
                     Q = subdata.get(f"G/{name}")
                     if Q is None:
                         key = (ZZ(self.G.Index(self.G.Normalizer(M.G))), M.label, M.tex_name, None, None)
@@ -723,7 +726,7 @@ class WebAbstractGroup(WebObj):
         ser = []
         for lab, H in subs.items():
             for spec_lab in H.special_labels:
-                if ser_re.match(spec_lab):
+                if ser_re.fullmatch(spec_lab):
                     # ser.append((H.subgroup, spec_lab)) # returning right thing?
                     ser.append((H.short_label, spec_lab))
         # sort
@@ -1237,7 +1240,7 @@ class WebAbstractGroup(WebObj):
             ngens = len(used)
             for i in range(ngens):
                 a = used[i]
-                e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a : used[i + 1]])
+                e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
                 ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
                 if all(x == 0 for x in ae):
                     pure_powers.append("%s^{%s}" % (var_name(i), e))
@@ -1738,7 +1741,7 @@ class WebAbstractConjClass(WebObj):
             name = self.label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
 
-class WebAbstractDivision(object):
+class WebAbstractDivision():
     def __init__(self, group, label, classes):
         self.group = group
         self.label = label
@@ -1750,7 +1753,7 @@ class WebAbstractDivision(object):
             name = self.label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Crational">{name}</a>'
 
-class WebAbstractAutjClass(object):
+class WebAbstractAutjClass():
     def __init__(self, group, label, classes):
         self.group = group
         self.label = label

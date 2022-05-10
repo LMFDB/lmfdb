@@ -21,7 +21,7 @@ geomtypelet_to_geomtypename_dict = {
 }
 
 
-def make_curve_latex(crv_str, nu = None):
+def make_curve_latex(crv_str, nu=None):
     if "nu" not in crv_str:
         R0 = QQ
     else:
@@ -32,18 +32,19 @@ def make_curve_latex(crv_str, nu = None):
     lhs = R(sides[0])
     rhs = R(sides[1])
     if nu and ("nu" in crv_str):
-       S = PolynomialRing(CC , 2, 'x,y')
-       # evaluate at nu, if given
-       new_lhs = dict()
-       new_rhs = dict()
-       for m, c in lhs.dict().items():
-           new_lhs[m] = c.subs(nu=nu)
-       for m, c in rhs.dict().items():
-           new_rhs[m] = c.subs(nu=nu)
-       lhs = S(new_lhs) # R, or something else, like CC[]?
-       rhs = S(new_rhs)
+        S = PolynomialRing(CC, 2, 'x,y')
+        # evaluate at nu, if given
+        new_lhs = dict()
+        new_rhs = dict()
+        for m, c in lhs.dict().items():
+            new_lhs[m] = c.subs(nu=nu)
+        for m, c in rhs.dict().items():
+            new_rhs[m] = c.subs(nu=nu)
+        lhs = S(new_lhs) # R, or something else, like CC[]?
+        rhs = S(new_rhs)
     eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
+
 
 def make_map_latex(map_str, nu = None):
     if "nu" not in map_str:
@@ -84,14 +85,14 @@ def make_map_latex(map_str, nu = None):
     den_new = den_new / den_gcd
     # evaluate at nu, if given
     if nu and ("nu" in map_str):
-        S = PolynomialRing(CC , 2, 'x,y')
+        S = PolynomialRing(CC, 2, 'x,y')
         lc = lc.subs(nu=nu)
         num_dict = dict()
         den_dict = dict()
         for m, c in num_new.dict().items():
-           num_dict[m] = c.subs(nu=nu)
+            num_dict[m] = c.subs(nu=nu)
         for m, c in den_new.dict().items():
-           den_dict[m] = c.subs(nu=nu)
+            den_dict[m] = c.subs(nu=nu)
         num_new = S(num_dict)
         den_new = S(den_dict)
     # make strings for lc, num, and den
@@ -125,7 +126,7 @@ def belyi_base_field(galmap):
     return F
 
 
-class WebBelyiGalmap(object):
+class WebBelyiGalmap():
     """
     Class for a Belyi map.  Attributes include:
         data -- information about the map to be displayed
@@ -344,7 +345,7 @@ class WebBelyiGalmap(object):
         return
 
 
-class WebBelyiPassport(object):
+class WebBelyiPassport():
     """
     Class for a Belyi passport.  Attributes include:
         data -- information about the map to be displayed

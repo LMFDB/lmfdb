@@ -7,7 +7,7 @@ from ast import literal_eval
 from io import BytesIO
 
 
-class Downloader(object):
+class Downloader():
     """
     A class for downloading data in a uniform way.
 
@@ -85,7 +85,7 @@ class Downloader(object):
                       'gp':['make_data() = ','{']}
     function_end = {'magma':['end function;'],
                     'gp':['}']}
-    none = {'gp': 'null', 'sage' : 'None', 'text' : 'NULL', 'magma' : '[]'}
+    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]'}
     make_data_comment = {
         'magma': 'To create a list of {short_name}, type "{var_name}:= make_data();"',
         'sage':'To create a list of {short_name}, type "{var_name} = make_data()"',
@@ -200,11 +200,11 @@ class Downloader(object):
         if label_col:
             proj = [label_col] + proj
         # set up column wrappers
-        cw = self.get('column_wrappers',{})
-        id = lambda x: x
+        cw = self.get('column_wrappers', {})
+        identity = lambda x: x
         for col in wo_label:
             if col not in cw:
-                cw[col] = id
+                cw[col] = identity
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))

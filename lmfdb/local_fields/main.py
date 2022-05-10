@@ -2,7 +2,7 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
-from flask import render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, QQ, RR, latex, cached_function, Integers)
 
@@ -28,6 +28,7 @@ from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
 import re
+LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -219,7 +220,7 @@ lf_columns = SearchColumns([
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u"])
 
 def lf_postprocess(res, info, query):
-    cache = knowl_cache(list(set([f"{rec['n']}T{rec['gal']}" for rec in res])))
+    cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
     for rec in res:
         rec["cache"] = cache
     return res
@@ -243,6 +244,7 @@ def local_field_search(info,query):
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
+    parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
@@ -255,7 +257,7 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lookup(label)
         if data is None:
-            if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            if LF_RE.fullmatch(label):
                 flash_error("Field %s was not found in the database.", label)
             else:
                 flash_error("%s is not a valid label for a $p$-adic field.", label)
@@ -359,7 +361,7 @@ def render_field_webpage(args):
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
-        if db.nf_fields.exists({'local_algs': {'$contains': label}}):
+        if data['is_completion']:
             friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]
@@ -404,6 +406,8 @@ def printquad(code, p):
 
 @local_fields_page.route("/data/<label>")
 def lf_data(label):
+    if not LF_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     title = f"Local field data - {label}"
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     return datapage(label, "lf_fields", title=title, bread=bread)

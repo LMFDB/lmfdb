@@ -164,11 +164,13 @@ def profile(userid):
 
 @login_page.route("/login", methods=["POST"])
 def login(**kwargs):
-    # login and validate the user …
-    # remember = True sets a cookie to remember the user
+    """
+    login and validate the user …
+    remember = True sets a cookie to remember the user
+    """
     name = request.form["name"]
     password = request.form["password"]
-    next = request.form["next"]
+    nxt = request.form["next"]
     remember = request.form.get("remember") == "on"
     user = LmfdbUser(name)
     if user and user.authenticate(password):
@@ -176,7 +178,7 @@ def login(**kwargs):
         flask.flash(Markup("Hello %s, your login was successful!" % user.name))
         logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
         # FIXME add color cookie, see change_colors
-        return flask.redirect(next or url_for(".info"))
+        return flask.redirect(nxt or url_for(".info"))
     flash_error("Oops! Wrong username or password.")
     return flask.redirect(url_for(".info"))
 

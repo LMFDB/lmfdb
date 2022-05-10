@@ -204,6 +204,8 @@ def download_search(info):
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):
+    if not lmfdb_label_regex.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread((label, url_for_label(label)), ("Data", " "))
     extension_labels = list(db.av_fq_endalg_factors.search({"base_label": label}, "extension_label", sort=["extension_degree"]))
     tables = ["av_fq_isog", "av_fq_endalg_factors"] + ["av_fq_endalg_data"] * len(extension_labels)
@@ -640,7 +642,7 @@ def jump(info):
         lead = cdict[deg]
         if lead == 1: # accept monic normalization
             lead = cdict[0]
-            cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
+            cdict = {deg-exp: coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
             flash_error ("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
             return redirect(url_for(".abelian_varieties"))

@@ -511,7 +511,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/', follow_redirects=True)
         assert '1.0612' in L.get_data(as_text=True), "Missing data in /L/lhash/dirichlet_L_6253.458/"
-        assert '1-6253-6253.458-r1-0-0' in L.get_data(as_text=True) 
+        assert '1-6253-6253.458-r1-0-0' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert 'Character/Dirichlet/6253/458' in L.get_data(as_text=True)
 

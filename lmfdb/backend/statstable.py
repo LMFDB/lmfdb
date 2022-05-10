@@ -290,7 +290,7 @@ class PostgresStatsTable(PostgresBase):
         for col in self.table.search_cols:
             if col not in allcounts:
                 allcounts[col] = self._slow_count({col: None}, suffix=suffix, extra=False)
-        return {col: cnt for col,cnt in allcounts.items() if cnt > 0}
+        return {col: cnt for col, cnt in allcounts.items() if cnt > 0}
 
     def refresh_null_counts(self, suffix=""):
         """
@@ -1484,9 +1484,13 @@ ORDER BY v.ord LIMIT %s"""
                                 curlevel.append((colvec + col, j))
                     level += 1
 
-    def _status(self):
+    def _status(self, reset_None_to_1=False):
         """
         Returns information that can be used to recreate the statistics table.
+
+        INPUT:
+
+        - ``reset_None_to_1`` -- change threshold None to 1 in the stored statistics
 
         OUTPUT:
 
@@ -1507,12 +1511,19 @@ ORDER BY v.ord LIMIT %s"""
                 ccols = []
                 cvals = []
             else:
-                grouping = cgcols[len(cvals) :]
+                grouping = cgcols[len(cvals):]
                 ccols = cgcols[: len(cvals)]
             nstat_cmds.append((cols[0], grouping, ccols, cvals, threshold))
+        if reset_None_to_1:
+            for L in [stat_cmds, split_cmds, nstat_cmds]:
+                for i in range(len(L)):
+                    newval = list(L[i])
+                    if newval[-1] is None:
+                        newval[-1] = 1
+                        L[i] = tuple(newval)
         return stat_cmds, split_cmds, nstat_cmds
 
-    def refresh_stats(self, total=True, suffix=""):
+    def refresh_stats(self, total=True, reset_None_to_1=False, suffix=""):
         """
         Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
         table to determine which stats to recompute, and the rows with ``extra = True``
@@ -1522,6 +1533,7 @@ ORDER BY v.ord LIMIT %s"""
 
         - ``total`` -- if False, doesn't update the total count (since we can often
             update the total cheaply)
+        - ``reset_None_to_1`` -- change threshold None to 1 in stored statistics
         - ``suffix`` -- appended to the table name when computing and storing stats.
             Used when reloading a table.
         """
@@ -1529,7 +1541,7 @@ ORDER BY v.ord LIMIT %s"""
         t0 = time.time()
         with DelayCommit(self, silence=True):
             # Determine the stats and counts currently recorded
-            stat_cmds, split_cmds, nstat_cmds = self._status()
+            stat_cmds, split_cmds, nstat_cmds = self._status(reset_None_to_1)
             col_value_dict = self.extra_counts(include_counts=False, suffix=suffix)
 
             # Delete all stats and counts
@@ -1551,11 +1563,11 @@ ORDER BY v.ord LIMIT %s"""
                 self.total = self._slow_count({}, suffix=suffix, extra=False)
             self.logger.info("Refreshed statistics in %.3f secs" % (time.time() - t0))
 
-    def status(self):
+    def status(self, reset_None_to_1=False):
         """
         Prints a status report on the statistics for this table.
         """
-        stat_cmds, split_cmds, nstat_cmds = self._status()
+        stat_cmds, split_cmds, nstat_cmds = self._status(reset_None_to_1)
         col_value_dict = self.extra_counts(include_counts=False)
         have_stats = stat_cmds or split_cmds or nstat_cmds
         if have_stats:
@@ -1769,7 +1781,7 @@ ORDER BY v.ord LIMIT %s"""
             data[values] = D
         # Ensure that we have all the statistics necessary
         ok = True
-        if buckets == {}:
+        if not buckets:
             # Just check that the results are nonempty
             if not data:
                 self.add_stats(cols, constraint, split_list=split_list)

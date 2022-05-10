@@ -57,12 +57,12 @@ def half_integral_weight_form_search(info, query):
             flash_error("%s is not a valid Dirichlet character label, it should be of the form q.n", info['character'])
             raise ValueError
 
-def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
-     return str(Qq([c for c in list]).add_bigoh(len(list)+1))
 
+def print_q_expansion(lst):
+    lst = [str(c) for c in lst]
+    Qa = PolynomialRing(QQ, 'a')
+    Qq = PowerSeriesRing(Qa, 'q')
+    return str(Qq(lst).add_bigoh(len(lst) + 1))
 
 
 def my_latex_from_qexp(s):
@@ -132,7 +132,3 @@ def render_hiwf_webpage(**args):
     else:
         info['theta']= data['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
-
-
-
-

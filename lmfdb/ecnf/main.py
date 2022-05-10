@@ -379,6 +379,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
 
 @ecnf_page.route("/data/<label>")
 def ecnf_data(label):
+    if not LABEL_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread((label, url_for_label(label)), ("Data", " "))
     title = f"Elliptic curve data - {label}"
     return datapage(label, "ec_nfcurves", title=title, bread=bread)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, url_for, request, redirect, make_response
+from flask import abort, render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -9,7 +9,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache)
 from lmfdb.ecnf.main import split_class_label
-from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.number_field import field_pretty, FIELD_LABEL_RE
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
@@ -19,6 +19,9 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
+
+import re
+HMF_LABEL_RE = re.compile("^"+FIELD_LABEL_RE.pattern[1:-1] + r"-\d+\.\d+-[a-z]+$")
 
 def get_bread(tail=[]):
     base = [("Modular forms", url_for('modular_forms')),
@@ -235,7 +238,7 @@ def download_hmf_magma(**args):
 
     outstr += 'NN := ideal<ZF | {' + f["level_ideal"][1:-1] + '}>;\n\n'
 
-    outstr += 'primesArray := [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[', '],\n[') + '];\n'
+    outstr += 'primesArray := [\n' + ','.join(F_hmf["primes"]).replace('],[', '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
     if hecke_pol != 'x':
@@ -244,7 +247,7 @@ def download_hmf_magma(**args):
     else:
         outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
 
-    outstr += '\nheckeEigenvaluesArray := [' + ', '.join([st for st in hecke_eigs]) + '];'
+    outstr += '\nheckeEigenvaluesArray := [' + ', '.join(hecke_eigs) + '];'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i := 1 to #heckeEigenvaluesArray do\n  heckeEigenvalues[primes[i]] := heckeEigenvaluesArray[i];\nend for;\n\n'
 
@@ -344,7 +347,7 @@ def download_hmf_sage(**args):
 
     outstr += 'NN = ZF.ideal(' + f["level_ideal"] + ')\n\n'
 
-    outstr += 'primes_array = [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[',
+    outstr += 'primes_array = [\n' + ','.join(F_hmf["primes"]).replace('],[',
                                                                                       '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
@@ -354,7 +357,7 @@ def download_hmf_sage(**args):
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 
-    outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in hecke_eigs]) + ']'
+    outstr += '\nhecke_eigenvalues_array = [' + ', '.join(hecke_eigs) + ']'
     outstr += '\nhecke_eigenvalues = {}\n'
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
@@ -538,6 +541,8 @@ def render_hmf_webpage(**args):
 
 @hmf_page.route("/data/<label>")
 def hmf_data(label):
+    if not HMF_LABEL_RE.match(label):
+        return abort(404, f"Invalid label {label}")
     field_label = label.split("-")[0]
     title = f"Hilbert modular form data - {label}"
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])

@@ -156,6 +156,7 @@ bmf_columns = SearchColumns([
 
 bmf_columns.dummy_download = True
 
+
 @search_wrap(table=db.bmf_forms,
              title='Bianchi modular form search results',
              err_title='Bianchi modular forms search input error',
@@ -165,7 +166,6 @@ bmf_columns.dummy_download = True
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              properties=lambda: [])
-
 def bianchi_modular_form_search(info, query):
     """Function to handle requests from the top page, either jump to one
     newform or do a search.
@@ -282,7 +282,7 @@ def bmf_field_dim_table(**args):
     weights = set()
     for dat in data:
         weights = weights.union(set(dat[gl_or_sl].keys()))
-    weights = list([int(w) for w in weights])
+    weights = [int(w) for w in weights]
     weights.sort()
     info['weights'] = weights
     info['nweights'] = len(weights)

@@ -4,15 +4,21 @@ from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler, formatters
 from sage.misc.lazy_attribute import lazy_attribute
 
+
 def elist_formatter(elist):
-    if elist == []: return "1"
+    if not elist:
+        return "1"
     edisp = ["^{%s}" % e if e != 1 else "" for e in elist]
     return f"${''.join(p+e for (p,e) in zip('pqrsl', edisp))}$"
+
+
 pqr_re = re.compile(r"^(1)|(p(\^\{(\d+)\})?)(q(\^\{(\d+)\})?)?(r(\^\{(\d+)\})?)?(s(\^\{(\d+)\})?)?(l(\^\{(\d+)\})?)?$")
+
+
 def elist_qformatter(elist):
     if isinstance(elist, list):
         return "exponents_of_order=" + str(elist).replace(" ", "")
-    M = pqr_re.match(elist.replace("$",""))
+    M = pqr_re.fullmatch(elist.replace("$",""))
     if M is None:
         raise ValueError(elist)
     L = []
@@ -26,10 +32,12 @@ def nilp_formatter(nilp):
     if nilp == -1:
         return "not"
     return str(nilp)
+
 def nilp_qformatter(nilp):
     if nilp == "not":
         return "nilpotent=no"
     return f"nilpotency_class={nilp}"
+
 stype_lookup = {
     0: "cyclic",
     1: "abelian and metacyclic, not cyclic",
@@ -46,6 +54,7 @@ stype_lookup = {
     12: "solvable, not monomial or metabelian",
     13: "not solvable"
 }
+
 stype_qlookup = {
     0: "cyclic=yes",
     1: "abelian=yes&cyclic=no&metacyclic=yes",
@@ -62,6 +71,7 @@ stype_qlookup = {
     12: "metabelian=no&monomial=no&solvable=yes",
     13: "solvable=no"
 }
+
 group_knowls = {
     "exponents_of_order": "group.order",
     "cyclic": "group.cyclic",
@@ -78,6 +88,7 @@ group_knowls = {
     "Agroup": "group.Agroup",
     "rank": "group.rank",
 }
+
 def stype_insert_knowls(s):
     L = re.split("(,? ?(?:(?:and)|(?:or)|(?:not))? )", s)
     for i in range(len(L)):
@@ -85,8 +96,10 @@ def stype_insert_knowls(s):
             L[i] = display_knowl(group_knowls[L[i]], L[i])
     return "".join(L)
 stype_klookup = {stype: stype_insert_knowls(desc) for (stype, desc) in stype_lookup.items()}
+
 def stype_formatter(stype):
     return stype_klookup[stype]
+
 def stype_qformatter(stype):
     if isinstance(stype, str):
         for k, v in stype_klookup.items():

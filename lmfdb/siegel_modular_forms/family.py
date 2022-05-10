@@ -52,10 +52,10 @@ class SiegelFamily (SageObject):
             self.__dimension_glossary = None
         self.__samples = None
         self.order = doc.get('order')
-        
+
     def computes_dimensions(self):
-        return True if self.__dimension else False
-    
+        return bool(self.__dimension)
+
     def dimension(self, *args, **kwargs):
         return self.__dimension(*args, **kwargs) if self.__dimension else None
 

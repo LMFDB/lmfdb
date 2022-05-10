@@ -441,7 +441,7 @@ def render_artin_representation_webpage(label):
 def artin_data(label):
     poly = db.artin_reps.lookup(label, "NFGal")
     if poly is None:
-        return abort(404)
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     return datapage([label, poly], ["artin_reps", "artin_field_data"], bread=bread, title=f"Artin representation data - {label}", label_cols=["Baselabel", "Polynomial"])
 

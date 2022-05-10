@@ -69,22 +69,22 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
+
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Labeling convention', url_for(".labels_page"))]
 
+
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
-def tfTOyn(bool):
-    if bool:
-        return "yes"
-    else:
-        return "no"
+def tfTOyn(b: bool):
+    return "yes" if b else "no"
+
 
 # Convert [4,1] to 4.1, then  apply sg_pretty
 def group_display(strg):
@@ -243,9 +243,9 @@ def groups_per_genus(genus):
         'genus': genus,
         'groups_0': groups_0,
         'groups_gt0': groups_gt0,
-        'show_top_braid' : show_top_braid,
-        'show_g0_gt0' : show_g0_gt0,
-        'group_display' : group_display
+        'show_top_braid': show_top_braid,
+        'show_g0_gt0': show_g0_gt0,
+        'group_display': group_display
     }
 
     title = 'Families of higher genus curves with automorphisms: Genus %s group statistics' % genus
@@ -1027,18 +1027,18 @@ def topological_action(fam, cc):
     Lbraid = {}
 
     for element in topo_class:
-       if str(element['braid']) in Lbraid:
-           Lbraid[str(element['braid'])].append(
-               (element['passport_label'],
-                element['total_label'],
-                ' '))
-           # We include the space so that we don't have duplicate conjugacy
-           # classes displayed
-       else:
-           Lbraid[str(element['braid'])] = [
-               (element['passport_label'],
-                element['total_label'],
-                cc_display(ast.literal_eval(element['con'])))]
+        if str(element['braid']) in Lbraid:
+            Lbraid[str(element['braid'])].append(
+                (element['passport_label'],
+                 element['total_label'],
+                 ' '))
+            # We include the space so that we don't have duplicate conjugacy
+            # classes displayed
+        else:
+            Lbraid[str(element['braid'])] = [
+                (element['passport_label'],
+                 element['total_label'],
+                 cc_display(ast.literal_eval(element['con'])))]
 
     # Sort braid ascending
     key_for_sorted = sorted(ast.literal_eval(key) for key in Lbraid)
@@ -1146,14 +1146,14 @@ def hgcwa_code_download(**args):
         data = [entry for entry in search_data if entry['topological'] == cc_list]
 
     elif label_is_one_passport(label):
-        search_data = list(db.hgcwa_passports.search({"passport_label" : label}))
+        search_data = list(db.hgcwa_passports.search({"passport_label": label}))
         if lang == args['download_type']:
             data = search_data
         else:
             data = [entry for entry in search_data if entry['braid'] == entry['cc']]
 
     elif label_is_one_family(label):
-        search_data = list(db.hgcwa_passports.search({"label" : label}))
+        search_data = list(db.hgcwa_passports.search({"label": label}))
         if lang == args['download_type']:
             data = search_data
         else:

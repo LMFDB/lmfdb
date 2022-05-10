@@ -5,7 +5,7 @@ import re
 from io import BytesIO
 import time
 
-from flask import render_template, request, url_for, redirect, make_response, send_file
+from flask import abort, render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
@@ -26,14 +26,17 @@ from lmfdb import db
 
 # utilitary functions for displays
 
+
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
 
-def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
-     return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
+
+def print_q_expansion(lst):
+    lst = [str(c) for c in lst]
+    Qa = PolynomialRing(QQ, 'a')
+    Qq = PowerSeriesRing(Qa, 'q')
+    return web_latex_split_on_pm(Qq(lst).add_bigoh(len(lst)))
+
 
 def my_latex(s):
     ss = ""
@@ -56,7 +59,7 @@ def get_bread(tail=[]):
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
-            ('Reliability of the data', url_for(".reliability_page")),            
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Labels for integral lattices', url_for(".labels_page")),
             ('History of lattices', url_for(".history_page"))]
 
@@ -273,7 +276,7 @@ def render_lattice_webpage(**args):
             (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
     if f['name']==['Leech']:
-        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
+        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]),
 str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
         info['all_shortest']="no"
         info['download_shortest'] = [
@@ -327,7 +330,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     info['properties']=[('Label', '%s' % info['label'])]+info['properties']
     downloads = [("Underlying data", url_for(".lattice_data", label=lab))]
 
-    if info['name'] != "" :
+    if info['name'] != "":
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template(
@@ -354,6 +357,8 @@ def vect_to_sym(v):
 
 @lattice_page.route('/data/<label>')
 def lattice_data(label):
+    if not lattice_label_regex.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Lattice data - {label}"
     return datapage(label, "lat_lattices", title=title, bread=bread)

@@ -31,7 +31,7 @@ LMFDB_VERSION = "LMFDB Release 1.2.1"
 ############################
 
 
-class ReverseProxied(object):
+class ReverseProxied():
     def __init__(self, app):
         self.app = app
 
@@ -39,7 +39,7 @@ class ReverseProxied(object):
         scheme = environ.get('HTTP_X_FORWARDED_PROTO')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
-        
+
         return self.app(environ, start_response)
 
 app = Flask(__name__)
@@ -260,7 +260,7 @@ def netloc_redirect():
         Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
     """
     from urllib.parse import urlparse, urlunparse
-    
+
     urlparts = urlparse(request.url)
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
