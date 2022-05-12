@@ -482,6 +482,8 @@ class Lfunction_from_db(Lfunction):
         self.label = self.lfunc_data['label']
         self.info = self.general_webpagedata()
         self.info['title'] = "L-function " + self.label
+        if self.info['label'] == '1-1-1.1-r0-0-0':
+          self.info['title'] = "L-function " + self.label + ": Riemann zeta function"
 
     @lazy_attribute
     def _Ltype(self):

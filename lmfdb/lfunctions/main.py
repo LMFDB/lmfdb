@@ -1169,6 +1169,8 @@ def render_single_Lfunction(Lclass, args, request):
             return render_lfunction_exception(err)
 
     info = initLfunction(L, temp_args, request)
+    if info['label']=='1-1-1.1-r0-0-0':
+        info['learnmore'].append(("$\zeta$ zeros", url_for("zeta zeros.zetazeros")))
     return render_template('Lfunction.html', **info)
 
 def render_lfunction_exception(err):
