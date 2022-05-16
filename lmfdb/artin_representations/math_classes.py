@@ -475,10 +475,7 @@ class ArtinRepresentation():
 
     def processed_root_number(self):
         tmp = self.root_number()
-        if tmp == 0:
-            return "?"
-        else:
-            return str(tmp)
+        return "?" if tmp == 0 else str(tmp)
 
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -488,9 +485,10 @@ class ArtinRepresentation():
             assert len(tmp) == 1
             trace_complex = tmp[0]
         except AssertionError:
-        # We are looking for the character value on the conjugacy class of complex conjugation.
-        # This is always an integer, so we don't expect this to be a more general
-        # algebraic integer, and we can simply convert to sage
+            # We are looking for the character value on the conjugacy
+            # class of complex conjugation.  This is always an
+            # integer, so we don't expect this to be a more general
+            # algebraic integer, and we can simply convert to sage
             raise TypeError("Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp)
         return trace_complex
 
