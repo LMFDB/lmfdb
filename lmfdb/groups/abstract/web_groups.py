@@ -4,6 +4,7 @@ import re
 from lmfdb import db
 
 from flask import url_for
+
 from sage.all import (
     Permutations,
     Permutation,
@@ -14,6 +15,7 @@ from sage.all import (
     latex,
     lazy_attribute,
     prod,
+    is_prime,
     cartesian_product_iterator,
 )
 from sage.libs.gap.libgap import libgap
@@ -136,8 +138,6 @@ class WebObj():
         # self.table must be defined in subclasses
         return self.table.lookup(self.label)
 
-
-# Abstract Group object
 class WebAbstractGroup(WebObj):
     table = db.gps_groups
 
@@ -353,7 +353,10 @@ class WebAbstractGroup(WebObj):
                     c += m
             if aut_order < 2**32 and libgap(aut_order).IdGroupsAvailable():
                 A = self.G.AutomorphismGroup()
-                aid = int(A.IdGroup()[1])
+                if A:
+                    aid = int(A.IdGroup()[1])
+                else:
+                    aid = 0
             else:
                 aid = 0
             return aut_order, aid, aut_order, aid
@@ -509,17 +512,25 @@ class WebAbstractGroup(WebObj):
     def _subgroup_data(self):
         G = self.G
         Z = G.Center()
-        GZ = G/Z
         D = G.DerivedSubgroup()
-        GD = G/D
         Phi = G.FrattiniSubgroup()
-        GPhi = G/Phi
         F = G.FittingSubgroup()
-        GF = G/F
         R = G.RadicalGroup()
-        GR = G/R
         S = G.Socle()
-        GS = G/S
+        if isinstance(self._data, list):
+            GZ = G.Zquotient()
+            GD = G.Dquotient()
+            GPhi = G.Phiquotient()
+            GF = G.Fquotient()
+            GR = G.Rquotient()
+            GS = G.Squotient()
+        else:
+            GZ = G/Z
+            GD = G/D
+            GPhi = G/Phi
+            GF = G/F
+            GR = G/R
+            GS = G/S
         label_for = {}
         label_rev = defaultdict(list)
         gapH = {"Z": Z,
@@ -568,8 +579,12 @@ class WebAbstractGroup(WebObj):
                 r"\operatorname{Fit}": display_knowl('group.fitting_subgroup', 'Fitting'),
                 "R": display_knowl('group.radical', 'Radical'),
                 "S": display_knowl('group.socle', 'Socle')}
+        print("SSSL!")
         subdata = self._subgroup_data
+        print("sub data")
+        print(subdata)
         def show(sname, name=None):
+            print(" ______________________ ", sname)
             if name is None:
                 name = sname
             H = subdata[name]
@@ -1476,6 +1491,110 @@ class WebAbstractGroup(WebObj):
     def is_hyperelementary(self):
         return self.hyperelementary > 1
 
+# We may get abelian groups which are too large for GAP, so handle them directly
+class LiveAbelianGroup():
+    def __init__(self, data):
+        self.snf = data
+
+    def Order(self):
+        return libgap(prod(self.snf))
+
+    def Center(self):
+        return LiveAbelianGroup(self.snf)
+
+    def Zquotient(self):
+        return libgap.TrivialGroup()
+
+    def DerivedSubgroup(self):
+        return libgap.TrivialGroup()
+
+    def Dquotient(self):
+        return self
+
+    def FrattiniSubgroup(self):
+        # Reduce all exponents by 1
+        snf1 = [prod([z[0]**(z[1]-1) for z in factor(n)]) for n in self.snf]
+        snf1 = [z for z in snf1 if z > 1]
+        return LiveAbelianGroup(snf1)
+
+    def Phiquotient(self):
+        # Make all exponents by 1
+        snf1 = [prod([z for z in ZZ(n).prime_factors()]) for n in self.snf]
+        return LiveAbelianGroup(snf1)
+
+    def FittingSubgroup(self):
+        return self
+
+    def Fquotient(self):
+        return libgap.TrivialGroup()
+
+    def RadicalGroup(self):
+        return self
+
+    def Rquotient(self):
+        return libgap.TrivialGroup()
+
+    def Socle(self):
+        # Isomorphic to Frattini quotient
+        return self.Phiquotient()
+
+    def Squotient(self):
+        # Isomorphic to Frattini subgroup
+        return self.FrattiniSubgroup()
+
+    def IsNilpotent(self):
+        return True
+
+    def IsSolvable(self):
+        return True
+
+    def IsAbelian(self):
+        return True
+
+    def IsSupersolvable(self):
+        return True
+
+    def IsMonomial(self):
+        return True
+
+    def IsSimple(self):
+        return (len(self.snf)==1 and is_prime(self.snf[0]))
+
+    def IsAlmostSimpleGroup(self):
+        return False
+
+    def IsPerfect(self):
+        return len(self.snf)==0
+
+    def IsCyclic(self):
+        return len(self.snf) < 2
+
+    def NilpotencyClassOfGroup(self):
+        return 0 if len(self.snf)==0 else 1
+
+    def DerivedLength(self):
+        return 0 if len(self.snf)==0 else 1
+
+    def Exponent(self):
+        return 0 if len(self.snf)==0 else self.snf[0]
+
+    def AbelianInvariants(self):
+        primaryl = [factor(z) for z in self.snf]
+        primary2 = []
+        for f in primaryl:
+            primary2.extend([z[0]**z[1] for z in f])
+        return sorted(primary2)
+
+    def AutomorphismGroup(self):
+        return None
+
+    def RankPGroup(self):
+        return len(self.snf)
+
+    def IdGroup(self):
+        return libgap.AbelianGroup(self.snf).IdGroup()
+
+# Abstract Group object
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
