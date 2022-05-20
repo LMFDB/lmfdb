@@ -17,7 +17,6 @@ from sage.all import (
     prod,
     is_prime,
     cartesian_product_iterator,
-    gap,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement

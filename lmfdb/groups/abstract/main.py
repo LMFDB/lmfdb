@@ -53,7 +53,6 @@ from .web_groups import (
     WebAbstractRationalCharacter,
     WebAbstractSubgroup,
     group_names_pretty,
-    LiveAbelianGroup,
     primary_to_smith
 )
 from .stats import GroupStats
