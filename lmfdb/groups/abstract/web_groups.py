@@ -1601,7 +1601,7 @@ class LiveAbelianGroup():
             return []
         plist = ZZ(self.snf[-1]).prime_factors()
         def get_sylow(snf, p):
-            ppart = [z.p_primary_part(p) for z in snf]
+            ppart = [p**z.ord(p) for z in snf]
             return [z for z in ppart if z>1]
         sylows = [get_sylow(self.snf,p) for p in plist]
         return [LiveAbelianGroup(syl) for syl in sylows]
