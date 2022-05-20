@@ -17,6 +17,7 @@ from sage.all import (
     prod,
     is_prime,
     cartesian_product_iterator,
+    gap,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
@@ -119,6 +120,16 @@ def var_name(i):
     else:
         raise RuntimeError("too many variables in presentation")
 
+def abelian_get_elementary(snf):
+    plist = ZZ(snf[0]).prime_factors()
+    if len(snf)==1:  # cyclic group, all primes are good
+        return prod(plist)
+    possiblep = ZZ(snf[1]).prime_factors()
+    if len(possiblep)>1:
+        return 1
+    return possiblep[0]
+
+
 
 class WebObj():
     def __init__(self, label, data=None):
@@ -157,6 +168,9 @@ class WebAbstractGroup(WebObj):
                 dbdata = self.table.lookup(label)
                 if dbdata is not None:
                     data = dbdata
+        elif isinstance(data, LiveAbelianGroup):
+            self._data = data.snf
+            data = data.snf
         WebObj.__init__(self, label, data)
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
@@ -169,6 +183,14 @@ class WebAbstractGroup(WebObj):
                     i = ZZ(m.group(4))
                     if i <= maxi:
                         self._data = (n, i)
+        if isinstance(self._data, list): # live abelian group
+            self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
+            self.G = LiveAbelianGroup(self.snf)
+            # a few properties are easier to shortcut than to do through LiveAbelianGroup
+            self.elementary = abelian_get_elementary(self.snf)
+            self.hyperelementary = self.elementary
+            self.Zgroup = len(self.snf)==1
+            self.Agroup = True
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
@@ -557,7 +579,7 @@ class WebAbstractGroup(WebObj):
                 gapH[f"m_{{{i+1}}}"] = M
                 gapH[f"G/m_{{{i+1}}}"] = G/M
         for name, H in gapH.items():
-            if H.Order().IdGroupsAvailable():
+            if H.Order().IdGroupsAvailable() and H.Order() < 10**9:
                 label = f"{H.Order()}.{H.IdGroup()[1]}"
                 label_for[name] = label
                 label_rev[label].append(name)
@@ -579,12 +601,8 @@ class WebAbstractGroup(WebObj):
                 r"\operatorname{Fit}": display_knowl('group.fitting_subgroup', 'Fitting'),
                 "R": display_knowl('group.radical', 'Radical'),
                 "S": display_knowl('group.socle', 'Socle')}
-        print("SSSL!")
         subdata = self._subgroup_data
-        print("sub data")
-        print(subdata)
         def show(sname, name=None):
-            print(" ______________________ ", sname)
             if name is None:
                 name = sname
             H = subdata[name]
@@ -1570,13 +1588,26 @@ class LiveAbelianGroup():
         return len(self.snf) < 2
 
     def NilpotencyClassOfGroup(self):
-        return 0 if len(self.snf)==0 else 1
+        return 1 if self.snf else 0
 
     def DerivedLength(self):
-        return 0 if len(self.snf)==0 else 1
+        return 1 if self.snf else 0
 
     def Exponent(self):
-        return 0 if len(self.snf)==0 else self.snf[0]
+        return self.snf[-1] if self.snf else 1
+
+    def Sylows(self):
+        if not self.snf:
+            return []
+        plist = ZZ(self.snf[-1]).prime_factors()
+        def get_sylow(snf, p):
+            ppart = [z.p_primary_part(p) for z in snf]
+            return [z for z in ppart if z>1]
+        sylows = [get_sylow(self.snf,p) for p in plist]
+        return [LiveAbelianGroup(syl) for syl in sylows]
+
+    def SylowSystem(self):
+        return self.Sylows()
 
     def AbelianInvariants(self):
         primaryl = [factor(z) for z in self.snf]

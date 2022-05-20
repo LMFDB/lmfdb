@@ -655,16 +655,14 @@ def by_abelian_label(label):
             label,
         )
         return redirect(url_for(".index"))
-    print("************************************")
-    print(" here ")
     primary = canonify_abelian_label(label)
-    print(" canon ")
-    dblabel = db.gps_groups.lucky(
-        {"abelian": True, "primary_abelian_invariants": primary}, "label"
-    )
-    print(" dblabel ")
+    # Avoid database error on a hopeless search
+    dblabel = None
+    if not [z for z in primary if z>2**31-1]:
+        dblabel = db.gps_groups.lucky(
+            {"abelian": True, "primary_abelian_invariants": primary}, "label"
+        )
     if dblabel is None:
-        print("doing render_abstr_group")
         return render_abstract_group("ab/" + label, data=primary)
     else:
         return redirect(url_for(".by_label", label=dblabel))
@@ -1024,40 +1022,20 @@ def diagram_js_string(gp, conj, aut):
         num_layers = 0
     return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {num_layers});', display_opts
 
-def abelian_get_elementary(snf):
-    plist = ZZ(snf[0]).prime_factors()
-    if len(snf)==1:  # cyclic group, all primes are good
-        return prod(plist)
-    ppossible = ZZ(snf[1]).prime_factors()
-    if len(ppossible)>1:
-        return 1
-    return ppossible[0]
-
 # Writes individual pages
 def render_abstract_group(label, data=None):
     info = {}
-    print("Data is ")
-    print(data)
     if data is None:
         label = clean_input(label)
         gp = WebAbstractGroup(label)
     elif isinstance(data, list): # abelian group
         gp = WebAbstractGroup(label, data=data)
-        snf = primary_to_smith(data)
-        gp.elementary = abelian_get_elementary(snf)
-        gp.hyperelementary = gp.elementary
-        gp.Zgroup = len(snf)==1
-        gp.Agroup = True
-        gp.G = LiveAbelianGroup(snf)
-        print("SNF: ", snf)
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     # check if it fails to be a potential label even
 
-    print(gp)
     info["boolean_characteristics_string"] = create_boolean_string(gp)
-    print("post bool string")
 
     if gp.live():
         title = f"Abstract group {label}"
