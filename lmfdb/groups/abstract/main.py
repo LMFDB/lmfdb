@@ -663,7 +663,12 @@ def by_abelian_label(label):
             {"abelian": True, "primary_abelian_invariants": primary}, "label"
         )
     if dblabel is None:
-        return render_abstract_group("ab/" + label, data=primary)
+        snf = primary_to_smith(primary)
+        canonical_label = '.'.join([str(z) for z in snf])
+        if canonical_label != label:
+            return redirect(url_for(".by_abelian_label", label=canonical_label))
+        else:
+            return render_abstract_group("ab/" + canonical_label, data=primary)
     else:
         return redirect(url_for(".by_label", label=dblabel))
 
