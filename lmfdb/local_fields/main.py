@@ -287,13 +287,12 @@ def render_field_webpage(args):
             ('Galois group', group_pretty_and_nTj(gn, gt)),
         ]
         # Look up the unram poly so we can link to it
-        unramlabel = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0}, projection=0)
-        if unramlabel is None:
+        unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
+        if unramdata is None:
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = url_for_label(unramlabel)
-            unramdata = db.lf_fields.lookup(unramlabel)
+            unramfriend = url_for_label(unramdata['label'])
 
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
@@ -304,7 +303,8 @@ def render_field_webpage(args):
             eisenp = raw_typeset(eisenp, web_latex(eisenp))
 
         else:
-            unramp = data['unram'].replace('t','x')
+            unramp = coeff_to_poly(unramdata['coeffs'])
+            #unramp = data['unram'].replace('t','x')
             unramp = raw_typeset(unramp, web_latex(Px(str(unramp))))
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
