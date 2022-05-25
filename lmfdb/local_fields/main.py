@@ -153,6 +153,12 @@ def show_slopes(sl):
         return "None"
     return(sl)
 
+def show_slopes2(sl):
+    # uses empty brackets with a space instead of None
+    if str(sl) == "[]":
+        return r'[\ ]'
+    return(sl)
+
 def show_slope_content(sl,t,u):
     sc = str(sl)
     if sc == '[]':
@@ -214,7 +220,7 @@ lf_columns = SearchColumns([
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
     ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
-                    show_slopes, mathmode=False),
+                    show_slopes2, mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
