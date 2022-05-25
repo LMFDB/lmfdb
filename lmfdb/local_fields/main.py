@@ -151,7 +151,7 @@ def ratproc(inp):
 def show_slopes(sl):
     if str(sl) == "[]":
         return "None"
-    return(sl)
+    return('$' + sl + '$')
 
 def show_slopes2(sl):
     # uses empty brackets with a space instead of None
