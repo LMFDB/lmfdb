@@ -118,15 +118,9 @@ def ctx_local_fields():
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
-def format_lfield(coefmult,p):
-    coefmult = [int(c) for c in coefmult.split(",")]
-    data = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=1)
-    if data is None:
-        # This should not happen, what do we do?
-        # This is wrong
-        return ''
-    return lf_display_knowl(data['label'], name = prettyname(data))
-
+def format_lfield(label,p):
+    data = db.lf_fields.lookup(label)
+    return lf_display_knowl(label, name = prettyname(data))
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
@@ -362,7 +356,7 @@ def render_field_webpage(args):
                     'gsm': gsm,
                     'galphrase': galphrase,
                     'autstring': autstring,
-                    'subfields': format_subfields(data['subfields'],p),
+                    'subfields': format_subfields(data['subs'],p),
                     'aut': data['aut'],
                     })
         friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
