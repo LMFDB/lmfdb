@@ -213,11 +213,13 @@ lf_columns = SearchColumns([
                       default=True),
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
+    ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
+                    show_slopes, mathmode=False),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
                       default=True, mathmode=True)],
-    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u"])
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible"])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
@@ -342,6 +344,7 @@ def render_field_webpage(args):
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
                     'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
                     'hw': data['hw'],
+                    'visible': show_slopes(data['visible']),
                     'slopes': show_slopes(data['slopes']),
                     'gal': group_pretty_and_nTj(gn, gt, True),
                     'gt': gt,
