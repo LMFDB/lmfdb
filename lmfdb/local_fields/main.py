@@ -123,9 +123,10 @@ def format_lfield(label,p):
     return lf_display_knowl(label, name = prettyname(data))
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
-def format_subfields(subdata, p):
-    if not subdata:
+def format_subfields(sublist, multdata, p):
+    if not sublist:
         return ''
+    subdata = zip(sublist, multdata)
     return display_multiset(subdata, format_lfield, p)
 
 
@@ -356,7 +357,7 @@ def render_field_webpage(args):
                     'gsm': gsm,
                     'galphrase': galphrase,
                     'autstring': autstring,
-                    'subfields': format_subfields(data['subs'],p),
+                    'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     })
         friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
