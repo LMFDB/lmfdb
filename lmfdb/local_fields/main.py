@@ -352,6 +352,7 @@ def render_field_webpage(args):
                     'inertia': group_display_inertia(data['inertia']),
                     'wild_inertia': wild_inertia,
                     'unram': unramp,
+                    'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
                     'gms': data['gms'],
                     'gsm': gsm,
