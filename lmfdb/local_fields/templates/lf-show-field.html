@@ -51,7 +51,7 @@
     <table>
       <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
       <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
-      <tr><td>Vertices of the {{KNOWL('lf.ramification_polygon', 'ramification polygon')}}:<td>{{info.ram_poly_vert}}
+      <tr><td>{{KNOWL('lf.ramification_polygon', 'ramification polygon')}} vertices:<td>{{info.ram_poly_vert}}
       <tr><td>{{KNOWL('lf.residual_polynomials', 'Residual polynomials')}}:<td>{{info.residual_polys}}
       {% if info.hastbar %}
         &nbsp; where $\overline{t}$ is a root of {{info.unrampoly|safe}}
