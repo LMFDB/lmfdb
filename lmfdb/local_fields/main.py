@@ -300,6 +300,7 @@ def render_field_webpage(args):
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
+        unrampoly = ''
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
