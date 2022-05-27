@@ -349,7 +349,7 @@ def render_field_webpage(args):
             Ptbarz = PolynomialRing(Ptbar, 'z')
             residual_polys = [latex(Ptbarz(z)) for z in residual_polys]
             residual_polys = [z.replace('tbar',r'\overline{t}') for z in residual_polys]
-            residual_polys = ','.join(residual_polys)
+            residual_polys = ', '.join(residual_polys)
             residual_polys = '$' + residual_polys + '$'
 
 
