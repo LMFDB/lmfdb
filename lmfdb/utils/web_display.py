@@ -304,11 +304,11 @@ def web_latex_split_on_pm(x):
         A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly
-    A = A.replace(r"\left","")
-    A = A.replace(r"\right","")
+    A = A.replace(r"\left", "")
+    A = A.replace(r"\right", "")
     for s in on:
-  #      A = A.replace(s, r'\) ' + s + r' \( ')
-   #     A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
+        # A = A.replace(s, r'\) ' + s + r' \( ')
+        # A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
         A = A.replace(s, r'\)' + r' \(\mathstrut ' + s + r'\mathstrut ')
     # the above will be re-done using a more sophisticated method involving
     # regular expressions.  Below fixes bad spacing when the current approach
@@ -474,10 +474,10 @@ def raw_typeset_poly(coeffs,
         denominatortset = f"/ {compress_int(denominator)[0]}"
 
     if compress_poly:
-            tset = compress_polynomial(
-                poly,
-                compress_threshold - len(denominatortset),
-                decreasing)
+        tset = compress_polynomial(
+            poly,
+            compress_threshold - len(denominatortset),
+            decreasing)
     else:
         if decreasing:
             tset = latex(poly)

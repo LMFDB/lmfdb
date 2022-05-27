@@ -367,8 +367,8 @@ class GaloisRepresentation( Lfunction):
                 # for general reps we would have to test the lines below
                 # to be certain that the formulae are correct.
                 #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                    #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
-                    #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
+                #    (p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                #    (p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
                 raise NotImplementedError("Currently tensor products of Galois representations are only implemented under some conditions.",
                                           "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
@@ -378,12 +378,12 @@ class GaloisRepresentation( Lfunction):
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
             if ((Vans[2] in ZZ and Wans[2] in ZZ and
-                all(Vans[n] == Wans[n] for n in range(1,50) ) ) or
-                all( CC(Vans[n]) == CC(Wans[n]) for n in range(1,50) ) ):
-                    raise NotImplementedError("It seems you are asking to tensor a "+
-                                              "Galois representation with its dual " +
-                                              "which results in the L-function having "+
-                                              "a pole. This is not implemented here.")
+                    all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
+                    all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
+                raise NotImplementedError("It seems you are asking to tensor a "
+                                          "Galois representation with its dual "
+                                          "which results in the L-function having "
+                                          "a pole. This is not implemented here.")
 
         scommon = [x for x in V.bad_semistable_primes if x in W.bad_semistable_primes]
 

@@ -8,24 +8,28 @@ from sage.misc.cachefunc import cached_function
 from itertools import combinations
 import heapq
 
-eps = RR(0.00001) # tolerance
+eps = RR(0.00001)  # tolerance
 pi = RR.pi()
+
 
 def distxy(P, Q):
     return ((P[0] - Q[0])**2 + (P[1] - Q[1])**2).sqrt()
 
+
 def distrt(P, Q):
     return (P[0]**2 + Q[0]**2 - 2*P[0]*Q[0]*(P[1] - Q[1]).cos()).sqrt()
+
 
 def distray(P, Q):
     # Distance to the ray starting at Q and going out
     R0, theta = Q
     if P[0] * (P[1] - theta).cos() >= R0:
-        # The minimum distance to the theta line occurs on the ray, so we can just use the right triangle
+        # The minimum distance to the theta line occurs on the ray, so
+        # we can just use the right triangle
         return P[0] * (P[1] - theta).sin().abs()
-    else:
     # The minimum distance occurs at the inner radius
-        return distrt(P, Q)
+    return distrt(P, Q)
+
 
 class ThetaRay:
     def __init__(self, R0, R1, theta):
@@ -38,6 +42,7 @@ class ThetaRay:
         # This is the largest difference between thetas for two touching circles in the annulus
         R0, R1 = self.R0, self.R1
         return (1 - 2*(R0 - R1)**2 / (R0 + R1)**2).arccos()
+
 
 class Outside:
     def __init__(self, r):

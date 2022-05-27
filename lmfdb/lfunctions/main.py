@@ -1169,9 +1169,11 @@ def render_single_Lfunction(Lclass, args, request):
             return render_lfunction_exception(err)
 
     info = initLfunction(L, temp_args, request)
-    if info['label']=='1-1-1.1-r0-0-0':
-        info['learnmore'].append(("$\zeta$ zeros", url_for("zeta zeros.zetazeros")))
+    if info['label'] == '1-1-1.1-r0-0-0':
+        info['learnmore'].append((r"$\zeta$ zeros",
+                                  url_for("zeta zeros.zetazeros")))
     return render_template('Lfunction.html', **info)
+
 
 def render_lfunction_exception(err):
     try:
@@ -1624,7 +1626,7 @@ def getLfunctionPlot(request, *args):
             zero_range *= 1.2
             plotrange = min(plotrange, zero_range)
     else:
-    # obsolete, because lfunc_data comes from DB?
+        # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None
