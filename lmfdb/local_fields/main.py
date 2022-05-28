@@ -341,6 +341,7 @@ def render_field_webpage(args):
             ramverts = ["({},{})".format(z[0],z[1]) for z in ramverts]
             ramverts = '$' + ','.join(ramverts) + '$'
         residual_polys = data['residual_polynomials']
+        hastbar = False
         if not residual_polys:
             residual_polys='None'
         else:
