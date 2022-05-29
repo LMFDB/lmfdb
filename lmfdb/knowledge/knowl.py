@@ -333,7 +333,6 @@ class KnowlBackend(PostgresBase):
         return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in cur}
 
     def set_column_description(self, table, col, description):
-        from lmfdb import db
         uid = db.login()
         kid = f"columns.{table}.{col}"
         data = {
@@ -817,7 +816,6 @@ class Knowl():
             pieces = ID.split(".")
             # Ignore the title passed in
             self.title = f"Column {pieces[2]} of table {pieces[1]}"
-            from lmfdb import db
             if pieces[1] in db.tablenames:
                 self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
             else:

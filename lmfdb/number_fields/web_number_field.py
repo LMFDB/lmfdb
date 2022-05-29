@@ -210,7 +210,7 @@ def is_fundamental_discriminant(d):
 
 @cached_function
 def field_pretty(label):
-    d, r, D, i = label.split('.')
+    d, r, D, _ = label.split('.')
     if d == '1':  # Q
         return r'\(\Q\)'
     if d == '2':  # quadratic field

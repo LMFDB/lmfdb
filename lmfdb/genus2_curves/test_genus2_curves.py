@@ -106,7 +106,7 @@ class Genus2Test(LmfdbTest):
         )
 
     def test_random(self):
-        for i in range(5):
+        for _ in range(5):
             L = self.tc.get("/Genus2Curve/Q/random", follow_redirects=True)
             assert "Sato-Tate group" in L.get_data(as_text=True)
 

@@ -16,7 +16,7 @@ def field_data(s):
     r"""
     Returns full field data from field label.
     """
-    deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
+    deg, r1, abs_disc, _ = [int(c) for c in s.split(".")]
     sig = [r1, (deg - r1) // 2]
     return [s, deg, sig, abs_disc]
 
