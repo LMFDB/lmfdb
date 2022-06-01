@@ -401,7 +401,7 @@ class GaloisRepresentation( Lfunction):
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
         h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
         h = tensor_hodge(h1, h2)
-        w,m,n = hodge_to_selberg(h)
+        _, m, n = hodge_to_selberg(h)
         self.mu_fe = m
         self.nu_fe = n
         _, self.gammaV = gamma_factors(h)
@@ -754,7 +754,7 @@ def all_an_from_prime_powers(L):
         q = 1
         Sr = RealField()(len(L))
         f = Sr.log(base=p).floor()
-        for k in range(f):
+        for _ in range(f):
             q = q*p
             for m in range(2, 1+(S//q)):
                 if (m%p) != 0:
@@ -783,7 +783,7 @@ def get_euler_factor(L,p):
     f = S.log(base=p).floor()
     E = []
     q = 1
-    for i in range(f):
+    for _ in range(f):
         q = q*p
         E.append(L[q-1])
     return list_to_euler_factor(E,f)

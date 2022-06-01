@@ -123,7 +123,6 @@ def are_conjugate_in_alternating(rho, sigma):
         sigma_tuple = sigma_augmented_cycles[i][1]
         for j in range(len(rho_tuple)):
             tmp[rho_tuple[j] - 1] = sigma_tuple[j]
-    from sage.all import Permutation
     sig = Permutation(tmp).signature()
     if sig == -1:
         return False
@@ -141,7 +140,7 @@ def alpha_alt_fn(data):
     def alpha_alt(roots, p):
         """ Computes invariant alpha in the 'ALT' case
         """
-        from sage.all import prod, Permutation
+        from sage.all import prod
         tmp = prod(roots[i] - roots[j] for i in range(len(roots)) for j in range(i))
         try:
             frob_perm = Permutation(alternating_group(frobenius_permutation(roots, p)))

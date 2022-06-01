@@ -52,7 +52,7 @@ def get_congruent_number_data(n):
     info['triangle'] = None
     if cong:
         P = 2*gens[0]
-        x,y = P.xy()
+        x, _ = P.xy()
         Z = 2*x.sqrt()
         XplusY = 2*(x+n).sqrt()
         XminusY = 2*(x-n).sqrt()

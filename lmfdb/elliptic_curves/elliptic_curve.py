@@ -692,8 +692,8 @@ def padic_data(label, p):
 @ec_page.route("/download_qexp/<label>/<int:limit>")
 def download_EC_qexp(label, limit):
     try:
-        N, iso, number = split_lmfdb_label(label)
-    except (ValueError,AttributeError):
+        _, _, number = split_lmfdb_label(label)
+    except (ValueError, AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
         ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
@@ -713,8 +713,8 @@ def download_EC_qexp(label, limit):
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
     try:
-        N, iso, number = split_lmfdb_label(label)
-    except (ValueError,AttributeError):
+        _, _, number = split_lmfdb_label(label)
+    except (ValueError, AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
         data = db.ec_curvedata.lookup(label, label_col='lmfdb_label')

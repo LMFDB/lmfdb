@@ -136,7 +136,7 @@ class mf_hecke_cc(MfChecker):
         Check a_{p^2} = a_p^2 - chi(p) for primes up to 31
         """
         ls = rec['label'].split('.')
-        level, weight, chi = map(int, [ls[0], ls[1], ls[-2]])
+        level, _, chi = map(int, [ls[0], ls[1], ls[-2]])
         char = ConreyCharacter(level, chi)
         Z = rec['an_normalized']
         for p in prime_range(31+1):

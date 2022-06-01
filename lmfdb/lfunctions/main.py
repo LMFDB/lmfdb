@@ -178,7 +178,7 @@ def process_euler(res, info, query):
     for L in res:
         L['euler_factor'] = {}
         p = 2
-        for i, F in enumerate(L.get('euler_factors', [])):
+        for F in L.get('euler_factors', []):
             L['euler_factor'][p] = list_to_factored_poly_otherorder(F)
             p = next_prime(p)
     return res

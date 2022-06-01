@@ -75,7 +75,6 @@ def process_algebraic_integer(seq, root_of_unity):
     return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
 
 def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
-    from sage.rings.all import PolynomialRing
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
@@ -194,7 +193,6 @@ class ArtinRepresentation():
         try:
             return self._hard_primes
         except AttributeError:
-            from sage.rings.all import Integer
             self._hard_primes = [Integer(str(x)) for x in self._data["HardPrimes"]]
             return self._hard_primes
 
@@ -205,7 +203,6 @@ class ArtinRepresentation():
         try:
             return self._bad_primes
         except AttributeError:
-            from sage.rings.all import Integer
             self._bad_primes = [Integer(str(x)) for x in self._data["BadPrimes"]]
             return self._bad_primes
 

@@ -92,7 +92,7 @@ def stats():
         else:
             return tablename[:i], tablename[i+1:]
     for tablename, sizes in table_sizes.items():
-        dname, name = split_db(tablename)
+        dname, _ = split_db(tablename)
         dbSize[dname] += sizes['total_bytes']
         dbObjects[dname] += sizes['nrows']
     for tablename, sizes in table_sizes.items():
@@ -102,7 +102,7 @@ def stats():
         nobjects += sizes['nrows']
         indexSize += sizes['index_bytes']
         if csize >= int(info['minsize']):
-            dname, name = split_db(tablename)
+            dname, _ = split_db(tablename)
             if tablename not in db.tablenames:
                 link = tablename
             else:

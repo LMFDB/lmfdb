@@ -106,7 +106,7 @@ def EC_R_plot_zone_piece(f,h,a,b):
     g=f+h**2/4
     t=a
     s=(b-a)/npts
-    for i in range(npts+1):
+    for _ in range(npts+1):
         y=g(t)
         if y>0:
             y=sqrt(y)

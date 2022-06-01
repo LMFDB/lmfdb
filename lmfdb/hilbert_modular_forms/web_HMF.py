@@ -92,7 +92,7 @@ class WebHMF():
         j = L.find(']')
         data['level_ideal'] = L[i:j+1]
         #print("data['level_ideal'] = %s" % data['level_ideal'])
-        N, n, alpha = data['level_ideal'][1:-1].split(',')
+        N, _, _ = data['level_ideal'][1:-1].split(',')
         data['level_norm'] = int(N)
         #print("data['level_norm'] = %s" % data['level_norm'])
         level = F.ideal_from_str(data['level_ideal'])[2]
