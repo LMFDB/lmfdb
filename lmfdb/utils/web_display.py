@@ -149,7 +149,8 @@ def make_bigint(s, cutoff=20, max_width=70):
 
     The string ``s`` with integers at least 10^cutoff replaced by bigint_knowls.
     """
-    Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
+    Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff + 1))
+
     def knowl_replacer(M):
         a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
         if a[0:2] == r'<a':

@@ -89,6 +89,7 @@ class ECNF_isoclass():
         self.field = FIELD(self.field_label)
         self.field_name = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, self.field_name)
+
         def curve_url(c):
             return url_for(".show_ecnf",
                            nf=c['field_label'],

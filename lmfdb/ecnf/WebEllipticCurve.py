@@ -519,7 +519,6 @@ class ECNF():
         except AttributeError:
             self.sha = "not available"
 
-
         # Local data
 
         # The Kodaira symbol is stored as an int in pari encoding. The

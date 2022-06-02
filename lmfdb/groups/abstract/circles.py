@@ -188,11 +188,13 @@ def get_color(order):
         h = (43*odd) % 360
         s = 60 + ((odd * 17) % 31)
         v = [90, 80, 70, 60, 50, 40, 30]
+
     def delist(comp):
         if isinstance(comp, list):
             i = k if k < len(comp) else -1
             comp = comp[i]
         return comp
+
     h, s, v = delist(h), delist(s), delist(v)
     rgb = hsv_to_rgb(h / 360.0, s / 100.0, v / 100.0)
     return round(255*rgb[0]), round(255*rgb[1]), round(255*rgb[2])

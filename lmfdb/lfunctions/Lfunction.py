@@ -411,6 +411,7 @@ def apply_coeff_info(L, coeff_info):
                 assert L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
             else:
                 fix = L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+
     def convert_euler_Lpoly(poly_coeffs):
         Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
         # WARNING: the data in the database is wrong!
@@ -421,6 +422,7 @@ def apply_coeff_info(L, coeff_info):
         if len(Fp) == 2 and fix:
             Fp[1] *= -1
         return Fp
+
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]

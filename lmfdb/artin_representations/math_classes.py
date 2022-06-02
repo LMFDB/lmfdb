@@ -289,6 +289,7 @@ class ArtinRepresentation():
         localfactorsa = [z.real().round() % charf for z in localfactors]
         # Test to see if we are ok?
         localfactorsa = [localfactorsa[j] if bad[j]>0 else -1 for j in range(len(localfactorsa))]
+
         def myfunc(inp, n):
             fn = list(factor(inp))
             pvals = [[localfactorsa[self.any_prime_to_cc_index(z[0])-1], z[1]] for z in fn]
@@ -833,24 +834,27 @@ class NumberFieldGaloisGroup():
     def computation_roots(self):
         # Write these as p-adic series.  Start with helper
         self.lowered = self.lower_precision()
-        def help_padic(n,p, prec):
+
+        def help_padic(n, p, prec):
             """
               Take an integer n, prime p, and precision prec, and return a
               prec-tuple of the p-adic coefficients of j
             """
             n = ZZ(n)
-            res = [0 for j in range(prec)]
-            while n<0:
+            res = [0] * prec
+            while n < 0:
                 n += p**prec
             for k in range(prec):
                 res[k] = n % p
-                n = (n-res[k])/p
+                n = (n - res[k]) // p
             return res
+
         # Second helper, in case some arrays are not extended by 0
-        def getel(li,j):
-            if j<len(li):
+        def getel(li, j):
+            if j < len(li):
                 return li[j]
             return 0
+
         myroots = self._data["QpRts"]
         p = self._data['QpRts-p']
         prec = self._data['QpRts-prec']
