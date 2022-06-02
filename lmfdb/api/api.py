@@ -85,6 +85,7 @@ def stats():
     dbObjects = defaultdict(int)
     stats = {}
     table_sizes = db.table_sizes()
+
     def split_db(tablename):
         i = tablename.find('_')
         if i == -1:
@@ -170,6 +171,7 @@ def api_query(table, id = None):
     DELIM = request.args.get("_delim", ",")
     fields = request.args.get("_fields", None)
     sortby = request.args.get("_sort", None)
+
     def apierror(msg, flash_extras=[], code=404, table=True):
         if format == "html":
             flash_error(msg, *flash_extras)

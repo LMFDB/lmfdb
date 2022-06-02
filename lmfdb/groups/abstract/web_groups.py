@@ -569,6 +569,7 @@ class WebAbstractGroup(WebObj):
                 "R": display_knowl('group.radical', 'Radical'),
                 "S": display_knowl('group.socle', 'Socle')}
         subdata = self._subgroup_data
+
         def show(sname, name=None):
             if name is None:
                 name = sname
@@ -747,14 +748,11 @@ class WebAbstractGroup(WebObj):
                 if ser_re.fullmatch(spec_lab):
                     # ser.append((H.subgroup, spec_lab)) # returning right thing?
                     ser.append((H.short_label, spec_lab))
-        # sort
-        def sort_ser(p, ch):
-            return int(((p[1]).split(ch))[1])
 
-        def sort_ser_sp(p):
-            return sort_ser(p, sp)
+        def sort_ser(p):
+            return int(((p[1]).split(sp))[1])
 
-        return [el[0] for el in sorted(ser, key=sort_ser_sp)]
+        return [el[0] for el in sorted(ser, key=sort_ser)]
 
     @lazy_attribute
     def chief_series(self):

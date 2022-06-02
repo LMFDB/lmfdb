@@ -292,6 +292,7 @@ class WebNewform():
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
+
         def make_label(character, j):
             label = base_label + [str(character), str(j + 1)]
             return '.'.join(label)
@@ -1003,6 +1004,7 @@ function switch_basis(btype) {
     def display_twists(self):
         if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'
+
         def twist_type(r):
             d = r['self_twist_disc']
             return '' if r['target_label'] != self.label else ('inner' if not d else ('trivial' if d == 1 else ('CM' if d < 0 else 'RM')))
@@ -1057,6 +1059,7 @@ function switch_basis(btype) {
             return '<p>Twists of this newform have not been computed.</p>'
         if not self.embedding_label:
             return '' # we should only be called when embedding_label is set
+
         def twist_type(r):
             if r['target_hecke_orbit_code'] != self.hecke_orbit_code:
                 return ''
@@ -1066,6 +1069,7 @@ function switch_basis(btype) {
                 return 'inner'
             else:
                 return 'CM' if r['parity'] < 0 else 'RM'
+
         def revcode(x):    # reverse encoding of newform orbit N.k.o.i for sorting (so N is in the high 24 bits not the low 24 bits)
             return ((x&((1<<24)-1))<<40) | (((x>>24)&((1<<12)-1))<<28) | (((x>>36)&((1<<16)-1))<<12) | (x>>52)
 

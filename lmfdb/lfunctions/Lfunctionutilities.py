@@ -369,7 +369,6 @@ def lfuncEPhtml(L, fmt):
                 out += seriescoeff(elt, i, "series", "polynomial", 3)
         return out
 
-
     eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
     eptable += "<table class='ntdata'>"
     eptable += "<thead>"
@@ -379,6 +378,7 @@ def lfuncEPhtml(L, fmt):
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
     eptable += "</tr>"
     eptable += "</thead>"
+
     def row(trclass, goodorbad, p, poly):
         if isinstance(poly[0], list):
             galois_pretty_factors = list_factored_to_factored_poly_otherorder
@@ -574,6 +574,7 @@ def lfuncFEtex(L, fmt):
         ans += r",\ "
         ans += "("
         # this is mostly a hack for GL2 Maass forms
+
         def real_digits(x):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 

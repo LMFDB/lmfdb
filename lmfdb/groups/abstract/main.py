@@ -1195,6 +1195,7 @@ def shortsubinfo(ambient, short_label):
         return ""
     wsg = WebAbstractSubgroup(label)
     # helper function
+
     def subinfo_getsub(title, knowlid, lab):
         full_lab = "%s.%s" % (ambient, lab)
         h = WebAbstractSubgroup(full_lab)

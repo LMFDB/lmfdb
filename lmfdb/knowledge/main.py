@@ -881,6 +881,7 @@ def index():
         if len(t) == 0 or t[0] not in string.ascii_letters:
             return "?"
         return t[0].upper()
+
     def get_table(k):
         return k['id'].split(".")[1]
 
