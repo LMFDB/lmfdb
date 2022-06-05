@@ -47,7 +47,8 @@ def web_ainvs(field_label, ainvs):
 
 from sage.misc.all import latex
 def web_point(P):
-    return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
+    return '$\\left(%s\\right)$' % (" : ".join(str(latex(x)) for x in P))
+
 
 def pretty_ideal(Kgen, s, enclose=True):
     r"""Returns the a latex string an ideal of K defined by the string s,
@@ -383,7 +384,7 @@ class ECNF():
             if self.cm_nramp==1:
                 self.cm_ramp = self.cm_ramp[0]
             else:
-                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+                self.cm_ramp = ", ".join(str(p) for p in self.cm_ramp)
 
         # Sato-Tate:
         self.ST = st_display_knowl('1.2.A.1.1a' if not self.cm_type else ('1.2.B.2.1a' if self.cm_type < 0 else '1.2.B.1.1a'))
@@ -551,7 +552,7 @@ class ECNF():
         if len(isodegs)<3:
             self.isodeg = " and ".join(isodegs)
         else:
-            self.isodeg = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+            self.isodeg = " and ".join([", ".join(isodegs[:-1]), isodegs[-1]])
 
 
         sig = self.signature
@@ -613,7 +614,7 @@ class ECNF():
 
         if self.base_change:
             self.base_change = [lab for lab in self.base_change if '?' not in lab]
-            self.properties += [('Base change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
+            self.properties += [('Base change', 'yes: %s' % ','.join(str(lab) for lab in self.base_change))]
         else:
             self.base_change = []  # in case it was False instead of []
             self.properties += [('Base change', 'no')]
@@ -727,11 +728,11 @@ def make_code(label, lang=None):
             Ecode['field'][l] = Ecode['field'][l] % str(poly.list())
 
     # Fill in curve coefficients:
-    ainvs = ["".join(["[",ai,"]"]) for ai in E['ainvs'].split(";")]
+    ainvs = [f"[{ai}]" for ai in E['ainvs'].split(";")]
     ainvs_string = {
-        'magma': "[" + ",".join(["K!{}".format(ai) for ai in ainvs]) + "]",
-        'sage':  "[" + ",".join(["K({})".format(ai) for ai in ainvs]) + "]",
-        'pari':  "[" + ",".join(["Pol(Vecrev({}))".format(ai) for ai in ainvs]) + "], K",
+        'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
+        'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        'pari': "[" + ",".join("Pol(Vecrev({}))".format(ai) for ai in ainvs) + "], K",
         }
     if lang:
         Ecode['curve'] = Ecode['curve'] % ainvs_string[lang]

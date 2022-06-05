@@ -351,7 +351,7 @@ class CMF_download(Downloader):
         s += c + ' Each entry in the list has the form:\n'
         s += c + " %s\n" % proj
         s += 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += ',\n'.join('[' + ', '.join([str(spc[col]) for col in proj]) + ']' for spc in spaces)
+        s += ',\n'.join('[' + ', '.join(str(spc[col]) for col in proj) + ']' for spc in spaces)
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newspaces', lang=lang)
 
@@ -547,7 +547,7 @@ class CMF_download(Downloader):
 
         assert k >= 2   # modular symbols only in weight >= 2
 
-        cutters = "[" + ",".join(["<%d,R!%s"%(c[0],c[1])+">" for c in newform.hecke_cutters]) + "]"
+        cutters = "[" + ",".join("<%d,R!%s" % (c[0], c[1]) + ">" for c in newform.hecke_cutters) + "]"
         explain = [ '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
                     '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
                     '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.'

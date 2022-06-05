@@ -247,13 +247,13 @@ class WebNewform():
         #    self.properties += [('Artin image', r'\(%s\)' %  self.artin_image_display)]
 
         if self.is_cm and self.is_rm:
-            disc = ', '.join([ str(d) for d in self.self_twist_discs ])
+            disc = ', '.join(str(d) for d in self.self_twist_discs)
             self.properties += [('CM/RM discs', disc)]
         elif self.is_cm:
-            disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
+            disc = ' and '.join(str(d) for d in self.self_twist_discs if d < 0)
             self.properties += [('CM discriminant', disc)]
         elif self.is_rm:
-            disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
+            disc = ' and '.join(str(d) for d in self.self_twist_discs if d > 0)
             self.properties += [('RM discriminant', disc)]
         elif self.weight == 1:
             self.properties += [('CM/RM', 'no')]
@@ -1292,11 +1292,10 @@ function switch_basis(btype) {
         return self._display_op(x, y, prec)
 
     def embedding(self,  m, n=None, prec=6, format='embed'):
-        return " ".join([ elt(m, n, prec, format)
+        return " ".join(elt(m, n, prec, format)
             for elt in [self.embedding_re, self.embedding_op, self.embedding_im]
-            ])
-
-
+            )
+s
     def satake(self, m, p, i, prec=6, format='satake'):
         """
         Return a Satake parameter.
@@ -1310,12 +1309,10 @@ function switch_basis(btype) {
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
         if format == 'satake':
-            return " ".join([ elt(m, p, i, prec)
+            return " ".join(elt(m, p, i, prec)
                 for elt in [self.satake_re, self.satake_op, self.satake_im]
-                ])
-
-        else:
-            return self.satake_angle(m, p, i, prec)
+                )
+        return self.satake_angle(m, p, i, prec)
 
     @cached_method
     def satake_angle(self, m, p, i, prec=6):
