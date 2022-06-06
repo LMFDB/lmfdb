@@ -978,7 +978,7 @@ def unlatex(s):
     s = re.sub(r'\\frac{(.+?)}{(.+?)}', r'(\1)/(\2)', s)
     s = s.replace(r'{',r'(')
     s = s.replace(r'}',r')')
-    s = re.sub(r'([^\s+,-])\s*a', r'\1*a',s)
+    s = re.sub(r'([^\s+,*-])\s*a', r'\1*a',s)
     return s
 
 
