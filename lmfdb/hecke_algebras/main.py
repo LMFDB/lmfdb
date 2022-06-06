@@ -119,11 +119,13 @@ def download_search(info):
     # loop through all search results and grab the Hecke operators stored
     for c, rr in enumerate(res):
         s += list_start
-        s += ",".join([str(rr['level']), str(rr['weight']),""])
+        s += ",".join([str(rr['level']), str(rr['weight']), ""])
         if 'ell' in info["query"]:
             s += '"%s"' % (str(rr['orbit_label']))
         else:
-            s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
+            s += ",".join(entry(r)
+                          for r in (sage_eval(rr['hecke_op'])[i]
+                                    for i in range(min(10, rr['num_hecke_op']))))
         if c != last:
             s += list_end + ',\\\n'
         else:

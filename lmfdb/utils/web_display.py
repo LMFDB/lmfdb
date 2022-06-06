@@ -766,7 +766,7 @@ def dispZmat(mat):
     """
     s = r'\begin{pmatrix}'
     for row in mat:
-        rw = '& '.join([str(z) for z in row])
+        rw = '& '.join(str(z) for z in row)
         s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
@@ -791,7 +791,7 @@ def list_to_latex_matrix(li):
     '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
     """
     dim = len(li[0])
-    mm = r"\left(\begin{array}{"+dim*"r" +"}"
-    mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
+    mm = r"\left(\begin{array}{" + dim * "r" + "}"
+    mm += r"\\".join(" & ".join(str(a) for a in row) for row in li)
     mm += r'\end{array}\right)'
     return mm

@@ -248,8 +248,8 @@ def parse_spectral(inp, query, qfield):
         GR_real = sum(([k]*(v//ge) for k, v in GRcount.items()), [])
         GC_real = sum(([k]*(v//ge) for k, v in GCcount.items()), [])
         e *= ge
-        rs = ''.join(['r'+str(x) for x in GR_real])
-        cs = ''.join(['c'+str(x) for x in GC_real])
+        rs = ''.join('r' + str(x) for x in GR_real)
+        cs = ''.join('c' + str(x) for x in GC_real)
         out = rs + cs + ('' if e == 1 else 'e%d' % e) + '-0'
     else:
         # For now, we don't do any rewriting since we have to track the order of both real and imaginary parts, which is annoying
