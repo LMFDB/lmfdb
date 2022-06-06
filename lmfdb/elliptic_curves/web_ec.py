@@ -71,7 +71,8 @@ def gl2_subgroup_data(label):
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
     info += row_wrap('Genus', data['genus'])
-    def ratcusps(c,r):
+
+    def ratcusps(c, r):
         if not c:
             return ""
         if not r:
@@ -80,8 +81,7 @@ def gl2_subgroup_data(label):
             return " (all of which are rational)"
         if r == 1:
             return " (one of which is rational)"
-        else:
-            return " (of which %s are rational)" % r
+        return f" (of which {r} are rational)"
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")

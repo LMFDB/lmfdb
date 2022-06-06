@@ -411,6 +411,7 @@ def apply_coeff_info(L, coeff_info):
                 assert L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
             else:
                 fix = L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+
     def convert_euler_Lpoly(poly_coeffs):
         Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
         # WARNING: the data in the database is wrong!
@@ -421,6 +422,7 @@ def apply_coeff_info(L, coeff_info):
         if len(Fp) == 2 and fix:
             Fp[1] *= -1
         return Fp
+
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
@@ -482,6 +484,8 @@ class Lfunction_from_db(Lfunction):
         self.label = self.lfunc_data['label']
         self.info = self.general_webpagedata()
         self.info['title'] = "L-function " + self.label
+        if self.info['label'] == '1-1-1.1-r0-0-0':
+            self.info['title'] = "L-function " + self.label + ": Riemann zeta function"
 
     @lazy_attribute
     def _Ltype(self):
@@ -493,6 +497,7 @@ class Lfunction_from_db(Lfunction):
         # systematically in the database. Default to True until this
         # is retrievable from the database.
         return True
+
     @lazy_attribute
     def bread(self):
         from .main import url_for_lfunction
@@ -907,7 +912,6 @@ class Lfunction_HMF(Lfunction):
 
         # Compute Dirichlet coefficients ########################
         R = QQ['x']
-        (x,) = R._first_ngens(1)
         K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
         iota = K.complex_embeddings()[self.number]
 

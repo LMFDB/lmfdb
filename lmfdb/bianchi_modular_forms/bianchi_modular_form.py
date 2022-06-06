@@ -439,7 +439,7 @@ def download_bmf_magma(**args):
 
     outstr += 'NN := ideal<ZF | {}>;\n\n'.format(set(f.level.gens()))
 
-    outstr += 'primesArray := [\n' + ','.join([str(st).replace(' ', '') for st in prime_gens]).replace('],[',
+    outstr += 'primesArray := [\n' + ','.join(str(st).replace(' ', '') for st in prime_gens).replace('],[',
                                                                                        '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
@@ -566,7 +566,7 @@ def download_bmf_sage(**args):
 
     outstr += 'NN = ZF.ideal({})\n\n'.format(f.level.gens())
 
-    outstr += 'primes_array = [\n' + ','.join([str(st).replace(' ', '') for st in prime_gens]).replace('],[',
+    outstr += 'primes_array = [\n' + ','.join(str(st).replace(' ', '') for st in prime_gens).replace('],[',
                                                                                        '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 

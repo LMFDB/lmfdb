@@ -85,6 +85,7 @@ def stats():
     dbObjects = defaultdict(int)
     stats = {}
     table_sizes = db.table_sizes()
+
     def split_db(tablename):
         i = tablename.find('_')
         if i == -1:
@@ -92,7 +93,7 @@ def stats():
         else:
             return tablename[:i], tablename[i+1:]
     for tablename, sizes in table_sizes.items():
-        dname, name = split_db(tablename)
+        dname, _ = split_db(tablename)
         dbSize[dname] += sizes['total_bytes']
         dbObjects[dname] += sizes['nrows']
     for tablename, sizes in table_sizes.items():
@@ -102,7 +103,7 @@ def stats():
         nobjects += sizes['nrows']
         indexSize += sizes['index_bytes']
         if csize >= int(info['minsize']):
-            dname, name = split_db(tablename)
+            dname, _ = split_db(tablename)
             if tablename not in db.tablenames:
                 link = tablename
             else:
@@ -170,6 +171,7 @@ def api_query(table, id = None):
     DELIM = request.args.get("_delim", ",")
     fields = request.args.get("_fields", None)
     sortby = request.args.get("_sort", None)
+
     def apierror(msg, flash_extras=[], code=404, table=True):
         if format == "html":
             flash_error(msg, *flash_extras)
