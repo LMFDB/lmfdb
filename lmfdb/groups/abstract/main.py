@@ -53,6 +53,7 @@ from .web_groups import (
     WebAbstractRationalCharacter,
     WebAbstractSubgroup,
     group_names_pretty,
+    primary_to_smith
 )
 from .stats import GroupStats
 
@@ -654,11 +655,19 @@ def by_abelian_label(label):
         )
         return redirect(url_for(".index"))
     primary = canonify_abelian_label(label)
-    dblabel = db.gps_groups.lucky(
-        {"abelian": True, "primary_abelian_invariants": primary}, "label"
-    )
+    # Avoid database error on a hopeless search
+    dblabel = None
+    if not [z for z in primary if z>2**31-1]:
+        dblabel = db.gps_groups.lucky(
+            {"abelian": True, "primary_abelian_invariants": primary}, "label"
+        )
     if dblabel is None:
-        return render_abstract_group("ab/" + label, data=primary)
+        snf = primary_to_smith(primary)
+        canonical_label = '.'.join([str(z) for z in snf])
+        if canonical_label != label:
+            return redirect(url_for(".by_abelian_label", label=canonical_label))
+        else:
+            return render_abstract_group("ab/" + canonical_label, data=primary)
     else:
         return redirect(url_for(".by_label", label=dblabel))
 
