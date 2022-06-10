@@ -939,10 +939,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
+        # ℤ is &#8484; in html
         torsion_opts = ([("", ""), ("[]", "trivial")] +
-                        [("%s"%n, "order %s"%n) for n in range(4,16,4)] +
-                        [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
-                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+                        [("%s" % n, "order %s" % n) for n in range(4, 16, 4)] +
+                        [("[%s]" % n, "ℤ/%sℤ" % n) for n in range(2, 13) if n != 11] +
+                        [("[2,%s]" % n, "ℤ/2ℤ&oplus;ℤ/%sℤ" % n) for n in range(2, 10, 2)])
         torsion = SelectBox(
             name="torsion",
             label="Torsion",
