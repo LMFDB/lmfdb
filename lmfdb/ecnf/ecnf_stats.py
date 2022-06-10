@@ -38,7 +38,7 @@ def latex_tor(t):
     elif len(t) == 1:
         return r"$\Z/{%s}\Z$" % t
     else:
-        return r"$\Z{%s}\Z \oplus \Z/{%s}\Z$" % t
+        return r"$\Z/{%s}\Z \oplus \Z/{%s}\Z$" % t
 
 def tor_invs(t):
     if isinstance(t, str):
