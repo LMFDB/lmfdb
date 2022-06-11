@@ -520,12 +520,16 @@ class WebEC():
         mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
         mwbsd['heights'] = [RR(h) for h in mwbsd['heights']]
 
+        # Mordell-Weil group
+        invs = [0 for a in range(self.rank)] + [n for n in self.torsion_structure]
+        mwbsd['mw_struct'] = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+
         # Torsion structure and generators:
         if mwbsd['torsion'] == 1:
             mwbsd['tor_struct'] = ''
             mwbsd['tor_gens'] = ''
         else:
-            mwbsd['tor_struct'] = r' \times '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
+            mwbsd['tor_struct'] = r' \oplus '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
             tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
             mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp),
                 ', '.join(web_latex(P) for P in tor_gens_tmp))
@@ -626,7 +630,7 @@ class WebEC():
             if "missing" in tg1['f']:
                 tg['fields_missing'] = True
             T = tgd['torsion']
-            tg1['t'] = r'\(' + r' \times '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
+            tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
             bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:
                 from lmfdb.ecnf.main import split_full_label

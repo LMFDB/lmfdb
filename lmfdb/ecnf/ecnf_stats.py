@@ -36,9 +36,9 @@ def latex_tor(t):
     if len(t) == 0:
         return "trivial"
     elif len(t) == 1:
-        return "$C_{%s}$" % t
+        return r"$\Z/{%s}\Z$" % t
     else:
-        return r"$C_{%s} \times C_{%s}$" % t
+        return r"$\Z/{%s}\Z \oplus \Z/{%s}\Z$" % t
 
 def tor_invs(t):
     if isinstance(t, str):

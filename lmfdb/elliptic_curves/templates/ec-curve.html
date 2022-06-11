@@ -72,25 +72,7 @@ white-space: pre in order to keep line breaks! #}
     ($r \le {{data.mwbsd.rank_bounds.1}}$)
     {%endif%}
     {% else %}
-    {% if data.mwbsd.rank == 0 %}
-      {% if data.mwbsd.torsion == 1 %}
-        trivial
-      {% else %}
-        ${{data.mwbsd.tor_struct}}$
-      {%endif%}
-    {% elif data.mwbsd.rank==1 %}
-      {% if data.mwbsd.torsion == 1 %}
-        $\Z$
-      {% else %}
-        $\Z\times {{data.mwbsd.tor_struct}}$
-      {%endif%}
-    {% else %}
-      {% if data.mwbsd.torsion == 1 %}
-        $\Z^{{data.mwbsd.rank}}$
-      {% else %}
-        $\Z^{{data.mwbsd.rank}} \times {{data.mwbsd.tor_struct}}$
-      {% endif %}
-    {%endif%}
+    {{ data.mwbsd.mw_struct}}
     {%endif%}
     </p>
 

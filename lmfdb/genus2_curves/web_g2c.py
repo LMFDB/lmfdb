@@ -834,7 +834,7 @@ class WebG2C():
             if len(invs) == 0:
                 data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = r'\(' + r' \times '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+                data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
                 data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])

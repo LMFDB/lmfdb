@@ -409,7 +409,7 @@ class ECNF():
         if self.tr == 1:
             self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
-            self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
+            self.tor_struct_pretty = r"\(\Z/%s\Z\oplus\Z/%s\Z\)" % tuple(self.torsion_structure)
 
         self.torsion_gens = [web_point(parse_point(K,P)) for P in self.torsion_gens]
 
