@@ -45,7 +45,7 @@ def show():
     objLinks = args # an immutable dict of links to objects to tp
 
     objPaths = []
-    for k, v in objLinks.items():
+    for _, v in objLinks.items():
         objPaths.append(v.split('/'))
 
     galoisRepObjs = []

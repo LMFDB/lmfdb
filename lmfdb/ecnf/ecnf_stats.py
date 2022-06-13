@@ -16,7 +16,7 @@ def field_data(s):
     r"""
     Returns full field data from field label.
     """
-    deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
+    deg, r1, abs_disc, _ = [int(c) for c in s.split(".")]
     sig = [r1, (deg - r1) // 2]
     return [s, deg, sig, abs_disc]
 
@@ -36,9 +36,9 @@ def latex_tor(t):
     if len(t) == 0:
         return "trivial"
     elif len(t) == 1:
-        return "$C_{%s}$" % t
+        return r"$\Z/{%s}\Z$" % t
     else:
-        return r"$C_{%s} \times C_{%s}$" % t
+        return r"$\Z/{%s}\Z \oplus \Z/{%s}\Z$" % t
 
 def tor_invs(t):
     if isinstance(t, str):

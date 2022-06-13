@@ -210,7 +210,7 @@ def is_fundamental_discriminant(d):
 
 @cached_function
 def field_pretty(label):
-    d, r, D, i = label.split('.')
+    d, r, D, _ = label.split('.')
     if d == '1':  # Q
         return r'\(\Q\)'
     if d == '2':  # quadratic field
@@ -521,12 +521,8 @@ class WebNumberField:
     def inessentialp(self):
         if self.haskey('inessentialp'):
             inep = self._data['inessentialp']
-            if inep:
-                return(', '.join([r'$%s$' % z for z in inep]))
-            else:
-                return('None')
+            return ', '.join(r'$%s$' % z for z in inep) if inep else 'None'
         return 'Not computed'
-
 
     # 2018-4-1: is this actually used?  grep -r doesn't find anywhere it's called....
     # Used by subfields and resolvent functions to
@@ -924,7 +920,7 @@ class WebNumberField:
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
     def make_code_snippets(self):
-         # read in code.yaml from numberfields directory:
+        # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names

@@ -59,8 +59,8 @@ class HomePageTest(LmfdbTest):
         """
         self.check_args("/EllipticCurve/Q/?jump=11.a2", r'y^2+y=x^3-x^2-10x-20')
         self.check_args("/EllipticCurve/Q/?jump=389.a", 'Elliptic curves in class 389.a')
-        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", r'\Z^2')
-        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+", r'\Z^2')
+        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", '0.15246')
+        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+", '0.15246')
 
     #
     # Various search combinations

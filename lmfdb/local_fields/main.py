@@ -118,20 +118,15 @@ def ctx_local_fields():
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
-def format_lfield(coefmult,p):
-    coefmult = [int(c) for c in coefmult.split(",")]
-    data = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=1)
-    if data is None:
-        # This should not happen, what do we do?
-        # This is wrong
-        return ''
-    return lf_display_knowl(data['label'], name = prettyname(data))
-
+def format_lfield(label,p):
+    data = db.lf_fields.lookup(label)
+    return lf_display_knowl(label, name = prettyname(data))
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
-def format_subfields(subdata, p):
-    if not subdata:
+def format_subfields(sublist, multdata, p):
+    if not sublist:
         return ''
+    subdata = zip(sublist, multdata)
     return display_multiset(subdata, format_lfield, p)
 
 
@@ -151,6 +146,12 @@ def ratproc(inp):
 def show_slopes(sl):
     if str(sl) == "[]":
         return "None"
+    return('$' + sl + '$')
+
+def show_slopes2(sl):
+    # uses empty brackets with a space instead of None
+    if str(sl) == "[]":
+        return r'[\ ]'
     return(sl)
 
 def show_slope_content(sl,t,u):
@@ -213,11 +214,13 @@ lf_columns = SearchColumns([
                       default=True),
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
+    ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
+                    show_slopes2, mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
                       default=True, mathmode=True)],
-    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u"])
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible"])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
@@ -287,13 +290,12 @@ def render_field_webpage(args):
             ('Galois group', group_pretty_and_nTj(gn, gt)),
         ]
         # Look up the unram poly so we can link to it
-        unramlabel = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0}, projection=0)
-        if unramlabel is None:
+        unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
+        if unramdata is None:
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = url_for_label(unramlabel)
-            unramdata = db.lf_fields.lookup(unramlabel)
+            unramfriend = url_for_label(unramdata['label'])
 
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
@@ -304,7 +306,8 @@ def render_field_webpage(args):
             eisenp = raw_typeset(eisenp, web_latex(eisenp))
 
         else:
-            unramp = data['unram'].replace('t','x')
+            unramp = coeff_to_poly(unramdata['coeffs'])
+            #unramp = data['unram'].replace('t','x')
             unramp = raw_typeset(unramp, web_latex(Px(str(unramp))))
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
@@ -342,18 +345,20 @@ def render_field_webpage(args):
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
                     'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
                     'hw': data['hw'],
+                    'visible': show_slopes(data['visible']),
                     'slopes': show_slopes(data['slopes']),
                     'gal': group_pretty_and_nTj(gn, gt, True),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
                     'wild_inertia': wild_inertia,
                     'unram': unramp,
+                    'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
                     'gms': data['gms'],
                     'gsm': gsm,
                     'galphrase': galphrase,
                     'autstring': autstring,
-                    'subfields': format_subfields(data['subfields'],p),
+                    'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     })
         friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]

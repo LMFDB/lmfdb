@@ -304,11 +304,14 @@ def render_sample_page(family, sam, args, bread):
                 m = 0
         info['modulus'] = m
         # Hack to reduce polynomials and to handle non integral stuff
+
         def redc(c):
-            return m.reduce(c*c.denominator())/m.reduce(c.denominator())
+            return m.reduce(c * c.denominator()) / m.reduce(c.denominator())
+
         def redp(f):
             c = f.dict()
-            return f.parent()(dict((e,redc(c[e])) for e in c))
+            return f.parent()({e: redc(ce) for e, ce in c.items()})
+
         def safe_reduce(f):
             if not m:
                 return latex(f)

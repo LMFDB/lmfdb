@@ -333,7 +333,6 @@ class KnowlBackend(PostgresBase):
         return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in cur}
 
     def set_column_description(self, table, col, description):
-        from lmfdb import db
         uid = db.login()
         kid = f"columns.{table}.{col}"
         data = {
@@ -460,6 +459,7 @@ class KnowlBackend(PostgresBase):
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
         """
         kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."]))
+
         def filter_from_matches(pattern):
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
             for match in matches:
@@ -817,7 +817,6 @@ class Knowl():
             pieces = ID.split(".")
             # Ignore the title passed in
             self.title = f"Column {pieces[2]} of table {pieces[1]}"
-            from lmfdb import db
             if pieces[1] in db.tablenames:
                 self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
             else:

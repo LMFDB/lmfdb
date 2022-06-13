@@ -830,9 +830,9 @@ def ecnf_code(**args):
 
 def disp_tor(t):
     if len(t) == 1:
-        return "[%s]" % t, "C%s" % t
+        return "[%s]" % t, "ℤ/%sℤ" % t
     else:
-        return "[%s,%s]" % t, "C%s&times;C%s" % t
+        return "[%s,%s]" % t, "ℤ/%sℤ&oplus;ℤ/%sℤ" % t
 
 class ECNFSearchArray(SearchArray):
     noun = "curve"

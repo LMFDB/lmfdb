@@ -119,8 +119,10 @@ def TraceHash(E):
 
     if K not in TH_P_cache:
         TH_P_cache[K] = dict([(p,[P for P in K.primes_above(p) if P.norm()==p]) for p in TH_P])
+
     def ap(p):
         return sum([E.reduction(P).trace_of_frobenius() for P in TH_P_cache[K][p]], 0)
+
     return TraceHash_from_ap([ap(p) for p in TH_P])
 
 # Dictionary to hold the trace hashes of isogeny classes by label.  We

@@ -107,6 +107,7 @@ class mf_hecke_nf(MfChecker):
             return False
         m = rec['hecke_ring_cyclotomic_generator']
         d = rec['hecke_ring_rank']
+
         def check_val(val):
             if not isinstance(val, list):
                 return False
