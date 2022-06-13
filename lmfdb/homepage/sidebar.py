@@ -26,7 +26,7 @@ def linked_name(item, level=""):
         if 'status' in item and item['status'] == 'future':
             this_entry = ''.join(['<div class="future">',this_entry,'</div>'])
     if 'status' in item and item['status'] == 'beta':
-            this_entry = ''.join(['<div class="beta">',this_entry,'</div>'])
+        this_entry = ''.join(['<div class="beta">', this_entry, '</div>'])
     return this_entry
 
 # The unique instance of the class SideBar:
@@ -56,7 +56,7 @@ class SideBar():
         heading = lambda k: linked_name(self.toc_dic[k]['heading'],'heading')
         self.data = [(k,heading(k),self.toc_dic[k]) for k in self.main_headings]
 
-        for key, head, data in self.data:
+        for _, _, data in self.data:
             if data['type'] == 'L':
                 for item in data['firstpart']['entries']:
                     item['url'] = linked_name(item)

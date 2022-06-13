@@ -75,7 +75,6 @@ def process_algebraic_integer(seq, root_of_unity):
     return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
 
 def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
-    from sage.rings.all import PolynomialRing
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
@@ -194,7 +193,6 @@ class ArtinRepresentation():
         try:
             return self._hard_primes
         except AttributeError:
-            from sage.rings.all import Integer
             self._hard_primes = [Integer(str(x)) for x in self._data["HardPrimes"]]
             return self._hard_primes
 
@@ -205,7 +203,6 @@ class ArtinRepresentation():
         try:
             return self._bad_primes
         except AttributeError:
-            from sage.rings.all import Integer
             self._bad_primes = [Integer(str(x)) for x in self._data["BadPrimes"]]
             return self._bad_primes
 
@@ -292,6 +289,7 @@ class ArtinRepresentation():
         localfactorsa = [z.real().round() % charf for z in localfactors]
         # Test to see if we are ok?
         localfactorsa = [localfactorsa[j] if bad[j]>0 else -1 for j in range(len(localfactorsa))]
+
         def myfunc(inp, n):
             fn = list(factor(inp))
             pvals = [[localfactorsa[self.any_prime_to_cc_index(z[0])-1], z[1]] for z in fn]
@@ -475,10 +473,7 @@ class ArtinRepresentation():
 
     def processed_root_number(self):
         tmp = self.root_number()
-        if tmp == 0:
-            return "?"
-        else:
-            return str(tmp)
+        return "?" if tmp == 0 else str(tmp)
 
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -488,9 +483,10 @@ class ArtinRepresentation():
             assert len(tmp) == 1
             trace_complex = tmp[0]
         except AssertionError:
-        # We are looking for the character value on the conjugacy class of complex conjugation.
-        # This is always an integer, so we don't expect this to be a more general
-        # algebraic integer, and we can simply convert to sage
+            # We are looking for the character value on the conjugacy
+            # class of complex conjugation.  This is always an
+            # integer, so we don't expect this to be a more general
+            # algebraic integer, and we can simply convert to sage
             raise TypeError("Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp)
         return trace_complex
 
@@ -838,24 +834,27 @@ class NumberFieldGaloisGroup():
     def computation_roots(self):
         # Write these as p-adic series.  Start with helper
         self.lowered = self.lower_precision()
-        def help_padic(n,p, prec):
+
+        def help_padic(n, p, prec):
             """
               Take an integer n, prime p, and precision prec, and return a
               prec-tuple of the p-adic coefficients of j
             """
             n = ZZ(n)
-            res = [0 for j in range(prec)]
-            while n<0:
+            res = [0] * prec
+            while n < 0:
                 n += p**prec
             for k in range(prec):
                 res[k] = n % p
-                n = (n-res[k])/p
+                n = (n - res[k]) // p
             return res
+
         # Second helper, in case some arrays are not extended by 0
-        def getel(li,j):
-            if j<len(li):
+        def getel(li, j):
+            if j < len(li):
                 return li[j]
             return 0
+
         myroots = self._data["QpRts"]
         p = self._data['QpRts-p']
         prec = self._data['QpRts-prec']

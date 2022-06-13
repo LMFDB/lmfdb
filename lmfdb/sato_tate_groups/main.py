@@ -655,7 +655,7 @@ def sato_tate_search(info, query):
 
 def parse_sort(info):
     sorts = info['search_array'].sorts
-    for name, display, S in sorts:
+    for name, _, S in sorts:
         if name == info.get('sort_order', ''):
             sop = info.get('sort_dir', '')
             if sop == 'op':

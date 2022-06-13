@@ -692,8 +692,8 @@ def padic_data(label, p):
 @ec_page.route("/download_qexp/<label>/<int:limit>")
 def download_EC_qexp(label, limit):
     try:
-        N, iso, number = split_lmfdb_label(label)
-    except (ValueError,AttributeError):
+        _, _, number = split_lmfdb_label(label)
+    except (ValueError, AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
         ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
@@ -713,8 +713,8 @@ def download_EC_qexp(label, limit):
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
     try:
-        N, iso, number = split_lmfdb_label(label)
-    except (ValueError,AttributeError):
+        _, _, number = split_lmfdb_label(label)
+    except (ValueError, AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
         data = db.ec_curvedata.lookup(label, label_col='lmfdb_label')
@@ -838,13 +838,17 @@ def ec_code(**args):
             code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
     return code
 
+
 def tor_struct_search_Q(prefill="any"):
     def fix(t):
-        return t + ' selected = "yes"' if prefill==t else t
+        return t + ' selected = "yes"' if prefill == t else t
+
     def cyc(n):
-        return [fix("["+str(n)+"]"), "C{}".format(n)]
-    def cyc2(m,n):
-        return [fix("[{},{}]".format(m,n)), "C{}&times;C{}".format(m,n)]
+        return [fix(f"[{n}]"), "C{}".format(n)]
+
+    def cyc2(m, n):
+        return [fix("[{},{}]".format(m, n)), "C{}&times;C{}".format(m, n)]
+
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
     for n in range(2,13):
         if n!=11:
@@ -935,10 +939,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
+        # ℤ is &#8484; in html
         torsion_opts = ([("", ""), ("[]", "trivial")] +
-                        [("%s"%n, "order %s"%n) for n in range(4,16,4)] +
-                        [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
-                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+                        [("%s" % n, "order %s" % n) for n in range(4, 16, 4)] +
+                        [("[%s]" % n, "ℤ/%sℤ" % n) for n in range(2, 13) if n != 11] +
+                        [("[2,%s]" % n, "ℤ/2ℤ&oplus;ℤ/%sℤ" % n) for n in range(2, 10, 2)])
         torsion = SelectBox(
             name="torsion",
             label="Torsion",

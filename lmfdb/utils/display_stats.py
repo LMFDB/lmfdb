@@ -159,6 +159,7 @@ class proportioners():
         attr['constraint'] = {}
         attr['proportioner'] = False
         attr['totaler'] = False
+
         def inner(grid, row_headers, col_headers, stats):
             total_data = stats.display_data(**attr)
             total_grid = total_data['grid']
@@ -191,6 +192,7 @@ class proportioners():
         attr['constraint'] = None
         attr['proportioner'] = False
         attr['totaler'] = False
+
         def inner(counts, headers, stats):
             total_counts = stats.display_data(**attr)['counts']
             for D, tD in zip(counts, total_counts):

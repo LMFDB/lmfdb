@@ -158,11 +158,13 @@ class Downloader():
             filename += self.file_suffix[lang]
         c = self.comment_prefix[lang]
         mydate = time.strftime("%d %B %Y")
+
         @stream_with_context
         def _generator():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
             for line in generator:
                 yield line
+
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
         resp = Response(_generator(), mimetype='text/plain', headers=headers)

@@ -99,12 +99,11 @@ class CMFTest(LmfdbTest):
             res.append((load, url))
 
         except Exception as err:
-                print("Error on page " + url)
-                print(str(err))
-                print(print_exc())
-                errors.append(url)
-                res.append((None, url))
-
+            print("Error on page " + url)
+            print(str(err))
+            print(print_exc())
+            errors.append(url)
+            res.append((None, url))
 
         for ns in newspaces:
             n += 1

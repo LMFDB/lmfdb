@@ -44,19 +44,19 @@ def kronecker_symbol(m):
         return None
 
 ###############################################################################
-## Conrey character with no call to Jonathan's code
-## in order to handle big moduli
-##
+# Conrey character with no call to Jonathan's code
+# in order to handle big moduli
+
 
 def get_sage_genvalues(modulus, order, genvalues, zeta_order):
-        """
-        Helper method for computing correct genvalues when constructing
-        the sage character
-        """
-        phi_mod = euler_phi(modulus)
-        exponent_factor = phi_mod / order
-        genvalues_exponent = [x * exponent_factor for x in genvalues]
-        return [x * zeta_order / phi_mod for x in genvalues_exponent]
+    """
+    Helper method for computing correct genvalues when constructing
+    the sage character
+    """
+    phi_mod = euler_phi(modulus)
+    exponent_factor = phi_mod / order
+    genvalues_exponent = (x * exponent_factor for x in genvalues)
+    return [x * zeta_order / phi_mod for x in genvalues_exponent]
 
 
 class PariConreyGroup():

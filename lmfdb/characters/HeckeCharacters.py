@@ -132,8 +132,7 @@ class HeckeChar(DualAbelianGroupElement):
     @cached_method
     def conductor(self):
         bnr = self.parent().group().bnr()
-        pari_cond = pari(bnr.bnrconductorofchar(self.list()))
-        finite, arch = pari_cond
+        finite, _ = pari(bnr.bnrconductorofchar(self.list()))
         return self.number_field().ideal(finite)
 
     def is_primitive(self):

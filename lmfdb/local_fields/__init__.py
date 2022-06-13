@@ -15,13 +15,15 @@ from . import main
 assert main
 
 from urllib.parse import urlparse, urlunparse
+
+
 @local_fields_page.before_request
 def redirect_local():
-        urlparts = urlparse(request.url)
-        if 'LocalNumberField' in urlparts.path:
-            urlparts = urlparts._replace(path=urlparts.path.replace('LocalNumberField', 'padicField'))
-            return redirect(urlunparse(urlparts), 301)
-        return
+    urlparts = urlparse(request.url)
+    if 'LocalNumberField' in urlparts.path:
+        urlparts = urlparts._replace(path=urlparts.path.replace('LocalNumberField', 'padicField'))
+        return redirect(urlunparse(urlparts), 301)
+    return
 
 
 app.register_blueprint(local_fields_page, url_prefix="/padicField")

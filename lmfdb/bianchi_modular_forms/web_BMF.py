@@ -143,6 +143,7 @@ class WebBMF():
             self.hecke_poly = Qx(str(self.hecke_poly))
             F = NumberField(self.hecke_poly,'z')
             self.hecke_poly = web_latex(self.hecke_poly)
+
             def conv(ap):
                 if '?' in ap:
                     return 'not known'
