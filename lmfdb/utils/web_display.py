@@ -149,7 +149,8 @@ def make_bigint(s, cutoff=20, max_width=70):
 
     The string ``s`` with integers at least 10^cutoff replaced by bigint_knowls.
     """
-    Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
+    Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff + 1))
+
     def knowl_replacer(M):
         a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
         if a[0:2] == r'<a':
@@ -304,11 +305,11 @@ def web_latex_split_on_pm(x):
         A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly
-    A = A.replace(r"\left","")
-    A = A.replace(r"\right","")
+    A = A.replace(r"\left", "")
+    A = A.replace(r"\right", "")
     for s in on:
-  #      A = A.replace(s, r'\) ' + s + r' \( ')
-   #     A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
+        # A = A.replace(s, r'\) ' + s + r' \( ')
+        # A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
         A = A.replace(s, r'\)' + r' \(\mathstrut ' + s + r'\mathstrut ')
     # the above will be re-done using a more sophisticated method involving
     # regular expressions.  Below fixes bad spacing when the current approach
@@ -474,10 +475,10 @@ def raw_typeset_poly(coeffs,
         denominatortset = f"/ {compress_int(denominator)[0]}"
 
     if compress_poly:
-            tset = compress_polynomial(
-                poly,
-                compress_threshold - len(denominatortset),
-                decreasing)
+        tset = compress_polynomial(
+            poly,
+            compress_threshold - len(denominatortset),
+            decreasing)
     else:
         if decreasing:
             tset = latex(poly)
@@ -765,7 +766,7 @@ def dispZmat(mat):
     """
     s = r'\begin{pmatrix}'
     for row in mat:
-        rw = '& '.join([str(z) for z in row])
+        rw = '& '.join(str(z) for z in row)
         s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
@@ -790,7 +791,7 @@ def list_to_latex_matrix(li):
     '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
     """
     dim = len(li[0])
-    mm = r"\left(\begin{array}{"+dim*"r" +"}"
-    mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
+    mm = r"\left(\begin{array}{" + dim * "r" + "}"
+    mm += r"\\".join(" & ".join(str(a) for a in row) for row in li)
     mm += r'\end{array}\right)'
     return mm

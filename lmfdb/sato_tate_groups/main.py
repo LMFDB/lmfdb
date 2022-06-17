@@ -655,7 +655,7 @@ def sato_tate_search(info, query):
 
 def parse_sort(info):
     sorts = info['search_array'].sorts
-    for name, display, S in sorts:
+    for name, _, S in sorts:
         if name == info.get('sort_order', ''):
             sop = info.get('sort_dir', '')
             if sop == 'op':
@@ -675,7 +675,7 @@ def mu_data(n):
     rec['label_components'] = [int(0),int(1),int(0),int(n)]
     rec['weight'] = 0
     rec['degree'] = 1
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'mu(%d)'%n
     rec['pretty'] = r'\mu(%d)'%n
     rec['real_dimension'] = 0
@@ -732,7 +732,7 @@ def su2_mu_data(w, n):
     rec['label'] = "%d.2.3.c%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
     rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
@@ -787,7 +787,7 @@ def nu1_mu_data(w,n):
     rec['label'] = "%d.2.1.d%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
-    rec['rational'] = True if n <= 2 else False
+    rec['rational'] = bool(n <= 2)
     rec['name'] = 'U(1)[C%d]'%n if n > 1 else 'N(U(1))'
     rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
@@ -1162,24 +1162,29 @@ class STStats(StatsDisplay):
 
     stat_list = [
         {"cols": ["component_group", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["identity_component"],
-         "constraint": {"maximal": True},
+         "constraint": {"maximal": True, "rational": True},
          "top_title": [("maximal subgroups", "st_group.supgroups"),
                        ("per", None),
                        ("identity component", "st_group.identity_component")],
         },
         {"cols": ["trace_zero_density", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["second_trace_moment", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["fourth_trace_moment", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["first_a2_moment", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
     ]

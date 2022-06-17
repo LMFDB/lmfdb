@@ -1,5 +1,6 @@
 from .web_display import display_knowl
 
+
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):
@@ -7,21 +8,26 @@ def get_default_func(default, name):
         if "showcol" in info and name in info["showcol"].split("."):
             return True
         sort_order = info.get('sort_order', '')
-        if (sort_order and
-            sort_order == name and
-            "search_array" in info and
-            info["search_array"].sorts is not None):
+        if (sort_order and sort_order == name and
+                "search_array" in info and
+                info["search_array"].sorts is not None):
             return True
         if isinstance(default, bool):
             return default
         return default(info)
     return f
 
+
 class SearchCol:
-    def __init__(self, name, knowl, title, default=False, align="left", contingent=None, short_title=None, **kwds):
-        # Both contingent and default can be functions that take info as an input (if default is a boolean it's translated to the constant function with that value)
-        # If contingent is false, then that column doesn't even show up on the list of possible columns
-        # If default is false, then that column is included in the selector but not displayed by default
+    def __init__(self, name, knowl, title, default=False, align="left",
+                 contingent=None, short_title=None, **kwds):
+        # Both contingent and default can be functions that take info
+        # as an input (if default is a boolean it's translated to the
+        # constant function with that value)
+        # If contingent is false, then that column doesn't even show
+        # up on the list of possible columns
+        # If default is false, then that column is included in the
+        # selector but not displayed by default
         assert "," not in name
         self.name = name
         self.knowl = knowl
@@ -51,10 +57,7 @@ class SearchCol:
         if isinstance(rec, dict):
             return rec.get(self.orig[0], "")
         val = getattr(rec, self.name)
-        if callable(val):
-            return val()
-        else:
-            return val
+        return val() if callable(val) else val
 
     def display(self, rec):
         # default behavior is to just use the string representation of rec
@@ -63,12 +66,12 @@ class SearchCol:
     def display_knowl(self):
         if self.knowl:
             return display_knowl(self.knowl, self.title)
-        else:
-            return self.title
+        return self.title
 
     def show(self, info, rank=None):
         if (self.contingent is None or self.contingent(info)) and (rank is None or rank == 0):
             yield self
+
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -81,6 +84,7 @@ class SpacerCol(SearchCol):
     def display_knowl(self):
         return ""
 
+
 class MathCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", orig=None, **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
@@ -88,6 +92,7 @@ class MathCol(SearchCol):
 
     def display(self, rec):
         return f"${self.get(rec)}$"
+
 
 class FloatCol(MathCol):
     def __init__(self, name, knowl, title, prec=3, default=False, align="center", **kwds):
@@ -99,12 +104,24 @@ class FloatCol(MathCol):
         # We mix string processing directives so that we can use variable precision
         return f"%.{self.prec}f" % val
 
+
 class CheckCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
         return "&#x2713;" if self.get(rec) else ""
+
+
+class CheckMaybeCol(SearchCol):
+    def __init__(self, name, knowl, title, default=False, align="center", **kwds):
+        super().__init__(name, knowl, title, default, align, **kwds)
+
+    def display(self, rec):
+        if self.get(rec) > 0:
+            return "&#x2713;"
+        return "" if self.get(rec) < 0 else "not computed"
+
 
 class LinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_for, default=False, align="left", **kwds):
@@ -114,8 +131,10 @@ class LinkCol(SearchCol):
     def display(self, rec):
         return f'<a href="{self.url_for(self.get(rec))}">{self.get(rec)}</a>'
 
+
 class ProcessedCol(SearchCol):
-    def __init__(self, name, knowl, title, func, default=False, orig=None, mathmode=False, align="left", **kwds):
+    def __init__(self, name, knowl, title, func, default=False, orig=None,
+                 mathmode=False, align="left", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
         self.func = func
         self.orig = [orig if (orig is not None) else name]
@@ -127,8 +146,10 @@ class ProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
+
 class ProcessedLinkCol(SearchCol):
-    def __init__(self, name, knowl, title, url_func, disp_func, default=False, orig=None, align="left", **kwds):
+    def __init__(self, name, knowl, title, url_func, disp_func, default=False,
+                 orig=None, align="left", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
         self.url_func = url_func
         self.disp_func = disp_func
@@ -140,8 +161,10 @@ class ProcessedLinkCol(SearchCol):
         disp = self.disp_func(x)
         return f'<a href="{url}">{disp}</a>'
 
+
 class MultiProcessedCol(SearchCol):
-    def __init__(self, name, knowl, title, inputs, func, default=False, mathmode=False, align="left", **kwds):
+    def __init__(self, name, knowl, title, inputs, func, default=False,
+                 mathmode=False, align="left", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
         self.func = func
         self.orig = inputs
@@ -153,8 +176,11 @@ class MultiProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
+
 class ContingentCol(ProcessedCol):
-    def __init__(self, name, knowl, title, func, contingent=lambda info:True, default=False, orig=None, mathmode=False, align="center", **kwds):
+    def __init__(self, name, knowl, title, func, contingent=lambda info: True,
+                 default=False, orig=None, mathmode=False, align="center",
+                 **kwds):
         super().__init__(name, knowl, title, func, default, orig, mathmode, align, **kwds)
         self.contingent = contingent
 
@@ -162,9 +188,13 @@ class ContingentCol(ProcessedCol):
         if self.contingent(info) and (rank is None or rank == 0):
             yield self
 
+
 class ColGroup(SearchCol):
     # See classical modular forms for an example
-    def __init__(self, name, knowl, title, subcols, contingent=lambda info:True, default=False, orig=None, align="center", **kwds):
+
+    def __init__(self, name, knowl, title, subcols,
+                 contingent=lambda info: True, default=False, orig=None,
+                 align="center", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
         self.subcols = subcols
         self.contingent = contingent
@@ -191,12 +221,14 @@ class ColGroup(SearchCol):
             else:
                 yield from subcols
 
+
 class SearchColumns:
-    above_results = "" # Can add text above the Results (1-50 of ...) if desired
-    above_table = "" # Can add text above the results table if desired
-    dummy_download = False # change this to include dummy_download_search_results.html instead
-    below_download = "" # Can add text above the bottom download links
+    above_results = ""  # Can add text above the Results (1-50 of ...) if desired
+    above_table = ""  # Can add text above the results table if desired
+    dummy_download = False  # change this to include dummy_download_search_results.html instead
+    below_download = ""  # Can add text above the bottom download links
     languages = None
+
     def __init__(self, columns, db_cols=None, tr_class=None):
         """
         INPUT:

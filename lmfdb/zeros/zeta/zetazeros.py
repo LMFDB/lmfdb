@@ -17,6 +17,12 @@ def learnmore_list():
             ('Source of the data', url_for(".source")),
             ('Reliability of the data', url_for(".reliability"))]
 
+def friends_list():
+    return [('L-function', url_for("l_functions.l_function_riemann_page"))]
+
+def downloads():
+    return [('Bulk download', "https://beta.lmfdb.org/riemann-zeta-zeros/")]
+
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -32,7 +38,7 @@ def zetazeros():
     else:
         title = r"Zeros of $\zeta(s)$"
         bread = [("L-functions", url_for("l_functions.index")), (r'Zeros of $\zeta(s)$', ' ')]
-        return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore_list())
+        return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore_list(), friends=friends_list(), downloads=downloads())
 
 
 @ZetaZeros.route("/Completeness")

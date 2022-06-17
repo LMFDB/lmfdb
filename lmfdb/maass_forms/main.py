@@ -184,6 +184,7 @@ def parse_character(inp, query, qfield):
         raise ValueError("Character labels q.n must have Conrey index n no greater than the modulus q.")
     if gcd(level,conrey_index) != 1:
         raise ValueError("Character labels q.n must have Conrey index coprime to the modulus q.")
+
     def contains_level(D):
         if D == level:
             return True
@@ -191,6 +192,7 @@ def parse_character(inp, query, qfield):
             a = D.get('$gte')
             b = D.get('$lte')
             return (a is None or level >= a) and (b is None or level <= b)
+
     # Check that the provided constraint on level is consistent with the one
     # given by the character, and update level/$or
     if '$or' in query and all(level_field in D for D in query['$or']):

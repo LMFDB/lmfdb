@@ -160,7 +160,7 @@ class LockError(RuntimeError):
     pass
 
 
-class QueryLogFilter(object):
+class QueryLogFilter():
     """
     A filter used when logging slow queries.
     """
@@ -172,7 +172,7 @@ class QueryLogFilter(object):
             return 0
 
 
-class EmptyContext(object):
+class EmptyContext():
     """
     Used to simplify code in cases where we may or may not want to open an extras file.
     """
@@ -186,7 +186,7 @@ class EmptyContext(object):
         pass
 
 
-class DelayCommit(object):
+class DelayCommit():
     """
     Used to set default behavior for whether to commit changes to the database connection.
 

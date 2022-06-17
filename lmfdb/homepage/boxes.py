@@ -4,7 +4,7 @@ from flask import url_for
 from sage.all import cached_function
 
 
-class Box(object):
+class Box():
     def __init__(self, title):
         self.title = title
         self.content = None

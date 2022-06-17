@@ -188,7 +188,7 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             N = self.conductor
-            if N % p != 0 : # good reduction
+            if N % p != 0: # good reduction
                 return 1 - E.ap(p) * T + p * T**2
             elif N % (p**2) != 0: # multiplicative reduction
                 return 1 - E.ap(p) * T
@@ -334,7 +334,7 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(K, "T")
             T = R.gens()[0]
             N = self.conductor
-            if N % p != 0 : # good reduction
+            if N % p != 0: # good reduction
                 return 1 - ans[p-1][self.number] * T + T**2
             elif N % (p**2) != 0: # semistable reduction
                 return 1 - ans[p-1][self.number] * T
@@ -362,28 +362,28 @@ class GaloisRepresentation( Lfunction):
         bad2 = ZZ(W.conductor).prime_factors()
         bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
-            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes) :
+            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes):
                 # this condition above only applies to the current type of objects
                 # for general reps we would have to test the lines below
                 # to be certain that the formulae are correct.
                 #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                    #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
-                    #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
+                #    (p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                #    (p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
                 raise NotImplementedError("Currently tensor products of Galois representations are only implemented under some conditions.",
                                           "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
         # check for the possibility of getting poles
-        if V.weight == W.weight and V.conductor == W.conductor :
+        if V.weight == W.weight and V.conductor == W.conductor:
             Vans = V.algebraic_coefficients(50)
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
             if ((Vans[2] in ZZ and Wans[2] in ZZ and
-                all(Vans[n] == Wans[n] for n in range(1,50) ) ) or
-                all( CC(Vans[n]) == CC(Wans[n]) for n in range(1,50) ) ):
-                    raise NotImplementedError("It seems you are asking to tensor a "+
-                                              "Galois representation with its dual " +
-                                              "which results in the L-function having "+
-                                              "a pole. This is not implemented here.")
+                    all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
+                    all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
+                raise NotImplementedError("It seems you are asking to tensor a "
+                                          "Galois representation with its dual "
+                                          "which results in the L-function having "
+                                          "a pole. This is not implemented here.")
 
         scommon = [x for x in V.bad_semistable_primes if x in W.bad_semistable_primes]
 
@@ -401,7 +401,7 @@ class GaloisRepresentation( Lfunction):
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
         h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
         h = tensor_hodge(h1, h2)
-        w,m,n = hodge_to_selberg(h)
+        _, m, n = hodge_to_selberg(h)
         self.mu_fe = m
         self.nu_fe = n
         _, self.gammaV = gamma_factors(h)
@@ -754,7 +754,7 @@ def all_an_from_prime_powers(L):
         q = 1
         Sr = RealField()(len(L))
         f = Sr.log(base=p).floor()
-        for k in range(f):
+        for _ in range(f):
             q = q*p
             for m in range(2, 1+(S//q)):
                 if (m%p) != 0:
@@ -783,7 +783,7 @@ def get_euler_factor(L,p):
     f = S.log(base=p).floor()
     E = []
     q = 1
-    for i in range(f):
+    for _ in range(f):
         q = q*p
         E.append(L[q-1])
     return list_to_euler_factor(E,f)

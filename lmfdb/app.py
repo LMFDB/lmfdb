@@ -31,7 +31,7 @@ LMFDB_VERSION = "LMFDB Release 1.2.1"
 ############################
 
 
-class ReverseProxied(object):
+class ReverseProxied():
     def __init__(self, app):
         self.app = app
 
@@ -63,7 +63,6 @@ def set_beta_state():
 
 
 def is_beta():
-    from flask import g
     return g.BETA
 
 

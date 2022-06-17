@@ -24,7 +24,7 @@ def construct_full_label(field_label, weight, level_label, label_suffix):
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
 
 
-class WebHMF(object):
+class WebHMF():
     """
     Class for an Hilbert Modular Newform
     """
@@ -92,7 +92,7 @@ class WebHMF(object):
         j = L.find(']')
         data['level_ideal'] = L[i:j+1]
         #print("data['level_ideal'] = %s" % data['level_ideal'])
-        N, n, alpha = data['level_ideal'][1:-1].split(',')
+        N, _, _ = data['level_ideal'][1:-1].split(',')
         data['level_norm'] = int(N)
         #print("data['level_norm'] = %s" % data['level_norm'])
         level = F.ideal_from_str(data['level_ideal'])[2]

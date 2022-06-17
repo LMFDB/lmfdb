@@ -47,7 +47,8 @@ def web_ainvs(field_label, ainvs):
 
 from sage.misc.all import latex
 def web_point(P):
-    return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
+    return '$\\left(%s\\right)$' % (" : ".join(str(latex(x)) for x in P))
+
 
 def pretty_ideal(Kgen, s, enclose=True):
     r"""Returns the a latex string an ideal of K defined by the string s,
@@ -106,7 +107,7 @@ def EC_R_plot_zone_piece(f,h,a,b):
     g=f+h**2/4
     t=a
     s=(b-a)/npts
-    for i in range(npts+1):
+    for _ in range(npts+1):
         y=g(t)
         if y>0:
             y=sqrt(y)
@@ -225,7 +226,7 @@ def latex_equation(ainvs):
                     term(a6,''),
                     r''])
 
-class ECNF(object):
+class ECNF():
 
     """
     ECNF Wrapper
@@ -383,7 +384,7 @@ class ECNF(object):
             if self.cm_nramp==1:
                 self.cm_ramp = self.cm_ramp[0]
             else:
-                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+                self.cm_ramp = ", ".join(str(p) for p in self.cm_ramp)
 
         # Sato-Tate:
         self.ST = st_display_knowl('1.2.A.1.1a' if not self.cm_type else ('1.2.B.2.1a' if self.cm_type < 0 else '1.2.B.1.1a'))
@@ -408,7 +409,7 @@ class ECNF(object):
         if self.tr == 1:
             self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
-            self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
+            self.tor_struct_pretty = r"\(\Z/%s\Z\oplus\Z/%s\Z\)" % tuple(self.torsion_structure)
 
         self.torsion_gens = [web_point(parse_point(K,P)) for P in self.torsion_gens]
 
@@ -519,7 +520,6 @@ class ECNF(object):
         except AttributeError:
             self.sha = "not available"
 
-
         # Local data
 
         # The Kodaira symbol is stored as an int in pari encoding. The
@@ -552,7 +552,7 @@ class ECNF(object):
         if len(isodegs)<3:
             self.isodeg = " and ".join(isodegs)
         else:
-            self.isodeg = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+            self.isodeg = " and ".join([", ".join(isodegs[:-1]), isodegs[-1]])
 
 
         sig = self.signature
@@ -614,7 +614,7 @@ class ECNF(object):
 
         if self.base_change:
             self.base_change = [lab for lab in self.base_change if '?' not in lab]
-            self.properties += [('Base change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
+            self.properties += [('Base change', 'yes: %s' % ','.join(str(lab) for lab in self.base_change))]
         else:
             self.base_change = []  # in case it was False instead of []
             self.properties += [('Base change', 'no')]
@@ -728,11 +728,11 @@ def make_code(label, lang=None):
             Ecode['field'][l] = Ecode['field'][l] % str(poly.list())
 
     # Fill in curve coefficients:
-    ainvs = ["".join(["[",ai,"]"]) for ai in E['ainvs'].split(";")]
+    ainvs = [f"[{ai}]" for ai in E['ainvs'].split(";")]
     ainvs_string = {
-        'magma': "[" + ",".join(["K!{}".format(ai) for ai in ainvs]) + "]",
-        'sage':  "[" + ",".join(["K({})".format(ai) for ai in ainvs]) + "]",
-        'pari':  "[" + ",".join(["Pol(Vecrev({}))".format(ai) for ai in ainvs]) + "], K",
+        'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
+        'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        'pari': "[" + ",".join("Pol(Vecrev({}))".format(ai) for ai in ainvs) + "], K",
         }
     if lang:
         Ecode['curve'] = Ecode['curve'] % ainvs_string[lang]

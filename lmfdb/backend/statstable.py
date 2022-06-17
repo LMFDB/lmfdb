@@ -1511,7 +1511,7 @@ ORDER BY v.ord LIMIT %s"""
                 ccols = []
                 cvals = []
             else:
-                grouping = cgcols[len(cvals) :]
+                grouping = cgcols[len(cvals):]
                 ccols = cgcols[: len(cvals)]
             nstat_cmds.append((cols[0], grouping, ccols, cvals, threshold))
         if reset_None_to_1:

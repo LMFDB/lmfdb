@@ -85,7 +85,7 @@ def cremona_label_to_lmfdb_label(lab):
         return lab
     return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
-class WebBMF(object):
+class WebBMF():
     """
     Class for a Bianchi Newform
     """
@@ -143,6 +143,7 @@ class WebBMF(object):
             self.hecke_poly = Qx(str(self.hecke_poly))
             F = NumberField(self.hecke_poly,'z')
             self.hecke_poly = web_latex(self.hecke_poly)
+
             def conv(ap):
                 if '?' in ap:
                     return 'not known'

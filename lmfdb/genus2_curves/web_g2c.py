@@ -359,7 +359,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
             # If there are two factors, then they are both at most quadratic
             # and we can prettify them
             else:
-                statement += r'\(' + r' \times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]) + r'\)'
+                statement += r'\(' + r' \times '.join(ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ) + r'\)'
         # Then the case where there is still a single factor:
         elif factorsQQ_number == 1:
             # Number field case:
@@ -377,7 +377,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
         # Finally the case of two factors. We can prettify to some extent, since we
         # can describe the maximal order here
         else:
-            statement += r"an order of index \(%s\) in \(%s\)" % (ring[0], r' \times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]))
+            statement += r"an order of index \(%s\) in \(%s\)" % (ring[0], r' \times '.join(ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ))
         # End of first row:
         statement += "</td></tr>"
 
@@ -495,7 +495,7 @@ def gsp4_subgroup_data(label):
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15])
     info = '<table>\n'
-    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
@@ -592,9 +592,9 @@ def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
         D,xD,yD,yden = divisor_data(gens[i])
         D0 = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1]]
         Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1])]
-        div = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
+        div = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join(point_string(P) for P in D0)) if D0 else 'D_0'
         div += ' - '
-        div += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' - '.join([point_string(P) for P in Dinf])) if Dinf else r'D_\infty'
+        div += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' - '.join(point_string(P) for P in Dinf)) if Dinf else r'D_\infty'
         gentab.extend([td_wrapl(div), td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'), td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
@@ -689,7 +689,7 @@ def ratpts_simpletable(pts,pts_v,fh):
 # Genus 2 curve class definition
 ###############################################################################
 
-class WebG2C(object):
+class WebG2C():
     """
     Class for a genus 2 curve (or isogeny class) over Q.  Attributes include:
         data -- information about the curve and its Jacobian to be displayed (taken from db and polished)
@@ -713,7 +713,7 @@ class WebG2C(object):
         try:
             slabel = label.split(".")
             if len(slabel) == 2:
-                curve = db.g2c_curves.lucky({"class" : label})
+                curve = db.g2c_curves.lucky({"class": label})
             elif len(slabel) == 4:
                 curve = db.g2c_curves.lookup(label)
             else:
@@ -800,11 +800,11 @@ class WebG2C(object):
             P = curve['non_solvable_places']
             if len(P):
                 sz = "except over "
-                sz += ", ".join([QpName(p) for p in P])
+                sz += ", ".join(QpName(p) for p in P)
                 last = " and"
                 if len(P) > 2:
                     last = ", and"
-                sz = last.join(sz.rsplit(",",1))
+                sz = last.join(sz.rsplit(",", 1))
             else:
                 sz = "everywhere"
             data['non_solvable_places'] = sz
@@ -834,7 +834,7 @@ class WebG2C(object):
             if len(invs) == 0:
                 data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = r'\(' + r' \times '.join([ (r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs]) + r'\)'
+                data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
                 data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
@@ -860,10 +860,10 @@ class WebG2C(object):
             #TODO (?) also for the isogeny class
         else:
             # invariants specific to isogeny class
-            curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
+            curves_data = list(db.g2c_curves.search({"class": curve['class']}, ['label','eqn']))
             if not curves_data:
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
-            data['curves'] = [ {"label" : c['label'], "equation_formatted" : min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
+            data['curves'] = [ {"label": c['label'], "equation_formatted": min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
             lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
             if not lfunc_data:
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
@@ -975,7 +975,7 @@ class WebG2C(object):
 
         # then again EC from lfun
         instances = []
-        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
+        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type': 'ECQP'}, 'url'):
             instances.extend(elt.split('|'))
 
         # and then the other isogeny friends
@@ -1041,7 +1041,7 @@ class WebG2C(object):
         code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
         code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
         if ratpts:
-            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + ']; // minimal model'}
+            code['rat_pts'] = {'magma': '[' + ','.join("C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']) + ']; // minimal model'}
             code['rat_pts_simp'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in [simplify_hyperelliptic_point(data['min_eqn'], pt) for pt in ratpts['rat_pts']]]) + ']; // simplified model'}
         code['mw_group'] = {'magma':'MordellWeilGroupGenus2(Jacobian(C));'}
         code['two_selmer'] = {'magma':'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'}

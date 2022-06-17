@@ -429,6 +429,7 @@ class LMFDBDatabase(PostgresDatabase):
         from . import website # loads all the modules
         assert website
         from lmfdb.utils.display_stats import StatsDisplay
+
         def find_subs(L):
             # Assume no multiple inheritance
             new_subs = sum([C.__subclasses__() for C in L], [])

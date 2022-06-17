@@ -15,7 +15,7 @@ from lmfdb.utils import display_float
 # Please do not pollute with flask, postgres, logger or similar
 #############################################################################
 
-class Lfunction(object):
+class Lfunction():
     """
     Class representing a general L-function
     """

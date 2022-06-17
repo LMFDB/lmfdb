@@ -800,7 +800,7 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         with DelayCommit(self, commit, silence=True):
-            type, columns, check_func, table = self._get_constraint_data(name, suffix)
+            type, columns, _, table = self._get_constraint_data(name, suffix)
             dropper = self._drop_constraint_statement(name + suffix, table, type, columns)
             if permanent:
                 deleter = SQL("DELETE FROM meta_constraints WHERE table_name = %s AND constraint_name = %s")

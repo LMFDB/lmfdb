@@ -7,7 +7,7 @@ from ast import literal_eval
 from io import BytesIO
 
 
-class Downloader(object):
+class Downloader():
     """
     A class for downloading data in a uniform way.
 
@@ -85,7 +85,7 @@ class Downloader(object):
                       'gp':['make_data() = ','{']}
     function_end = {'magma':['end function;'],
                     'gp':['}']}
-    none = {'gp': 'null', 'sage' : 'None', 'text' : 'NULL', 'magma' : '[]'}
+    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]'}
     make_data_comment = {
         'magma': 'To create a list of {short_name}, type "{var_name}:= make_data();"',
         'sage':'To create a list of {short_name}, type "{var_name} = make_data()"',
@@ -158,11 +158,13 @@ class Downloader(object):
             filename += self.file_suffix[lang]
         c = self.comment_prefix[lang]
         mydate = time.strftime("%d %B %Y")
+
         @stream_with_context
         def _generator():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
             for line in generator:
                 yield line
+
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
         resp = Response(_generator(), mimetype='text/plain', headers=headers)

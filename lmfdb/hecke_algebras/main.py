@@ -119,11 +119,13 @@ def download_search(info):
     # loop through all search results and grab the Hecke operators stored
     for c, rr in enumerate(res):
         s += list_start
-        s += ",".join([str(rr['level']), str(rr['weight']),""])
+        s += ",".join([str(rr['level']), str(rr['weight']), ""])
         if 'ell' in info["query"]:
             s += '"%s"' % (str(rr['orbit_label']))
         else:
-            s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
+            s += ",".join(entry(r)
+                          for r in (sage_eval(rr['hecke_op'])[i]
+                                    for i in range(min(10, rr['num_hecke_op']))))
         if c != last:
             s += list_end + ',\\\n'
         else:
@@ -292,7 +294,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         except ValueError:
             base_lab=".".join([split(lab)[i] for i in [0,1,2]])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
-        data = db.hecke_ladic.lucky({'orbit_label': lab , 'ell': ell})
+        data = db.hecke_ladic.lucky({'orbit_label': lab, 'ell': ell})
     if data is None:
         t = "Hecke algebra search error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
@@ -519,7 +521,7 @@ def download_hecke_algebras_full_lists_id(**args):
     mat_start = "Mat("+ladic if lang == 'gp' else "Matrix("+ladic
     mat_end = "~)" if lang == 'gp' else ")"
 
-    outstr = c + ' Idempotent for the Hecke orbit %s mod %s and index %s downloaded from the LMFDB on %s. \n\n'%( label, ell , index, mydate)
+    outstr = c + ' Idempotent for the Hecke orbit %s mod %s and index %s downloaded from the LMFDB on %s. \n\n'%( label, ell, index, mydate)
     outstr += download_assignment_start[lang] +'['
     outstr += " ".join([mat_start, idempotent, mat_end])
     outstr += ']'

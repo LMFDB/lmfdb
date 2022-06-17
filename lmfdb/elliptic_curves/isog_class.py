@@ -8,7 +8,7 @@ from lmfdb import db
 
 from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
-class ECisog_class(object):
+class ECisog_class():
     """
     Class for an isogeny class of elliptic curves over Q
     """
@@ -34,7 +34,7 @@ class ECisog_class(object):
             N, iso, number = split_lmfdb_label(label)
             if number:
                 return "Invalid label"
-            data = db.ec_curvedata.lucky({"lmfdb_iso" : label, 'lmfdb_number':1})
+            data = db.ec_curvedata.lucky({"lmfdb_iso": label, 'lmfdb_number':1})
             if data is None:
                 return "Class not found"
             data['label_type'] = 'LMFDB'
@@ -45,7 +45,7 @@ class ECisog_class(object):
                 N, iso, number = split_cremona_label(label)
                 if number:
                     label = "".join([N,iso])
-                data = db.ec_curvedata.lucky({"Ciso" : label, 'Cnumber':1})
+                data = db.ec_curvedata.lucky({"Ciso": label, 'Cnumber':1})
                 data['label_type'] = 'Cremona'
                 data['iso_label'] = iso
                 data['class_label'] = label

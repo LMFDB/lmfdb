@@ -178,7 +178,7 @@ def process_euler(res, info, query):
     for L in res:
         L['euler_factor'] = {}
         p = 2
-        for i, F in enumerate(L.get('euler_factors', [])):
+        for F in L.get('euler_factors', []):
             L['euler_factor'][p] = list_to_factored_poly_otherorder(F)
             p = next_prime(p)
     return res
@@ -229,8 +229,10 @@ def parse_spectral(inp, query, qfield):
     # We want to support either c0 or r0r1, and including or not including exponent notation
     reals, e, imags = M.groups()
     e = 1 if e is None else int(e)
+
     def extract(t, x):
-        return Counter(list(map(int, re.findall(t+r'([0-9.]+)', x))))
+        return Counter(list(map(int, re.findall(t + r'([0-9.]+)', x))))
+
     if imags == '0': # algebraic
         GRcount = extract('r', reals)
         # We store the real parts of nu doubled
@@ -246,8 +248,8 @@ def parse_spectral(inp, query, qfield):
         GR_real = sum(([k]*(v//ge) for k, v in GRcount.items()), [])
         GC_real = sum(([k]*(v//ge) for k, v in GCcount.items()), [])
         e *= ge
-        rs = ''.join(['r'+str(x) for x in GR_real])
-        cs = ''.join(['c'+str(x) for x in GC_real])
+        rs = ''.join('r' + str(x) for x in GR_real)
+        cs = ''.join('c' + str(x) for x in GC_real)
         out = rs + cs + ('' if e == 1 else 'e%d' % e) + '-0'
     else:
         # For now, we don't do any rewriting since we have to track the order of both real and imaginary parts, which is annoying
@@ -1169,7 +1171,11 @@ def render_single_Lfunction(Lclass, args, request):
             return render_lfunction_exception(err)
 
     info = initLfunction(L, temp_args, request)
+    if info['label'] == '1-1-1.1-r0-0-0':
+        info['learnmore'].append((r"$\zeta$ zeros",
+                                  url_for("zeta zeros.zetazeros")))
     return render_template('Lfunction.html', **info)
+
 
 def render_lfunction_exception(err):
     try:
@@ -1622,7 +1628,7 @@ def getLfunctionPlot(request, *args):
             zero_range *= 1.2
             plotrange = min(plotrange, zero_range)
     else:
-    # obsolete, because lfunc_data comes from DB?
+        # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None

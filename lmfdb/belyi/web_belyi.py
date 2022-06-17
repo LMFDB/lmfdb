@@ -154,7 +154,7 @@ def belyi_base_field(galmap):
     return F
 
 
-class WebBelyiGalmap(object):
+class WebBelyiGalmap():
     """
     Class for a Belyi map.  Attributes include:
         data -- information about the map to be displayed
@@ -378,7 +378,7 @@ class WebBelyiGalmap(object):
         return
 
 
-class WebBelyiPassport(object):
+class WebBelyiPassport():
     """
     Class for a Belyi passport.  Attributes include:
         data -- information about the map to be displayed

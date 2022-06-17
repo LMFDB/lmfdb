@@ -396,7 +396,7 @@ class mf_newforms(MfChecker):
         """
         check that self_twist_discs = is compatible with the last entries of inner_twists.
         """
-        return self._test_equality(set(rec['self_twist_discs']), set([elt[6] for elt in rec['inner_twists'] if elt[6] not in [None, 0, 1]]), verbose)
+        return self._test_equality(set(rec['self_twist_discs']), set(elt[6] for elt in rec['inner_twists'] if elt[6] not in [None, 0, 1]), verbose)
 
     #### slow ####
 

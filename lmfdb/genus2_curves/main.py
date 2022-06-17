@@ -245,7 +245,7 @@ def interesting():
 
 @app.context_processor
 def ctx_gsp4_subgroup():
-    return {'gsp4_subgroup_data' : gsp4_subgroup_data}
+    return {'gsp4_subgroup_data': gsp4_subgroup_data}
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
 def by_url_curve_label(cond, alpha, disc, num):
@@ -408,11 +408,10 @@ ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r
 G2_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")")
 
 def genus2_lookup_equation(input_str):
-    # retuns:
-    # label, C_str
-    # None, C_str when it couldn't find it in the DB
-    # "", input_str when it fails to parse
-    # 0, C_str when it fails to start magma
+    # returns:
+    # label, "" : if found curve
+    # None, C_str : when it couldn't find it in the DB
+    # raises ValueError if something fails along the way
     R = PolynomialRing(QQ, "x")
     y = PolynomialRing(R, "y").gen()
 
@@ -434,6 +433,8 @@ def genus2_lookup_equation(input_str):
     if len(fg) == 1:
         fg.append(R(0))
 
+
+    magma.quit() # force a new magma session
     C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
     try:
         C = magma.HyperellipticCurve(fg)

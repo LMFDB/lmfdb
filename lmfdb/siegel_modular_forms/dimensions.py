@@ -225,13 +225,13 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         else:
             headers, dct = ['Total', 'Non cusp', 'Cusp'], {}
         for k in wt_range1:
-            dct[k] = dict([(h, 0) for h in headers])
+            dct[k] = {h: 0 for h in headers}
         return headers, dct
 
     if j >= 2 and wt_range[0] < 4:
         raise NotImplementedError(r"Dimensions of \(M_{k,j}(%s)\) for <span style='color:black'>\(k<4\)</span> and <span style='color:black'>\(j\ge 2\)</span> not implemented" % latex_names.get(group,group))
 
-    query = { 'sym_power': str(j), 'group' : 'Gamma(2)', 'space': 'total' }
+    query = { 'sym_power': str(j), 'group': 'Gamma(2)', 'space': 'total' }
     db_total = db.smf_dims.lucky(query)
     if not db_total:
         raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)

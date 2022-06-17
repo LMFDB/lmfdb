@@ -7,7 +7,7 @@ from .utilities import format_percentage
 from .web_display import display_knowl
 from lmfdb.backend.utils import KeyedDefaultDict, range_formatter
 
-class formatters(object):
+class formatters():
     @classmethod
     def boolean(cls, value):
         return 'True' if value else 'False'
@@ -34,7 +34,7 @@ def _format_percentage(cnt, total, show_zero=False):
     else:
         return format_percentage(cnt, total) + '%'
 
-class proportioners(object):
+class proportioners():
     ##################################################################
     #                     Proportion strategies                      #
     ##################################################################
@@ -159,6 +159,7 @@ class proportioners(object):
         attr['constraint'] = {}
         attr['proportioner'] = False
         attr['totaler'] = False
+
         def inner(grid, row_headers, col_headers, stats):
             total_data = stats.display_data(**attr)
             total_grid = total_data['grid']
@@ -191,6 +192,7 @@ class proportioners(object):
         attr['constraint'] = None
         attr['proportioner'] = False
         attr['totaler'] = False
+
         def inner(counts, headers, stats):
             total_counts = stats.display_data(**attr)['counts']
             for D, tD in zip(counts, total_counts):
@@ -208,7 +210,7 @@ class proportioners(object):
                 D['proportion'] = _format_percentage(D['count'], overall, show_zero=True)
         return inner
 
-class totaler(object):
+class totaler():
     ##################################################################
     #                     Totaler strategies                         #
     ##################################################################

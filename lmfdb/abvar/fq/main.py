@@ -310,6 +310,7 @@ class AbvarSearchArray(SearchArray):
             short_label="Points on curve",
             advanced=True,
         )
+
         def nbsp(knowl, label):
             return "&nbsp;&nbsp;&nbsp;&nbsp;" + display_knowl(knowl, label)
         number_field = TextBox(
@@ -435,10 +436,13 @@ class AbvarSearchArray(SearchArray):
         )
         use_geom_index = CheckboxSpacer(use_geom_decomp, colspan=4, advanced=True)
         use_geom_refine = CheckboxSpacer(use_geom_decomp, colspan=5, advanced=True)
+
         def long_label(d):
-            return nbsp("av.decomposition", "Dimension %s factors" % d)
+            return nbsp("av.decomposition", f"Dimension {d} factors")
+
         def short_label(d):
-            return display_knowl("av.decomposition", "Dim %s factors" % d)
+            return display_knowl("av.decomposition", f"Dim {d} factors")
+
         dim1 = TextBox(
             "dim1_factors",
             label=long_label(1),
@@ -642,7 +646,7 @@ def jump(info):
         lead = cdict[deg]
         if lead == 1: # accept monic normalization
             lead = cdict[0]
-            cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
+            cdict = {deg-exp: coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
             flash_error ("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
             return redirect(url_for(".abelian_varieties"))
@@ -656,10 +660,12 @@ def jump(info):
         except ValueError:
             flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
             return redirect(url_for(".abelian_varieties"))
+
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
+
         jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
     return by_label(jump_box)
 
