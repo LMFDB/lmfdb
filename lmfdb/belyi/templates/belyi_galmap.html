@@ -64,7 +64,13 @@ function show_eqns(eqnstyle) {
   {% endif %}
 </div>
 <div class='plane_eqn'>
-  <p> \(\displaystyle \phi(t,x) = {{data.plane_map}}\) </p>
+  <p>
+    {% if data.plane_constant == '1' %}
+      \(\displaystyle \phi(t,x) = t\)
+    {% else %}
+      \(\displaystyle \phi(t,x) = \frac{1}{a} \, t\), &emsp; where \(\displaystyle a = {{data.plane_constant}}\)
+    {% endif %}
+  </p>
 </div>
 
 <h2>{{ KNOWL('nf.embedding', title="Embeddings") }}</h2>

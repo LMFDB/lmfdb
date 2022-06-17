@@ -132,6 +132,13 @@ def make_plane_map_latex(const_str, nu=None):
     #return teXify_pol(f)
     return latex(1/a*t)
 
+def make_plane_constant_latex(const_str, nu=None):
+    if "nu" not in const_str:
+        R0 = QQ
+    else:
+        R0 = PolynomialRing(QQ, "nu")
+    a = R0(const_str)
+    return latex(a)
 
 
 ###############################################################################
@@ -256,6 +263,7 @@ class WebBelyiGalmap(object):
             data["plane_model"] = make_plane_model_latex(galmap["plane_model"])
         if galmap.get('plane_constant'):
             data['plane_map'] = make_plane_map_latex(galmap['plane_constant'])
+            data['plane_constant'] = make_plane_constant_latex(galmap['plane_constant'])
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
