@@ -179,7 +179,7 @@ def homogeneous_latex_equation(ainvs):
                     '{:+}z^3'.format(a6) if abs(a6)>1 else '+z^3' if a6==1 else '-z^3' if a6==-1 else '',
                     r'\)'])
 
-def short_latex_equation(avins):
+def short_latex_equation(ainvs):
     a1,a2,a3,a4,a6 = [int(a) for a in ainvs]
     c4 = -27*a1^4 - 216*a1^2*a2 + 648*a1*a3 - 432*a2^2 + 1296*a4
     c6 = 54*a1^6 + 648*a1^4*a2 - 1944*a1^3*a3 + 2592*a1^2*a2^2 - 3888*a1^2*a4 - 7776*a1*a2*a3 + 3456*a2^3 - 15552*a2*a4 + 11664*a3^2 + 46656*a6
