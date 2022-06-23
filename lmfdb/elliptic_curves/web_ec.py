@@ -184,7 +184,7 @@ def short_latex_equation(ainvs):
     c4 = -27*a1^4 - 216*a1^2*a2 + 648*a1*a3 - 432*a2^2 + 1296*a4
     c6 = 54*a1^6 + 648*a1^4*a2 - 1944*a1^3*a3 + 2592*a1^2*a2^2 - 3888*a1^2*a4 - 7776*a1*a2*a3 + 3456*a2^3 - 15552*a2*a4 + 11664*a3^2 + 46656*a6
     for p in c4.gcd(c6).prime_divisors():
-        while valuation(c4,p) >= 4 and valuation(c6,p) >= 6:
+        while c4.valuation(p) >= 4 and c6.valuation(p) >= 6:
             c4 = c4.divide_knowing_divisible_by(p**4)
             c6 = c6.divide_knowing_divisible_by(p**6)
     return ''.join([r'\(y^2=x^3',
