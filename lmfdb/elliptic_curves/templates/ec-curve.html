@@ -75,15 +75,15 @@ white-space: pre in order to keep line breaks! #}
 
     <table>
     <tr class='min_eqn'>
-        <td>${{ data.data.equations[0] | safe }}$</td>
+        <td>{{ data.data.equations[0] | safe }}</td>
         <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>, <a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
     <tr>
     <tr class='proj_eqn nodisplay'>
-        <td>${{ data.data.equations[1] | safe }}$</td>
+        <td>{{ data.data.equations[1] | safe }}</td>
         <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>dehomogenize</a>, <a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
     <tr>
     <tr class='simp_eqn nodisplay'>
-        <td>${{ data.data.equations[2] | safe }}$</td>
+        <td>{{ data.data.equations[2] | safe }}</td>
         <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>, <a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>)</td>
     <tr>
     </table>
