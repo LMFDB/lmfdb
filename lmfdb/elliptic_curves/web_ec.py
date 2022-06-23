@@ -188,7 +188,7 @@ def short_latex_equation(avins):
                     '{:+}'.format(c6) if c6 else '',
                     r'\)'])
 
-def min_eqns_pretty(ainvs):
+def latex_equations(ainvs):
     return [latex_equation(ainvs),homogeneous_latex_equation(ainvs),short_latex_equation(ainvs)]
 
 class WebEC():
