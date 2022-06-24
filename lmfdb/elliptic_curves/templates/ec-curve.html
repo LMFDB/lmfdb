@@ -4,6 +4,16 @@
 <div.ip>span { white-space: nowrap; font-family: serif; }
 </style>
 
+<script>
+var cur_invstyle = null;
+function show_eqns(invstyle) {
+    $('.min_eqn').hide();
+    $('.proj_eqn').hide();
+    $('.simp_eqn').hide();
+    $('.'+invstyle).show();
+  }
+</script>
+
 {% macro code(codes, item) %}
 {% set code = codes() %}
 {% for L in code[item] %}
@@ -59,7 +69,26 @@ white-space: pre in order to keep line breaks! #}
 
     {{ place_code('curve') }}
 
-    <p> {{ data.data.equation | safe }} </p>
+    <h2 class='min_eqn' style='margin-top:0px;'>            {{ KNOWL('ec.minimal_equation', 'Minimal equation') }} </h2>
+    <h2 class='proj_eqn nodisplay' style='margin-top:0px;'> {{ KNOWL('ec.minimal_equation', 'Minimal equation') }} </h2>
+    <h2 class='simp_eqn nodisplay' style='margin-top:0px;'> {{ KNOWL('ec.simple_equation',  'Simplified equation') }} </h2>
+
+    <table>
+    <tr class='min_eqn'>
+        <td>{{ data.data.equations[0] | safe }}</td>
+        <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>, <a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
+    <tr>
+    <tr class='proj_eqn nodisplay'>
+        <td>{{ data.data.equations[1] | safe }}</td>
+        <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>dehomogenize</a>, <a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
+    <tr>
+    <tr class='simp_eqn nodisplay'>
+        <td>{{ data.data.equations[2] | safe }}</td>
+        <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>, <a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>)</td>
+    <tr>
+    </table>
+
+    {# <p> {{ data.data.equation | safe }} </p> #}
 
 
     <h2> {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil group') }} structure</h2>
