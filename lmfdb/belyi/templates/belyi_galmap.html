@@ -25,7 +25,16 @@ function show_eqns(eqnstyle) {
   </p>
 </h2>
 
-<h2>Curve</h2>
+<h2 style="display:inline">Curve</h2>
+<div class='plane_eqn' style="display:inline">
+  (<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)
+</div>
+<div class='std_eqn nodisplay' style="display:inline">
+  (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
+</div>
+<!--<div style="float:left;"><h2>Curvy</h2></div>-->
+<!--<h2 style="float:left;">Curvy</h2>-->
+<!--<div style="float:right;">Regular Text Goes Here</div>-->
 
 <table>
   <tr class='std_eqn nodisplay'>
@@ -39,7 +48,7 @@ function show_eqns(eqnstyle) {
       {% endif %}
     </td>
     <td>
-      (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
+      <!--(<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)-->
     </td>
   </tr>
   <tr class='plane_eqn'>
@@ -50,7 +59,7 @@ function show_eqns(eqnstyle) {
       {% endif %}
     </td>
     <td>
-      (<a onclick="show_eqns('std_eqn'); return false" href='#'>standard</a>)
+      <!--(<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)-->
     </td>
   </tr>
 </table>
