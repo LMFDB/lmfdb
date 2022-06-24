@@ -180,13 +180,18 @@ def homogeneous_latex_equation(ainvs):
                     r'\)'])
 
 def short_latex_equation(ainvs):
+    print(ainvs)
     a1,a2,a3,a4,a6 = [ZZ(a) for a in ainvs]
     A = -27*a1^4 - 216*a1^2*a2 + 648*a1*a3 - 432*a2^2 + 1296*a4
     B = 54*a1^6 + 648*a1^4*a2 - 1944*a1^3*a3 + 2592*a1^2*a2^2 - 3888*a1^2*a4 - 7776*a1*a2*a3 + 3456*a2^3 - 15552*a2*a4 + 11664*a3^2 + 46656*a6
+    print(A)
+    print(B)
     for p in A.gcd(B).prime_divisors():
         while A.valuation(p) >= 4 and B.valuation(p) >= 6:
             A = A.divide_knowing_divisible_by(p**4)
             B = B.divide_knowing_divisible_by(p**6)
+    print(A)
+    print(B)
     return ''.join([r'\(y^2=x^3',
                     '{:+}x'.format(A) if abs(A)>1 else '+x' if A==1 else '-x' if A==-1 else '',
                     '{:+}'.format(B) if B else '',
