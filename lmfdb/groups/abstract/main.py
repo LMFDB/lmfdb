@@ -974,7 +974,7 @@ def subgroup_search(info, query={}):
     parse_bool(
         info, query, "hall", process=lambda x: ({"$gt": 1} if x else {"$lte": 1})
     )
-    parse_bool(info, query, "proper")
+    parse_bool(info, query, "nontrivproper", qfield="proper")
     parse_regex_restricted(info, query, "subgroup", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "ambient", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "quotient", regex=abstract_group_label_regex)
@@ -1815,11 +1815,11 @@ class SubgroupSearchArray(SearchArray):
             knowl="group.order",
             example="128",
         )
-        proper = YesNoBox(name="proper", label="Proper", knowl="group.proper_subgroup")
+        nontrivproper = YesNoBox(name="nontrivproper", label=display_knowl('group.trivial_subgroup', 'Non-trivial') + " " + display_knowl('group.proper_subgroup', 'proper'))
 
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
-            [normal, characteristic, perfect, maximal, central, proper],
+            [normal, characteristic, perfect, maximal, central, nontrivproper],
             [ambient, ambient_order, direct, split, hall, sylow],
             [
                 quotient,
