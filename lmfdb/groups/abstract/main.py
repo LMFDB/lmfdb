@@ -545,7 +545,7 @@ def index():
             return subgroup_search(info)
     info["stats"] = GroupStats()
     info["count"] = 50
-    info["order_list"] = ["1-63", "64-127", "128-255", "256-383", "384-511"]
+    info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000"]
     info["nilp_list"] = range(1, 8)
     info["prop_browse_list"] = [
         ("abelian=yes", "abelian"),
