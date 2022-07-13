@@ -670,7 +670,7 @@ class PostgresBase():
         INPUT:
 
         - ``sort_list`` -- a list, either of strings (which are interpreted as
-        column names in the ascending direction) or of pairs (column name, 1 or -1).
+          column names in the ascending direction) or of pairs (column name, 1 or -1).
 
         OUTPUT:
 
@@ -697,29 +697,29 @@ class PostgresBase():
 
         - ``table_name`` -- a string or list of strings
         - ``data_types`` -- (optional) a dictionary providing a list of column names and
-        types for each table name.  If not provided, will be looked up from the database.
+          types for each table name.  If not provided, will be looked up from the database.
 
-        EXAMPLE:
-        sage: db._column_types('non_existant')
-        ([], {}, False)
-        sage: db._column_types('test_table')
-        ([u'dim',
-          u'label',
-          u'discriminant',
-          u'bad_primes',
-          u'new_column1',
-          u'new_label',
-          u'bar'],
-         {u'bad_primes': 'jsonb',
-          u'bar': 'text',
-          u'dim': 'smallint',
-          u'discriminant': 'numeric',
-          u'id': 'bigint',
-          u'label': 'text',
-          u'new_column1': 'text',
-          u'new_label': 'text'},
-         True)
+        EXAMPLES::
 
+            sage: db._column_types('non_existant')
+            ([], {}, False)
+            sage: db._column_types('test_table')
+            ([u'dim',
+              u'label',
+              u'discriminant',
+              u'bad_primes',
+              u'new_column1',
+              u'new_label',
+              u'bar'],
+             {u'bad_primes': 'jsonb',
+              u'bar': 'text',
+              u'dim': 'smallint',
+              u'discriminant': 'numeric',
+              u'id': 'bigint',
+              u'label': 'text',
+              u'new_column1': 'text',
+              u'new_label': 'text'},
+             True)
         """
         has_id = False
         col_list = []
@@ -931,13 +931,13 @@ class PostgresBase():
 
     def _create_table(self, name, columns):
         """
-        Utility function: creates a table with the schema specified by `columns`
+        Utility function: creates a table with the schema specified by ``columns``
 
         INPUT:
 
         - ``name`` -- the desired name
-        - ``columns`` -- list of pairs, where the first entry is the column name
-        and the second one is the corresponding type
+        - ``columns`` -- list of pairs, where the first entry is
+          the column name and the second one is the corresponding type
         """
         # FIXME make the code use this
         for col, typ in columns:

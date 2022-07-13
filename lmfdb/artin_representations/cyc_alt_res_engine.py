@@ -38,12 +38,16 @@ from sage.all import Integer, lcm, PolynomialRing, Integers, FiniteField, Altern
 
 
 def polynomial_conjugacy_class_matcher_fn(inp):
-    """ Given an input ``inp`` of the form
+    """
+    Given an input ``inp`` of the form::
+
         [{"RootOf":["0","1"], "ConjugacyClass":3}, {"RootOf":["-7","1"], "ConjugacyClass":4}]
-        returns a function that
-            - takes an argument alpha
-            - matches alpha as a root to one of the 'RootsOf'
-            - returns the value in the corresponding 'ConjugacyClass'
+
+    returns a function that:
+
+    - takes an argument alpha
+    - matches alpha as a root to one of the ``'RootsOf'``
+    - returns the value in the corresponding ``'ConjugacyClass'``
     """
     P = PolynomialRing(Integers(), "x")
     fn_cc_pairs = []

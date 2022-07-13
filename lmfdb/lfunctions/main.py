@@ -1245,12 +1245,14 @@ def set_gaga_properties(L):
 def set_bread_and_friends(info, L, request):
     """
     Populates the info dictionary with:
-        - bread -- bread crumbs on top
-        - origins -- objects the give rise to this L-functions, shows as "Origins"
-        - friends -- dual L-fcn and other objects that this L-fcn divides, shows as related objects
-        - factors_origins -- objects that give rise to the factors of this L-fcn, shows as "Origins of factors"
-        - Linstances -- displays the instances that give rise to this Lhash, only shows up through the Lhash route
-        - downloads -- download links
+
+    - bread -- bread crumbs on top
+    - origins -- objects the give rise to this L-functions, shows as "Origins"
+    - friends -- dual L-fcn and other objects that this L-fcn divides, shows as related objects
+    - factors_origins -- objects that give rise to the factors of this L-fcn, shows as "Origins of factors"
+    - Linstances -- displays the instances that give rise to this Lhash, only shows up through the Lhash route
+    - downloads -- download links
+
     Returns the list of friends to link to and the bread crumbs.
     Depends on the type of L-function and needs to be added to for new types
     """

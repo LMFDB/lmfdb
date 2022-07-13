@@ -332,13 +332,13 @@ class PostgresStatsTable(PostgresBase):
         """
         Add the count to the counts table.
 
-        INPUT::
+        INPUT:
 
         - ``query`` -- a dictionary
         - ``count`` -- the count of rows in the search table satisfying the query
         - ``split_list`` -- see the ``add_stats`` method
         - ``suffix`` -- if provided, the table with that suffix added will be
-            used to store the count
+          used to store the count
         - ``extra`` -- see the discussion at the top of this class.
         """
         # We only want to record 0 counts for value [NULL], since other cases can break stats
@@ -611,12 +611,12 @@ class PostgresStatsTable(PostgresBase):
         """
         Return the min or max value achieved by the column, or None if not cached.
 
-        INPUT::
+        INPUT:
 
         - ``col`` -- the column
         - ``ccols`` -- constraint columns
         - ``cvals`` -- constraint values.  The max will be taken over rows where
-            the constraint columns take on these values.
+          the constraint columns take on these values.
         - ``kind`` -- either "min" or "max"
         """
         constraint = SQL("constraint_cols = %s AND constraint_values = %s")
@@ -632,11 +632,11 @@ class PostgresStatsTable(PostgresBase):
         """
         Compute the minimum/maximum value achieved by the column.
 
-        INPUT::
+        INPUT:
 
         - ``col`` -- the column
-        - ``constraint`` -- a dictionary giving a constraint.  The min/max will be taken
-            over rows satisfying this constraint.
+        - ``constraint`` -- a dictionary giving a constraint.
+          The min/max will be taken over rows satisfying this constraint.
         """
         qstr, values = self.table._parse_dict(constraint)
         if qstr is None:

@@ -2194,10 +2194,10 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``sort`` -- a list of columns or pairs (col, direction) where direction is 1 or -1.
-        - ``id_ordered`` -- the value id_ordered to set when changing the sort to a non None value.
-            If ``sort is None, then id_ordered will be set to False.
+        - ``id_ordered`` -- the value ``id_ordered`` to set when changing the sort to a non ``None`` value.
+          If ``sort`` is ``None``, then ``id_ordered`` will be set to ``False``.
         - ``resort`` -- whether to resort the table ids when changing the sort to a non None value
-            and if id_ordered=True
+          and if id_ordered=True
         """
         self._set_sort(sort)
         with DelayCommit(self, commit, silence=True):

@@ -2108,10 +2108,14 @@ def aut_data(label):
 def dyn_gen(f, args):
     r"""
     Called from the generic dynamic knowl.
-    f is the name of a function to call, which has to be in flist, which
-      is at the bottom of this file
-    args is a string with the arguments, which are concatenated together
-      with %7C, which is the encoding of the pipe symbol
+
+    INPUT:
+
+    - ``f`` is the name of a function to call, which has to be in ``flist``,
+      which is at the bottom of this file
+
+    - ``args`` is a string with the arguments, which are concatenated together
+      with ``%7C``, which is the encoding of the pipe symbol
     """
     func = flist[f]
     arglist = args.split("|")
