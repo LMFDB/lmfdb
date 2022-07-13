@@ -227,7 +227,7 @@
             {% set slash = joiner("/ ") %}
             {% for lang in code['show'] %}
             {# override show names for standard languages to ensure consistency #}
-            {% set show = 'Pari/GP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else code['show']['lang'] %}
+            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else code['show']['lang'] %}
             {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
             {% endfor %}
         </div>

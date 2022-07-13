@@ -644,7 +644,7 @@ def render_field_webpage(args):
                   ('Galois group', group_pretty_and_nTj(data['degree'], t))]
     downloads = [('Stored data to gp',
                   url_for('.nf_download', nf=label, download_type='data'))]
-    for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
+    for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"], ["Oscar", "oscar"]]:
         downloads.append(('Download {} code'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
     downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
@@ -725,42 +725,29 @@ def interesting():
         learnmore=learnmore_list(),
     )
 
+download_format = {
+    'gp' : { 'com1': '/*', 'com2' : '*/', 'assign': '=', 'llist' : '[', 'rlist': ']', 'ltup': '[', 'rtup': ']' , 'ext': 'gp', 'eol': '\\', 'noc': True },
+    'magma' : { 'com1': '/*', 'com2': '*/', 'assign': ':=', 'llist': '[', 'rlist': ']', 'ltup': '<', 'rtup': '>', 'ext': 'm', 'noc': True },
+    'mathematica' : { 'com1' : '(*', 'com2' : '*)', 'assign': '=', 'llist': '{', 'rlist': '}', 'ltup': '{', 'rtup': '}', 'ext': 'ma' },
+    'oscar' : { 'com1': '#=', 'com2': '=#', 'assign': '=', 'llist': '[', 'rlist': ']', 'ltup': '(', 'rtup': ')', 'ext': 'jl' },
+    'sage' : { 'com': '#', 'com1': '', 'com2': '', 'assign': '=', 'llist': '[', 'rlist': ']', 'ltup': '(', 'rtup': ')', 'ext': 'sage' },
+}
+
 def download_search(info):
     dltype = info.get('Submit')
-    delim = 'bracket'
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    filename = 'fields.gp'
+    dlformat = download_format[dltype]
+    filename = 'fields' + '.' + dlformat['ext']
     mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'fields.sage'
-    if dltype == 'mathematica':
-        com = ''
-        com1 = '(*'
-        com2 = '*)'
-        delim = 'brace'
-        filename = 'fields.ma'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'fields.m'
-    s = com1 + "\n"
+    com = dlformat.get('com','')
+    eol = dlformat.get('eol','')
+    s = dlformat['com1'] + "\n"
     s += com + ' Number fields downloaded from the LMFDB downloaded %s\n'% mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [label, polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
     s += com + ' If a class group was not computed, the entry is [-1]\n'
-    s += '\n' + com2
-    s += '\n'
-    if dltype == 'magma':
-        s += 'data := ['
-    else:
-        s += 'data = ['
-    s += '\\\n'
+    s += dlformat['com2'] + '\n'
+    s += '\n' + 'data ' + dlformat['assign'] + ' ' + dlformat['llist'] + eol + '\n'
     Qx = PolynomialRing(QQ,'x')
     # reissue saved query here
     res = db.nf_fields.search(ast.literal_eval(info["query"]))
@@ -773,19 +760,10 @@ def download_search(info):
         else:
             cl = [-1]
         entry = ', '.join(['"'+str(f['label'])+'"', str(pol), str(D), str(gal_t), str(cl)])
-        s += '[' + entry + ']' + ',\\\n'
-    s = s[:-3]
-    if dltype == 'gp':
-        s += '];\n'
-    else:
-        s += ']\n'
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
+        s += dlformat['ltup'] + entry + dlformat['rtup'] + ',' + eol + '\n'
+    if dlformat.get('noc',''):
+        s = s[:-2-len(eol)] + eol + '\n'
+    s += dlformat['rlist'] +';\n'
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
@@ -1053,8 +1031,8 @@ code_names = {'field': 'Define the number field',
               'galois_group': 'Galois group',
               'prime_cycle_types': 'Frobenius cycle types'}
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
 
 
 def nf_code(**args):

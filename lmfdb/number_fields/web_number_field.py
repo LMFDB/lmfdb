@@ -923,9 +923,12 @@ class WebNumberField:
         # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
+        for lang in self.code['prompt']:
+            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        #self.code['show'] = {'sage':'','pari':'', 'magma':'', 'oscar':''} # use default show names
 
         # Fill in placeholders for this specific field:
-        for lang in ['sage', 'pari']:
-            self.code['field'][lang] = self.code['field'][lang] % self.poly()
-        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
+        # for lang in ['sage', 'pari']:
+        #    self.code['field'][lang] = self.code['field'][lang] % self.poly()
+        #self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
