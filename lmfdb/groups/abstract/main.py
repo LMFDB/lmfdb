@@ -1066,11 +1066,9 @@ def render_abstract_group(label, data=None):
         title = "Abstract group " + "$" + gp.tex_name + "$"
 
         downloads = [
-            (
-                "Code for Magma",
-                url_for(".download_group", label=label, download_type="magma"),
-            ),
-            ("Code for Gap", url_for(".download_group", label=label, download_type="gap")),
+            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
             ("Underlying data", url_for(".gp_data", label=label)),
         ]
 
@@ -1337,67 +1335,83 @@ def download_group(**args):
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
         filename += ".g"
-    if dltype == "magma":
+    elif dltype == "magma":
         com = ""
         com1 = "/*"
         com2 = "*/"
         filename += ".m"
+    elif dltype == "oscar":
+        com = ""
+        com1 = "#="
+        com2 = "=#"
     s = com1 + "\n"
     s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
-    s += (
-        com
-        + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
-    )
-    s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
-    s += (
-        com
-        + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
-    )
-    s += com + " \n"
-    s += "\n" + com2
-    s += "\n"
-
-    if gp_data["solvable"]:
-        s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-        s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
-
-        if dltype == "magma":
-            s += "G:=SmallGroupDecoding(encd,gpsize); \n"
-        elif dltype == "gap":
-            s += "G:=PcGroupCode(encd, gpsize); \n"
-
-        gen_index = gp_data["gens_used"]
-        num_gens = len(gen_index)
-        for i in range(num_gens):
-            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
-
-    # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+    if dltype == "oscar":
+        if gp_data["solvable"]:
+            s += com + " The group will be created as a polycylic group (not necessarily matching the presentation in the LMFDB).\n"
+            s += com + ' You can turn it into a permuation group using "PermGroup(G)".\n'
+        else:
+            s += com + " The group will be created as a permuation group (not necessarily using the generators used in the LMFDB).\n"
+        s += com2 + "\n"
+        s += "\n"
+        s += "G = small_group(%s,%s)" % tuple(label.split("."))
     else:
-        d = -gp_data["elt_rep_type"]
-        s += "d:=" + str(d) + "; \n"
-        s += "Sd:=SymmetricGroup(d); \n"
+        s += (
+            com
+            + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
+        )
+        s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
+        s += (
+            com
+            + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
+        )
+        s += com + "\n"
+        s += com2 + "\n"
+        s += "\n"
 
-        # Turn Lehmer code into permutations
-        list_gens = []
-        for perm in gp_data["perm_gens"]:
-            perm_decode = Permutations(d).unrank(perm)
-            list_gens.append(perm_decode)
+        if gp_data["solvable"]:
+            s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
+            s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
 
-        if dltype == "magma":
-            s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
-        elif dltype == "gap":
-            #          MAKE LIST2
-            s += "List_Gens:=" + str(list_gens) + "; \n \n"
-            s += "LGens:=[]; \n"
-            s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
-            s += "G:=Subgroup(Sd,LGens);"
+            if dltype == "magma":
+                s += "G:=SmallGroupDecoding(encd,gpsize); \n"
+            elif dltype == "gap":
+                s += "G:=PcGroupCode(encd, gpsize); \n"
 
-    strIO = BytesIO()
-    strIO.write(s.encode("utf-8"))
-    strIO.seek(0)
-    return send_file(
-        strIO, attachment_filename=filename, as_attachment=True, add_etags=False
-    )
+            gen_index = gp_data["gens_used"]
+            num_gens = len(gen_index)
+            for i in range(num_gens):
+                s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
+
+        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+        else:
+            d = -gp_data["elt_rep_type"]
+            s += "d:=" + str(d) + "; \n"
+            s += "Sd:=SymmetricGroup(d); \n"
+
+            # Turn Lehmer code into permutations
+            list_gens = []
+            for perm in gp_data["perm_gens"]:
+                perm_decode = Permutations(d).unrank(perm)
+                list_gens.append(perm_decode)
+
+            if dltype == "magma":
+                s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
+            elif dltype == "gap":
+                #          MAKE LIST2
+                s += "List_Gens:=" + str(list_gens) + "; \n \n"
+                s += "LGens:=[]; \n"
+                s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
+                s += "G:=Subgroup(Sd,LGens);"
+
+    response = make_response(s)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+    #strIO = BytesIO()
+    #strIO.write(s.encode("utf-8"))
+    #strIO.seek(0)
+    #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
 def display_profile_line(data, ambient, aut):

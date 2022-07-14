@@ -645,7 +645,7 @@ def render_field_webpage(args):
     downloads = [('Stored data to gp',
                   url_for('.nf_download', nf=label, download_type='data'))]
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"], ["Oscar", "oscar"]]:
-        downloads.append(('Download {} code'.format(lang[0]),
+        downloads.append(('Code to {}'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
     downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup

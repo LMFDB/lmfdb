@@ -4,7 +4,7 @@
 
 import re
 
-from flask import abort, render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import ZZ, latex, gap
 
 from lmfdb import db
@@ -309,8 +309,10 @@ def render_group_webpage(args):
         data['nilpotency'] = '$%s$' % data['nilpotency']
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] += ' (not nilpotent)'
-        downloads = [('Underlying data', url_for(".gg_data", label=label))]
-
+        downloads = []
+        for lang in [["Magma","magma"], ["SageMath","sage"], ["Oscar", "oscar"]]:
+            downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+        downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         bread = get_bread([(label, ' ')])
         return render_template(
             "gg-show-group.html",
@@ -322,6 +324,23 @@ def render_group_webpage(args):
             downloads=downloads,
             KNOWL_ID="gg.%s"%label,
             learnmore=learnmore_list())
+
+@galois_groups_page.route('/<label>/download/<download_type>')
+def gg_code(label,download_type):
+    if download_type == "magma":
+        s = "// Magma code for creating transitive group " + label + "\n\n"
+        s += "G := TransitiveGroup(%s,%s);\n" % tuple(label.split("T"))
+    elif download_type == "oscar":
+        s = "# Oscar code for creating transitive group " + label + "\n\n"
+        s += "G = transitive_group(%s,%s)\n" % tuple(label.split("T"))
+    elif download_type == "sage":
+        s = "# Sage code for creating transitive group " + label + "\n\n"
+        s += "G = TransitiveGroup(%s,%s)\n" % tuple(label.split("T"))
+    else:
+        return abort(404, f"Invalid download type {download_type}")
+    response = make_response(s)
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @galois_groups_page.route("/data/<label>")
 def gg_data(label):
