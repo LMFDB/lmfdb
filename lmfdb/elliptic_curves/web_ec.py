@@ -462,7 +462,8 @@ class WebEC():
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Pari/GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Oscar', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
                           ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
@@ -693,7 +694,7 @@ class WebEC():
             self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
-            for lang in ['sage', 'pari', 'magma']:
+            for lang in ['sage', 'pari', 'magma', 'oscar']:
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
 
         return self._code

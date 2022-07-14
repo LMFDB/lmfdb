@@ -18,7 +18,7 @@ not-implemented:
   magma: |
     // (not yet implemented)
   oscar: |
-    // (not yet implemented)
+    # (not yet implemented)
 
 field:
   sage: x = polygen(QQ);  K.<a> = NumberField(%s)

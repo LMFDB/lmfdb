@@ -733,6 +733,30 @@ download_format = {
     'sage' : { 'com': '#', 'com1': '', 'com2': '', 'assign': '=', 'llist': '[', 'rlist': ']', 'ltup': '(', 'rtup': ')', 'ext': 'sage' },
 }
 
+download_preamble = {
+    'gp' : '',
+    'magma' : 'R<x> := PolynomialRing(Rationals());',
+    'mathematica' : '',
+    'oscar' : 'Rx, x = PolynomialRing(QQ)',
+    'sage' : 'x = polygen(QQ)',
+}
+
+download_makedata = {
+    'gp' : '', # don't try to make fields in gp, even with nfinit it may take a very long time
+    'magma' : 'function make_data() return [NumberField(r[2]) : r in data]; end function;',
+    'mathematica' : '',
+    'oscar' : 'function make_data() return [NumberField(r[2]) for r in data] end',
+    'sage' : 'def make_data(): return [NumberField(r[1],"a") for r in data]',
+}
+download_makedata_comment = {
+    'magma': 'To create a list L of fields, type "L := make_data();"',
+    'sage': 'To create a list L of {short_name}, type "L = make_data()"',
+    'gp': '',
+    'mathematica': '',
+    'oscar': 'To create a list L of {short_name}, type "L = make_data()"',
+}
+
+
 def download_search(info):
     dltype = info.get('Submit')
     dlformat = download_format[dltype]
@@ -746,7 +770,11 @@ def download_search(info):
     s += com + '   [label, polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
     s += com + ' If a class group was not computed, the entry is [-1]\n'
-    s += dlformat['com2'] + '\n'
+    if download_makedata_comment.get(dltype):
+        s += com + download_makedata_comment[dltype] + '\n'
+    if dlformat['com1']:
+        s += dlformat['com2'] + '\n'
+    s += download_preamble[dltype] + '\n'
     s += '\n' + 'data ' + dlformat['assign'] + ' ' + dlformat['llist'] + eol + '\n'
     Qx = PolynomialRing(QQ,'x')
     # reissue saved query here
@@ -764,6 +792,8 @@ def download_search(info):
     if dlformat.get('noc',''):
         s = s[:-2-len(eol)] + eol + '\n'
     s += dlformat['rlist'] +';\n'
+    if download_makedata.get(dltype):
+        s += download_makedata[dltype] + '\n'
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)

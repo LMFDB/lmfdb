@@ -313,13 +313,10 @@ class EC_download(Downloader):
     data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
     data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
     function_body = {
-        "magma": [
-            "return [EllipticCurve([a:a in ai]):ai in data];", # convert ai from list to sequence
-        ],
-        "sage": [
-            "return [EllipticCurve(ai) for ai in data]",
-        ],
+        "magma": ["return [EllipticCurve([a:a in ai]):ai in data];",],
+        "sage": ["return [EllipticCurve(ai) for ai in data]",],
         "gp": ["[ellinit(ai)|ai<-data];"],
+        "oscar": ["return [EllipticCurve(ai) for ai in data]",],
     }
 
 ec_columns = SearchColumns([
@@ -634,7 +631,7 @@ def render_curve_webpage_by_label(label):
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()
-    code['show'] = {'magma':'','pari':'','sage':''} # use default show names
+    code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     T =  render_template("ec-curve.html",
                          properties=data.properties,
                          data=data,
@@ -817,8 +814,8 @@ code_names = {'curve': 'Define the curve',
                  'galrep': 'mod p Galois image',
                  'padicreg': 'p-adic regulator'}
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
 
 def ec_code(**args):
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
