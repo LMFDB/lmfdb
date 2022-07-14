@@ -167,8 +167,9 @@ def _dimension_Sp4Z(wt_range):
     """
     Return the dimensions of subspaces of Siegel modular forms on $Sp(4,Z)$.
 
-    OUTPUT
-        ("Total", "Eisenstein", "Klingen", "Maass", "Interesting")
+    OUTPUT:
+
+    ("Total", "Eisenstein", "Klingen", "Maass", "Interesting")
     """
     headers = ['Total', 'Eisenstein', 'Klingen', 'Maass', 'Interesting']
 
