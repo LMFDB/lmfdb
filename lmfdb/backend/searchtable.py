@@ -137,6 +137,7 @@ class PostgresSearchTable(PostgresTable):
         inequalities, containment and disjunctions.
 
         INPUT:
+
         - ``key`` -- a code starting with $ from the following list:
             - ``$and`` -- and
             - ``$or`` -- or

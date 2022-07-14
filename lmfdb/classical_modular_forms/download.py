@@ -536,8 +536,10 @@ class CMF_download(Downloader):
 
     def _magma_MakeNewformModSym(self, newform, hecke_nf ):
         """
-        Given a WebNewform r from mf_newforms containing columns
-           label,level,weight,char_orbit_label,char_values,cutters
+        Given a WebNewform r from mf_newforms containing columns::
+
+            label,level,weight,char_orbit_label,char_values,cutters
+
         returns a string containing magma code to create the newform
         Galois orbit as a modular symbols space using Hecke cutters in magma.
         """
@@ -566,11 +568,15 @@ class CMF_download(Downloader):
 
     def _magma_MakeNewformModFrm(self, newform, hecke_nf):
         """
-        Given a WebNewform r from mf_newforms containing columns
-           label,level,weight,char_orbit_label,char_values
-        and h a row from mf_hecke_nf containing columns
-           hecke_ring_numerators,hecke_ring_denominators,
-           hecke_ring_cyclotomic_generator
+        Given a WebNewform r from mf_newforms containing columns::
+
+            label,level,weight,char_orbit_label,char_values
+
+        and h a row from mf_hecke_nf containing columns::
+
+            hecke_ring_numerators,hecke_ring_denominators,
+            hecke_ring_cyclotomic_generator
+
         and v a list whose nth entry is the entry an from the table mf_hecke_nf
         (consisting of a list of integers giving the Hecke eigenvalue
         as a linear combination of the basis specified in the orbit table)

@@ -262,12 +262,14 @@ def coeff_to_power_series(c, var='q', prec=None):
 def display_multiset(mset, formatter=str, *args):
     """
     Input mset is a list of pairs [item, multiplicity]
+
     Return a string for display of the multi-set.  The
     function formatter is a function whose first argument
-    is the item, and *args are the other arguments
+    is the item, and ``*args`` are the other arguments
     and is applied to each item.
 
     Example:
+
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
@@ -534,13 +536,15 @@ def round_to_half_int(num, fraction=2):
     """
     return round(num * 1.0 * fraction) / fraction
 
+
 def splitcoeff(coeff):
-    """
+    r"""
     Return a list of list-represented complex numbers given a string of the
     form "r0 i0 \n r1 i1 \n r2 i2", where r0 is the real part of the 0th number
     and i0 is the imaginary part of the 0th number, and so on.
 
     Example:
+
     >>> splitcoeff("1 1 \n -1 2")
     [[1.0, 1.0], [-1.0, 2.0]]
     """

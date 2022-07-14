@@ -864,8 +864,10 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     def add_row(self, c):
         """
         Add a row to _contents for display on the webpage.
-        Each row of content takes the form
+        Each row of content takes the form::
+
             character_name, (header..data), (several..values)
+
         where `header..data` is expected to be a tuple of length the same
         size as `len(headers)`, and given in the same order as in `headers`,
         and where `several..values` are the values of the character
@@ -1217,9 +1219,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def add_row(self, c):
         """
         Add a row to _contents for display on the webpage.
-        Each row of content takes the form
+        Each row of content takes the form::
+
             character_name, (header..data), (several..values)
-        where `header..data` is expected to be a tuple of length the same
+
+        where ``header..data`` is expected to be a tuple of length the same
         size as `len(headers)`, and given in the same order as in `headers`,
         and where `several..values` are the values of the character
         on self.groupelts, in order.
