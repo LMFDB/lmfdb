@@ -1009,11 +1009,11 @@ def nf_data(**args):
 
 
 sorted_code_names = ['field', 'poly', 'degree', 'signature',
-                     'discriminant', 'ramified_primes',
+                     'discriminant', 'ramified_primes', 'automorphisms',
                      'integral_basis', 'class_group', 'unit_group',
                      'unit_rank', 'unit_torsion_gen',
-                     'fundamental_units', 'regulator', 'galois_group',
-                     'prime_cycle_types']
+                     'fundamental_units', 'regulator', 'class_number_formula',
+                     'intermediate_fields', 'galois_group', 'prime_cycle_types']
 
 code_names = {'field': 'Define the number field',
               'poly': 'Defining polynomial',
@@ -1021,6 +1021,7 @@ code_names = {'field': 'Define the number field',
               'signature': 'Signature',
               'discriminant': 'Discriminant',
               'ramified_primes': 'Ramified primes',
+              'automorphisms': 'Autmorphisms',
               'integral_basis': 'Integral basis',
               'class_group': 'Class group',
               'unit_group': 'Unit group',
@@ -1028,7 +1029,9 @@ code_names = {'field': 'Define the number field',
               'unit_torsion_gen': 'Generator for roots of unity',
               'fundamental_units': 'Fundamental units',
               'regulator': 'Regulator',
+              'class_number_formula': 'Analytic class number formula',
               'galois_group': 'Galois group',
+              'intermediate_fields': 'Intermediate fields',
               'prime_cycle_types': 'Frobenius cycle types'}
 
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
@@ -1041,7 +1044,11 @@ def nf_code(**args):
     nf = WebNumberField(label)
     nf.make_code_snippets()
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
+    if lang == 'oscar':
+        code += '{} If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'.format(Comment[lang])
+        code += "{} Some of these functions may take a long time to compile (this depends on the state of your Julia REPL), and/or to execute (this depends on the field).\n".format(Comment[lang])
+    else:
+        code += "{} Some of these functions may take a long time to execute (this depends on the field).\n".format(Comment[lang])
     if lang == 'gp':
         lang = 'pari'
     for k in sorted_code_names:
