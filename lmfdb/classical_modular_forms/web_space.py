@@ -154,7 +154,8 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
 def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
     Returns the label for the space using the orbit index
-    eg:
+    eg::
+
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
