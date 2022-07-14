@@ -29,6 +29,10 @@ curve:
 simple_curve:
   sage: E.short_weierstrass_model()
   magma: WeierstrassModel(E);
+  oscar: short_weierstrass_model(E)
+
+mwgroup:
+  magma: MordellWeilGroup(E);
 
 gens:
   sage:  E.gens()
@@ -38,6 +42,7 @@ tors:
   sage:  E.torsion_subgroup().gens()
   pari:  elltors(E)
   magma: TorsionSubgroup(E);
+  oscar: torsion_structure(E)
 
 intpts:
   sage:  E.integral_points()
@@ -47,20 +52,41 @@ cond:
   sage:  E.conductor().factor()
   pari:  ellglobalred(E)[1]
   magma: Conductor(E);
+  oscar: conductor(E)
 
 disc:
   sage:  E.discriminant().factor()
   pari:  E.disc
   magma: Discriminant(E);
+  oscar: discriminant(E)
 
 jinv:
   sage:  E.j_invariant().factor()
   pari:  E.j
   magma: jInvariant(E);
+  oscar: j_invariant(E)
+
+cm:
+  sage: E.has_cm()
+  magma: HasComplexMultiplication(E);
+
+faltings:
+  pari: ellheight(E)
+  magma: FaltingsHeight(E);
+  oscar: faltings_height(E)
+
+stable_faltings:
+  magma: StableFaltingsHeight(E);
+  oscar: stable_faltings_height(E)
 
 rank:
   sage:  E.rank()
   magma: Rank(E);
+
+analytic_rank:
+  sage: E.analytic_rank()
+  pari: ellanalyticrank(E)
+  magma: AnalyticRank(E);
 
 reg:
   sage:  E.regulator()
@@ -70,42 +96,57 @@ real_period:
   sage:  E.period_lattice().omega()
   pari:  E.omega[1]
   magma: RealPeriod(E);
+  oscar: real_period(E)
 
 cp:
   sage:  E.tamagawa_numbers()
   pari:  gr=ellglobalred(E); [[gr[4][i,1],gr[5][i][4]] | i<-[1..#gr[4][,1]]]
   magma: TamagawaNumbers(E);
-
+  oscar: tamagawa_numbers(E)
 
 ntors:
   sage:  E.torsion_order()
   pari:  elltors(E)[1]
   magma: Order(TorsionSubgroup(E));
+  oscar: prod(torsion_structure(E)[1])
 
 sha:
   sage:  E.sha().an_numerical()
   magma: MordellWeilShaInformation(E);
 
+L1:
+  sage:  |
+    r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()
+  pari:  |
+    ar = ellanalyticrank(E); ar[2]/factorial(ar[1])
+  magma: |
+    Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
+
+bsd_formula:
+  sage: |
+    # self-contained SageMath code snippet for the BSD formula (checks rank, computes analytic sha)
+    E = EllipticCurve(%s); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
+    Lr1 = E.lseries().dokchitser().derivative(1,r)/r.factorial(); sha = E.sha().an_numerical();
+    omega = E.period_lattice().omega(); reg = E.regulator(); tam = E.tamagawa_product(); tor = E.torsion_order();
+    print("anayltic sha: {}" *(Lr1 * tor^2 / (omega * reg * tam)))
+  magma: |
+    /* self-contained Magma code snippet for the BSD formula (checks rank, computes analyiic sha) */
+    E = EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
+    sha := MordellWeilShaInformation(E); omega := RealPeriod(E); reg := Regulator(E); tam := &*TamagawaNumbers(E);
+    tor := #TorsionSubgroup(E); assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
+
 qexp:
   sage:  E.q_eigenform(20)
   pari:  |
-    xy = elltaniyama(E);
-    x*deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
+    xy = elltaniyama(E); x*deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
   magma: ModularForm(E);
 
 moddeg:
   sage:  E.modular_degree()
   magma: ModularDegree(E);
 
-L1:
-  sage:  |
-    r = E.rank();
-    E.lseries().dokchitser().derivative(1,r)/r.factorial()
-  pari:  |
-    ar = ellanalyticrank(E);
-    ar[2]/factorial(ar[1])
-  magma: |
-    Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
+manin:
+  magma: ManinConstant(E);
 
 localdata:
   sage:
@@ -114,15 +155,11 @@ localdata:
     ellglobalred(E)[5]
   magma: |
     [LocalInformation(E,p) : p in BadPrimes(E)];
+  oscar: |
+    [(p,tamagawa_number(E,p), kodaira_symbol(E,p), reduction_type(E,p)) for p in bad_primes(E)]
 
 galrep:
   sage:  |
-    rho = E.galois_representation();
-    [rho.image_type(p) for p in rho.non_surjective()]
+    rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
-
-padicreg:
-  sage: |
-    [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]
-

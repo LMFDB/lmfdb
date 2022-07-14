@@ -572,6 +572,10 @@ class WebEC():
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
+        mwbsd['equal'] = r'=' if mwbsd['analytic_rank'] < 2 else r'\overset{?}{=}'
+        mwbsd['rhs'] = '?' if mwbsd['sha'] == '?' else mwbsd['sha'] * mwbsd['real_period'] * mwbsd['reg'] * mwbsd['tamagawa_product'] / mwbsd['torsion']**2
+        mwbsd['formula'] = r'%0.9f \approx %s %s \frac{\# &#1064;(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \approx %0.9f' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
+
     def display_modell_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
 
@@ -694,7 +698,9 @@ class WebEC():
             self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
-            for lang in ['sage', 'pari', 'magma', 'oscar']:
+            for lang in self._code['curve']:
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
+            for lang in self._code['bsd_formula']:
+                self._code['bsd_formula'][lang] = self._code['bsd_formula'][lang] % (self.data['ainvs'])
 
         return self._code

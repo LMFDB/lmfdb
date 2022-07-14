@@ -100,17 +100,18 @@ white-space: pre in order to keep line breaks! #}
     {%endif%}
     </p>
 
+    <p>{{ place_code('mwgroup') }}</p>
+
     {% if data.mwbsd.rank!=0 %}
     {% if data.mwbsd.rank==1 %}
-    <p><h3> Infinite order Mordell-Weil generator and {{KNOWL('ec.q.canonical_height','height')}}</h3>
+    <h3> Infinite order Mordell-Weil generator and {{KNOWL('ec.q.canonical_height','height')}}</h3>
     {% else %}
-    <p><h3> Infinite order Mordell-Weil generators and {{KNOWL('ec.q.canonical_height','heights')}}</h3>
+    <h3> Infinite order Mordell-Weil generators and {{KNOWL('ec.q.canonical_height','heights')}}</h3>
     {% endif %}
-      {{ place_code('gens') }}
       {% if data.mwbsd.ngens==0 %}
     No {% if data.mwbsd.rank==1 %} generator {% else %} generators  {% endif %} computed
       {% else %}
-      <div style='overflow:auto'><p>
+      <div style='overflow:auto'>
       <table>
         <tr><td>$P$</td><td>&nbsp;=&nbsp;</td>
           {% for pt in data.mwbsd.generators %}<td>{{pt|safe}}</td>{% endfor %}
@@ -119,29 +120,29 @@ white-space: pre in order to keep line breaks! #}
           {% for ht in data.mwbsd.heights %}<td>${{ht}}$</td>{% endfor %}
           </tr>
         </table>
-      </p></div>
-    </p>
+      </div>
       {% if data.mwbsd.ngens < data.mwbsd.rank %}
 	Only {{ data.mwbsd.ngens }} generators computed
       {% endif %}
 
     {%endif %}
+      <p>{{ place_code('gens') }}</p>
     {%endif%}
 
     {% if data.mwbsd.torsion!=1 %}
     <h2> {{ KNOWL('ec.torsion_subgroup', title='Torsion generators') }}</h2>
-      {{ place_code('tors') }}
     <p> {{ data.mwbsd.tor_gens |safe }} </p>
+      {{ place_code('tors') }}
     {%endif %}
 
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
-      {{ place_code('intpts') }}
     <div class="ip">
       <p>
       {{data.mwbsd.int_points | safe}}
       </p>
     </div>
+      {{ place_code('intpts') }}
     {% if data.mwbsd.ngens < data.mwbsd.rank %}
      <p>
      N.B. Only integral points which are combinations of known generators are shown.
@@ -152,39 +153,27 @@ white-space: pre in order to keep line breaks! #}
         <table>
 
         <tr>
-        <td colspan="4">
-          {{ place_code('cond') }}
-        </td>
-        </tr>
-        <tr>
         <td>{{ KNOWL('ec.q.conductor', title='Conductor') }}:</td>
         <td>{{ data.data.cond_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
         <td>${{ data.data.cond_factor }}$</td>
+        <td>{{ place_code('cond') }} </td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('disc') }}
-        </td>
-        </tr>
         <tr>
         <td>{{ KNOWL('ec.discriminant', title='Discriminant') }}:</td>
         <td>${{ data.data.disc }} $</td>
         <td>&nbsp;=&nbsp;</td>
         <td>${{ data.data.disc_factor }} $</td>
+        <td>{{ place_code('disc') }}</td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('jinv') }}
-        </td>
-        </tr>
         <tr>
         <td>{{ KNOWL('ec.j_invariant', title='j-invariant') }}:</td>
         <td>{{ data.data.j_inv_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
         <td>${{ data.data.j_inv_factor }}$</td>
+        <td>{{ place_code('jinv') }}
         </tr>
 
         <tr>
@@ -202,6 +191,7 @@ white-space: pre in order to keep line breaks! #}
         ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
         {% endif %}
         </td>
+        <td>{{ place_code('cm') }}
         </tr>
 
         <tr>
@@ -212,28 +202,29 @@ white-space: pre in order to keep line breaks! #}
         <tr>
         <td>{{ KNOWL('ec.q.faltings_height', title='Faltings height') }}:</td>
         <td>${{ data.faltings_height }}\dots$</td>
+        <td></td><td></td>
+        <td>{{ place_code('faltings') }}</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.q.faltings_height', title='Stable Faltings height') }}:</td>
         <td>${{ data.stable_faltings_height }}\dots$</td>
+        <td></td><td></td>
+        <td>{{ place_code('stable_faltings') }}</td>
         </tr>
 
        </table>
 
-    <h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD') }} invariants</h2>
-    <div></div>
-    <p>
+    <h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD invariants') }}</h2>
         <table>
-
-        <tr><td colspan="4">{{ place_code('rank') }}</td></tr>
+        <tbody>
         <tr>
         <td>{{ KNOWL('ec.q.analytic_rank', title='Analytic rank') }}:</td>
         <td> ${{ data.analytic_rank }}$
         </td>
+        <td>{{ place_code('analytic_rank') }}</td>
         </tr>
 
-        <tr><td colspan="4">{{ place_code('reg') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.regulator', title='Regulator') }}:</td>
       	{% if data.mwbsd.reg == '?' %}
@@ -245,15 +236,15 @@ white-space: pre in order to keep line breaks! #}
             <td> ${{ data.mwbsd.reg }}\dots$</td>
           {% endif %}
         {% endif %}
+        <td>{{ place_code('reg') }}
         </tr>
 
-        <tr><td colspan="4">{{ place_code('real_period') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.q.real_period', title='Real period') }}:</td>
         <td> ${{ data.mwbsd.real_period }}\dots$</td>
+        <td>{{ place_code('real_period') }}</td>
         </tr>
 
-        <tr><td colspan="4">{{ place_code('cp') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
         <td>$ {{ data.mwbsd.tamagawa_product }} $
@@ -261,15 +252,15 @@ white-space: pre in order to keep line breaks! #}
             &nbsp;=&nbsp;$ {{ data.mwbsd.tamagawa_factors }} $
           {% endif %}
         </td>
+        <td>{{ place_code('cp') }}</td>
         </tr>
 
-        <tr><td colspan="4">{{ place_code('ntors') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
         <td>${{ data.mwbsd.torsion }}$</td>
+        <td>{{ place_code('ntors') }}</td>
         </tr>
 
-        <tr><td colspan="4">{{ place_code('sha') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
       	<td>
@@ -287,6 +278,7 @@ white-space: pre in order to keep line breaks! #}
             {% endif %}
           {% endif %}
         </td>
+        <td>{{ place_code('sha') }}</td>
         </tr>
       	{% if data.mwbsd.sha == '?' %}
           <tr>
@@ -294,13 +286,21 @@ white-space: pre in order to keep line breaks! #}
           <td> ${{ data.mwbsd.regsha }}$</td>
           </tr>
         {% endif %}
-        <tr><td colspan="4">{{ place_code('L1') }}</td></tr>
         <tr>
         <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
         <td>$ {{ data.mwbsd.lder_name }} $ &approx; $ {{ data.mwbsd.special_value }} $</td>
+        <td>{{ place_code('L1') }}</td>
         </tr>
+        </tbody>
         </table>
-    </p>
+
+<h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD formula') }}</h2>
+<p style="margin:10px 280px;">
+$\displaystyle {{ data.mwbsd.formula|safe }}$
+</p>
+<center>
+{{ place_code('bsd_formula') }}
+</center>
 
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
@@ -313,16 +313,8 @@ white-space: pre in order to keep line breaks! #}
 {{ data.newform_label }}
 {% endif %}
 </p>
+    <div class="output" style="margin-left:1ch;"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
     <p>{{ place_code('qexp') }}</p>
-{#
-    <form>
-#}
-        <div class="output" style="margin-left:1ch;"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
-{#
-        <div class="emptyspace"><br></div>
-        <button id="morebutton">More coefficients</button>
-    </form>
-#}
     <p>For more coefficients, see the Downloads section to the right.    </p>
 
     {#
@@ -333,9 +325,6 @@ white-space: pre in order to keep line breaks! #}
         <table>
 
         <tr>
-        <td colspan="4">
-          {{ place_code('moddeg') }}
-        </td>
         </tr>
         <tr>
         <td>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}:</td>
@@ -346,6 +335,7 @@ white-space: pre in order to keep line breaks! #}
 	  {{ data.data.degree }}
 	  {% endif %}
         </td>
+        <td>{{ place_code('moddeg') }}</td>
         </tr>
 	{% if data.conductor < data.cremona_bound %}
         <tr>
@@ -353,10 +343,12 @@ white-space: pre in order to keep line breaks! #}
         <td>
 	  {% if data.data.optimality_code==1 %}yes{% elif data.data.optimality_code==0 %}no{% else %}not computed<sup>*</sup> (one of {{ data.data.optimality_code }} curves in this isogeny class which might be optimal){% endif %}
         </td>
+        <td>
         </tr>
         <tr>
         <td>{{ KNOWL('ec.q.manin_constant', title='Manin constant') }}:</td>
-	<td>{{ data.data.manin_constant }} {% if not data.data.manin_known %} (conditional<sup>*</sup>){% endif %}</td>
+	      <td>{{ data.data.manin_constant }} {% if not data.data.manin_known %} (conditional<sup>*</sup>){% endif %}</td>
+        <td>{{ place_code('manin') }}</td>
         </tr>
 	{% endif %}
 	</table>
@@ -399,8 +391,6 @@ text-align: center;
   of {{KNOWL('ec.q.reduction_type', title='bad reduction')}}:
 </p>
 
-    {{ place_code('localdata') }}
-
 <table id = "local_data" class="ntdata"><thead>
 <tr>
 <th>prime</th>
@@ -435,10 +425,9 @@ text-align: center;
 {% endfor %}
 </tbody>
 </table>
+<p>{{ place_code('localdata') }}</p>
 
 <h2> {{KNOWL('ec.galois_rep', title='Galois representations')}} </h2>
-
-  {{ place_code('galrep') }}
 
 <p>
 The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {{KNOWL('ec.maximal_elladic_galois_rep', title='maximal image')}}
@@ -465,10 +454,9 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
   for all primes $\ell$.
   </p>
 {% endif %}
+  <p>{{ place_code('galrep') }}</p>
 
 <h2>$p$-adic regulators</h2>
-
-    {{ place_code('padicreg') }}
 
 <p>
 {% if data.rank==0 %}

@@ -793,26 +793,34 @@ def render_single_congruent_number(n):
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
 
-sorted_code_names = ['curve', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'qexp', 'moddeg', 'L1', 'localdata', 'galrep', 'padicreg']
+sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
 code_names = {'curve': 'Define the curve',
+                 'simple_curve': 'Simplified equation',
+                 'mwgroup': 'Mordell-Weil group',
+                 'gens': 'Mordell-Weil generators',
                  'tors': 'Torsion subgroup',
                  'intpts': 'Integral points',
                  'cond': 'Conductor',
                  'disc': 'Discriminant',
                  'jinv': 'j-invariant',
-                 'rank': 'Rank',
+                 'cm': 'Potential complex multiplication',
+                 'faltings': 'Faltings height',
+                 'stable_faltings': 'Stable Faltings height',
+                 'rank': 'Mordell-Weil rank',
+                 'analytic_rank': 'Analytic rank',
                  'reg': 'Regulator',
                  'real_period': 'Real Period',
                  'cp': 'Tamagawa numbers',
                  'ntors': 'Torsion order',
                  'sha': 'Order of Sha',
+                 'L1': 'Special L-value',
+                 'bsd_formula': 'BSD formula',
                  'qexp': 'q-expansion of modular form',
                  'moddeg': 'Modular degree',
-                 'L1': 'Special L-value',
+                 'manin': 'Manin constant',
                  'localdata': 'Local data',
-                 'galrep': 'mod p Galois image',
-                 'padicreg': 'p-adic regulator'}
+                 'galrep': 'mod p Galois image'}
 
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
