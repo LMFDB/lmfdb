@@ -40,6 +40,7 @@ from lmfdb.utils import (
     dispcyclomat,
     search_wrap,
     web_latex,
+    Downloader,
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
@@ -793,16 +794,16 @@ def group_jump(info):
                 raise RuntimeError("The group %s has not yet been added to the database." % jump)
     raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
 
-def group_download(info):
-    t = "Stub"
-    bread = get_bread([("Jump", "")])
-    return render_template(
-        "single.html",
-        kid="rcs.groups.abstract.source",
-        title=t,
-        bread=bread,
-        learnmore=learnmore_list_remove("Source"),
-    )
+#def group_download(info):
+#    t = "Stub"
+#    bread = get_bread([("Jump", "")])
+#    return render_template(
+#        "single.html",
+#        kid="rcs.groups.abstract.source",
+#        title=t,
+#        bread=bread,
+#        learnmore=learnmore_list_remove("Source"),
+#    )
 
 def show_factor(n):
     return f"${latex(ZZ(n).factor())}$"
@@ -812,6 +813,19 @@ def get_url(label):
 
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
+
+class Group_download(Downloader):
+    table = db.gps_groups
+    title = "Abstract groups"
+    columns = "label"
+    column_wrappers = { "label" : lambda x : [int(a) for a in x.split(".")] }
+    data_format = ["[N,i]"]
+    data_description = "for the small group identifier N.i of the ith group of order N."
+    function_body = {
+        "magma": ['return [SmallGroup(r[1],r[2]) : r in data];',],
+        "sage": ['return [gap.SmallGroup(r) for r in data]',],
+        "oscar": ['return [small_group(r...) for r in data]',],
+    }
 
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url, default=True),
@@ -834,14 +848,13 @@ group_columns = SearchColumns([
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
                       default=True, align="center")])
-group_columns.dummy_download=True
 
 @search_wrap(
     table=db.gps_groups,
     title="Abstract group search results",
     err_title="Abstract groups search input error",
     columns=group_columns,
-    shortcuts={"jump": group_jump, "download": group_download},
+    shortcuts={"jump": group_jump, "download": Group_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
     #  credit=lambda:credit_string,
@@ -938,7 +951,6 @@ subgroup_columns = SearchColumns([
         CheckCol("minimal_normal", "group.maximal_quotient", "max", default=True, short_title="Quo. maximal")],
              default=True)],
     tr_class=["bottom-align", ""])
-subgroup_columns.dummy_download = True
 
 @search_wrap(
     table=db.gps_subgroups,

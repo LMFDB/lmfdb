@@ -13,7 +13,7 @@ from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma, latex_comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
-    StatsDisplay, totaler, proportioners, prop_int_pretty,
+    StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
@@ -94,6 +94,19 @@ def index():
     info['degree_list'] = list(range(1, 48))
     return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, learnmore=learnmore_list())
 
+class GG_download(Downloader):
+    table = db.gps_transitive
+    title = "Transitive groups"
+    columns = "label"
+    column_wrappers = { "label" : lambda x : [int(a) for a in x.split("T")] }
+    data_format = ["[n,t]"]
+    data_description = "for the transitive group identifier nTt, where n is the degree and t is the T-number."
+    function_body = {
+        "magma": ['return [TransitiveGroup(r[1],r[2]) : r in data];',],
+        "sage": ['return [TransitiveGroup(r[0],r[1]) for r in data]',],
+        "oscar": ['return [transitive_group(r...) for r in data]',],
+    }
+
 # For the search order-parsing
 def make_order_key(order):
     order1 = int(ZZ(order).log(10))
@@ -117,7 +130,6 @@ gg_columns = SearchColumns([
                       default=True)
 ],
     db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
-gg_columns.dummy_download = True
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
@@ -141,6 +153,7 @@ def gg_postprocess(res, info, query):
              title='Galois group search results',
              err_title='Galois group search input error',
              columns=gg_columns,
+             shortcuts={"download": GG_download()},
              url_for_label=url_for_label,
              postprocess=gg_postprocess,
              learnmore=learnmore_list,

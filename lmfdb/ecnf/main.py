@@ -388,20 +388,28 @@ def ecnf_data(label):
 def download_search(info):
     dltype = info['Submit']
     delim = 'bracket'
-    com = r'\\'  # single line comment start
+    com = ''   # single line comment start
     com1 = ''  # multiline comment start
     com2 = ''  # multiline comment end
-    filename = 'elliptic_curves.gp'
+    eol = ''   # line continuation (only needed for gp)
+    filename = 'elliptic_curves.txt'
     mydate = time.strftime("%d %B %Y")
+    if dltype == 'gp':
+        filename = 'elliptic_curves.gp'
+        com = r'\\'
+        eol = '\\'
     if dltype == 'sage':
         com = '#'
         filename = 'elliptic_curves.sage'
     if dltype == 'magma':
-        com = ''
         com1 = '/*'
         com2 = '*/'
         delim = 'magma'
         filename = 'elliptic_curves.m'
+    elif dltype == 'oscar':
+        com1 = '#='
+        com2 = '=#'
+        filename = 'elliptic_curves.jl'
     s = com1 + "\n"
     s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
@@ -415,9 +423,12 @@ def download_search(info):
     elif dltype == 'sage':
         s += 'R.<x> = QQ[]; \n'
         s += 'data = [ '
+    elif dltype == 'oscar':
+        s += 'R,x = PolynomialRing(QQ);\n'
+        s += 'data = ['
     else:
         s += 'data = [ '
-    s += '\\\n'
+    s += eol + '\n'
     nf_dict = {}
     for f in db.ec_nfcurves.search(ast.literal_eval(info["query"]), ['field_label', 'ainvs']):
         nf = str(f['field_label'])
@@ -431,8 +442,8 @@ def download_search(info):
         entry = entry.replace('u','')
         entry = entry.replace('\'','')
         entry = entry.replace(';','],[')
-        s += '[[' + poly + '], [[' + entry + ']]],\\\n'
-    s = s[:-3]
+        s += '[[' + poly + '], [[' + entry + ']]],'+eol+'\n'
+    s = s[:-2-len(eol)]
     s += ']\n'
 
     if delim == 'brace':
