@@ -102,6 +102,11 @@ def ctx_galois_groups():
 
 
 @app.context_processor
+def ctx_raw_typeset():
+    return {'raw_typeset': raw_typeset}
+
+
+@app.context_processor
 def ctx_number_fields():
     return {'number_field_data': number_field_data,
             'global_numberfield_summary': global_numberfield_summary,}
