@@ -258,5 +258,5 @@ class Downloader():
             s += '\n\n'
             s += '\n'.join(func_start) + '\n'
             s += '    ' + '\n    '.join(func_body) + '\n'
-            s += '\n'.join(func_end)
+            s += '\n'.join(func_end) + '\n'
         return self._wrap(s, filename, lang=lang)
