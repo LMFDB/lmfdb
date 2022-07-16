@@ -93,6 +93,10 @@ def fixed_prec(r, digs=3):
     print(head)
     return str(head) + '.' + n[-digs:]
 
+@app.context_processor
+def ctx_raw_typeset():
+    return {'raw_typeset': raw_typeset}
+
 
 @app.context_processor
 def ctx_galois_groups():
