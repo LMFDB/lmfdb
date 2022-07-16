@@ -473,7 +473,7 @@ class GalSearchArray(SearchArray):
             knowl="group",
             example_span_colspan=8,
             example="[8,3]",
-            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+            example_span="list of %s, e.g. [8,3] or 8.3, group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
                 display_knowl("nf.galois_group.name", "list of group labels"),
                 display_knowl("gg.label", "transitive group labels")))

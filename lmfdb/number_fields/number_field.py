@@ -1139,7 +1139,7 @@ class NFSearchArray(SearchArray):
             label="Galois group",
             knowl="nf.galois_search",
             example="C5",
-            example_span="[8,3], C5 or 7T2")
+            example_span="[8,3], 8.3, C5 or 7T2")
         is_galois = YesNoBox(
             name="is_galois",
             label="Is Galois",
