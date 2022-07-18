@@ -116,7 +116,7 @@ class_number_formula:
     x = polygen(QQ);  K.<a> = NumberField(%s)
     DK = K.disc(); r1,r2 = K.signature(); RK = K.regulator();  RR = RK.parent()
     hK = K.class_number(); wK = K.unit_group().torsion_generator().order();
-    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * sqrt(abs(DK)))  
+    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))  
   pari: |
     # self-contained Pari/GP code snippet to compute the analytic class number formula
     K = bnfinit(%s, 1);
