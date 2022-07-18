@@ -124,7 +124,7 @@ class_number_formula:
     2^r1 * (2*Pi)^r2 * RK * hK / (wK * sqrt(abs(DK)))
   magma: |
     /* self-contained Magma code snippet to compute the analytic class number formula */
-    Qx, x := PolynomialRing(QQ); K<a> := NumberField(%s);
+    Qx<x> := PolynomialRing(QQ); K<a> := NumberField(%s);
     OK := Integers(K); DK := Discriminant(OK);
     UK, fUK := UnitGroup(OK); clK, fclK := ClassGroup(OK);
     r1,r2 := Signature(K); RK := Regulator(K); RR := Parent(RK);
