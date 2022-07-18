@@ -95,9 +95,9 @@ reg:
 real_period:
   sage:  E.period_lattice().omega()
   pari:  E.omega[1]
-  magma: RealPeriod(E) * (Discriminant(E) lt 0 select 2 else 1)
+  magma: RealPeriod(E) * (Discriminant(E) gt 0 select 2 else 1)
   oscar: |
-    real_period(E) * (discriminant(e) < 0 ? 2 : 1)
+    real_period(E) * (discriminant(e) > 0 ? 2 : 1)
 
 cp:
   sage:  E.tamagawa_numbers()
@@ -133,7 +133,7 @@ bsd_formula:
   magma: |
     /* self-contained Magma code snippet for the BSD formula (checks rank, computes analyiic sha) */
     E := EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
-    sha := MordellWeilShaInformation(E); omega := RealPeriod(E) * (Discriminant(E) lt 0 select 2 else 1);
+    sha := MordellWeilShaInformation(E); omega := RealPeriod(E) * (Discriminant(E) gt 0 select 2 else 1);
     reg := Regulator(E); tam := &*TamagawaNumbers(E); tor := #TorsionSubgroup(E);
     assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
 
