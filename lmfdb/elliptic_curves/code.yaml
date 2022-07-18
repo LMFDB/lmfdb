@@ -131,7 +131,7 @@ bsd_formula:
     print("anayltic sha: " + str(RR(Lr1) * tor^2 / (omega * reg * tam)))
   magma: |
     /* self-contained Magma code snippet for the BSD formula (checks rank, computes analyiic sha) */
-    E = EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
+    E := EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
     sha := MordellWeilShaInformation(E); omega := RealPeriod(E); reg := Regulator(E); tam := &*TamagawaNumbers(E);
     tor := #TorsionSubgroup(E); assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
 
