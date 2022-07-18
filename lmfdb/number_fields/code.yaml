@@ -137,7 +137,7 @@ class_number_formula:
     UK, fUK = unit_group(OK); clK, fclK = class_group(OK);
     r1,r2 = signature(K); RK = regulator(K); RR = parent(RK);
     hK = order(clK); wK = order(first(torsion_subgroup(UK)));
-    2^r1 * (2*pi)^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))
+    2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 
 galois_group:
   sage:  K.galois_group(type='pari')
