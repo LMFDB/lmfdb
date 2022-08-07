@@ -735,7 +735,7 @@ class NumberFieldGaloisGroup():
     def polredabs(self):
         # polynomials are all polredabs'ed now
         return PolynomialRing(QQ, 'x')([str(m) for m in self.polynomial()])
-        # if "polredabs" in self._data():
+        # if "polredabs" in self._data:
         #     return self._data["polredabs"]
         # else:
         #     pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
@@ -754,7 +754,7 @@ class NumberFieldGaloisGroup():
         return pol_to_html(self.polredabs())
 
     def label(self):
-        if "label" in self._data():
+        if "label" in self._data:
             return self._data["label"]
         else:
             # from number_fields.number_field import poly_to_field_label
