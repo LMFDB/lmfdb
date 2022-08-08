@@ -105,7 +105,7 @@ function refresh_link_suggestions() {
   var re_offset = [1, 0, 0, 0];
   // We don't want to include the first character of the first regex in the bad interval.
   // We could do this with a negative lookbehind, but that's not supported on Firefox.
-  for (i = 0; i < math_res.length; i++) {
+  for (var i = 0; i < math_res.length; i++) {
     do {
       m = math_res[i].exec(content);
       if (m) {
