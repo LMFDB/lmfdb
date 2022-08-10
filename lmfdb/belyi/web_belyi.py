@@ -208,7 +208,7 @@ class WebBelyiGalmap():
         data["embeddings_and_triples"] = []
         self.triple = None
         self.embedding = None
-        for i in range(0, len(data["triples_cyc"])):
+        for i in range(len(data["triples_cyc"])):
             my_dict = {}
             triple_str = ', '.join(data['triples_cyc'][i])
             triple_link = triple_str.replace(' ','')
