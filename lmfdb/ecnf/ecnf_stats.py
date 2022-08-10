@@ -33,12 +33,11 @@ def latex_tor(t):
         # This is used in formatting stats, and we need it to process the output.
         return t
     t = tuple(t)
-    if len(t) == 0:
+    if not t:
         return "trivial"
-    elif len(t) == 1:
+    if len(t) == 1:
         return r"$\Z/{%s}\Z$" % t
-    else:
-        return r"$\Z/{%s}\Z \oplus \Z/{%s}\Z$" % t
+    return r"$\Z/{%s}\Z \oplus \Z/{%s}\Z$" % t
 
 def tor_invs(t):
     if isinstance(t, str):

@@ -69,7 +69,8 @@ def do_import(ll, db, saving):
     else:
         print(data)
 
-class lock_yaml(object):
+
+class lock_yaml():
     """
     An object preventing simultaneous access to the yaml file
     using a coarse grained lock file.
@@ -86,6 +87,7 @@ class lock_yaml(object):
                 break
     def __exit__(self, typ, value, tb):
         os.unlink(self.lock_file)
+
 
 def do_import_one(g, q, db, status_file, datadir):
     """
