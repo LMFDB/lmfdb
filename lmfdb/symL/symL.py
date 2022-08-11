@@ -57,11 +57,11 @@ class SymmetricPowerLFunction(SageObject):
         x = R('x')
         F = R(1)
         ap = self.E.ap(p)
-        for i in range(0, (m - 1) // 2 + 1):
+        for i in range((m - 1) // 2 + 1):
             s = m - 2 * i
             s2 = s // 2
 
-            TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in range(0, s2 + 1)])
+            TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in range(s2 + 1)])
 
             if s % 2 != 0:
                 TI = ap * TI
@@ -153,7 +153,7 @@ def symmetricEulerFactor(E, m, p):
 
     print(type(F))
 
-    for i in range(0, (m - 1) // 2 + 1):
+    for i in range((m - 1) // 2 + 1):
         s = m - 2 * i
         s2 = s // 2
         ap = E.ap(p)

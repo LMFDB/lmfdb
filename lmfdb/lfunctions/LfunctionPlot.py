@@ -57,10 +57,10 @@ def getAllMaassGraphHtml(degree, signature=""):
 
 #        else:
 #            ans += getGroupHtml(g)
-    for i in range(0, len(groups)):
+    for i in range(len(groups)):
         g = groups[i][0]
         ans += getGroupHtml(g)
-        for j in range(0, len(groups[i][1])):
+        for j in range(len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
@@ -655,7 +655,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                             ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
                             ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
                             ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
-                        for number in range(0, numberwithlabel):
+                        for number in range(numberwithlabel):
                             xbase += self_dual * xdotspacing
                             ans += "<a xlink:href='" + linkurl + str(number + 1) + "/' target='_top'>\n"
                             ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]

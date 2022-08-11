@@ -247,8 +247,8 @@ def lfuncDShtml(L, fmt):
 
             if nonzeroterms > maxcoeffs:
                 break
-            if(nonzeroterms % numperline == 0):
-                ans = ans     # don't need  \cr in the html version
+            if nonzeroterms % numperline == 0:
+                # ans = ans  # don't need  \cr in the html version
                 nonzeroterms += 1   # This ensures we don t add more than one newline
         ans = ans + "<span class='term'> + &#8943;</span></td></tr></table>"
 

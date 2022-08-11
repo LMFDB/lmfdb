@@ -671,7 +671,7 @@ def ratpts_table(pts,pts_v):
         return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption, colspan=tabcols)]
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
-    for i in range(0,len(pts),6):
+    for i in range(0, len(pts), 6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in spts[i:i+6]])
         if i+6 > len(pts):
