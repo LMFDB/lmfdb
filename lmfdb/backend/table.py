@@ -169,7 +169,7 @@ class PostgresTable(PostgresBase):
         Initialize the sorting attributes from a list of columns or pairs (col, direction)
         """
         self._sort_orig = sort
-        self._sort_keys = set([])
+        self._sort_keys = set()
         if sort:
             for col in sort:
                 if isinstance(col, str):

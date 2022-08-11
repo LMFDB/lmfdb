@@ -208,7 +208,7 @@ def createLcalcfile_ver2(L, url):
 
         if hasattr(L, 'dirichlet_coefficients_arithmetic'):
             total = min(len(L.dirichlet_coefficients_arithmetic), period - 1)
-            for n in range(0, total):
+            for n in range(total):
                 if L.selfdual:
                     thefile += str(L.dirichlet_coefficients_arithmetic[n])
                 else:
@@ -221,7 +221,7 @@ def createLcalcfile_ver2(L, url):
                     thefile += "\n"
         else:
             total = min(len(L.dirichlet_coefficients), period - 1)
-            for n in range(0, total):
+            for n in range(total):
                 if L.selfdual:
                     thefile += str(L.dirichlet_coefficients[n])
                 else:
@@ -301,7 +301,7 @@ def createLcalcfile_ver1(L):
 
     thefile += str(L.quasidegree) + "\n"  # number of actual Gamma functions
 
-    for n in range(0, L.quasidegree):
+    for n in range(L.quasidegree):
         thefile = thefile + str(L.kappa_fe[n]) + "\n"
         thefile = thefile + str(real_part(L.lambda_fe[n])) + " " + str(imag_part(L.lambda_fe[n])) + "\n"
 
@@ -311,7 +311,7 @@ def createLcalcfile_ver1(L):
 
     thefile += str(len(L.poles)) + "\n"  # counts number of poles
 
-    for n in range(0, len(L.poles)):
+    for n in range(len(L.poles)):
         thefile += str(real_part(L.poles[n])) + " " + str(imag_part(L.poles[n])) + "\n"  # pole location
         thefile += str(
             real_part(L.residues[n])) + " " + str(imag_part(L.residues[n])) + "\n"  # residue at pole

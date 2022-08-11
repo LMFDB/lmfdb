@@ -877,7 +877,7 @@ function switch_basis(btype) {
         R = self._PrintRing
         if self.single_generator:
             beta = R.gen(0)
-            return [beta**i for i in range(0, self.dim)]
+            return [beta**i for i in range(self.dim)]
         else:
             return [1] + list(R.gens())
 

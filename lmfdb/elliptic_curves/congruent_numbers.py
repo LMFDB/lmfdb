@@ -30,7 +30,7 @@ def parse_gens_string(s):
 def get_congruent_number_data(n):
     info = {'n': n}
     info['rank'] = rank = int(get_CN_data('rank', n)[1])
-    info['is_congruent'] = cong = rank>0
+    info['is_congruent'] = cong = rank > 0
 
     ainvs = [0,0,0,-n*n,0]
     E = EllipticCurve(ainvs)
@@ -38,7 +38,7 @@ def get_congruent_number_data(n):
 
     gens_string = get_CN_data('MWgroup', n)[1]
     gens = [E(g) for g in parse_gens_string(gens_string)]
-    info['gens'] = ", ".join([str(g) for g in gens])
+    info['gens'] = ", ".join(str(g) for g in gens)
     info['missing_generator'] =  len(gens) < rank
 
     # better typesetting of points
