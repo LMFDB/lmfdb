@@ -1714,6 +1714,9 @@ class WebAbstractSubgroup(WebObj):
                 return Wtype(label, rec)
             elif rec.get("short_label") == label:
                 return Wtype(rec["label"], rec)
+        # It's possible that the label refers to a small group that is not in the database
+        # but that we can create dynamically
+        return Wtype(label)
 
     @lazy_attribute
     def _full(self):
