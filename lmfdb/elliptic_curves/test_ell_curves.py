@@ -16,8 +16,7 @@ class EllCurveTest(LmfdbTest):
     def test_by_iso_label(self):
         L = self.tc.get('/EllipticCurve/Q/12350/s/')
         assert '[1, -1, 1, -3655, -83403]' in L.get_data(as_text=True)
-        L = self.tc.get('/EllipticCurve/Q/12350/s')
-        assert 'You should be redirected automatically to target URL:' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/12350/s', follow_redirects=True)
         assert '/EllipticCurve/Q/12350/s/' in L.get_data(as_text=True)
 
     def test_Cremona_label_mal(self):
@@ -53,14 +52,12 @@ class EllCurveTest(LmfdbTest):
         assert '[0, 1, 0, -2133408, 1198675188]' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/210/')
         assert '[1, 0, 0, 729, -176985]' in L.get_data(as_text=True)
-        L = self.tc.get('/EllipticCurve/Q/210')
-        assert 'You should be redirected automatically to target URL:' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/210', follow_redirects=True)
         assert '/EllipticCurve/Q/210/' in L.get_data(as_text=True)
 
     def test_Weierstrass_search(self):
-        L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]')
-        assert 'You should be redirected automatically to target URL:' in L.get_data(as_text=True)
-        assert '/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]', follow_redirects=True)
+        assert '/EllipticCurve/Q/10351/b/1' in L.get_data(as_text=True)
 
     def test_j_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&count=100')
