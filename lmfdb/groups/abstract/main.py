@@ -1395,9 +1395,7 @@ def download_group(**args):
     strIO = BytesIO()
     strIO.write(s.encode("utf-8"))
     strIO.seek(0)
-    return send_file(
-        strIO, attachment_filename=filename, as_attachment=True, add_etags=False
-    )
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 
 def display_profile_line(data, ambient, aut):
