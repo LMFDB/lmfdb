@@ -200,7 +200,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):

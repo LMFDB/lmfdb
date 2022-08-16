@@ -446,9 +446,8 @@ def download_search(info):
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")

@@ -496,9 +496,8 @@ def hgcwa_code_download_search(info):
     strIO.write(code.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 
 #Similar to parse_ints in lmfdb/utils
@@ -1234,9 +1233,8 @@ def hgcwa_code_download(**args):
     strIO.write(code.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 class HGCWASearchArray(SearchArray):
     noun = "passport"
