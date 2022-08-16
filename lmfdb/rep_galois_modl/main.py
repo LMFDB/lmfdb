@@ -128,7 +128,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 @search_wrap(template="rep_galois_modl-search.html",
              table=db.modlgal_reps,
