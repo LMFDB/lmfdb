@@ -35,7 +35,7 @@ def download_sample(name):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, download_name=name + '.json', as_attachment = True, add_etags=False)
+    return send_file(strIO, download_name=name + '.json', as_attachment=True)
 
 
 ###############################################################################

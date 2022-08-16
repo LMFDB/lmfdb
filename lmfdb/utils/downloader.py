@@ -141,7 +141,7 @@ class Downloader():
         bIO = BytesIO()
         bIO.write(s.encode('utf-8'))
         bIO.seek(0)
-        return send_file(bIO, download_name=filename, as_attachment=True, add_etags=False)
+        return send_file(bIO, download_name=filename, as_attachment=True)
 
     def _wrap_generator(self, generator, filebase, lang='text', title=None, add_ext=True):
         """
