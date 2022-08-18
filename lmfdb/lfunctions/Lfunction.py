@@ -1414,7 +1414,7 @@ class SymmetricPowerLfunction(Lfunction):
     Only implemented for (non-CM) elliptic curves
 
     Compulsory parameters: power, underlying_type, field
-    For ellitic curves: conductor, isogeny
+    For elliptic curves: conductor, isogeny
 
     """
 

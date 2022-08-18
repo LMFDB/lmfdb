@@ -6205,7 +6205,7 @@
 					}
 				}
 				
-				/* Store the saved state so it might be accessed at any time (particualrly a plug-in */
+				/* Store the saved state so it might be accessed at any time (particularly a plug-in */
 				oSettings.oLoadedState = $.extend( true, {}, oData );
 				
 				/* Restore key features */
@@ -7066,7 +7066,7 @@
 					bUsePassedData = true;
 				}
 				
-				/* Backwards compatability */
+				/* Backwards compatibility */
 				/* aoColumns / aoData - remove at some point... */
 				if ( typeof oInit != 'undefined' && typeof oInit.aoData != 'undefined' )
 				{
