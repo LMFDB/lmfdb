@@ -179,7 +179,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
 
 def ec_disc(ainvs):
     """
-    Return disciminant of a Weierstrass equation from its list of a-invariants.
+    Return discriminant of a Weierstrass equation from its list of a-invariants.
     (Temporary function pending inclusion of model discriminant in database.)
     """
     a1, a2, a3, a4, a6 = ainvs

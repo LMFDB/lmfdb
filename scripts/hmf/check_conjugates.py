@@ -106,7 +106,7 @@ def fldlabel2conjdata(label):
     return data
 
 def conjstringideal(F,stridl,g):
-    """Given a string representing an ideal of F and an automorpism g of F,
+    """Given a string representing an ideal of F and an automorphism g of F,
     return the string representing the conjugate ideal.
     """
     N,n,_,gen = str2ideal(F,stridl)

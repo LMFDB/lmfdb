@@ -63,12 +63,12 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #
 # * The tensor product of a modular form with a representation of
 # dimension > 1, requires a lot of terms to be computed (numcoeff)
-#and this takes a lot of time. We instead atrificially cap the number
+#and this takes a lot of time. We instead artificially cap the number
 #by an arbitrary bound (besancon_bound). Ideally, the dirichlet_coefficients
 #of objects of small conductor should be stored on the database. Or at least
 #stored as soon as someone makes us compute them once.
 
-#* Currently we use dokchitsers function to compurte numcoeff. This creates
+#* Currently we use dokchitsers function to compute numcoeff. This creates
 #a gp where this number is computed. The computation is very fast there,
 #but I am not sure the gp().quit() really exits the gp session. They might
 #pile up.
