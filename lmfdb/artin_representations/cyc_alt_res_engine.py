@@ -230,7 +230,7 @@ def from_cycle_type_to_conjugacy_class_index_dict(defining_polynomial, frobenius
             - with values: the functions of primes that return the cycle index
     """
     # print "Constructing the dict ",defining_polynomial, frobenius_resolvents
-    output_dict = dict()
+    output_dict = {}
     for technique in frobenius_resolvents:
         # Each technique will lead to different functions
         if technique["Algorithm"] == "CYC":
