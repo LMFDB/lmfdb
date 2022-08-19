@@ -1872,7 +1872,7 @@
 			if ( json.sEcho !== undefined )
 			{
 				/* Protect against old returns over-writing a new one. Possible when you get
-				 * very fast interaction, and later queires are completed much faster
+				 * very fast interaction, and later queries are completed much faster
 				 */
 				if ( json.sEcho*1 < oSettings.iDraw )
 				{
