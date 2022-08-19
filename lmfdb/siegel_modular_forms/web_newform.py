@@ -146,7 +146,7 @@ class WebNewform():
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in db.mf_newforms.col_type:
+        for elt in db.smf_samples.col_type:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -154,9 +154,9 @@ class WebNewform():
         self.embedding_label = embedding_label
         self.embedded_minimal_twist = None  # stub filled in below when embedding_label is set
 
-        self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
+#        self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-        self.factored_level = web_latex_factored_integer(self.level, equals=True)
+#        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data:  # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:
@@ -165,8 +165,8 @@ class WebNewform():
 
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        self.texp = [0] + self.traces
-        self.texp_prec = len(self.texp)
+#        self.texp = [0] + self.traces
+#        self.texp_prec = len(self.texp)
 
         # self.char_conrey = self.conrey_indexes[0]
         # self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
@@ -523,10 +523,15 @@ class WebNewform():
 
     @staticmethod
     def by_label(label, embedding_label = None):
-        if not valid_label(label):
-            raise ValueError("Invalid newform label %s." % label)
+        # until we update the validity check, we skip it
+#        if not valid_label(label):
+#            raise ValueError("Invalid newform label %s." % label)
 
-        data = db.mf_newforms.lookup(label)
+        slabel = label.split('.')
+        data = db.smf_samples.search({ 'collection': {'$contains': [slabel\
+[0]]}, 'name': slabel[1]})
+        data = [d for d in data][0]
+#        data = db.smf_samples.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')

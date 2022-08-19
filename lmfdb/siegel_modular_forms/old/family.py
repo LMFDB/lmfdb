@@ -23,7 +23,7 @@ def get_smf_family(name):
 class SiegelFamily (SageObject):
     """
     Represents a family of spaces of Siegel modular forms.
-    """
+q    """
 
     def __init__(self, name, doc=None):
         if doc is None:

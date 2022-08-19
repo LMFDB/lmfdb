@@ -80,7 +80,7 @@ def level_bound(nontriv=None):
     # At the moment, level is not stored in the database
     # (We only have "collection"). We therefore return the maximal level
     # hardcoded until we fix that.
-    return 2
+    return 587
     if nontriv:
         return db.smf_samples.max('level',{'char_order':{'$ne':1}})
     else:
@@ -169,7 +169,8 @@ def display_ALdims(level, weight, al_dims):
         return ''
 
 def set_info_funcs(info):
-    info["mf_url"] = lambda mf: url_for_label(mf['label'])
+#    info["mf_url"] = lambda mf: url_for_label(mf['label'])
+    info["mf_url"] = lambda mf : ".".join([mf['collection'][0], mf['name']])
 
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
@@ -204,7 +205,7 @@ def index():
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
+    info["level_list"] = ('1', '2-10', '11-100', '101-%d' % level_bound() )
     return render_template("smf_browse.html",
                            info=info,
                            title="Siegel modular forms",
@@ -371,6 +372,7 @@ def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
+        print("14 threw the 404")
         return abort(404, err.args)
 
     info = to_dict(request.args)
@@ -403,6 +405,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
         newform = WebNewform.by_label(newform_label,
                                       embedding_label=embedding_label)
     except (KeyError,ValueError) as err:
+        print("1 threw the 404")
         return abort(404, err.args)
     info = to_dict(request.args)
     info['display_float'] = display_float
@@ -410,6 +413,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
     except ValueError as err:
+        print("2 threw the 404")
         return abort(404, err.args)
     info['CC_m'] = [m]
     info['CC_n'] = [0, 1000]
@@ -433,6 +437,7 @@ def render_space_webpage(label):
     try:
         space = WebNewformSpace.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
+        print("3 threw the 404")
         return abort(404, err.args)
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
@@ -452,6 +457,7 @@ def render_full_gamma1_space_webpage(label):
     try:
         space = WebGamma1Space.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
+        print("4 threw the 404")
         return abort(404, err.args)
     info={}
     set_info_funcs(info)
@@ -474,6 +480,7 @@ def mf_data(label):
         space_label = ".".join(slabel[:3])
         ocode = db.smf_samples.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
+            print("5 threw the 404")
             return abort(404, f"{label} not in database")
         tables = ["smf_samples", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
         labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
@@ -484,6 +491,7 @@ def mf_data(label):
         space_label = ".".join(slabel[:3])
         ocode = db.smf_samples.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
+            print("6 threw the 404")
             return abort(404, f"{label} not in database")
         tables = ["smf_samples", "mf_hecke_nf", "mf_newspaces", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
         labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
@@ -492,6 +500,7 @@ def mf_data(label):
     elif len(slabel) == 3:
         ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
         if ocode is None:
+            print("7 threw the 404")
             return abort(404, f"{label} not in database")
         tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits", "mf_hecke_newspace_traces"]
         labels = [label, label, label, ocode]
@@ -503,25 +512,26 @@ def mf_data(label):
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
     else:
+        print("8 threw the 404")
         return abort(404, f"Invalid label {label}")
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
 
-@smf.route("/<level>/")
-def by_url_level(level):
-    if not POSINT_RE.match(level):
-        try:
-            return redirect(url_for_label(level), code=301)
-        except ValueError:
-            flash_error("%s is not a valid newform or space label", level)
-            return redirect(url_for(".index"))
-    info = to_dict(request.args, search_array=SMFSearchArray())
-    if 'level' in info:
-        return redirect(url_for('.index', **request.args), code=307)
-    else:
-        info['level'] = level
-    return newform_search(info)
+#@smf.route("/<level>/")
+#def by_url_level(level):
+#    if not POSINT_RE.match(level):
+#        try:
+#            return redirect(url_for_label(level), code=301)
+#        except ValueError:
+#            flash_error("%s is not a valid newform or space label", level)
+#            return redirect(url_for(".index"))
+#    info = to_dict(request.args, search_array=SMFSearchArray())
+#    if 'level' in info:
+#        return redirect(url_for('.index', **request.args), code=307)
+#    else:
+#        info['level'] = level
+#    return newform_search(info)
 
 @smf.route("/<int:level>/<int:weight>/")
 def by_url_full_gammma1_space_label(level, weight):
@@ -539,9 +549,15 @@ def by_url_space_conreylabel(level, weight, conrey_index):
     label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index))
     return redirect(url_for_label(label), code=301)
 
-@smf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
-def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
-    label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
+@smf.route("/<level_subgroup>/<int:level>/<int:weight>/<hecke_orbit>/")
+def by_url_newform_label(level_subgroup, level, weight, hecke_orbit):
+    label = ".".join(map(str, [level_subgroup, level, weight, hecke_orbit]))
+    return render_newform_webpage(label)
+
+# Backward compatibility from before 2022
+@smf.route('/<label>')
+@smf.route('/<label>/')
+def by_url_label(label):
     return render_newform_webpage(label)
 
 # Backward compatibility from before 2018
@@ -554,9 +570,11 @@ def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
 @smf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
 def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embedding_label):
     if embedding_label.count('.') != 1:
+        print("9 threw the 404")
         return abort(404, "Invalid embedding label: periods")
     conrey_index, embedding = embedding_label.split('.')
     if not (conrey_index.isdigit() and embedding.isdigit()):
+        print("10 threw the 404")
         return abort(404, "Invalid embedding label: not integers")
     return redirect(url_for("smf.by_url_embedded_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
 
@@ -564,6 +582,7 @@ def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embeddi
 @smf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
 def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
     if conrey_index <= 0 or embedding <= 0:
+        print("11 threw the 404")
         return abort(404, "Invalid embedding label: negative values")
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
@@ -573,6 +592,8 @@ def url_for_label(label):
     if label == "random":
         return url_for("smf.random_form")
     if not label:
+        print("12 threw the 404")
+        raise Exception("where are we?")
         return abort(404, "Invalid label")
 
     slabel = label.split(".")
@@ -587,6 +608,7 @@ def url_for_label(label):
     elif len(slabel) == 1:
         func = "smf.by_url_level"
     else:
+        print("13 threw the 404")
         return abort(404, "Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
@@ -808,63 +830,69 @@ def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
 
 newform_columns = SearchColumns([
-    LinkCol("label", "smf.label", "Label", url_for_label, default=True),
-    MathCol("level", "smf.level", "Level"),
-    MathCol("weight", "smf.weight", "Weight"),
-    MultiProcessedCol("character", "smf.character", "Char",
-                      ["level", "char_orbit_label"],
-                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
-                      short_title="character"),
-    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
-                      ["char_conductor", "prim_orbit_index"],
-                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
-                      short_title="primitive character"),
-    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
-    MathCol("dim", "smf.dimension", "Dim", default=True, align="right", short_title="dimension"),
-    MathCol("relative_dim", "smf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
+#    LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
+#    MathCol("level", "mf.siegel.level", "Level"),
+#     MathCol("name", "mf.siegel.name", "Name", default=True),
+#     MathCol("collection", "mf.siegel.collection", "Collection", ["name", "collection"], default=True),
+     MultiProcessedCol("name", None, "Label", ["collection", "name"],
+                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
+     MathCol("degree", "mf.siegel.degree", "Degree", default=True),
+     MathCol("weight", "mf.siegel.weight", "Weight", default=True),
+#    MultiProcessedCol("character", "smf.character", "Char",
+#                      ["level", "char_orbit_label"],
+#                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
+#                      short_title="character"),
+#    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
+#                      ["char_conductor", "prim_orbit_index"],
+#                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
+#                      short_title="primitive character"),
+#    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
+#    MathCol("dim", "smf.dimension", "Dim", default=True, align="right", short_title="dimension"),
+#    MathCol("relative_dim", "smf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
-    MultiProcessedCol("field", "smf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
-    ProcessedCol("projective_image", "smf.projective_image", "Image",
-                 lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
-                 contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
-                 default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
-                 align="center", short_title="projective image"),
-    MultiProcessedCol("cm", "smf.self_twist", "CM",
-                      ["is_cm", "cm_discs"],
-                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
-                      short_title="CM",
-                      default=True),
-    MultiProcessedCol("rm", "smf.self_twist", "RM",
-                      ["is_rm", "rm_discs"],
-                      lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
-                      contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
-                      short_title="RM",
-                      default=True),
-    CheckCol("is_self_dual", "smf.selfdual", "Self-dual"),
-    MathCol("inner_twist_count", "smf.inner_twist_count", "Inner twists"),
-    MathCol("analytic_rank", "smf.analytic_rank", "Rank*"),
-    ColGroup("traces", "smf.trace_form", "Traces",
-             [_trace_col(i) for i in range(4)],
-             default=True),
-    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
+#    MultiProcessedCol("field", "smf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
+#    ProcessedCol("projective_image", "smf.projective_image", "Image",
+#                 lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
+#                 contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
+#                 default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
+#                 align="center", short_title="projective image"),
+#    MultiProcessedCol("cm", "smf.self_twist", "CM",
+#                      ["is_cm", "cm_discs"],
+#                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
+#                      short_title="CM",
+#                      default=True),
+#    MultiProcessedCol("rm", "smf.self_twist", "RM",
+#                      ["is_rm", "rm_discs"],
+#                      lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
+#                      contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
+#                      short_title="RM",
+#                      default=True),
+#    CheckCol("is_self_dual", "smf.selfdual", "Self-dual"),
+#    MathCol("inner_twist_count", "smf.inner_twist_count", "Inner twists"),
+#    MathCol("analytic_rank", "smf.analytic_rank", "Rank*"),
+#    ColGroup("traces", "smf.trace_form", "Traces",
+#             [_trace_col(i) for i in range(4)],
+#             default=True),
+#    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
 #    ColGroup("atkin_lehner", "smf.atkin-lehner", "A-L signs",
 #             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
 #             contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
-    ProcessedCol("fricke_eigenval", "smf.fricke", "Fricke sign",
-                 lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
-                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
-    ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
-                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
-    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
-    MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
-                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
-                      default=True)],
+#    ProcessedCol("fricke_eigenval", "smf.fricke", "Fricke sign",
+#                 lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
+#                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
+#    ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
+#                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
+#    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
+#    MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
+#                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
+#                      default=True)],
+    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'collection', 'fdeg', 'field', 'field_poly', 'type'],
+    ['degree', 'weight', 'collection', 'fdeg', 'field', 'field_poly',
+     'type', 'name'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_samples,
-             template='smf_search_results.html',
              title='Siegel newform search results',
              err_title='Siegel newform Search Input Error',
              columns=newform_columns,
@@ -876,7 +904,6 @@ newform_columns = SearchColumns([
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list)
-
 def newform_search(info, query):
     print(info)
     newform_parse(info, query)
