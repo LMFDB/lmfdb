@@ -1,0 +1,52 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>Below are the dimensions of spaces of {{KNOWL("mf.siegel.vector_valued",title="vector valued Siegel modular forms")}} with full {{KNOWL("group.sp2gr",title="$\mathrm{Sp}(4, \mathbb{Z})$")}} level structure.</p>
+
+<h2>Featured Examples</h2>
+
+<p><a href="{{url_for('.by_label',label='Sp4Z.20_Ups')}}">$\Upsilon_{20}$</a>: the {{KNOWL("mf.siegel.nonlift",title="nonlift")}} of lowest weight </p>
+<p><a href="{{url_for('.by_label',label='Sp4Z.24_Ups_I')}}">$\Upsilon_{24a}$</a>, <a href="{{url_for('.by_label',label='Sp4Z.24_Ups_II')}}">$\Upsilon_{24b}$</a>: two rational eigenforms of full level  in a two-dimensional space.</p>
+
+<h2>Featured Spaces</h2>
+
+<span style="padding:3em"><a href="{{url_for('.by_label',label='Sp4Z')}}">$M_k(\mathrm{Sp}(4, \mathbb{Z}))$</a></span>
+<span style="padding:3em"><a href="{{url_for('.by_label',label='Sp4Z_2')}}">$M_{k,2}(\mathrm{Sp}(4, \mathbb{Z}))$</a></span>
+
+<h2>Dimension Table</h2>
+
+{% if not info.error %}
+<table class="ntdata">
+  <thead>
+    <tr align="center">
+      <th class="spaceleft">&nbsp;k &#10189; j</th>
+      {% for j in info.dim_args.j_range %}
+      <th class="space" style="text-align:center"> {{j}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% for k in info.dim_args.k_range %}
+  <tr>
+    <th class="left"> {{ k }} </th>
+    {% for j in info.dim_args.j_range %}
+    <td class="center">{% if info.table[k][j]>0 %} <a href="./{{k}}/{{j}}/">{{info.table[k][j] }}</a> {% else %} 0 {% endif%} </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+{% else %}
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red"><i>Please modify weight range below</i></span>
+
+{% endif %}
+
+<h4> Enter a new range of weights for dimension table:</h4>
+
+<form id="dimensionForm" action="." method="get">
+<span>$k$: <input name="k" size=10 value="{{info.args.k}}" placeholder="10-20"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span>$j$: <input name="j" size=10 value="{{info.args.j}}" placeholder="0-20"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" value="submit">Recompute table</button>
+</form>
+
+{% endblock %}

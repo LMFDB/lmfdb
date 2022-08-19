@@ -1,0 +1,56 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.forms|count > 0 %}
+<h2>Available samples</h2>
+{% set KNOWL_ID = "mf.siegel.extent.%s"|format(info.family.name)|lower %}
+{{ KNOWL_INC(KNOWL_ID, title='') }}
+
+<div class="box1">
+  <table>
+    <thead>
+      <tr><th>Weight</th><th>Galois orbits (number of forms)</th></tr>
+    </thead>
+    {% for wt,forms1 in info.forms|sort %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+      <td>{{ wt }}</td>
+      <td>
+    {% for form,dim in forms1|sort %}
+    <a style="display: inline;" href="{{ url_for('.by_label',label=info.family.name+'.'+form) }}">{{ form }} ({{ dim }})</a>&nbsp;&nbsp;
+    {% endfor %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+{% endif %}
+
+{% if info.family.computes_dimensions() %}
+<h2>Dimension table of spaces of {{KNOWL('mf.siegel.degree',title='degree '+info.family.degree|string)}} {{KNOWL('mf.siegel',title='Siegel modular forms')}}</h2>
+{% include 'includes/dimension_table.html' %}
+
+<h4> Enter a new range of weights for dimension table:</h4>
+
+<form action="." method="get">
+
+<span>$k$: <input name="k" size=10 value="{{info.args.k}}" placeholder="{{info.family.dim_args_default['k']}}"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+
+{% if 'j' in info.family.dimension_desc()['args'] %}
+<span>$j$: <input name="j" size=10 value="{{info.args.j}}" placeholder="{{info.family.dim_args_default['j']}}"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+{% endif %}
+
+<button type="submit" value="submit">Recompute table</button>
+
+</form>
+
+{% endif %}
+
+<br>
+{% set KNOWL_ID = "mf.siegel.family.%s"|format(info.family.name)|lower %}
+{{ KNOWL_INC(KNOWL_ID, title=knowl_title(KNOWL_ID)) }}
+
+{% endblock %}
+
+
+
