@@ -144,7 +144,7 @@ def source():
     bread = bread_prefix() + [('Source', ' ')]
     return render_template("multi.html", kids=['rcs.source.nf',
                                                'rcs.ack.nf',
-                                               'rcs.ack.nf'],
+                                               'rcs.cite.nf'],
         title=t, bread=bread, learnmore=learnmore)
 
 
