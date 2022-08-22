@@ -39,7 +39,7 @@ from lmfdb.sato_tate_groups.main import st_display_knowl
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
-
+ALPHACAP_RE = re.compile("^[A-Z]+$")
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
 ETAQUOTIENTS = yaml.load(open(os.path.join(_curdir, "eta.yaml")),
@@ -106,29 +106,17 @@ def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
     else:
         return field_display_gen(nf_label, poly, disc, truncate=16)
 
-# Since right now we do not have this data, we compute the level
-# (and the type of level subgroup) from the collection given
-def compute_level_from_collection(collection):
-    if collection == "Sp8Z":
-        return 1
-
-# at the moment only deal with trivial character
-def char_order(mf):
-    return 1
-    
 def display_AL(info):
     results = info["results"]
     print(results)
     if not results:
         return False
-    # N = results[0]['level']
-    N = compute_level_from_collection(results[0]['collection'])
-    if not all(compute_level_from_collection(mf['collection']) == N
-               for mf in results):
+    N = results[0]['level']
+    if not all(mf['level'] == N for mf in results):
         return False
     if N == 1:
         return False
-    return all(char_order(mf) == 1 for mf in results)
+    return all(mf['char_order'] == 1 for mf in results)
 
 def display_Fricke(info):
     return any(char_order(mf) == 1 for mf in info["results"])
@@ -169,8 +157,7 @@ def display_ALdims(level, weight, al_dims):
         return ''
 
 def set_info_funcs(info):
-#    info["mf_url"] = lambda mf: url_for_label(mf['label'])
-    info["mf_url"] = lambda mf : ".".join([mf['collection'][0], mf['name']])
+    info["mf_url"] = lambda mf: url_for_label(mf['label'])
 
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
@@ -586,7 +573,7 @@ def by_url_space_label(degree, family, level, weight, char_orbit_label):
     label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
     return render_space_webpage(label)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_orbit):
     valid_weight = check_valid_weight(weight, degree)
     if not valid_weight[0]:
@@ -619,6 +606,7 @@ def url_for_label(label):
     if not label:
         return abort(404, "Invalid label")
 
+    print("label=", label)
     slabel = label.split(".")
     if (len(slabel) >= 8) and (slabel[-4].isalpha()):
         func = "smf.by_url_embedded_newform_label"
@@ -636,11 +624,23 @@ def url_for_label(label):
         func = "smf.by_url_degree"
     else:
         return abort(404, "Invalid label")
-    keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
-    keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
-    for i in range (len(slabel)):
-        if not keytypes[i].match(slabel[i]):
+    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+    if not POSINT_RE.match(slabel[0]):
+        raise ValueError("Invalid label")  
+    keytypes_start = [POSINT_RE, ALPHACAP_RE, POSINT_RE]
+    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    if len(keytypes_start)+len(keytypes_end)+int(slabel[0]) < len(slabel):
+        raise ValueError("Invalid label")
+    for i in range (len(keytypes_start)):
+        if not keytypes_start[i].match(slabel[i]):
             raise ValueError("Invalid label")
+    idx = len(keytypes_start)
+    while POSINT_RE.match(slabel[idx]):
+        idx += 1
+    for i in range (len(slabel)-idx):
+        if not keytypes_end[i].match(slabel[i+idx]):
+            raise ValueError("Invalid label")
+    slabel = slabel[:len(keytypes_start)] + ['.'.join(slabel[len(keytypes_start):idx])] + slabel[idx:]
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
     return url_for(func, **kwds)
 
@@ -856,12 +856,12 @@ def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
 
 newform_columns = SearchColumns([
-#    LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
-#    MathCol("level", "mf.siegel.level", "Level"),
+    LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
+    MathCol("level", "mf.siegel.level", "Level"),
 #     MathCol("name", "mf.siegel.name", "Name", default=True),
 #     MathCol("collection", "mf.siegel.collection", "Collection", ["name", "collection"], default=True),
-     MultiProcessedCol("name", None, "Label", ["collection", "name"],
-                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
+#     MultiProcessedCol("name", None, "Label", ["collection", "name"],
+#                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
      MathCol("degree", "mf.siegel.degree", "Degree", default=True),
      MathCol("weight", "mf.siegel.weight", "Weight", default=True),
 #    MultiProcessedCol("character", "smf.character", "Char",
@@ -914,8 +914,7 @@ newform_columns = SearchColumns([
 #                      default=True)],
     ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'collection', 'dim', 'field', 'field_poly',
-     'type', 'name'],
+    ['degree', 'weight', 'family', 'dim', 'field_disc', 'field_poly', 'label'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
