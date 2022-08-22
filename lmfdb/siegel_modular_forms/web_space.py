@@ -20,13 +20,15 @@ def valid_gamma1(label):
 
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
-    links = [('level', 'Level %s', 'cmf.by_url_level'),
-             ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
-             ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
-             ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
+    links = [('degree', 'Degree %s', 'smf.by_url_degree'),
+             ('family', 'Family %s', 'smf.by_url_family'),
+             ('level', 'Level %s', 'smf.by_url_level'),
+             ('weight', 'Weight %s', 'smf.by_url_full_space_label'),
+             ('char_orbit_label', 'Character orbit %s', 'smf.by_url_space_label'),
+             ('hecke_orbit', 'Newform orbit %s', 'smf.by_url_newform_label'),
+             ('embedding_label', 'Embedding %s', 'smf.by_url_newform_conrey5')]
     bread = [('Modular forms', url_for('modular_forms')),
-             ('Classical', url_for("cmf.index"))]
+             ('Classical', url_for("smf.index"))]
     if 'other' in kwds:
         if isinstance(kwds['other'], str):
             return bread + [(kwds['other'], ' ')]

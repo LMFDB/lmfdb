@@ -506,16 +506,16 @@ FAMILY_DICT = {
 
 def check_valid_family(family):
     if family not in FAMILY_DICT.values():
-        return (false, "Invalid family label - {family}")
-    return (true, "")
+        return (False, "Invalid family label - {family}")
+    return (True, "")
 
 def check_valid_weight(weight, degree):
     if weight.count('.') >= degree:
         return (false, "Invalid weight: vector length should be at most the degree")
     weight_vec = weight.split('.')
     if not all([w.isdigit() for w in weight_vec]):
-        return (false, "Invalid weight: not integers")
-    return (true, "")
+        return (False, "Invalid weight: not integers")
+    return (True, "")
 
 @smf.route("/<degree>/")
 def by_url_degree(degree):
@@ -606,7 +606,6 @@ def url_for_label(label):
     if not label:
         return abort(404, "Invalid label")
 
-    print("label=", label)
     slabel = label.split(".")
     if (len(slabel) >= 8) and (slabel[-4].isalpha()):
         func = "smf.by_url_embedded_newform_label"
@@ -771,7 +770,15 @@ def common_parse(info, query, na_check=False):
     parse_ints(info, query, 'level', name="Level")
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
-    parse_ints(info, query, 'weight', name="Weight")
+    # parse_ints(info, query, 'weight', name="Weight")
+    if 'weight' in info:
+        print("info['weight']=", info['weight'])
+        print("info['weight'][0]=", info['weight'][0])
+#        print("list(info['weight'])=", list(eval(info['weight'])))
+        if info['weight'][0] in ['(', '[']:
+            query['weight_alt'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
+            print("query['weight_alt']=", query['weight_alt'])
+        query['weight_alt'] = [int(info['weight'])]
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
@@ -813,6 +820,7 @@ def parse_discriminant(d, sign = 0):
 
 def newform_parse(info, query):
     common_parse(info, query)
+    parse_ints(info, query, 'degree')
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
     parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
@@ -864,6 +872,7 @@ newform_columns = SearchColumns([
 #                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
      MathCol("degree", "mf.siegel.degree", "Degree", default=True),
      MathCol("weight", "mf.siegel.weight", "Weight", default=True),
+     MathCol("weight_alt", "mf.siegel.weight", "Weight (alt.)", default=True),
 #    MultiProcessedCol("character", "smf.character", "Char",
 #                      ["level", "char_orbit_label"],
 #                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
@@ -909,12 +918,12 @@ newform_columns = SearchColumns([
 #    ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
 #                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
 #    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
-#    MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
-#                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
-#                      default=True)],
-    ],
+   MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
+                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
+                      default=True)],
+#    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'dim', 'field_disc', 'field_poly', 'label'],
+    ['degree', 'weight', 'family', 'dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -930,9 +939,7 @@ newform_columns = SearchColumns([
              bread=get_search_bread,
              learnmore=learnmore_list)
 def newform_search(info, query):
-    print(info)
     newform_parse(info, query)
-    print(query)
     set_info_funcs(info)
 
 def trace_postprocess(res, info, query, spaces=False):
@@ -1492,8 +1499,8 @@ class SMFSearchArray(SearchArray):
     sort_knowl = 'smf.sort_order'
     _sort = [
 #        ('', 'analytic conductor', ['analytic_conductor', 'level']),
-        ('degree', 'degree', ['degree', 'level_subgroup']),
-        ('level_subgroup', 'level_subgroup', ['level_subgroup', 'level']),
+        ('degree', 'degree', ['degree', 'family']),
+        ('family', 'family', ['family', 'level']),
         ('level', 'level', ['level', 'weight']),
         ('weight', 'weight', ['weight', 'level']),
 #        ('character', 'character', ['level', 'char_orbit_index', 'weight']),
@@ -1540,12 +1547,13 @@ class SMFSearchArray(SearchArray):
             example='2',
             example_span='2, 1-4')
 
-        level_subgroup = SelectBox(
-            name='level_subgroup',
-            label='Level subgroup',
+        family = SelectBox(
+            name='family',
+            label='Family',
             options=[('paramodular', 'paramodular'),
                      ('Siegel', 'Siegel'),
-                     ('principal', 'principal')],      
+                     ('principal', 'principal'),
+                     ('full', 'full')],      
             width=110)
         
         level_quantifier = SelectBox(
@@ -1770,7 +1778,7 @@ class SMFSearchArray(SearchArray):
 
         self.browse_array = [
             [degree],
-            [level_subgroup, level],
+            [family, level],
             [weight]
 #            [level_primes, character],
 #            [char_order, char_primitive],
@@ -1783,20 +1791,20 @@ class SMFSearchArray(SearchArray):
 #            [results, projective_image_type]]
 ]
         self.refine_array = [
-            [degree, level_subgroup, level, weight]
+            [degree, family, level, weight]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, coefficient_field],
 #            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
-            [degree, level_subgroup, level, weight]
+            [degree, family, level, weight]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
-            [degree, level_subgroup, level, weight]
+            [degree, family, level, weight]
 #            [level, weight, analytic_conductor, Nk2, hdim],
 #            [level_primes, character, char_primitive, char_order, hnum_newforms]
         ]

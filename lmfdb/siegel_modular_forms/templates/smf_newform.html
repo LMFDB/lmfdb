@@ -5,17 +5,17 @@
 
 <!-- Hecke field and algebraic q-expansion data -->
 
-<h2> {{KNOWL('cmf.newspace',title='Newspace')}} parameters </h2>
+<h2> {{KNOWL('mf.siegel.newspace',title='Newspace')}} parameters </h2>
 
 <table>
   <tr>
-    <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
+    <td> {{ KNOWL('mf.siegel.level', title='Level') }}: </td>
     <td> \( N \) </td>
     <td>\(=\)</td>
     <td>{{ newform.factored_level }}</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
+    <td> {{ KNOWL('mf.siegel.weight', title='Weight') }}: </td>
     <td> \( k \) </td>
     <td>\(=\)</td>
     <td>\( {{ newform.weight }} \)</td>
@@ -38,100 +38,43 @@
   </tr>
   {% endif %}
   <tr>
-    <td> {{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}: </td>
-    <td>\({{ info.display_float(newform.analytic_conductor, 12, 'round') }}\)</td>
-  </tr>
-  {% if newform.has_analytic_rank %}
-  <tr>
-    <td> {{ KNOWL('cmf.analytic_rank', title='Analytic rank') }}: </td>
-    <td>\({{ newform.analytic_rank }}\){% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
-  </tr>
-  {% endif %}
-  <tr>
-    <td> {{ KNOWL('cmf.dimension', title='Dimension') }}: </td>
+    <td> {{ KNOWL('mf.siegel.dimension', title='Dimension') }}: </td>
     <td>\({{ newform.dim }}\)</td>
   </tr>
   {% if newform.char_degree > 1 and newform.rel_dim > 1 %}
   <tr>
-    <td> {{ KNOWL('cmf.relative_dimension', title='Relative dimension') }}: </td>
+    <td> {{ KNOWL('mf.siegel.relative_dimension', title='Relative dimension') }}: </td>
     <td>\({{ newform.rel_dim }}\) over {{ newform.cyc_display() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.field_poly and newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <tr>
-    <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
+    <td> {{ KNOWL('mf.siegel.coefficient_field',title='Coefficient field') }}: </td>
     <td> {{ newform.field_display() | safe }}</td>
   </tr>
   <tr>
-  	<td> {{ KNOWL('cmf.defining_polynomial',title='Defining polynomial') }}: </td>
+  	<td> {{ KNOWL('mf.siegel.defining_polynomial',title='Defining polynomial') }}: </td>
   	<td>{{ newform.field_poly_display | safe }}</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
+    <td> {{ KNOWL('mf.siegel.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> {{ newform.ring_display() | safe }}</td>
   </tr>
   {% elif newform.dim == 1 %}
   <tr>
-    <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
+    <td> {{ KNOWL('mf.siegel.coefficient_field',title='Coefficient field') }}: </td>
     <td> \(\mathbb{Q}\)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
+    <td> {{ KNOWL('mf.siegel.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> \(\mathbb{Z}\)</td>
   </tr>
   {% endif %}
   {% if newform.hecke_ring_index_factored %}
   <tr>
-    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
+    <td> {{ KNOWL('mf.siegel.coefficient_ring',title='Coefficient ring index') }}: </td>
     <td> {{ newform.ring_index_display() | safe }}</td>
-  </tr>
-  {% endif %}
-  <tr>
-    <td> {{ KNOWL('cmf.twist_minimal',title='Twist minimal') }}: </td>
-    <td> {{ newform.twist_minimal_display() | safe }}</td>
-  </tr>
-  {% if newform.char_order == 1 %}
-  <tr>
-    <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
-    <td>\({{ newform.fricke_eigenval }}\)</td>
-  </tr>
-  {% endif %}
-  {% if newform.projective_image %}
-  <tr>
-    <td>{{ KNOWL('cmf.projective_image', title='Projective image')}}:</td>
-    <td>{{ newform.projective_image_knowl() | safe }}</td>
-  </tr>
-  {% endif %}
-  {% if newform.projective_field %}
-  <tr>
-    <td>{{ KNOWL('cmf.projective_field', title='Projective field')}}:</td>
-    <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
-  </tr>
-  {% endif %}
-  {% if newform.artin_image %}
-  <tr>
-    <td>{{ KNOWL('cmf.artin_image', title='Artin image') }}:</td>
-    <td>{{ newform.artin_image_knowl() | safe }}</td>
-  </tr>
-  {% else %}
-    {% if newform.artin_degree %}
-    <tr>
-      <td>{{ KNOWL('cmf.artin_image', title='Artin image size') }}:</td>
-      <td>\({{ newform.artin_degree }}\)</td>
-    </tr>
-    {% endif %}
-  {% endif %}
-  {% if newform.artin_field %}
-  <tr>
-    <td>{{ KNOWL('cmf.artin_field', title='Artin field')}}:</td>
-    <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
-  </tr>
-  {% endif %}
-  {% if newform.weight > 1 %}
-  <tr>
-    <td>{{ KNOWL('cmf.sato_tate', title='Sato-Tate group') }}: </td>
-    <td>{{ newform.sato_tate_display() | safe }}</td>
   </tr>
   {% endif %}
 </table>
@@ -142,28 +85,28 @@
 
 <table>
   <tr>
-    <td>{{ KNOWL('cmf.embedding_label', title='Embedding label') }}</td>
+    <td>{{ KNOWL('mf.siegel.embedding_label', title='Embedding label') }}</td>
     <td></td>
     <td></td>
     <td> {{newform.embedding_label}}</td>
   </tr>
   {% if newform.embedding_root and newform.dim > 1 %}
   <tr>
-    <td>{{ KNOWL('cmf.root', title='Root') }}</td>
+    <td>{{ KNOWL('mf.siegel.root', title='Root') }}</td>
     <td></td>
     <td></td>
     <td>\({{newform.embedding_root}}\) of defining polynomial</td>
   </tr>
   {% endif %}
   <tr>
-    <td>{{ KNOWL('cmf.character', title='Character') }}</td>
+    <td>{{ KNOWL('mf.siegel.character', title='Character') }}</td>
     <td>\(\chi\)</td>
     <td>\(=\)</td>
     <td>{{ newform.char_conrey_link | safe}}</td>
   </tr>
 {% if newform.embedding_label != newform.dual_label %}
   <tr>
-    <td>{{ KNOWL('cmf.dualform', 'Dual form') }}</td>
+    <td>{{ KNOWL('mf.siegel.dualform', 'Dual form') }}</td>
     <td></td>
     <td></td>
     <td> {{ newform.dual_link | safe }} </td>
@@ -184,15 +127,15 @@ function show_qexp(qstyle) {
 </script>
 {% if newform.has_exact_qexp or (newform.embedding_label and newform.has_complex_qexp) %}
 
-<h2 id="qexp-anchor"> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
+<h2 id="qexp-anchor"> {{ KNOWL('mf.siegel.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp-div">
   {% if newform.dim > 1  and not newform.embedding_label %}
     <p>
       {% if not newform.hecke_ring_cyclotomic_generator %}
       Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() | safe }}.
-      We also show the integral \(q\)-expansion of the {{ KNOWL('cmf.trace_form',title='trace form') }}.
+      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.siegel.trace_form',title='trace form') }}.
       {% else %}
-      The \(q\)-expansion and {{ KNOWL('cmf.trace_form',title='trace form') }} are shown below.
+      The \(q\)-expansion and {{ KNOWL('mf.siegel.trace_form',title='trace form') }} are shown below.
       {% endif %}
     </p>
   {% endif %}
@@ -223,13 +166,13 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.show_hecke_ring_basis %}
-    <p> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}</p>
+    <p> Basis of {{ KNOWL('mf.siegel.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
 </div>
 {% else %}
-<h2> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
-<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('cmf.trace_form', title='trace expansion') }}.</p>
+<h2> {{ KNOWL('mf.siegel.q-expansion',title='$q$-expansion')}}</h2>
+<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('mf.siegel.trace_form', title='trace expansion') }}.</p>
 
 <form id="qexp">
   <table><tr><td>
@@ -250,7 +193,7 @@ function show_qexp(qstyle) {
 {% endif %}
 
 {% if info.eta_quotient %}
-<h2>Expression as an {{KNOWL('cmf.eta_quotient', title='eta quotient')}}</h2>
+<h2>Expression as an {{KNOWL('mf.siegel.eta_quotient', title='eta quotient')}}</h2>
 <p>\(f(z) = {{ info.eta_quotient }}\)</p>
 {% endif %}
 
