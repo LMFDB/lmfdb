@@ -37,9 +37,13 @@ from lmfdb.siegel_modular_forms.web_space import (
 from lmfdb.siegel_modular_forms.download import SMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 
+
+
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
 ALPHACAP_RE = re.compile("^[A-Z]+$")
+
+
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
 ETAQUOTIENTS = yaml.load(open(os.path.join(_curdir, "eta.yaml")),
