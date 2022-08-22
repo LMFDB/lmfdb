@@ -63,28 +63,18 @@ def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 @cached_function
-def Nk2_bound(nontriv=None):
-    if nontriv:
-        return db.smf_samples.max('Nk2',{'char_order':{'$ne':1}})
-    else:
-        return db.smf_samples.max('Nk2')
-@cached_function
 def weight_bound(nontriv=None):
     if nontriv:
-        return db.smf_samples.max('weight',{'char_order':{'$ne':1}})
+        return db.smf_newforms.max('weight',{'char_order':{'$ne':1}})
     else:
-        return db.smf_samples.max('weight')
+        return db.smf_newforms.max('weight')
 
 @cached_function
 def level_bound(nontriv=None):
-    # At the moment, level is not stored in the database
-    # (We only have "collection"). We therefore return the maximal level
-    # hardcoded until we fix that.
-    return 587
     if nontriv:
-        return db.smf_samples.max('level',{'char_order':{'$ne':1}})
+        return db.smf_newforms.max('level',{'char_order':{'$ne':1}})
     else:
-        return db.smf_samples.max('level')
+        return db.smf_newforms.max('level')
 
 #############################################################################
 # The following functions are used for processing columns in search results #
@@ -204,7 +194,7 @@ def index():
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
-    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
+    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound()[0] )
     info["level_list"] = ('1', '2-10', '11-100', '101-%d' % level_bound() )
     return render_template("smf_browse.html",
                            info=info,
@@ -215,20 +205,20 @@ def index():
 @smf.route("/random/")
 @redirect_no_cache
 def random_form():
-    label = db.smf_samples.random()
+    label = db.smf_newforms.random()
     return url_for_label(label)
 
 @smf.route("/random_space/")
 @redirect_no_cache
 def random_space():
-    label = db.mf_newspaces.random()
+    label = db.smf_newspaces.random()
     return url_for_label(label)
 
 @smf.route("/interesting_newforms")
 def interesting_newforms():
     return interesting_knowls(
         "smf",
-        db.smf_samples,
+        db.smf_newforms,
         url_for_label,
         regex=LABEL_RE,
         title="Some interesting newforms",
@@ -474,101 +464,134 @@ def render_full_gamma1_space_webpage(label):
 @smf.route("/data/<label>")
 def mf_data(label):
     slabel = label.split(".")
-    if len(slabel) == 6:
+    if (len(slabel) >= 8) and (slabel[-4][0].isalpha()):
         emb_label = label
-        form_label = ".".join(slabel[:4])
-        space_label = ".".join(slabel[:3])
-        ocode = db.smf_samples.lookup(form_label, "hecke_orbit_code")
+        form_label = ".".join(slabel[:-2])
+        space_label = ".".join(slabel[:-3])
+        ocode = db.smf_newforms.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
             print("5 threw the 404")
             return abort(404, f"{label} not in database")
-        tables = ["smf_samples", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
-        labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
-        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        tables = ["smf_newforms", "smf_hecke_cc", "smf_newspaces", "smf_hecke_charpolys", "smf_hecke_traces"]
+        labels = [form_label, emb_label, space_label, ocode, ocode]
+        label_cols = ["label", "label", "label", "hecke_orbit_code", "hecke_orbit_code"]
         title = f"Embedded newform data - {label}"
-    elif len(slabel) == 4:
+    elif (len(slabel) >= 6) and (slabel[-2][0].isalpha()):
         form_label = label
-        space_label = ".".join(slabel[:3])
-        ocode = db.smf_samples.lookup(form_label, "hecke_orbit_code")
+        space_label = ".".join(slabel[:-1])
+        ocode = db.smf_newforms.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
             print("6 threw the 404")
             return abort(404, f"{label} not in database")
-        tables = ["smf_samples", "mf_hecke_nf", "mf_newspaces", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
-        labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
-        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        tables = ["smf_newforms", "smf_hecke_nf", "smf_newspaces", "smf_hecke_charpolys", "smf_hecke_traces"]
+        labels = [form_label, form_label, space_label, ocode, ocode]
+        label_cols = ["label", "label", "label", "hecke_orbit_code", "hecke_orbit_code"]
         title = f"Newform data - {label}"
-    elif len(slabel) == 3:
+    elif (len(slabel) >= 5) and (slabel[-2][0].isdigit()):
         ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
         if ocode is None:
             print("7 threw the 404")
             return abort(404, f"{label} not in database")
-        tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits", "mf_hecke_newspace_traces"]
-        labels = [label, label, label, ocode]
-        label_cols = ["label", "label", "label", "hecke_orbit_code"]
+        tables = ["smf_newspaces", "smf_subspaces", "smf_hecke_newspace_traces"]
+        labels = [label, label, ocode]
+        label_cols = ["label", "label", "hecke_orbit_code"]
         title = f"Newspace data - {label}"
-    elif len(slabel) == 2:
-        tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
+    elif (len(slabel) >= 4) and (slabel[-1][0].isdigit()):
+        tables = ["smf_allchars", "smf_allchars_subspaces"]
         labels = label
         label_cols = None
-        title = fr"$\Gamma_1$ data - {label}"
+        title = fr"Newspace data - {label}"
     else:
-        print("8 threw the 404")
         return abort(404, f"Invalid label {label}")
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
+FAMILY_DICT = {
+    'paramodular' : 'K',
+    'Siegel'      : 'S',
+    'principal'   : 'F'
+}
 
-#@smf.route("/<level>/")
-#def by_url_level(level):
-#    if not POSINT_RE.match(level):
-#        try:
-#            return redirect(url_for_label(level), code=301)
-#        except ValueError:
-#            flash_error("%s is not a valid newform or space label", level)
-#            return redirect(url_for(".index"))
-#    info = to_dict(request.args, search_array=SMFSearchArray())
-#    if 'level' in info:
-#        return redirect(url_for('.index', **request.args), code=307)
-#    else:
-#        info['level'] = level
-#    return newform_search(info)
+def check_valid_family(family):
+    if family not in FAMILY_DICT.values():
+        return (false, "Invalid family label - {family}")
+    return (true, "")
 
-@smf.route("/<int:level>/<int:weight>/")
-def by_url_full_gammma1_space_label(level, weight):
-    label = str(level)+"."+str(weight)
-    return render_full_gamma1_space_webpage(label)
+def check_valid_weight(weight, degree):
+    if weight.count('.') >= degree:
+        return (false, "Invalid weight: vector length should be at most the degree")
+    weight_vec = weight.split('.')
+    if not all([w.isdigit() for w in weight_vec]):
+        return (false, "Invalid weight: not integers")
+    return (true, "")
 
-@smf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
-def by_url_space_label(level, weight, char_orbit_label):
-    label = str(level)+"."+str(weight)+"."+char_orbit_label
+@smf.route("/<degree>/")
+def by_url_degree(degree):
+    if not POSINT_RE.match(degree):
+        try:
+            return redirect(url_for_label(degree), code=301)
+        except ValueError:
+            flash_error("%s is not a valid Siegel newform or space label", degree)
+            return redirect(url_for(".index"))
+    info = to_dict(request.args, search_array=SMFSearchArray())
+    if 'degree' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+    return newform_search(info)
+
+@smf.route("/<int:degree>/<family>/")
+def by_url_family_label(degree, family):
+    valid_family = check_valid_family(family)
+    if not valid_family[0]:
+        return abort(404, valid_family[1])
+    label = str(degree)+"."+str(family)
+    return render_family_webpage(label)
+
+@smf.route("/<int:degree>/<family>/<int:level>/")
+def by_url_level(degree, family, level):
+    valid_family = check_valid_family(family)
+    if not valid_family[0]:
+        return abort(404, valid_family[1])
+    info = to_dict(request.args, search_array=SMFSearchArray())
+    if ('degree' in info) or ('family' in info) or ('level' in info):
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['family'] = family
+        info['level'] = level
+    return newform_search(info)
+
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
+def by_url_full_space_label(degree, family, level, weight):
+    valid_family = check_valid_family(family)
+    if not valid_family[0]:
+        return abort(404, valid_family[1])
+    valid_weight = check_valid_weight(weight, degree)
+    if not valid_weight[0]:
+        return abort(404, valid_weight[1])
+    label = ".".join([str(w) for w in [degree, family, level, weight]])
+    return render_full_space_webpage(label)
+
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
+def by_url_space_label(degree, family, level, weight, char_orbit_label):
+    valid_weight = check_valid_weight(weight, degree)
+    if not valid_weight[0]:
+        return abort(404, valid_weight[1])
+    label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
     return render_space_webpage(label)
 
-# Backward compatibility from before 2018
-@smf.route("/<int:level>/<int:weight>/<int:conrey_index>/")
-def by_url_space_conreylabel(level, weight, conrey_index):
-    label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index))
-    return redirect(url_for_label(label), code=301)
-
-@smf.route("/<level_subgroup>/<int:level>/<int:weight>/<hecke_orbit>/")
-def by_url_newform_label(level_subgroup, level, weight, hecke_orbit):
-    label = ".".join(map(str, [level_subgroup, level, weight, hecke_orbit]))
+@smf.route("/<int:degree>/<family>/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
+def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_orbit):
+    valid_weight = check_valid_weight(weight, degree)
+    if not valid_weight[0]:
+        return abort(404, valid_weight[1])
+    label = ".".join(map(str, [degree, family, level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
-
-# Backward compatibility from before 2022
-@smf.route('/<label>')
-@smf.route('/<label>/')
-def by_url_label(label):
-    return render_newform_webpage(label)
-
-# Backward compatibility from before 2018
-@smf.route("/<int:level>/<int:weight>/<int:conrey_index>/<hecke_orbit>/")
-def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
-    label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index)+"."+hecke_orbit)
-    return redirect(url_for_label(label), code=301)
 
 # Utility redirect for bread and links from embedding table
-@smf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
-def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embedding_label):
+@smf.route("/<int:degree>/<family>/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
+def by_url_newform_conrey5(degree, family, level, weight, char_orbit_label, hecke_orbit, embedding_label):
     if embedding_label.count('.') != 1:
         print("9 threw the 404")
         return abort(404, "Invalid embedding label: periods")
@@ -1345,7 +1368,7 @@ class SMF_stats(StatsDisplay):
     # we stick to what we have 
     #    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
     buckets = {
-               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
+               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()[0]],
                'fdeg':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000']
 #               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
 #               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
