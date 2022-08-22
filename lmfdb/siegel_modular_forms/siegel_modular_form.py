@@ -63,11 +63,21 @@ def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 @cached_function
-def weight_bound(nontriv=None):
+def degree_bound():
+    return db.smf_newforms.max('degree')
+
+@cached_function
+def weight_bound(wt_len=1, nontriv=None):
+# TODO : There should be a way to query only those with a given cardinality
+#    if nontriv:
+#        return db.smf_newforms.max('weight',{'char_order':{'$ne':1}})
+#    else:
+#        return db.smf_newforms.max('weight')
     if nontriv:
-        return db.smf_newforms.max('weight',{'char_order':{'$ne':1}})
+        wts = db.smf_newforms.search({'char_order':{'$ne':1}}, 'weight_alt')
     else:
-        return db.smf_newforms.max('weight')
+        wts = db.smf_newforms.search({}, 'weight_alt')
+    return max([w for w in wts if len(w) == wt_len])
 
 @cached_function
 def level_bound(nontriv=None):
@@ -194,7 +204,9 @@ def index():
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
-    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound()[0] )
+    info["degree_list"] = ('2', '3-%d' % degree_bound())
+    info["weight_list"] = ('2', '3', '4', '5-8', '9-16', '17-%d' % weight_bound()[0] )
+    info["vector_weight_list"] = ('(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1]) )
     info["level_list"] = ('1', '2-10', '11-100', '101-%d' % level_bound() )
     return render_template("smf_browse.html",
                            info=info,
@@ -501,7 +513,8 @@ def mf_data(label):
 FAMILY_DICT = {
     'paramodular' : 'K',
     'Siegel'      : 'S',
-    'principal'   : 'F'
+    'principal'   : 'C',
+    'full'        : 'F'
 }
 
 def check_valid_family(family):
@@ -1356,9 +1369,10 @@ class SMF_stats(StatsDisplay):
     baseurl_func = ".index"
     # right now we don't have all these columns in our database.               
     # we stick to what we have 
-    #    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
-    buckets = {
-               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()[0]],
+    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
+               'degree':['2', '3-%d'%degree_bound()],
+               'weight':['2','3','4','5-8','9-16','17-%d'%weight_bound()[0] ],
+               'vector_weight' : ['(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1])],
                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000']
 #               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
 #               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],

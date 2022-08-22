@@ -17,8 +17,14 @@ Info was: {{info}}
 
 <table class="browse">
   <tr>
+    <td>By {{ KNOWL('mf.siegel.degree',title = "degree")}}:</td>
+    <td>{% for degree in info.degree_list %} <a href="?degree={{degree}}">{{degree}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
     <td>By {{ KNOWL('mf.siegel.weight',title = "weight")}}:</td>
     <td>{% for weight in info.weight_list %} <a href="?weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td></td>
+    <td>{% for weight in info.vector_weight_list %} <a href="?weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('mf.siegel.level', title="level")}}:</td>
     <td>{% for level in info.level_list %} <a href="?level={{level}}">{{level}}</a>&nbsp;&nbsp; {% endfor %}</td>
