@@ -1,0 +1,47 @@
+prompt:
+  sage:   'sage'
+  magma:  'magma'
+
+logo:
+  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+newforms-nontriv-char:
+  sage: |
+    D = DirichletGroup({N})
+    c = D.Element(D,vector({elt}))
+    N = Newforms(c,{k},names="a")
+  magma: |
+    D := FullDirichletGroup({N});
+    c := D!{elt};
+    S:= CuspForms(c,{k});
+    N := Newforms(S);
+
+newforms-triv-char:
+  sage: N = Newforms({N},{k},names="a")
+  magma: |
+    S := CuspForms({N},{k});
+    N := Newforms(S);
+
+f:
+  sage: f = N[{newform_number}]
+
+qexp:
+  sage: |
+    f.q_expansion() # note that sage often uses an isomorphic number field
+
+coefficient_field:
+  sage: |
+    K = f.hecke_eigenvalue_field() # note that sage often uses an isomorphic number field
+
+absolute_polynomial:
+  sage: K.absolute_polynomial()
+
+relative_polynomial:
+  sage: K.relative_polynomial()
