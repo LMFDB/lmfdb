@@ -230,7 +230,7 @@ def interesting_newforms():
 def interesting_spaces():
     return interesting_knowls(
         "smf",
-        db.mf_newspaces,
+        db.smf_newspaces,
         url_for_label,
         regex=NEWSPACE_RE,
         title="Some interesting newspaces",
@@ -362,7 +362,6 @@ def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
-        print("14 threw the 404")
         return abort(404, err.args)
 
     info = to_dict(request.args)
@@ -395,7 +394,6 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
         newform = WebNewform.by_label(newform_label,
                                       embedding_label=embedding_label)
     except (KeyError,ValueError) as err:
-        print("1 threw the 404")
         return abort(404, err.args)
     info = to_dict(request.args)
     info['display_float'] = display_float
@@ -403,7 +401,6 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
     except ValueError as err:
-        print("2 threw the 404")
         return abort(404, err.args)
     info['CC_m'] = [m]
     info['CC_n'] = [0, 1000]
@@ -427,7 +424,6 @@ def render_space_webpage(label):
     try:
         space = WebNewformSpace.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
-        print("3 threw the 404")
         return abort(404, err.args)
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
@@ -447,7 +443,6 @@ def render_full_gamma1_space_webpage(label):
     try:
         space = WebGamma1Space.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
-        print("4 threw the 404")
         return abort(404, err.args)
     info={}
     set_info_funcs(info)
@@ -470,7 +465,6 @@ def mf_data(label):
         space_label = ".".join(slabel[:-3])
         ocode = db.smf_newforms.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
-            print("5 threw the 404")
             return abort(404, f"{label} not in database")
         tables = ["smf_newforms", "smf_hecke_cc", "smf_newspaces", "smf_hecke_charpolys", "smf_hecke_traces"]
         labels = [form_label, emb_label, space_label, ocode, ocode]
@@ -481,16 +475,14 @@ def mf_data(label):
         space_label = ".".join(slabel[:-1])
         ocode = db.smf_newforms.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
-            print("6 threw the 404")
             return abort(404, f"{label} not in database")
         tables = ["smf_newforms", "smf_hecke_nf", "smf_newspaces", "smf_hecke_charpolys", "smf_hecke_traces"]
         labels = [form_label, form_label, space_label, ocode, ocode]
         label_cols = ["label", "label", "label", "hecke_orbit_code", "hecke_orbit_code"]
         title = f"Newform data - {label}"
     elif (len(slabel) >= 5) and (slabel[-2][0].isdigit()):
-        ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
+        ocode = db.smf_newspaces.lookup(label, "hecke_orbit_code")
         if ocode is None:
-            print("7 threw the 404")
             return abort(404, f"{label} not in database")
         tables = ["smf_newspaces", "smf_subspaces", "smf_hecke_newspace_traces"]
         labels = [label, label, ocode]
@@ -593,11 +585,9 @@ def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_
 @smf.route("/<int:degree>/<family>/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
 def by_url_newform_conrey5(degree, family, level, weight, char_orbit_label, hecke_orbit, embedding_label):
     if embedding_label.count('.') != 1:
-        print("9 threw the 404")
         return abort(404, "Invalid embedding label: periods")
     conrey_index, embedding = embedding_label.split('.')
     if not (conrey_index.isdigit() and embedding.isdigit()):
-        print("10 threw the 404")
         return abort(404, "Invalid embedding label: not integers")
     return redirect(url_for("smf.by_url_embedded_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
 
@@ -605,7 +595,6 @@ def by_url_newform_conrey5(degree, family, level, weight, char_orbit_label, heck
 @smf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
 def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
     if conrey_index <= 0 or embedding <= 0:
-        print("11 threw the 404")
         return abort(404, "Invalid embedding label: negative values")
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
@@ -615,23 +604,24 @@ def url_for_label(label):
     if label == "random":
         return url_for("smf.random_form")
     if not label:
-        print("12 threw the 404")
-        raise Exception("where are we?")
         return abort(404, "Invalid label")
 
     slabel = label.split(".")
-    if len(slabel) == 6:
+    if (len(slabel) >= 8) and (slabel[-4].isalpha()):
         func = "smf.by_url_embedded_newform_label"
-    elif len(slabel) == 4:
+    elif (len(slabel) >= 6) and (slabel[-2].isalpha()):
         func = "smf.by_url_newform_label"
-    elif len(slabel) == 3:
+    elif (len(slabel) >= 5) and (slabel[-1].isalpha()):
         func = "smf.by_url_space_label"
-    elif len(slabel) == 2:
-        func = "smf.by_url_full_gammma1_space_label"
-    elif len(slabel) == 1:
+    elif (len(slabel) >= 4) and (slabel[-1].isdigit()):
+        func = "smf.by_url_full_space_label"
+    elif len(slabel) == 3:
         func = "smf.by_url_level"
+    elif len(slabel) == 2:
+        func = "smf.by_url_family"
+    elif len(slabel) == 1:
+        func = "smf.by_url_degree"
     else:
-        print("13 threw the 404")
         return abort(404, "Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
@@ -648,7 +638,7 @@ def jump_box(info):
         jump = convert_spacelabel_from_conrey(jump)
     #handle direct trace_hash search
     if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
-        label = db.smf_samples.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
+        label = db.smf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
         if label:
             return redirect(url_for_label(label), 301)
         else:
@@ -656,7 +646,7 @@ def jump_box(info):
     elif jump == 'yes':
         query = {}
         newform_parse(info, query)
-        jump = db.smf_samples.lucky(query, 'label', sort = None)
+        jump = db.smf_newforms.lucky(query, 'label', sort = None)
         if jump is None:
             errmsg = "There are no newforms specified by the query %s"
             jump = query
@@ -911,11 +901,11 @@ newform_columns = SearchColumns([
 #                      default=True)],
     ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'collection', 'fdeg', 'field', 'field_poly',
+    ['degree', 'weight', 'collection', 'dim', 'field', 'field_poly',
      'type', 'name'],
     tr_class=["middle bottomlined", ""])
 
-@search_wrap(table=db.smf_samples,
+@search_wrap(table=db.smf_newforms,
              title='Siegel newform search results',
              err_title='Siegel newform Search Input Error',
              columns=newform_columns,
@@ -990,7 +980,7 @@ def set_Trn(info, query, limit=1000):
     info['download_limit'] = limit
 
 @search_wrap(template="smf_trace_search_results.html",
-             table=db.smf_samples,
+             table=db.smf_newforms,
              title='Newform search results',
              err_title='Newform search input error',
              shortcuts={'jump':jump_box,
@@ -1006,7 +996,7 @@ def trace_search(info, query):
     set_info_funcs(info)
 
 @search_wrap(template="smf_space_trace_search_results.html",
-             table=db.mf_newspaces,
+             table=db.smf_newspaces,
              title='Newspace search results',
              err_title='Newspace search input error',
              shortcuts={'jump':jump_box,
@@ -1172,7 +1162,7 @@ def dimension_form_postprocess(res, info, query):
     na_query = {}
     common_parse(info, na_query, na_check=True)
     dim_dict = {}
-    for rec in db.mf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
+    for rec in db.smf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
         N = rec['level']
         k = rec['weight']
         if (N,k) not in dim_dict:
@@ -1188,7 +1178,7 @@ def dimension_form_postprocess(res, info, query):
     return dim_dict
 
 @search_wrap(template="smf_dimension_search_results.html",
-             table=db.smf_samples,
+             table=db.smf_newforms,
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
@@ -1207,7 +1197,7 @@ def dimension_form_search(info, query):
     query['__sort__'] = []
 
 @search_wrap(template="smf_dimension_space_search_results.html",
-             table=db.mf_newspaces,
+             table=db.smf_newspaces,
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
@@ -1236,7 +1226,7 @@ space_columns = SearchColumns([
     MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "smf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
-@search_wrap(table=db.mf_newspaces,
+@search_wrap(table=db.smf_newspaces,
              title='Newspace search results',
              err_title='Newspace search input error',
              columns=space_columns,
@@ -1335,14 +1325,14 @@ class SMF_stats(StatsDisplay):
     Class for creating and displaying statistics for Siegel modular forms
     """
     def __init__(self):
-        self.nforms = comma(db.smf_samples.count())
+        self.nforms = comma(db.smf_newforms.count())
         # Right now we don't have tables for newform spaces or Hecke orbits.
         # until we do we disable self.nspaces and self.ndim
-        #self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
+        #self.nspaces = comma(db.smf_newspaces.count({'num_forms':{'$gt':0}}))
         #self.ndim = comma(db.mf_hecke_cc.count())
         # !!! WARNING : at the moment not too long, but we do not want to
         # retain this
-        self.ndim = sum([f['fdeg'] for f in db.smf_samples.search()])
+        self.ndim = sum([f['dim'] for f in db.smf_newforms.search()])
         #self.weight_knowl = display_knowl('mf.siegel.weight', title='weight')
         #self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
@@ -1362,14 +1352,14 @@ class SMF_stats(StatsDisplay):
         return r"The database currently contains %s (Galois orbits of) %s and ? nonzero %s, corresponding to %s Siegel modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
     extent_knowl = 'mf.siegel.statistics_extent'
-    table = db.smf_samples
+    table = db.smf_newforms
     baseurl_func = ".index"
     # right now we don't have all these columns in our database.               
     # we stick to what we have 
     #    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
     buckets = {
                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()[0]],
-               'fdeg':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000']
+               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000']
 #               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
 #               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
 #               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
@@ -1381,7 +1371,7 @@ class SMF_stats(StatsDisplay):
     knowls = {'level': 'mf.siegel.level',
               'weight': 'mf.siegel.weight',
               'degree' : 'mf.siegel.degree',
-              'fdeg' : 'mf.siegel.dimension'
+              'dim' : 'mf.siegel.dimension'
 #              'dim': 'mf.siegel.dimension',
 #              'relative_dim': 'mf.siegel.dimension',
 #              'char_order': 'character.dirichlet.order',
@@ -1400,7 +1390,7 @@ class SMF_stats(StatsDisplay):
 #                  'inner_twist_count': 'inner twists',
 #                  'cm_discs': 'complex multiplication',
 #                  'rm_discs': 'real multiplication'}
-        'fdeg' : 'absolute dimension'
+        'dim' : 'absolute dimension'
         }
     #     short_display = {'char_order': 'character order',
     short_display = {
@@ -1411,7 +1401,7 @@ class SMF_stats(StatsDisplay):
 #                     'rm_discs': 'RM disc',
 #                     'dim': 'abs. dimension',
 #                     'relative_dim': 'rel. dimension'}
-        'fdeg' : 'abs. dimension'
+        'dim' : 'abs. dimension'
         }
     #    formatters = {'projective_image': (lambda t: 'Unknown' if t is None else r'\(%s_{%s}\)' % (t[0], t[1:])),
     formatters = {
@@ -1439,7 +1429,7 @@ class SMF_stats(StatsDisplay):
          'proportioner': proportioners.per_col_total,
          'totaler': totaler()},
 #        {'cols': ['level', 'dim'],
-        {'cols': ['degree', 'fdeg'],
+        {'cols': ['degree', 'dim'],
          'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
 #        {'cols': ['char_order', 'relative_dim'],
@@ -1452,7 +1442,7 @@ class SMF_stats(StatsDisplay):
 #                      ('for weight 1 forms', None)],
 #         'constraint':{'weight': 1}},
 #        {'cols':'num_forms',
-#         'table':db.mf_newspaces,
+#         'table':db.smf_newspaces,
 #         'top_title': [('number of newforms', 'mf.siegel.galois_orbit'), (r'in \(S_k(N, \chi)\)', None)],
 #        'url_extras': 'search_type=Spaces&'},
 #       {'cols':'inner_twist_count'},
@@ -1471,7 +1461,7 @@ class SMF_stats(StatsDisplay):
     # right now we don't have all these columns in our database.
     # we stick to what we have
     # dynamic_cols = ['level', 'weight', 'dim', 'relative_dim', 'analytic_conductor', 'char_order', 'char_degree', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
-    dynamic_cols = ['degree', 'weight', 'fdeg']
+    dynamic_cols = ['degree', 'weight', 'dim']
 
 @smf.route("/stats")
 def statistics():
