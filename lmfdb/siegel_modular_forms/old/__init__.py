@@ -6,7 +6,6 @@ from flask import Blueprint
 
 smf_page = Blueprint('smf', __name__,
                      template_folder='templates', static_folder='static')
-smf = smf_page
 smf_logger = make_logger(smf_page)
 
 
