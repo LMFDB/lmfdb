@@ -399,7 +399,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
                 statement += " (CM)"
                 # TODO: Get the following line to work
                 #statement += " ({{ KNOWL('ag.complex_multiplication', title='CM') }})"
-        # Up next is the case of a matrix ring (trivial disciminant), with
+        # Up next is the case of a matrix ring (trivial discriminant), with
         # labels and full prettification always available:
         elif factorsQQ[0][2] == 1:
             statement += r"\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
@@ -671,7 +671,7 @@ def ratpts_table(pts,pts_v):
         return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption, colspan=tabcols)]
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
-    for i in range(0,len(pts),6):
+    for i in range(0, len(pts), 6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in spts[i:i+6]])
         if i+6 > len(pts):

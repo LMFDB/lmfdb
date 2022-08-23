@@ -27,7 +27,6 @@ def redirect_local():
 
 
 app.register_blueprint(local_fields_page, url_prefix="/padicField")
-app.register_blueprint(local_fields_page, url_prefix="/LocalNumberField")
 
 # API2 has been disabled for now
 #from lmfdb.api2.searchers import register_search_function

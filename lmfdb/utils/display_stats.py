@@ -491,17 +491,18 @@ class StatsDisplay(UniqueRepresentation):
 
         A dictionary.
 
-        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys.
+        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys:
+
         - ``value`` -- a tuple of values taken on by the given columns.
         - ``count`` -- The number of rows with that tuple of values.
         - ``query`` -- a url resulting in a list of entries with the given tuple of values.
         - ``proportion`` -- the fraction of rows having this tuple of values,
-            as a string formatted as a percentage.
+          as a string formatted as a percentage.
 
-        In the 2d case, it has two keys, ``grid`` and ``col_headers``.
+        In the 2d case, it has two keys, ``grid`` and ``col_headers``:
 
         - ``grid`` is a list of pairs, the first being a row header and the second
-            being a list of dictionaries as above.
+          being a list of dictionaries as above.
         - ``col_headers`` is a list of column headers.
         """
         if isinstance(cols, str):
@@ -630,7 +631,7 @@ class StatsDisplay(UniqueRepresentation):
             attr['row_title'] = self._short_display[cols[0]]
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
-            rows = [counts[i:i+10] for i in range(0,len(counts),10)]
+            rows = [counts[i:i+10] for i in range(0, len(counts), 10)]
             if len(rows) > max_rows:
                 short_rows = rows[:max_rows]
                 data['divs'] = [(short_rows, "short_table_" + hsh, "short"),

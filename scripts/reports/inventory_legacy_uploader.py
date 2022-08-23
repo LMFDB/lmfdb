@@ -185,9 +185,12 @@ def read_list(listfile):
 def fresh_upload(master_file_name, list_file_name):
     """Delete existing data and upload a fresh copy.
     CLOBBERS ALL EXISTING CONTENT
-      Arguments :
-      master_file_name -- path to structure file from report tool (e.g. lmfdb_structure.json)
-      list_file_name -- path to file containing names of all json files to upload (one per collection)
+
+    Arguments:
+
+    - master_file_name -- path to structure file from report tool (e.g. lmfdb_structure.json)
+
+    - list_file_name -- path to file containing names of all json files to upload (one per collection)
     """
     got_client = inv.setup_internal_client(editor=True)
     if not got_client:
@@ -204,11 +207,13 @@ def fresh_upload(master_file_name, list_file_name):
 def fresh_upload_coll(db_name, coll_name, master_file_name, json_file_name):
     """Delete existing data and upload a fresh copy for a single collection.
     CLOBBERS ALL EXISTING CONTENT FOR THIS COLLECTION
-      Arguments :
-      db_name -- name of database to refresh
-      coll_name -- name of collection to refresh
-      master_file_name -- path to structure file from report tool (entire or single collection)
-      json_file_name -- path to additional json file for this collection
+
+    Arguments:
+
+    - db_name -- name of database to refresh
+    - coll_name -- name of collection to refresh
+    - master_file_name -- path to structure file from report tool (entire or single collection)
+    - json_file_name -- path to additional json file for this collection
     """
     got_client = inv.setup_internal_client(editor=True)
     if not got_client:

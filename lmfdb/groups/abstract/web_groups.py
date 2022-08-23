@@ -907,7 +907,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def maximal_subgroup_of(self):
         # Could show up multiple times as non-conjugate maximal subgroups in the same ambient group
-        # So we should elimintate duplicates from the following list
+        # So we should eliminate duplicates from the following list
         return [
             WebAbstractSupergroup(self, "sub", supdata["label"], supdata)
             for supdata in db.gps_subgroups.search(
@@ -920,7 +920,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def maximal_quotient_of(self):
         # Could show up multiple times as a quotient of different normal subgroups in the same ambient group
-        # So we should elimintate duplicates from the following list
+        # So we should eliminate duplicates from the following list
         return [
             WebAbstractSupergroup(self, "quo", supdata["label"], supdata)
             for supdata in db.gps_subgroups.search(
@@ -1714,6 +1714,9 @@ class WebAbstractSubgroup(WebObj):
                 return Wtype(label, rec)
             elif rec.get("short_label") == label:
                 return Wtype(rec["label"], rec)
+        # It's possible that the label refers to a small group that is not in the database
+        # but that we can create dynamically
+        return Wtype(label)
 
     @lazy_attribute
     def _full(self):

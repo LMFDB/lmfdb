@@ -105,7 +105,9 @@ def gl2_subgroup_data(label):
     else:
         info += row_wrap("Cyclic %s${}^n$-isogeny field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['isogeny_orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
         info += row_wrap("Cyclic %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
-        info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%(ell*(ell-1)*(ell-1)*(ell+1)*ell**(4*n) // data['index']) for n in range(1,e+1)]))
+        degs = [int(s.split('.')[1]) for s in data["reductions"]] + [data['index']]
+        degs = [ell*(ell-1)**2*(ell+1)*ell**(4*i) // degs[i] for i in range(e)]
+        info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%d for d in degs]))
     if data['genus'] > 0:
         info += row_wrap('Newforms', ''.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
         info += row_wrap('Analytic rank', data['rank'])
@@ -168,6 +170,32 @@ def latex_equation(ainvs):
                     '{:+}'.format(a6) if a6 else '',
                     r'\)'])
 
+def homogeneous_latex_equation(ainvs):
+    a1,a2,a3,a4,a6 = [int(a) for a in ainvs]
+    return ''.join([r'\(y^2z',
+                    '+xyz' if a1 else '',
+                    '+yz^2' if a3 else '',
+                    '=x^3',
+                    '+x^2z' if a2==1 else '-x^2z' if a2==-1 else '',
+                    '{:+}xz^2'.format(a4) if abs(a4)>1 else '+xz^2' if a4==1 else '-xz^2' if a4==-1 else '',
+                    '{:+}z^3'.format(a6) if abs(a6)>1 else '+z^3' if a6==1 else '-z^3' if a6==-1 else '',
+                    r'\)'])
+
+def short_latex_equation(ainvs):
+    a1,a2,a3,a4,a6 = [ZZ(a) for a in ainvs]
+    A = -27*a1**4 - 216*a1**2*a2 + 648*a1*a3 - 432*a2**2 + 1296*a4
+    B = 54*a1**6 + 648*a1**4*a2 - 1944*a1**3*a3 + 2592*a1**2*a2**2 - 3888*a1**2*a4 - 7776*a1*a2*a3 + 3456*a2**3 - 15552*a2*a4 + 11664*a3**2 + 46656*a6
+    for p in A.gcd(B).prime_divisors():
+        while A.valuation(p) >= 4 and B.valuation(p) >= 6:
+            A = A.divide_knowing_divisible_by(p**4)
+            B = B.divide_knowing_divisible_by(p**6)
+    return ''.join([r'\(y^2=x^3',
+                    '{:+}x'.format(A) if abs(A)>1 else '+x' if A==1 else '-x' if A==-1 else '',
+                    '{:+}'.format(B) if B else '',
+                    r'\)'])
+
+def latex_equations(ainvs):
+    return [latex_equation(ainvs),homogeneous_latex_equation(ainvs),short_latex_equation(ainvs)]
 
 class WebEC():
     """
@@ -252,6 +280,7 @@ class WebEC():
 
         latexeqn = latex_equation(self.ainvs)
         data['equation'] = raw_typeset(unlatex(latexeqn), latexeqn)
+        data['equations'] = [raw_typeset(unlatex(latexeqn), latexeqn) for latexeqn in latex_equations(self.ainvs)]
 
         # minimal quadratic twist:
 

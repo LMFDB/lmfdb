@@ -82,9 +82,11 @@ def build_api_records(api_key, record_count, r_c_e, view_start,
     record_list -- Dictionary containing the records in the current view
 
     Keyword arguments:
-    max_count -- The maximum number of records in a view that a client can request. This should be the same as
-                 is returned in the main API page unless this value cannot be inferred without context
-    request -- Flask request object to query for needed data
+
+    - max_count -- The maximum number of records in a view that a
+      client can request. This should be the same as is returned in
+      the main API page unless this value cannot be inferred without context
+    - request -- Flask request object to query for needed data
 
     """
     view_count = min(view_count, record_count - view_start)
@@ -111,9 +113,11 @@ def build_api_search(api_key, mddtuple, max_count=None, request=None):
     search_dict -- Search dictionary compatible with simple_search
 
     Keyword arguments:
-    max_count -- The maximum number of records in a view that a client can request. This should be the same as
-                 is returned in the main API page unless this value cannot be inferred without context
-    request -- Flask request object to query for needed data
+
+    - max_count -- The maximum number of records in a view that a
+      client can request. This should be the same as is returned in
+      the main API page unless this value cannot be inferred without context
+    - request -- Flask request object to query for needed data
 
     """
 

@@ -136,7 +136,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 def hecke_algebras_postprocess(res, info, query):
     if info.get('ell'):
@@ -436,11 +436,11 @@ def download_hecke_algebras_full_lists_op(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    entry = lambda r: "".join([mat_start, str(r), mat_end])
 
     outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of Hecke operators T_1, ..., T_%s. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'],res['num_hecke_op'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
+    outstr += ",\\\n".join(entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(res['num_hecke_op'])])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'

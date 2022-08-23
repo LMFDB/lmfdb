@@ -778,7 +778,7 @@ def render_congruent_number_data():
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-            return send_file(filepath, as_attachment=True, add_etags=False)
+            return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
             return redirect(url_for(".rational_elliptic_curves"))

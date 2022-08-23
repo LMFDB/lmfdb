@@ -200,7 +200,7 @@ def api_query(table, id = None):
         return apierror("table %s does not exist", [table], table=False)
     q = {}
 
-    # if id is set, just go and get it, ignore query parameeters
+    # if id is set, just go and get it, ignore query parameters
     if id is not None:
         if offset:
             return apierror("Cannot include offset with id")
@@ -365,11 +365,11 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     if not isinstance(tables, list):
         tables = [tables]
     if not isinstance(labels, list):
-        labels = [labels for table in tables]
+        labels = [labels for _ in tables]
     if label_cols is None:
-        label_cols = ["label" for table in tables]
+        label_cols = ["label" for _ in tables]
     if sorts is None:
-        sorts = [None for table in tables]
+        sorts = [None for _ in tables]
     assert len(labels) == len(tables) == len(label_cols)
 
     def apierror(msg, flash_extras=[], code=404, table=False):

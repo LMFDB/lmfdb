@@ -43,7 +43,8 @@ class EllCurveTest(LmfdbTest):
 
     def test_conductor(self):
         r"""
-        Check that the elliptic curve/#field tells about its conductor and disciminant
+        Check that the elliptic curve/#field tells about its conductor
+        and discriminant
         """
         L = self.tc.get('/EllipticCurve/2.0.7.1/10000.5/a/1')
         assert '10000' in L.get_data(as_text=True)

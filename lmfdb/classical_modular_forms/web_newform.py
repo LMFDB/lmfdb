@@ -62,9 +62,12 @@ def encode_hecke_orbit(label):
 def convert_newformlabel_from_conrey(newformlabel_conrey):
     """
     Returns the label for the newform using the orbit index
-    eg:
+
+    eg::
+
         N.k.c.x --> N.k.i.x
-    return None if N.k.i is not on the db
+
+    return ``None`` if ``N.k.i`` is not on the db
     """
     N, k, chi, x = newformlabel_conrey.split('.')
     newspace_label = convert_spacelabel_from_conrey('.'.join([N, k, chi]))
@@ -612,8 +615,8 @@ class WebNewform():
         INPUT:
 
         - ``m`` -- if ``None``, m is set to the order of the character
-        (or the order of the field generator when the defining polynomial
-        is cyclotomic and the relative dimension is 1).
+          (or the order of the field generator when the defining polynomial
+          is cyclotomic and the relative dimension is 1).
         - ``real_sub`` -- If ``True``, will display the real subfield instead.
 
         OUTPUT:
@@ -874,7 +877,7 @@ function switch_basis(btype) {
         R = self._PrintRing
         if self.single_generator:
             beta = R.gen(0)
-            return [beta**i for i in range(0, self.dim)]
+            return [beta**i for i in range(self.dim)]
         else:
             return [1] + list(R.gens())
 

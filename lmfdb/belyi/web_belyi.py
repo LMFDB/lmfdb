@@ -34,8 +34,8 @@ def make_curve_latex(crv_str, nu=None):
     if nu and ("nu" in crv_str):
         S = PolynomialRing(CC, 2, 'x,y')
         # evaluate at nu, if given
-        new_lhs = dict()
-        new_rhs = dict()
+        new_lhs = {}
+        new_rhs = {}
         for m, c in lhs.dict().items():
             new_lhs[m] = c.subs(nu=nu)
         for m, c in rhs.dict().items():
@@ -86,8 +86,8 @@ def make_map_latex(map_str, nu = None):
     if nu and ("nu" in map_str):
         S = PolynomialRing(CC, 2, 'x,y')
         lc = lc.subs(nu=nu)
-        num_dict = dict()
-        den_dict = dict()
+        num_dict = {}
+        den_dict = {}
         for m, c in num_new.dict().items():
             num_dict[m] = c.subs(nu=nu)
         for m, c in den_new.dict().items():
@@ -261,7 +261,7 @@ class WebBelyiGalmap():
         data["embeddings_and_triples"] = []
         self.triple = None
         self.embedding = None
-        for i in range(0, len(data["triples_cyc"])):
+        for i in range(len(data["triples_cyc"])):
             my_dict = {}
             triple_str = ', '.join(data['triples_cyc'][i])
             triple_link = triple_str.replace(' ','')

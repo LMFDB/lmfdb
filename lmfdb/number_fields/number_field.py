@@ -93,6 +93,10 @@ def fixed_prec(r, digs=3):
     print(head)
     return str(head) + '.' + n[-digs:]
 
+@app.context_processor
+def ctx_raw_typeset():
+    return {'raw_typeset': raw_typeset}
+
 
 @app.context_processor
 def ctx_galois_groups():
@@ -140,7 +144,7 @@ def source():
     bread = bread_prefix() + [('Source', ' ')]
     return render_template("multi.html", kids=['rcs.source.nf',
                                                'rcs.ack.nf',
-                                               'rcs.ack.nf'],
+                                               'rcs.cite.nf'],
         title=t, bread=bread, learnmore=learnmore)
 
 
@@ -210,7 +214,7 @@ def render_class_group_data():
         if info['filenamebase'] in ['cl3mod8', 'cl7mod8', 'cl4mod16', 'cl8mod16']:
             filepath = "%s/%s/%s.%d.gz" % (class_group_data_directory,info['filenamebase'],info['filenamebase'],k)
             if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-                return send_file(filepath, as_attachment=True, add_etags=False)
+                return send_file(filepath, as_attachment=True)
             else:
                 info['message'] = 'File not found'
                 return class_group_request_error(info, bread)
@@ -790,9 +794,8 @@ def download_search(info):
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 
 def number_field_jump(info):
@@ -837,7 +840,7 @@ nf_columns = SearchColumns([
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 + - 1, align="center", mathmode=True),
     MathCol("regulator", "nf.regulator", "Regulator", align="left")],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "monogenic"])
+    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "monogenic", "num_ram"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]

@@ -1,10 +1,8 @@
-
-
 import re
 from flask import url_for
 from collections import defaultdict
-from sage.all import ZZ, QQ, LCM
-from sage.all import (cached_method, ceil, gcd,
+
+from sage.all import (ZZ, QQ, cached_method, ceil, gcd, lcm,
                       latex, lazy_attribute,
                       matrix, valuation)
 from sage.geometry.newton_polygon import NewtonPolygon
@@ -26,15 +24,11 @@ def HMF_valid_label(label):
 
 GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
+
 # Convert cyclotomic indices to rational numbers
-
-
 def cyc_to_QZ(A):
-    alpha = []
-    for Ai in A:
-        alpha.extend([QQ(k)/Ai for k in range(1, Ai+1) if gcd(k, Ai) == 1])
-    alpha.sort()
-    return alpha
+    return sorted(QQ(k) / Ai for Ai in A
+                  for k in range(1, Ai + 1) if gcd(k, Ai) == 1)
 
 
 class WebHyperGeometricFamily():
@@ -77,7 +71,7 @@ class WebHyperGeometricFamily():
     @lazy_attribute
     def gammas(self):
         def subdict(d, v):
-            if d[v]>1:
+            if d[v] > 1:
                 d[v] -= 1
             else:
                 del d[v]
@@ -99,19 +93,19 @@ class WebHyperGeometricFamily():
                 if d in ab[wh]:
                     subdict(ab[wh], d)
                 else:
-                    ab[1-wh][d] += 1
-        gamma[1] = [-1*z for z in gamma[1]]
+                    ab[1 - wh][d] += 1
+        gamma[1] = [-1 * z for z in gamma[1]]
         gamma = gamma[1] + gamma[0]
         gamma.sort()
         return gamma
 
     @lazy_attribute
     def wild_primes(self):
-        return integer_prime_divisors(LCM(LCM(self.A), LCM(self.B)))
+        return integer_prime_divisors(lcm(lcm(self.A), lcm(self.B)))
 
     @lazy_attribute
     def motivic_det_char(self):
-        exp = -QQ(self.weight * self.degree)/2
+        exp = -QQ(self.weight * self.degree) / 2
         first = r'\Q({})'.format(exp)
 
         if self.det[0] == 1:
@@ -133,15 +127,15 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def hinf_latex(self):
-        return(latex(self.hinf))
+        return latex(self.hinf)
 
     @lazy_attribute
     def h0_latex(self):
-        return(latex(self.h0))
+        return latex(self.h0)
 
     @lazy_attribute
     def h1_latex(self):
-        return(latex(self.h1))
+        return latex(self.h1)
 
     @lazy_attribute
     def bezout_latex(self):
@@ -153,17 +147,15 @@ class WebHyperGeometricFamily():
         if not l2:
             return 'C_1'
         fa = [ZZ(a).factor() for a in l2]
-        eds = []
-        for b in fa:
-            for pp in b:
-                eds.append([pp[0], pp[1]])
-        eds.sort()
-        l2 = ['C_{{{}}}'.format(a[0]**a[1]) for a in eds]
+        eds = sorted((pp[0], pp[1])
+                     for b in fa
+                     for pp in b)
+        l2 = ('C_{{{}}}'.format(a[0]**a[1]) for a in eds)
         return (r' \times ').join(l2)
 
     @lazy_attribute
     def type(self):
-        if (self.weight % 2) and (self.degree % 2) == 0:
+        if (self.weight % 2) and not (self.degree % 2):
             return 'Symplectic'
         else:
             return 'Orthogonal'
@@ -224,7 +216,7 @@ class WebHyperGeometricFamily():
             else:
                 # Fix multiple backslashes
                 m1[2] = re.sub(r'\\+', r'\\', m1[2])
-                m1[2] = '$%s$'% m1[2]
+                m1[2] = '$%s$' % m1[2]
             return m1
 
         def getgroup(m1, ell):
@@ -248,10 +240,10 @@ class WebHyperGeometricFamily():
             j = valuation(a, p)
             if j == 0:
                 return str(a)
-            a = a/p**j
+            a = a / p**j
             if a == 1:
                 return latex(ZZ(p**j).factor())
-            return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
+            return str(a) + r'\cdot' + latex(ZZ(p**j).factor())
 
         # # this will have a new data format in the future
         # converted = [[ell,
@@ -261,18 +253,17 @@ class WebHyperGeometricFamily():
         # return [[m[0], m[1], m[2][0],
         #         splitint(m[1][0]/m[2][1], m[0]), m[3]] for m in converted]
 
-        mono = [m for m in self.mono if m[1] != 0]
+        mono = (m for m in self.mono if m[1] != 0)
         mono = [[m[0], dogapthing(m[1]),
-          getgroup(m[1], m[0]),
-          latex(ZZ(m[1][0]).factor())] for m in mono]
-        mono = [[m[0], m[1], m[2][0], splitint(ZZ(m[1][0])/m[2][1], m[0]), m[3]] for m in mono]
-        return mono
+                 getgroup(m[1], m[0]),
+                 latex(ZZ(m[1][0]).factor())] for m in mono]
+        return [[m0, m1, m2[0], splitint(ZZ(m1[0]) / m2[1], m0), m3]
+                for m0, m1, m2, m3 in mono]
 
     @lazy_attribute
     def friends(self):
         return [('Motives in the family',
-                 url_for('hypergm.index') +
-                 "?A={}&B={}".format(str(self.A), str(self.B)))]
+                 url_for('hypergm.index') + f"?A={self.A}&B={self.B}")]
 
     @lazy_attribute
     def downloads(self):
@@ -316,13 +307,13 @@ class WebHyperGeometricFamily():
     def hodge_polygon(self):
         expand_hodge = []
         for i, h in enumerate(self.hodge):
-            expand_hodge += [i]*h
+            expand_hodge += [i] * h
         return NewtonPolygon(expand_hodge).vertices()
 
     @lazy_attribute
     def ordinary(self):
         if self.weight > 0:
-            middle = ceil(ZZ(len(self.hodge_polygon))/2)
+            middle = ceil(ZZ(len(self.hodge_polygon)) / 2)
 
             def ordinary(f, p):
                 return all(valuation(f[i], p) == v

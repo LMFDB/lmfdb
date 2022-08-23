@@ -21,13 +21,17 @@ def update_unique_count(db, coll, attribute):
     db[coll + '.stats'].replace_one({'_id':attribute}, doc, upsert=True)
 
 def update_joint_unique_count(db, coll, primary_attribute, secondary_attribute, prefix=None):
-    '''
+    r'''
     For each distinct primary_attribute in db[coll], the function finds the number
     of distinct values of secondary_attribute in db[coll] with that primary_attribute value.
-    The function then adds an entry
-      {_id : prefix + primary_attribute/secondary_attribute, distinct : counts}
+
+    The function then adds an entry ::
+
+        {_id : prefix + primary_attribute/secondary_attribute, distinct : counts}
+
     to db[coll.stats], where counts is a dictionary where the keys are possible values for
     primary_attribute which map to the number of distinct values for secondary_attribute.
+
     Note: due to limitations of MongoDB, the keys are string representations of the attributes.
 
     Required arguments:
@@ -45,13 +49,18 @@ def update_joint_unique_count(db, coll, primary_attribute, secondary_attribute, 
         prefix: string used to prefix document id
 
     For example:
+
     If [1,2] is the list of unique values for 'dim', and there are 5 unique values
     for 'total_label' across all entries with dim=1, and 7 unique values for
-    'total_label' across all entries with dim=2, then
-      update_joint_unique_count(db, 'passports', 'dim', 'total_label', prefix='by')
-    add the entry
-      {'_id'  :'bydim/total_label',
-       unique : {'1':5, '2':7} }
+    'total_label' across all entries with dim=2, then::
+
+        update_joint_unique_count(db, 'passports', 'dim', 'total_label', prefix='by')
+
+    add the entry::
+
+        {'_id'  :'bydim/total_label',
+         unique : {'1':5, '2':7} }
+
     to db[coll.stats].
     '''
     pa = str(primary_attribute)

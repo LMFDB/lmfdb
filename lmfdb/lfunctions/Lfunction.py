@@ -83,13 +83,14 @@ from .LfunctionDatabase import (
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if key not in args]
-    if len(missing_keys):
+    if missing_keys:
         raise KeyError(errmsg, "Missing required parameters: %s." % ','.join(missing_keys))
+
 
 def validate_integer_args(errmsg, args, *keys):
     for key in keys:
         if key in args:
-            if not isinstance(args[key],int) and not re.match(r'^\d+$',args[key].strip()):
+            if not isinstance(args[key], int) and not re.match(r'^\d+$', args[key].strip()):
                 raise ValueError(errmsg, "Unable to convert parameter '%s' with value '%s' to a nonnegative integer." % (key, args[key]))
 
 
@@ -109,7 +110,7 @@ def an_from_data(euler_factors,upperbound=30):
 
     result = upperbound * [1]
 
-    for i in range(0,len(euler_factors)):
+    for i in range(len(euler_factors)):
         p = nth_prime(i+1)
         if p > upperbound:
             break
@@ -174,14 +175,13 @@ def makeLfromdata(L):
         L.analytic_normalization = round_to_half_int(data.get('analytic_normalization'))
         L.motivic_weight = '' # ZZ(2*L.analytic_normalization)
 
-
     L.mu_fe = []
-    for i in range(0,len(data['gamma_factors'][0])):
+    for i in range(len(data['gamma_factors'][0])):
         L.mu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
-    for i in range(0,len(data['gamma_factors'][1])):
+    for i in range(len(data['gamma_factors'][1])):
         L.nu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
@@ -1414,7 +1414,7 @@ class SymmetricPowerLfunction(Lfunction):
     Only implemented for (non-CM) elliptic curves
 
     Compulsory parameters: power, underlying_type, field
-    For ellitic curves: conductor, isogeny
+    For elliptic curves: conductor, isogeny
 
     """
 
