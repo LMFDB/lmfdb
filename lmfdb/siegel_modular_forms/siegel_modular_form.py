@@ -804,7 +804,8 @@ def common_parse(info, query, na_check=False):
             #query['weight_alt'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
             query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
         else:
-            query['weight_alt'] = [int(info['weight'])]
+            # query['weight_alt'] = [int(info['weight'])]
+            query['weight'] = str([int(info['weight']),0]).replace('[','{').replace(']','}')
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
