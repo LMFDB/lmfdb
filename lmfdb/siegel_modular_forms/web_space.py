@@ -251,9 +251,10 @@ class WebNewformSpace():
         self.properties = [('Label',self.label)]
 #        if self.plot is not None and self.dim > 0:
 #            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
+        self.weight_str = '$(' + str(self.weight)[1:-1]  + ')$'
         self.properties +=[
             ('Level', prop_int_pretty(self.level)),
-            ('Weight', [prop_int_pretty(w) for w in self.weight]),
+            ('Weight', self.weight_str),
 #            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
 #            ('Rep. character', '$%s$' % self.char_conrey_str),
 #            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
