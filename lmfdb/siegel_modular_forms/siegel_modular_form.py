@@ -37,9 +37,13 @@ from lmfdb.siegel_modular_forms.web_space import (
 from lmfdb.siegel_modular_forms.download import SMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 
+
+
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
 ALPHACAP_RE = re.compile("^[A-Z]+$")
+
+
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
 ETAQUOTIENTS = yaml.load(open(os.path.join(_curdir, "eta.yaml")),
@@ -191,7 +195,8 @@ def index():
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
-    info["degree_list"] = ('2', '3-%d' % degree_bound())
+    # info["degree_list"] = ('2', '3-%d' % degree_bound())
+    info["degree_list"] = ('2')
     info["weight_list"] = ('2', '3', '4', '5-8', '9-16', '17-%d' % weight_bound()[0] )
     info["vector_weight_list"] = ('(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1]) )
     info["level_list"] = ('1', '2-10', '11-100', '101-%d' % level_bound() )

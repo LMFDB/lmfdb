@@ -258,7 +258,7 @@ def bmf_field_dim_table(**args):
     if level_flag == 'all':
         query[gl_or_sl] = {'$exists': True}
     else:
-        # Only get records where the cuspdial/new dimension is positive for some weight
+        # Only get records where the cuspidal/new dimension is positive for some weight
         totaldim = gl_or_sl.replace('dims', level_flag) + '_totaldim'
         query[totaldim] = {'$gt': 0}
     t = ' '.join(['Dimensions of spaces of {} Bianchi modular forms over'.format(info['group']), pretty_field_label])
