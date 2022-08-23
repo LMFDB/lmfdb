@@ -327,7 +327,7 @@ class WebNewformSpace():
 
     def _vec(self):
         # return [self.level, self.weight, self.conrey_indexes[0]]
-        return [self.level, self.weight, None]
+        return [self.level, ",".join([str(w) for w in self.weight]), None]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
