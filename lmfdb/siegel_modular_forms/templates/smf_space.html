@@ -1,0 +1,45 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2> Defining parameters </h2>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('smf.level', title='Level') }}: </td>
+    <td> \( N \) </td>
+    <td>\(=\)</td>
+    <td>{{ space.factored_level }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('smf.weight', title='Weight') }}: </td>
+    <td> \( k \) </td>
+    <td>\(=\)</td>
+    <td>\( {{ space.weight }} \)</td>
+  </tr>
+</table>
+
+<h2> Dimensions </h2>
+
+<p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
+
+<table class="dimgrid">
+  <thead>
+    <tr>
+      <th class="blank"></th>
+      <th> Total </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for X in ['M', 'S', 'E'] %}
+    <tr>
+      <th class="left"> {{info.space_type[X]}} </td>
+      {% for typ in ['all'] %} 
+      <td> {{ space.dim_grid[X][typ] }} </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

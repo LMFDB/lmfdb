@@ -458,7 +458,16 @@ def render_full_gamma1_space_webpage(label):
 @smf.route("/data/<label>")
 def mf_data(label):
     slabel = label.split(".")
-    if (len(slabel) >= 8) and (slabel[-4][0].isalpha()):
+    # temporary patch - for displaying newspaces as we work on them
+    if (len(slabel) == 5):
+        ret_id = db.smf_newspaces.lookup(label, "id")
+        if ret_id is None:
+            return abort(404, f"{label} not in database")
+        tables = ["smf_newspaces"]
+        labels = [label]
+        label_cols = ["label"]
+        title = f"Newspace data - {label}"
+    elif (len(slabel) >= 8) and (slabel[-4][0].isalpha()):
         emb_label = label
         form_label = ".".join(slabel[:-2])
         space_label = ".".join(slabel[:-3])
@@ -500,7 +509,7 @@ def mf_data(label):
 FAMILY_DICT = {
     'paramodular' : 'K',
     'Siegel'      : 'S',
-    'principal'   : 'C',
+    'principal'   : 'P',
     'full'        : 'F'
 }
 
@@ -554,24 +563,34 @@ def by_url_level(degree, family, level):
         info['level'] = level
     return newform_search(info)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
-def by_url_full_space_label(degree, family, level, weight):
-    valid_family = check_valid_family(family)
-    if not valid_family[0]:
-        return abort(404, valid_family[1])
-    valid_weight = check_valid_weight(weight, degree)
-    if not valid_weight[0]:
-        return abort(404, valid_weight[1])
-    label = ".".join([str(w) for w in [degree, family, level, weight]])
-    return render_full_space_webpage(label)
+# this is replaced by the space label for now
+# @smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
+# def by_url_full_space_label(degree, family, level, weight):
+#    valid_family = check_valid_family(family)
+#    if not valid_family[0]:
+#        return abort(404, valid_family[1])
+#    valid_weight = check_valid_weight(weight, degree)
+#    if not valid_weight[0]:
+#        return abort(404, valid_weight[1])
+#    label = ".".join([str(w) for w in [degree, family, level, weight]])
+#    return render_full_space_webpage(label)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
-def by_url_space_label(degree, family, level, weight, char_orbit_label):
-    valid_weight = check_valid_weight(weight, degree)
-    if not valid_weight[0]:
-        return abort(404, valid_weight[1])
-    label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
-    return render_space_webpage(label)
+# we replace this one by the temporary labels that we have
+#@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
+#def by_url_space_label(degree, family, level, weight, char_orbit_label):
+#    valid_weight = check_valid_weight(weight, degree)
+#    if not valid_weight[0]:
+#        return abort(404, valid_weight[1])
+#    label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
+#    return render_space_webpage(label)
+
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
+def by_url_space_label(degree, family, level, weight):
+    valid_weight = check_valid_weight(weight, degree)                                
+    if not valid_weight[0]:                                                          
+        return abort(404, valid_weight[1])                                           
+    label = ".".join([str(w) for w in [degree, family, level, weight]])
+    return render_space_webpage(label) 
 
 @smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_orbit):
@@ -607,7 +626,10 @@ def url_for_label(label):
         return abort(404, "Invalid label")
 
     slabel = label.split(".")
-    if (len(slabel) >= 8) and (slabel[-4].isalpha()):
+    # temporary patch to display what we have
+    if (len(slabel) == 5):
+        func = "smf.by_url_space_label"
+    elif (len(slabel) >= 8) and (slabel[-4].isalpha()):
         func = "smf.by_url_embedded_newform_label"
     elif (len(slabel) >= 6) and (slabel[-2].isalpha()):
         func = "smf.by_url_newform_label"
@@ -1345,30 +1367,25 @@ class SMF_stats(StatsDisplay):
     """
     def __init__(self):
         self.nforms = comma(db.smf_newforms.count())
-        # Right now we don't have tables for newform spaces or Hecke orbits.
-        # until we do we disable self.nspaces and self.ndim
         #self.nspaces = comma(db.smf_newspaces.count({'num_forms':{'$gt':0}}))
+        self.nspaces = comma(db.smf_newspaces.count({'cusp_dim':{'$gt':0}}))
         #self.ndim = comma(db.mf_hecke_cc.count())
         # !!! WARNING : at the moment not too long, but we do not want to
         # retain this
         self.ndim = sum([f['dim'] for f in db.smf_newforms.search()])
-        #self.weight_knowl = display_knowl('mf.siegel.weight', title='weight')
-        #self.level_knowl = display_knowl('mf.siegel.level', title='level')
+        self.weight_knowl = display_knowl('mf.siegel.weight', title='weight')
+        self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
         self.newspace_knowl = display_knowl('mf.siegel.newspace', title='newspaces')
-        #stats_url = url_for(".statistics")
+        stats_url = url_for(".statistics")
 
     @property
     def short_summary(self):
-        # at the moment we do not have tables for nspaces or ndim             
-        # replaced them by question marks
         return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s Siegel modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
 
     @property
     def summary(self):
-        # at the moment we do not have tables for nspaces or ndim
-        # replaced them by question marks
-        return r"The database currently contains %s (Galois orbits of) %s and ? nonzero %s, corresponding to %s Siegel modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s Siegel modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
     extent_knowl = 'mf.siegel.statistics_extent'
     table = db.smf_newforms
