@@ -37,6 +37,7 @@ from lmfdb.siegel_modular_forms.web_space import (
 from lmfdb.siegel_modular_forms.download import SMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 
+INT_RE = re.compile("^[0-9]*$")
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
 ALPHACAP_RE = re.compile("^[A-Z]+$")
@@ -646,21 +647,25 @@ def url_for_label(label):
         func = "smf.by_url_degree"
     else:
         return abort(404, "Invalid label")
-    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+#    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+    keys = ['degree', 'family', 'level', 'weight']
     if not POSINT_RE.match(slabel[0]):
         raise ValueError("Invalid label")  
     keytypes_start = [POSINT_RE, ALPHACAP_RE, POSINT_RE]
-    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    # keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    keytypes_end = [POSINT_RE, POSINT_RE]
     if len(keytypes_start)+len(keytypes_end)+int(slabel[0]) < len(slabel):
         raise ValueError("Invalid label")
     for i in range (len(keytypes_start)):
         if not keytypes_start[i].match(slabel[i]):
             raise ValueError("Invalid label")
     idx = len(keytypes_start)
-    while POSINT_RE.match(slabel[idx]):
+    while ((idx < len(slabel)) and INT_RE.match(slabel[idx])):
         idx += 1
     for i in range (len(slabel)-idx):
         if not keytypes_end[i].match(slabel[i+idx]):
+            print("idx=", idx)
+            print("label=", label)
             raise ValueError("Invalid label")
     slabel = slabel[:len(keytypes_start)] + ['.'.join(slabel[len(keytypes_start):idx])] + slabel[idx:]
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
@@ -795,13 +800,11 @@ def common_parse(info, query, na_check=False):
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     # parse_ints(info, query, 'weight', name="Weight")
     if 'weight' in info:
-        print("info['weight']=", info['weight'])
-        print("info['weight'][0]=", info['weight'][0])
-#        print("list(info['weight'])=", list(eval(info['weight'])))
         if info['weight'][0] in ['(', '[']:
-            query['weight_alt'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
-            print("query['weight_alt']=", query['weight_alt'])
-        query['weight_alt'] = [int(info['weight'])]
+            #query['weight_alt'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
+            query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
+        else:
+            query['weight_alt'] = [int(info['weight'])]
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
@@ -866,19 +869,19 @@ def newspace_parse(info, query):
             msg = "%s not valid when searching for spaces"
             flash_error(msg, display)
             raise ValueError(msg  % display)
-    if 'dim' not in info and 'hst' not in info:
+    if 'cusp_dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
-        info['dim'] = '1-'
+        info['cusp_dim'] = '1-'
     if info.get('all_spaces') == 'yes' and 'num_forms' in query:
         msg = "Cannot specify number of newforms while requesting all spaces"
         flash_error(msg)
         raise ValueError(msg)
     common_parse(info, query)
-    if info['search_type'] != 'SpaceDimensions':
-        parse_ints(info, query, 'num_forms', name='Number of newforms')
-        if 'num_forms' not in query and info.get('all_spaces') != 'yes':
+#    if info['search_type'] != 'SpaceDimensions':
+#        parse_ints(info, query, 'num_forms', name='Number of newforms')
+#        if 'num_forms' not in query and info.get('all_spaces') != 'yes':
             # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
-            query['num_forms'] = {'$exists':True}
+#            query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
     return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
@@ -946,7 +949,7 @@ newform_columns = SearchColumns([
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt'],
+    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -1043,7 +1046,7 @@ def trace_search(info, query):
              err_title='Newspace search input error',
              shortcuts={'jump':jump_box,
                         'download':SMF_download().download_multiple_space_traces},
-             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
+             projection=['label', 'cusp_dim', 'weight'],
              postprocess=space_trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list)
@@ -1134,8 +1137,8 @@ def dimension_space_postprocess(res, info, query):
     # Remove entries that are unused for dimension tables
     urlgen_info.pop('hidden_search_type', None)
     urlgen_info.pop('number', None)
-    urlgen_info.pop('numforms', None)
-    urlgen_info.pop('dim', None)
+#    urlgen_info.pop('numforms', None)
+    urlgen_info.pop('cusp_dim', None)
     urlgen_info.pop('search_array', None)
 
     def url_generator_list(N, k):
@@ -1243,7 +1246,8 @@ def dimension_form_search(info, query):
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
-             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
+#             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
+             projection=['label', 'level', 'weight', 'total_dim', 'degree', 'cusp_dim', 'eis_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1259,14 +1263,15 @@ def dimension_space_search(info, query):
 
 space_columns = SearchColumns([
     LinkCol("label", "smf.label", "Label", url_for_label, default=True),
-    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
-    MultiProcessedCol("character", "smf.character", r"$\chi$", ["level", "conrey_indexes"],
-                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
-                      short_title="character", default=True),
-    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("dim", "smf.display_dim", "Dim.", short_title="dimension", default=True),
-    MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "smf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+#    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
+#    MultiProcessedCol("character", "smf.character", r"$\chi$", ["level", "conrey_indexes"],
+#                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
+#                      short_title="character", default=True),
+#    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
+    MathCol("total_dim", "smf.display_dim", "Dim.", short_title="dimension", default=True)
+    #    MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
+#    MultiProcessedCol("al_dims", "smf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+    ])
 
 @search_wrap(table=db.smf_newspaces,
              title='Newspace search results',
