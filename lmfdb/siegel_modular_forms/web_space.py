@@ -10,7 +10,9 @@ from lmfdb.utils import (
     web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
-NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
+# changing to the temporary labels that we have
+#NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+$")
+NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
 def valid_label(label):
@@ -20,13 +22,15 @@ def valid_gamma1(label):
 
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
-    links = [('level', 'Level %s', 'cmf.by_url_level'),
-             ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
-             ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
-             ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
+    links = [('degree', 'Degree %s', 'smf.by_url_degree'),
+             ('family', 'Family %s', 'smf.by_url_family'),
+             ('level', 'Level %s', 'smf.by_url_level'),
+             ('weight', 'Weight %s', 'smf.by_url_full_space_label'),
+             ('char_orbit_label', 'Character orbit %s', 'smf.by_url_space_label'),
+             ('hecke_orbit', 'Newform orbit %s', 'smf.by_url_newform_label'),
+             ('embedding_label', 'Embedding %s', 'smf.by_url_newform_conrey5')]
     bread = [('Modular forms', url_for('modular_forms')),
-             ('Classical', url_for("cmf.index"))]
+             ('Classical', url_for("smf.index"))]
     if 'other' in kwds:
         if isinstance(kwds['other'], str):
             return bread + [(kwds['other'], ' ')]
@@ -90,7 +94,7 @@ def ALdim_table(al_dims, level, weight):
     for p, ev in first_row:
         header.append(r'<th>\(%s\)</th>'%p)
     if len(first_row) > 1:
-        header.append(r"<th class='right'>%s</th>"%(display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
+        header.append(r"<th class='right'>%s</th>"%(display_knowl('smf.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}
@@ -121,9 +125,9 @@ def ALdim_table(al_dims, level, weight):
             tr = "<tr>"
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
-        plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
+        plus_knowl = display_knowl('smf.plus_space',title='Plus space').replace('"',"'")
         plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
-        minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
+        minus_knowl = display_knowl('smf.minus_space',title='Minus space').replace('"',"'")
         minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
@@ -159,7 +163,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
+    return db.smf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
 
 def trace_expansion_generic(space, prec_max=10):
@@ -211,15 +215,18 @@ class DimGrid():
 
     @staticmethod
     def from_db(data):
-        grid = {'M':{'all':data['mf_dim'],
-                     'new':data['dim']+data['eis_new_dim'],
-                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
+        grid = {'M':{'all':data['total_dim'],
+#                     'new':data['dim']+data['eis_new_dim'],
+#                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
+                     },
                 'S':{'all':data['cusp_dim'],
-                     'new':data['dim'],
-                     'old':data['cusp_dim']-data['dim']},
+#                     'new':data['dim'],
+#                     'old':data['cusp_dim']-data['dim']}
+                     },
                 'E':{'all':data['eis_dim'],
-                     'new':data['eis_new_dim'],
-                     'old':data['eis_dim']-data['eis_new_dim']}}
+#                     'new':data['eis_new_dim'],
+#                     'old':data['eis_dim']-data['eis_new_dim']}}
+                     }}
         return DimGrid(grid)
 
 class WebNewformSpace():
@@ -227,66 +234,68 @@ class WebNewformSpace():
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
         self.factored_level = web_latex_factored_integer(self.level, equals=True)
-        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
+#        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
-        self.num_forms = data.get('num_forms')
-        self.trace_bound = data.get('trace_bound')
-        self.has_trace_form = (data.get('traces') is not None)
-        self.char_conrey = self.conrey_indexes[0]
-        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
+#        self.num_forms = data.get('num_forms')
+#        self.trace_bound = data.get('trace_bound')
+#        self.has_trace_form = (data.get('traces') is not None)
+#        self.char_conrey = self.conrey_indexes[0]
+#        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
+        self.newforms = list(db.smf_newforms.search({'space_label':self.label}, projection=2))
+#        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
+#        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
-        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
+#        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
 
         # Properties
         self.properties = [('Label',self.label)]
-        if self.plot is not None and self.dim > 0:
-            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
+#        if self.plot is not None and self.dim > 0:
+#            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
         self.properties +=[
             ('Level', prop_int_pretty(self.level)),
-            ('Weight', prop_int_pretty(self.weight)),
-            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
-            ('Rep. character', '$%s$' % self.char_conrey_str),
-            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
-            ('Dimension', prop_int_pretty(self.dim)),
+            ('Weight', [prop_int_pretty(w) for w in self.weight]),
+#            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
+#            ('Rep. character', '$%s$' % self.char_conrey_str),
+#            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Dimension', prop_int_pretty(self.cusp_dim)),
         ]
-        if self.num_forms is not None:
-            self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))
-        self.properties.append(('Sturm bound', prop_int_pretty(self.sturm_bound)))
-        if data.get('trace_bound') is not None:
-            self.properties.append(('Trace bound', prop_int_pretty(self.trace_bound)))
+#        if self.num_forms is not None:
+#            self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))
+#        self.properties.append(('Sturm bound', prop_int_pretty(self.sturm_bound)))
+#        if data.get('trace_bound') is not None:
+#            self.properties.append(('Trace bound', prop_int_pretty(self.trace_bound)))
         # Work around search results not including None
-        if data.get('num_forms') is None:
-            self.num_forms = None
+#        if data.get('num_forms') is None:
+#            self.num_forms = None
 
         # Breadcrumbs
-        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
+#        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
+        self.bread = get_bread(level=self.level, weight=self.weight)
 
         # Downloads
         self.downloads = [
-            ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
+            ('Trace form to text', url_for('smf.download_traces', label=self.label)),
             ('All stored data to text', url_for('.download_newspace', label=self.label)),
             ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
-        if self.conrey_indexes[0] == 1:
-            self.trivial_character = True
-            character_str = "trivial character"
-            if self.dim == 0:
-                self.dim_str = r"\(%s\)"%(self.dim)
-            else:
-                self.minus_dim = self.dim - self.plus_dim
-                self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
-        else:
-            self.trivial_character = False
-            character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
+#        if self.conrey_indexes[0] == 1:
+#            self.trivial_character = True
+#            character_str = "trivial character"
+#            if self.dim == 0:
+#                self.dim_str = r"\(%s\)"%(self.dim)
+#            else:
+#                self.minus_dim = self.dim - self.plus_dim
+#                self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
+#        else:
+#            self.trivial_character = False
+#            character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
-            self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of modular forms of level %s, weight %s, and %s"%(self.level, self.weight, character_str)
-        gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
-        self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
+#            self.dim_str = r"\(%s\)"%(self.dim)
+        self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
+        self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
+        gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d\.%d' % (self.level, self.weight[0], self.weight[1])
+        self.friends = [('Newspace %d.%d.%d' % (self.level, self.weight[0], self.weight[1]), gamma1_link)]
 
     @staticmethod
     def by_label(label):
@@ -296,7 +305,7 @@ class WebNewformSpace():
         """
         if not valid_label(label):
             raise ValueError("Invalid modular forms space label %s." % label)
-        data = db.mf_newspaces.lookup(label)
+        data = db.smf_newspaces.lookup(label)
         if data is None:
             raise ValueError("Space %s not found" % label)
         return WebNewformSpace(data)
@@ -316,7 +325,8 @@ class WebNewformSpace():
         return self.char_orbit_link + ord_deg
 
     def _vec(self):
-        return [self.level, self.weight, self.conrey_indexes[0]]
+        # return [self.level, self.weight, self.conrey_indexes[0]]
+        return [self.level, self.weight, None]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -383,7 +393,7 @@ class WebGamma1Space():
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         # by default we sort on char_orbit_index
-        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
+        newspaces = list(db.smf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces) if newspaces else DimGrid()
@@ -395,7 +405,7 @@ class WebGamma1Space():
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
         self.decomp = []
-        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
+        newforms = list(db.smf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
         for space in newspaces:
             if space.get('num_forms') is None:
@@ -422,8 +432,8 @@ class WebGamma1Space():
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [
-            ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('All stored data to text', url_for('cmf.download_full_space', label=self.label)),
+            ('Trace form to text', url_for('smf.download_traces', label=self.label)),
+            ('All stored data to text', url_for('smf.download_full_space', label=self.label)),
             ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
         self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)

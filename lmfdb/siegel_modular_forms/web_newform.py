@@ -25,8 +25,8 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
-LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
-EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
+LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
+EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
 
@@ -146,7 +146,7 @@ class WebNewform():
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in db.smf_samples.col_type:
+        for elt in db.smf_newforms.col_type:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -154,7 +154,7 @@ class WebNewform():
         self.embedding_label = embedding_label
         self.embedded_minimal_twist = None  # stub filled in below when embedding_label is set
 
-#        self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
+        self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
 #        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data:  # Until we have search results include nulls
@@ -165,8 +165,8 @@ class WebNewform():
 
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-#        self.texp = [0] + self.traces
-#        self.texp_prec = len(self.texp)
+        self.texp = [0] + self.traces
+        self.texp_prec = len(self.texp)
 
         # self.char_conrey = self.conrey_indexes[0]
         # self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
@@ -242,44 +242,44 @@ class WebNewform():
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
         self.properties += [('Level', prop_int_pretty(self.level)),
-                            ('Weight', prop_int_pretty(self.weight))]
+                            ('Weight', [prop_int_pretty(w) for w in self.weight])]
         if self.embedding_label is None:
             self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
         else:
             self.properties.append(('Character', '%s.%s' % (self.level, self.char_conrey)))
 
-        if self.is_self_dual != 0:
-            self.properties += [('Self dual', 'yes' if self.is_self_dual == 1 else 'no')]
-        self.properties += [('Analytic conductor', '$%.3f$' % self.analytic_conductor)]
+#        if self.is_self_dual != 0:
+#            self.properties += [('Self dual', 'yes' if self.is_self_dual == 1 else 'no')]
+#        self.properties += [('Analytic conductor', '$%.3f$' % self.analytic_conductor)]
 
         if self.analytic_rank is not None:
             self.properties += [('Analytic rank', prop_int_pretty(self.analytic_rank))]
 
         self.properties += [('Dimension', prop_int_pretty(self.dim))]
 
-        if self.projective_image:
-            self.properties += [('Projective image', '$%s$' % self.projective_image_latex)]
+#        if self.projective_image:
+#            self.properties += [('Projective image', '$%s$' % self.projective_image_latex)]
         # Artin data would make the property box scroll
         #if self.artin_degree: # artin_degree > 0
         #    self.properties += [('Artin image size', str(self.artin_degree))]
         #if self.artin_image:
         #    self.properties += [('Artin image', r'\(%s\)' %  self.artin_image_display)]
 
-        if self.is_cm and self.is_rm:
-            disc = ', '.join(str(d) for d in self.self_twist_discs)
-            self.properties += [('CM/RM discs', disc)]
-        elif self.is_cm:
-            disc = ' and '.join(str(d) for d in self.self_twist_discs if d < 0)
-            self.properties += [('CM discriminant', disc)]
-        elif self.is_rm:
-            disc = ' and '.join(str(d) for d in self.self_twist_discs if d > 0)
-            self.properties += [('RM discriminant', disc)]
-        elif self.weight == 1:
-            self.properties += [('CM/RM', 'no')]
-        else:
-            self.properties += [('CM', 'no')]
-        if self.inner_twist_count >= 1:
-            self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
+#        if self.is_cm and self.is_rm:
+#            disc = ', '.join(str(d) for d in self.self_twist_discs)
+#            self.properties += [('CM/RM discs', disc)]
+#        elif self.is_cm:
+#            disc = ' and '.join(str(d) for d in self.self_twist_discs if d < 0)
+#            self.properties += [('CM discriminant', disc)]
+#        elif self.is_rm:
+#            disc = ' and '.join(str(d) for d in self.self_twist_discs if d > 0)
+#            self.properties += [('RM discriminant', disc)]
+#        elif self.weight == 1:
+#            self.properties += [('CM/RM', 'no')]
+#        else:
+#            self.properties += [('CM', 'no')]
+#        if self.inner_twist_count >= 1:
+#            self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
         self.title = "Newform orbit %s"%(self.label)
 
     # Breadcrumbs
@@ -328,13 +328,13 @@ class WebNewform():
         # first newspaces
         res = []
         base_label = [str(s) for s in [self.level, self.weight]]
-        cmf_base = '/ModularForm/GL2/Q/holomorphic/'
+        smf_base = '/ModularForm/GSp/Q/'
         ns1_label = '.'.join(base_label)
-        ns1_url = cmf_base + '/'.join(base_label)
+        ns1_url = smf_base + '/'.join(base_label)
         res.append(('Newspace ' + ns1_label, ns1_url))
         char_letter = self.char_orbit_label
         ns_label = '.'.join(base_label + [char_letter])
-        ns_url = cmf_base + '/'.join(base_label + [char_letter])
+        ns_url = smf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:
@@ -345,7 +345,7 @@ class WebNewform():
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual form ' + dlabel, d_url))
             if self.embedded_minimal_twist is not None and self.embedded_minimal_twist != self.label + '.' + self.embedding_label:
-                minimal_twist_url = cmf_base + self.embedded_minimal_twist.replace('.','/') + '/'
+                minimal_twist_url = smf_base + self.embedded_minimal_twist.replace('.','/') + '/'
                 res.append(('Minimal twist ' + self.embedded_minimal_twist, minimal_twist_url))
             if self.dim == 1:
                 # use the Galois orbits friends for the unique embedding
@@ -360,23 +360,23 @@ class WebNewform():
                 except TypeError:
                     related_objects = self.related_objects
         else:
-            if self.minimal_twist is not None and self.minimal_twist != self.label:
-                minimal_twist_url = cmf_base + self.minimal_twist.replace('.','/') + '/'
-                res.append(('Minimal twist ' + self.minimal_twist, minimal_twist_url))
+#            if self.minimal_twist is not None and self.minimal_twist != self.label:
+#                minimal_twist_url = smf_base + self.minimal_twist.replace('.','/') +# '/'
+#                res.append(('Minimal twist ' + self.minimal_twist, minimal_twist_url#))
             related_objects = self.related_objects
         res += names_and_urls(related_objects)
 
         # finally L-functions
-        if self.weight <= 200:
+        if self.weight[0] <= 200:
             if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
-            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
-                res = [list(map(str, elt)) for elt in res]
+#            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
+#                res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
-                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
+#                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.embedding_labels:
-                    lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                    lfun_url =  '/L' + smf_base + lfun_label.replace('.','/')
                     res.append(('L-function ' + lfun_label, lfun_url))
 
         return res
@@ -387,8 +387,8 @@ class WebNewform():
         downloads = []
         if self.embedding_label is None:
             label = self.label
-            if self.hecke_cutters or self.has_exact_qexp:
-                downloads.append(('Modular form to Magma', url_for('.download_newform_to_magma', label=label)))
+#            if self.hecke_cutters or self.has_exact_qexp:
+#                downloads.append(('Modular form to Magma', url_for('.download_newform_to_magma', label=label)))
             if self.has_exact_qexp:
                 downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=label)))
@@ -524,14 +524,11 @@ class WebNewform():
     @staticmethod
     def by_label(label, embedding_label = None):
         # until we update the validity check, we skip it
-#        if not valid_label(label):
-#            raise ValueError("Invalid newform label %s." % label)
+        if not valid_label(label):
+            raise ValueError("Invalid newform label %s." % label)
 
         slabel = label.split('.')
-        data = db.smf_samples.search({ 'collection': {'$contains': [slabel\
-[0]]}, 'name': slabel[1]})
-        data = [d for d in data][0]
-#        data = db.smf_samples.lookup(label)
+        data = db.smf_newforms.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
@@ -686,16 +683,16 @@ class WebNewform():
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
-        knowl = display_knowl('cmf.hecke_cutter', title=title)
-        desc = f"<p>This {display_knowl('cmf.newform_subspace','newform subspace')} can be constructed as the "
+        knowl = display_knowl('smf.hecke_cutter', title=title)
+        desc = f"<p>This {display_knowl('smf.newform_subspace','newform subspace')} can be constructed as the "
         if len(polynomials) > 1:
             desc += f"intersection of the kernels of the following {knowl} {acting_on}:</p>\n<table>"
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
         elif len(polynomials) == 1:
             desc += f"kernel of the {knowl} {polynomials[0]}"
         else:
-            desc = r"<p>This %s is the entire %s %s.</p> "%(display_knowl('cmf.newform_subspace','newform subspace'),
-                                                          display_knowl('cmf.newspace','newspace'),self.display_newspace())
+            desc = r"<p>This %s is the entire %s %s.</p> "%(display_knowl('mf.siegel.newform_subspace','newform subspace'),
+                                                          display_knowl('mf.siegel.newspace','newspace'),self.display_newspace())
         return desc
 
     def defining_polynomial(self, separator=''):
@@ -956,8 +953,8 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('cmf.inner_twist_multiplicity', 'Mult'),
-                  th_wrap('cmf.self_twist_field', 'Type'),
+                  th_wrap('mf.siegel.inner_twist_multiplicity', 'Mult'),
+                  th_wrap('mf.siegel.self_twist_field', 'Type'),
                   '  </tr>', '</thead>', '<tbody>']
         self_twists = sorted([r for r in self.twists if r['self_twist_disc']], key = lambda r: r['conductor'])
         other_inner_twists = sorted([r for r in self.twists if r['target_label'] == self.label and not r['self_twist_disc']], key = lambda r: r['conductor'])
@@ -1034,15 +1031,15 @@ function switch_basis(btype) {
             return '' if r['target_label'] != self.label else ('inner' if not d else ('trivial' if d == 1 else ('CM' if d < 0 else 'RM')))
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisting character orbit'), '<tr>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('mf.siegel.twist','twisting character orbit'), '<tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('cmf.twist_multiplicity', 'Mult'),
-                  th_wrap('cmf.self_twist_field', 'Type'),
-                  th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimal', 'Min'),
-                  th_wrap('cmf.dimension', 'Dim'),
+                  th_wrap('mf.siegel.twist_multiplicity', 'Mult'),
+                  th_wrap('mf.siegel.self_twist_field', 'Type'),
+                  th_wrap('mf.siegel.twist', 'Twist'),
+                  th_wrap('mf.siegel.twist_minimal', 'Min'),
+                  th_wrap('mf.siegel.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
         for r in sorted(self.twists, key=lambda x: [x['conductor'], x['twisting_char_orbit'], x['target_level'], x['target_char_orbit'], x['target_hecke_orbit']]):
@@ -1056,15 +1053,15 @@ function switch_basis(btype) {
         twists1.extend(['</tbody>', '</table>'])
 
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisted newform orbit'), '<tr>',
-                  th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimal', 'Min'),
-                  th_wrap('cmf.dimension', 'Dim'),
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('mf.siegel.twist','twisted newform orbit'), '<tr>',
+                  th_wrap('mf.siegel.twist', 'Twist'),
+                  th_wrap('mf.siegel.twist_minimal', 'Min'),
+                  th_wrap('mf.siegel.dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('cmf.twist_multiplicity', 'Mult'),
-                  th_wrap('cmf.self_twist_field', 'Type'),
+                  th_wrap('mf.siegel.twist_multiplicity', 'Mult'),
+                  th_wrap('mf.siegel.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
         for r in sorted(self.twists, key = lambda x: [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
             minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes' if r['target_is_minimal'] else ''
@@ -1098,14 +1095,14 @@ function switch_basis(btype) {
             return ((x&((1<<24)-1))<<40) | (((x>>24)&((1<<12)-1))<<28) | (((x>>36)&((1<<16)-1))<<12) | (x>>52)
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisting character'), '<tr>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('mf.siegel.twist','twisting character'), '<tr>',
                   th_wrap('character.dirichlet.conrey', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('cmf.self_twist_field', 'Type'),
-                  th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimal', 'Min'),
-                  th_wrap('cmf.dimension', 'Dim'),
+                  th_wrap('mf.siegel.self_twist_field', 'Type'),
+                  th_wrap('mf.siegel.twist', 'Twist'),
+                  th_wrap('mf.siegel.twist_minimal', 'Min'),
+                  th_wrap('mf.siegel.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
         for r in sorted(self.embedded_twists, key = lambda x: [x['conductor'],x['twisting_conrey_index'],revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index']]):
@@ -1119,14 +1116,14 @@ function switch_basis(btype) {
         twists1.extend(['</tbody>', '</table>'])
 
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisted newform'), '<tr>',
-                  th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimal', 'Min'),
-                  th_wrap('cmf.dimension', 'Dim'),
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('mf.siegel.twist','twisted newform'), '<tr>',
+                  th_wrap('mf.siegel.twist', 'Twist'),
+                  th_wrap('mf.siegel.twist_minimal', 'Min'),
+                  th_wrap('mf.siegel.dimension', 'Dim'),
                   th_wrap('character.dirichlet.conrey', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('cmf.self_twist_field', 'Type'),
+                  th_wrap('mf.siegel.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
 
         for r in sorted(self.embedded_twists, key = lambda x: [revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
