@@ -195,7 +195,8 @@ def index():
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
-    info["degree_list"] = ('2', '3-%d' % degree_bound())
+    # info["degree_list"] = ('2', '3-%d' % degree_bound())
+    info["degree_list"] = ('2')
     info["weight_list"] = ('2', '3', '4', '5-8', '9-16', '17-%d' % weight_bound()[0] )
     info["vector_weight_list"] = ('(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1]) )
     info["level_list"] = ('1', '2-10', '11-100', '101-%d' % level_bound() )
