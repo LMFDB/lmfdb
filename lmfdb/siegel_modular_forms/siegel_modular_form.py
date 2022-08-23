@@ -521,7 +521,7 @@ def check_valid_family(family):
 
 def check_valid_weight(weight, degree):
     if weight.count('.') >= degree:
-        return (false, "Invalid weight: vector length should be at most the degree")
+        return (False, "Invalid weight: vector length should be at most the degree")
     weight_vec = weight.split('.')
     if not all([w.isdigit() for w in weight_vec]):
         return (False, "Invalid weight: not integers")
