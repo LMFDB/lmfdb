@@ -121,6 +121,31 @@ def make_plane_model_latex(crv_str, nu=None):
     #return teXify_pol(f)
     return latex(f)+"=0"
 
+def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
+    R0 = PolynomialRing(QQ,"T")
+    T = R0.gens()[0]
+    K = NumberField(R0(numfld_cs), "nu") # sage factors out constants, ruining integrality
+    nu = K.gens()[0]
+    S0 = PolynomialRing(K,"x")
+    x = S0.gens()[0]
+    S = PolynomialRing(S0,"t")
+    t = S.gens()[0]
+    f = S(crv_str)
+    cs = f.coefficients()
+    cs.reverse()
+    mons = f.monomials()
+    L = len(cs)
+    f_str = ""
+    for i in range(0,L-1):
+        f_str += "%s%s" % (latex(factor(cs[i])), latex(t**(L-i-1)))
+        if i != L-2:
+            f_str += "+"
+    if mons[-1] == 1:
+        f_str += latex(factor(cs[-1]))
+    else:
+        f_str += latex(factor(cs[-1])) + latex(mons[-1])
+    return f_str
+
 def make_plane_map_latex(const_str, nu=None):
     if "nu" not in const_str:
         R0 = QQ
