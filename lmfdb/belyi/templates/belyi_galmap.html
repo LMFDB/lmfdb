@@ -4,12 +4,11 @@
 <script>
 var cur_style = null;
 function show_eqns(eqnstyle) {
-    $('.std_eqn').hide();
-    $('.plane_eqn').hide();
-    $('.'+eqnstyle).show();
+    $('.std_eqn').css("display", "none");
+    $('.plane_eqn').css("display", "none");
+    $('.'+eqnstyle).css("display", "inline");
   }
 </script>
-
 
 <h2>{{ KNOWL('belyi.base_field', title='Base field')}}</h2>
   <p>
@@ -25,18 +24,15 @@ function show_eqns(eqnstyle) {
   </p>
 </h2>
 
-<h2 style="display:inline">Curve</h2>
+<h2 style="display:inline">Curve</h2> &nbsp;
 <div class='plane_eqn' style="display:inline">
 <!--<div class='plane_eqn'>-->
   (<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)
 </div>
-<div class='std_eqn nodisplay' style="display:inline">
-<!--<div class='std_eqn nodisplay'>-->
+<!--<div class='std_eqn nodisplay' style="display:inline">-->
+<div class='std_eqn nodisplay'>
   (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
 </div>
-<!--<div style="float:left;"><h2>Curve</h2></div>-->
-<!--<h2 style="float:left;">Curve</h2>-->
-<!--<div style="float:right;">Regular Text Goes Here</div>-->
 
 <table>
   <tr class='std_eqn nodisplay'>
