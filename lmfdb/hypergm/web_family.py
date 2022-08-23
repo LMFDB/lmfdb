@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import re
 from flask import url_for
 from collections import defaultdict
@@ -28,7 +26,7 @@ GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
 
 # Convert cyclotomic indices to rational numbers
-def cyc_to_QZ(A) -> list:
+def cyc_to_QZ(A):
     return sorted(QQ(k) / Ai for Ai in A
                   for k in range(1, Ai + 1) if gcd(k, Ai) == 1)
 
