@@ -587,11 +587,11 @@ def by_url_level(degree, family, level):
 
 @smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
 def by_url_space_label(degree, family, level, weight):
-    valid_weight = check_valid_weight(weight, degree)                                
-    if not valid_weight[0]:                                                          
-        return abort(404, valid_weight[1])                                           
+    valid_weight = check_valid_weight(weight, degree)
+    if not valid_weight[0]:
+        return abort(404, valid_weight[1])
     label = ".".join([str(w) for w in [degree, family, level, weight]])
-    return render_space_webpage(label) 
+    return render_space_webpage(label)
 
 @smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_orbit):
