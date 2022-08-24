@@ -155,9 +155,23 @@ def display_ALdims(level, weight, al_dims):
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
 
+    # temporary, to see that it works
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
-                          'E':'Eisenstein series'}
+                          'E':'Eisenstein series',
+                          'Q' : 'Klingen-Eisenstein series (Q)',
+                          'F' : 'Siegel-Eisenstein series (F)',
+                          'Y' : 'Yoshida lifts (Y)',
+                          'P' : 'Saito-Kurokawa lifts (P)',
+                          'G' : 'General type (G)'
+    }
+
+    info["subspace_type"] = {'E' : {'Q' : 'Klingen-Eisenstein series (Q)',
+                                    'F' : 'Siegel-Eisenstein series (F)'},
+                             'S' : {'Y' : 'Yoshida lifts (Y)',
+                                    'P' : 'Saito-Kurokawa lifts (P)',
+                                    'G' : 'General type (G)'}
+                             }
 
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
     info['bigint_knowl'] = bigint_knowl
@@ -1144,7 +1158,13 @@ def dimension_space_postprocess(res, info, query):
     def switch_text(X, typ):
         space_type = {'M': ' modular forms',
                       'S': ' cusp forms',
-                      'E': ' Eisenstein series'}
+                      'E': ' Eisenstein series',
+                      'Q' : 'Klingen-Eisenstein series (Q)',
+                      'F' : 'Siegel-Eisenstein series (F)',
+                      'Y' : 'Yoshida lifts (Y)',
+                      'P' : 'Saito-Kurokawa lifts (P)',
+                      'G' : 'General type (G)'
+        }
         return typ.capitalize() + space_type[X]
 
     dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
