@@ -1180,11 +1180,11 @@ def dimension_space_postprocess(res, info, query):
         k = space['weight']
         dims = DimGrid.from_db(space)
         if space.get('num_forms') is None:
-            dim_dict[N,k] = False
-        elif (N,k) not in dim_dict:
-            dim_dict[N,k] = dims
-        elif dim_dict[N,k] is not False:
-            dim_dict[N,k] += dims
+            dim_dict[N,k[0], k[1]] = False
+        elif (N,k[0],k[1]) not in dim_dict:
+            dim_dict[N,k[0],k[1]] = dims
+        elif dim_dict[N,k[0],k[1]] is not False:
+            dim_dict[N,k[0],k[1]] += dims
     delete_false(dim_dict)
     return dim_dict
 
@@ -1252,7 +1252,7 @@ def dimension_form_search(info, query):
              err_title='Dimension search input error',
              per_page=None,
 #             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
-             projection=['label', 'level', 'weight', 'total_dim', 'degree', 'cusp_dim', 'eis_dim'],
+             projection=['label', 'level', 'weight', 'total_dim', 'degree', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_P_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
