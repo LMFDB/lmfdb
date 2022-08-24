@@ -10,9 +10,7 @@ from lmfdb.utils import (
     web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
-# changing to the temporary labels that we have
-#NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+$")
-NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+$")
+NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
 def valid_label(label):

@@ -460,16 +460,7 @@ def render_full_gamma1_space_webpage(label):
 @smf.route("/data/<label>")
 def mf_data(label):
     slabel = label.split(".")
-    # temporary patch - for displaying newspaces as we work on them
-    if (len(slabel) == 5):
-        ret_id = db.smf_newspaces.lookup(label, "id")
-        if ret_id is None:
-            return abort(404, f"{label} not in database")
-        tables = ["smf_newspaces"]
-        labels = [label]
-        label_cols = ["label"]
-        title = f"Newspace data - {label}"
-    elif (len(slabel) >= 8) and (slabel[-4][0].isalpha()):
+    if (len(slabel) >= 8) and (slabel[-4][0].isalpha()):
         emb_label = label
         form_label = ".".join(slabel[:-2])
         space_label = ".".join(slabel[:-3])
@@ -491,12 +482,18 @@ def mf_data(label):
         label_cols = ["label", "label", "label", "hecke_orbit_code", "hecke_orbit_code"]
         title = f"Newform data - {label}"
     elif (len(slabel) >= 5) and (slabel[-2][0].isdigit()):
-        ocode = db.smf_newspaces.lookup(label, "hecke_orbit_code")
-        if ocode is None:
-            return abort(404, f"{label} not in database")
-        tables = ["smf_newspaces", "smf_subspaces", "smf_hecke_newspace_traces"]
-        labels = [label, label, ocode]
-        label_cols = ["label", "label", "hecke_orbit_code"]
+#        ocode = db.smf_newspaces.lookup(label, "hecke_orbit_code")
+#        if ocode is None:
+#            return abort(404, f"{label} not in database")
+        ret_id = db.smf_newspaces.lookup(label, "id")
+        if ret_id is None:
+             return abort(404, f"{label} not in database")
+        #tables = ["smf_newspaces", "smf_subspaces", "smf_hecke_newspace_traces"]
+        #labels = [label, label, ocode]
+        #label_cols = ["label", "label", "hecke_orbit_code"]
+        tables = ["smf_newspaces"]
+        labels = [label]
+        label_cols = ["label"]
         title = f"Newspace data - {label}"
     elif (len(slabel) >= 4) and (slabel[-1][0].isdigit()):
         tables = ["smf_allchars", "smf_allchars_subspaces"]
@@ -565,33 +562,23 @@ def by_url_level(degree, family, level):
         info['level'] = level
     return newform_search(info)
 
-# this is replaced by the space label for now
-# @smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
-# def by_url_full_space_label(degree, family, level, weight):
-#    valid_family = check_valid_family(family)
-#    if not valid_family[0]:
-#        return abort(404, valid_family[1])
-#    valid_weight = check_valid_weight(weight, degree)
-#    if not valid_weight[0]:
-#        return abort(404, valid_weight[1])
-#    label = ".".join([str(w) for w in [degree, family, level, weight]])
-#    return render_full_space_webpage(label)
-
-# we replace this one by the temporary labels that we have
-#@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
-#def by_url_space_label(degree, family, level, weight, char_orbit_label):
-#    valid_weight = check_valid_weight(weight, degree)
-#    if not valid_weight[0]:
-#        return abort(404, valid_weight[1])
-#    label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
-#    return render_space_webpage(label)
-
 @smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
-def by_url_space_label(degree, family, level, weight):
+def by_url_full_space_label(degree, family, level, weight):
+    valid_family = check_valid_family(family)
+    if not valid_family[0]:
+        return abort(404, valid_family[1])
     valid_weight = check_valid_weight(weight, degree)
     if not valid_weight[0]:
         return abort(404, valid_weight[1])
     label = ".".join([str(w) for w in [degree, family, level, weight]])
+    return render_full_space_webpage(label)
+
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>")
+def by_url_space_label(degree, family, level, weight, char_orbit_label):
+    valid_weight = check_valid_weight(weight, degree)
+    if not valid_weight[0]:
+        return abort(404, valid_weight[1])
+    label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
     return render_space_webpage(label)
 
 @smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
@@ -628,10 +615,7 @@ def url_for_label(label):
         return abort(404, "Invalid label")
 
     slabel = label.split(".")
-    # temporary patch to display what we have
-    if (len(slabel) == 5):
-        func = "smf.by_url_space_label"
-    elif (len(slabel) >= 8) and (slabel[-4].isalpha()):
+    if (len(slabel) >= 8) and (slabel[-4].isalpha()):
         func = "smf.by_url_embedded_newform_label"
     elif (len(slabel) >= 6) and (slabel[-2].isalpha()):
         func = "smf.by_url_newform_label"
@@ -648,12 +632,12 @@ def url_for_label(label):
     else:
         return abort(404, "Invalid label")
 #    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
-    keys = ['degree', 'family', 'level', 'weight']
+    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label']
     if not POSINT_RE.match(slabel[0]):
         raise ValueError("Invalid label")  
     keytypes_start = [POSINT_RE, ALPHACAP_RE, POSINT_RE]
-    # keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
-    keytypes_end = [POSINT_RE, POSINT_RE]
+#    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    keytypes_end = [ALPHA_RE, POSINT_RE, POSINT_RE]
     if len(keytypes_start)+len(keytypes_end)+int(slabel[0]) < len(slabel):
         raise ValueError("Invalid label")
     for i in range (len(keytypes_start)):
@@ -664,11 +648,11 @@ def url_for_label(label):
         idx += 1
     for i in range (len(slabel)-idx):
         if not keytypes_end[i].match(slabel[i+idx]):
-            print("idx=", idx)
-            print("label=", label)
             raise ValueError("Invalid label")
     slabel = slabel[:len(keytypes_start)] + ['.'.join(slabel[len(keytypes_start):idx])] + slabel[idx:]
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
+    print("idx=", idx)
+    print("kwds=", kwds)
     return url_for(func, **kwds)
 
 def jump_box(info):
@@ -950,7 +934,7 @@ newform_columns = SearchColumns([
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt'],
+    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt', 'char_orbit_label'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
