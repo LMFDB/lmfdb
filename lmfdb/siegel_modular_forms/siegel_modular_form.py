@@ -793,10 +793,8 @@ def common_parse(info, query, na_check=False):
     # parse_ints(info, query, 'weight', name="Weight")
     if 'weight' in info:
         if info['weight'][0] in ['(', '[']:
-            #query['weight_alt'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
             query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
         else:
-            # query['weight_alt'] = [int(info['weight'])]
             query['weight'] = str([int(info['weight']),0]).replace('[','{').replace(']','}')
     if 'weight_parity' in info:
         parity=info['weight_parity']
@@ -1543,8 +1541,8 @@ class SMFSearchArray(SearchArray):
              'Traces': _sort_forms,
              'Spaces': _sort_spaces,
              'SpaceTraces': _sort_spaces}
-    jump_example="3.6.a.a"
-    jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
+    jump_example="2.S.1.12.0.a"
+    jump_egspan="e.g. 2.S.1.12.0.a.a or 2.S.1.12.0.a"
     jump_knowl="mf.siegel.search_input"
     jump_prompt="Label"
     null_column_explanations = { # No need to display warnings for these
