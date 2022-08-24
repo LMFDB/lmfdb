@@ -33,17 +33,23 @@
   <thead>
     <tr>
       <th class="blank"></th>
+      <th> Subspace </th>
+      <th> Dimension </th>
       <th> Total </th>
     </tr>
   </thead>
   <tbody>
-    {% for X in ['M', 'S', 'E', 'Q', 'P', 'F', 'Y', 'G'] %}
+    {% for X in ['M', 'S', 'E'] %}
+    {% for Y in info.subspace_type[X] %}
     <tr>
       <th class="left"> {{info.space_type[X]}} </td>
+      <th class="left"> {{info.subspace_type[X][Y]}} </td>
       {% for typ in ['all'] %} 
-      <td> {{ space.dim_grid[X][typ] }} </td>
+      <td> {{ space.dim_grid[Y][typ] }} </td>
+      <td> {{ space.dim_grid[X][typ]  }} </td>
       {% endfor %}
     </tr>
+    {% endfor %}
     {% endfor %}
   </tbody>
 </table>

@@ -104,7 +104,6 @@ def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
 
 def display_AL(info):
     results = info["results"]
-    print(results)
     if not results:
         return False
     N = results[0]['level']
@@ -166,7 +165,8 @@ def set_info_funcs(info):
                           'G' : 'General type (G)'
     }
 
-    info["subspace_type"] = {'E' : {'Q' : 'Klingen-Eisenstein series (Q)',
+    info["subspace_type"] = {'M' : {'M' : ''},
+                             'E' : {'Q' : 'Klingen-Eisenstein series (Q)',
                                     'F' : 'Siegel-Eisenstein series (F)'},
                              'S' : {'Y' : 'Yoshida lifts (Y)',
                                     'P' : 'Saito-Kurokawa lifts (P)',
@@ -660,8 +660,6 @@ def url_for_label(label):
             raise ValueError("Invalid label")
     slabel = slabel[:len(keytypes_start)] + ['.'.join(slabel[len(keytypes_start):idx])] + slabel[idx:]
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
-    print("idx=", idx)
-    print("kwds=", kwds)
     return url_for(func, **kwds)
 
 def jump_box(info):
