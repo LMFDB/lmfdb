@@ -889,13 +889,13 @@ newform_columns = SearchColumns([
 #     MathCol("collection", "mf.siegel.collection", "Collection", ["name", "collection"], default=True),
 #     MultiProcessedCol("name", None, "Label", ["collection", "name"],
 #                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
-     MathCol("degree", "mf.siegel.degree", "Degree", default=True),
-     MathCol("weight", "mf.siegel.weight", "Weight", default=True),
-     MathCol("weight_alt", "mf.siegel.weight", "Weight (alt.)", default=True),
-#    MultiProcessedCol("character", "smf.character", "Char",
-#                      ["level", "char_orbit_label"],
-#                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
-#                      short_title="character"),
+    MathCol("degree", "mf.siegel.degree", "Degree", default=True),
+    MathCol("weight", "mf.siegel.weight", "Weight", default=True),
+    MathCol("weight_alt", "mf.siegel.weight", "Weight (alt.)", default=True),
+    MultiProcessedCol("character", "smf.character", "Char",
+                      ["level", "char_orbit_label"],
+                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
+                      short_title="character"),
 #    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
 #                      ["char_conductor", "prim_orbit_index"],
 #                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
@@ -1263,9 +1263,9 @@ def dimension_space_search(info, query):
 space_columns = SearchColumns([
     LinkCol("label", "smf.label", "Label", url_for_label, default=True),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
-#    MultiProcessedCol("character", "smf.character", r"$\chi$", ["level", "conrey_indexes"],
-#                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
-#                      short_title="character", default=True),
+    MultiProcessedCol("character", "mf.siegel.character", r"$\chi$", ["level", "conrey_indexes"],
+                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
+                      short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     MathCol("total_dim", "smf.display_dim", "Dim.", short_title="dimension", default=True)
     #    MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
@@ -1607,18 +1607,18 @@ class SMFSearchArray(SearchArray):
             example_span='2, 4-8',
             select_box=weight_quantifier)
 
-#        character_quantifier = ParityMod(
-#            name='char_parity',
-#            extra=['class="simult_select"', 'onchange="simult_change(event);"'#])
+        character_quantifier = ParityMod(
+            name='char_parity',
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
- #       character = TextBoxWithSelect(
- #           name='char_label',
- #           knowl='mf.siegel.character',
- #           label='Character',
- #           short_label='Char.',
- #           example='20.d',
- #           example_span='20.d',
- #           select_box=character_quantifier)
+        character = TextBoxWithSelect(
+            name='char_label',
+            knowl='mf.siegel.character',
+            label='Character',
+            short_label='Char.',
+            example='20.d',
+            example_span='20.d',
+            select_box=character_quantifier)
 
  #       prime_quantifier = SubsetBox(
  #           name="prime_quantifier",
@@ -1800,7 +1800,8 @@ class SMFSearchArray(SearchArray):
         self.browse_array = [
             [degree],
             [family, level],
-            [weight, char_order]
+            [weight],
+            [char_order, character]
 #            [level_primes, character],
 #            [char_order, char_primitive],
 #            [dim, coefficient_field],
@@ -1812,20 +1813,20 @@ class SMFSearchArray(SearchArray):
 #            [results, projective_image_type]]
 ]
         self.refine_array = [
-            [degree, family, level, weight, char_order]
+            [degree, family, level, weight, char_order, character]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, coefficient_field],
 #            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
-            [degree, family, level, weight, char_order]
+            [degree, family, level, weight, char_order, character]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
-            [degree, family, level, weight, char_order]
+            [degree, family, level, weight, char_order, character]
 #            [level, weight, analytic_conductor, Nk2, hdim],
 #            [level_primes, character, char_primitive, char_order, hnum_newforms]
         ]
