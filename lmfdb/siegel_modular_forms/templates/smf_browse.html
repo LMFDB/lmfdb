@@ -16,10 +16,11 @@ Info was: {{info}}
 <h2> Browse {{ KNOWL('mf.siegel.newform','newforms')}}</h2>
 
 <table class="browse">
-  <tr>
+<!--  <tr>
     <td>By {{ KNOWL('mf.siegel.degree',title = "degree")}}:</td>
     <td>{% for degree in info.degree_list %} <a href="?degree={{degree}}">{{degree}}</a>&nbsp;&nbsp; {% endfor %}</td>
-  </tr><tr>
+-->
+  <tr>
     <td>By {{ KNOWL('mf.siegel.weight',title = "weight")}}:</td>
     <td>{% for weight in info.weight_list %} <a href="?weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
@@ -43,12 +44,16 @@ Info was: {{info}}
 <!--    <td> \(j = \)
 	<input type="number" name="j" value="{{ j_value }}" style="width: 1 em">
     </td>
--->
     {% if j_value %}
     <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{'('+weight+','+ j_value +')'}}</a>&nbsp;&nbsp; {% endfor %}</td>
     {% else %}
     <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{'('+weight+','+'0'+')'}}</a>&nbsp;&nbsp; {% endfor %}</td>
-    {% endif %}
+    </tr><tr>
+<!--    {% endif %}  -->
+    <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td></td>
+    <td>{% for weight in info.vector_weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('mf.siegel.level', title="level")}}:</td>
     <td>{% for level in info.level_list %} <a href="?search_type=Spaces&level={{level}}">{{level}}</a>&nbsp;&nbsp; {% endfor %}</td>
