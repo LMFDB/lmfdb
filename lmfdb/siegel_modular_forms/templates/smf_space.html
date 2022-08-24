@@ -45,8 +45,8 @@
       <th class="left"> {{info.space_type[X]}} </td>
       <th class="left"> {{info.subspace_type[X][Y]}} </td>
       {% for typ in ['all'] %} 
-      <td> {{ space.dim_grid[Y][typ] }} </td>
-      <td> {{ space.dim_grid[X][typ]  }} </td>
+      <td class="center"> {{ space.dim_grid[Y][typ] }} </td>
+      <td class="center"> {{ space.dim_grid[X][typ]  }} </td>
       {% endfor %}
     </tr>
     {% endfor %}
