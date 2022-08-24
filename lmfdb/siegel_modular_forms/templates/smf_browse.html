@@ -40,11 +40,10 @@ Info was: {{info}}
 <table class="browse">
   <tr>
     <td>By {{ KNOWL('mf.siegel.weight',title = "weight")}}:</td>
-    <td> \((k,j)\) </td>
-  </tr><tr>
-    <td> \(j = \)
+<!--    <td> \(j = \)
 	<input type="number" name="j" value="{{ j_value }}" style="width: 1 em">
     </td>
+-->
     {% if j_value %}
     <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{'('+weight+','+ j_value +')'}}</a>&nbsp;&nbsp; {% endfor %}</td>
     {% else %}
