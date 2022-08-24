@@ -793,7 +793,11 @@ def common_parse(info, query, na_check=False):
     # parse_ints(info, query, 'weight', name="Weight")
     if 'weight' in info:
         if info['weight'][0] in ['(', '[']:
-            query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
+            if '-' in info['weight']:
+                wts = ['{' + w[1:-1] + '}' for w in info['weight'].split('-')]
+                query['weight'] = { '$gte' : wts[0], '$lte' : wts[1] }
+            else:
+                query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
         else:
             parse_ints(info, query, 'weight', name="Weight")
             if type(query['weight']) == int:
