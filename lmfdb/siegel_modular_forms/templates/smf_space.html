@@ -17,6 +17,12 @@
     <td>\(=\)</td>
     <td>{{ space.weight_str }}</td>
   </tr>
+  <tr>
+    <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit')}}: </td>
+    <td> \([\chi]\) </td>
+    <td>\(=\)</td>
+    <td> {{ space.display_character() | safe }} </td>
+  </tr>
 </table>
 
 <h2> Dimensions </h2>

@@ -69,11 +69,6 @@ def degree_bound():
 
 @cached_function
 def weight_bound(wt_len=1, nontriv=None):
-# TODO : There should be a way to query only those with a given cardinality
-#    if nontriv:
-#        return db.smf_newforms.max('weight',{'char_order':{'$ne':1}})
-#    else:
-#        return db.smf_newforms.max('weight')
     if nontriv:
         wts = db.smf_newforms.search({'char_order':{'$ne':1}}, 'weight_alt')
     else:
@@ -892,7 +887,7 @@ newform_columns = SearchColumns([
 #                      ["char_conductor", "prim_orbit_index"],
 #                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
 #                      short_title="primitive character"),
-#    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
+    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
 #    MathCol("dim", "smf.dimension", "Dim", default=True, align="right", short_title="dimension"),
 #    MathCol("relative_dim", "smf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
@@ -934,7 +929,7 @@ newform_columns = SearchColumns([
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt', 'char_orbit_label'],
+    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt', 'char_orbit_label', 'char_order'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -1252,7 +1247,7 @@ space_columns = SearchColumns([
 #    MultiProcessedCol("character", "smf.character", r"$\chi$", ["level", "conrey_indexes"],
 #                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
 #                      short_title="character", default=True),
-#    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
+    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     MathCol("total_dim", "smf.display_dim", "Dim.", short_title="dimension", default=True)
     #    MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
 #    MultiProcessedCol("al_dims", "smf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
@@ -1387,9 +1382,9 @@ class SMF_stats(StatsDisplay):
                'degree':['2', '3-%d'%degree_bound()],
                'weight':['2','3','4','5-8','9-16','17-%d'%weight_bound()[0] ],
                'vector_weight' : ['(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1])],
-               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000']
+               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
 #               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-#               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']
 #               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     }
     #    reverses = {'cm_discs': True}
@@ -1399,10 +1394,9 @@ class SMF_stats(StatsDisplay):
     knowls = {'level': 'mf.siegel.level',
               'weight': 'mf.siegel.weight',
               'degree' : 'mf.siegel.degree',
-              'dim' : 'mf.siegel.dimension'
-#              'dim': 'mf.siegel.dimension',
+              'dim' : 'mf.siegel.dimension',
 #              'relative_dim': 'mf.siegel.dimension',
-#              'char_order': 'character.dirichlet.order',
+              'char_order': 'character.dirichlet.order',
 #              'char_degree': 'character.dirichlet.degree',
 #              'analytic_rank': 'mf.siegel.analytic_rank',
 #              'projective_image': 'mf.siegel.projective_image',
@@ -1420,8 +1414,7 @@ class SMF_stats(StatsDisplay):
 #                  'rm_discs': 'real multiplication'}
         'dim' : 'absolute dimension'
         }
-    #     short_display = {'char_order': 'character order',
-    short_display = {
+    short_display = {'char_order': 'character order',
 #                     'char_degree': 'character degree',
 #                     'num_forms': 'newforms',
 #                     'inner_twist_count': 'inner twists',
@@ -1460,9 +1453,10 @@ class SMF_stats(StatsDisplay):
         {'cols': ['degree', 'dim'],
          'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
+        {'cols': ['char_order'],
 #        {'cols': ['char_order', 'relative_dim'],
-#         'proportioner': proportioners.per_row_total,
-#         'totaler': totaler()},
+         'proportioner': proportioners.per_row_total,
+         'totaler': totaler()},
 #        {'cols':'analytic_rank',
 #         'totaler':{'avg':True}},
 #        {'cols':'projective_image',
@@ -1489,7 +1483,7 @@ class SMF_stats(StatsDisplay):
     # right now we don't have all these columns in our database.
     # we stick to what we have
     # dynamic_cols = ['level', 'weight', 'dim', 'relative_dim', 'analytic_conductor', 'char_order', 'char_degree', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
-    dynamic_cols = ['degree', 'weight', 'dim']
+    dynamic_cols = ['degree', 'weight', 'dim', 'char_order']
 
 @smf.route("/stats")
 def statistics():
@@ -1511,9 +1505,9 @@ class SMFSearchArray(SearchArray):
         ('family', 'family', ['family', 'level']),
         ('level', 'level', ['level', 'weight']),
         ('weight', 'weight', ['weight', 'level']),
-#        ('character', 'character', ['level', 'char_orbit_index', 'weight']),
+        ('character', 'character', ['level', 'char_orbit_index', 'weight']),
 #        ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
-#        ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
+        ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
 #        ('Nk2', 'Nk^2', ['Nk2', 'level']),
         ('dim', 'dimension', ['dim', 'level', 'weight']),
 #        ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
@@ -1618,12 +1612,12 @@ class SMFSearchArray(SearchArray):
  #           example_span='2,3',
  #           select_box=prime_quantifier)
 
- #       char_order = TextBox(
- #           name='char_order',
- #           label='Character order',
- #           knowl='character.dirichlet.order',
- #           example='1',
- #           example_span='1, 2-4')
+        char_order = TextBox(
+            name='char_order',
+            label='Character order',
+            knowl='character.dirichlet.order',
+            example='1',
+            example_span='1, 2-4')
  #       char_primitive = TextBox(
  #           name='prim_label',
  #           knowl='character.dirichlet.primitive',
@@ -1787,7 +1781,7 @@ class SMFSearchArray(SearchArray):
         self.browse_array = [
             [degree],
             [family, level],
-            [weight]
+            [weight, char_order]
 #            [level_primes, character],
 #            [char_order, char_primitive],
 #            [dim, coefficient_field],
@@ -1799,20 +1793,20 @@ class SMFSearchArray(SearchArray):
 #            [results, projective_image_type]]
 ]
         self.refine_array = [
-            [degree, family, level, weight]
+            [degree, family, level, weight, char_order]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, coefficient_field],
 #            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
-            [degree, family, level, weight]
+            [degree, family, level, weight, char_order]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
-            [degree, family, level, weight]
+            [degree, family, level, weight, char_order]
 #            [level, weight, analytic_conductor, Nk2, hdim],
 #            [level_primes, character, char_primitive, char_order, hnum_newforms]
         ]
