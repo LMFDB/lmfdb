@@ -1384,8 +1384,8 @@ class SMF_stats(StatsDisplay):
                'vector_weight' : ['(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1])],
                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
 #               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']
-#               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
+                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']
     }
     #    reverses = {'cm_discs': True}
     reverses = {}
@@ -1397,7 +1397,7 @@ class SMF_stats(StatsDisplay):
               'dim' : 'mf.siegel.dimension',
 #              'relative_dim': 'mf.siegel.dimension',
               'char_order': 'character.dirichlet.order',
-#              'char_degree': 'character.dirichlet.degree',
+              'char_degree': 'character.dirichlet.degree',
 #              'analytic_rank': 'mf.siegel.analytic_rank',
 #              'projective_image': 'mf.siegel.projective_image',
 #              'num_forms': 'mf.siegel.galois_orbit',
@@ -1415,7 +1415,7 @@ class SMF_stats(StatsDisplay):
         'dim' : 'absolute dimension'
         }
     short_display = {'char_order': 'character order',
-#                     'char_degree': 'character degree',
+                     'char_degree': 'character degree',
 #                     'num_forms': 'newforms',
 #                     'inner_twist_count': 'inner twists',
 #                     'cm_discs': 'CM disc',
@@ -1483,7 +1483,7 @@ class SMF_stats(StatsDisplay):
     # right now we don't have all these columns in our database.
     # we stick to what we have
     # dynamic_cols = ['level', 'weight', 'dim', 'relative_dim', 'analytic_conductor', 'char_order', 'char_degree', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
-    dynamic_cols = ['degree', 'weight', 'dim', 'char_order']
+    dynamic_cols = ['degree', 'weight', 'dim', 'char_order', 'char_degree']
 
 @smf.route("/stats")
 def statistics():
