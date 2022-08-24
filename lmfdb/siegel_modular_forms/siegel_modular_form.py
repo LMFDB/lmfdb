@@ -172,6 +172,7 @@ def set_info_funcs(info):
                                     'P' : 'Saito-Kurokawa lifts (P)',
                                     'G' : 'General type (G)'}
                              }
+    info["subspace_num"] = { typ : len(info["subspace_type"][typ]) for typ in ['M', 'E', 'S']}
 
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
     info['bigint_knowl'] = bigint_knowl

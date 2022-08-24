@@ -40,13 +40,19 @@
   </thead>
   <tbody>
     {% for X in ['M', 'S', 'E'] %}
+    <tr>
+      <th rowspan={{info.subspace_num[X]+1}} class="left"> {{info.space_type[X]}} </td>
+      <td></td>
+      <td></td>
+      {% for typ in ['all'] %} 
+      <td rowspan={{info.subspace_num[X]+1}} class="center"> {{ space.dim_grid[X][typ]  }} </td>
+      {% endfor %}
+    </tr>
     {% for Y in info.subspace_type[X] %}
     <tr>
-      <th class="left"> {{info.space_type[X]}} </td>
       <th class="left"> {{info.subspace_type[X][Y]}} </td>
       {% for typ in ['all'] %} 
       <td class="center"> {{ space.dim_grid[Y][typ] }} </td>
-      <td class="center"> {{ space.dim_grid[X][typ]  }} </td>
       {% endfor %}
     </tr>
     {% endfor %}
