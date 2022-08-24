@@ -795,7 +795,11 @@ def common_parse(info, query, na_check=False):
         if info['weight'][0] in ['(', '[']:
             query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
         else:
-            query['weight'] = str([int(info['weight']),0]).replace('[','{').replace(']','}')
+            parse_ints(info, query, 'weight', name="Weight")
+            if type(query['weight']) == int:
+                query['weight'] = '{ %d, 0 } ' % query['weight']
+            else:
+                query['weight'] = { key : '{ %d, 0 }' % query['weight'][key] for key in query['weight'].keys()}
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
