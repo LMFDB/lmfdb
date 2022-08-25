@@ -28,7 +28,7 @@ def get_bread(**kwds):
              ('hecke_orbit', 'Newform orbit %s', 'smf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'smf.by_url_newform_conrey5')]
     bread = [('Modular forms', url_for('modular_forms')),
-             ('Classical', url_for("smf.index"))]
+             ('Siegel', url_for("smf.index"))]
     if 'other' in kwds:
         if isinstance(kwds['other'], str):
             return bread + [(kwds['other'], ' ')]

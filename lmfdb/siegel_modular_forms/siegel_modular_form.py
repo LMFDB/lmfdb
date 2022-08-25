@@ -518,8 +518,7 @@ def mf_data(label):
 FAMILY_DICT = {
     'paramodular' : 'K',
     'Siegel'      : 'S',
-    'principal'   : 'P',
-    'full'        : 'F'
+    'principal'   : 'P'
 }
 
 def check_valid_family(family):
@@ -644,7 +643,7 @@ def url_for_label(label):
 #    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label']
     if not POSINT_RE.match(slabel[0]):
-        raise ValueError("Invalid label")  
+        raise ValueError("Invalid label")
     keytypes_start = [POSINT_RE, ALPHACAP_RE, POSINT_RE]
 #    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
     keytypes_end = [ALPHA_RE, POSINT_RE, POSINT_RE]
@@ -1579,10 +1578,9 @@ class SMFSearchArray(SearchArray):
             label='Family',
             options=[('paramodular', 'paramodular'),
                      ('Siegel', 'Siegel'),
-                     ('principal', 'principal'),
-                     ('full', 'full')],      
-            width=110)
-        
+                     ('principal', 'principal')],
+            width=150)
+
         level_quantifier = SelectBox(
             name='level_type',
             options=[('', ''),
@@ -1826,7 +1824,8 @@ class SMFSearchArray(SearchArray):
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
-            [degree, family, level, weight, char_order, character]
+            [degree, family, level, weight, dim],
+            [char_order, character]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
