@@ -1206,7 +1206,7 @@ def dimension_form_search(info, query):
              err_title='Dimension search input error',
              per_page=None,
 #             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
-             projection=['label', 'level', 'weight', 'total_dim', 'degree', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_P_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim'],
+             projection=['label', 'level', 'weight', 'total_dim', 'degree', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_F_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)

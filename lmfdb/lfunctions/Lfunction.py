@@ -58,7 +58,7 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.siegel_modular_forms.sample import Sample
+# from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
@@ -1007,112 +1007,112 @@ class Lfunction_HMF(Lfunction):
 
 
 #############################################################################
-
-class Lfunction_SMF2_scalar_valued(Lfunction):
-    """Class representing an L-function for a scalar valued Siegel modular form of degree 2
-
-    Compulsory parameters: weight
-                           orbit (SMF sample name is weight_orbt (e.g. 16_Klingen))
-
-    Optional parameters: number (indicates choice of embedding)
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        # Check for compulsory arguments
-        validate_required_args('Unable to construct Siegel modular form L-function.',
-                               args, 'weight', 'orbit')
-        if self.orbit[0] == 'U':
-            self._Ltype = "siegelnonlift"
-        elif self.orbit[0] == 'E':
-            self._Ltype = "siegeleisenstein"
-        elif self.orbit[0] == 'K':
-            self._Ltype = "siegelklingeneisenstein"
-        elif self.orbit[0] == 'M':
-            self._Ltype = "siegelmaasslift"
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.weight = int(self.weight)
-        if args['number']:
-            self.number = int(args['number'])
-        else:
-            self.number = 0     # Default embedding of the coefficients
-
-        # Load form (S) from database
-        label = '%d_%s'%(self.weight,self.orbit)
-        self.S = Sample('Sp4Z', label)
-        if not self.S:
-            raise KeyError("Siegel modular form Sp4Z.%s not found in database." % label)
-        self.field = self.S.field()
-        evlist = self.S.available_eigenvalues()
-        if len(evlist) < 3: # FIXME -- we should sanity check that we have enough eigenvalues for it make sense to display an L-function page (presumably 3 is not enough)
-            raise ValueError("Eigenvalue data for Siegel modular form Sp4Z.%s not available or insufficient." % label)
-        self.evs = self.S.eigenvalues(self.S.available_eigenvalues())
-        for ev in self.evs:
-            self.evs[ev] = self.field(self.evs[ev])
-
-        # Mandatory properties
-        self.fromDB = False
-        self.coefficient_type = 3
-        self.coefficient_period = 0
-        if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
-            self.poles = []  # the L-function is entire
-            self.residues = []
-            self.primitive = True  # and primitive
-        elif self.orbit[0] == 'E':  # if the function is an Eisenstein series
-            self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
-            self.primitive = False
-        elif self.orbit[0] == 'M':  # if the function is a lift and a cusp form
-            self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
-            self.primitive = False
-        elif self.orbit[0] == 'K':
-            self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
-            self.primitive = False
-        self.langlands = True
-        self.degree = 4
-        self.quasidegree = 1
-        self.level_factored = self.level = 1
-        self.mu_fe = []  # the shifts of the Gamma_R to print
-        self.automorphyexp = float(self.weight) - float(1.5)
-        self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        self.algebraic = True
-        self.motivic_weight = 2*self.weight - 3 # taken from A. Panchiskin's talk @ Oberwolfach, Oct. 2007
-
-        # Compute Dirichlet coefficients ########################
-        roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
-        self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
-
-        # FIXME: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
-        # self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
-
-        self.sign = (-1) ** float(self.weight)
-        self.checkselfdual()
-
-        # Text for the web page
-        self.texname = "L(s,F)"
-        self.texnamecompleteds = r"\Lambda(s,F)"
-        if self.selfdual:
-            self.texnamecompleted1ms = r"\Lambda(1-s,F)"
-        else:
-            self.texnamecompleted1ms = r"\Lambda(1-s,\overline{F})"
-        self.credit = ''
-
-        # Generate a function to do computations
-        generateSageLfunction(self)
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "mf.siegel"
-        self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
-                      "Modular form of weight " + str(self.weight) + ".")
-
-    def original_object(self):
-        return self.S
-
+#
+# class Lfunction_SMF2_scalar_valued(Lfunction):
+#     """Class representing an L-function for a scalar valued Siegel modular form of degree 2
+#
+#     Compulsory parameters: weight
+#                            orbit (SMF sample name is weight_orbt (e.g. 16_Klingen))
+#
+#     Optional parameters: number (indicates choice of embedding)
+#     """
+#
+#     def __init__(self, **args):
+#         constructor_logger(self, args)
+#
+#         # Check for compulsory arguments
+#         validate_required_args('Unable to construct Siegel modular form L-function.',
+#                                args, 'weight', 'orbit')
+#         if self.orbit[0] == 'U':
+#             self._Ltype = "siegelnonlift"
+#         elif self.orbit[0] == 'E':
+#             self._Ltype = "siegeleisenstein"
+#         elif self.orbit[0] == 'K':
+#             self._Ltype = "siegelklingeneisenstein"
+#         elif self.orbit[0] == 'M':
+#             self._Ltype = "siegelmaasslift"
+#
+#         # Put the arguments into the object dictionary
+#         self.__dict__.update(args)
+#         self.weight = int(self.weight)
+#         if args['number']:
+#             self.number = int(args['number'])
+#         else:
+#             self.number = 0     # Default embedding of the coefficients
+#
+#         # Load form (S) from database
+#         label = '%d_%s'%(self.weight,self.orbit)
+#         self.S = Sample('Sp4Z', label)
+#         if not self.S:
+#             raise KeyError("Siegel modular form Sp4Z.%s not found in database." % label)
+#         self.field = self.S.field()
+#         evlist = self.S.available_eigenvalues()
+#         if len(evlist) < 3: # FIXME -- we should sanity check that we have enough eigenvalues for it make sense to display an L-function page (presumably 3 is not enough)
+#             raise ValueError("Eigenvalue data for Siegel modular form Sp4Z.%s not available or insufficient." % label)
+#         self.evs = self.S.eigenvalues(self.S.available_eigenvalues())
+#         for ev in self.evs:
+#             self.evs[ev] = self.field(self.evs[ev])
+#
+#         # Mandatory properties
+#         self.fromDB = False
+#         self.coefficient_type = 3
+#         self.coefficient_period = 0
+#         if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
+#             self.poles = []  # the L-function is entire
+#             self.residues = []
+#             self.primitive = True  # and primitive
+#         elif self.orbit[0] == 'E':  # if the function is an Eisenstein series
+#             self.poles = [float(3) / float(2)]
+#             self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
+#             self.primitive = False
+#         elif self.orbit[0] == 'M':  # if the function is a lift and a cusp form
+#             self.poles = [float(3) / float(2)]
+#             self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
+#             self.primitive = False
+#         elif self.orbit[0] == 'K':
+#             self.poles = [float(3) / float(2)]
+#             self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
+#             self.primitive = False
+#         self.langlands = True
+#         self.degree = 4
+#         self.quasidegree = 1
+#         self.level_factored = self.level = 1
+#         self.mu_fe = []  # the shifts of the Gamma_R to print
+#         self.automorphyexp = float(self.weight) - float(1.5)
+#         self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
+#         self.compute_kappa_lambda_Q_from_mu_nu()
+#         self.algebraic = True
+#         self.motivic_weight = 2*self.weight - 3 # taken from A. Panchiskin's talk @ Oberwolfach, Oct. 2007
+#
+#         # Compute Dirichlet coefficients ########################
+#         roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
+#         self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
+#
+#         # FIXME: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
+#         # self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
+#
+#         self.sign = (-1) ** float(self.weight)
+#         self.checkselfdual()
+#
+#         # Text for the web page
+#         self.texname = "L(s,F)"
+#         self.texnamecompleteds = r"\Lambda(s,F)"
+#         if self.selfdual:
+#             self.texnamecompleted1ms = r"\Lambda(1-s,F)"
+#         else:
+#             self.texnamecompleted1ms = r"\Lambda(1-s,\overline{F})"
+#         self.credit = ''
+#
+#         # Generate a function to do computations
+#         generateSageLfunction(self)
+#         self.info = self.general_webpagedata()
+#         self.info['knowltype'] = "mf.siegel"
+#         self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
+#                       "Modular form of weight " + str(self.weight) + ".")
+#
+#     def original_object(self):
+#         return self.S
+#
 #############################################################################
 
 
