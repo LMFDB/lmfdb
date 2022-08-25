@@ -43,8 +43,6 @@ ALPHA_RE = re.compile("^[a-z]+$")
 ALPHACAP_RE = re.compile("^[A-Z]+$")
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
-ETAQUOTIENTS = yaml.load(open(os.path.join(_curdir, "eta.yaml")),
-                         Loader=yaml.FullLoader)
 
 @cached_function
 def learnmore_list():
@@ -326,49 +324,6 @@ def parse_prec(info):
     return []
 
 
-def eta_quotient_texstring(etadata):
-    r"""
-    Returns a latex string representing an eta quotient.
-
-    etadata should be a dictionary as returned from parsing `eta.yaml`.
-
-    IMPLEMENTATION NOTE:
-      numerstr and denomstr together form a texstring of the form
-      \eta(Az)^B \eta(Cz)^D, potentially in fraction form.
-
-      str will be a string representing something like
-      q^A \prod_{n} (1 - q^{Bn})^C (1 - q^{Dn})^E
-    """
-    numerstr = ''
-    denomstr = ''
-    innerqstr = ''
-    qfirstexp = 0  # compute A in the qstr representation
-    for key, value in etadata.items():
-        _texstr = '\\eta({}z)'.format(key if key != 1 else '')
-        qfirstexp += key * value
-        if value > 0:
-            numerstr += _texstr
-            if value != 1:
-                numerstr += '^{%s}' % (value)
-        else:
-            denomstr += _texstr
-            if value != -1:
-                denomstr += '^{%s}' % (-value)
-        innerqstr += '(1 - q^{%sn})^{%s}' % (key if key != 1 else '',
-                                             value if value != 1 else '')
-    if denomstr == '':
-        etastr = numerstr
-    else:
-        etastr = '\\dfrac{%s}{%s}' % (numerstr, denomstr)
-
-    qfirstexp = qfirstexp // 24
-    etastr += '=q'
-    if qfirstexp != 1:
-        etastr += '^{%s}' % (qfirstexp)
-    etastr += '\\prod_{n=1}^\\infty' + innerqstr
-    return etastr
-
-
 def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
@@ -518,8 +473,7 @@ def mf_data(label):
 FAMILY_DICT = {
     'paramodular' : 'K',
     'Siegel'      : 'S',
-    'principal'   : 'P',
-    'full'        : 'F'
+    'principal'   : 'P'
 }
 
 def check_valid_family(family):
@@ -644,7 +598,7 @@ def url_for_label(label):
 #    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label']
     if not POSINT_RE.match(slabel[0]):
-        raise ValueError("Invalid label")  
+        raise ValueError("Invalid label")
     keytypes_start = [POSINT_RE, ALPHACAP_RE, POSINT_RE]
 #    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
     keytypes_end = [ALPHA_RE, POSINT_RE, POSINT_RE]
@@ -1579,10 +1533,9 @@ class SMFSearchArray(SearchArray):
             label='Family',
             options=[('paramodular', 'paramodular'),
                      ('Siegel', 'Siegel'),
-                     ('principal', 'principal'),
-                     ('full', 'full')],      
-            width=110)
-        
+                     ('principal', 'principal')],
+            width=150)
+
         level_quantifier = SelectBox(
             name='level_type',
             options=[('', ''),
@@ -1826,7 +1779,8 @@ class SMFSearchArray(SearchArray):
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
-            [degree, family, level, weight, char_order, character]
+            [degree, family, level, weight, dim],
+            [char_order, character]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
