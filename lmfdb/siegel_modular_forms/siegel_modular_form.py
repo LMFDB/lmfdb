@@ -1264,7 +1264,7 @@ def completeness_page():
 @smf.route("/Labels")
 def labels_page():
     t = 'Labels for Siegel modular forms'
-    return render_template("single.html", kid='smf.label', title=t,
+    return render_template("single.html", kid='mf.siegel.label', title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
 
