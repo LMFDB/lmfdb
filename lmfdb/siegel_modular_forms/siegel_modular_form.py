@@ -127,7 +127,7 @@ def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
         count = dim_dict[dim]
         query = {'weight':weight,
                  'char_label':'%s.%s'%(level,char_orbit_label),
-                 'dim':dim}
+                 'total_dim':dim}
         if count > 3:
             short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
             title = '%s newforms' % count
@@ -784,9 +784,9 @@ def common_parse(info, query, na_check=False):
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
     if not na_check and info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
-            parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
+            parse_ints(info, query, 'total_dim', qfield='relative_dim', name="Dimension")
         else:
-            parse_ints(info, query, 'dim', name="Dimension")
+            parse_ints(info, query, 'total_dim', name="Dimension")
 
 
 def parse_discriminant(d, sign = 0):
@@ -1609,7 +1609,7 @@ class SMFSearchArray(SearchArray):
             min_width=110)
 
         dim = TextBoxWithSelect(
-            name='dim',
+            name='total_dim',
             label='Dim.',
             knowl='mf.siegel.dimension',
             example='1',
