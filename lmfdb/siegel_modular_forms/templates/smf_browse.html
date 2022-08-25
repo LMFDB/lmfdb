@@ -16,10 +16,6 @@ Info was: {{info}}
 <h2> Browse {{ KNOWL('mf.siegel.newform','newforms')}}</h2>
 
 <table class="browse">
-<!--  <tr>
-    <td>By {{ KNOWL('mf.siegel.degree',title = "degree")}}:</td>
-    <td>{% for degree in info.degree_list %} <a href="?degree={{degree}}">{{degree}}</a>&nbsp;&nbsp; {% endfor %}</td>
--->
   <tr>
     <td>By {{ KNOWL('mf.siegel.weight',title = "weight")}}:</td>
     <td>{% for weight in info.weight_list %} <a href="?weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
@@ -41,15 +37,6 @@ Info was: {{info}}
 <table class="browse">
   <tr>
     <td>By {{ KNOWL('mf.siegel.weight',title = "weight")}}:</td>
-<!--    <td> \(j = \)
-	<input type="number" name="j" value="{{ j_value }}" style="width: 1 em">
-    </td>
-    {% if j_value %}
-    <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{'('+weight+','+ j_value +')'}}</a>&nbsp;&nbsp; {% endfor %}</td>
-    {% else %}
-    <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{'('+weight+','+'0'+')'}}</a>&nbsp;&nbsp; {% endfor %}</td>
-    </tr><tr>
-<!--    {% endif %}  -->
     <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
     <td></td>
@@ -60,8 +47,7 @@ Info was: {{info}}
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting_spaces')}}">interesting newspaces</a> or a <a href="{{url_for('.random_space')}}">random newspace</a></td>
   </tr><tr>
-    <td colspan="2">Create a <a href = "?search_type=Spaces">search</a> for newspaces,
- a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.siegel.character',title='character') }}</td>
+    <td colspan="2">Create a <a href="?search_type=Spaces">search</a> for newspaces or a <a href="?search_type=SpaceDimensions&char_order=1">table of dimensions for \(\Sp_4(\Z)\)</a> </td>
   </tr>
 </table>
 
