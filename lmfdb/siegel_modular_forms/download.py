@@ -9,7 +9,7 @@ from lmfdb.siegel_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
 
 class SMF_download(Downloader):
-    table = db.smf_samples
+    table = db.smf_newforms
     title = 'Siegel modular forms'
     data_format = ['N=level', 'k=weight', 'dim', 'analytic conductor', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces - a2,a3,a5,a7']
     columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']

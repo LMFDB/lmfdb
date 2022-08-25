@@ -226,7 +226,7 @@ class DimGrid():
 #                     'old':data['eis_dim']-data['eis_new_dim']}}
                      },
                 'Q':{'all':data['eis_Q_dim']},
-                'F':{'all':data['eis_P_dim']},
+                'F':{'all':data['eis_F_dim']},
                 'Y':{'all':data['cusp_Y_dim']},
                 'P':{'all':data['cusp_P_dim']},
                 'G':{'all':data['cusp_G_dim']}
