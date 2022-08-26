@@ -587,13 +587,11 @@ def url_for_label(label):
         func = "smf.by_url_degree"
     else:
         return abort(404, "Invalid label")
-#    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
-    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label']
+    keys = ['degree', 'family', 'level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     if not POSINT_RE.match(slabel[0]):
         raise ValueError("Invalid label")
     keytypes_start = [POSINT_RE, ALPHACAP_RE, POSINT_RE]
-#    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
-    keytypes_end = [ALPHA_RE, POSINT_RE, POSINT_RE]
+    keytypes_end = [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
     if len(keytypes_start)+len(keytypes_end)+int(slabel[0]) < len(slabel):
         raise ValueError("Invalid label")
     for i in range (len(keytypes_start)):
