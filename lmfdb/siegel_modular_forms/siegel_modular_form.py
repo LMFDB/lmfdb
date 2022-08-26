@@ -62,17 +62,12 @@ def learnmore_list_remove(matchstring):
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
-# this is a terrible thing to do and just temporary for 26 Aug 2022 to 
-# disable stats for the next three functions
-
 @cached_function
 def degree_bound():
-    return 0
     return db.smf_newforms.max('degree')
 
 @cached_function
 def weight_bound(wt_len=1, nontriv=None):
-    return [0,0]
     if nontriv:
         wts = db.smf_newforms.search({'char_order':{'$ne':1}}, 'weight_alt')
     else:
@@ -81,7 +76,6 @@ def weight_bound(wt_len=1, nontriv=None):
 
 @cached_function
 def level_bound(nontriv=None):
-    return 0
     if nontriv:
         return db.smf_newforms.max('level',{'char_order':{'$ne':1}})
     else:
