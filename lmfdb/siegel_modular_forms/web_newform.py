@@ -23,7 +23,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
-from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str
 
 LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -156,7 +156,7 @@ class WebNewform():
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-#        self.factored_level = web_latex_factored_integer(self.level, equals=True)
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data:  # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:
@@ -165,7 +165,9 @@ class WebNewform():
 
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        self.texp = [0] + self.traces
+        # self.texp = [0] + self.traces
+        # TODO - temporary patch
+        self.texp = [0]
         self.texp_prec = len(self.texp)
 
         # self.char_conrey = self.conrey_indexes[0]
@@ -231,18 +233,29 @@ class WebNewform():
             if self.embedded_twists:
                 self.embedded_minimal_twist = self.embedded_twists[0]["twist_class_label"]
 
-        self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
+#        self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
         # properties box
         if embedding_label is None:
             self.properties = [('Label', self.label)]
         else:
             self.properties = [('Label', '%s.%s' % (self.label, self.embedding_label))]
-        if self.plot is not None:
-            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
+        self.family_str = family_char_to_str(self.family)
+        self.weight_str = '(' + str(self.weight)[1:-1]  + ')'
+        self.weight_parity = -1 if (self.weight[1] % 2) == 1 else 1
+#        if self.plot is not None:
+#            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
-        self.properties += [('Level', prop_int_pretty(self.level)),
-                            ('Weight', [prop_int_pretty(w) for w in self.weight])]
+        self.properties +=[
+            ('Level', prop_int_pretty(self.level)),
+            ('Family', self.family_str),
+            ('Weight', self.weight_str),
+#            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),     
+#            ('Rep. character', '$%s$' % self.char_conrey_str),                      
+#            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta\_{%s})' % self.char_order)),                                                         
+	]
+
+        
         if self.embedding_label is None:
             self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
         else:
@@ -327,14 +340,15 @@ class WebNewform():
     def friends(self):
         # first newspaces
         res = []
-        base_label = [str(s) for s in [self.level, self.weight]]
+        base_label = [str(s) for s in [self.degree, self.family, self.level]]
+        weight_label = [str(s) for s in self.weight]
         smf_base = '/ModularForm/GSp/Q/'
-        ns1_label = '.'.join(base_label)
-        ns1_url = smf_base + '/'.join(base_label)
+        ns1_label = '.'.join(base_label + weight_label)
+        ns1_url = smf_base + '/'.join(base_label) + '.'.join(weight_label)
         res.append(('Newspace ' + ns1_label, ns1_url))
         char_letter = self.char_orbit_label
-        ns_label = '.'.join(base_label + [char_letter])
-        ns_url = smf_base + '/'.join(base_label + [char_letter])
+        ns_label = '.'.join(base_label + weight_label + [char_letter])
+        ns_url = smf_base + '/'.join(base_label + ['.'.join(weight_label), char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:

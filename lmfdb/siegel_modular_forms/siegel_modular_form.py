@@ -335,9 +335,6 @@ def render_newform_webpage(label):
     info['display_float'] = display_float
     info['format'] = info.get('format', 'embed')
 
-    if label in ETAQUOTIENTS:
-        info['eta_quotient'] = eta_quotient_texstring(ETAQUOTIENTS[label])
-
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))
@@ -897,7 +894,7 @@ newform_columns = SearchColumns([
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order'],
+    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
