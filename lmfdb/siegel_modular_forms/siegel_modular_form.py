@@ -26,11 +26,12 @@ from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
 from lmfdb.api import datapage
-from lmfdb.siegel_modular_forms import smf
 from lmfdb.siegel_modular_forms.web_newform import (
     WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
     quad_field_knowl, cyc_display, field_display_gen)
+from lmfdb.siegel_modular_forms import smf
 from lmfdb.siegel_modular_forms.web_space import (
+    family_str_to_char, family_char_to_str,
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
@@ -61,12 +62,17 @@ def learnmore_list_remove(matchstring):
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
+# this is a terrible thing to do and just temporary for 26 Aug 2022 to 
+# disable stats for the next three functions
+
 @cached_function
 def degree_bound():
+    return 0
     return db.smf_newforms.max('degree')
 
 @cached_function
 def weight_bound(wt_len=1, nontriv=None):
+    return [0,0]
     if nontriv:
         wts = db.smf_newforms.search({'char_order':{'$ne':1}}, 'weight_alt')
     else:
@@ -75,6 +81,7 @@ def weight_bound(wt_len=1, nontriv=None):
 
 @cached_function
 def level_bound(nontriv=None):
+    return 0
     if nontriv:
         return db.smf_newforms.max('level',{'char_order':{'$ne':1}})
     else:
@@ -470,14 +477,8 @@ def mf_data(label):
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
-FAMILY_DICT = {
-    'paramodular' : 'K',
-    'Siegel'      : 'S',
-    'principal'   : 'P'
-}
-
 def check_valid_family(family):
-    if family not in FAMILY_DICT.values():
+    if not family_char_to_str(family):
         return (False, "Invalid family label - {family}")
     return (True, "")
 
@@ -1355,8 +1356,8 @@ class SMF_stats(StatsDisplay):
     extent_knowl = 'mf.siegel.statistics_extent'
     table = db.smf_newforms
     baseurl_func = ".index"
-    # right now we don't have all these columns in our database.               
-    # we stick to what we have 
+    # right now we don't have all these columns in our database.
+    # we stick to what we have
     buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
                'degree':['2', '3-%d'%degree_bound()],
                'weight':['2','3','4','5-8','9-16','17-%d'%weight_bound()[0] ],

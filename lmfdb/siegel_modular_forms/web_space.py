@@ -18,6 +18,23 @@ def valid_label(label):
 def valid_gamma1(label):
     return GAMMA1_RE.match(label)
 
+FAMILY_DICT = {
+    'paramodular' : 'K',
+    'Siegel'      : 'S',
+    'principal'   : 'P'
+}
+FAMILY_DICT_STR = {
+    'K' : 'paramodular',
+    'S' : 'Siegel',
+    'P' : 'principal'
+}
+
+def family_str_to_char(str):
+    return FAMILY_DICT[str]
+
+def family_char_to_str(c):
+    return FAMILY_DICT_STR[c]
+
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
     links = [('degree', 'Degree %s', 'smf.by_url_degree'),
@@ -255,6 +272,7 @@ class WebNewformSpace():
         self.properties = [('Label',self.label)]
 #        if self.plot is not None and self.dim > 0:
 #            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
+        self.family_str = family_char_to_str(self.family)
         self.weight_str = '$(' + str(self.weight)[1:-1]  + ')$'
         self.properties +=[
             ('Level', prop_int_pretty(self.level)),
