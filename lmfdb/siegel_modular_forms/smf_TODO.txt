@@ -1,0 +1,7 @@
+* Ensure weight (2,0) gives all dimensions equal to zero.  (Should be automatic when newspaces table is regenerated.)
+* Fix breadcrumbs for Siegel spaces
+* Weight search with vectors doesn't work, e.g. the browse (9,2)-(16,2) gives 
+   Query was: {'weight': {'$gte': '{9,2}', '$lte': '{16,2}'}}
+but that is interpreted in a lexicographic way.  Is that what we want?
+* Add char_parity to newspaces
+
