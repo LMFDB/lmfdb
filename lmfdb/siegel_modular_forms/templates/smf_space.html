@@ -31,6 +31,20 @@
 
 <h2> Dimensions </h2>
 
+{% if space.degree == 2 and space.weight[0] == 1 %}
+
+<p> There are no modular forms of weight \( k,j \) = {{ space.weight }} when \( k = 1 \). </p>
+
+{% elif space.degree == 2 and space.weight_parity == -1 and space.char_parity == 1 %}
+
+<p> There are no modular forms of weight \( k,j \) = {{ space.weight }} and character {{ space.char_orbit_link | safe }} since \( j \) is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
+
+{% elif space.degree == 2 and space.weight_parity == 1 and space.char_parity == -1 %}
+
+<p> There are no modular forms of weight \( k,j \) = {{ space.weight }} and character {{ space.char_orbit_link | safe }} since \( j \) is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
+
+{% else %}
+
 <p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
 
 <table class="dimgrid">
@@ -63,5 +77,7 @@
     {% endfor %}
   </tbody>
 </table>
+
+{% endif %}
 
 {% endblock %}

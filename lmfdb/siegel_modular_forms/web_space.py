@@ -274,8 +274,14 @@ class WebNewformSpace():
 #            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
         self.family_str = family_char_to_str(self.family)
         self.weight_str = '$(' + str(self.weight)[1:-1]  + ')$'
+        self.weight_parity = -1 if (self.weight[1] % 2) == 1 else 1
+
+        ###  NOOO!  Ultimately look this up, so delete once done
+        self.char_parity = 1
+
         self.properties +=[
             ('Level', prop_int_pretty(self.level)),
+            ('Family', self.family_str),
             ('Weight', self.weight_str),
 #            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
 #            ('Rep. character', '$%s$' % self.char_conrey_str),
