@@ -827,7 +827,9 @@ def newspace_parse(info, query):
 #            query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
-    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
+    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp:\
+ bigint_knowl(tdisp[i], 12), orig="trace_lambda_p", align="right", default=True)
+#    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
 
 def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
@@ -835,26 +837,21 @@ def _AL_col(i, p):
 newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
     MathCol("level", "mf.siegel.level", "Level"),
-#     MathCol("name", "mf.siegel.name", "Name", default=True),
-#     MathCol("collection", "mf.siegel.collection", "Collection", ["name", "collection"], default=True),
-#     MultiProcessedCol("name", None, "Label", ["collection", "name"],
-#                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
     MathCol("degree", "mf.siegel.degree", "Degree", default=True),
     MathCol("weight", "mf.siegel.weight", "Weight", default=True),
-#    MathCol("weight_alt", "mf.siegel.weight", "Weight (alt.)", default=True),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
                       short_title="character"),
-#    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
-#                      ["char_conductor", "prim_orbit_index"],
-#                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
-#                      short_title="primitive character"),
+    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
+                      ["char_conductor", "prim_orbit_index"],
+                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
+                      short_title="primitive character"),
     MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
-#    MathCol("dim", "smf.dimension", "Dim", default=True, align="right", short_title="dimension"),
-#    MathCol("relative_dim", "smf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
+    MathCol("dim", "mf.siegel.dimension", "Dim", default=True, align="right", short_title="dimension"),
+    MathCol("relative_dim", "mf.siegel.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
-#    MultiProcessedCol("field", "smf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
+    MultiProcessedCol("field", "mf.siegel.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
 #    ProcessedCol("projective_image", "smf.projective_image", "Image",
 #                 lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
 #                 contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
@@ -874,9 +871,9 @@ newform_columns = SearchColumns([
 #    CheckCol("is_self_dual", "smf.selfdual", "Self-dual"),
 #    MathCol("inner_twist_count", "smf.inner_twist_count", "Inner twists"),
 #    MathCol("analytic_rank", "smf.analytic_rank", "Rank*"),
-#    ColGroup("traces", "smf.trace_form", "Traces",
-#             [_trace_col(i) for i in range(4)],
-#             default=True),
+    ColGroup("traces", "mf.siegel.trace_form", "Traces",
+             [_trace_col(i) for i in range(4)],
+             default=True),
 #    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
 #    ColGroup("atkin_lehner", "smf.atkin-lehner", "A-L signs",
 #             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
@@ -892,7 +889,7 @@ newform_columns = SearchColumns([
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order'],
+    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -1475,18 +1472,18 @@ class SMFSearchArray(SearchArray):
         ('level', 'level', ['level', 'weight']),
         ('weight', 'weight', ['weight', 'level']),
         ('character', 'character', ['level', 'char_orbit_index', 'weight']),
-#        ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
+        ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
 #        ('Nk2', 'Nk^2', ['Nk2', 'level']),
         ('dim', 'dimension', ['dim', 'level', 'weight']),
-#        ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
-#        ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
+        ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
+        ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
 #        ('inner_twist_count', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
 #        ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
     ]
-#    for name, disp, sord in _sort:
-#        if 'char_orbit_index' not in sord:
-#            sord.append('char_orbit_index')
+    for name, disp, sord in _sort:
+        if 'char_orbit_index' not in sord:
+            sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
     _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
     sorts = {'List': _sort_forms,
@@ -1569,16 +1566,16 @@ class SMFSearchArray(SearchArray):
             example_span='20.d',
             select_box=character_quantifier)
 
- #       prime_quantifier = SubsetBox(
- #           name="prime_quantifier",
- #           min_width=110)
- #       level_primes = TextBoxWithSelect(
- #           name='level_primes',
- #           knowl='mf.siegel.bad_prime',
- #           label=r'Bad \(p\)',
- #           example='2,3',
- #           example_span='2,3',
- #           select_box=prime_quantifier)
+        prime_quantifier = SubsetBox(
+            name="prime_quantifier",
+            min_width=110)
+        level_primes = TextBoxWithSelect(
+            name='level_primes',
+            knowl='mf.siegel.bad_prime',
+            label=r'Bad \(p\)',
+            example='2,3',
+            example_span='2,3',
+            select_box=prime_quantifier)
 
         char_order = TextBox(
             name='char_order',
@@ -1586,12 +1583,12 @@ class SMFSearchArray(SearchArray):
             knowl='character.dirichlet.order',
             example='1',
             example_span='1, 2-4')
- #       char_primitive = TextBox(
- #           name='prim_label',
- #           knowl='character.dirichlet.primitive',
- #           label='Primitive character',
- #           example='1.a',
- #           example_span='1.a')
+        char_primitive = TextBox(
+            name='prim_label',
+            knowl='character.dirichlet.primitive',
+            label='Primitive character',
+            example='1.a',
+            example_span='1.a')
 
         dim_quantifier = SelectBox(
             name='dim_type',
@@ -1609,12 +1606,12 @@ class SMFSearchArray(SearchArray):
             name='dim',
             label='')
 
- #       coefficient_field = TextBox(
- #           name='nf_label',
- #           knowl='mf.siegel.coefficient_field',
- #           label='Coefficient field',
- #           example='1.1.1.1',
- #           example_span='4.0.144.1, Qsqrt5')
+        coefficient_field = TextBox(
+            name='nf_label',
+            knowl='mf.siegel.coefficient_field',
+            label='Coefficient field',
+            example='1.1.1.1',
+            example_span='4.0.144.1, Qsqrt5')
 
  #       analytic_conductor = TextBox(
  #           name='analytic_conductor',
@@ -1750,10 +1747,10 @@ class SMFSearchArray(SearchArray):
             [degree],
             [family, level],
             [weight],
-            [char_order, character]
-#            [level_primes, character],
-#            [char_order, char_primitive],
-#            [dim, coefficient_field],
+            [level_primes, character],
+            [char_order, char_primitive],
+            [dim, coefficient_field],
+            [results]
 #            [analytic_conductor, Nk2],
 #            [self_twist, self_twist_discs],
 #            [inner_twist_count, is_self_dual],
@@ -1762,21 +1759,22 @@ class SMFSearchArray(SearchArray):
 #            [results, projective_image_type]]
 ]
         self.refine_array = [
-            [degree, family, level, weight, char_order, character]
+            [degree, family, level, weight, dim],
 #            [level, weight, analytic_conductor, Nk2, dim],
-#            [level_primes, character, char_primitive, char_order, coefficient_field],
+            [level_primes, character, char_primitive, char_order, coefficient_field],
 #            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
             [degree, family, level, weight, dim],
-            [char_order, character]
+            [level_primes, character, char_primitive, char_order]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
-            [degree, family, level, weight, char_order, character]
+            [degree, family, level, weight, hdim],
+            [level_primes, character, char_primitive, char_order]
 #            [level, weight, analytic_conductor, Nk2, hdim],
 #            [level_primes, character, char_primitive, char_order, hnum_newforms]
         ]
