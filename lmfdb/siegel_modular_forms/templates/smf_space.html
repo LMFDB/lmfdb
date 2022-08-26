@@ -19,7 +19,7 @@
     <td> {{ KNOWL('mf.siegel.weight', title='Weight') }}: </td>
     <td> \( (k,j) \) </td>
     <td>\(=\)</td>
-    <td>{{ space.weight_str }}</td>
+    <td>\({{ space.weight_str }}\)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit')}}: </td>
@@ -33,15 +33,15 @@
 
 {% if space.degree == 2 and space.weight[0] == 1 %}
 
-<p> There are no modular forms of weight \( k,j \) = {{ space.weight }} when \( k = 1 \). </p>
+<p> There are no modular forms of weight \( (k,j) = {{ space.weight_str }} \) when \( k = 1 \). </p>
 
 {% elif space.degree == 2 and space.weight_parity == -1 and space.char_parity == 1 %}
 
-<p> There are no modular forms of weight \( k,j \) = {{ space.weight }} and character {{ space.char_orbit_link | safe }} since \( j \) is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
+<p> There are no modular forms of weight \( (k,j) = {{ space.weight_str }} \) and character {{ space.char_orbit_link | safe }} since \( j \) is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
 
 {% elif space.degree == 2 and space.weight_parity == 1 and space.char_parity == -1 %}
 
-<p> There are no modular forms of weight \( k,j \) = {{ space.weight }} and character {{ space.char_orbit_link | safe }} since \( j \) is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
+<p> There are no modular forms of weight \( (k,j) = {{ space.weight }} \) and character {{ space.char_orbit_link | safe }} since \( j \) is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
 
 {% else %}
 

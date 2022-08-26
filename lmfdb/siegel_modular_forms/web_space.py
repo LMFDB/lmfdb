@@ -273,7 +273,7 @@ class WebNewformSpace():
 #        if self.plot is not None and self.dim > 0:
 #            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
         self.family_str = family_char_to_str(self.family)
-        self.weight_str = '$(' + str(self.weight)[1:-1]  + ')$'
+        self.weight_str = '(' + str(self.weight)[1:-1]  + ')'
         self.weight_parity = -1 if (self.weight[1] % 2) == 1 else 1
 
         ###  NOOO!  Ultimately look this up, so delete once done

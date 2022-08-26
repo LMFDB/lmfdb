@@ -67,11 +67,11 @@ def degree_bound():
     return db.smf_newforms.max('degree')
 
 @cached_function
-def weight_bound(wt_len=1, nontriv=None):
+def weight_bound(wt_len=2, nontriv=None):
     if nontriv:
-        wts = db.smf_newforms.search({'char_order':{'$ne':1}}, 'weight_alt')
+        wts = db.smf_newforms.search({'char_order':{'$ne':1}}, 'weight')
     else:
-        wts = db.smf_newforms.search({}, 'weight_alt')
+        wts = db.smf_newforms.search({}, 'weight')
     return max([w for w in wts if len(w) == wt_len])
 
 @cached_function
@@ -846,7 +846,7 @@ newform_columns = SearchColumns([
 #                       lambda coll, name : '<a href=' + coll[0] + "." + name + '>' + coll[0] + "." + name + '</a>', default=True),
     MathCol("degree", "mf.siegel.degree", "Degree", default=True),
     MathCol("weight", "mf.siegel.weight", "Weight", default=True),
-    MathCol("weight_alt", "mf.siegel.weight", "Weight (alt.)", default=True),
+#    MathCol("weight_alt", "mf.siegel.weight", "Weight (alt.)", default=True),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
@@ -897,7 +897,7 @@ newform_columns = SearchColumns([
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'weight_alt', 'char_orbit_label', 'char_order'],
+    ['degree', 'weight', 'family', 'cusp_dim', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
