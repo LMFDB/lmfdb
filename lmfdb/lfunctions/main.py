@@ -1464,7 +1464,7 @@ def set_navi(L):
 
 
 def generateLfunctionFromUrl(*args, **kwds):
-    ''' Returns the L-function object corresponding to the supplied argumnents
+    '''Returns the L-function object corresponding to the supplied arguments
     from the url. kwds contains possible arguments after a question mark.
     '''
     try:

@@ -236,9 +236,9 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
 # not to create a Magma script to search for one.
 #
 # NB the first version find_curve_labels() just outputs a Magma
-# script; after running Magma, use export_magma_output() to priduce a
+# script; after running Magma, use export_magma_output() to produce a
 # file of curves.  Or (simpler when Magma is available on the same
-# machine) use the scond version, find_curves(), which runs Magma
+# machine) use the second version, find_curves(), which runs Magma
 # itself and outputs the resulting curves.
 
 

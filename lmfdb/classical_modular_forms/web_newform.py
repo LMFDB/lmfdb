@@ -291,7 +291,7 @@ class WebNewform():
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
-    def convert_qexp_to_cyclotomic(self,  m):
+    def convert_qexp_to_cyclotomic(self, m):
         from sage.all import CyclotomicField
         F = CyclotomicField(m)
         zeta = F.gens()[0]
@@ -1310,7 +1310,7 @@ function switch_basis(btype) {
                 y *= self.analytic_shift[n]
         return self._display_op(x, y, prec)
 
-    def embedding(self,  m, n=None, prec=6, format='embed'):
+    def embedding(self, m, n=None, prec=6, format='embed'):
         return " ".join(elt(m, n, prec, format)
             for elt in [self.embedding_re, self.embedding_op, self.embedding_im]
             )

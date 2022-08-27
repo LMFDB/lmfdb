@@ -1,11 +1,11 @@
 bcrypt
 cython
-flask<=1.1.4
+flask
 flask-cache
 flask-login
 flask-markdown
-markupsafe<=2.0.1
-itsdangerous<=2.0.1
+markupsafe
+itsdangerous
 psycopg2-binary
 pyflakes
 pytest

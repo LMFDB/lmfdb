@@ -446,9 +446,8 @@ def download_search(info):
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
@@ -525,7 +524,7 @@ ecnf_columns = SearchColumns([
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
                  short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
+    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
@@ -859,11 +858,11 @@ class ECNFSearchArray(SearchArray):
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         Qcurve_opts = ([("", ""),
-                        ("Q-curve",  "Q-curve"),
+                        ("Q-curve", "Q-curve"),
                         ("base-change", "base change"),
-                        ("non-Q-curve",  "not a Q-curve"),
-                        ("non-base-change",  "not a base change"),
-                        ("non-base-change-Q-curve",  "non-base-chg Q-curve"),
+                        ("non-Q-curve", "not a Q-curve"),
+                        ("non-base-change", "not a base change"),
+                        ("non-base-change-Q-curve", "non-base-chg Q-curve"),
                        ])
         Qcurves = SelectBox(
             name="Qcurves",
@@ -957,8 +956,8 @@ class ECNFSearchArray(SearchArray):
             knowl="ec.isogeny",
             example="16")
         reduction_opts = ([("", ""),
-                           ("semistable",  "semistable"),
-                           ("not semistable",  "not semistable"),
+                           ("semistable", "semistable"),
+                           ("not semistable", "not semistable"),
                            ("potentially good", "potentially good"),
                            ("not potentially good", "not potentially good")])
         reduction = SelectBox(

@@ -3317,7 +3317,7 @@
 				anRows[ iRowCount ].appendChild( nTd );
 			}
 			
-			/* Callback the header and footer custom funcation if there is one */
+			/* Callback the header and footer custom function if there is one */
 			if ( typeof oSettings.fnHeaderCallback == 'function' )
 			{
 				oSettings.fnHeaderCallback.call( oSettings.oInstance, $('>tr', oSettings.nTHead)[0], 
@@ -3514,7 +3514,7 @@
 			if ( typeof json.sEcho != 'undefined' )
 			{
 				/* Protect against old returns over-writing a new one. Possible when you get
-				 * very fast interaction, and later queires are completed much faster
+				 * very fast interaction, and later queries are completed much faster
 				 */
 				if ( json.sEcho*1 < oSettings.iDraw )
 				{
@@ -4591,7 +4591,7 @@
 					aaSort = oSettings.aaSorting.slice();
 				}
 				
-				/* If there is a sorting data type, and a fuction belonging to it, then we need to
+				/* If there is a sorting data type, and a function belonging to it, then we need to
 				 * get the data from the developer's function and apply it for this column
 				 */
 				for ( i=0 ; i<aaSort.length ; i++ )
@@ -5267,7 +5267,7 @@
 		
 		
 		/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-		 * Section - Feature: Processing incidator
+		 * Section - Feature: Processing indicator
 		 */
 		
 		/*
@@ -5708,7 +5708,7 @@
 			if ( oSettings.oScroll.sX === "" && oSettings.oScroll.sY !== "" )
 			{
 				/* When y-scrolling only, we want to remove the width of the scroll bar so the table
-				 * + scroll bar will fit into the area avaialble.
+				 * + scroll bar will fit into the area available.
 				 */
 				var iOrigWidth = $(n).width();
 				n.style.width = _fnStringToCss( $(n).outerWidth()-oSettings.oScroll.iBarWidth );
@@ -6205,7 +6205,7 @@
 					}
 				}
 				
-				/* Store the saved state so it might be accessed at any time (particualrly a plug-in */
+				/* Store the saved state so it might be accessed at any time (particularly a plug-in */
 				oSettings.oLoadedState = $.extend( true, {}, oData );
 				
 				/* Restore key features */
@@ -7066,7 +7066,7 @@
 					bUsePassedData = true;
 				}
 				
-				/* Backwards compatability */
+				/* Backwards compatibility */
 				/* aoColumns / aoData - remove at some point... */
 				if ( typeof oInit != 'undefined' && typeof oInit.aoData != 'undefined' )
 				{

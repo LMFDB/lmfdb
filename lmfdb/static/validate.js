@@ -38,7 +38,7 @@ function validate() {
 	return true
     }
     else {
-	alert( "Error: invalid input: " + args + "\n\n Valid input: x for scalar valued and x j for vector valued modular forms. Here x is a non-negative integer k <= 9999 or a range in the form k+n, where k and n are non-negative integers <= 9999 and <= 99, respectively. Moreover, 'j' is a non-negative integer <= 99.\n\n The short hand 'k+n' stands for 'k plus n more succesive integers'.");
+	alert( "Error: invalid input: " + args + "\n\n Valid input: x for scalar valued and x j for vector valued modular forms. Here x is a non-negative integer k <= 9999 or a range in the form k+n, where k and n are non-negative integers <= 9999 and <= 99, respectively. Moreover, 'j' is a non-negative integer <= 99.\n\n The short hand 'k+n' stands for 'k plus n more successive integers'.");
 	return false;
     }
     alert( "Error: input too big");

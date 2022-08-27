@@ -2431,7 +2431,7 @@ class PostgresTable(PostgresBase):
                 self.resort()
             else:
                 updater = SQL("UPDATE meta_tables SET (has_extras) = (%s) WHERE name = %s")
-                self._execute(updater, [True,  self.search_table])
+                self._execute(updater, [True, self.search_table])
             self.extra_table = self.search_table + "_extras"
             col_type = [("id", "bigint")]
             cur = self._indexes_touching(columns)

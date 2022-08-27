@@ -200,7 +200,7 @@ def api_query(table, id = None):
         return apierror("table %s does not exist", [table], table=False)
     q = {}
 
-    # if id is set, just go and get it, ignore query parameeters
+    # if id is set, just go and get it, ignore query parameters
     if id is not None:
         if offset:
             return apierror("Cannot include offset with id")
