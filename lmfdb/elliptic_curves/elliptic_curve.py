@@ -778,7 +778,7 @@ def render_congruent_number_data():
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-            return send_file(filepath, as_attachment=True, add_etags=False)
+            return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
             return redirect(url_for(".rational_elliptic_curves"))
@@ -986,8 +986,8 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.faltings_height",
             example="-1-2")
         reduction_opts = ([("", ""),
-                           ("semistable",  "semistable"),
-                           ("not semistable",  "not semistable"),
+                           ("semistable", "semistable"),
+                           ("not semistable", "not semistable"),
                            ("potentially good", "potentially good"),
                            ("not potentially good", "not potentially good")])
         reduction = SelectBox(
@@ -1026,7 +1026,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, bad_primes],
-            [disc,  jinv],
+            [disc, jinv],
             [torsion, cm],
             [rank, sha],
             [regulator, sha_primes],

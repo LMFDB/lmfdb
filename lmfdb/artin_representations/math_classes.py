@@ -703,7 +703,7 @@ class NumberFieldGaloisGroup():
             self._data = db.artin_field_data.lucky({'Polynomial': coeffs})
             if self._data is None:
                 # This should probably be a ValueError, but we use an AttributeError for backward compatibility
-                raise AttributeError("No Galois group data for polynonial %s" % (coeffs))
+                raise AttributeError("No Galois group data for polynomial %s" % (coeffs))
         self.lowered = False
 
     @classmethod

@@ -684,7 +684,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
             logger.warning("a value of an L-function has been computed on the fly")
 
     if sLatex_arithmetic:
-        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
+        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)', sLatex_arithmetic + ')')
     else:
         lfunction_value_tex_arithmetic = ''
     if sLatex_analytic:

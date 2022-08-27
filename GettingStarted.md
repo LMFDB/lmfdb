@@ -124,7 +124,7 @@ Running
    at a point where such a file is not syntactically correct, the
    server will crash and you will need to `start_lmfdb` again.   Any
    changes to html files will not cause the server to restart, so
-   you will need to reload the pages in your borowser.  Changes in
+   you will need to reload the pages in your browser.  Changes in
    the yaml files which are read only once at startup will require
    you to manually stop the server and restart it.
 

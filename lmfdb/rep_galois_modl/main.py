@@ -128,7 +128,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 @search_wrap(template="rep_galois_modl-search.html",
              table=db.modlgal_reps,
@@ -150,7 +150,7 @@ def rep_galois_modl_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].",  gram)
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 

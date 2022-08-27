@@ -31,7 +31,7 @@ def parse_dim_args(dim_args, default_dim_args):
     args={}
     if 'k' in res:
         if res['k'][-1] > MAXWT:
-            flash_error("<span style='color:black'>$k$</span> cannot exceed %s.",  MAXWT)
+            flash_error("<span style='color:black'>$k$</span> cannot exceed %s.", MAXWT)
             raise ValueError("dim_args")
         if len(res['k']) > MAXWTRANGE:
             flash_error("range for <span style='color:black'>$k$</span> cannot include more than %s values.", MAXWTRANGE)
@@ -241,10 +241,10 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
     if not db_cusp:
         raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
 
-    P = PowerSeriesRing(ZZ,  default_prec =wt_range[-1] + 1,  names = ('t'))
+    P = PowerSeriesRing(ZZ, default_prec=wt_range[-1] + 1, names=('t'))
     Qt = FunctionField(QQ, names=('t'))
-    total = dict()
-    cusp = dict()
+    total = {}
+    cusp = {}
     for p in partitions:
         f = Qt(str(db_total[p]))
         total[p] = P(f.numerator())/P(f.denominator())
@@ -316,7 +316,7 @@ def dimension_Sp6Z(wt_range):
 
 def _dimension_Sp6Z(wt_range):
     headers = ['Total', 'Miyawaki lifts I', 'Miyawaki lifts II (conjectured)', 'Other']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  __dimension_Sp6Z(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(4))
@@ -371,7 +371,7 @@ def dimension_Sp8Z(wt_range):
     </ul>
     """
     headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  _dimension_Sp8Z(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(4))
@@ -435,7 +435,7 @@ def dimension_Gamma0_4_half(wt_range):
     </ul>
     """
     headers = ['Total', 'Non cusp', 'Cusp']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  _dimension_Gamma0_4_half(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(3))
@@ -480,7 +480,7 @@ def dimension_Gamma0_3_psi_3(wt_range):
     </ul>
     """
     headers = ['Total']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  _dimension_Gamma0_3_psi_3(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(len(headers)))
@@ -522,7 +522,7 @@ def dimension_Gamma0_4_psi_4(wt_range):
     <p> Odd weights are not yet implemented.</p>
     """
     headers = ['Total']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         if is_odd(k):
             continue
@@ -565,7 +565,7 @@ def dimension_Gamma0_4(wt_range):
     </ul>
     """
     headers = ['Total']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  _dimension_Gamma0_4(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(len(headers)))
@@ -599,7 +599,7 @@ def dimension_Gamma0_3(wt_range):
     </ul>
     """
     headers = ['Total']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  _dimension_Gamma0_3(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(len(headers)))
@@ -635,7 +635,7 @@ def dimension_Dummy_0(wt_range):
     </ul>
     """
     headers = ['Total', 'Yoda lifts', 'Hinkelstein series']
-    dct = dict()
+    dct = {}
     for k in wt_range:
         dims =  _dimension_Dummy_0(k)
         dct[k] = dict((headers[j],dims[j]) for j in range(4))

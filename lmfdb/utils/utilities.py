@@ -446,10 +446,10 @@ def display_float(x, digits, method = "truncate",
     if no_sci is None:
         no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
+        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:
         # older versions of Sage don't support the digits keyword
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(no_sci=no_sci)
+        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(no_sci=no_sci)
         point = s.find('.')
         if point != -1:
             if point < digits:

@@ -171,7 +171,7 @@ Database Interface
    ```
 
    If you do this within lmfdb code (rather than just at the command line),
-   make sure you properly escpae literals and identifiers to prevent
+   make sure you properly escape literals and identifiers to prevent
    SQL injection attacks.  This means wrapping any table or column
    name that might have come from an untrusted source in `Identifier`,
    and using either the %s construction shown above or the `Literal`
@@ -545,7 +545,7 @@ Statistics
    Finally, statistics are used by the query planner when searching
    for rows.  These statistics are stored internally within postgres
    using postgres' `ANALYZE` and `CREATE STATISTICS` functions, and
-   are not easily accesssible to developers.
+   are not easily accessible to developers.
 
 1. How do I access statistics?
 
@@ -647,7 +647,7 @@ Statistics
    fairly easy.  Just add a view using the `dynamic_stats.html`
    template, and call the `dynamic_setup` method of your stats object
    with `info` as an argument.  See classical modular forms for an
-   examaple.
+   example.
 
 1. If I change the data in a table, how can I update the statistics on the table?
 
@@ -725,7 +725,7 @@ Data Validation
    SQL injection and should not be available when the website is
    running).  Then use, for example, `db.mf_newforms.verify()`.
 
-   You can specify a paricular speedtype to run
+   You can specify a particular speedtype to run
    (e.g. `speedtype="slow"` or `speedtype="overall"`), a specific
    check (e.g. `check="check_cmrm_discs"`), or a specific object (e.g.
    `label="24.37.h.c"`).  You can also run tests on multiple tables

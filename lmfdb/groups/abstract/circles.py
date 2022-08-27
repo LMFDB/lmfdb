@@ -161,7 +161,7 @@ class Circle:
 
 # Most common orders below 512: 4 (2384226 ccs), 2, 8, 12, 6, 24, 1, 16, 20, 28, 3, 10, 14, 56, 30, 18, 40, 9, 48, 60, 5, 36, 15, 7, 26, 52, 32, 22, 44, 42, 21, 120, 27 (5046 ccs)
 # We color based on 2-adic valuation and odd part.  Generally, a higher valuation is coded as darker, and we use the odd part to select a hue.
-# The HSV color coordiantes are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
+# The HSV color coordinates are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
 hsv = {
     1: (0, 95, [None, 100, 82, 66, 52, 40, 30, 22, 16]), # red; 1 is handled separately
     3: (220, 90, [90, 80, 70, 60, 50, 40, 30, 20]), # blue
