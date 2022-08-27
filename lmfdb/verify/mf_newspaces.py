@@ -303,7 +303,9 @@ class mf_newspaces(MfChecker):
         # TIME about 60s
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'], verbose=verbose)
 
-    @fast(projection=['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'])
+    @fast(projection=['level', 'level_radical', 'level_primes',
+                      'level_is_prime', 'level_is_prime_power',
+                      'level_is_squarefree', 'level_is_square'])
     def check_level(self, rec, verbose=False):
         """
         Check the level_* columns

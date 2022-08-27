@@ -294,8 +294,8 @@ class ECNF():
             self.fact_cond_norm = '1'
         else:
             self.cond = pretty_ideal(Kgen, self.conductor_ideal)
-            self.fact_cond      = latex_factorization(badprimes, cond_ords)
-            self.fact_cond_norm = latex_factorization(badnorms,  cond_ords)
+            self.fact_cond = latex_factorization(badprimes, cond_ords)
+            self.fact_cond_norm = latex_factorization(badnorms, cond_ords)
 
         # Assumption: the curve models stored in the database are
         # either global minimal models or minimal at all but one

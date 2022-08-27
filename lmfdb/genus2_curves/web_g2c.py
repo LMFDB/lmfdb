@@ -18,7 +18,7 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
+from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -495,7 +495,7 @@ def gsp4_subgroup_data(label):
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15])
     info = '<table>\n'
-    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
+    info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])

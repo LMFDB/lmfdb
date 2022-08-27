@@ -31,7 +31,7 @@ def parse_dim_args(dim_args, default_dim_args):
     args={}
     if 'k' in res:
         if res['k'][-1] > MAXWT:
-            flash_error("<span style='color:black'>$k$</span> cannot exceed %s.",  MAXWT)
+            flash_error("<span style='color:black'>$k$</span> cannot exceed %s.", MAXWT)
             raise ValueError("dim_args")
         if len(res['k']) > MAXWTRANGE:
             flash_error("range for <span style='color:black'>$k$</span> cannot include more than %s values.", MAXWTRANGE)
@@ -241,7 +241,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
     if not db_cusp:
         raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
 
-    P = PowerSeriesRing(ZZ,  default_prec =wt_range[-1] + 1,  names = ('t'))
+    P = PowerSeriesRing(ZZ, default_prec=wt_range[-1] + 1, names=('t'))
     Qt = FunctionField(QQ, names=('t'))
     total = {}
     cusp = {}
