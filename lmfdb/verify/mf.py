@@ -58,7 +58,9 @@ class MfChecker(TableChecker):
         """
         check level_* attributes (radical,primes,is_prime,...)
         """
-        attributes = ['level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square']
+        attributes = ['level_radical', 'level_primes', 'level_is_prime',
+                      'level_is_prime_power', 'level_is_squarefree',
+                      'level_is_square']
         stored = [rec[attr] for attr in attributes]
         computed = level_attributes(rec['level'])
         success = stored == computed

@@ -986,8 +986,8 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.faltings_height",
             example="-1-2")
         reduction_opts = ([("", ""),
-                           ("semistable",  "semistable"),
-                           ("not semistable",  "not semistable"),
+                           ("semistable", "semistable"),
+                           ("not semistable", "not semistable"),
                            ("potentially good", "potentially good"),
                            ("not potentially good", "not potentially good")])
         reduction = SelectBox(
@@ -1026,7 +1026,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, bad_primes],
-            [disc,  jinv],
+            [disc, jinv],
             [torsion, cm],
             [rank, sha],
             [regulator, sha_primes],
