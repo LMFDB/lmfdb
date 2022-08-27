@@ -5,7 +5,7 @@ import re
 from io import BytesIO
 import time
 
-from flask import render_template, request, url_for, redirect, make_response,  send_file
+from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
 from lmfdb import db

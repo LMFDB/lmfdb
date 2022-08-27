@@ -49,7 +49,7 @@ class CMFTest(LmfdbTest):
         n = 0
         for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
             n += 1
-            r = self.newform(nf['label'],  nf['dim'])
+            r = self.newform(nf['label'], nf['dim'])
             res.append(r)
             if r[0] is None:
                 errors.append(r[1])

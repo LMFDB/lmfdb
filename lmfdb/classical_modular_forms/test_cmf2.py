@@ -193,7 +193,7 @@ class CmfTest(LmfdbTest):
                     )]:
             for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=1']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
-                page = self.tc.get(s,  follow_redirects=True)
+                page = self.tc.get(s, follow_redirects=True)
                 for elt in begin[1]:
                     assert elt in page.get_data(as_text=True), s
 
@@ -205,9 +205,9 @@ class CmfTest(LmfdbTest):
                 ('level=900-1000&weight=1-&projective_image=D2',
                     ['Results (26 matches)', r"\sqrt{-1}", r"\sqrt{-995}", r"\sqrt{137}"]
                     )]:
-            for s in Subsets(['has_self_twist=yes', 'has_self_twist=cm', 'has_self_twist=rm',  'projective_image_type=Dn','dim=1-4']):
+            for s in Subsets(['has_self_twist=yes', 'has_self_twist=cm', 'has_self_twist=rm', 'projective_image_type=Dn','dim=1-4']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
-                page = self.tc.get(s,  follow_redirects=True)
+                page = self.tc.get(s, follow_redirects=True)
                 for elt in begin[1]:
                     assert elt in page.get_data(as_text=True), s
 
@@ -335,22 +335,22 @@ class CmfTest(LmfdbTest):
         r"""
         Test that we display Fricke signs
         """
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15%2C20&weight=2&dim=1&search_type=List',  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15%2C20&weight=2&dim=1&search_type=List', follow_redirects=True)
         assert 'Fricke sign' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?char_order=1&search_type=List',  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?char_order=1&search_type=List', follow_redirects=True)
         assert 'Fricke sign' in page.get_data(as_text=True)
 
     def displaying_weight1_search(self):
         for typ in ['List', 'Traces', 'Dimensions']:
             for search in ['weight=1', 'rm_discs=5','has_self_twist=rm','cm_discs=-3%2C+-39']:
-                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?%s&search_type=%s' % (search, typ),  follow_redirects=True)
+                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?%s&search_type=%s' % (search, typ), follow_redirects=True)
                 assert 'Only for weight 1:' in page.get_data(as_text=True)
 
     def test_is_self_dual(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List',  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List', follow_redirects=True)
         for elt in ['23.1.b.a', '31.1.b.a', '111.1.d.a']:
             assert elt in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List',  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List', follow_redirects=True)
         for elt in ['52.1.j.a', '57.1.h.a', '111.1.h.a']:
             assert elt in page.get_data(as_text=True)
 
@@ -368,9 +368,9 @@ class CmfTest(LmfdbTest):
                                  29: r'\( T \)'},
 
                     # Dimension 2
-                    '10/3/c/a':  {5: r'\( T^{2} + 25 \)',
-                                  11: r'\( (T + 8)^{2} \)',
-                                  97: r'\( T^{2} + 126T + 7938 \)'},
+                    '10/3/c/a': {5: r'\( T^{2} + 25 \)',
+                                 11: r'\( (T + 8)^{2} \)',
+                                 97: r'\( T^{2} + 126T + 7938 \)'},
 
                     # Dimension 5
                     '294/5/b/f': {2: r'\( (T^{2} + 8)^{5} \)',

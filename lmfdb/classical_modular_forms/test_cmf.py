@@ -226,7 +226,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/a/")
         assert '11241' in page.get_data(as_text=True)
         assert '10099' in page.get_data(as_text=True)
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/",  follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/", follow_redirects=True)
         assert '11241' in page.get_data(as_text=True)
         assert '10099' in page.get_data(as_text=True)
 
