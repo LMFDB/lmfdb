@@ -838,7 +838,7 @@ newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
     MathCol("level", "mf.siegel.level", "Level"),
     MathCol("degree", "mf.siegel.degree", "Degree"),
-    ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0]),
+    ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
