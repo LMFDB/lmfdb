@@ -371,17 +371,26 @@ class WebNewformSpace():
     def cusp_latex(self):
         return common_latex(*(self._vec() + ["S"]))
 
+    def cusp_new_latex(self):
+        return common_latex(*(self._vec() + ["S",0,"new"]))
+
     def cusp_latex_symbolic(self):
         return common_latex(*(self._vec() + ["S"]), symbolic_chi=True)
 
-    def new_latex(self):
-        return common_latex(*(self._vec() + ["S",0,"new"]))
-
-    def old_latex(self):
+    def cusp_old_latex(self):
         return common_latex(*(self._vec() + ["S",0,"old"]))
 
-    def old_latex_symbolic(self):
+    def cusp_old_latex_symbolic(self):
         return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
+
+    def new_latex(self):
+        return common_latex(*(self._vec() + ["M",0,"new"]))
+
+    def old_latex(self):
+        return common_latex(*(self._vec() + ["M",0,"old"]))
+
+    def old_latex_symbolic(self):
+        return common_latex(*(self._vec() + ["M",0,"old"]), symbolic_chi=True)
 
     def subspace_latex(self, new=False):
         return common_latex("M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)

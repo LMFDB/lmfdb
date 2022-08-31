@@ -80,4 +80,11 @@
 
 {% endif %}
 
+{% if space.total_dim > 0 %}
+<h2> {{ KNOWL('mf.siegel.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('mf.siegel.newform_subspace',title='newform subspaces') }}</h2>
+
+{% include 'search_results_table.html' %}
+
+{% endif %}
+
 {% endblock %}
