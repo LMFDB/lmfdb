@@ -17,8 +17,9 @@ from lmfdb.utils import (
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
     integer_squarefree_part,
-    raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp
+    raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp, raw_typeset
 )
+from lmfdb.utils.web_display import compress_polynomial
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -29,6 +30,44 @@ LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
+AUTOMORPHIC_TYPE = {'F' : 'Siegel-Eisentein',
+                    'Q' : 'Klingen-Eisenstein',
+                    'Y' : 'Yoshida Lift',
+                    'S' : 'Saito-Kurokawa Lift',
+                    'G' : 'General type'
+                    }
+
+def raw_typeset_ev(coeffs,
+                   compress_threshold=100,
+                   coeff_compress_threshold=30,
+                   var=r"\beta",
+                   final_rawvar='b',
+                   superscript=False,
+                   **kwargs):
+    
+    rawvar = var.lstrip("\\")
+    R = PolynomialRing(ZZ, rawvar)
+
+    poly = R(coeffs)
+    raw = str(poly)
+    tset = compress_polynomial(
+        poly,
+        coeff_compress_threshold,
+        decreasing=True)
+    if not superscript:
+        raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
+        tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+        # in case the last replace doesn't trigger because is at the end
+        if raw.endswith(rawvar):
+            raw += "1"
+            if tset.endswith(var):
+                tset += "_1"
+
+    raw = raw.lstrip(" ")
+    # use final_rawvar
+    raw = raw.replace(rawvar, final_rawvar)
+
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
 # we may store alpha_p with p <= 3000
 primes_for_angles = prime_range(3000)
@@ -165,13 +204,11 @@ class WebNewform():
 
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        # self.texp = [0] + self.traces
-        # TODO - temporary patch
         self.texp = [0]
+        if self.traces:
+            self.texp += self.traces
         self.texp_prec = len(self.texp)
 
-        # self.char_conrey = self.conrey_indexes[0]
-        # self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = r"\(" + str(self.level) + r"\)." + self.char_orbit_label
 
         self.hecke_ring_character_values = None
@@ -180,32 +217,49 @@ class WebNewform():
         self.single_generator = None
         self.has_exact_qexp = False
         if self.embedding_label is None:
-            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
-            eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
-            if eigenvals and eigenvals.get('an'):
+            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp', 'maxp_square']
+            self.hecke_types = ['lambda_p', 'lambda_p_square', 'lambda_p_square_0', 'lambda_p_square_1', 'lambda_p_square_2']
+            self.hecke_disp = {'lambda_p' : 'p',
+                               'lambda_p_square' : 'p^2',
+                               'lambda_p_square_0' : 'p^2, 0',
+                               'lambda_p_square_1' : 'p^2, 1',
+                               'lambda_p_square_2' : 'p^2, 2'
+                               }
+            hecke_cols += self.hecke_types
+            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
+            if eigenvals:
+# right now we still don't have the general an
+#            if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
                 for attr in hecke_cols:
                     setattr(self, attr, eigenvals.get(attr))
+                self.primes = prime_range(self.maxp_square+1)
+                self.range_evs = range(len(self.primes))
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
                     m = 0
                     zero = [0] * self.dim
                 else:
                     zero = []
-                self.qexp = [zero] + eigenvals['an']
-                self.qexp_prec = len(self.qexp)
+                if eigenvals.get('an'):
+                    self.qexp = [zero] + eigenvals['an']
+                    self.qexp_prec = len(self.qexp)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
                 # This is not enough, for some reason
                 # if (m != 0) and (not self.single_generator):
                 # This is the only thing I could make work:
                 if (m != 0) and self.field_poly_is_cyclotomic and (self.hecke_ring_numerators is not None):
-                    self.convert_qexp_to_cyclotomic(m)
+                    attribs = self.hecke_types
+                    if eigenvals.get('an'):
+                        attribs += ['qexp']
+                    for attr in attribs:
+                        self.convert_to_cyclotomic(m, attr)
                     self.show_hecke_ring_basis = False
                 else:
                     self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
-            hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, hecke_cols)
+            hecke_data = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, hecke_cols)
             if hecke_data:
                 for attr in hecke_cols:
                     setattr(self, attr, hecke_data.get(attr))
@@ -243,18 +297,12 @@ class WebNewform():
         self.family_str = family_char_to_str(self.family)
         self.weight_str = '(' + str(self.weight)[1:-1]  + ')'
         self.weight_parity = -1 if (self.weight[1] % 2) == 1 else 1
-#        if self.plot is not None:
-#            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
-
+        self.aut_type_str = AUTOMORPHIC_TYPE[self.aut_rep_type]
         self.properties +=[
             ('Level', prop_int_pretty(self.level)),
             ('Family', self.family_str),
-            ('Weight', self.weight_str),
-#            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),     
-#            ('Rep. character', '$%s$' % self.char_conrey_str),                      
-#            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta\_{%s})' % self.char_order)),                                                         
+            ('Weight', self.weight_str)
 	]
-
         
         if self.embedding_label is None:
             self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
@@ -304,7 +352,7 @@ class WebNewform():
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
-    def convert_qexp_to_cyclotomic(self,  m):
+    def convert_to_cyclotomic(self, m, attrib):
         from sage.all import CyclotomicField
         F = CyclotomicField(m)
         zeta = F.gens()[0]
@@ -313,12 +361,12 @@ class WebNewform():
         betas = [F(self.hecke_ring_numerators[i]) /
                  self.hecke_ring_denominators[i] for i in range(l)]
         write_in_powers = zeta.coordinates_in_terms_of_powers()
-        for coeffs in self.qexp:
+        for coeffs in getattr(self,attrib):
             elt = sum([coeffs[i] * betas[i] for i in range(l)])
             ret.append(write_in_powers(elt))
         self.single_generator = True
-        self.qexp = ret
-        self.qexp_converted = True
+        setattr(self, attrib, ret)
+        setattr(self, attrib + '_converted', True)
         return ret
 
     @lazy_attribute
@@ -1177,7 +1225,30 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + r'+O(q^{%d})\)' % prec
 
-
+    def hecke_eigenvalue(self, hecke_type, n):
+        # Display the hecke eigenvalue of this hecke_type at place n. Will be inside \( \).
+        m = self.hecke_ring_cyclotomic_generator
+        ev = getattr(self, hecke_type)[n]
+        if m is not None and m != 0:
+            # sum of powers of zeta_m
+            # convert into a normal representation
+            def to_list(data):
+                if not data:
+                    return []
+                out = [0]*(max(e for _, e in data) + 1)
+                for c, e in data:
+                    out[e] = c
+                    return out
+            coeffs = to_list(ev)
+            return raw_typeset_ev(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
+        elif self.single_generator:
+            var = str(self._PrintRing.gen(0))
+            return raw_typeset_ev(ev, superscript=True, var=var, final_rawvar=var[0])
+        else:
+            # in this case str(self._PrintRing.gen(0)) = beta1
+            # and thus the extra case
+            return raw_typeset_ev(ev)
+    
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.embedding_label:
@@ -1212,6 +1283,9 @@ function switch_basis(btype) {
         prec = min(self.texp_prec, prec_max)
         return raw_typeset_qexp([[elt] for elt in self.texp[:prec]])
 
+    def hecke_ev_header(self, n):
+        return 'a_{%s}'%n
+    
     def embed_header(self, n, format='embed'):
         if format == 'embed':
             return 'a_{%s}'%n

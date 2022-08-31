@@ -19,7 +19,7 @@
     <td>{{ newform.factored_level }}</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.siegel.weight', title='Weight') }}: </td>
+    <td> {{ KNOWL('mf.siegel.weight_k_j', title='Weight') }}: </td>
     <td> \( (k,j) \) </td>
     <td>\(=\)</td>
     <td>\( {{ newform.weight_str }} \)</td>
@@ -35,6 +35,11 @@
 <h2> Newform invariants </h2>
 
 <table>
+  <tr>
+    <td>  {{ KNOWL('mf.siegel.automorphic_type', title='Automorphic type') }}: </td>
+    <td>  {{newform.aut_type_str}} ({{newform.aut_rep_type }}) </td>
+  </tr> 
+
   <tr>
     <td> {{ KNOWL('mf.siegel.dimension', title='Dimension') }}: </td>
     <td>\({{ newform.dim }}\)</td>
@@ -125,5 +130,43 @@
 
 {% block subcontent %}
 {% endblock %}
+
+<h2>Hecke eigenvalues</h2>
+<div class="table-scroll-wrapper">
+<table class="ntdata complex-cols">
+  <thead>
+    <tr>
+      <th class="sticky-head dark" style="min-width: 40px;">Hecke operator</th>
+      {% for n in newform.primes %}
+      <th class="center dark" colspan="1">\( {{ newform.hecke_ev_header(n) }} \)</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% set headcol_rowspan = 1 %}
+    {% for ht in newform.hecke_types %}
+    {% if loop.index is divisibleby(2) %}
+    {% set shade = 'dark' %}
+    {% else %}
+    {% set shade = 'light' %}
+    {% endif %}
+    <tr>
+      {% set hd = newform.hecke_disp[ht] %}
+      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col border-right" style="min-width: 40px;" align="center">
+	\( T_{ {{ hd }} } \)
+      </td>
+      {% for n in newform.range_evs %}
+      <td align="right">
+        {{ newform.hecke_eigenvalue(ht,n) | safe }}
+      </td>
+      {% endfor %} {# n loop #}
+    </tr>
+    {% endfor %} {# ht loop #}
+    <tr style="max-height: 0px;" class="border-bottom"> {# Add a bottom border #}
+      <td style="max-height: 0px;margin: 0px;padding: 0px;" colspan="{{2 + (info.CC_n | length)}}"></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 {% endblock %}
