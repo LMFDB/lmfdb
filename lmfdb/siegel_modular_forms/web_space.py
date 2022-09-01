@@ -149,7 +149,13 @@ def ALdim_table(al_dims, level, weight):
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 
-def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
+def common_latex(family, level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
+    FAMILY_DISP = {
+        'K' : r"K",
+        'P' : r"\Gamma",
+        'S' : r"\Gamma_{t}"
+        }
+    family_disp = FAMILY_DISP[family]
     # symbolic_chi is currently ignored: we always use a symbolic chi
     if conrey is None:
         char = ""
@@ -167,7 +173,7 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     if char:
         ans = r"{S}_{{{k}}}{typ}({N}{char})"
     else:
-        ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
+        ans = r"{S}_{{{k}}}{typ}(" + family_disp + r"({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
 def convert_spacelabel_from_conrey(spacelabel_conrey):
@@ -354,7 +360,7 @@ class WebNewformSpace():
 
     def _vec(self):
         # return [self.level, self.weight, self.conrey_indexes[0]]
-        return [self.level, ",".join([str(w) for w in self.weight]), None]
+        return [self.family, self.level, ",".join([str(w) for w in self.weight]), None]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -393,12 +399,12 @@ class WebNewformSpace():
         return common_latex(*(self._vec() + ["M",0,"old"]), symbolic_chi=True)
 
     def subspace_latex(self, new=False):
-        return common_latex("M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)
+        return common_latex(self.family, "M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
         template = r"<a href={url}>\({old}\)</a>\(^{{\oplus {mult}}}\)"
-        return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, typ="new"),
+        return r"\(\oplus\)".join(template.format(old=common_latex(self.family, N, self.weight, conrey, typ="new"),
                                                   url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label=cremona_letter_code(i-1)),
                                                   mult=mult)
                                   for N, i, conrey, mult in self.oldspaces)
@@ -485,7 +491,7 @@ class WebGamma1Space():
         return WebGamma1Space(level, weight)
 
     def _vec(self):
-        return [self.level, self.weight, None]
+        return [self.family, self.level, self.weight, None]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M",1]))
@@ -506,10 +512,10 @@ class WebGamma1Space():
         return common_latex(*(self._vec() + ["S",1,"new"]))
 
     def subspace_latex(self, new=False):
-        return common_latex("M", self.weight, None, "S", 1, "new" if new else "")
+        return common_latex(self.family, "M", self.weight, None, "S", 1, "new" if new else "")
 
     def summand_latex(self,symbolic_chi=True):
-        return common_latex(self.level, self.weight, 1, "S", 0, "new", symbolic_chi=symbolic_chi)
+        return common_latex(self.family, self.level, self.weight, 1, "S", 0, "new", symbolic_chi=symbolic_chi)
 
     def old_latex(self):
         return common_latex(*(self._vec() + ["S",1,"old"]))
@@ -529,7 +535,7 @@ class WebGamma1Space():
                 name = "{N}.{k}.{i}.{f}".format(N=N, k=self.weight, i=i, f=form)
         else:
             t = 1 if i is None else 0
-            name = r"\(%s\)" % common_latex(N, self.weight, i, t=t, typ=typ)
+            name = r"\(%s\)" % common_latex(self.family, N, self.weight, i, t=t, typ=typ)
         if i is None:
             url = url_for(".by_url_full_gammma1_space_label",
                           level=N, weight=self.weight)
