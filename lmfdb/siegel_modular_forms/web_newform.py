@@ -25,6 +25,7 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str
+from lmfdb.lfunctions.Lfunctionutilities import seriescoeff
 
 LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -68,6 +69,92 @@ def raw_typeset_ev(coeffs,
     raw = raw.replace(rawvar, final_rawvar)
 
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
+
+def raw_typeset_lfunc(coeffs_list,
+                      compress_threshold=100,
+                      coeff_compress_threshold=30,
+                      var=r"\beta",
+                      final_rawvar='b',
+                      superscript=False,
+                      **kwargs):
+    plus = r" + "
+    minus = r" - "
+
+    rawvar = var.lstrip("\\")
+    R = PolynomialRing(ZZ, rawvar)
+
+    def rawtset_coeff(i, coeffs):
+        poly = R(coeffs)
+        if poly == 0:
+            return "", ""
+        rawq = " * " + str(i) + "^{-s}" if i > 1 else " "
+        tsetq = " \\cdot {{"  + str(i) +  "}}^{{-s}}" if i > 1 else " "
+        raw = str(poly)
+        if poly in [1, -1]:
+            rawq = "{" + str(i) + "}^{-s}" if i > 1 else "1"
+            tsetq = "{{" + str(i) + "}}^{{-s}}" if i > 1 else "1"
+            if poly == -1:
+                return minus + rawq, minus + tsetq
+            elif i > 1:
+                return plus + rawq, plus + tsetq
+            else:
+                return rawq, tsetq
+        else:
+            tset = compress_polynomial(
+                poly,
+                coeff_compress_threshold,
+                decreasing=True)
+        if not superscript:
+            raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
+            tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+            # in case the last replace doesn't trigger because is at the end
+            if raw.endswith(rawvar):
+                raw += "1"
+            if tset.endswith(var):
+                tset += "_1"
+        if poly.number_of_terms() == 1:
+            if i > 1:
+                if raw.startswith('-'):
+                    raw = minus + raw[1:]
+                else:
+                    raw = plus + raw
+                    tset = plus + tset
+        else:
+            tset = f"({tset})"
+            raw = f"({raw})"
+            if i > 1:
+                raw = plus + raw
+                tset = plus + tset
+        raw += rawq
+        tset += tsetq
+        return raw, tset
+
+    tset = ''
+    raw = ''
+    add_to_tset = True
+    lastt = None
+    for i, coeffs in enumerate(coeffs_list):
+        r, t = rawtset_coeff(i, coeffs)
+        if t:
+            lastt = t
+        raw += r
+        if add_to_tset:
+            tset += t
+        if add_to_tset and "cdots" in tset:
+            add_to_tset = False
+            lastt = None
+        else:
+            if lastt and not add_to_tset:
+                tset += r"+ \cdots "
+                tset += lastt
+
+    tset += rf'+O({{{len(coeffs_list)}}}^' + '{-s})'
+    raw = raw.lstrip(" ")
+    # use final_rawvar
+    raw = raw.replace(rawvar, final_rawvar)
+
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
+
 
 # we may store alpha_p with p <= 3000
 primes_for_angles = prime_range(3000)
@@ -1248,7 +1335,31 @@ function switch_basis(btype) {
             # in this case str(self._PrintRing.gen(0)) = beta1
             # and thus the extra case
             return raw_typeset_ev(ev)
-    
+
+    def L_function(self, prec_max=10):
+        # Display the L-function, truncating to precision prec_max. Will be inside \( \).
+        prec = min(self.qexp_prec, prec_max)
+        m = self.hecke_ring_cyclotomic_generator
+        if m is not None and m != 0:
+            # sum of powers of zeta_m
+            # convert into a normal representation
+            def to_list(data):
+                if not data:
+                    return []
+                out = [0]*(max(e for _, e in data) + 1)
+                for c, e in data:
+                    out[e] = c
+                    return out
+            coeffs = [to_list(data) for data in self.qexp[:prec]]
+            return raw_typeset_lfunc(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
+        elif self.single_generator:
+            var = str(self._PrintRing.gen(0))
+            return raw_typeset_lfunc(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
+        else:
+            # in this case str(self._PrintRing.gen(0)) = beta1
+            # and thus the extra case
+            return raw_typeset_lfunc(self.qexp[:prec])
+        
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.embedding_label:
