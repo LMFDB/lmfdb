@@ -881,15 +881,15 @@ newform_columns = SearchColumns([
 #    ProcessedCol("fricke_eigenval", "smf.fricke", "Fricke sign",
 #                 lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
 #                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
-#    ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
-#                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
+    ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
+                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
 #    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
    MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)],
 #    ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p'],
+    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -1479,7 +1479,7 @@ class SMFSearchArray(SearchArray):
         ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
         ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
 #        ('inner_twist_count', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
-#        ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
+        ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
     ]
     for name, disp, sord in _sort:
         if 'char_orbit_index' not in sord:
@@ -1661,19 +1661,19 @@ class SMFSearchArray(SearchArray):
  #           knowl='mf.siegel.selfdual',
  #           label='Is self-dual')
 
- #       coefficient_ring_index = TextBox(
- #           name='hecke_ring_index',
- #           label='Coefficient ring index',
- #           knowl='mf.siegel.coefficient_ring',
- #           example='1',
- #           example_span='1, 2-4')
+        coefficient_ring_index = TextBox(
+            name='hecke_ring_index',
+            label='Coefficient ring index',
+            knowl='mf.siegel.coefficient_ring',
+            example='1',
+            example_span='1, 2-4')
 
- #       hecke_ring_generator_nbound = TextBox(
- #           name='hecke_ring_generator_nbound',
- #           label='Coefficient ring gens.',
- #           knowl='mf.siegel.hecke_ring_generators',
- #           example='20',
- #           example_span='7, 1-10')
+        hecke_ring_generator_nbound = TextBox(
+            name='hecke_ring_generator_nbound',
+            label='Coefficient ring gens.',
+            knowl='mf.siegel.hecke_ring_generators',
+            example='20',
+            example_span='7, 1-10')
 
  #       analytic_rank= TextBox(
  #           name='analytic_rank',
@@ -1750,11 +1750,11 @@ class SMFSearchArray(SearchArray):
             [level_primes, character],
             [char_order, char_primitive],
             [dim, coefficient_field],
-            [results]
+            [results],
 #            [analytic_conductor, Nk2],
 #            [self_twist, self_twist_discs],
 #            [inner_twist_count, is_self_dual],
-#            [coefficient_ring_index, hecke_ring_generator_nbound],
+            [coefficient_ring_index, hecke_ring_generator_nbound],
 #            [analytic_rank, projective_image],
 #            [results, projective_image_type]]
 ]
@@ -1763,6 +1763,7 @@ class SMFSearchArray(SearchArray):
 #            [level, weight, analytic_conductor, Nk2, dim],
             [level_primes, character, char_primitive, char_order, coefficient_field],
 #            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
+            [coefficient_ring_index, hecke_ring_generator_nbound]
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [

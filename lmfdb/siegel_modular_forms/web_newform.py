@@ -480,7 +480,8 @@ class WebNewform():
         smf_base = '/ModularForm/GSp/Q/'
         ns1_label = '.'.join(base_label + weight_label)
         ns1_url = smf_base + '/'.join(base_label) + '.'.join(weight_label)
-        res.append(('Newspace ' + ns1_label, ns1_url))
+        # Right now, we still don't have the analogues of Gamma1 spaces
+        # res.append(('Newspace ' + ns1_label, ns1_url))
         char_letter = self.char_orbit_label
         ns_label = '.'.join(base_label + weight_label + [char_letter])
         ns_url = smf_base + '/'.join(base_label + ['.'.join(weight_label), char_letter])
@@ -526,7 +527,8 @@ class WebNewform():
             if self.dim > 1:
                 for lfun_label in self.embedding_labels:
                     lfun_url =  '/L' + smf_base + lfun_label.replace('.','/')
-                    res.append(('L-function ' + lfun_label, lfun_url))
+                    # Right now we don't have the associated L-functions (or maybe we do but they are labeled differently...)
+                    # res.append(('L-function ' + lfun_label, lfun_url))
 
         return res
 
@@ -1359,6 +1361,10 @@ function switch_basis(btype) {
             # in this case str(self._PrintRing.gen(0)) = beta1
             # and thus the extra case
             return raw_typeset_lfunc(self.qexp[:prec])
+
+    def trace_lfunction(self, prec_max=10):
+        prec = min(self.texp_prec, prec_max)
+        return raw_typeset_lfunc([[elt] for elt in self.texp[:prec]])
         
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
