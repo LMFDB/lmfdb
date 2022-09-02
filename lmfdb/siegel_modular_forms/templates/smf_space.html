@@ -52,6 +52,10 @@
     <tr>
       <th class="blank"></th>
       <th> Subspace </th>
+      <th> New </th>
+      <th> Total New </th>
+      <th> Old </th>
+      <th> Total Old </th>
       <th> Dimension </th>
       <th> Total </th>
     </tr>
@@ -61,15 +65,15 @@
     <tr>
       <th rowspan={{info.subspace_num[X]+1}} class="left"> {{info.space_type[X]}} </td>
       <td></td>
+      {% for typ in ['new', 'old', 'all'] %} 
       <td></td>
-      {% for typ in ['all'] %} 
       <td rowspan={{info.subspace_num[X]+1}} class="center"> {{ space.dim_grid[X][typ]  }} </td>
       {% endfor %}
     </tr>
     {% for Y in info.subspace_type[X] %}
     <tr>
       <th class="left"> {{info.subspace_type[X][Y]}} </td>
-      {% for typ in ['all'] %} 
+      {% for typ in ['new', 'old', 'all'] %} 
       <td class="center"> {{ space.dim_grid[Y][typ] }} </td>
       {% endfor %}
     </tr>

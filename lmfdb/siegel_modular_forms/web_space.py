@@ -236,24 +236,23 @@ class DimGrid():
 
     @staticmethod
     def from_db(data):
-        grid = {'M':{'all': data.get('total_dim', '?'),
-#                     'new':data['dim']+data['eis_new_dim'],
-#                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
-                     },
-                'S':{'all':data['cusp_dim'],
-#                     'new':data['dim'],
-#                     'old':data['cusp_dim']-data['dim']}
-                     },
-                'E':{'all': data.get('eis_dim', '?'),
-#                     'new':data['eis_new_dim'],
-#                     'old':data['eis_dim']-data['eis_new_dim']}}
-                     },
-                'Q':{'all': data.get('eis_Q_dim', '?')},
-                'F':{'all': data.get('eis_F_dim', '?')},
-                'Y':{'all':data['cusp_Y_dim']},
-                'P':{'all':data['cusp_P_dim']},
-                'G':{'all':data['cusp_G_dim']}
-        }
+        prefix = {'all' : '',
+                  'new' : 'new_',
+                  'old' : 'old_'}
+        
+        col = {'M' : 'total',
+               'S' : 'cusp',
+               'E' : 'eis',
+               'Q' : 'eis_Q',
+               'F' : 'eis_F',
+               'Y' : 'cusp_Y',
+               'P' : 'cusp_P',
+               'G' : 'cusp_G'
+               }
+        
+        grid = { subsp : { sub : data.get(prefix[sub] + col[subsp] + '_dim', '?')
+                           for sub in prefix.keys()} for subsp in col.keys()}
+       
         return DimGrid(grid)
 
 class WebNewformSpace():
