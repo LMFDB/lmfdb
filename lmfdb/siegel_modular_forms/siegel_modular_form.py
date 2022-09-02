@@ -128,7 +128,7 @@ def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
         count = dim_dict[dim]
         query = {'weight':weight,
                  'char_label':'%s.%s'%(level,char_orbit_label),
-                 'total_dim':dim}
+                 'cusp_dim':dim}
         if count > 3:
             short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
             title = '%s newforms' % count
@@ -774,9 +774,9 @@ def common_parse(info, query, na_check=False):
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
     if not na_check and info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
-            parse_ints(info, query, 'total_dim', qfield='relative_dim', name="Dimension")
+            parse_ints(info, query, 'cusp_dim', qfield='relative_dim', name="Cusp Dimension")
         else:
-            parse_ints(info, query, 'total_dim', name="Dimension")
+            parse_ints(info, query, 'cusp_dim', name="Cusp Dimension")
 
 
 def parse_discriminant(d, sign = 0):
@@ -1193,7 +1193,7 @@ def dimension_form_search(info, query):
              err_title='Dimension search input error',
              per_page=None,
 #             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
-             projection=['label', 'level', 'weight', 'total_dim', 'degree', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_F_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim'],
+             projection=['label', 'level', 'weight', 'degree', 'total_dim', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_F_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1214,7 +1214,7 @@ space_columns = SearchColumns([
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("total_dim", "smf.display_dim", "Dim.", short_title="dimension", default=True)
+    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True)
     #    MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
 #    MultiProcessedCol("al_dims", "smf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
     ])
@@ -1596,8 +1596,8 @@ class SMFSearchArray(SearchArray):
             min_width=110)
 
         dim = TextBoxWithSelect(
-            name='total_dim',
-            label='Dim.',
+            name='cusp_dim',
+            label='Cusp Dim.',
             knowl='mf.siegel.dimension',
             example='1',
             example_span='2, 1-6',

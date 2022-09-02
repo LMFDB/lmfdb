@@ -236,7 +236,7 @@ class DimGrid():
 
     @staticmethod
     def from_db(data):
-        grid = {'M':{'all':data['total_dim'],
+        grid = {'M':{'all': data.get('total_dim', '?'),
 #                     'new':data['dim']+data['eis_new_dim'],
 #                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
                      },
@@ -244,12 +244,12 @@ class DimGrid():
 #                     'new':data['dim'],
 #                     'old':data['cusp_dim']-data['dim']}
                      },
-                'E':{'all':data['eis_dim'],
+                'E':{'all': data.get('eis_dim', '?'),
 #                     'new':data['eis_new_dim'],
 #                     'old':data['eis_dim']-data['eis_new_dim']}}
                      },
-                'Q':{'all':data['eis_Q_dim']},
-                'F':{'all':data['eis_F_dim']},
+                'Q':{'all': data.get('eis_Q_dim', '?')},
+                'F':{'all': data.get('eis_F_dim', '?')},
                 'Y':{'all':data['cusp_Y_dim']},
                 'P':{'all':data['cusp_P_dim']},
                 'G':{'all':data['cusp_G_dim']}
@@ -273,6 +273,7 @@ class WebNewformSpace():
 #        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
 #        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
+        self.is_display_decomp = (self.cusp_dim > 0) or (getattr(self, 'total_dim', 0) > 0)
 
         # Properties
         self.properties = [('Label',self.label)]
