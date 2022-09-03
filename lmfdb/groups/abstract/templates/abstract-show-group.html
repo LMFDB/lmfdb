@@ -202,7 +202,7 @@
   {% endif %}
   {% if gp.semidirect_products %}
     <tr>
-      <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
+      <td >{{KNOWL('group.semidirect_product', 'Nontrivial semidirect product')}}:</td>
       {% for sub, count, labels in gp.semidirect_products[:4] %}
         <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
       {% endfor %}
