@@ -401,11 +401,17 @@ def G2C_data(label):
 ### Regex patterns used in lookup
 TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
+ONE_TERM = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)"
+SHORT_WEIER_BEG = re.compile(r"^" +  ONE_TERM + r"\^2=")
+LONG_WEIER_BEG = re.compile(r"^" +  ONE_TERM + r"\^2+")
 POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
 POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
 ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
 ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
 G2_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")")
+LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
+LHASH_RE = re.compile(r"\#\d+")
 
 def genus2_lookup_equation(input_str):
     # returns:
@@ -494,11 +500,6 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
-ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
-LHASH_RE = re.compile(r"\#\d+")
-
-
 def genus2_jump(info):
     jump = info["jump"].replace(" ", "")
     if LABEL_RE.fullmatch(jump):
@@ -518,11 +519,46 @@ def genus2_jump(info):
             return redirect(url_for_curve_label(label), 301)
         elif label is None:
             # the input was parsed
-            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve in the database"
+            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
+    elif SHORT_WEIER_BEG.match(jump):
+        f = jump.split("=")[1]
+        label, eqn_str = genus2_lookup_equation(f)
+        if label:
+            return redirect(url_for_curve_label(label), 301)
+        elif label is None:
+            # the input was parsed
+            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
+    elif LONG_WEIER_BEG.match(jump):
+        # Here we assume quite a bit from the user's input
+        # to extract h and f
+        first_bit, f = jump.split("=")
+        y_monomial_letter = jump[0]
+        x_monomial_letter = {a for a in f if a.isalpha()}
+        if len(x_monomial_letter) > 1:
+            errmsg = "Your f polynomialz is apparently multivariate, this is bad."
+            flash_error(errmsg)
+            return redirect(url_for(".index"))
+        x_monomial_letter = x_monomial_letter.pop()
+        hy = first_bit.split("+",1)[1]
+        R1 = PolynomialRing(ZZ,x_monomial_letter)
+        R2 = PolynomialRing(R1,y_monomial_letter)
+        hy = R2(hy)
+        if (hy[0] != 0) or (hy.degree() != 1):
+            errmsg = "Your h polynomial is not being multiplied by y"
+            flash_error(errmsg)
+            return redirect(url_for(".index"))    
+        h = hy[1]  # in R1
+        new_input = str(f) + "," + str(h)
+        print(f"new input is {new_input}")
+        label, eqn_str = genus2_lookup_equation(new_input)
+        if label:
+            return redirect(url_for_curve_label(label), 301)
+        elif label is None:
+            # the input was parsed
+            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
-        errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
-        errmsg += "."
+        errmsg += ", or a univariate polynomial, e.g., x^5 + 1."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
