@@ -113,6 +113,18 @@ table.ntdata a {
 $\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_label|safe }}
 </center>
 
+{% if nf.is_cm_field() %}
+        <p><h2> {{ KNOWL('nf.reflex_field', title='Reflex fields') }}</h2>
+  <table  style="margin-left:5%;" border="2">
+    <thead><tr style="border-bottom: 1px solid #000;">
+      <th>Label<th>Polynomial<th>Number of CM types
+    </tr></thead>
+    <tbody>
+    {{ info.reflex_fields | safe }}
+    </tbody>
+  </table>
+{% endif %}
+
         <h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <p>
             {{ info.galois_group | safe }}:

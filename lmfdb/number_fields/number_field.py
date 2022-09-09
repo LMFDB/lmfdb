@@ -509,6 +509,21 @@ def render_field_webpage(args):
     #ram_primes = ram_primes.replace('L', '')
     if not ram_primes:
         ram_primes = r'\textrm{None}'
+    if True:
+        # Reflex fields table
+        table = ""
+        reflex_fields = db.nf_fields_reflex.search({"nf_label" : label})
+        reflex_fields_list = []
+        field_labels_dict = dict()
+        for reflex_field in reflex_fields:
+            reflex_fields_list.append([reflex_field['rf_coeffs'], reflex_field['multiplicity']])
+            field_labels_dict[tuple(reflex_field['rf_coeffs'])] = "N/A"
+        field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[0]} for a in reflex_fields_list]}, ["label", "coeffs"])
+        for field in field_labels:
+            field_labels_dict[tuple(field["coeffs"])] = field["label"]
+        for reflex_field in reflex_fields_list:     
+            table = table + '<tr><td>' + field_labels_dict[tuple(reflex_field[0])] + '</td><td>' + str(reflex_field[0]) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
+        data['reflex_fields'] = table
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()
     zk = [compress_poly_Q(x, 'a') for x in zkraw]
