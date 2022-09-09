@@ -8,7 +8,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 
 from .encoding import Json, copy_dumps
 from .base import PostgresBase, _meta_table_name
-from .utils import DelayCommit, EmptyContext, IdentifierWrapper, LockError, psycopg2_version
+from .utils import DelayCommit, IdentifierWrapper, LockError, psycopg2_version
 from .base import (
     _meta_indexes_cols,
     _meta_constraints_cols,
