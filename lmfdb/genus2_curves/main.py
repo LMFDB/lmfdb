@@ -535,7 +535,7 @@ def genus2_jump(info):
         y_monomial_letter = jump[0]
         x_monomial_letter = {a for a in f if a.isalpha()}
         if len(x_monomial_letter) > 1:
-            errmsg = "Your f polynomialz is apparently multivariate, this is bad."
+            errmsg = "Your f polynomial is multivariate; it should only have one variable in it."
             flash_error(errmsg)
             return redirect(url_for(".index"))
         x_monomial_letter = x_monomial_letter.pop()
@@ -549,7 +549,6 @@ def genus2_jump(info):
             return redirect(url_for(".index"))    
         h = hy[1]  # in R1
         new_input = str(f) + "," + str(h)
-        print(f"new input is {new_input}")
         label, eqn_str = genus2_lookup_equation(new_input)
         if label:
             return redirect(url_for_curve_label(label), 301)
@@ -558,7 +557,8 @@ def genus2_jump(info):
             errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
-        errmsg += ", or a univariate polynomial, e.g., x^5 + 1."
+        errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
+        errmsg += ", or a Weierstrass equation, e.g., y^2=x^5 + 1."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
@@ -1185,6 +1185,7 @@ class G2CSearchArray(SearchArray):
         info["jump_example"] = "169.a.169.1"
         info["jump_egspan"] = "e.g. 169.a.169.1 or 169.a or 1088.b"
         info["jump_egspan"] += " or x^5 + 1 or x^5, x^2 + x + 1"
+        info["jump_egspan"] += " or b^2 = k^5 + 1 or m^2 + m*(x^2 + x + 1) = x^5"
         info["jump_knowl"] = "g2c.search_input"
         info["jump_prompt"] = "Label or polynomial"
         return SearchArray.jump_box(self, info)

@@ -4,8 +4,9 @@ import re
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex
 from sage.databases.cremona import parse_cremona_label, class_to_int
+from sage.schemes.elliptic_curves.constructor import EllipticCurve_from_Weierstrass_polynomial
 
 from lmfdb.elliptic_curves.web_ec import latex_equation
 
@@ -13,7 +14,7 @@ from lmfdb.elliptic_curves.web_ec import latex_equation
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
-from lmfdb.utils import (
+from lmfdb.utils import (coeff_to_poly,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
@@ -23,7 +24,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, Processe
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, ZLIST_RE, ZLLIST_RE
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
@@ -242,7 +243,7 @@ def by_conductor(conductor):
     return elliptic_curve_search(info)
 
 
-def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=False, invalid_class=False):
+def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=False, invalid_class=False, invalid_poly=False):
     err_args = {}
     for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
@@ -254,29 +255,83 @@ def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=Fa
         err_args['err_msg'] = "The isogeny class %s is not in the database"
     elif invalid_class:
         err_args['err_msg'] = r"%s is not a valid label for an isogeny class of elliptic curves over $\mathbb{Q}$"
+    elif invalid_poly:
+        err_args['err_msg'] = "The equation defined by %s does not define an elliptic curve"
     elif not label:
         err_args['err_msg'] = "Please enter a non-empty label %s"
     else:
         err_args['err_msg'] = r"%s is not a valid label for an elliptic curve or isogeny class over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
+
+def ec_lookup_equation(input_str):
+
+    R = PolynomialRing(QQ, "x")
+    y = PolynomialRing(R, "y").gen()
+
+    def read_list_coeffs(elt):
+        if not elt:
+            return R(0)
+        else:
+            return R([int(c) for c in elt.split(",")])
+
+    if ZLLIST_RE.fullmatch(input_str):
+        input_str_new = input_str.strip('[').strip(']')
+        fg = [read_list_coeffs(elt) for elt in input_str_new.split('],[')]
+    elif ZLIST_RE.fullmatch(input_str):
+        input_str_new = input_str.strip('[').strip(']')
+        fg = [read_list_coeffs(input_str_new), R(0)]
+    else:
+        input_str_new = input_str.strip('[').strip(']')
+        fg = [R(list(coeff_to_poly(elt))) for elt in input_str_new.split(",")]
+    if len(fg) == 1:
+        fg.append(R(0))
+
+    ec_defining_poly = y**2 + y*(fg[1]) - fg[0]
+    S = PolynomialRing(QQ,2, ["x", "y"])
+    try:
+        E = EllipticCurve_from_Weierstrass_polynomial(S(ec_defining_poly))
+    except ValueError:
+        C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
+        return None, ("invalid_poly",C_str_latex)
+    lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+    
+    if lmfdb_label is None:
+        return None, ("not_in_db",EC_ainvs(E))
+    return lmfdb_label,""
+
+
+
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
-    m = match_lmfdb_label(label)
-    if m:
+    if label is None:
+        return elliptic_curve_jump_error('', info)
+    elif match_lmfdb_label(label):
         try:
             return by_ec_label(label)
         except ValueError:
             return elliptic_curve_jump_error(label, info, missing_curve=True)
-    m = match_cremona_label(label)
-    if m:
+    elif match_cremona_label(label):
         try:
             return redirect(url_for(".by_ec_label", label=label))
             #return by_ec_label(label)
         except ValueError:
             return elliptic_curve_jump_error(label, info, missing_curve=True)
+    elif match_weierstrass_polys(label):
+        print("was ere")
+        label, fail_reason = ec_lookup_equation(label)
+        if label:
+            return by_ec_label(label)
+        elif label is None:
+            if fail_reason[0] == "invalid_poly":
+                return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
+            return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
 
-    if label:
+    # elif match_short_weierstrass_eqn(label):
+
+    # elif match_long_weierstrass_eqn(label):
+
+    else:
         # Try to parse a string like [1,0,3,2,4] as valid
         # Weistrass coefficients:
         lab = re.sub(r'\s','',label)
@@ -293,10 +348,8 @@ def elliptic_curve_jump(info):
                 info['conductor'] = E.conductor()
                 return elliptic_curve_jump_error(label, info, missing_curve=True)
             return by_ec_label(lmfdb_label)
-        except (TypeError, ValueError, ArithmeticError):
+        except Exception:
             return elliptic_curve_jump_error(label, info)
-    else:
-        return elliptic_curve_jump_error('', info)
 
 def url_for_label(label):
     if label == "random":
