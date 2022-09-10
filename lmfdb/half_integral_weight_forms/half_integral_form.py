@@ -7,9 +7,10 @@ from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
 from lmfdb import db
 from lmfdb.utils import flash_error, parse_ints, search_wrap
-#from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
+# from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.half_integral_weight_forms import hiwf_page
+
 
 @hiwf_page.route("/")
 def half_integral_weight_form_render_webpage():
@@ -24,7 +25,7 @@ def half_integral_weight_form_render_webpage():
     else:
         return half_integral_weight_form_search(args)
 
-#hiwf_columns = SearchColumns([
+# hiwf_columns = SearchColumns([
 #    LinkCol("label", None, "Label", lambda label: url_for("hiwf.render_hiwf_webpage", label=label), default=True),
 #    MathCol("level", None, "Level", default=True),
 #    MathCol("weight", None, "Weight", default=True),
@@ -32,7 +33,8 @@ def half_integral_weight_form_render_webpage():
 #                 lambda char: r'<a href="Character/Dirichlet/%s">$\chi_{%s}(%s, \cdot)$</a>' % (char.replace(".", "/"), char.split(".")[0], char.split(".")[1]),
 #                 default=True),
 #    MathCol("dim", None, "Dimension", default=True)])
-#hiwf_columns.dummy_download = True
+# hiwf_columns.dummy_download = True
+
 
 @search_wrap(template="half_integral_weight_form_search.html",
              table=db.halfmf_forms,
@@ -40,17 +42,17 @@ def half_integral_weight_form_render_webpage():
              err_title='Half integral weight cusp forms search input error',
              # columns=hiwf_columns, # doesn't work since nobody has created a search_array for halfmf_forms....
              per_page=50,
-             shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
-             projection=['level','label','weight','character','dim'],
+             shortcuts={'label': lambda info: render_hiwf_webpage(label=info['label'])},
+             projection=['level', 'label', 'weight', 'character', 'dim'],
              cleaners={'char': lambda v: r"\chi_{" + v['character'].split(".")[0] + "}(" + v['character'].split(".")[1] + r",\cdot)",
-                       'ch_lab': lambda v: v.pop('character').replace('.','/'),
+                       'ch_lab': lambda v: v.pop('character').replace('.', '/'),
                        'dimension': lambda v: v.pop('dim')},
-             bread=lambda:[('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")),('Search results', ' ')],
+             bread=lambda: [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")), ('Search results', ' ')],
              properties=lambda: [])
 def half_integral_weight_form_search(info, query):
     parse_ints(info, query, 'weight')
     parse_ints(info, query, 'level')
-    if info.get('character','').strip():
+    if info.get('character', '').strip():
         if re.match(r'^\d+.\d+$', info['character'].strip()):
             query['character'] = info['character'].strip()
         else:
@@ -76,7 +78,6 @@ def my_latex_from_qexp(s):
     return ss
 
 
-
 @hiwf_page.route('/<label>')
 def render_hiwf_webpage(**args):
     data = None
@@ -96,21 +97,21 @@ def render_hiwf_webpage(**args):
 
     dim = data['dim']
     dimtheta = data['dimtheta']
-    dimnew=dim-dimtheta
+    dimnew = dim - dimtheta
     info['dimension'] = dim
-    info['dimtheta']= dimtheta
+    info['dimtheta'] = dimtheta
     info['dimnew'] = dimnew
     chi = data['character']
-    info['ch_lab']= chi.replace('.','/')
-    chi1=chi.split(".")
-    chi2=r"\chi_{"+chi1[0]+"}("+chi1[1]+r",\cdot)"
-    info['char']= chi2
-    info['newpart']=data['newpart']
-    new=[]
+    info['ch_lab'] = chi.replace('.', '/')
+    chi1 = chi.split(".")
+    chi2 = r"\chi_{" + chi1[0] + "}(" + chi1[1] + r",\cdot)"
+    info['char'] = chi2
+    info['newpart'] = data['newpart']
+    new = []
     for n in data['newpart']:
-        v={}
+        v = {}
         v['dim'] = n['dim_image']
-        s=[]
+        s = []
         for h in n['half_forms']:
             s.append(my_latex_from_qexp(print_q_expansion(h)))
         v['hiwf'] = s
@@ -118,17 +119,17 @@ def render_hiwf_webpage(**args):
         v['nf'] = n['nf_label']
         v['field_knowl'] = nf_display_knowl(n['nf_label'], n['nf_label'])
         new.append(v)
-    info['new']= new
-    if dimtheta !=0:
-        theta=[]
+    info['new'] = new
+    if dimtheta != 0:
+        theta = []
         for m in data['thetas']:
             for n in m:
-                n_lab= n.replace('.','/')
-                n_l=n.split(".")
-                n_lat=r"\chi_{"+n_l[0]+"}("+n_l[1]+r",\cdot)"
-                v=[n_lab, n_lat]
+                n_lab = n.replace('.', '/')
+                n_l = n.split(".")
+                n_lat = r"\chi_{" + n_l[0] + "}(" + n_l[1] + r",\cdot)"
+                v = [n_lab, n_lat]
                 theta.append(v)
-        info['theta']= theta
+        info['theta'] = theta
     else:
-        info['theta']= data['thetas']
+        info['theta'] = data['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
