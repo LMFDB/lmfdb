@@ -180,7 +180,7 @@ class PostgresStatsTable(PostgresBase):
     dictionary whose keys are columns, and whose values are a list of strings giving intervals.
     Counts are computed with values grouped into intervals.
 
-    EXAMPLE::
+    EXAMPLES::
 
         sage: db.mf_newforms.stats.add_bucketed_counts(['level', 'weight'], {'level': ['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-10000'], 'weight': ['1','2','3','4','5-8','9-16','17-32','33-64','65-316']})
 
