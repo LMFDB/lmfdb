@@ -282,8 +282,8 @@ class mf_newspaces(MfChecker):
         """
         return accumulate_failures(
                 self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
-                    constraint=self._box_query(box, extras = {'dim':{'$gt':1}}))
-                for box in db.mf_boxes.search({'straces':True}))
+                    constraint=self._box_query(box, extras={'dim': {'$gt': 1}}))
+                for box in db.mf_boxes.search({'straces': True}))
 
     ### mf_newforms ###
     @overall

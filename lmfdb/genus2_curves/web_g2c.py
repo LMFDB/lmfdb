@@ -97,11 +97,11 @@ def min_eqns_pretty(fh):
 
 def url_for_ec(label):
     if '-' not in label:
-        return url_for('ec.by_ec_label', label = label)
-    else:
-        (nf, cond, isog, num) = split_ecnf_label(label)
-        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
-        return url
+        return url_for('ec.by_ec_label', label=label)
+    nf, cond, isog, num = split_ecnf_label(label)
+    return url_for('ecnf.show_ecnf', nf=nf, conductor_label=cond,
+                  class_label=isog, number=num)
+
 
 def url_for_ec_class(ec_label):
     if '-' not in ec_label:
@@ -110,6 +110,7 @@ def url_for_ec_class(ec_label):
     else:
         (nf, cond, isog, num) = split_ecnf_label(ec_label)
         return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
+
 
 def ec_label_class(ec_label):
     x = ec_label
