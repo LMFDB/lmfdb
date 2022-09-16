@@ -542,6 +542,8 @@ def genus2_jump(info):
         hy = first_bit.split("+",1)[1]
         R1 = PolynomialRing(ZZ,x_monomial_letter)
         R2 = PolynomialRing(R1,y_monomial_letter)
+        while re.search("[A-Za-z]{2}", hy):
+            hy = re.sub("([A-Za-z])([A-Za-z])", r"\1*\2", hy)
         hy = R2(hy)
         if (hy[0] != 0) or (hy.degree() != 1):
             errmsg = "Your h polynomial is not being multiplied by y"
