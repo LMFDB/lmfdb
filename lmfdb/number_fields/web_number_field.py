@@ -253,7 +253,7 @@ def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
 
-def formatfield(coef, show_poly=False, missing_text=None):
+def formatfield(coef, show_poly=False, missing_text=None, data=None):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -266,8 +266,14 @@ def formatfield(coef, show_poly=False, missing_text=None):
     """
     if isinstance(coef, str):
         coef = string2list(coef)
-    thefield = WebNumberField.from_coeffs(coef)
-    if thefield._data is None:
+    if data == None:
+        thefield = WebNumberField.from_coeffs(coef)
+    else:
+        if data['label'] == "N/A":
+            thefield = None
+        else:
+            thefield = WebNumberField(data['label'], data=data)
+    if thefield == None or thefield._data is None:
         deg = len(coef) - 1
         mypolraw = coeff_to_poly(coef)
         mypol = latex(mypolraw)
@@ -281,7 +287,11 @@ def formatfield(coef, show_poly=False, missing_text=None):
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
-    return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
+    if data == None:
+        label = thefield.get_label()
+    else:
+        label = data['label']
+    return nf_display_knowl(label,thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity
 def modules2string(n, t, modlist):
