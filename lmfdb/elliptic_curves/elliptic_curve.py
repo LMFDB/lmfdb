@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from math import hypot
 import os
 import re
 import time
