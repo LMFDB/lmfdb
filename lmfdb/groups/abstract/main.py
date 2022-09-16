@@ -14,7 +14,7 @@ from flask import (
     url_for,
     abort,
 )
-from six import BytesIO
+from io import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
