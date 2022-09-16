@@ -149,7 +149,7 @@ def convert_hecke_eigenvalues(K_old, eigenvals, K_new, int_basis):
         int_basis -- list, a list containing the integral basis for K_new
     """
     if not K_old.is_isomorphic(K_new):
-        return "Error! Fields not isomorphic!"
+        raise RuntimeError("Fields not isomorphic!")
     iota = K_old.embeddings(K_new)[0]
     (a,) = K_new._first_ngens(1)
 
