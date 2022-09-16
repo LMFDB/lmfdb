@@ -521,11 +521,11 @@ def render_field_webpage(args):
         field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[0]} for a in reflex_fields_list]}, ["label", "coeffs"])
         for field in field_labels:
             field_labels_dict[tuple(field["coeffs"])] = field["label"]
-        for reflex_field in reflex_fields_list: 
+        for reflex_field in reflex_fields_list:
             if field_labels_dict[tuple(reflex_field[0])] == "N/A":
-                table = table + '<tr><td>' + formatfield(reflex_field[0], data={'label' : field_labels_dict[tuple(reflex_field[0])]}) + '</td><td>' + raw_typeset_poly(PolynomialRing(ZZ, name='x')(reflex_field[0])) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
-            else:    
-                table = table + '<tr><td>' + formatfield(reflex_field[0], data={'label' : field_labels_dict[tuple(reflex_field[0])]}) + '</td><td>' + raw_typeset_poly(PolynomialRing(ZZ, name='x')(reflex_field[0])) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
+                table = table + '<tr><td>' + formatfield(reflex_field[0], data={'label' : field_labels_dict[tuple(reflex_field[0])]}) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
+            else:
+                table = table + '<tr><td>' + formatfield(reflex_field[0], data={'label' : field_labels_dict[tuple(reflex_field[0])]}) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
         data['reflex_fields'] = table
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()
