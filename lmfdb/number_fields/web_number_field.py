@@ -266,14 +266,14 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
     """
     if isinstance(coef, str):
         coef = string2list(coef)
-    if data == None:
+    if data is None:
         thefield = WebNumberField.from_coeffs(coef)
     else:
         if data['label'] == "N/A":
             thefield = None
         else:
             thefield = WebNumberField(data['label'], data=data)
-    if thefield == None or thefield._data is None:
+    if thefield is None or thefield._data is None:
         deg = len(coef) - 1
         mypolraw = coeff_to_poly(coef)
         mypol = latex(mypolraw)
