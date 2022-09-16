@@ -35,10 +35,16 @@ POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
 POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
 ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
 ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
-G2_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")")
+G1_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE]]) + r")")
 
 def match_weierstrass_polys(lab):
-    return G2_LOOKUP_RE.fullmatch(lab)
+    return G1_LOOKUP_RE.fullmatch(lab)
+
+def match_short_weierstrass_eqn(lab):
+    return SHORT_WEIER_BEG.match(lab)
+
+def match_long_weierstrass_eqn(lab):
+    return LONG_WEIER_BEG.match(lab)
 
 def match_lmfdb_label(lab):
     return lmfdb_label_regex.fullmatch(lab)

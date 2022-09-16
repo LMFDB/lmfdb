@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from math import hypot
 import os
 import re
 import time
@@ -24,7 +25,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, Processe
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, ZLIST_RE, ZLLIST_RE
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, ZLIST_RE, ZLLIST_RE, match_long_weierstrass_eqn, match_short_weierstrass_eqn
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
@@ -288,9 +289,10 @@ def ec_lookup_equation(input_str):
         fg.append(R(0))
 
     ec_defining_poly = y**2 + y*(fg[1]) - fg[0]
+    print(f"ec defining poly is {ec_defining_poly}")
     S = PolynomialRing(QQ,2, ["x", "y"])
     try:
-        E = EllipticCurve_from_Weierstrass_polynomial(S(ec_defining_poly))
+        E = EllipticCurve_from_Weierstrass_polynomial(S(ec_defining_poly)).minimal_model()
     except ValueError:
         C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
         return None, ("invalid_poly",C_str_latex)
@@ -299,7 +301,6 @@ def ec_lookup_equation(input_str):
     if lmfdb_label is None:
         return None, ("not_in_db",EC_ainvs(E))
     return lmfdb_label,""
-
 
 
 def elliptic_curve_jump(info):
@@ -327,10 +328,45 @@ def elliptic_curve_jump(info):
                 return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
             return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
 
-    # elif match_short_weierstrass_eqn(label):
+    elif match_short_weierstrass_eqn(label):
+        f = label.split("=")[1]
+        label, fail_reason = ec_lookup_equation(f)
+        if label:
+            return by_ec_label(label)
+        elif label is None:
+            if fail_reason[0] == "invalid_poly":
+                return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
+            return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
 
-    # elif match_long_weierstrass_eqn(label):
-
+    elif match_long_weierstrass_eqn(label):
+        # Here we assume quite a bit from the user's input
+        # to extract h and f
+        first_bit, f = label.split("=")
+        y_monomial_letter = first_bit[0]
+        x_monomial_letter = {a for a in f if a.isalpha()}
+        if len(x_monomial_letter) > 1:
+            errmsg = "Your f polynomial is multivariate; it should only have one variable in it."
+            flash_error(errmsg)
+            return redirect(url_for(".index"))
+        x_monomial_letter = x_monomial_letter.pop()
+        hy = first_bit.split("+",1)[1]
+        R1 = PolynomialRing(ZZ,x_monomial_letter)
+        R2 = PolynomialRing(R1,y_monomial_letter)
+        hy = R2(hy)
+        if (hy[0] != 0) or (hy.degree() != 1):
+            errmsg = "Your h polynomial is not being multiplied by y"
+            flash_error(errmsg)
+            return redirect(url_for(".index"))    
+        h = hy[1]  # in R1
+        new_input = str(f) + "," + str(h)
+        print(f"new input is {new_input}")
+        label, fail_reason = ec_lookup_equation(new_input)
+        if label:
+            return by_ec_label(label)
+        elif label is None:
+            if fail_reason[0] == "invalid_poly":
+                return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
+            return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
     else:
         # Try to parse a string like [1,0,3,2,4] as valid
         # Weistrass coefficients:
