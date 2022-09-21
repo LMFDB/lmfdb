@@ -464,7 +464,9 @@ class StatsDisplay(UniqueRepresentation):
     def stats(self):
         return self
 
-    def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, baseurl_func=None, url_extras=None, **kwds):
+    def display_data(self, cols, table=None, constraint=None, avg=None,
+                     buckets=None, totaler=None, proportioner=None,
+                     baseurl_func=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 

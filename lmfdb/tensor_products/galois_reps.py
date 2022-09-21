@@ -485,12 +485,12 @@ class GaloisRepresentation( Lfunction):
         if hasattr(self, "sign"):
             # print type(self.sign)
             # type complex would yield an error here.
-            self.ld = Dokchitser(conductor = self.conductor,
-                                gammaV = self.gammaV,
-                                weight = self.motivic_weight,
-                                eps = self.sign,
-                                poles = [],
-                                residues = [])
+            self.ld = Dokchitser(conductor=self.conductor,
+                                gammaV=self.gammaV,
+                                weight=self.motivic_weight,
+                                eps=self.sign,
+                                poles=[],
+                                residues=[])
         else:
             # find the sign from the functional equation
             # this should be implemented later:

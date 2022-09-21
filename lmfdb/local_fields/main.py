@@ -109,18 +109,22 @@ def lf_display_knowl(label, name=None):
         name = label
     return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, name)
 
+
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
+
 
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
             'local_algebra_data': local_algebra_data}
 
+
 # Utilities for subfield display
-def format_lfield(label,p):
+def format_lfield(label, p):
     data = db.lf_fields.lookup(label)
-    return lf_display_knowl(label, name = prettyname(data))
+    return lf_display_knowl(label, name=prettyname(data))
+
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(sublist, multdata, p):
