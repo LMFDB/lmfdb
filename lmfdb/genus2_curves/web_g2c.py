@@ -99,17 +99,15 @@ def url_for_ec(label):
     if '-' not in label:
         return url_for('ec.by_ec_label', label=label)
     nf, cond, isog, num = split_ecnf_label(label)
-    return url_for('ecnf.show_ecnf', nf=nf, conductor_label=cond,
-                  class_label=isog, number=num)
+    return url_for('ecnf.show_ecnf', nf=nf, conductor_label=cond, class_label=isog, number=num)
 
 
 def url_for_ec_class(ec_label):
     if '-' not in ec_label:
-        (cond, iso, num) = split_lmfdb_label(ec_label)
+        cond, iso, num = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
-    else:
-        (nf, cond, isog, num) = split_ecnf_label(ec_label)
-        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
+    nf, cond, isog, num = split_ecnf_label(ec_label)
+    return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
 
 
 def ec_label_class(ec_label):
