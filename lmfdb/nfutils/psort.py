@@ -20,7 +20,7 @@ FpX_key = lambda a: a.list()
 
 # Sort key for Z_p.  The start_val=0 is needed for elements whose
 # parent is Qp rather than Zp since over Qp the first entry is the
-# coefficient of p^v with v the the valuation
+# coefficient of p^v with v the valuation
 
 Zp_key = lambda a: a.list(start_val=0)
 
