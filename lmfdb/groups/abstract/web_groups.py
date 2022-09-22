@@ -11,10 +11,12 @@ from sage.all import (
     PermutationGroup,
     SymmetricGroup,
     ZZ,
+    Zmod,
     factor,
     latex,
     lazy_attribute,
     prod,
+    lcm,
     is_prime,
     cartesian_product_iterator,
 )
@@ -874,14 +876,22 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_classes(self):
         if self.live():
-            # We just record size, order, and a representative
-            cl = [
-                WebAbstractConjClass(self.label, f"{c.Representative().Order()}?", {
-                    "size": ZZ(c.Size()),
-                    "order": ZZ(c.Representative().Order()),
-                    "representative": c.Representative()})
-                for c in self.G.ConjugacyClasses()
-            ]
+            if isinstance(self.G, LiveAbelianGroup):
+                cl = [
+                    WebAbstractConjClass(self.label, f"{m}?", {
+                        "size": ZZ(1),
+                        "order": m})
+                    for m in self.G.element_orders()
+                ]
+            else:
+                # We just record size, order, and a representative
+                cl = [
+                    WebAbstractConjClass(self.label, f"{c.Representative().Order()}?", {
+                        "size": ZZ(c.Size()),
+                        "order": ZZ(c.Representative().Order()),
+                        "representative": c.Representative()})
+                    for c in self.G.ConjugacyClasses()
+                ]
             # no divisions or autjugacy classes
             return cl
         cl = [
@@ -1669,6 +1679,11 @@ class LiveAbelianGroup():
     def IdGroup(self):
         return libgap.AbelianGroup(self.snf).IdGroup()
 
+    def element_orders(self):
+        return sorted(
+            lcm(c.additive_order() for c in T)
+            for T in cartesian_product_iterator(
+                    [Zmod(m) for m in self.snf]))
 
 # Abstract Group object
 
