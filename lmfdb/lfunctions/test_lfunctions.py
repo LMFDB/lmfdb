@@ -10,23 +10,21 @@ class LfunctionTest(LmfdbTest):
     # Testing at least one example of each type of L-function page
     #------------------------------------------------------
 
-
-
     def test_LDirichlet(self):
-        L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects = True)
+        L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects=True)
         assert '0.4813597783' in L.get_data(as_text=True)
         #assert 'SatoTate' in L.get_data(as_text=True)
         #assert 'mu(9)' in L.get_data(as_text=True)
         assert '2.13818063440820276534' in L.get_data(as_text=True)
         assert '1-19-19.9-r0-0-0' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Character/Dirichlet/6400/3/', follow_redirects = True)
+        L = self.tc.get('/L/Character/Dirichlet/6400/3/', follow_redirects=True)
         assert '2.131285033' in L.get_data(as_text=True) in L.get_data(as_text=True)
         #assert 'SatoTate' in L.get_data(as_text=True)
         #assert 'mu(320)' in L.get_data(as_text=True)
         assert '3.1381043104275982' in L.get_data(as_text=True)
         assert '1-80e2-6400.3-r0-0-0' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Character/Dirichlet/17/16/', follow_redirects = True)
+        L = self.tc.get('/L/Character/Dirichlet/17/16/', follow_redirects=True)
         assert '1.01608483' in L.get_data(as_text=True)
         assert '1-17-17.16-r0-0-0' in L.get_data(as_text=True)
 
@@ -35,7 +33,7 @@ class LfunctionTest(LmfdbTest):
                     '/L/Character/Dirichlet/6400/6399/',
                     'L/Character/Dirichlet/1000000000/3/',
                     'L/Character/Dirichlet/1000000000000000000000/3/']:
-            L = self.tc.get(url, follow_redirects = True)
+            L = self.tc.get(url, follow_redirects=True)
             assert 'not found' in L.get_data(as_text=True)
 
     def test_Lec(self):
@@ -523,7 +521,7 @@ class LfunctionTest(LmfdbTest):
     def test_tracehash(self):
         L = self.tc.get('/L/tracehash/7200459463482029776252499748763/', follow_redirects=True)
         assert 'trace_hash = 7200459463482029776252499748763 not in [0, 2^61]' in L.get_data(as_text=True)
-        L = self.tc.get('/L/tracehash/1938322253992393114/', follow_redirects = True)
+        L = self.tc.get('/L/tracehash/1938322253992393114/', follow_redirects=True)
         assert '324016' in L.get_data(as_text=True), "Missing data in /L/tracehash/1938322253992393114/"
         assert 'Dual L-function' not in L.get_data(as_text=True)
         assert '2-324016-1.1-c1-0-6' in L.get_data(as_text=True)

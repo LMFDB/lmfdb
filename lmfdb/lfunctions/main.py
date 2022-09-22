@@ -924,8 +924,9 @@ def l_function_ec_page(conductor_label, isogeny_class_label):
 def l_function_ec_page_label(label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return redirect(url_for('.l_function_ec_page', conductor_label = conductor,
-                                      isogeny_class_label = isogeny), 301)
+        return redirect(url_for('.l_function_ec_page',
+                                conductor_label=conductor,
+                                isogeny_class_label=isogeny), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
         return render_lfunction_exception(errmsg)
@@ -1114,8 +1115,8 @@ def l_function_ec_sym_page(power, conductor, isogeny):
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return redirect(url_for('.l_function_ec_sym_page', conductor = conductor,
-                                      isogeny = isogeny, power = power), 301)
+        return redirect(url_for('.l_function_ec_sym_page', conductor=conductor,
+                                isogeny=isogeny, power=power), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
         return render_lfunction_exception(errmsg)
@@ -1134,13 +1135,14 @@ def l_function_genus2_page(cond,x):
 @l_function_page.route("/Lhash/<lhash>")
 @l_function_page.route("/Lhash/<lhash>/")
 def l_function_by_hash_page(lhash):
-    label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection = "label")
+    label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection="label")
     if label is None:
         errmsg = 'Did not find an L-function with Lhash = %s' % lhash
         return render_lfunction_exception(errmsg)
     return redirect(url_for_lfunction(label), 301)
 
-#by trace_hash
+
+# by trace_hash
 @l_function_page.route("/tracehash/<int:trace_hash>")
 @l_function_page.route("/tracehash/<int:trace_hash>/")
 def l_function_by_trace_hash_page(trace_hash):
@@ -1148,7 +1150,7 @@ def l_function_by_trace_hash_page(trace_hash):
         errmsg = r'trace_hash = %s not in [0, 2^61]' % trace_hash
         return render_lfunction_exception(errmsg)
 
-    label = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash, 'label': {'$exists': True}}, projection = "label")
+    label = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash, 'label': {'$exists': True}}, projection="label")
     if label is None:
         errmsg = 'Did not find an L-function with trace_hash = %s' % trace_hash
         return render_lfunction_exception(errmsg)
@@ -1431,14 +1433,14 @@ def set_navi(L):
         if next_form_id:
             next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
                          url_for('maass.by_label',
-                         label = next_form_id) )
+                         label=next_form_id) )
         else:
             next_data = ('','','')
         prev_form_id = L.mf.prev_maass_form()
         if prev_form_id:
             prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
                          url_for('maass.by_lavel',
-                         label = prev_form_id) )
+                         label=prev_form_id) )
         else:
             prev_data = ('','','')
 
@@ -1480,11 +1482,11 @@ def generateLfunctionFromUrl(*args, **kwds):
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
         maass_id = args[4]
-        return Lfunction_Maass(maass_id = maass_id, fromDB = False)
+        return Lfunction_Maass(maass_id=maass_id, fromDB=False)
 
     elif args[0] == 'ModularForm' and (args[1] == 'GSp4' or args[1] == 'GL4' or args[1] == 'GL3') and args[2] == 'Q' and args[3] == 'Maass':
-        return Lfunction_Maass(fromDB = True, group = args[1], level = args[4],
-                char = args[5], R = args[6], ap_id = args[7])
+        return Lfunction_Maass(fromDB=True, group=args[1], level=args[4],
+                               char=args[5], R=args[6], ap_id=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GSp' and args[2] == 'Q' and args[3] == 'Sp4Z':
         return Lfunction_SMF2_scalar_valued(weight=args[4], orbit=args[5], number=args[6])
@@ -1499,13 +1501,13 @@ def generateLfunctionFromUrl(*args, **kwds):
 
     elif args[0] == "SymmetricPower":
         return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],
-                                       conductor=args[4], isogeny = args[5])
+                                       conductor=args[4], isogeny=args[5])
 
     elif args[0] == "Motive" and args[1] == "Hypergeometric" and args[2] == "Q":
         if args[4]:
-            return HypergeometricMotiveLfunction(family = args[3], t = args[4])
+            return HypergeometricMotiveLfunction(family=args[3], t=args[4])
         else:
-            return HypergeometricMotiveLfunction(label = args[3])
+            return HypergeometricMotiveLfunction(label=args[3])
     elif args[0] in ['lhash', 'Lhash']:
         return Lfunction_from_db(Lhash=str(args[1]))
 
@@ -1678,7 +1680,7 @@ def render_zerosLfunction(request, *args):
         # This depends on mathematical information, all below is formatting
         # More semantic this way
         # Allow 10 seconds
-        website_zeros = L.compute_web_zeros(time_allowed = 10)
+        website_zeros = L.compute_web_zeros(time_allowed=10)
 
     # Handle cases where zeros are not available
     if isinstance(website_zeros, str):
@@ -1803,14 +1805,15 @@ def processEllipticCurveNavigation(startCond, endCond):
             s += '<tr>'
 
         counter += 1
-        s += '<td><a href="' + url_for('.l_function_ec_page', conductor_label=cond,
-                                       isogeny_class_label = iso) + '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('.l_function_ec_page',
+                                       conductor_label=cond,
+                                       isogeny_class_label=iso) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'
             counter = 0
 
-    if counter > 0:
+    if counter:
         s += '</tr>\n'
 
     s += '</table>\n'

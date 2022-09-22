@@ -437,7 +437,7 @@ class KnowlBackend(PostgresBase):
             if beta is None:
                 beta = is_beta()
             if not beta:
-                # Have to make sure we do display references where the the most recent positively reviewed knowl does reference this, but the most recent beta does not.
+                # Have to make sure we do display references where the most recent positively reviewed knowl does reference this, but the most recent beta does not.
                 selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
                 cur = self._execute(selecter, values)
                 good_ids = [rec[0] for rec in cur]

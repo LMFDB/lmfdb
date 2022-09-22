@@ -64,12 +64,12 @@ def dimension_Gamma_2(wt_range, j):
     <ul>
       <li>
         row <span class="emph">All</span>
-        and in in the $k$th column shows the dimension of
+        and in the $k$th column shows the dimension of
         the full space $M_{k,j}(\Gamma(2))$,
         of the non cusp forms, and of the cusp forms.</li>
       <li>
         in row <span class="emph">$p$</span>, where $p$ is a partition of $6$,
-        and in in the $k$th column shows the multiplicity of the
+        and in the $k$th column shows the multiplicity of the
         $\mathrm{Sp}(4,\Z)$-representation
         associated to $p$ in the full $\mathrm{Sp}(4,\Z)$-module
         $M_{k,j}(\Gamma(2))$,
@@ -93,12 +93,12 @@ def dimension_Gamma1_2(wt_range, j):
     <ul>
       <li>
         row <span class="emph">All</span>
-        and in in the $k$th column shows the dimension of
+        and in the $k$th column shows the dimension of
         the full space $M_{k,j}(\Gamma(2))$,
         of the non cusp forms, and of the cusp forms.</li>
       <li>
         in row <span class="emph">$p$</span>, where $p$ is a partition of $3$,
-        and in in the $k$th column shows the multiplicity of the
+        and in the $k$th column shows the multiplicity of the
         $\Gamma_1(2)$-representation
         associated to $p$ in the full $\Gamma_1(2)$-module $M_{k,j}(\Gamma(2))$,
         in the submodule of non cusp forms and of cusp forms.

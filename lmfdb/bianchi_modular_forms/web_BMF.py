@@ -264,7 +264,7 @@ class WebBMF():
 
             # This will also add the EC/G2C, as this how the Lfun was computed
             # and not add itself
-            self.friends = names_and_urls(instances, exclude = {url})
+            self.friends = names_and_urls(instances, exclude={url})
             self.friends.append(('L-function', '/L/'+url))
         else:
             # old code

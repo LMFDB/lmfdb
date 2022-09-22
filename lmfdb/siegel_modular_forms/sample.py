@@ -96,7 +96,7 @@ class Sample_class (SageObject):
     def Fourier_coefficients(self, det_list):
         query = {'owner_id': self.__id, 'det': {'$in': det_list}}
         fcs = db.smf_fc.search(query, ['det', 'data'])
-        P = PolynomialRing(self.__field, names = 'x,y')
+        P = PolynomialRing(self.__field, names='x,y')
         return dict((fcd['det'], dict((tuple(literal_eval(f)), P(str(poly))) for f, poly in fcd['data'].items() )) for fcd in fcs)
 
 

@@ -25,7 +25,7 @@ class Downloader():
       or a dictionary with keys language names and values the appropriate columns.
       In all cases, exclude the label column, which is prepended automatically.
     - a ``column_wrappers`` attribute, which is a dictionary with column names
-      as keys and unary functions f as values; data for for the named columns
+      as keys and unary functions f as values; data for the named columns
       be mapped through f when being added to the download data (column names
       that do not appear in columns will be ignored)
     - a ``data_format`` attribute, which is a list of strings

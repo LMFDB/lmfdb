@@ -299,7 +299,8 @@ def makeLfromdata(L):
         # we recover all the bits
         int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros]
         # we convert them back to floats and we want to display their truncated version
-        return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+        return [(RealNumber(elt.str() + ".") / two_power).str(truncate=True)
+                for elt in int_zeros]
 
     if L.accuracy is not None:
         L.positive_zeros_raw = convert_zeros(L.accuracy, L.positive_zeros_raw)
@@ -610,39 +611,37 @@ class Lfunction_from_db(Lfunction):
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
         data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
-        return Downloader()._wrap(
-                Json.dumps(data),
-                filename + '.euler_factors',
-                lang = 'text',
-                title = 'Euler Factors of %s' % self.label)
+        return Downloader()._wrap(Json.dumps(data),
+                                  filename + '.euler_factors',
+                                  lang='text',
+                                  title='Euler Factors of %s' % self.label)
 
     def download_zeros(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['order_of_vanishing'] = self.order_of_vanishing
         data['positive_zeros'] = self.positive_zeros_raw
         data['negative_zeros'] = self.negative_zeros_raw
         data['positive_zeros_accuracy'] = self.accuracy
         data['negative_zeros_accuracy'] = self.dual_accuracy
-        return Downloader()._wrap(
-                Json.dumps(data),
-                filename + '.zeros',
-                lang = 'text',
-                title = 'Zeros of %s' % self.label)
+        return Downloader()._wrap(Json.dumps(data),
+                                  filename + '.zeros',
+                                  lang='text',
+                                  title='Zeros of %s' % self.label)
 
     def download_dirichlet_coeff(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.dir_coeffs',
-                lang = 'text',
-                title = 'Dirichlet coefficients of %s' % self.label)
+                lang='text',
+                title='Dirichlet coefficients of %s' % self.label)
 
     def download(self):
         filename = self.label
-        data  = dict(self.__dict__)
+        data = dict(self.__dict__)
         for k in ['level_factored', 'dirichlet_coefficients']:
             if isinstance(data[k], list):
                 data[k] = list(map(str, data[k]))
@@ -652,9 +651,8 @@ class Lfunction_from_db(Lfunction):
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.lfunction',
-                lang = 'text',
-                title = 'The L-function object of %s' % self.label)
-
+                lang='text',
+                title='The L-function object of %s' % self.label)
 
     @lazy_attribute
     def htmlname(self):
@@ -709,15 +707,13 @@ class Lfunction_from_db(Lfunction):
             self.info['knowltype'] = self.knowltype
 
 
-
-
 #############################################################################
 
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form
 
     Compulsory parameters: maass_id (if not from DB)
-                           fromDB  (True if data is in Lfuntions database)
+                           fromDB  (True if data is in Lfunctions database)
 
     Possible parameters: group,level,char,R,ap_id  (if data is in Lfunctions DB)
     """

@@ -20,7 +20,7 @@ FpX_key = lambda a: a.list()
 
 # Sort key for Z_p.  The start_val=0 is needed for elements whose
 # parent is Qp rather than Zp since over Qp the first entry is the
-# coefficient of p^v with v the the valuation
+# coefficient of p^v with v the valuation
 
 Zp_key = lambda a: a.list(start_val=0)
 
@@ -272,12 +272,15 @@ def exp_vec_wt_iter(w, wts):
                 for v1 in exp_vec_wt_iter(w1,wts[:-1]):
                     yield v1+[v0]
 
+
 def exp_vec_wt(w, wts):
     r""" Sorted list of all non-negative integer tuples v of length
     len(wts) and weight w = sum(v[i](wts[i]).  Sorting is first by
     unweighted weight sum(v[i]) the reverse lex.
     """
-    return sorted(list(exp_vec_wt_iter(w,wts)), key = lambda v: (sum(v),[-c for c in v]))
+    return sorted(exp_vec_wt_iter(w, wts),
+                  key=lambda v: (sum(v), [-c for c in v]))
+
 
 def ppower_norm_ideals(K,p,f):
     r""" Return a sorted list of ideals of K of norm p^f with p prime

@@ -326,7 +326,8 @@ def web_latex_split_on_pm(x):
     return A
     # return web_latex_split_on(x)
 
-def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+
+def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     r"""
     Convert input into a latex string, with splits into separate latex strings
     occurring on given regex `r`.
