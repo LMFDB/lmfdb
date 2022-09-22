@@ -141,7 +141,7 @@ class PostgresStatsTable(PostgresBase):
     - ``cols`` -- these are the columns specified in the query.  A list, stored as a jsonb.
     - ``values`` -- these could be numbers, or dictionaries giving a more complicated constraint.
         A list, of the same length as ``cols``, stored as a jsonb.
-    - ``count`` -- the number of rows in the search table where the the columns take on the given values.
+    - ``count`` -- the number of rows in the search table where the columns take on the given values.
     - ``extra`` -- false if the count was added in an ``add_stats`` method,
         true if it was added separately (such as by a request on a search results page).
     - ``split`` -- used when column values are arrays.  If true, then the array is split
@@ -1065,7 +1065,7 @@ class PostgresStatsTable(PostgresBase):
 
         OUTPUT:
 
-        A dictionary with keys the possible values taken on the the columns in grouping.
+        A dictionary with keys the possible values taken on the columns in grouping.
         Each value is a dictionary with keys 'min', 'max', 'avg'
         """
         if isinstance(grouping, str):
@@ -1356,7 +1356,7 @@ class PostgresStatsTable(PostgresBase):
                 logging.warning(
                     "{:d} rows were just inserted to".format(len(to_add))
                     + " into {}, ".format(self.counts + suffix)
-                    + "all with with cols = {}. ".format(jallcols)
+                    + "all with cols = {}. ".format(jallcols)
                     + "This might decrease the counts table performance "
                     + "significantly! Consider clearing all the stats "
                     + "db.{}.stats._clear_stats_counts()".format(self.search_table)
