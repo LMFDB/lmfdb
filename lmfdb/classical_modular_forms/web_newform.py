@@ -231,7 +231,7 @@ class WebNewform():
             if self.embedded_twists:
                 self.embedded_minimal_twist = self.embedded_twists[0]["twist_class_label"]
 
-        self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
+        self.plot =  db.mf_newform_portraits.lookup(self.label, projection="portrait")
 
         # properties box
         if embedding_label is None:
@@ -480,7 +480,7 @@ class WebNewform():
         if format in angles_formats:
             cc_proj.append(angles_projection)
 
-        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
+        cc_data = list(db.mf_hecke_cc.search(query, projection=cc_proj))
         if not cc_data:
             self.has_complex_qexp = False
         else:
@@ -522,7 +522,7 @@ class WebNewform():
                 self.embedding_root = display_complex(x, y, 6, method='round', try_halfinteger=False)
 
     @staticmethod
-    def by_label(label, embedding_label = None):
+    def by_label(label, embedding_label=None):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
@@ -533,12 +533,11 @@ class WebNewform():
             Nk2 = int(N) * int(k) * int(k)
             nontriv = not (a == 'a')
             from .main import Nk2_bound
-            if Nk2 > Nk2_bound(nontriv = nontriv):
+            if Nk2 > Nk2_bound(nontriv=nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
-                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
+                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv=nontriv), nontriv_text) )
             raise ValueError("Newform %s not found" % label)
-        return WebNewform(data, embedding_label = embedding_label)
-
+        return WebNewform(data, embedding_label=embedding_label)
 
     @property
     def projective_image_latex(self):
@@ -858,19 +857,19 @@ function switch_basis(btype) {
 
     @property
     def _PrintRing(self):
+        """
         # the order='negdeglex' assures constant terms come first
         # univariate polynomial rings don't support order,
         # we work around it by introducing a dummy variable
+        """
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
-            return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order = 'negdeglex')
-        elif self.single_generator:
+            return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order='negdeglex')
+        if self.single_generator:
             if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
-                return PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
-            else:
-                return PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')
-        else:
-            return PolynomialRing(QQ, ['beta%s' % i for i in range(1, self.dim)], order = 'negdeglex')
+                return PolynomialRing(QQ, [self._nu_var, 'dummy'], order='negdeglex')
+            return PolynomialRing(QQ, ['beta', 'dummy'], order='negdeglex')
+        return PolynomialRing(QQ, [f'beta{i}' for i in range(1, self.dim)], order='negdeglex')
 
     @property
     def _Rgens(self):
@@ -954,8 +953,8 @@ function switch_basis(btype) {
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '  </tr>', '</thead>', '<tbody>']
-        self_twists = sorted([r for r in self.twists if r['self_twist_disc']], key = lambda r: r['conductor'])
-        other_inner_twists = sorted([r for r in self.twists if r['target_label'] == self.label and not r['self_twist_disc']], key = lambda r: r['conductor'])
+        self_twists = sorted([r for r in self.twists if r['self_twist_disc']], key=lambda r: r['conductor'])
+        other_inner_twists = sorted([r for r in self.twists if r['target_label'] == self.label and not r['self_twist_disc']], key=lambda r: r['conductor'])
         inner_twists = self_twists + other_inner_twists
         for r in inner_twists:
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
@@ -968,7 +967,7 @@ function switch_basis(btype) {
         return '\n'.join(twists)
 
     @cached_method
-    def display_hecke_char_polys(self, num_disp = 5):
+    def display_hecke_char_polys(self, num_disp=5):
         """
         Display a table of the characteristic polynomials of the Hecke operators
         for small primes. The number of primes presented by default is 5, although
@@ -1061,7 +1060,11 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
-        for r in sorted(self.twists, key = lambda x: [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
+        for r in sorted(self.twists, key=lambda x: [x['target_level'],
+                                                    x['target_char_orbit'],
+                                                    x['target_hecke_orbit'],
+                                                    x['conductor'],
+                                                    x['twisting_char_orbit']]):
             minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
@@ -1103,7 +1106,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in sorted(self.embedded_twists, key = lambda x: [x['conductor'],x['twisting_conrey_index'],revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index']]):
+        for r in sorted(self.embedded_twists, key=lambda x: [x['conductor'],x['twisting_conrey_index'],revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index']]):
             minimality = '&check;' if r['target_label'] == self.embedded_minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
@@ -1124,7 +1127,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in sorted(self.embedded_twists, key = lambda x: [revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
+        for r in sorted(self.embedded_twists, key=lambda x: [revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
             minimality = '&check;' if r['target_label'] == self.embedded_minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
@@ -1147,7 +1150,7 @@ function switch_basis(btype) {
         s = r'\(q'
         for j in range(2, prec):
             term = eigseq[j]
-            latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
+            latexterm = display_complex(term[0] * self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method="round", parenthesis=True, try_halfinteger=False)
             if latexterm != '0':
                 if latexterm == '1':
                     latexterm = ''

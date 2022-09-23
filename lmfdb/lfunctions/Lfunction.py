@@ -19,6 +19,7 @@ from sage.all import (
     EllipticCurve,
     I,
     Integer,
+    NaN,
     NumberField,
     PowerSeriesRing,
     QQ,
@@ -245,7 +246,7 @@ def makeLfromdata(L):
                           for p, elt in L.bad_lfactors]
     elif 'Maass' in data.get('origin', ''):
         R = ComplexField(ceil(data['precision']*log(10)/log(2)))
-        stringtoR = lambda x: R(x) if x != '??' else R('NaN')
+        stringtoR = lambda x: R(x) if x != '??' else R(NaN)
         L.localfactors = [[stringtoR(q) for q in x] for x in L.localfactors]
         L.bad_lfactors = [[p, [stringtoR(q) for q in elt]]
                           for p, elt in L.bad_lfactors]

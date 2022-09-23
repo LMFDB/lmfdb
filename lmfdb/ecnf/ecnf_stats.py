@@ -214,6 +214,8 @@ class ECNF_stats(StatsDisplay):
     def signature_summary(self, sig):
         r, s = sig
         d = r+2*s
+        if sig not in self.sig_normstats:
+            return ''
         stats = self.sig_normstats[r,s]
         ncurves = stats['ncurves']
         nclasses = stats['nclasses']
