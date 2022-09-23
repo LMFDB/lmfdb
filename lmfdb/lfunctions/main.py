@@ -2,7 +2,19 @@
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, Factorization, Integer, next_prime, prime_range, GCD
+from sage.all import (
+    Factorization,
+    GCD,
+    Integer,
+    QQ,
+    ZZ,
+    latex,
+    line,
+    next_prime,
+    prime_range,
+    spline,
+    srange,
+)
 
 import tempfile
 import os
