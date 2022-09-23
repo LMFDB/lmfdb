@@ -54,11 +54,12 @@ def cm_info(cm):
     except TypeError:
         return str(cm)
 
+
 @bmf_page.route("/")
 def index():
     """Function to deal with the base URL
     /ModularForm/GL2/ImaginaryQuadratic.  If there are no request.args
-    we display the browse and serch page, otherwise (as happens when
+    we display the browse and search page, otherwise (as happens when
     submitting a jump or search button from that page) we hand over to
     the function bianchi_modular_form_search().
     """
@@ -287,7 +288,7 @@ def bmf_field_dim_table(**args):
     info['weights'] = weights
     info['nweights'] = len(weights)
 
-    data.sort(key = lambda x: [int(y) for y in x['level_label'].split(".")])
+    data.sort(key=lambda x: [int(y) for y in x['level_label'].split(".")])
     dims = {}
     for dat in data:
         dims[dat['level_label']] = d = {}

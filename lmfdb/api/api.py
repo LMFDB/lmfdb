@@ -161,7 +161,7 @@ def api_query_id(table, id):
 
 @api_page.route("/<table>")
 @api_page.route("/<table>/")
-def api_query(table, id = None):
+def api_query(table, id=None):
     #if censored_table(table):
     #    return abort(404)
 
@@ -344,10 +344,11 @@ def api_query(table, id = None):
                                search_schema={table: search_schema},
                                extra_schema={table: extra_schema},
                                single_object=single_object,
-                               query_unquote = query_unquote,
-                               url_args = url_args,
+                               query_unquote=query_unquote,
+                               url_args=url_args,
                                bread=bc,
                                **data)
+
 
 # This function is used to show the data associated to a given homepage, which could possibly be from multiple tables.
 def datapage(labels, tables, title, bread, label_cols=None, sorts=None):

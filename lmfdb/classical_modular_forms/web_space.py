@@ -238,7 +238,7 @@ class WebNewformSpace():
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
-        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
+        self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
 
         # Properties
         self.properties = [('Label',self.label)]
@@ -403,7 +403,7 @@ class WebGamma1Space():
                 self.has_uncomputed_char = True
             else:
                 self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
-        self.plot =  db.mf_gamma1_portraits.lookup(self.label, projection = "portrait")
+        self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.new_dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]

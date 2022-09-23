@@ -14,7 +14,7 @@ from flask import (
     url_for,
     abort,
 )
-from six import BytesIO
+from io import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
@@ -774,7 +774,7 @@ def group_jump(info):
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
-        return redirect(url_for(".by_abelian_label", label = ".".join(invs)))
+        return redirect(url_for(".by_abelian_label", label=".".join(invs)))
     # by name
     labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:

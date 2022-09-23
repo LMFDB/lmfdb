@@ -701,12 +701,12 @@ def make_code(label, lang=None):
 
     # Get the base field label and a-invariants:
 
-    E = db.ec_nfcurves.lookup(label, projection = ['field_label', 'ainvs'])
+    E = db.ec_nfcurves.lookup(label, projection=['field_label', 'ainvs'])
 
     # Look up the defining polynomial of the base field:
 
     from lmfdb.utils import coeff_to_poly
-    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection = 'coeffs'))
+    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection='coeffs'))
 
     # read in code.yaml from current directory:
 

@@ -975,9 +975,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character group", cglink) )
-        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
-        friendlist.append( ("Character orbit", gal_orb_link) )
+        friendlist.append(("Character group", cglink))
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus,
+                                     orbit_label=self.orbit_label)
+        friendlist.append(("Character orbit", gal_orb_link))
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(

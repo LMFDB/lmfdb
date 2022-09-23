@@ -63,7 +63,7 @@ class PostgresUserTable(PostgresBase):
         hashed.update(fixed_salt)  # fixed salt must come last!
         return hashed.hexdigest()
 
-    def bchash(self, pwd, existing_hash = None):
+    def bchash(self, pwd, existing_hash=None):
         """
         Generate a bcrypt based password hash. Intended to replace
         Schilly's original hashing algorithm
@@ -139,7 +139,7 @@ class PostgresUserTable(PostgresBase):
             raise ValueError("User not present in database!")
         bcpass, oldpass = cur.fetchone()
         if bcpass:
-            if bcpass == self.bchash(pwd, existing_hash = bcpass):
+            if bcpass == self.bchash(pwd, existing_hash=bcpass):
                 return True
         else:
             for i in range(self.rmin, self.rmax + 1):
