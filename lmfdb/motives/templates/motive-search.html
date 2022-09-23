@@ -76,7 +76,7 @@
 
 {% for field in info.fields: %}
 <tr>
-<td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
+<td align='left'><a href="/padicField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
 <td>{{field.p}}</td>
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
