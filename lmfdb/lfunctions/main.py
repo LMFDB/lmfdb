@@ -1622,7 +1622,7 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
-    except Exception:
+    except Exception as err:
         if is_debug_mode():
             raise
         else:
