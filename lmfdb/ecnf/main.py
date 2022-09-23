@@ -744,12 +744,14 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if r not in range(d%2,d+1,2):
-        info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
+    if r not in range(d%2,d+1,2):
+        info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
+    if not info['summary']:
+        info['error'] = "The database does not contain any curves defined over fields of signature %s" % info['sig']
 
     fields_by_sig = ECNF_stats().fields_by_sig
     counts_by_field = ECNF_stats().field_normstats
