@@ -1533,20 +1533,20 @@ def generateLfunctionFromUrl(*args, **kwds):
 ################################################################################
 
 # L-function of Elliptic curve #################################################
-@l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
+@l_function_page.route("/Plot/EllipticCurve/Q/<label>")
 def l_function_ec_plot(label):
     return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
                                     None, None, None)
 
-@l_function_page.route("/Plot/<path:args>/")
+@l_function_page.route("/Plot/<path:args>")
 def plotLfunction(args):
-    args = tuple(args.split('/'))
+    args = tuple(args.rstrip('/').split('/'))
     return render_plotLfunction(request, *args)
 
 
-@l_function_page.route("/Zeros/<path:args>/")
+@l_function_page.route("/Zeros/<path:args>")
 def zerosLfunction(args):
-    args = tuple(args.split('/'))
+    args = tuple(args.rstrip('/').split('/'))
     return render_zerosLfunction(request, *args)
 
 
@@ -1582,7 +1582,7 @@ def download_dirichlet_coeff(label, L=None): # the wrapper populates the L
     assert label
     return L.download_dirichlet_coeff()
 
-@l_function_page.route("/download/<path:label>/")
+@l_function_page.route("/download/<path:label>")
 @download_route_wrapper
 def download(label, L=None): # the wrapper populates the L
     assert label
@@ -1606,8 +1606,9 @@ def render_plotLfunction(request, *args):
     try:
         data = getLfunctionPlot(request, *args)
     except Exception as err: # depending on the arguments, we may get an exception or we may get a null return, we need to handle both cases
-        raise
-        if not is_debug_mode():
+        if is_debug_mode():
+            raise
+        else:
             return render_lfunction_exception(err)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
@@ -1621,8 +1622,11 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
-    except Exception:
-        return ""
+    except Exception as err:
+        if is_debug_mode():
+            raise
+        else:
+            return render_lfunction_exception(err)
 
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
