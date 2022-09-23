@@ -744,11 +744,11 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if r not in range(d%2,d+1,2):
-        info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
+    if r not in range(d%2,d+1,2):
+        info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
 
     fields_by_sig = ECNF_stats().fields_by_sig
