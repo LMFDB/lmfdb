@@ -566,7 +566,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_LHGMZeros(self):
         L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1/t-1.1/')
-        assert '4.497732273' in L.get_data(as_text=True)
+        assert '4.4977' in L.get_data(as_text=True)
 
 
     #------------------------------------------------------
