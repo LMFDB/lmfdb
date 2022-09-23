@@ -1540,13 +1540,13 @@ def l_function_ec_plot(label):
 
 @l_function_page.route("/Plot/<path:args>")
 def plotLfunction(args):
-    args = tuple(args.split('/'))
+    args = tuple(args.rstrip('/').split('/'))
     return render_plotLfunction(request, *args)
 
 
 @l_function_page.route("/Zeros/<path:args>")
 def zerosLfunction(args):
-    args = tuple(args.split('/'))
+    args = tuple(args.rstrip('/').split('/'))
     return render_zerosLfunction(request, *args)
 
 
