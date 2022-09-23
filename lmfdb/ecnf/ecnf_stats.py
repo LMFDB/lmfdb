@@ -214,6 +214,8 @@ class ECNF_stats(StatsDisplay):
     def signature_summary(self, sig):
         r, s = sig
         d = r+2*s
+        if sig not in self.sig_normstats:
+            return f'The database contains no curves defined over number fields of degree {d} and signature ({r},{s}).'
         stats = self.sig_normstats[r,s]
         ncurves = stats['ncurves']
         nclasses = stats['nclasses']
