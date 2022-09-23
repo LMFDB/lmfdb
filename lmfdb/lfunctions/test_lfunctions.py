@@ -553,16 +553,16 @@ class LfunctionTest(LmfdbTest):
 
     def test_LecPlot(self):
         L = self.tc.get('/L/Plot/2/56/1.1/c1/0/0/')
-        assert 'OK' in str(L)
+        assert b'PNG' in L.get_data()
 
     def test_LcmfPlot(self):
         # ModularForm/GL2/Q/holomorphic/14/6/a/a/
         L = self.tc.get('/L/Plot/2/14/1.1/c5/0/0/')
-        assert 'OK' in str(L)
+        assert b'PNG' in L.get_data()
 
     def test_LartinPlot(self):
-        L = self.tc.get('/L/Zeros/ArtinRepresentation/2.68.4t3.b.a/')
-        assert 'OK' in str(L)
+        L = self.tc.get('/L/Plot/ArtinRepresentation/2.68.4t3.b.a/')
+        assert b'PNG' in L.get_data()
 
     def test_LHGMZeros(self):
         L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1/t-1.1/')
