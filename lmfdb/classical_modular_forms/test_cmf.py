@@ -64,7 +64,8 @@ class CmfTest(LmfdbTest):
         assert '168' in data
 
     def test_level_bread(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/',
+                           follow_redirects=True)
         assert '1124.1.d.a' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{-281})' in page.get_data(as_text=True)
         assert '1124.1.d.d' in page.get_data(as_text=True)
