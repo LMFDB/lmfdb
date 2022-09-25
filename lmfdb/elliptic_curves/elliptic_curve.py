@@ -115,6 +115,7 @@ def rational_elliptic_curves(err_args=None):
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
 
+
 @ec_page.route("/interesting")
 def interesting():
     return interesting_knowls(
@@ -127,20 +128,22 @@ def interesting():
         learnmore=learnmore_list()
     )
 
+
 @ec_page.route("/random")
 @redirect_no_cache
 def random_curve():
-    label = db.ec_curvedata.random(projection = 'lmfdb_label')
+    label = db.ec_curvedata.random(projection='lmfdb_label')
     cond, iso, num = split_lmfdb_label(label)
     return url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num)
 
+
 @ec_page.route("/curve_of_the_day")
-@redirect_no_cache # disables cache on todays curve
+@redirect_no_cache  # disables cache on todays curve
 def todays_curve():
     from datetime import date
-    mordells_birthday = date(1888,1,28)
-    n = (date.today()-mordells_birthday).days
-    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset = n)
+    mordells_birthday = date(1888, 1, 28)
+    n = (date.today() - mordells_birthday).days
+    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset=n)
     return url_for(".by_ec_label", label=label)
 
 ################################################################################
@@ -165,10 +168,10 @@ class ECstats(StatsDisplay):
         self.max_N_prime_c = comma(self.max_N_prime)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
-        self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
-        self.rank_knowl = display_knowl('ec.rank', title = "rank")
+        self.cond_knowl = display_knowl('ec.q.conductor', title="conductor")
+        self.rank_knowl = display_knowl('ec.rank', title="rank")
         self.ec_knowl = display_knowl('ec.q', title='elliptic curves')
-        self.cl_knowl = display_knowl('ec.isogeny', title = "isogeny classes")
+        self.cl_knowl = display_knowl('ec.isogeny', title="isogeny classes")
 
     @property
     def short_summary(self):

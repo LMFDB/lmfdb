@@ -90,7 +90,7 @@ def gl2_subgroup_data(label):
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
-        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix=RZB_URL_PREFIX, label=data['RZBlabel']))
     if data.get('Slabel') and label != data.get('Slabel'):
         info += row_wrap('Sutherland label', data['Slabel'])
     if data.get('SZlabel'):
@@ -286,7 +286,7 @@ class WebEC():
 
         data['minq_D'] = minqD = self.min_quad_twist_disc
         data['minq_label'] = db.ec_curvedata.lucky({'ainvs': self.min_quad_twist_ainvs},
-                                                   projection = 'lmfdb_label' if self.label_type=='LMFDB' else 'Clabel')
+                                                   projection='lmfdb_label' if self.label_type == 'LMFDB' else 'Clabel')
         data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
 
         # modular degree:
@@ -442,7 +442,7 @@ class WebEC():
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant']))]
 
-        lfun_url = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
+        lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
 
         if db.lfunc_instances.exists({'url':origin_url}):
@@ -452,9 +452,9 @@ class WebEC():
 
         if not self.cm:
             if N<=300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = N, isogeny = iso))]
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=N, isogeny=iso))]
             if N<=50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = N, isogeny = iso))]
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=N, isogeny=iso))]
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
@@ -669,7 +669,7 @@ class WebEC():
             tg1['m'] = 0  # holds multiplicity per degree
             tgextra.append(tg1)
 
-        tgextra.sort(key = lambda x: x['d'])
+        tgextra.sort(key=lambda x: x['d'])
         tg['n'] = len(tgextra)
         lastd = 1
         for tg1 in tgextra:

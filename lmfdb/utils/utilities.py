@@ -380,7 +380,7 @@ def num2letters(n):
         return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
-def to_dict(args, exclude = [], **kwds):
+def to_dict(args, exclude=[], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
@@ -412,7 +412,7 @@ def is_exact(x):
     return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
 
 
-def display_float(x, digits, method = "truncate",
+def display_float(x, digits, method="truncate",
                              extra_truncation_digits=3,
                              try_halfinteger=True,
                              no_sci=None,
@@ -460,8 +460,9 @@ def display_float(x, digits, method = "truncate",
         s = s.replace("e", r"\times 10^{") + "}"
     return s
 
-def display_complex(x, y, digits, method = "truncate",
-                                  parenthesis = False,
+
+def display_complex(x, y, digits, method="truncate",
+                                  parenthesis=False,
                                   extra_truncation_digits=3,
                                   try_halfinteger=True):
     """
@@ -509,8 +510,8 @@ def display_complex(x, y, digits, method = "truncate",
             sign = ""
         else:
             sign = " + "
-    y = display_float(y, digits, method = method,
-                                 extra_truncation_digits = extra_truncation_digits,
+    y = display_float(y, digits, method=method,
+                                 extra_truncation_digits=extra_truncation_digits,
                                  try_halfinteger=try_halfinteger)
     if y == "1":
         y = ""
@@ -898,8 +899,10 @@ def ajax_more(callback, *arg_list, **kwds):
     else:
         return res
 
+
 def image_src(G):
     return ajax_url(image_callback, G, _ajax_sticky=True)
+
 
 def image_callback(G):
     P = G.plot()
@@ -911,7 +914,8 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = False, transparent=False, axes_pad=None):
+
+def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes=False, transparent=False, axes_pad=None):
     """
     Convert a plot object to base64-encoded png format.
 
