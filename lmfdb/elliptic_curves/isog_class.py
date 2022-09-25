@@ -137,7 +137,7 @@ class ECisog_class():
             char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
             self.newform_link = url_for("cmf.by_url_newform_label", level=self.conductor, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
 
-        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = self.conductor, isogeny_class_label = self.iso_label)
+        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label=self.conductor, isogeny_class_label=self.iso_label)
 
         self.friends =  [('L-function', self.lfunction_link)]
 
@@ -150,9 +150,9 @@ class ECisog_class():
         else:
             self.CMfield = "no"
             if self.conductor <= 300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = self.conductor, isogeny = self.iso_label))]
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=self.conductor, isogeny=self.iso_label))]
             if self.conductor <= 50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = self.conductor, isogeny = self.iso_label))]
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
         if self.newform_exists_in_db:
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 
