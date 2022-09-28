@@ -533,7 +533,7 @@ def resolve_display(resolves):
 
 def group_display_inertia(code):
     if str(code[0]) == "t":
-        return transitive_group_display_knowl(base_label(*code[1]))
+        return group_pretty_and_nTj(code[1][0], code[1][1], useknowls=True)
     if code[1] == [1,1]:
         return "trivial"
     ans = "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")

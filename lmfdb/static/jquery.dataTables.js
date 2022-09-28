@@ -1872,7 +1872,7 @@
 			if ( json.sEcho !== undefined )
 			{
 				/* Protect against old returns over-writing a new one. Possible when you get
-				 * very fast interaction, and later queires are completed much faster
+				 * very fast interaction, and later queries are completed much faster
 				 */
 				if ( json.sEcho*1 < oSettings.iDraw )
 				{
@@ -3091,7 +3091,7 @@
 			
 			/* Remove old sizing and apply the calculated column widths
 			 * Get the unique column headers in the newly created (cloned) header. We want to apply the
-			 * calclated sizes to this header
+			 * calculated sizes to this header
 			 */
 			if ( o.oScroll.sX === "" )
 			{
@@ -3617,7 +3617,7 @@
 			if ( oSettings.oScroll.sX === "" && oSettings.oScroll.sY !== "" )
 			{
 				/* When y-scrolling only, we want to remove the width of the scroll bar so the table
-				 * + scroll bar will fit into the area avaialble.
+				 * + scroll bar will fit into the area available.
 				 */
 				var iOrigWidth = $(n).width();
 				n.style.width = _fnStringToCss( $(n).outerWidth()-oSettings.oScroll.iBarWidth );
@@ -3786,7 +3786,7 @@
 					aaSort = oSettings.aaSorting.slice();
 				}
 				
-				/* If there is a sorting data type, and a fuction belonging to it, then we need to
+				/* If there is a sorting data type, and a function belonging to it, then we need to
 				 * get the data from the developer's function and apply it for this column
 				 */
 				for ( i=0 ; i<aaSort.length ; i++ )

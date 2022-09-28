@@ -44,11 +44,13 @@ def integer_divisors(n):
     """ returns sorted list of positive divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
     if not n:
         raise ValueError("n must be nonzero")
+
     def _divisors(a):
         if len(a) == 0:
             return [1]
         q = a[0]
-        return sum([[q[0]**e*n for n in _divisors(a[1:])] for e in range(0,q[1]+1)],[])
+        return sum([[q[0]**e*n for n in _divisors(a[1:])] for e in range(q[1]+1)],[])
+
     return sorted(_divisors(ZZ(n).factor()))
 
 def integer_prime_divisors(n):
@@ -260,12 +262,14 @@ def coeff_to_power_series(c, var='q', prec=None):
 def display_multiset(mset, formatter=str, *args):
     """
     Input mset is a list of pairs [item, multiplicity]
+
     Return a string for display of the multi-set.  The
     function formatter is a function whose first argument
-    is the item, and *args are the other arguments
+    is the item, and ``*args`` are the other arguments
     and is applied to each item.
 
     Example:
+
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
@@ -376,7 +380,7 @@ def num2letters(n):
         return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
-def to_dict(args, exclude = [], **kwds):
+def to_dict(args, exclude=[], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
@@ -408,7 +412,7 @@ def is_exact(x):
     return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
 
 
-def display_float(x, digits, method = "truncate",
+def display_float(x, digits, method="truncate",
                              extra_truncation_digits=3,
                              try_halfinteger=True,
                              no_sci=None,
@@ -442,10 +446,10 @@ def display_float(x, digits, method = "truncate",
     if no_sci is None:
         no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
+        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:
         # older versions of Sage don't support the digits keyword
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(no_sci=no_sci)
+        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(no_sci=no_sci)
         point = s.find('.')
         if point != -1:
             if point < digits:
@@ -456,8 +460,9 @@ def display_float(x, digits, method = "truncate",
         s = s.replace("e", r"\times 10^{") + "}"
     return s
 
-def display_complex(x, y, digits, method = "truncate",
-                                  parenthesis = False,
+
+def display_complex(x, y, digits, method="truncate",
+                                  parenthesis=False,
                                   extra_truncation_digits=3,
                                   try_halfinteger=True):
     """
@@ -505,8 +510,8 @@ def display_complex(x, y, digits, method = "truncate",
             sign = ""
         else:
             sign = " + "
-    y = display_float(y, digits, method = method,
-                                 extra_truncation_digits = extra_truncation_digits,
+    y = display_float(y, digits, method=method,
+                                 extra_truncation_digits=extra_truncation_digits,
                                  try_halfinteger=try_halfinteger)
     if y == "1":
         y = ""
@@ -532,13 +537,15 @@ def round_to_half_int(num, fraction=2):
     """
     return round(num * 1.0 * fraction) / fraction
 
+
 def splitcoeff(coeff):
-    """
+    r"""
     Return a list of list-represented complex numbers given a string of the
     form "r0 i0 \n r1 i1 \n r2 i2", where r0 is the real part of the 0th number
     and i0 is the imaginary part of the 0th number, and so on.
 
     Example:
+
     >>> splitcoeff("1 1 \n -1 2")
     [[1.0, 1.0], [-1.0, 2.0]]
     """
@@ -892,8 +899,10 @@ def ajax_more(callback, *arg_list, **kwds):
     else:
         return res
 
+
 def image_src(G):
     return ajax_url(image_callback, G, _ajax_sticky=True)
+
 
 def image_callback(G):
     P = G.plot()
@@ -905,7 +914,8 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = False, transparent=False, axes_pad=None):
+
+def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes=False, transparent=False, axes_pad=None):
     """
     Convert a plot object to base64-encoded png format.
 

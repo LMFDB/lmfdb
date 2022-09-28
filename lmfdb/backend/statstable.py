@@ -141,7 +141,7 @@ class PostgresStatsTable(PostgresBase):
     - ``cols`` -- these are the columns specified in the query.  A list, stored as a jsonb.
     - ``values`` -- these could be numbers, or dictionaries giving a more complicated constraint.
         A list, of the same length as ``cols``, stored as a jsonb.
-    - ``count`` -- the number of rows in the search table where the the columns take on the given values.
+    - ``count`` -- the number of rows in the search table where the columns take on the given values.
     - ``extra`` -- false if the count was added in an ``add_stats`` method,
         true if it was added separately (such as by a request on a search results page).
     - ``split`` -- used when column values are arrays.  If true, then the array is split
@@ -180,7 +180,7 @@ class PostgresStatsTable(PostgresBase):
     dictionary whose keys are columns, and whose values are a list of strings giving intervals.
     Counts are computed with values grouped into intervals.
 
-    EXAMPLE::
+    EXAMPLES::
 
         sage: db.mf_newforms.stats.add_bucketed_counts(['level', 'weight'], {'level': ['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-10000'], 'weight': ['1','2','3','4','5-8','9-16','17-32','33-64','65-316']})
 
@@ -332,13 +332,13 @@ class PostgresStatsTable(PostgresBase):
         """
         Add the count to the counts table.
 
-        INPUT::
+        INPUT:
 
         - ``query`` -- a dictionary
         - ``count`` -- the count of rows in the search table satisfying the query
         - ``split_list`` -- see the ``add_stats`` method
         - ``suffix`` -- if provided, the table with that suffix added will be
-            used to store the count
+          used to store the count
         - ``extra`` -- see the discussion at the top of this class.
         """
         # We only want to record 0 counts for value [NULL], since other cases can break stats
@@ -611,12 +611,12 @@ class PostgresStatsTable(PostgresBase):
         """
         Return the min or max value achieved by the column, or None if not cached.
 
-        INPUT::
+        INPUT:
 
         - ``col`` -- the column
         - ``ccols`` -- constraint columns
         - ``cvals`` -- constraint values.  The max will be taken over rows where
-            the constraint columns take on these values.
+          the constraint columns take on these values.
         - ``kind`` -- either "min" or "max"
         """
         constraint = SQL("constraint_cols = %s AND constraint_values = %s")
@@ -632,11 +632,11 @@ class PostgresStatsTable(PostgresBase):
         """
         Compute the minimum/maximum value achieved by the column.
 
-        INPUT::
+        INPUT:
 
         - ``col`` -- the column
-        - ``constraint`` -- a dictionary giving a constraint.  The min/max will be taken
-            over rows satisfying this constraint.
+        - ``constraint`` -- a dictionary giving a constraint.
+          The min/max will be taken over rows satisfying this constraint.
         """
         qstr, values = self.table._parse_dict(constraint)
         if qstr is None:
@@ -1065,7 +1065,7 @@ class PostgresStatsTable(PostgresBase):
 
         OUTPUT:
 
-        A dictionary with keys the possible values taken on the the columns in grouping.
+        A dictionary with keys the possible values taken on the columns in grouping.
         Each value is a dictionary with keys 'min', 'max', 'avg'
         """
         if isinstance(grouping, str):
@@ -1356,7 +1356,7 @@ class PostgresStatsTable(PostgresBase):
                 logging.warning(
                     "{:d} rows were just inserted to".format(len(to_add))
                     + " into {}, ".format(self.counts + suffix)
-                    + "all with with cols = {}. ".format(jallcols)
+                    + "all with cols = {}. ".format(jallcols)
                     + "This might decrease the counts table performance "
                     + "significantly! Consider clearing all the stats "
                     + "db.{}.stats._clear_stats_counts()".format(self.search_table)

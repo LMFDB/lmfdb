@@ -434,20 +434,18 @@ def LS5(p):  # Gives the Legendre Symbol (5/p)
     return tink5(_sage_const_0, _sage_const_1, -_sage_const_1, -_sage_const_1, _sage_const_1, p)
 
 
-def LS2(p):  # Gives the Legendre Symbol (2/p)
-    S1 = (p ** _sage_const_2 - _sage_const_1) / _sage_const_8
-    S = (-_sage_const_1) ** (S1)
-    if p == _sage_const_2:
-        S = _sage_const_0
-    return S
+def LS2(p):
+    """
+    Gives the Legendre Symbol (2/p)
+    """
+    return 0 if p == 2 else (-1)**((p**2 - 1) // 8)
 
 
-def LSminus1(p):  # Gives the Legendre Symbol (-1/p)
-    S1 = (p - _sage_const_1) / _sage_const_2
-    S = (-_sage_const_1) ** (S1)
-    if p == _sage_const_2:
-        S = _sage_const_1
-    return S
+def LSminus1(p):
+    """
+    Gives the Legendre Symbol (-1/p)
+    """
+    return 1 if p == 2 else (-1)**((p - 1) // 2)
 
 
 def LSminus3(p):  # Gives the Legendre Symbol (-3/p) ==(p/3)
@@ -647,8 +645,10 @@ def II(k, p):
 
 
 def dimKp(k, p):
-# This returns the dimension of cusp forms for K(p)
-# of weight k>=3 and PRIME level p
+    """
+    This returns the dimension of cusp forms for K(p)
+    of weight k>=3 and PRIME level p
+    """
     S = H(k, p) + II(k, p)
     if k == _sage_const_3:
         S = H(k, p) + II(k, p) + _sage_const_1

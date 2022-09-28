@@ -4,14 +4,18 @@ from sage.plot.line import line
 from sage.plot.circle import circle
 from sage.plot.text import text
 from sage.rings.rational import Rational
-from sage.rings.complex_field import ComplexField
+from sage.rings.complex_mpfr import ComplexField
 from sage.functions.log import exp
 
 
 def circle_drops(A, B):
-    # Drops going around the unit circle for those A and B.
-    # See http://user.math.uzh.ch/dehaye/thesis_students/Nicolas_Wider-Integrality_of_factorial_ratios.pdf
-    # for longer description (not original, better references exist)
+    """
+    Drops going around the unit circle for those A and B.
+
+    See http://user.math.uzh.ch/dehaye/thesis_students/Nicolas_Wider-Integrality_of_factorial_ratios.pdf
+
+    for longer description (not original, better references exist)
+    """
     marks = lcm(lcm(A), lcm(B))
     tmp = [0 for i in range(marks)]
     for a in A:

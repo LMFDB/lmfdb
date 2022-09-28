@@ -57,10 +57,10 @@ def getAllMaassGraphHtml(degree, signature=""):
 
 #        else:
 #            ans += getGroupHtml(g)
-    for i in range(0, len(groups)):
+    for i in range(len(groups)):
         g = groups[i][0]
         ans += getGroupHtml(g)
-        for j in range(0, len(groups[i][1])):
+        for j in range(len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
@@ -372,7 +372,7 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 # ============================================
 
 
-def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
+def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, yMin=1, xoffset=1, dashedx=5, dashedy=5):
     # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
@@ -490,7 +490,7 @@ def paintSvgHoloNew(condmax):
     for nf in db.mf_newforms.search({'analytic_conductor': {'$lte': condmax}},
                                     projection=['analytic_conductor', 'label', 'weight', 'conrey_indexes', 'dim', 'char_degree'],
                                     sort=[('analytic_conductor', 1)]):
-        level, k, _, hecke_letter = nf['label'].split('.')
+        _, k, _, hecke_letter = nf['label'].split('.')
         if int(k) > max_k:
             max_k = int(k)
         if nf['weight'] not in values:
@@ -517,7 +517,7 @@ def paintSvgHoloNew(condmax):
     x_offset = 0
     for wei in sorted(values.keys()):
         for label, z1, lfun_url, Nk2 in values[wei]:
-            N, k = label[:2]
+            k = label[1]
             x = x_scale*float(Nk2)
             y = y_scale*z1
             if y > y_max:
@@ -546,17 +546,15 @@ def paintSvgHoloNew(condmax):
 
     # axes on top of dots
     ans += paintCSNew(x_max - x_offset*x_scale,
-            y_max + y_scale/2,
-            x_max/x_scale,
-            y_max/y_scale,
-            x_scale,
-            y_scale,
-            7, xoffset = x_offset, dashedx = 0.05, dashedy = 1, xMin = 0)
+                      y_max + y_scale/2,
+                      x_max/x_scale,
+                      y_max/y_scale,
+                      x_scale,
+                      y_scale,
+                      7, xoffset=x_offset, dashedx=0.05, dashedy=1, xMin=0)
 
     ans += "</g>"
-
     ans += svgEnd()
-
     return ans
 
 
@@ -655,7 +653,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                             ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
                             ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
                             ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
-                        for number in range(0, numberwithlabel):
+                        for number in range(numberwithlabel):
                             xbase += self_dual * xdotspacing
                             ans += "<a xlink:href='" + linkurl + str(number + 1) + "/' target='_top'>\n"
                             ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
@@ -772,7 +770,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebGamma1Space(level = x, weight = y)  # space of modular forms of weight y, level x
+            WS = WebGamma1Space(level=x, weight=y)  # space of modular forms of weight y, level x
             galois_orbits = WS.decomp  # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -819,7 +817,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewform.by_label(label = label)   # one of the Galois orbits for weight y, level x
+                    MF = WebNewform.by_label(label=label)   # one of the Galois orbits for weight y, level x
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1

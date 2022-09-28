@@ -276,7 +276,7 @@ def register_token(token):
             flash_error("Sorry, user ID '%s' already exists!", name)
             return flask.redirect(url_for(".register_new"))
 
-        newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
+        newuser = userdb.new_user(name, pwd=pw1, full_name=full_name)
         userdb.delete_token(token)
         #newuser.full_name = full_name
         #newuser.save()

@@ -36,7 +36,7 @@ contains other conventions and information for the development process.
 - Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
 - Mathematical values listed in search results, including integers, should be in math mode.
 - Search result values that are words (e.g. even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
-- Boolean values in search results that that indicate the presence of a property (e.g. IsSolvable) should generally use a checkmark &#x2713; for yes, blank for no, with the checkmark centered.
+- Boolean values in search results that indicate the presence of a property (e.g. IsSolvable) should generally use a checkmark &#x2713; for yes, blank for no, with the checkmark centered.
 - Labels and lists (e.g. Weierstrass coefficients) in search results should be left-aligned.
 - Alignment of numbers in search results may vary: fixed precision decimal numbers should be right aligned, as should integers whose values vary over a wide range (e.g. orders of Galois groups).  Small integers (e.g < 100) should generally be centered, factored signed integers (e.g discriminants) should be left aligned.
 - Factored polynomials and factored positive integers in search results should be centered.
@@ -45,7 +45,7 @@ contains other conventions and information for the development process.
 
 - Object page templates should extend homepage.html and include a content block.
 - Every object page should have a properties box, and when relevant/available, a related objects box, and a downloads box.
-- Content should be organized intos sections (with`<h2>` headings).  The first section should contain the infromation that defines the objeect, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
+- Content should be organized intos sections (with`<h2>` headings).  The first section should contain the information that defines the object, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
 - Content captions should be knowls (or contain a knowl) and be followed by colons.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.

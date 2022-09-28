@@ -282,8 +282,8 @@ class mf_newspaces(MfChecker):
         """
         return accumulate_failures(
                 self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
-                    constraint=self._box_query(box, extras = {'dim':{'$gt':1}}))
-                for box in db.mf_boxes.search({'straces':True}))
+                    constraint=self._box_query(box, extras={'dim': {'$gt': 1}}))
+                for box in db.mf_boxes.search({'straces': True}))
 
     ### mf_newforms ###
     @overall
@@ -303,7 +303,9 @@ class mf_newspaces(MfChecker):
         # TIME about 60s
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'], verbose=verbose)
 
-    @fast(projection=['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'])
+    @fast(projection=['level', 'level_radical', 'level_primes',
+                      'level_is_prime', 'level_is_prime_power',
+                      'level_is_squarefree', 'level_is_square'])
     def check_level(self, rec, verbose=False):
         """
         Check the level_* columns

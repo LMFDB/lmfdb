@@ -864,8 +864,10 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     def add_row(self, c):
         """
         Add a row to _contents for display on the webpage.
-        Each row of content takes the form
+        Each row of content takes the form::
+
             character_name, (header..data), (several..values)
+
         where `header..data` is expected to be a tuple of length the same
         size as `len(headers)`, and given in the same order as in `headers`,
         and where `several..values` are the values of the character
@@ -973,9 +975,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character group", cglink) )
-        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
-        friendlist.append( ("Character orbit", gal_orb_link) )
+        friendlist.append(("Character group", cglink))
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus,
+                                     orbit_label=self.orbit_label)
+        friendlist.append(("Character orbit", gal_orb_link))
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
@@ -1217,9 +1220,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def add_row(self, c):
         """
         Add a row to _contents for display on the webpage.
-        Each row of content takes the form
+        Each row of content takes the form::
+
             character_name, (header..data), (several..values)
-        where `header..data` is expected to be a tuple of length the same
+
+        where ``header..data`` is expected to be a tuple of length the same
         size as `len(headers)`, and given in the same order as in `headers`,
         and where `several..values` are the values of the character
         on self.groupelts, in order.

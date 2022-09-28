@@ -8,24 +8,28 @@ from sage.misc.cachefunc import cached_function
 from itertools import combinations
 import heapq
 
-eps = RR(0.00001) # tolerance
+eps = RR(0.00001)  # tolerance
 pi = RR.pi()
+
 
 def distxy(P, Q):
     return ((P[0] - Q[0])**2 + (P[1] - Q[1])**2).sqrt()
 
+
 def distrt(P, Q):
     return (P[0]**2 + Q[0]**2 - 2*P[0]*Q[0]*(P[1] - Q[1]).cos()).sqrt()
+
 
 def distray(P, Q):
     # Distance to the ray starting at Q and going out
     R0, theta = Q
     if P[0] * (P[1] - theta).cos() >= R0:
-        # The minimum distance to the theta line occurs on the ray, so we can just use the right triangle
+        # The minimum distance to the theta line occurs on the ray, so
+        # we can just use the right triangle
         return P[0] * (P[1] - theta).sin().abs()
-    else:
     # The minimum distance occurs at the inner radius
-        return distrt(P, Q)
+    return distrt(P, Q)
+
 
 class ThetaRay:
     def __init__(self, R0, R1, theta):
@@ -38,6 +42,7 @@ class ThetaRay:
         # This is the largest difference between thetas for two touching circles in the annulus
         R0, R1 = self.R0, self.R1
         return (1 - 2*(R0 - R1)**2 / (R0 + R1)**2).arccos()
+
 
 class Outside:
     def __init__(self, r):
@@ -156,7 +161,7 @@ class Circle:
 
 # Most common orders below 512: 4 (2384226 ccs), 2, 8, 12, 6, 24, 1, 16, 20, 28, 3, 10, 14, 56, 30, 18, 40, 9, 48, 60, 5, 36, 15, 7, 26, 52, 32, 22, 44, 42, 21, 120, 27 (5046 ccs)
 # We color based on 2-adic valuation and odd part.  Generally, a higher valuation is coded as darker, and we use the odd part to select a hue.
-# The HSV color coordiantes are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
+# The HSV color coordinates are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
 hsv = {
     1: (0, 95, [None, 100, 82, 66, 52, 40, 30, 22, 16]), # red; 1 is handled separately
     3: (220, 90, [90, 80, 70, 60, 50, 40, 30, 20]), # blue
@@ -183,11 +188,13 @@ def get_color(order):
         h = (43*odd) % 360
         s = 60 + ((odd * 17) % 31)
         v = [90, 80, 70, 60, 50, 40, 30]
+
     def delist(comp):
         if isinstance(comp, list):
             i = k if k < len(comp) else -1
             comp = comp[i]
         return comp
+
     h, s, v = delist(h), delist(s), delist(v)
     rgb = hsv_to_rgb(h / 360.0, s / 100.0, v / 100.0)
     return round(255*rgb[0]), round(255*rgb[1]), round(255*rgb[2])

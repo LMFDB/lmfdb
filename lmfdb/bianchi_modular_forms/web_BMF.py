@@ -143,6 +143,7 @@ class WebBMF():
             self.hecke_poly = Qx(str(self.hecke_poly))
             F = NumberField(self.hecke_poly,'z')
             self.hecke_poly = web_latex(self.hecke_poly)
+
             def conv(ap):
                 if '?' in ap:
                     return 'not known'
@@ -263,7 +264,7 @@ class WebBMF():
 
             # This will also add the EC/G2C, as this how the Lfun was computed
             # and not add itself
-            self.friends = names_and_urls(instances, exclude = {url})
+            self.friends = names_and_urls(instances, exclude={url})
             self.friends.append(('L-function', '/L/'+url))
         else:
             # old code

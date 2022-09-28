@@ -594,7 +594,7 @@ def jump_box(info):
     elif jump == 'yes':
         query = {}
         newform_parse(info, query)
-        jump = db.mf_newforms.lucky(query, 'label', sort = None)
+        jump = db.mf_newforms.lucky(query, 'label', sort=None)
         if jump is None:
             errmsg = "There are no newforms specified by the query %s"
             jump = query
@@ -657,6 +657,7 @@ def parse_character(inp, query, qfield, prim=False):
         raise ValueError("It must be of the form N.i")
     level, orbit = pair
     level = int(level)
+
     def contains_level(D):
         if D == level:
             return True
@@ -737,13 +738,14 @@ def common_parse(info, query, na_check=False):
             parse_ints(info, query, 'dim', name="Dimension")
 
 
-def parse_discriminant(d, sign = 0):
+def parse_discriminant(d, sign=0):
     d = int(d)
     if d*sign < 0:
         raise ValueError('%d %s 0' % (d, '<' if sign > 0 else '>'))
     if (d % 4) not in [0, 1]:
         raise ValueError('%d != 0 or 1 mod 4' % d)
     return d
+
 
 def newform_parse(info, query):
     common_parse(info, query)
@@ -1032,6 +1034,7 @@ def dimension_space_postprocess(res, info, query):
     urlgen_info.pop('numforms', None)
     urlgen_info.pop('dim', None)
     urlgen_info.pop('search_array', None)
+
     def url_generator_list(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'Spaces'
@@ -1048,13 +1051,16 @@ def dimension_space_postprocess(res, info, query):
     else:
         def url_generator(N, k):
             return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+
     def pick_table(entry, X, typ):
         return entry[X][typ]
+
     def switch_text(X, typ):
-        space_type = {'M':' modular forms',
-                      'S':' cusp forms',
-                      'E':' Eisenstein series'}
+        space_type = {'M': ' modular forms',
+                      'S': ' cusp forms',
+                      'E': ' Eisenstein series'}
         return typ.capitalize() + space_type[X]
+
     dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
                                  url_generator, pick_table, switch_text)
     dim_dict = {}
@@ -1078,15 +1084,18 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info.pop('hidden_search_type', None)
     urlgen_info.pop('number', None)
     urlgen_info.pop('search_array', None)
+
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
+
     def pick_table(entry, X, typ):
         # Only support one table
         return entry
+
     dimension_common_postprocess(info, query, ['S'], ['new'], url_generator, pick_table)
     # Determine which entries should have an "n/a"
     na_query = {}

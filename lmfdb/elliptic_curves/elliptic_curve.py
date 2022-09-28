@@ -115,6 +115,7 @@ def rational_elliptic_curves(err_args=None):
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
 
+
 @ec_page.route("/interesting")
 def interesting():
     return interesting_knowls(
@@ -127,20 +128,22 @@ def interesting():
         learnmore=learnmore_list()
     )
 
+
 @ec_page.route("/random")
 @redirect_no_cache
 def random_curve():
-    label = db.ec_curvedata.random(projection = 'lmfdb_label')
+    label = db.ec_curvedata.random(projection='lmfdb_label')
     cond, iso, num = split_lmfdb_label(label)
     return url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num)
 
+
 @ec_page.route("/curve_of_the_day")
-@redirect_no_cache # disables cache on todays curve
+@redirect_no_cache  # disables cache on todays curve
 def todays_curve():
     from datetime import date
-    mordells_birthday = date(1888,1,28)
-    n = (date.today()-mordells_birthday).days
-    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset = n)
+    mordells_birthday = date(1888, 1, 28)
+    n = (date.today() - mordells_birthday).days
+    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset=n)
     return url_for(".by_ec_label", label=label)
 
 ################################################################################
@@ -165,10 +168,10 @@ class ECstats(StatsDisplay):
         self.max_N_prime_c = comma(self.max_N_prime)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
-        self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
-        self.rank_knowl = display_knowl('ec.rank', title = "rank")
+        self.cond_knowl = display_knowl('ec.q.conductor', title="conductor")
+        self.rank_knowl = display_knowl('ec.rank', title="rank")
         self.ec_knowl = display_knowl('ec.q', title='elliptic curves')
-        self.cl_knowl = display_knowl('ec.isogeny', title = "isogeny classes")
+        self.cl_knowl = display_knowl('ec.isogeny', title="isogeny classes")
 
     @property
     def short_summary(self):
@@ -692,8 +695,8 @@ def padic_data(label, p):
 @ec_page.route("/download_qexp/<label>/<int:limit>")
 def download_EC_qexp(label, limit):
     try:
-        N, iso, number = split_lmfdb_label(label)
-    except (ValueError,AttributeError):
+        _, _, number = split_lmfdb_label(label)
+    except (ValueError, AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
         ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
@@ -713,8 +716,8 @@ def download_EC_qexp(label, limit):
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
     try:
-        N, iso, number = split_lmfdb_label(label)
-    except (ValueError,AttributeError):
+        _, _, number = split_lmfdb_label(label)
+    except (ValueError, AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
         data = db.ec_curvedata.lookup(label, label_col='lmfdb_label')
@@ -778,7 +781,7 @@ def render_congruent_number_data():
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-            return send_file(filepath, as_attachment=True, add_etags=False)
+            return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
             return redirect(url_for(".rational_elliptic_curves"))
@@ -838,13 +841,17 @@ def ec_code(**args):
             code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
     return code
 
+
 def tor_struct_search_Q(prefill="any"):
     def fix(t):
-        return t + ' selected = "yes"' if prefill==t else t
+        return t + ' selected = "yes"' if prefill == t else t
+
     def cyc(n):
-        return [fix("["+str(n)+"]"), "C{}".format(n)]
-    def cyc2(m,n):
-        return [fix("[{},{}]".format(m,n)), "C{}&times;C{}".format(m,n)]
+        return [fix(f"[{n}]"), "C{}".format(n)]
+
+    def cyc2(m, n):
+        return [fix("[{},{}]".format(m, n)), "C{}&times;C{}".format(m, n)]
+
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
     for n in range(2,13):
         if n!=11:
@@ -934,10 +941,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
+        # ℤ is &#8484; in html
         torsion_opts = ([("", ""), ("[]", "trivial")] +
-                        [("%s"%n, "order %s"%n) for n in range(4,16,4)] +
-                        [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
-                        [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+                        [("%s" % n, "order %s" % n) for n in range(4, 16, 4)] +
+                        [("[%s]" % n, "ℤ/%sℤ" % n) for n in range(2, 13) if n != 11] +
+                        [("[2,%s]" % n, "ℤ/2ℤ&oplus;ℤ/%sℤ" % n) for n in range(2, 10, 2)])
         torsion = SelectBox(
             name="torsion",
             label="Torsion",
@@ -980,8 +988,8 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.faltings_height",
             example="-1-2")
         reduction_opts = ([("", ""),
-                           ("semistable",  "semistable"),
-                           ("not semistable",  "not semistable"),
+                           ("semistable", "semistable"),
+                           ("not semistable", "not semistable"),
                            ("potentially good", "potentially good"),
                            ("not potentially good", "not potentially good")])
         reduction = SelectBox(
@@ -1020,7 +1028,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, bad_primes],
-            [disc,  jinv],
+            [disc, jinv],
             [torsion, cm],
             [rank, sha],
             [regulator, sha_primes],

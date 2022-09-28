@@ -16,7 +16,7 @@ def field_data(s):
     r"""
     Returns full field data from field label.
     """
-    deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
+    deg, r1, abs_disc, _ = [int(c) for c in s.split(".")]
     sig = [r1, (deg - r1) // 2]
     return [s, deg, sig, abs_disc]
 
@@ -33,12 +33,11 @@ def latex_tor(t):
         # This is used in formatting stats, and we need it to process the output.
         return t
     t = tuple(t)
-    if len(t) == 0:
+    if not t:
         return "trivial"
-    elif len(t) == 1:
-        return "$C_{%s}$" % t
-    else:
-        return r"$C_{%s} \times C_{%s}$" % t
+    if len(t) == 1:
+        return r"$\Z/{%s}\Z$" % t
+    return r"$\Z/{%s}\Z \oplus \Z/{%s}\Z$" % t
 
 def tor_invs(t):
     if isinstance(t, str):
@@ -215,6 +214,8 @@ class ECNF_stats(StatsDisplay):
     def signature_summary(self, sig):
         r, s = sig
         d = r+2*s
+        if sig not in self.sig_normstats:
+            return ''
         stats = self.sig_normstats[r,s]
         ncurves = stats['ncurves']
         nclasses = stats['nclasses']

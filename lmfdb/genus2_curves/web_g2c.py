@@ -18,7 +18,7 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
+from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -97,19 +97,18 @@ def min_eqns_pretty(fh):
 
 def url_for_ec(label):
     if '-' not in label:
-        return url_for('ec.by_ec_label', label = label)
-    else:
-        (nf, cond, isog, num) = split_ecnf_label(label)
-        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
-        return url
+        return url_for('ec.by_ec_label', label=label)
+    nf, cond, isog, num = split_ecnf_label(label)
+    return url_for('ecnf.show_ecnf', nf=nf, conductor_label=cond, class_label=isog, number=num)
+
 
 def url_for_ec_class(ec_label):
     if '-' not in ec_label:
-        (cond, iso, num) = split_lmfdb_label(ec_label)
+        cond, iso, num = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
-    else:
-        (nf, cond, isog, num) = split_ecnf_label(ec_label)
-        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
+    nf, cond, isog, num = split_ecnf_label(ec_label)
+    return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
+
 
 def ec_label_class(ec_label):
     x = ec_label
@@ -359,7 +358,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
             # If there are two factors, then they are both at most quadratic
             # and we can prettify them
             else:
-                statement += r'\(' + r' \times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]) + r'\)'
+                statement += r'\(' + r' \times '.join(ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ) + r'\)'
         # Then the case where there is still a single factor:
         elif factorsQQ_number == 1:
             # Number field case:
@@ -377,7 +376,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
         # Finally the case of two factors. We can prettify to some extent, since we
         # can describe the maximal order here
         else:
-            statement += r"an order of index \(%s\) in \(%s\)" % (ring[0], r' \times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]))
+            statement += r"an order of index \(%s\) in \(%s\)" % (ring[0], r' \times '.join(ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ))
         # End of first row:
         statement += "</td></tr>"
 
@@ -399,7 +398,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
                 statement += " (CM)"
                 # TODO: Get the following line to work
                 #statement += " ({{ KNOWL('ag.complex_multiplication', title='CM') }})"
-        # Up next is the case of a matrix ring (trivial disciminant), with
+        # Up next is the case of a matrix ring (trivial discriminant), with
         # labels and full prettification always available:
         elif factorsQQ[0][2] == 1:
             statement += r"\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
@@ -495,7 +494,7 @@ def gsp4_subgroup_data(label):
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15])
     info = '<table>\n'
-    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
@@ -592,9 +591,9 @@ def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
         D,xD,yD,yden = divisor_data(gens[i])
         D0 = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1]]
         Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1])]
-        div = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
+        div = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join(point_string(P) for P in D0)) if D0 else 'D_0'
         div += ' - '
-        div += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' - '.join([point_string(P) for P in Dinf])) if Dinf else r'D_\infty'
+        div += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' - '.join(point_string(P) for P in Dinf)) if Dinf else r'D_\infty'
         gentab.extend([td_wrapl(div), td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'), td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
@@ -671,7 +670,7 @@ def ratpts_table(pts,pts_v):
         return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption, colspan=tabcols)]
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
-    for i in range(0,len(pts),6):
+    for i in range(0, len(pts), 6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in spts[i:i+6]])
         if i+6 > len(pts):
@@ -800,11 +799,11 @@ class WebG2C():
             P = curve['non_solvable_places']
             if len(P):
                 sz = "except over "
-                sz += ", ".join([QpName(p) for p in P])
+                sz += ", ".join(QpName(p) for p in P)
                 last = " and"
                 if len(P) > 2:
                     last = ", and"
-                sz = last.join(sz.rsplit(",",1))
+                sz = last.join(sz.rsplit(",", 1))
             else:
                 sz = "everywhere"
             data['non_solvable_places'] = sz
@@ -834,7 +833,7 @@ class WebG2C():
             if len(invs) == 0:
                 data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = r'\(' + r' \times '.join([ (r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs]) + r'\)'
+                data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
                 data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
@@ -1041,7 +1040,7 @@ class WebG2C():
         code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
         code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
         if ratpts:
-            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + ']; // minimal model'}
+            code['rat_pts'] = {'magma': '[' + ','.join("C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']) + ']; // minimal model'}
             code['rat_pts_simp'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in [simplify_hyperelliptic_point(data['min_eqn'], pt) for pt in ratpts['rat_pts']]]) + ']; // simplified model'}
         code['mw_group'] = {'magma':'MordellWeilGroupGenus2(Jacobian(C));'}
         code['two_selmer'] = {'magma':'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'}

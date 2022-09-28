@@ -73,16 +73,21 @@ def to_polredabs(K):
     M = QQ.extension(g,'w')
     m2 = L.hom([h(M.gen(0))])
     return m2*m1
-    
-def base_change(E,phi):
+
+
+def base_change(E, phi):
     """
     INPUT:
-    * "E" - an elliptic curve
-        - phi - morphism whose domain is the base ring of E
-    Output:
-        - the elliptic curve obtained by applying phi to the coefficients of E
+
+    - E -- an elliptic curve
+    - phi -- morphism whose domain is the base ring of E
+
+    OUTPUT:
+
+    the elliptic curve obtained by applying phi to the coefficients of E
     """
     return EllipticCurve(phi.codomain(),map(phi,E.a_invariants()))
+
 
 def EllipticCurve_polredabs_a_invariants(E,morphism=True):
     """

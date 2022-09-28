@@ -38,12 +38,16 @@ from sage.all import Integer, lcm, PolynomialRing, Integers, FiniteField, Altern
 
 
 def polynomial_conjugacy_class_matcher_fn(inp):
-    """ Given an input ``inp`` of the form
+    """
+    Given an input ``inp`` of the form::
+
         [{"RootOf":["0","1"], "ConjugacyClass":3}, {"RootOf":["-7","1"], "ConjugacyClass":4}]
-        returns a function that
-            - takes an argument alpha
-            - matches alpha as a root to one of the 'RootsOf'
-            - returns the value in the corresponding 'ConjugacyClass'
+
+    returns a function that:
+
+    - takes an argument alpha
+    - matches alpha as a root to one of the ``'RootsOf'``
+    - returns the value in the corresponding ``'ConjugacyClass'``
     """
     P = PolynomialRing(Integers(), "x")
     fn_cc_pairs = []
@@ -123,7 +127,6 @@ def are_conjugate_in_alternating(rho, sigma):
         sigma_tuple = sigma_augmented_cycles[i][1]
         for j in range(len(rho_tuple)):
             tmp[rho_tuple[j] - 1] = sigma_tuple[j]
-    from sage.all import Permutation
     sig = Permutation(tmp).signature()
     if sig == -1:
         return False
@@ -141,7 +144,7 @@ def alpha_alt_fn(data):
     def alpha_alt(roots, p):
         """ Computes invariant alpha in the 'ALT' case
         """
-        from sage.all import prod, Permutation
+        from sage.all import prod
         tmp = prod(roots[i] - roots[j] for i in range(len(roots)) for j in range(i))
         try:
             frob_perm = Permutation(alternating_group(frobenius_permutation(roots, p)))
@@ -227,7 +230,7 @@ def from_cycle_type_to_conjugacy_class_index_dict(defining_polynomial, frobenius
             - with values: the functions of primes that return the cycle index
     """
     # print "Constructing the dict ",defining_polynomial, frobenius_resolvents
-    output_dict = dict()
+    output_dict = {}
     for technique in frobenius_resolvents:
         # Each technique will lead to different functions
         if technique["Algorithm"] == "CYC":

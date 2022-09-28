@@ -1,7 +1,7 @@
 ---
 title: A database
 image: families
-content: <p>The LMFDB is an extensive database of mathematical objects arising in Number Theory.</p><p>Sample lists&#58; <a href="/L/?degree=2">L-functions,</a> <a href="/EllipticCurve/Q/?conductor=1-99">Elliptic curves,</a> <a href="/zeros">Tables of zeros,</a>  <a href="/NumberField/?degree=2">Number fields</a></p><p><b>Save the date</b>&#58; <a href="/LuCaNT">LuCaNT 2023</a></p>
+content: <p>The LMFDB is an extensive database of mathematical objects arising in Number Theory.</p><p>Sample lists&#58; <a href="/L/?degree=2">L-functions,</a> <a href="/EllipticCurve/Q/?conductor=1-99">Elliptic curves,</a> <a href="/zeros">Tables of zeros,</a>  <a href="/NumberField/?degree=2">Number fields</a></p><p><b>Save the date</b>&#58; <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT 2023</a></p>
 control: 1
 links:
   - [ 0,0 ]

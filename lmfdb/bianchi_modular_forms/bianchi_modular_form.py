@@ -54,11 +54,12 @@ def cm_info(cm):
     except TypeError:
         return str(cm)
 
+
 @bmf_page.route("/")
 def index():
     """Function to deal with the base URL
     /ModularForm/GL2/ImaginaryQuadratic.  If there are no request.args
-    we display the browse and serch page, otherwise (as happens when
+    we display the browse and search page, otherwise (as happens when
     submitting a jump or search button from that page) we hand over to
     the function bianchi_modular_form_search().
     """
@@ -258,7 +259,7 @@ def bmf_field_dim_table(**args):
     if level_flag == 'all':
         query[gl_or_sl] = {'$exists': True}
     else:
-        # Only get records where the cuspdial/new dimension is positive for some weight
+        # Only get records where the cuspidal/new dimension is positive for some weight
         totaldim = gl_or_sl.replace('dims', level_flag) + '_totaldim'
         query[totaldim] = {'$gt': 0}
     t = ' '.join(['Dimensions of spaces of {} Bianchi modular forms over'.format(info['group']), pretty_field_label])
@@ -287,7 +288,7 @@ def bmf_field_dim_table(**args):
     info['weights'] = weights
     info['nweights'] = len(weights)
 
-    data.sort(key = lambda x: [int(y) for y in x['level_label'].split(".")])
+    data.sort(key=lambda x: [int(y) for y in x['level_label'].split(".")])
     dims = {}
     for dat in data:
         dims[dat['level_label']] = d = {}
@@ -439,7 +440,7 @@ def download_bmf_magma(**args):
 
     outstr += 'NN := ideal<ZF | {}>;\n\n'.format(set(f.level.gens()))
 
-    outstr += 'primesArray := [\n' + ','.join([str(st).replace(' ', '') for st in prime_gens]).replace('],[',
+    outstr += 'primesArray := [\n' + ','.join(str(st).replace(' ', '') for st in prime_gens).replace('],[',
                                                                                        '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
@@ -566,7 +567,7 @@ def download_bmf_sage(**args):
 
     outstr += 'NN = ZF.ideal({})\n\n'.format(f.level.gens())
 
-    outstr += 'primes_array = [\n' + ','.join([str(st).replace(' ', '') for st in prime_gens]).replace('],[',
+    outstr += 'primes_array = [\n' + ','.join(str(st).replace(' ', '') for st in prime_gens).replace('],[',
                                                                                        '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 

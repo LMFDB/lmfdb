@@ -23,6 +23,7 @@
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
       <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q_{ {{info.p}} }) }$:</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
+      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
     </table>
   </p>
 
@@ -51,6 +52,7 @@
     <table>
       <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
       <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
+      <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
     </table>
   </p>
   <p><h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>

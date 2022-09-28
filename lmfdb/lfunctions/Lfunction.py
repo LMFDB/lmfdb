@@ -19,6 +19,7 @@ from sage.all import (
     EllipticCurve,
     I,
     Integer,
+    NaN,
     NumberField,
     PowerSeriesRing,
     QQ,
@@ -83,13 +84,14 @@ from .LfunctionDatabase import (
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if key not in args]
-    if len(missing_keys):
+    if missing_keys:
         raise KeyError(errmsg, "Missing required parameters: %s." % ','.join(missing_keys))
+
 
 def validate_integer_args(errmsg, args, *keys):
     for key in keys:
         if key in args:
-            if not isinstance(args[key],int) and not re.match(r'^\d+$',args[key].strip()):
+            if not isinstance(args[key], int) and not re.match(r'^\d+$', args[key].strip()):
                 raise ValueError(errmsg, "Unable to convert parameter '%s' with value '%s' to a nonnegative integer." % (key, args[key]))
 
 
@@ -109,7 +111,7 @@ def an_from_data(euler_factors,upperbound=30):
 
     result = upperbound * [1]
 
-    for i in range(0,len(euler_factors)):
+    for i in range(len(euler_factors)):
         p = nth_prime(i+1)
         if p > upperbound:
             break
@@ -174,14 +176,13 @@ def makeLfromdata(L):
         L.analytic_normalization = round_to_half_int(data.get('analytic_normalization'))
         L.motivic_weight = '' # ZZ(2*L.analytic_normalization)
 
-
     L.mu_fe = []
-    for i in range(0,len(data['gamma_factors'][0])):
+    for i in range(len(data['gamma_factors'][0])):
         L.mu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
-    for i in range(0,len(data['gamma_factors'][1])):
+    for i in range(len(data['gamma_factors'][1])):
         L.nu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
@@ -245,7 +246,7 @@ def makeLfromdata(L):
                           for p, elt in L.bad_lfactors]
     elif 'Maass' in data.get('origin', ''):
         R = ComplexField(ceil(data['precision']*log(10)/log(2)))
-        stringtoR = lambda x: R(x) if x != '??' else R('NaN')
+        stringtoR = lambda x: R(x) if x != '??' else R(NaN)
         L.localfactors = [[stringtoR(q) for q in x] for x in L.localfactors]
         L.bad_lfactors = [[p, [stringtoR(q) for q in elt]]
                           for p, elt in L.bad_lfactors]
@@ -299,7 +300,8 @@ def makeLfromdata(L):
         # we recover all the bits
         int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros]
         # we convert them back to floats and we want to display their truncated version
-        return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+        return [(RealNumber(elt.str() + ".") / two_power).str(truncate=True)
+                for elt in int_zeros]
 
     if L.accuracy is not None:
         L.positive_zeros_raw = convert_zeros(L.accuracy, L.positive_zeros_raw)
@@ -411,6 +413,7 @@ def apply_coeff_info(L, coeff_info):
                 assert L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
             else:
                 fix = L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+
     def convert_euler_Lpoly(poly_coeffs):
         Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
         # WARNING: the data in the database is wrong!
@@ -421,6 +424,7 @@ def apply_coeff_info(L, coeff_info):
         if len(Fp) == 2 and fix:
             Fp[1] *= -1
         return Fp
+
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
@@ -482,6 +486,8 @@ class Lfunction_from_db(Lfunction):
         self.label = self.lfunc_data['label']
         self.info = self.general_webpagedata()
         self.info['title'] = "L-function " + self.label
+        if self.info['label'] == '1-1-1.1-r0-0-0':
+            self.info['title'] = "L-function " + self.label + ": Riemann zeta function"
 
     @lazy_attribute
     def _Ltype(self):
@@ -493,6 +499,7 @@ class Lfunction_from_db(Lfunction):
         # systematically in the database. Default to True until this
         # is retrievable from the database.
         return True
+
     @lazy_attribute
     def bread(self):
         from .main import url_for_lfunction
@@ -605,39 +612,37 @@ class Lfunction_from_db(Lfunction):
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
         data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
-        return Downloader()._wrap(
-                Json.dumps(data),
-                filename + '.euler_factors',
-                lang = 'text',
-                title = 'Euler Factors of %s' % self.label)
+        return Downloader()._wrap(Json.dumps(data),
+                                  filename + '.euler_factors',
+                                  lang='text',
+                                  title='Euler Factors of %s' % self.label)
 
     def download_zeros(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['order_of_vanishing'] = self.order_of_vanishing
         data['positive_zeros'] = self.positive_zeros_raw
         data['negative_zeros'] = self.negative_zeros_raw
         data['positive_zeros_accuracy'] = self.accuracy
         data['negative_zeros_accuracy'] = self.dual_accuracy
-        return Downloader()._wrap(
-                Json.dumps(data),
-                filename + '.zeros',
-                lang = 'text',
-                title = 'Zeros of %s' % self.label)
+        return Downloader()._wrap(Json.dumps(data),
+                                  filename + '.zeros',
+                                  lang='text',
+                                  title='Zeros of %s' % self.label)
 
     def download_dirichlet_coeff(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.dir_coeffs',
-                lang = 'text',
-                title = 'Dirichlet coefficients of %s' % self.label)
+                lang='text',
+                title='Dirichlet coefficients of %s' % self.label)
 
     def download(self):
         filename = self.label
-        data  = dict(self.__dict__)
+        data = dict(self.__dict__)
         for k in ['level_factored', 'dirichlet_coefficients']:
             if isinstance(data[k], list):
                 data[k] = list(map(str, data[k]))
@@ -647,9 +652,8 @@ class Lfunction_from_db(Lfunction):
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.lfunction',
-                lang = 'text',
-                title = 'The L-function object of %s' % self.label)
-
+                lang='text',
+                title='The L-function object of %s' % self.label)
 
     @lazy_attribute
     def htmlname(self):
@@ -704,15 +708,13 @@ class Lfunction_from_db(Lfunction):
             self.info['knowltype'] = self.knowltype
 
 
-
-
 #############################################################################
 
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form
 
     Compulsory parameters: maass_id (if not from DB)
-                           fromDB  (True if data is in Lfuntions database)
+                           fromDB  (True if data is in Lfunctions database)
 
     Possible parameters: group,level,char,R,ap_id  (if data is in Lfunctions DB)
     """
@@ -907,7 +909,6 @@ class Lfunction_HMF(Lfunction):
 
         # Compute Dirichlet coefficients ########################
         R = QQ['x']
-        (x,) = R._first_ngens(1)
         K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
         iota = K.complex_embeddings()[self.number]
 
@@ -1410,7 +1411,7 @@ class SymmetricPowerLfunction(Lfunction):
     Only implemented for (non-CM) elliptic curves
 
     Compulsory parameters: power, underlying_type, field
-    For ellitic curves: conductor, isogeny
+    For elliptic curves: conductor, isogeny
 
     """
 

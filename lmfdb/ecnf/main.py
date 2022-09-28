@@ -369,7 +369,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            title=title,
                            bread=bread,
                            ec=ec,
-                           code = code,
+                           code=code,
                            properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
@@ -446,9 +446,8 @@ def download_search(info):
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
@@ -520,12 +519,12 @@ ecnf_columns = SearchColumns([
     CheckCol("base_change", "ec.base_change", "Base change"),
     CheckCol("semistable", "ec.semistable", "Semistable"),
     CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),
-    ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
+    ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join(str(p) for p in primes),
                  short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
-                 lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                 lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
                  short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
+    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
@@ -745,12 +744,14 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if r not in range(d%2,d+1,2):
-        info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
+    if r not in range(d%2,d+1,2):
+        info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
+    if not info['summary']:
+        info['error'] = "The database does not contain any curves defined over fields of signature %s" % info['sig']
 
     fields_by_sig = ECNF_stats().fields_by_sig
     counts_by_field = ECNF_stats().field_normstats
@@ -830,9 +831,9 @@ def ecnf_code(**args):
 
 def disp_tor(t):
     if len(t) == 1:
-        return "[%s]" % t, "C%s" % t
+        return "[%s]" % t, "ℤ/%sℤ" % t
     else:
-        return "[%s,%s]" % t, "C%s&times;C%s" % t
+        return "[%s,%s]" % t, "ℤ/%sℤ&oplus;ℤ/%sℤ" % t
 
 class ECNFSearchArray(SearchArray):
     noun = "curve"
@@ -858,11 +859,11 @@ class ECNFSearchArray(SearchArray):
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         Qcurve_opts = ([("", ""),
-                        ("Q-curve",  "Q-curve"),
+                        ("Q-curve", "Q-curve"),
                         ("base-change", "base change"),
-                        ("non-Q-curve",  "not a Q-curve"),
-                        ("non-base-change",  "not a base change"),
-                        ("non-base-change-Q-curve",  "non-base-chg Q-curve"),
+                        ("non-Q-curve", "not a Q-curve"),
+                        ("non-base-change", "not a base change"),
+                        ("non-base-change-Q-curve", "non-base-chg Q-curve"),
                        ])
         Qcurves = SelectBox(
             name="Qcurves",
@@ -890,7 +891,7 @@ class ECNFSearchArray(SearchArray):
             options=[('', ''), ('PCM', 'potential CM'), ('PCMnoCM', 'potential CM but no CM'), ('CM', 'CM'), ('noPCM', 'no potential CM')])
         cm_disc = TextBox(
             name="cm_disc",
-            label= "CM discriminant",
+            label="CM discriminant",
             example="-4",
             example_span="-4 or -3,-8",
             knowl="ec.complex_multiplication"
@@ -956,8 +957,8 @@ class ECNFSearchArray(SearchArray):
             knowl="ec.isogeny",
             example="16")
         reduction_opts = ([("", ""),
-                           ("semistable",  "semistable"),
-                           ("not semistable",  "not semistable"),
+                           ("semistable", "semistable"),
+                           ("not semistable", "not semistable"),
                            ("potentially good", "potentially good"),
                            ("not potentially good", "not potentially good")])
         reduction = SelectBox(

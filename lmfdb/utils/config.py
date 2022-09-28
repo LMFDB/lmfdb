@@ -96,6 +96,14 @@ class Configuration(_Configuration):
         )
 
         parser.add_argument(
+            "-r",
+            "--restart",
+            action="store_true",
+            dest="core_restart",
+            help="enable restart mode",
+        )
+
+        parser.add_argument(
             "--color",
             dest="core_color",
             metavar="COLOR",
@@ -254,6 +262,7 @@ class Configuration(_Configuration):
             "port": opts["web"]["port"],
             "host": opts["web"]["bindip"],
             "debug": opts["core"]["debug"],
+            "use_reloader": opts["core"]["restart"],
         }
         for opt in ["use_debugger", "use_reloader", "profiler"]:
             if opt in extopts:

@@ -106,7 +106,7 @@ class Genus2Test(LmfdbTest):
         )
 
     def test_random(self):
-        for i in range(5):
+        for _ in range(5):
             L = self.tc.get("/Genus2Curve/Q/random", follow_redirects=True)
             assert "Sato-Tate group" in L.get_data(as_text=True)
 
@@ -189,13 +189,13 @@ class Genus2Test(LmfdbTest):
 
     def test_mwgroup(self):
         L = self.tc.get("/Genus2Curve/Q/25913/a/25913/1")
-        assert "\\Z \\times \\Z \\times \\Z" in L.get_data(as_text=True)
+        assert "\\Z \\oplus \\Z \\oplus \\Z" in L.get_data(as_text=True)
         assert "-x^3 - z^3" in L.get_data(as_text=True)
         assert "0.375585" in L.get_data(as_text=True)
         assert "\\infty" in L.get_data(as_text=True)
         assert "6.2.1658432.2" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/969306/a/969306/1")
-        assert "\\Z \\times \\Z \\times \\Z \\times \\Z/{2}\\Z" in L.get_data(as_text=True)
+        assert "\\Z \\oplus \\Z \\oplus \\Z \\oplus \\Z/{2}\\Z" in L.get_data(as_text=True)
         assert "16y" in L.get_data(as_text=True) and "2xz^2 + 11z^3" in L.get_data(as_text=True)
         assert "3.259671" in L.get_data(as_text=True)
         assert "\\infty" in L.get_data(as_text=True)

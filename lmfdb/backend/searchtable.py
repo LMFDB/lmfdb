@@ -137,6 +137,7 @@ class PostgresSearchTable(PostgresTable):
         inequalities, containment and disjunctions.
 
         INPUT:
+
         - ``key`` -- a code starting with $ from the following list:
             - ``$and`` -- and
             - ``$or`` -- or
@@ -201,7 +202,11 @@ class PostgresSearchTable(PostgresTable):
                 joiner = " OR " if key == "$or" else " AND "
                 return SQL("({0})").format(SQL(joiner).join(strings)), values
             else:
-                return None, None
+                if key == "$or":
+                    # the empty or clause should be False
+                    return SQL("false"), []
+                else:
+                    return None, None
         elif key == "$not":
             negated, values = self._parse_dict(value, outer=col, outer_type=col_type)
             if negated is None:
@@ -442,7 +447,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return self._sort_str(sort), bool(sort), sort
 
-    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, one_per=None, raw_values=[]):
+    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, one_per=None, raw_values=None):
         """
         Build an SQL query from a dictionary, including limit, offset and sorting.
 
@@ -478,6 +483,8 @@ class PostgresSearchTable(PostgresTable):
             sage: statement.as_string(db.conn), vals
             (' WHERE "class_number" = %s ORDER BY "id" LIMIT %s', [1, 20])
         """
+        if raw_values is None:
+            raw_values = []
         if raw is None:
             qstr, values = self._parse_dict(query)
         else:

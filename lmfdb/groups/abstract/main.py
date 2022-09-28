@@ -14,7 +14,7 @@ from flask import (
     url_for,
     abort,
 )
-from six import BytesIO
+from io import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
@@ -54,6 +54,7 @@ from .web_groups import (
     WebAbstractRationalCharacter,
     WebAbstractSubgroup,
     group_names_pretty,
+    primary_to_smith
 )
 from .stats import GroupStats
 
@@ -545,7 +546,7 @@ def index():
             return subgroup_search(info)
     info["stats"] = GroupStats()
     info["count"] = 50
-    info["order_list"] = ["1-63", "64-127", "128-255", "256-383", "384-511"]
+    info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000"]
     info["nilp_list"] = range(1, 8)
     info["prop_browse_list"] = [
         ("abelian=yes", "abelian"),
@@ -655,11 +656,19 @@ def by_abelian_label(label):
         )
         return redirect(url_for(".index"))
     primary = canonify_abelian_label(label)
-    dblabel = db.gps_groups.lucky(
-        {"abelian": True, "primary_abelian_invariants": primary}, "label"
-    )
+    # Avoid database error on a hopeless search
+    dblabel = None
+    if not [z for z in primary if z>2**31-1]:
+        dblabel = db.gps_groups.lucky(
+            {"abelian": True, "primary_abelian_invariants": primary}, "label"
+        )
     if dblabel is None:
-        return render_abstract_group("ab/" + label, data=primary)
+        snf = primary_to_smith(primary)
+        canonical_label = '.'.join([str(z) for z in snf])
+        if canonical_label != label:
+            return redirect(url_for(".by_abelian_label", label=canonical_label))
+        else:
+            return render_abstract_group("ab/" + canonical_label, data=primary)
     else:
         return redirect(url_for(".by_label", label=dblabel))
 
@@ -766,7 +775,7 @@ def group_jump(info):
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
-        return redirect(url_for(".by_abelian_label", label = ".".join(invs)))
+        return redirect(url_for(".by_abelian_label", label=".".join(invs)))
     # by name
     labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
@@ -966,7 +975,7 @@ def subgroup_search(info, query={}):
     parse_bool(
         info, query, "hall", process=lambda x: ({"$gt": 1} if x else {"$lte": 1})
     )
-    parse_bool(info, query, "proper")
+    parse_bool(info, query, "nontrivproper", qfield="proper")
     parse_regex_restricted(info, query, "subgroup", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "ambient", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "quotient", regex=abstract_group_label_regex)
@@ -1196,6 +1205,7 @@ def shortsubinfo(ambient, short_label):
         return ""
     wsg = WebAbstractSubgroup(label)
     # helper function
+
     def subinfo_getsub(title, knowlid, lab):
         full_lab = "%s.%s" % (ambient, lab)
         h = WebAbstractSubgroup(full_lab)
@@ -1386,9 +1396,7 @@ def download_group(**args):
     strIO = BytesIO()
     strIO.write(s.encode("utf-8"))
     strIO.seek(0)
-    return send_file(
-        strIO, attachment_filename=filename, as_attachment=True, add_etags=False
-    )
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 
 def display_profile_line(data, ambient, aut):
@@ -1805,11 +1813,11 @@ class SubgroupSearchArray(SearchArray):
             knowl="group.order",
             example="128",
         )
-        proper = YesNoBox(name="proper", label="Proper", knowl="group.proper_subgroup")
+        nontrivproper = YesNoBox(name="nontrivproper", label=display_knowl('group.trivial_subgroup', 'Non-trivial') + " " + display_knowl('group.proper_subgroup', 'proper'))
 
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
-            [normal, characteristic, perfect, maximal, central, proper],
+            [normal, characteristic, perfect, maximal, central, nontrivproper],
             [ambient, ambient_order, direct, split, hall, sylow],
             [
                 quotient,
@@ -2096,10 +2104,14 @@ def aut_data(label):
 def dyn_gen(f, args):
     r"""
     Called from the generic dynamic knowl.
-    f is the name of a function to call, which has to be in flist, which
-      is at the bottom of this file
-    args is a string with the arguments, which are concatenated together
-      with %7C, which is the encoding of the pipe symbol
+
+    INPUT:
+
+    - ``f`` is the name of a function to call, which has to be in ``flist``,
+      which is at the bottom of this file
+
+    - ``args`` is a string with the arguments, which are concatenated together
+      with ``%7C``, which is the encoding of the pipe symbol
     """
     func = flist[f]
     arglist = args.split("|")

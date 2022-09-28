@@ -655,7 +655,7 @@ def sato_tate_search(info, query):
 
 def parse_sort(info):
     sorts = info['search_array'].sorts
-    for name, display, S in sorts:
+    for name, _, S in sorts:
         if name == info.get('sort_order', ''):
             sop = info.get('sort_dir', '')
             if sop == 'op':
@@ -1161,24 +1161,29 @@ class STStats(StatsDisplay):
 
     stat_list = [
         {"cols": ["component_group", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["identity_component"],
-         "constraint": {"maximal": True},
+         "constraint": {"maximal": True, "rational": True},
          "top_title": [("maximal subgroups", "st_group.supgroups"),
                        ("per", None),
                        ("identity component", "st_group.identity_component")],
         },
         {"cols": ["trace_zero_density", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["second_trace_moment", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["fourth_trace_moment", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["first_a2_moment", "identity_component"],
+         "constraint": {"rational": True},
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
     ]

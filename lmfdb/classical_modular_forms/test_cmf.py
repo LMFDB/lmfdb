@@ -64,7 +64,8 @@ class CmfTest(LmfdbTest):
         assert '168' in data
 
     def test_level_bread(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/',
+                           follow_redirects=True)
         assert '1124.1.d.a' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{-281})' in page.get_data(as_text=True)
         assert '1124.1.d.d' in page.get_data(as_text=True)
@@ -78,18 +79,18 @@ class CmfTest(LmfdbTest):
 
     @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
-        from sage.all import ZZ, sqrt
-        for Nk2 in range(1,2001):
+        from sage.all import ZZ
+        for Nk2 in range(1, 2001):
             for N in ZZ(Nk2).divisors():
-                    k = sqrt(Nk2/N)
-                    if k in ZZ and k > 1:
-                        print("testing (N, k) = (%s, %s)" % (N, k))
-                        url  = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(N, k)
-                        rv = self.tc.get(url,follow_redirects=True)
-                        self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
-                        assert str(N) in rv.get_data(as_text=True)
-                        assert str(k) in rv.get_data(as_text=True)
-                        assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
+                k = (Nk2 // N).sqrt()
+                if k in ZZ and k > 1:
+                    print("testing (N, k) = (%s, %s)" % (N, k))
+                    url = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(N, k)
+                    rv = self.tc.get(url,follow_redirects=True)
+                    self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                    assert str(N) in rv.get_data(as_text=True)
+                    assert str(k) in rv.get_data(as_text=True)
+                    assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
     def test_favorite(self):
         favorite_newform_labels = [
@@ -226,7 +227,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/a/")
         assert '11241' in page.get_data(as_text=True)
         assert '10099' in page.get_data(as_text=True)
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/",  follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/", follow_redirects=True)
         assert '11241' in page.get_data(as_text=True)
         assert '10099' in page.get_data(as_text=True)
 

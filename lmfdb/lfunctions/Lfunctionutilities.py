@@ -247,8 +247,8 @@ def lfuncDShtml(L, fmt):
 
             if nonzeroterms > maxcoeffs:
                 break
-            if(nonzeroterms % numperline == 0):
-                ans = ans     # don't need  \cr in the html version
+            if nonzeroterms % numperline == 0:
+                # ans = ans  # don't need  \cr in the html version
                 nonzeroterms += 1   # This ensures we don t add more than one newline
         ans = ans + "<span class='term'> + &#8943;</span></td></tr></table>"
 
@@ -298,10 +298,10 @@ def lfuncEPtex(L, fmt):
             ans += r"\displaystyle\prod_p (1- \chi(p) p^{-s})^{-1}"
 
         elif L.Ltype() == "classical modular form" and fmt == "arithmetic":
-                ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
-            #FIXME, this is consistent with G2C and EC
+            ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+            # FIXME, this is consistent with G2C and EC
             # but do we really want this?
-            #else:
+            # else:
             #    ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s/2})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s/2} + \chi(p)p^{-s})^{-1}"
         elif L.Ltype() == "hilbertmodularform":
             ans += r"\displaystyle\prod_{\mathfrak{p}\ \mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \prod_{\mathfrak{p}\ \mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
@@ -369,7 +369,6 @@ def lfuncEPhtml(L, fmt):
                 out += seriescoeff(elt, i, "series", "polynomial", 3)
         return out
 
-
     eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
     eptable += "<table class='ntdata'>"
     eptable += "<thead>"
@@ -379,6 +378,7 @@ def lfuncEPhtml(L, fmt):
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
     eptable += "</tr>"
     eptable += "</thead>"
+
     def row(trclass, goodorbad, p, poly):
         if isinstance(poly[0], list):
             galois_pretty_factors = list_factored_to_factored_poly_otherorder
@@ -388,13 +388,13 @@ def lfuncEPhtml(L, fmt):
         try:
             if L.coefficient_field == "CDF" or None in poly:
                 factors = r'\( %s \)' % pretty_poly(poly)
-                gal_groups = [[0,0]]
+                gal_groups = [[0, 0]]
             elif not display_galois:
-                factors = galois_pretty_factors(poly, galois=display_galois, p = p)
-                factors =  make_bigint(r'\( %s \)' % factors)
+                factors = galois_pretty_factors(poly, galois=display_galois, p=p)
+                factors = make_bigint(r'\( %s \)' % factors)
             else:
-                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p = p)
-                factors =  make_bigint(r'\( %s \)' % factors)
+                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
+                factors = make_bigint(r'\( %s \)' % factors)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
@@ -574,6 +574,7 @@ def lfuncFEtex(L, fmt):
         ans += r",\ "
         ans += "("
         # this is mostly a hack for GL2 Maass forms
+
         def real_digits(x):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
@@ -683,7 +684,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
             logger.warning("a value of an L-function has been computed on the fly")
 
     if sLatex_arithmetic:
-        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
+        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)', sLatex_arithmetic + ')')
     else:
         lfunction_value_tex_arithmetic = ''
     if sLatex_analytic:

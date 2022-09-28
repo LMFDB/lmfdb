@@ -8,7 +8,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 
 from .encoding import Json, copy_dumps
 from .base import PostgresBase, _meta_table_name
-from .utils import DelayCommit, EmptyContext, IdentifierWrapper, LockError, psycopg2_version
+from .utils import DelayCommit, IdentifierWrapper, LockError, psycopg2_version
 from .base import (
     _meta_indexes_cols,
     _meta_constraints_cols,
@@ -169,7 +169,7 @@ class PostgresTable(PostgresBase):
         Initialize the sorting attributes from a list of columns or pairs (col, direction)
         """
         self._sort_orig = sort
-        self._sort_keys = set([])
+        self._sort_keys = set()
         if sort:
             for col in sort:
                 if isinstance(col, str):
@@ -800,7 +800,7 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         with DelayCommit(self, commit, silence=True):
-            type, columns, check_func, table = self._get_constraint_data(name, suffix)
+            type, columns, _, table = self._get_constraint_data(name, suffix)
             dropper = self._drop_constraint_statement(name + suffix, table, type, columns)
             if permanent:
                 deleter = SQL("DELETE FROM meta_constraints WHERE table_name = %s AND constraint_name = %s")
@@ -925,8 +925,7 @@ class PostgresTable(PostgresBase):
         restat=True,
         tostr_func=None,
         commit=True,
-        searchfile=None,
-        extrafile=None,
+        datafile=None,
         progress_count=10000,
         **kwds
     ):
@@ -945,8 +944,7 @@ class PostgresTable(PostgresBase):
         - ``tostr_func`` -- a function to be used when writing data to the temp file
             defaults to copy_dumps from encoding
         - ``commit`` -- whether to actually execute the rewrite
-        - ``searchfile`` -- a filename to use for the temp file holding the search table
-        - ``extrafile`` -- a filename to use for the temp file holding the extra table
+        - ``datafile`` -- a filename to use for the temp file holding the data
         - ``progress_count`` -- (default 10000) how frequently to print out status reports as the rewrite proceeds
         - ``**kwds`` -- any other keyword arguments are passed on to the ``reload`` method
 
@@ -962,79 +960,51 @@ class PostgresTable(PostgresBase):
             ....:     return rec
             sage: db.artin_reps.rewrite(add_signs)
         """
-        search_cols = ["id"] + self.search_cols
-        if self.extra_table is None:
-            projection = search_cols
-        else:
-            projection = search_cols + self.extra_cols
-            extra_cols = ["id"] + self.extra_cols
+        data_cols = projection = ["id"] + self.search_cols + self.extra_cols
         # It would be nice to just use Postgres' COPY TO here, but it would then be hard
         # to give func access to the data to process.
         # An alternative approach would be to use COPY TO and have func and filter both
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
             tostr_func = copy_dumps
-        if searchfile is None:
-            searchfile = tempfile.NamedTemporaryFile("w", delete=False)
-        elif os.path.exists(searchfile):
-            raise ValueError("Search file %s already exists" % searchfile)
+        if datafile is None:
+            datafile = tempfile.NamedTemporaryFile("w", delete=False)
+        elif os.path.exists(datafile):
+            raise ValueError("Data file %s already exists" % datafile)
         else:
-            searchfile = open(searchfile, "w")
-        if self.extra_table is None:
-            extrafile = EmptyContext()
-        elif extrafile is None:
-            extrafile = tempfile.NamedTemporaryFile("w", delete=False)
-        elif os.path.exists(extrafile):
-            raise ValueError("Extra file %s already exists" % extrafile)
-        else:
-            extrafile = open(extrafile, "w")
+            datafile = open(datafile, "w")
         start = time.time()
         count = 0
         tot = self.count(query)
         sep = kwds.get("sep", u"|")
         try:
-            with searchfile:
-                with extrafile:
-                    # write headers
-                    searchfile.write(sep.join(search_cols) + u"\n")
-                    searchfile.write(
-                        sep.join(self.col_type.get(col) for col in search_cols)
-                        + u"\n\n"
-                    )
-                    if self.extra_table is not None:
-                        extrafile.write(sep.join(extra_cols) + u"\n")
-                        extrafile.write(
-                            sep.join(self.col_type.get(col) for col in extra_cols)
-                            + u"\n\n"
-                        )
+            with datafile:
+                # write headers
+                datafile.write(sep.join(data_cols) + u"\n")
+                datafile.write(
+                    sep.join(self.col_type.get(col) for col in data_cols)
+                    + u"\n\n"
+                )
 
-                    for rec in self.search(query, projection=projection, sort=[]):
-                        processed = func(rec)
-                        searchfile.write(
-                            sep.join(
-                                tostr_func(processed.get(col), self.col_type[col])
-                                for col in search_cols
-                            )
-                            + u"\n"
+                for rec in self.search(query, projection=projection, sort=[]):
+                    processed = func(rec)
+                    datafile.write(
+                        sep.join(
+                            tostr_func(processed.get(col), self.col_type[col])
+                            for col in data_cols
                         )
-                        if self.extra_table is not None:
-                            extrafile.write(
-                                sep.join(
-                                    tostr_func(processed.get(col), self.col_type[col])
-                                    for col in extra_cols
-                                )
-                                + u"\n"
-                            )
-                        count += 1
-                        if (count % progress_count) == 0:
-                            print(
-                                "%d of %d records (%.1f percent) dumped in %.3f secs"
-                                % (count, tot, 100.0 * count / tot, time.time() - start)
-                            )
+                        + u"\n"
+                    )
+                    count += 1
+                    if (count % progress_count) == 0:
+                        print(
+                            "%d of %d records (%.1f percent) dumped in %.3f secs"
+                            % (count, tot, 100.0 * count / tot, time.time() - start)
+                        )
             print("All records dumped in %.3f secs" % (time.time() - start))
-            self.reload(
-                searchfile.name,
-                extrafile.name,
+            self.update_from_file(
+                datafile.name,
+                label_col="id",
                 resort=resort,
                 reindex=reindex,
                 restat=restat,
@@ -1044,9 +1014,7 @@ class PostgresTable(PostgresBase):
             )
             self.log_db_change("rewrite", query=query, projection=projection)
         finally:
-            os.unlink(searchfile.name)
-            if self.extra_table is not None:
-                os.unlink(extrafile.name)
+            os.unlink(datafile.name)
 
     def update_from_file(
         self,
@@ -2194,10 +2162,10 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``sort`` -- a list of columns or pairs (col, direction) where direction is 1 or -1.
-        - ``id_ordered`` -- the value id_ordered to set when changing the sort to a non None value.
-            If ``sort is None, then id_ordered will be set to False.
+        - ``id_ordered`` -- the value ``id_ordered`` to set when changing the sort to a non ``None`` value.
+          If ``sort`` is ``None``, then ``id_ordered`` will be set to ``False``.
         - ``resort`` -- whether to resort the table ids when changing the sort to a non None value
-            and if id_ordered=True
+          and if id_ordered=True
         """
         self._set_sort(sort)
         with DelayCommit(self, commit, silence=True):
@@ -2431,7 +2399,7 @@ class PostgresTable(PostgresBase):
                 self.resort()
             else:
                 updater = SQL("UPDATE meta_tables SET (has_extras) = (%s) WHERE name = %s")
-                self._execute(updater, [True,  self.search_table])
+                self._execute(updater, [True, self.search_table])
             self.extra_table = self.search_table + "_extras"
             col_type = [("id", "bigint")]
             cur = self._indexes_touching(columns)

@@ -25,7 +25,7 @@ class Downloader():
       or a dictionary with keys language names and values the appropriate columns.
       In all cases, exclude the label column, which is prepended automatically.
     - a ``column_wrappers`` attribute, which is a dictionary with column names
-      as keys and unary functions f as values; data for for the named columns
+      as keys and unary functions f as values; data for the named columns
       be mapped through f when being added to the download data (column names
       that do not appear in columns will be ignored)
     - a ``data_format`` attribute, which is a list of strings
@@ -92,7 +92,7 @@ class Downloader():
         'gp':'To create a list of {short_name}, type "{var_name} = make_data()"',
     }
 
-    def to_lang(self, lang, inp, level = 0, prepend = ''):
+    def to_lang(self, lang, inp, level=0, prepend=''):
         if inp is None:
             return self.none[lang]
         if isinstance(inp, str):
@@ -111,14 +111,13 @@ class Downloader():
                 begin = start + '\\\n'
             else:
                 begin = start
-            return begin + sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+            return begin + sep.join(self.to_lang(lang, c, level=level + 1) for c in inp) + end
         except TypeError:
             # not an iterable object
             return str(inp)
 
-    def assign(self, lang, name, elt, level = 0, prepend = ''):
+    def assign(self, lang, name, elt, level=0, prepend=''):
         return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
-
 
     def get(self, name, default=None):
         if hasattr(self, name):
@@ -141,7 +140,7 @@ class Downloader():
         bIO = BytesIO()
         bIO.write(s.encode('utf-8'))
         bIO.seek(0)
-        return send_file(bIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+        return send_file(bIO, download_name=filename, as_attachment=True)
 
     def _wrap_generator(self, generator, filebase, lang='text', title=None, add_ext=True):
         """
@@ -158,11 +157,13 @@ class Downloader():
             filename += self.file_suffix[lang]
         c = self.comment_prefix[lang]
         mydate = time.strftime("%d %B %Y")
+
         @stream_with_context
         def _generator():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
             for line in generator:
                 yield line
+
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
         resp = Response(_generator(), mimetype='text/plain', headers=headers)

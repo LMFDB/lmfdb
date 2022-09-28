@@ -200,7 +200,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):
@@ -217,7 +217,7 @@ def AV_data(label):
 class AbvarSearchArray(SearchArray):
     sorts = [("", "dimension", ['g', 'q', 'poly']),
              ("q", "field", ['q', 'g', 'poly']),
-             ("p", "charactersitic", ['p', 'q', 'g', 'poly']),
+             ("p", "characteristic", ['p', 'q', 'g', 'poly']),
              ("p_rank", "p-rank", ['p_rank', 'g', 'q', 'poly']),
              ("p_rank_deficit", "p-rank deficit", ['p_rank_deficit', 'g', 'q', 'poly']),
              ("curve_count", "curve points", ['curve_count', 'g', 'q', 'poly']),
@@ -310,6 +310,7 @@ class AbvarSearchArray(SearchArray):
             short_label="Points on curve",
             advanced=True,
         )
+
         def nbsp(knowl, label):
             return "&nbsp;&nbsp;&nbsp;&nbsp;" + display_knowl(knowl, label)
         number_field = TextBox(
@@ -435,10 +436,13 @@ class AbvarSearchArray(SearchArray):
         )
         use_geom_index = CheckboxSpacer(use_geom_decomp, colspan=4, advanced=True)
         use_geom_refine = CheckboxSpacer(use_geom_decomp, colspan=5, advanced=True)
+
         def long_label(d):
-            return nbsp("av.decomposition", "Dimension %s factors" % d)
+            return nbsp("av.decomposition", f"Dimension {d} factors")
+
         def short_label(d):
-            return display_knowl("av.decomposition", "Dim %s factors" % d)
+            return display_knowl("av.decomposition", f"Dim {d} factors")
+
         dim1 = TextBox(
             "dim1_factors",
             label=long_label(1),
@@ -656,10 +660,12 @@ def jump(info):
         except ValueError:
             flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
             return redirect(url_for(".abelian_varieties"))
+
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
+
         jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
     return by_label(jump_box)
 

@@ -50,7 +50,7 @@ c = StandardColors()
 
 class ColorScheme():
     colors = {
-        'col_main_d':  None, # Header and footer
+        'col_main_d': None, # Header and footer
         'col_main_dl': None, # Header and footer text
         'col_a_knowl': '#292', # Links
         'col_main': None,      # Links
