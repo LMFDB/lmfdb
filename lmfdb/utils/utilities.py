@@ -253,6 +253,24 @@ def coeff_to_poly(c, var=None):
         var = 'x'
     return PolynomialRing(QQ, var)(c)
 
+
+def coeff_to_poly_multi(c, var=None):
+    """
+    Convert a list or string representation of a polynomial to a sage polynomial.
+    Handles multivariate polynomials.
+    """
+    if isinstance(c, str):
+        # accept latex
+        c = c.replace("{", "").replace("}", "")
+        while re.search("[A-Za-z]{2}", c):
+            c = re.sub("([A-Za-z])([A-Za-z])", r"\1*\2", c)
+        while re.search("[0-9]+[A-Za-z]", c):
+            c = re.sub("([0-9]+)([A-Za-z])", r"\1*\2", c)
+        # autodetect variable name
+        if var is None:
+            varposs = set(re.findall(r"[A-Za-z_]+", c))
+    return PolynomialRing(QQ, list(varposs))(c)
+
 def coeff_to_power_series(c, var='q', prec=None):
     """
     Convert a list or dictionary giving coefficients to a sage power series.

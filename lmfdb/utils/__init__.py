@@ -62,6 +62,7 @@ from .utilities import (
     an_list,
     code_snippet_knowl,
     coeff_to_poly,
+    coeff_to_poly_multi,
     coeff_to_power_series,
     comma,
     datetime_to_timestamp_in_ms,

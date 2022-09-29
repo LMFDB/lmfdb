@@ -14,7 +14,7 @@ from lmfdb.elliptic_curves.web_ec import latex_equation
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
-from lmfdb.utils import (coeff_to_poly,
+from lmfdb.utils import (coeff_to_poly,coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
@@ -24,7 +24,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, Processe
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, ZLIST_RE, ZLLIST_RE, match_long_weierstrass_eqn, match_short_weierstrass_eqn
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, ZLIST_RE, ZLLIST_RE
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
@@ -314,11 +314,9 @@ def elliptic_curve_jump(info):
     elif match_cremona_label(label):
         try:
             return redirect(url_for(".by_ec_label", label=label))
-            #return by_ec_label(label)
         except ValueError:
             return elliptic_curve_jump_error(label, info, missing_curve=True)
     elif match_weierstrass_polys(label):
-        print("was ere")
         label, fail_reason = ec_lookup_equation(label)
         if label:
             return by_ec_label(label)
@@ -326,48 +324,20 @@ def elliptic_curve_jump(info):
             if fail_reason[0] == "invalid_poly":
                 return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
             return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
-
-    elif match_short_weierstrass_eqn(label):
-        f = label.split("=")[1]
-        label, fail_reason = ec_lookup_equation(f)
-        if label:
-            return by_ec_label(label)
-        elif label is None:
-            if fail_reason[0] == "invalid_poly":
-                return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
-            return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
-
-    elif match_long_weierstrass_eqn(label):
-        # Here we assume quite a bit from the user's input
-        # to extract h and f
-        first_bit, f = label.split("=")
-        y_monomial_letter = first_bit[0]
-        x_monomial_letter = {a for a in f if a.isalpha()}
-        if len(x_monomial_letter) > 1:
-            errmsg = "Your f polynomial is multivariate; it should only have one variable in it."
-            flash_error(errmsg)
-            return redirect(url_for(".index"))
-        x_monomial_letter = x_monomial_letter.pop()
-        hy = first_bit.split("+",1)[1]
-        R1 = PolynomialRing(ZZ,x_monomial_letter)
-        R2 = PolynomialRing(R1,y_monomial_letter)
-        while re.search("[A-Za-z]{2}", hy):
-            hy = re.sub("([A-Za-z])([A-Za-z])", r"\1*\2", hy)
-        hy = R2(hy)
-        if (hy[0] != 0) or (hy.degree() != 1):
-            errmsg = "Your h polynomial is not being multiplied by y"
-            flash_error(errmsg)
-            return redirect(url_for(".index"))    
-        h = hy[1]  # in R1
-        new_input = str(f) + "," + str(h)
-        print(f"new input is {new_input}")
-        label, fail_reason = ec_lookup_equation(new_input)
-        if label:
-            return by_ec_label(label)
-        elif label is None:
-            if fail_reason[0] == "invalid_poly":
-                return elliptic_curve_jump_error(fail_reason[1], info, invalid_poly=True)
-            return elliptic_curve_jump_error(fail_reason[1], info, missing_curve=True)
+    elif label.count('=') == 1:
+        lhs_str, rhs_str = label.split('=')
+        rhs_poly = coeff_to_poly_multi(rhs_str)
+        main_poly_str = lhs_str + "+" + str(-rhs_poly)
+        main_poly = coeff_to_poly_multi(main_poly_str)
+        try:
+            E = EllipticCurve_from_Weierstrass_polynomial(main_poly).minimal_model()
+        except ValueError:
+            C_str_latex = fr"\({latex(main_poly)}\)"
+            return elliptic_curve_jump_error(C_str_latex, info, invalid_poly=True)
+        lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+        if lmfdb_label is None:
+            return elliptic_curve_jump_error(EC_ainvs(E), info, missing_curve=True)
+        return by_ec_label(lmfdb_label)
     else:
         # Try to parse a string like [1,0,3,2,4] as valid
         # Weistrass coefficients:
