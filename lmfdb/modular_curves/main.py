@@ -39,7 +39,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, FloatCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, SpacerCol, ColGroup
+    SearchColumns, MathCol, FloatCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol,
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
@@ -50,7 +50,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
-    formatted_dims, url_for_NF_label, url_for_EC_label, url_for_ECNF_label, showj_nf,
+    formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf,
 )
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")

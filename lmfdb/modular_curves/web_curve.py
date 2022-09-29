@@ -29,9 +29,9 @@ def showexp(c, wrap=True):
 
 def showj(j):
     if j[0] == 0:
-        return rf"$0$"
+        return "$0$"
     elif j[1] == 1:
-        return rf"${j[0]}$"
+        return f"${j[0]}$"
     else:
         return r"$\tfrac{%s}{%s}$" % tuple(j)
 
@@ -119,13 +119,10 @@ def remove_leading_coeff(jfac):
 def jmap_factored(j_str):
     if 't' in j_str:
         R = PolynomialRing(QQ, 't')
-        t = R.gens()[0]
         F = FractionField(R)
     else:
         #assert ('x' in j_str or 'z' in j_str)
         R = PolynomialRing(QQ,2,'x,z')
-        x = R.gens()[0]
-        z = R.gens()[1]
         F = FractionField(R)
     j = F(j_str)
     # deal with leading coefficient

@@ -1994,7 +1994,7 @@ def crep_data(label):
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
     ans += "<br>Irreducible: {}".format(info["irreducible"])
-    ans += "<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
+    ans += f"<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
     N = info["cyc_order_mat"]
     genlist = ["$" + dispcyclomat(N, gen) + "$" for gen in info["gens"]]
     ans += ",".join(genlist)
@@ -2011,7 +2011,7 @@ def qrep_data(label):
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
     ans += "<br>Irreducible: {}".format(info["irreducible"])
-    ans += "<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
+    ans += f"<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
     genlist = ["$" + dispZmat(gen) + "$" for gen in info["gens"]]
     ans += ",".join(genlist)
     return Markup(ans)
