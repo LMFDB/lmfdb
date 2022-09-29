@@ -209,6 +209,7 @@ class GLnQSearchArray(SearchArray):
     plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
+
     def __init__(self):
         order = TextBox(
             name="order",

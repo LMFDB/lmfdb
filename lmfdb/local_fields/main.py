@@ -482,6 +482,7 @@ def reliability():
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+
 class LFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
@@ -498,6 +499,7 @@ class LFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         degree = TextBox(
             name='n',

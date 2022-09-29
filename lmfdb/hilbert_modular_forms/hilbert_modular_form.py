@@ -638,6 +638,7 @@ class HMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
     jump_knowl = "mf.hilbert.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         field = TextBox(
             name='field_label',

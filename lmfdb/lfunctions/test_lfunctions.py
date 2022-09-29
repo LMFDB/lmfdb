@@ -568,10 +568,9 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1/t-1.1/')
         assert '4.4977' in L.get_data(as_text=True)
 
-
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # Testing error messages
-    #------------------------------------------------------
+    # ------------------------------------------------------
 
     def test_errorMessages(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/k/4/a/1/')
@@ -610,10 +609,9 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27/a/')
         assert 'This Elliptic curve has complex multiplication and the symmetric power of its L-function is then not primitive.' in L.get_data(as_text=True)
 
-
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # Testing units not tested above
-    #------------------------------------------------------
+    # ------------------------------------------------------
 
     def test_paintSVGall(self):
         svg = paintSvgFileAll([["GSp4", 1]])

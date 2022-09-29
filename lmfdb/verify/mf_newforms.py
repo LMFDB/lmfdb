@@ -574,7 +574,6 @@ class mf_newforms(MfChecker):
         # TIME about 200s
         return self.check_crosstable_count('mf_hecke_lpolys', 25, 'hecke_orbit_code', constraint={'field_poly':{'$exists':True}})
 
-
     #### mf_hecke_cc ####
 
     @overall_long
