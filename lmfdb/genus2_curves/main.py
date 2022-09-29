@@ -21,6 +21,7 @@ from lmfdb.utils import (
     TextBoxWithSelect,
     YesNoBox,
     coeff_to_poly,
+    coeff_to_poly_multi,
     comma,
     display_knowl,
     flash_error,
@@ -401,9 +402,6 @@ def G2C_data(label):
 ### Regex patterns used in lookup
 TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
-ONE_TERM = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)"
-SHORT_WEIER_BEG = re.compile(r"^" +  ONE_TERM + r"\^2=")
-LONG_WEIER_BEG = re.compile(r"^" +  ONE_TERM + r"\^2+")
 POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
 POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
 ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
@@ -500,6 +498,24 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
+def unpack_hyperelliptic_polys(f):
+    
+    R = f.parent()
+    if len(R.gens()) != 2:
+        errmsg = "The input polynomial %s is not in two variables"
+        raise ValueError(errmsg)
+    quadratic_variables = [ y for y in R.gens() if f.degree(y) == 2 ]
+    if len(quadratic_variables) != 1:
+        errmsg = "The input polynomial %s is not in Weierstrass form"
+        raise ValueError(errmsg)
+    y = quadratic_variables[0]
+    x = [a for a in R.gens() if a != y][0]
+    y_sq_coeff = f.coefficient({y:2})
+    F = (1/y_sq_coeff) * -f.coefficient({y:0})
+    H = (1/y_sq_coeff) * f.coefficient({y:1})
+    return F,H
+
+
 def genus2_jump(info):
     jump = info["jump"].replace(" ", "")
     if LABEL_RE.fullmatch(jump):
@@ -520,36 +536,21 @@ def genus2_jump(info):
         elif label is None:
             # the input was parsed
             errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
-    elif SHORT_WEIER_BEG.match(jump):
-        f = jump.split("=")[1]
-        label, eqn_str = genus2_lookup_equation(f)
-        if label:
-            return redirect(url_for_curve_label(label), 301)
-        elif label is None:
-            # the input was parsed
-            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
-    elif LONG_WEIER_BEG.match(jump):
-        # Here we assume quite a bit from the user's input
-        # to extract h and f
-        first_bit, f = jump.split("=")
-        y_monomial_letter = jump[0]
-        x_monomial_letter = {a for a in f if a.isalpha()}
-        if len(x_monomial_letter) > 1:
-            errmsg = "Your f polynomial is multivariate; it should only have one variable in it."
-            flash_error(errmsg)
+    elif jump.count('=') == 1:
+        lhs_str, rhs_str = jump.split('=')
+        try:
+            rhs_poly = coeff_to_poly_multi(rhs_str)
+            main_poly_str = lhs_str + "+" + str(-rhs_poly)
+            main_poly = coeff_to_poly_multi(main_poly_str)
+        except Exception:
+            errmsg = "Unable to parse input %s into a polynomial"
+            flash_error(errmsg, main_poly_str)
             return redirect(url_for(".index"))
-        x_monomial_letter = x_monomial_letter.pop()
-        hy = first_bit.split("+",1)[1]
-        R1 = PolynomialRing(ZZ,x_monomial_letter)
-        R2 = PolynomialRing(R1,y_monomial_letter)
-        while re.search("[A-Za-z]{2}", hy):
-            hy = re.sub("([A-Za-z])([A-Za-z])", r"\1*\2", hy)
-        hy = R2(hy)
-        if (hy[0] != 0) or (hy.degree() != 1):
-            errmsg = "Your h polynomial is not being multiplied by y"
-            flash_error(errmsg)
-            return redirect(url_for(".index"))    
-        h = hy[1]  # in R1
+        try:
+            f,h = unpack_hyperelliptic_polys(main_poly)    
+        except ValueError as e:
+            flash_error(str(e), main_poly)
+            return redirect(url_for(".index"))  
         new_input = str(f) + "," + str(h)
         label, eqn_str = genus2_lookup_equation(new_input)
         if label:
@@ -563,6 +564,7 @@ def genus2_jump(info):
         errmsg += ", or a Weierstrass equation, e.g., y^2=x^5 + 1."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
+
 
 class G2C_download(Downloader):
     table = db.g2c_curves

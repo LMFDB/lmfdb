@@ -28,9 +28,6 @@ weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
 TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
 STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
-ONE_TERM = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)"
-SHORT_WEIER_BEG = re.compile(r"^" +  ONE_TERM + r"\^2=")
-LONG_WEIER_BEG = re.compile(r"^" +  ONE_TERM + r"\^2+")
 POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
 POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
 ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
@@ -39,12 +36,6 @@ G1_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLY
 
 def match_weierstrass_polys(lab):
     return G1_LOOKUP_RE.fullmatch(lab)
-
-def match_short_weierstrass_eqn(lab):
-    return SHORT_WEIER_BEG.match(lab)
-
-def match_long_weierstrass_eqn(lab):
-    return LONG_WEIER_BEG.match(lab)
 
 def match_lmfdb_label(lab):
     return lmfdb_label_regex.fullmatch(lab)
