@@ -1231,6 +1231,7 @@ def hgcwa_code_download(**args):
                      download_name=filename,
                      as_attachment=True)
 
+
 class HGCWASearchArray(SearchArray):
     noun = "passport"
     plural_noun = "passports"
@@ -1238,6 +1239,7 @@ class HGCWASearchArray(SearchArray):
     jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
     jump_knowl = "curve.highergenus.aut.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         genus = TextBox(
             name="genus",

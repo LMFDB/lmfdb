@@ -445,6 +445,7 @@ class LFunctionSearchArray(SearchArray):
     }
     for p in prime_range(100):
         null_column_explanations[f'euler{p}'] = False
+
     def __init__(self, force_rational=False):
         z1 = TextBox(
             name="z1",

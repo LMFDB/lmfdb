@@ -108,8 +108,10 @@ def extract_typ(kid):
             break
     return typ, url, name
 
+
 def extract_links(content):
     return sorted(set(x[2] for x in link_finder_re.findall(content) if x[2]))
+
 
 def normalize_define(term):
     m = define_fixer.search(term)
@@ -118,14 +120,17 @@ def normalize_define(term):
         term = define_fixer.sub(r'\%s'%n, term)
     return ' '.join(term.lower().replace('"', '').replace("'", "").split())
 
+
 def extract_defines(content):
     return sorted(set(x.strip() for x in defines_finder_re.findall(content)))
 
 # We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
 
+
 class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'timestamp', 'title', 'status', 'type', 'links', 'defines', 'source', 'source_name'] # doesn't include id, _keywords, reviewer or review_timestamp
+
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()

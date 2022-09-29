@@ -19,6 +19,7 @@ class Follower():
     - ``poll_interval`` -- the interval in seconds between checking on the status of the output.
     """
     ok_suffixes = ['log', 'progress', 'errors']
+
     def __init__(self, logdir, tabletypes, suffixes, poll_interval=0.1):
         self.logdir = logdir
         self.basenames = tabletypes

@@ -1217,6 +1217,7 @@ function switch_basis(btype) {
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
+
     def embedded_mf_link(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)

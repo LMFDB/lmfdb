@@ -1075,6 +1075,7 @@ def nf_code(**args):
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
 
+
 class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
@@ -1090,6 +1091,7 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, or polynomial"
+
     def __init__(self):
         degree = TextBox(
             name="degree",

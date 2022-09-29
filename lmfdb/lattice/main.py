@@ -475,6 +475,7 @@ class LatSearchArray(SearchArray):
              ("class_number", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
              ("minimum", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
              ("aut", "automorphism group", ['aut', 'dim', 'det', 'level', 'class_number', 'label'])]
+
     def __init__(self):
         dim = TextBox(
             name="dim",

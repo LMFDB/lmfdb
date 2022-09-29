@@ -705,6 +705,7 @@ class BMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
+
     def __init__(self):
         field = TextBox(
             name='field_label',

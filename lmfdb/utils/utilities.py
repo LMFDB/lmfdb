@@ -667,8 +667,6 @@ def code_snippet_knowl(D, full=True):
     return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
 
 
-
-
 ################################################################################
 #  pagination utilities
 ################################################################################
@@ -680,12 +678,14 @@ class ValueSaver():
     def __init__(self, source):
         self.source = source
         self.store = []
+
     def fill(self, stop):
         """
         Consumes values from the source until there are at least ``stop`` entries in the store.
         """
         if stop > len(self.store):
             self.store.extend(islice(self.source, stop - len(self.store)))
+
     def __getitem__(self, i):
         if isinstance(i, slice):
             if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (i.step is not None and i.step < 0):
@@ -695,8 +695,10 @@ class ValueSaver():
         else:
             self.fill(i+1)
             return self.store[i]
+
     def __len__(self):
         raise TypeError("Unknown length")
+
 
 class Pagination():
     """

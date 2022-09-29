@@ -139,6 +139,7 @@ def completeness_page():
     return render_template('single.html', kid='rcs.cande.maass',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
+
 @maass_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
@@ -146,11 +147,13 @@ def reliability_page():
     return render_template('single.html', kid='rcs.rigor.maass',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
+
 class MaassSearchArray(SearchArray):
     sorts = [("", "level", ['level', 'weight', 'conrey_index', 'spectral_parameter']),
              ("spectral", "spectral parameter", ['spectral_parameter', 'weight', 'level', 'conrey_index'])]
     noun = "Maass form"
     plural_noun = "Maass forms"
+
     def __init__(self):
         level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="997 or 1-10")
         weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 (only weight 0 currently available)")

@@ -1421,6 +1421,7 @@ class CMFSearchArray(SearchArray):
         'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
         'nf_label': "coefficient field not computed when dimension larger than 20",
     }
+
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',

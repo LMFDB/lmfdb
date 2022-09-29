@@ -475,8 +475,7 @@ class GaloisRepresentation( Lfunction):
         self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
         self.ld.gp().quit()
 
-
-## These are used when creating the classes with the above
+    # These are used when creating the classes with the above
 
     def set_dokchitser_Lfunction(self):
         """
@@ -559,8 +558,7 @@ class GaloisRepresentation( Lfunction):
         for n in range(len(self.dirichlet_coefficients)):
             self.dirichlet_coefficients[n] /= sqrt(float(n+1)**self.motivic_weight)
 
-
-## The tensor product
+    # The tensor product
 
     def __mul__(self, other):
         """
@@ -569,15 +567,13 @@ class GaloisRepresentation( Lfunction):
         """
         return GaloisRepresentation([self,other])
 
-## various direct accessible functions
-
+    # various direct accessible functions
 
     def root_number(self):
         """
         Root number
         """
         return self.sign
-
 
     def dimension(self):
         """
@@ -591,8 +587,7 @@ class GaloisRepresentation( Lfunction):
         """
         return self.conductor
 
-
-## Now to the L-function itself
+    # Now to the L-function itself
 
     def lfunction(self):
         """
@@ -646,6 +641,7 @@ def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
     if d2==1:
         return tensor_get_an_deg1(L1,L2,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
     return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
+
 
 def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
     """
