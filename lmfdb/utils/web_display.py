@@ -643,21 +643,21 @@ def compress_poly_Q(rawpoly,
         return r'\frac{%s}{%s}'%(compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
 
     tset = ''
-    for j in range(1,d+1):
-        csign = coefflist[d-j].sign()
+    for j in range(1, d + 1):
+        csign = coefflist[d - j].sign()
         if csign:
-            cabs = coefflist[d-j].abs()
-            if csign>0:
+            cabs = coefflist[d - j].abs()
+            if csign > 0:
                 tset += '+'
             else:
                 tset += '-'
-            if cabs != 1 or d-j==0:
+            if cabs != 1 or d == j:
                 tset += frac_string(cabs)
-            if d-j>0:
-                if d-j == 1:
+            if d > j:
+                if d - j == 1:
                     tset += var
                 else:
-                    tset += r'%s^{%s}'%(var,d-j)
+                    tset += r'%s^{%s}' % (var, d - j)
     return tset[1:]
 
 
@@ -732,19 +732,18 @@ def sparse_cyclotomic_to_latex(n, dat):
     and return sum_{j=1}^k cj zeta_n^ej in latex form as it is given
     (converting to sage will rewrite the element in terms of a basis)
     """
-
     dat.sort(key=lambda p: p[1])
-    ans=''
+    ans = ''
     z = r'\zeta_{%d}' % n
     for p in dat:
         if p[0] == 0:
             continue
-        if p[1]==0:
+        if p[1] == 0:
             if p[0] == 1 or p[0] == -1:
                 zpart = '1'
             else:
                 zpart = ''
-        elif p[1]==1:
+        elif p[1] == 1:
             zpart = z
         else:
             zpart = z+r'^{'+str(p[1])+'}'

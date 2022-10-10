@@ -164,9 +164,9 @@ def ring_pretty(L, f):
 
 
 def QpName(p):
-    if p==0:
+    if p == 0:
         return r"$\R$"
-    return r"$\Q_{"+str(p)+"}$"
+    return r"$\Q_{" + str(p) + "}$"
 
 ###############################################################################
 # Plot functions
