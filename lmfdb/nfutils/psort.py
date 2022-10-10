@@ -253,6 +253,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 #
 ########################################################
 
+
 # First some utility functions for working with weighted exponent
 # vectors:
 
@@ -261,14 +262,14 @@ def exp_vec_wt_iter(w, wts):
     length len(wts) and weight w = sum(v[i](wts[i]).
     """
     #print("w=%s, wts=%s" % (w,wts))
-    if w==0:
+    if w == 0:
         yield [0 for _ in wts]
     elif len(wts):
         for v0 in range(1+w//wts[-1]):
             w1 = w-wts[-1]*v0
-            if w1==0:
+            if w1 == 0:
                 yield [0]* (len(wts)-1) + [v0]
-            elif len(wts)>1:
+            elif len(wts) > 1:
                 for v1 in exp_vec_wt_iter(w1,wts[:-1]):
                     yield v1+[v0]
 

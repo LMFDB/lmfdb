@@ -320,8 +320,8 @@ class WebEC():
             data['cm_sqf'] = integer_squarefree_part(ZZ(self.cm))
 
             data['CM'] = r"yes (\(D=%s\))" % data['CMD']
-            if data['CMD']%4==0:
-                d4 = ZZ(data['CMD'])//4
+            if data['CMD'] % 4 == 0:
+                d4 = ZZ(data['CMD']) // 4
                 data['EndE'] = r"\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = r"\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']

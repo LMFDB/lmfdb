@@ -190,6 +190,7 @@ def ec_disc(ainvs):
     c6 = -b2*b2*b2 + 36*b2*b4 - 216*b6
     return (c4*c4*c4 - c6*c6) / 1728
 
+
 def latex_equation(ainvs):
     a1, a2, a3, a4, a6 = ainvs
 
@@ -197,9 +198,9 @@ def latex_equation(ainvs):
         pol = coeff.polynomial()
         mons = pol.monomials()
         n = len(mons)
-        if n==0:
+        if n == 0:
             return ""
-        if n>1:
+        if n > 1:
             return r"+\left({}\right)".format(latex(coeff))
         # now we have a numerical coefficient times a power of the generator
         if coeff == 1:
