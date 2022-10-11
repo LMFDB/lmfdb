@@ -22,7 +22,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
-from lmfdb.utils.common_regex import ZLIST_RE,ZLLIST_RE
+from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
