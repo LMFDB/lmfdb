@@ -357,11 +357,11 @@ class Genus2Test(LmfdbTest):
 
     def test_jump(self):
         # Check that giving defining polynomials for f,h works
-        L = self.tc.get('/Genus2Curve/Q/?jump=x%5E5+%2B+x+%2B+1%2Cx', follow_redirects=True)
+        L = self.tc.get('/Genus2Curve/Q/?jump=x%5E5%2Bx%2B1%2Cx', follow_redirects=True)
         assert "y^2 + xy = x^5 + x + 1" in L.get_data(as_text=True)
 
         # Check that giving a Weierstrass equation works, even without explicit multiplication '*'
-        L = self.tc.get("/Genus2Curve/Q/?jump=b%5E2+%3D+a%5E5+-+2a%5E2+%2B+1", follow_redirects=True)
+        L = self.tc.get("/Genus2Curve/Q/?jump=b%5E2%3Da%5E5-2a%5E2%2B1", follow_redirects=True)
         assert "$y^2 = x^5 - 2x^2 + 1$" in L.get_data(as_text=True)
 
         # Check that variables are only single characters
