@@ -361,17 +361,17 @@ class Genus2Test(LmfdbTest):
         assert "y^2 + xy = x^5 + x + 1" in L.get_data(as_text=True)
 
         # Check that giving a Weierstrass equation works, even without explicit multiplication '*'
-        L = self.tc.get("/Genus2Curve/Q/?jump=b%5E2+%3D+a%5E5+-+2a%5E2+%2B+1")
+        L = self.tc.get("/Genus2Curve/Q/?jump=b%5E2+%3D+a%5E5+-+2a%5E2+%2B+1", follow_redirects=True)
         assert "$y^2 = x^5 - 2x^2 + 1$" in L.get_data(as_text=True)
 
         # Check that variables are only single characters
-        L = self.tc.get("/Genus2Curve/Q/?jump=(banana)%5E2%3Dx%5E5%2B1")
+        L = self.tc.get("/Genus2Curve/Q/?jump=(banana)%5E2%3Dx%5E5%2B1", follow_redirects=True)
         assert "is not in two variables" in L.get_data(as_text=True)
 
         # Check that curves not of genus 2 fail
-        L = self.tc.get("/Genus2Curve/Q/?jump=y^2+%3D+x^10+-+1")
+        L = self.tc.get("/Genus2Curve/Q/?jump=y^2+%3D+x^10+-+1", follow_redirects=True)
         assert "invalid genus 2 curve" in L.get_data(as_text=True)
 
         # Check that there are only two variables present
-        L = self.tc.get("/Genus2Curve/Q/?jump=y%5E2+%3D+x+%2B+a")
+        L = self.tc.get("/Genus2Curve/Q/?jump=y%5E2+%3D+x+%2B+a", follow_redirects=True)
         assert "is not in two variables" in L.get_data(as_text=True)
