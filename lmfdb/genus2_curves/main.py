@@ -503,7 +503,6 @@ def unpack_hyperelliptic_polys(f):
         errmsg = "The input polynomial %s is not in Weierstrass form"
         raise ValueError(errmsg)
     y = quadratic_variables[0]
-    x = [a for a in R.gens() if a != y][0]
     y_sq_coeff = f.coefficient({y:2})
     F = (1/y_sq_coeff) * -f.coefficient({y:0})
     H = (1/y_sq_coeff) * f.coefficient({y:1})

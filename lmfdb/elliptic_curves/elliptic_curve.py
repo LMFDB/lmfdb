@@ -26,7 +26,7 @@ from lmfdb.utils.common_regex import ZLIST_RE,ZLLIST_RE
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
@@ -266,6 +266,25 @@ def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=Fa
     return rational_elliptic_curves(err_args)
 
 
+def ec_parse_coeff_vec(label, info):
+    lab = re.sub(r'\s','',label)
+    lab = re.sub(r'^\[','',lab)
+    lab = re.sub(r']$','',lab)
+    try:
+        labvec = lab.split(',')
+        labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
+        E = EllipticCurve(labvec).minimal_model()
+        # Now we do have a valid curve over Q, but it might
+        # not be in the database.
+        lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+        if lmfdb_label is None:
+            info['conductor'] = E.conductor()
+            return elliptic_curve_jump_error(label, info, missing_curve=True)
+        return by_ec_label(lmfdb_label)
+    except Exception:
+        return elliptic_curve_jump_error(label, info)
+
+
 def ec_lookup_equation(input_str):
 
     R = PolynomialRing(QQ, "x")
@@ -280,9 +299,9 @@ def ec_lookup_equation(input_str):
     if ZLLIST_RE.fullmatch(input_str):
         input_str_new = input_str.strip('[').strip(']')
         fg = [read_list_coeffs(elt) for elt in input_str_new.split('],[')]
-    elif ZLIST_RE.fullmatch(input_str):
-        input_str_new = input_str.strip('[').strip(']')
-        fg = [read_list_coeffs(input_str_new), R(0)]
+    # elif ZLIST_RE.fullmatch(input_str):
+    #     input_str_new = input_str.strip('[').strip(']')
+    #     fg = [read_list_coeffs(input_str_new), R(0)]
     else:
         input_str_new = input_str.strip('[').strip(']')
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str_new.split(",")]
@@ -290,7 +309,6 @@ def ec_lookup_equation(input_str):
         fg.append(R(0))
 
     ec_defining_poly = y**2 + y*(fg[1]) - fg[0]
-    print(f"ec defining poly is {ec_defining_poly}")
     S = PolynomialRing(QQ,2, ["x", "y"])
     try:
         E = EllipticCurve_from_Weierstrass_polynomial(S(ec_defining_poly)).minimal_model()
@@ -318,6 +336,10 @@ def elliptic_curve_jump(info):
             return redirect(url_for(".by_ec_label", label=label))
         except ValueError:
             return elliptic_curve_jump_error(label, info, missing_curve=True)
+    elif match_coeff_vec(label):
+        # Try to parse a string like [1,0,3,2,4] as valid
+        # Weistrass coefficients:
+        return ec_parse_coeff_vec(label, info)
     elif match_weierstrass_polys(label):
         label, fail_reason = ec_lookup_equation(label)
         if label:
@@ -341,24 +363,8 @@ def elliptic_curve_jump(info):
             return elliptic_curve_jump_error(EC_ainvs(E), info, missing_curve=True)
         return by_ec_label(lmfdb_label)
     else:
-        # Try to parse a string like [1,0,3,2,4] as valid
-        # Weistrass coefficients:
-        lab = re.sub(r'\s','',label)
-        lab = re.sub(r'^\[','',lab)
-        lab = re.sub(r']$','',lab)
-        try:
-            labvec = lab.split(',')
-            labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
-            E = EllipticCurve(labvec).minimal_model()
-            # Now we do have a valid curve over Q, but it might
-            # not be in the database.
-            lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
-            if lmfdb_label is None:
-                info['conductor'] = E.conductor()
-                return elliptic_curve_jump_error(label, info, missing_curve=True)
-            return by_ec_label(lmfdb_label)
-        except Exception:
-            return elliptic_curve_jump_error(label, info)
+        return elliptic_curve_jump_error(label, info)
+
 
 def url_for_label(label):
     if label == "random":
