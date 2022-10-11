@@ -378,7 +378,7 @@ class Genus2Test(LmfdbTest):
             # Check that there are only two variables present
             L = self.tc.get("/Genus2Curve/Q/?jump=y%5E2+%3D+x+%2B+a", follow_redirects=True)
             assert "is not in two variables" in L.get_data(as_text=True)
-        except TypeError as the_error:
+        except (RuntimeError, TypeError) as the_error:
             if str(the_error).startswith("unable to start magma"):
                 pass
             else:
