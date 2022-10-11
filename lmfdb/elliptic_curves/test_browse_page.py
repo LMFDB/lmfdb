@@ -63,7 +63,7 @@ class HomePageTest(LmfdbTest):
         self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+", '0.15246')
 
         # Check that giving defining polynomials for f,h works
-        self.check_args("/EllipticCurve/Q/?jump=x%5E3+%2B+10*x+%2B+17%2C+x", r"\\frac{109902239}{176525}")
+        self.check_args("/EllipticCurve/Q/?jump=x%5E3+%2B+10*x+%2B+17%2C+x", r"\frac{109902239}{176525}")
 
         # Check that giving a Weierstrass equation works, even without explicit multiplication '*'
         self.check_args("/EllipticCurve/Q/?jump=b%5E2+%2B+ab+%3D+a%5E3+%2B+2a+%2B+1", "-0.756030189082")
