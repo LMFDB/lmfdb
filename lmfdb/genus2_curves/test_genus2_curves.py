@@ -356,7 +356,9 @@ class Genus2Test(LmfdbTest):
                 'g2c_plots' in data and "data:image/png;base64" in data)
 
     def test_jump(self):
+        from sage.all import magma
         try:
+            magma('1+1')
             # Check that giving defining polynomials for f,h works
             L = self.tc.get('/Genus2Curve/Q/?jump=x%5E5%2Bx%2B1%2Cx', follow_redirects=True)
             assert "y^2 + xy = x^5 + x + 1" in L.get_data(as_text=True)
