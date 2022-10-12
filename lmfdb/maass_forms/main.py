@@ -259,7 +259,7 @@ def parse_rows_cols(info):
 
 def search_by_label(label):
     try:
-        mf =  WebMaassForm.by_label(label)
+        mf = WebMaassForm.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     info = to_dict(request.args)

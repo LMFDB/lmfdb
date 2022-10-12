@@ -1197,9 +1197,10 @@ def render_lfunction_exception(err):
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except Exception:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
-    bread =  [('L-functions', url_for('.index')), ('Error', '')]
+    bread = [('L-functions', url_for('.index')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
+
 
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
@@ -1241,8 +1242,7 @@ def set_gaga_properties(L):
     if L.rational is not None:
         ans.append(('Rational', 'yes' if L.rational else 'no'))
 
-
-    primitive =  getattr(L, 'primitive', None)
+    primitive = getattr(L, 'primitive', None)
     if primitive is not None:
         txt = 'yes' if primitive else 'no'
         ans.append(('Primitive', txt))

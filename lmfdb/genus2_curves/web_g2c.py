@@ -461,7 +461,7 @@ def split_field_statement(is_simple_geom, field_label, poly):
     elif field_label == '1.1.1.1':
         return r"Splits over \(\Q\)"
     elif field_label != '':
-        pretty =  field_pretty(field_label)
+        pretty = field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
         return (r"Splits over the number field \(\Q (b) \simeq \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"
             % (url, pretty, poly))
@@ -822,7 +822,7 @@ class WebG2C():
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else 'unknown'
 
             data['rat_pts'] = ratpts['rat_pts']
-            data['rat_pts_v'] =  ratpts['rat_pts_v']
+            data['rat_pts_v'] = ratpts['rat_pts_v']
             data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
             data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
 
@@ -1055,7 +1055,7 @@ class WebG2C():
 
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
             for lang in ['magma']: #TODO: 'sage', 'pari',

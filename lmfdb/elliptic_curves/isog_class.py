@@ -129,8 +129,7 @@ class ECisog_class():
         self.graph_img = encode_plot(P)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
-
-        self.newform =  raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
+        self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         if self.newform_exists_in_db:
@@ -139,7 +138,7 @@ class ECisog_class():
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label=self.conductor, isogeny_class_label=self.iso_label)
 
-        self.friends =  [('L-function', self.lfunction_link)]
+        self.friends = [('L-function', self.lfunction_link)]
 
         if self.cm:
             # set CM field for Properties box.
@@ -154,7 +153,7 @@ class ECisog_class():
             if self.conductor <= 50:
                 self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
         if self.newform_exists_in_db:
-            self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
+            self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
         if self.label_type == 'Cremona':
             self.title = "Elliptic curve isogeny class with Cremona label {} (LMFDB label {})".format(self.Ciso, self.lmfdb_iso)

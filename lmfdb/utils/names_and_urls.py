@@ -34,13 +34,13 @@ def name_and_object_from_url(url, check_existence=False):
             if len(url_split) == 4: # isogeny class
                 # EllipticCurve/2.2.140.1/14.1/a
                 field, cond, isog = url_split[-3:]
-                label_isogeny_class =  "-".join([field, cond, isog])
+                label_isogeny_class = "-".join([field, cond, isog])
                 if check_existence:
                     obj_exists = db.ec_nfcurves.exists({"class_label": label_isogeny_class})
             elif len(url_split) == 5: # curve
                 # EllipticCurve/2.0.4.1/1250.3/a/3
                 field, cond, isog, ind = url_split[-4:]
-                label_curve =  "-".join([field, cond, isog]) + ind
+                label_curve = "-".join([field, cond, isog]) + ind
                 if check_existence:
                     obj_exists = db.ec_nfcurves.exists({"label": label_curve})
         if len(url_split) == 4: # isogeny class
@@ -53,7 +53,7 @@ def name_and_object_from_url(url, check_existence=False):
     elif url_split[0] == "Character":
         # Character/Dirichlet/19/8
         assert url_split[1] == "Dirichlet"
-        name = r"Dirichlet character \(\chi_{%s} (%s, \cdot) \)" %  tuple(url_split[-2:])
+        name = r"Dirichlet character \(\chi_{%s} (%s, \cdot) \)" % tuple(url_split[-2:])
         label = ".".join(url_split[-2:])
         obj_exists = True
         if check_existence:
@@ -100,12 +100,12 @@ def name_and_object_from_url(url, check_existence=False):
             elif url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
                 label = url_split[-1]
-                name =  'Hilbert modular form ' + label
+                name = 'Hilbert modular form ' + label
                 obj_exists = True
                 if check_existence:
                     obj_exists = db.hmf_forms.label_exists(label)
 
-            elif url_split[2] ==  'ImaginaryQuadratic':
+            elif url_split[2] == 'ImaginaryQuadratic':
                 # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
                 label = '-'.join(url_split[-3:])
                 name = 'Bianchi modular form ' + label
@@ -114,7 +114,7 @@ def name_and_object_from_url(url, check_existence=False):
                     obj_exists = db.bmf_forms.label_exists(label)
     elif url_split[0] == "ArtinRepresentation":
         label = url_split[1]
-        name =  'Artin representation ' + label
+        name = 'Artin representation ' + label
         obj_exists = True
         if check_existence:
             obj_exists = db.artin_reps.label_exists(label.split('c')[0])

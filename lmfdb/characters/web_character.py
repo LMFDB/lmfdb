@@ -1156,7 +1156,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     def get_orbit_data(self, orbit_label):
         mod_and_label = "{}.{}".format(self.modulus, orbit_label)
-        orbit_data =  db.char_dir_orbits.lucky(
+        orbit_data = db.char_dir_orbits.lucky(
             {'modulus': self.modulus, 'label': mod_and_label}
         )
 

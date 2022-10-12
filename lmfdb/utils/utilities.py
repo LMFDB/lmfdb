@@ -356,7 +356,7 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  +=  sign * CBF(b)* CBF.gens()[0]
+            res  += sign * CBF(b)* CBF.gens()[0]
         return res
 
 # Conversion from numbers to letters and back
