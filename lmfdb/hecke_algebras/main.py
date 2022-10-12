@@ -103,7 +103,7 @@ def download_search(info):
         res = list(db.hecke_orbits.search(ast.literal_eval(info["query"])))
     last = len(res)
     c = download_comment_prefix[lang]
-    s =  '\n'
+    s = '\n'
     if 'ell' in info["query"]:
         s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight and the Hecke orbits for which l-adic data is available.\n\n'%(mydate, len(res))
     else:

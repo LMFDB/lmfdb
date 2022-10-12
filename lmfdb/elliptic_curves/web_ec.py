@@ -242,7 +242,7 @@ class WebEC():
         # Some data fields of self are just those from the database.
         # These only need some reformatting.
 
-        data['ainvs'] =  self.ainvs
+        data['ainvs'] = self.ainvs
         data['conductor'] = N = self.conductor
         data['j_invariant'] = QQ(tuple(self.jinv))
         data['j_inv_factor'] = latex(0)
@@ -421,8 +421,8 @@ class WebEC():
 
         # Newform
 
-        rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
-        data['newform'] =  raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
+        rawnewform = str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        data['newform'] = raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
@@ -690,7 +690,7 @@ class WebEC():
 
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
             for lang in ['sage', 'pari', 'magma']:

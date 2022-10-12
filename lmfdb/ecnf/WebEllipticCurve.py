@@ -662,7 +662,7 @@ class ECNF():
 
     def code(self):
         if self._code is None:
-            self._code =  make_code(self.label)
+            self._code = make_code(self.label)
         return self._code
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
@@ -714,7 +714,7 @@ def make_code(label, lang=None):
     import os
     import yaml
     _curdir = os.path.dirname(os.path.abspath(__file__))
-    Ecode =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+    Ecode = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
     # Fill in placeholders for this specific curve and language:
     if lang:

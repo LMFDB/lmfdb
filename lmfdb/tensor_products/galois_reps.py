@@ -796,9 +796,10 @@ def list_to_euler_factor(L,d):
         K = L[0].parent()
     R = PowerSeriesRing(K, "T")
     # T = R.gens()[0]
-    f =  1/ R([1]+L)
+    f = 1 / R([1]+L)
     f = f.add_bigoh(d+1)
     return f
+
 
 def tensor_local_factors(f1, f2, d):
     """

@@ -145,7 +145,7 @@ def makeLfromdata(L):
     L.level = int(data.get('conductor'))
     L.level_factored = factor(L.level)
     L.analytic_conductor = data.get('analytic_conductor')
-    L.rational =  data.get('rational')
+    L.rational = data.get('rational')
     # FIXME
     #L.root_analytic_conductor = data.get('root_analytic_conductor')
 
@@ -194,7 +194,7 @@ def makeLfromdata(L):
         central_value = 0
     elif L.leading_term is not None:
         #  convert to string in case it is in unicode string
-        central_value =  CC(str(L.leading_term))
+        central_value = CC(str(L.leading_term))
     else:
         # we use the plot_values
         if L.selfdual:
@@ -406,7 +406,7 @@ def apply_coeff_info(L, coeff_info):
     base_power_int = int(coeff_info[0][2:-3])
     fix = False
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
-        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
+        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] = convert_coefficient(an, base_power_int)
         # checks if we need to fix the Euler factors
         if is_prime(n) and L.dirichlet_coefficients_arithmetic[n] != 0:
             if fix:
@@ -1230,7 +1230,7 @@ class DedekindZeta(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "nf"
         self.info['label'] = ''
-        self.info['title'] = r"Dedekind zeta-function: $\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
+        self.info['title'] = r"Dedekind zeta-function: $\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" % web_latex(self.NF.defining_polynomial())
 
     def original_object(self):
         return self.NF
@@ -1364,7 +1364,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
         self.algebraic = True
-        self.motivic_weight =  self.motive["weight"]
+        self.motivic_weight = self.motive["weight"]
         # Compute Dirichlet coefficients ########################
         try:
             self.arith_coeffs = self.motive["coeffs"]

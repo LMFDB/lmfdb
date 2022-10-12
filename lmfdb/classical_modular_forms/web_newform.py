@@ -1347,9 +1347,9 @@ function switch_basis(btype) {
         theta = self._get_theta(m, p, i)
         s = display_float(2*theta, prec, method='round')
         if s == "1":
-            s =  r'\pi'
+            s = r'\pi'
         elif s== "-1":
-            s =  r'-\pi'
+            s = r'-\pi'
         elif s != "0":
             s += r'\pi'
         return r'\(%s\)'%s
@@ -1359,12 +1359,12 @@ function switch_basis(btype) {
         theta = CBF(self.cc_data[m]['angles'][p])
         unit = (2 * theta).exppii()
         if i == 0:
-            res =  unit
+            res = unit
         else:
             # it is very likely that the real or imag part are a half integer
             # as it returns a CDF, we need to convert it to CBF again
             chival = CBF(round_CBF_to_half_int(CBF(self.character_values[p][(m-1) // self.rel_dim][1])))
-            res =  chival / unit
+            res = chival / unit
         return round_CBF_to_half_int(res)
 
     @cached_method

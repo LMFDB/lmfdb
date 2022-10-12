@@ -24,7 +24,7 @@ def parse_interval(arg, name):
     a,b = 0,0
     arg = arg.replace (' ','')
     if re.match('^[0-9]+$', arg):
-        a,b =  (int(arg),int(arg))
+        a,b = (int(arg), int(arg))
     elif re.match('^[0-9]+-[0-9]+$', arg):
         s = arg.split('-')
         a,b = (int(s[0]), int(s[1]))

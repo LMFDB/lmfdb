@@ -145,7 +145,7 @@ def render_glnQ_group(args):
 
         title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
 
-        prop = [('Label', '%s' %  label),
+        prop = [('Label', '%s' % label),
                 ('Order', r'\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 

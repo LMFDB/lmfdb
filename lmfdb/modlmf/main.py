@@ -104,6 +104,7 @@ download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
 download_assignment_end = {'magma':';','sage':'','gp':''}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
+
 def download_search(info):
     lang = info["Submit"]
     filename = 'mod_l_modular_forms' + download_file_suffix[lang]
@@ -114,7 +115,7 @@ def download_search(info):
     res = list(db.modlmf_forms.search(ast.literal_eval(info["query"]), proj))
 
     c = download_comment_prefix[lang]
-    s =  '\n'
+    s = '\n'
     s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n'%(mydate, len(res))
     s += ' Each entry is given in the following format: field characteristic, field degree, level, minimal weight, conductor.\n\n'
     list_start = '[*' if lang=='magma' else '['
