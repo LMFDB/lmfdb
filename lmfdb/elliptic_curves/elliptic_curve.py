@@ -302,9 +302,6 @@ def ec_lookup_equation(input_str):
     if ZLLIST_RE.fullmatch(input_str):
         input_str_new = input_str.strip('[').strip(']')
         fg = [read_list_coeffs(elt) for elt in input_str_new.split('],[')]
-    # elif ZLIST_RE.fullmatch(input_str):
-    #     input_str_new = input_str.strip('[').strip(']')
-    #     fg = [read_list_coeffs(input_str_new), R(0)]
     else:
         input_str_new = input_str.strip('[').strip(']')
         fg = [R(list(coeff_to_poly(elt))) for elt in input_str_new.split(",")]
@@ -312,7 +309,7 @@ def ec_lookup_equation(input_str):
         fg.append(R(0))
 
     ec_defining_poly = y**2 + y*(fg[1]) - fg[0]
-    S = PolynomialRing(QQ,2, ["x", "y"])
+    S = PolynomialRing(QQ, 2, ["x", "y"])
     try:
         E = EllipticCurve_from_Weierstrass_polynomial(S(ec_defining_poly)).minimal_model()
     except ValueError:
