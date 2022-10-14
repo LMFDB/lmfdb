@@ -166,7 +166,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?order=24&cyclic=yes", "24.4")
         self.not_check_args("/Groups/Abstract/?order=24&cyclic=no", "24.2")
 
-
     def test_simple_search(self):
         r"""
         Check that we can restrict to simple or non-simple groups only
@@ -176,9 +175,9 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?simple=no", "29.1")
         self.not_check_args("/Groups/Abstract/?simple=yes", "18.4")
 
+    # when the test was first written 60.5 was only perfect and
+    # only non-solvable group in db so next two are quite restrictive
 
-     #when the test was first written 60.5 was only perfect and
-     # only non-solvable group in db so next two are quite restrictive
     def test_perfect_search(self):
         r"""
         Check that we can restrict to perfect or non-perfect groups only

@@ -142,6 +142,7 @@ download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
 download_assignment_end = {'magma':';','sage':'','gp':''}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
+
 def download_search(info):
     lang = info["Submit"]
     filename = 'integral_lattices' + download_file_suffix[lang]
@@ -151,7 +152,7 @@ def download_search(info):
     res = list(db.lat_lattices.search(ast.literal_eval(info["query"]), 'gram'))
 
     c = download_comment_prefix[lang]
-    s =  '\n'
+    s = '\n'
     s += c + ' Integral lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
     # The list entries are matrices of different sizes.  Sage and gp
     # do not mind this but Magma requires a different sort of list.
@@ -475,6 +476,7 @@ class LatSearchArray(SearchArray):
              ("class_number", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
              ("minimum", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
              ("aut", "automorphism group", ['aut', 'dim', 'det', 'level', 'class_number', 'label'])]
+
     def __init__(self):
         dim = TextBox(
             name="dim",

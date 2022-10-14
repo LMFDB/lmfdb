@@ -108,4 +108,4 @@ class GroupsTest(LmfdbTest):
             bins[i] += 1
         for i, b in enumerate(bins):
             d = 100*float(b)/total
-            print('%.2f\t|' %((i + 0.5)*h +  times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
+            print('%.2f\t|' %((i + 0.5)*h + times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)

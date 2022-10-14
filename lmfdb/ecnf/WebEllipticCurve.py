@@ -190,6 +190,7 @@ def ec_disc(ainvs):
     c6 = -b2*b2*b2 + 36*b2*b4 - 216*b6
     return (c4*c4*c4 - c6*c6) / 1728
 
+
 def latex_equation(ainvs):
     a1, a2, a3, a4, a6 = ainvs
 
@@ -197,9 +198,9 @@ def latex_equation(ainvs):
         pol = coeff.polynomial()
         mons = pol.monomials()
         n = len(mons)
-        if n==0:
+        if n == 0:
             return ""
-        if n>1:
+        if n > 1:
             return r"+\left({}\right)".format(latex(coeff))
         # now we have a numerical coefficient times a power of the generator
         if coeff == 1:
@@ -661,7 +662,7 @@ class ECNF():
 
     def code(self):
         if self._code is None:
-            self._code =  make_code(self.label)
+            self._code = make_code(self.label)
         return self._code
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
@@ -701,19 +702,19 @@ def make_code(label, lang=None):
 
     # Get the base field label and a-invariants:
 
-    E = db.ec_nfcurves.lookup(label, projection = ['field_label', 'ainvs'])
+    E = db.ec_nfcurves.lookup(label, projection=['field_label', 'ainvs'])
 
     # Look up the defining polynomial of the base field:
 
     from lmfdb.utils import coeff_to_poly
-    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection = 'coeffs'))
+    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection='coeffs'))
 
     # read in code.yaml from current directory:
 
     import os
     import yaml
     _curdir = os.path.dirname(os.path.abspath(__file__))
-    Ecode =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+    Ecode = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
     # Fill in placeholders for this specific curve and language:
     if lang:

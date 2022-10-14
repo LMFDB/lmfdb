@@ -450,7 +450,7 @@ def render_field_webpage(args):
     if D.abs().is_prime() or D == 1:
         data['discriminant'] = raw_typeset_int(D)
     else:
-        data['discriminant'] = raw_typeset_int(D, extra= r"\(\medspace = %s\)" % data['disc_factor'])
+        data['discriminant'] = raw_typeset_int(D, extra=r"\(\medspace = %s\)" % data['disc_factor'])
     if nf.frobs():
         data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
     else:  # fallback in case we haven't computed them in a case
@@ -1075,6 +1075,7 @@ def nf_code(**args):
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
 
+
 class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
@@ -1090,6 +1091,7 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, or polynomial"
+
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -1191,7 +1193,7 @@ class NFSearchArray(SearchArray):
         inessentialprimes = TextBoxWithSelect(
             name="inessentialp",
             label="Inessential primes",
-            short_label= r'Ines. \(p\)',
+            short_label=r'Ines. \(p\)',
             knowl="nf.inessential_prime",
             select_box=inessential_quantifier,
             example="2,3")

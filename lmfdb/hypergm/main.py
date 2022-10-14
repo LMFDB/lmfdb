@@ -190,13 +190,13 @@ def showlist(li):
 
 
 def splitint(a, p):
-    if a==1:
+    if a == 1:
         return ' '
     j = valuation(a, p)
-    if j==0:
+    if j == 0:
         return str(a)
     a = a/p**j
-    if a==1:
+    if a == 1:
         return latex(ZZ(p**j).factor())
     return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
 
@@ -275,17 +275,17 @@ def poly_with_factored_coeffs(c, p):
             xpow = 'x'
         if c[j] != '0':
             if c[j] == '+1':
-                if j==0:
+                if j == 0:
                     out += '+1'
                 else:
-                    out += '+'+xpow
+                    out += '+' + xpow
             elif c[j] == '-1':
-                if j==0:
+                if j == 0:
                     out += '-1'
                 else:
-                    out += '-'+ xpow
+                    out += '-' + xpow
             else:
-                if j==0:
+                if j == 0:
                     out += c[j]
                 else:
                     out += c[j] + xpow

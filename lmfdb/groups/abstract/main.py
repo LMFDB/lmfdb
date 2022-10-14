@@ -14,7 +14,7 @@ from flask import (
     url_for,
     abort,
 )
-from six import BytesIO
+from io import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
@@ -774,7 +774,7 @@ def group_jump(info):
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
-        return redirect(url_for(".by_abelian_label", label = ".".join(invs)))
+        return redirect(url_for(".by_abelian_label", label=".".join(invs)))
     # by name
     labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
@@ -1721,6 +1721,7 @@ class GroupsSearchArray(SearchArray):
 
     sort_knowl = "group.sort_order"
 
+
 class SubgroupSearchArray(SearchArray):
     null_column_explanations = { # No need to display warnings for these
         "quotient": False,
@@ -1733,6 +1734,7 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient', 'quotient_order', 'subgroup']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient', 'subgroup']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient', 'subgroup'])]
+
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")

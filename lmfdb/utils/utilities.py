@@ -374,7 +374,7 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  +=  sign * CBF(b)* CBF.gens()[0]
+            res  += sign * CBF(b)* CBF.gens()[0]
         return res
 
 # Conversion from numbers to letters and back
@@ -398,7 +398,7 @@ def num2letters(n):
         return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
-def to_dict(args, exclude = [], **kwds):
+def to_dict(args, exclude=[], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
@@ -430,7 +430,7 @@ def is_exact(x):
     return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
 
 
-def display_float(x, digits, method = "truncate",
+def display_float(x, digits, method="truncate",
                              extra_truncation_digits=3,
                              try_halfinteger=True,
                              no_sci=None,
@@ -478,8 +478,9 @@ def display_float(x, digits, method = "truncate",
         s = s.replace("e", r"\times 10^{") + "}"
     return s
 
-def display_complex(x, y, digits, method = "truncate",
-                                  parenthesis = False,
+
+def display_complex(x, y, digits, method="truncate",
+                                  parenthesis=False,
                                   extra_truncation_digits=3,
                                   try_halfinteger=True):
     """
@@ -527,8 +528,8 @@ def display_complex(x, y, digits, method = "truncate",
             sign = ""
         else:
             sign = " + "
-    y = display_float(y, digits, method = method,
-                                 extra_truncation_digits = extra_truncation_digits,
+    y = display_float(y, digits, method=method,
+                                 extra_truncation_digits=extra_truncation_digits,
                                  try_halfinteger=try_halfinteger)
     if y == "1":
         y = ""
@@ -684,8 +685,6 @@ def code_snippet_knowl(D, full=True):
     return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
 
 
-
-
 ################################################################################
 #  pagination utilities
 ################################################################################
@@ -697,12 +696,14 @@ class ValueSaver():
     def __init__(self, source):
         self.source = source
         self.store = []
+
     def fill(self, stop):
         """
         Consumes values from the source until there are at least ``stop`` entries in the store.
         """
         if stop > len(self.store):
             self.store.extend(islice(self.source, stop - len(self.store)))
+
     def __getitem__(self, i):
         if isinstance(i, slice):
             if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (i.step is not None and i.step < 0):
@@ -712,8 +713,10 @@ class ValueSaver():
         else:
             self.fill(i+1)
             return self.store[i]
+
     def __len__(self):
         raise TypeError("Unknown length")
+
 
 class Pagination():
     """
@@ -916,8 +919,10 @@ def ajax_more(callback, *arg_list, **kwds):
     else:
         return res
 
+
 def image_src(G):
     return ajax_url(image_callback, G, _ajax_sticky=True)
+
 
 def image_callback(G):
     P = G.plot()
@@ -929,7 +934,8 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = False, transparent=False, axes_pad=None):
+
+def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes=False, transparent=False, axes_pad=None):
     """
     Convert a plot object to base64-encoded png format.
 

@@ -19,6 +19,7 @@ from sage.all import (
     EllipticCurve,
     I,
     Integer,
+    NaN,
     NumberField,
     PowerSeriesRing,
     QQ,
@@ -144,7 +145,7 @@ def makeLfromdata(L):
     L.level = int(data.get('conductor'))
     L.level_factored = factor(L.level)
     L.analytic_conductor = data.get('analytic_conductor')
-    L.rational =  data.get('rational')
+    L.rational = data.get('rational')
     # FIXME
     #L.root_analytic_conductor = data.get('root_analytic_conductor')
 
@@ -193,7 +194,7 @@ def makeLfromdata(L):
         central_value = 0
     elif L.leading_term is not None:
         #  convert to string in case it is in unicode string
-        central_value =  CC(str(L.leading_term))
+        central_value = CC(str(L.leading_term))
     else:
         # we use the plot_values
         if L.selfdual:
@@ -245,7 +246,7 @@ def makeLfromdata(L):
                           for p, elt in L.bad_lfactors]
     elif 'Maass' in data.get('origin', ''):
         R = ComplexField(ceil(data['precision']*log(10)/log(2)))
-        stringtoR = lambda x: R(x) if x != '??' else R('NaN')
+        stringtoR = lambda x: R(x) if x != '??' else R(NaN)
         L.localfactors = [[stringtoR(q) for q in x] for x in L.localfactors]
         L.bad_lfactors = [[p, [stringtoR(q) for q in elt]]
                           for p, elt in L.bad_lfactors]
@@ -299,7 +300,8 @@ def makeLfromdata(L):
         # we recover all the bits
         int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros]
         # we convert them back to floats and we want to display their truncated version
-        return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+        return [(RealNumber(elt.str() + ".") / two_power).str(truncate=True)
+                for elt in int_zeros]
 
     if L.accuracy is not None:
         L.positive_zeros_raw = convert_zeros(L.accuracy, L.positive_zeros_raw)
@@ -404,7 +406,7 @@ def apply_coeff_info(L, coeff_info):
     base_power_int = int(coeff_info[0][2:-3])
     fix = False
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
-        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
+        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] = convert_coefficient(an, base_power_int)
         # checks if we need to fix the Euler factors
         if is_prime(n) and L.dirichlet_coefficients_arithmetic[n] != 0:
             if fix:
@@ -610,39 +612,37 @@ class Lfunction_from_db(Lfunction):
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
         data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
-        return Downloader()._wrap(
-                Json.dumps(data),
-                filename + '.euler_factors',
-                lang = 'text',
-                title = 'Euler Factors of %s' % self.label)
+        return Downloader()._wrap(Json.dumps(data),
+                                  filename + '.euler_factors',
+                                  lang='text',
+                                  title='Euler Factors of %s' % self.label)
 
     def download_zeros(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['order_of_vanishing'] = self.order_of_vanishing
         data['positive_zeros'] = self.positive_zeros_raw
         data['negative_zeros'] = self.negative_zeros_raw
         data['positive_zeros_accuracy'] = self.accuracy
         data['negative_zeros_accuracy'] = self.dual_accuracy
-        return Downloader()._wrap(
-                Json.dumps(data),
-                filename + '.zeros',
-                lang = 'text',
-                title = 'Zeros of %s' % self.label)
+        return Downloader()._wrap(Json.dumps(data),
+                                  filename + '.zeros',
+                                  lang='text',
+                                  title='Zeros of %s' % self.label)
 
     def download_dirichlet_coeff(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.dir_coeffs',
-                lang = 'text',
-                title = 'Dirichlet coefficients of %s' % self.label)
+                lang='text',
+                title='Dirichlet coefficients of %s' % self.label)
 
     def download(self):
         filename = self.label
-        data  = dict(self.__dict__)
+        data = dict(self.__dict__)
         for k in ['level_factored', 'dirichlet_coefficients']:
             if isinstance(data[k], list):
                 data[k] = list(map(str, data[k]))
@@ -652,9 +652,8 @@ class Lfunction_from_db(Lfunction):
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.lfunction',
-                lang = 'text',
-                title = 'The L-function object of %s' % self.label)
-
+                lang='text',
+                title='The L-function object of %s' % self.label)
 
     @lazy_attribute
     def htmlname(self):
@@ -709,15 +708,13 @@ class Lfunction_from_db(Lfunction):
             self.info['knowltype'] = self.knowltype
 
 
-
-
 #############################################################################
 
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form
 
     Compulsory parameters: maass_id (if not from DB)
-                           fromDB  (True if data is in Lfuntions database)
+                           fromDB  (True if data is in Lfunctions database)
 
     Possible parameters: group,level,char,R,ap_id  (if data is in Lfunctions DB)
     """
@@ -1233,7 +1230,7 @@ class DedekindZeta(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "nf"
         self.info['label'] = ''
-        self.info['title'] = r"Dedekind zeta-function: $\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
+        self.info['title'] = r"Dedekind zeta-function: $\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" % web_latex(self.NF.defining_polynomial())
 
     def original_object(self):
         return self.NF
@@ -1367,7 +1364,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
         self.algebraic = True
-        self.motivic_weight =  self.motive["weight"]
+        self.motivic_weight = self.motive["weight"]
         # Compute Dirichlet coefficients ########################
         try:
             self.arith_coeffs = self.motive["coeffs"]

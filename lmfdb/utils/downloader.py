@@ -25,7 +25,7 @@ class Downloader():
       or a dictionary with keys language names and values the appropriate columns.
       In all cases, exclude the label column, which is prepended automatically.
     - a ``column_wrappers`` attribute, which is a dictionary with column names
-      as keys and unary functions f as values; data for for the named columns
+      as keys and unary functions f as values; data for the named columns
       be mapped through f when being added to the download data (column names
       that do not appear in columns will be ignored)
     - a ``data_format`` attribute, which is a list of strings
@@ -92,7 +92,7 @@ class Downloader():
         'gp':'To create a list of {short_name}, type "{var_name} = make_data()"',
     }
 
-    def to_lang(self, lang, inp, level = 0, prepend = ''):
+    def to_lang(self, lang, inp, level=0, prepend=''):
         if inp is None:
             return self.none[lang]
         if isinstance(inp, str):
@@ -111,14 +111,13 @@ class Downloader():
                 begin = start + '\\\n'
             else:
                 begin = start
-            return begin + sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+            return begin + sep.join(self.to_lang(lang, c, level=level + 1) for c in inp) + end
         except TypeError:
             # not an iterable object
             return str(inp)
 
-    def assign(self, lang, name, elt, level = 0, prepend = ''):
+    def assign(self, lang, name, elt, level=0, prepend=''):
         return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
-
 
     def get(self, name, default=None):
         if hasattr(self, name):

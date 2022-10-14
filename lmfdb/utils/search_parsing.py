@@ -1544,6 +1544,7 @@ def parse_paired_fields(
     parse2(info, tmp_query2, field2, name2, qfield2, **kwds2)
     # print tmp_query1
     # print tmp_query2
+
     def remove_or(D):
         assert len(D) <= 1
         if "$or" in D:

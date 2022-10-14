@@ -369,7 +369,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            title=title,
                            bread=bread,
                            ec=ec,
-                           code = code,
+                           code=code,
                            properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
@@ -744,12 +744,14 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if r not in range(d%2,d+1,2):
-        info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
+    if r not in range(d%2,d+1,2):
+        info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
+    if not info['summary']:
+        info['error'] = "The database does not contain any curves defined over fields of signature %s" % info['sig']
 
     fields_by_sig = ECNF_stats().fields_by_sig
     counts_by_field = ECNF_stats().field_normstats
@@ -809,6 +811,7 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
@@ -818,7 +821,7 @@ def ecnf_code(**args):
         lang = 'pari'
 
     from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode =  make_code(label, lang)
+    Ecode = make_code(label, lang)
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     for k in sorted_code_names:
@@ -826,6 +829,7 @@ def ecnf_code(**args):
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
             code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
     return code
+
 
 def disp_tor(t):
     if len(t) == 1:
@@ -850,6 +854,7 @@ class ECNFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     jump_knowl = "ec.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         field = TextBox(
             name="field",
@@ -890,7 +895,7 @@ class ECNFSearchArray(SearchArray):
             options=[('', ''), ('PCM', 'potential CM'), ('PCMnoCM', 'potential CM but no CM'), ('CM', 'CM'), ('noPCM', 'no potential CM')])
         cm_disc = TextBox(
             name="cm_disc",
-            label= "CM discriminant",
+            label="CM discriminant",
             example="-4",
             example_span="-4 or -3,-8",
             knowl="ec.complex_multiplication"

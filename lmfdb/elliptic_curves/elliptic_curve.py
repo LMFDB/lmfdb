@@ -118,6 +118,7 @@ def rational_elliptic_curves(err_args=None):
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
 
+
 @ec_page.route("/interesting")
 def interesting():
     return interesting_knowls(
@@ -130,20 +131,22 @@ def interesting():
         learnmore=learnmore_list()
     )
 
+
 @ec_page.route("/random")
 @redirect_no_cache
 def random_curve():
-    label = db.ec_curvedata.random(projection = 'lmfdb_label')
+    label = db.ec_curvedata.random(projection='lmfdb_label')
     cond, iso, num = split_lmfdb_label(label)
     return url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num)
 
+
 @ec_page.route("/curve_of_the_day")
-@redirect_no_cache # disables cache on todays curve
+@redirect_no_cache  # disables cache on todays curve
 def todays_curve():
     from datetime import date
-    mordells_birthday = date(1888,1,28)
-    n = (date.today()-mordells_birthday).days
-    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset = n)
+    mordells_birthday = date(1888, 1, 28)
+    n = (date.today() - mordells_birthday).days
+    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset=n)
     return url_for(".by_ec_label", label=label)
 
 ################################################################################
@@ -168,10 +171,10 @@ class ECstats(StatsDisplay):
         self.max_N_prime_c = comma(self.max_N_prime)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
-        self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
-        self.rank_knowl = display_knowl('ec.rank', title = "rank")
+        self.cond_knowl = display_knowl('ec.q.conductor', title="conductor")
+        self.rank_knowl = display_knowl('ec.rank', title="rank")
         self.ec_knowl = display_knowl('ec.q', title='elliptic curves')
-        self.cl_knowl = display_knowl('ec.isogeny', title = "isogeny classes")
+        self.cl_knowl = display_knowl('ec.isogeny', title="isogeny classes")
 
     @property
     def short_summary(self):
@@ -703,17 +706,17 @@ def render_curve_webpage_by_label(label):
 
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
-    T =  render_template("ec-curve.html",
-                         properties=data.properties,
-                         data=data,
-                         # set default show names but actually code snippets are filled in only when needed
-                         code=code,
-                         bread=data.bread, title=data.title,
-                         friends=data.friends,
-                         downloads=data.downloads,
-                         KNOWL_ID="ec.q.%s"%lmfdb_label,
-                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                         learnmore=learnmore_list())
+    T = render_template("ec-curve.html",
+                        properties=data.properties,
+                        data=data,
+                        # set default show names but actually code snippets are filled in only when needed
+                        code=code,
+                        bread=data.bread, title=data.title,
+                        friends=data.friends,
+                        downloads=data.downloads,
+                        KNOWL_ID="ec.q.%s"%lmfdb_label,
+                        BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
+                        learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
@@ -947,6 +950,7 @@ class ECSearchArray(SearchArray):
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
+
     def __init__(self):
         conductor_quantifier = SelectBox(
             name='conductor_type',

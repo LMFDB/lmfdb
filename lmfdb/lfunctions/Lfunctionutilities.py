@@ -114,7 +114,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
         parenthesis = True
     else:
         parenthesis = False
-    coeff_display =  display_complex(rp, ip, digits, method="truncate", parenthesis=parenthesis)
+    coeff_display = display_complex(rp, ip, digits, method="truncate", parenthesis=parenthesis)
 
     # deal with the zero case
     if coeff_display == "0":
@@ -388,13 +388,13 @@ def lfuncEPhtml(L, fmt):
         try:
             if L.coefficient_field == "CDF" or None in poly:
                 factors = r'\( %s \)' % pretty_poly(poly)
-                gal_groups = [[0,0]]
+                gal_groups = [[0, 0]]
             elif not display_galois:
-                factors = galois_pretty_factors(poly, galois=display_galois, p = p)
-                factors =  make_bigint(r'\( %s \)' % factors)
+                factors = galois_pretty_factors(poly, galois=display_galois, p=p)
+                factors = make_bigint(r'\( %s \)' % factors)
             else:
-                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p = p)
-                factors =  make_bigint(r'\( %s \)' % factors)
+                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
+                factors = make_bigint(r'\( %s \)' % factors)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"

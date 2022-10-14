@@ -145,7 +145,7 @@ def render_glnQ_group(args):
 
         title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
 
-        prop = [('Label', '%s' %  label),
+        prop = [('Label', '%s' % label),
                 ('Order', r'\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
@@ -209,6 +209,7 @@ class GLnQSearchArray(SearchArray):
     plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
+
     def __init__(self):
         order = TextBox(
             name="order",

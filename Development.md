@@ -256,7 +256,7 @@ Here are some principles:
    - `/Character/Hecke/\<number_field>/\<modulus>/\<number>`
    - `/EllipticCurve/Q/\<label>`
    - `/GaloisGroup/\<label>`
-   - `/LocalNumberField/\<label>`
+   - `/padicField/\<label>`
    - `/ModularForm/GL2/Q/holomorphic/\<label>`
    - `/ModularForm/GL2/Q/Maass/\<label>`
    - `/Motive/Hypergeometric/Q/\<label>`

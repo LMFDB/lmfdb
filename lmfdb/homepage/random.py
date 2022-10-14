@@ -17,7 +17,7 @@ def random_url():
             "HigherGenus/C/Aut/",
             "Variety/Abelian/Fq/",
             "NumberField/",
-            "LocalNumberField/",
+            "padicField/",
             "Character/Dirichlet/",
             "ArtinRepresentation/",
             "GaloisGroup/",

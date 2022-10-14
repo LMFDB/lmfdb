@@ -594,7 +594,7 @@ def jump_box(info):
     elif jump == 'yes':
         query = {}
         newform_parse(info, query)
-        jump = db.mf_newforms.lucky(query, 'label', sort = None)
+        jump = db.mf_newforms.lucky(query, 'label', sort=None)
         if jump is None:
             errmsg = "There are no newforms specified by the query %s"
             jump = query
@@ -738,13 +738,14 @@ def common_parse(info, query, na_check=False):
             parse_ints(info, query, 'dim', name="Dimension")
 
 
-def parse_discriminant(d, sign = 0):
+def parse_discriminant(d, sign=0):
     d = int(d)
     if d*sign < 0:
         raise ValueError('%d %s 0' % (d, '<' if sign > 0 else '>'))
     if (d % 4) not in [0, 1]:
         raise ValueError('%d != 0 or 1 mod 4' % d)
     return d
+
 
 def newform_parse(info, query):
     common_parse(info, query)
@@ -1420,6 +1421,7 @@ class CMFSearchArray(SearchArray):
         'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
         'nf_label': "coefficient field not computed when dimension larger than 20",
     }
+
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
