@@ -439,7 +439,7 @@ def genus2_lookup_equation(input_str):
     try:
         C = magma.HyperellipticCurve(fg)
         g2 = magma.G2Invariants(C)
-    except TypeError:
+    except (TypeError, RuntimeError):
         raise ValueError(f'{C_str_latex} invalid genus 2 curve')
     g2 = str([str(i) for i in g2]).replace(" ", "")
     for r in db.g2c_curves.search({"g2_inv": g2}):
@@ -513,12 +513,15 @@ def genus2_jump(info):
         else:
             errmsg = "hash %s not found"
     elif G2_LOOKUP_RE.fullmatch(jump):
-        label, eqn_str = genus2_lookup_equation(jump)
-        if label:
-            return redirect(url_for_curve_label(label), 301)
-        elif label is None:
-            # the input was parsed
-            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve in the database"
+        try:
+            label, eqn_str = genus2_lookup_equation(jump)
+            if label:
+                return redirect(url_for_curve_label(label), 301)
+            elif label is None:
+                # the input was parsed
+                errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
+        except ValueError:
+            errmsg = "%s does not define a genus 2 curve"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
         errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
