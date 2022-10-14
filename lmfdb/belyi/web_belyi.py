@@ -201,9 +201,9 @@ class WebBelyiGalmap():
         try:
             slabel = label.split("-")
             if len(slabel) == 2: # passport label length
-                galmap = db.belyi_galmaps_fixed.lucky({"plabel": label})
+                galmap = db.belyi_galmaps.lucky({"plabel": label})
             elif len(slabel) == 3: # galmap label length
-                galmap = db.belyi_galmaps_fixed.lucky({"label": label})
+                galmap = db.belyi_galmaps.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -285,7 +285,7 @@ class WebBelyiGalmap():
         data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         if galmap.get("plane_model"):
-            data["plane_model"] = make_plane_model_latex(galmap["plane_model"])
+            data["plane_model"] = galmap["plane_model_latex"]
         if galmap.get('plane_constant'):
             data['plane_map'] = make_plane_map_latex(galmap['plane_constant'])
             data['plane_constant'] = make_plane_constant_latex(galmap['plane_constant'])
@@ -454,7 +454,7 @@ class WebBelyiPassport():
         data["primitivization_url"] = url_for_belyi_passport_label(data['primitivization'])
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps_fixed.search(
+        galmaps_for_plabel = db.belyi_galmaps.search(
             {"plabel": passport["plabel"]}
         )  # , sort = ['label_index'])
         galmapdata = []
