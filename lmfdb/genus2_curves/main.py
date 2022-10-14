@@ -21,6 +21,7 @@ from lmfdb.utils import (
     TextBoxWithSelect,
     YesNoBox,
     coeff_to_poly,
+    coeff_to_poly_multi,
     comma,
     display_knowl,
     flash_error,
@@ -39,6 +40,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
+from lmfdb.utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
@@ -399,13 +401,9 @@ def G2C_data(label):
 ################################################################################
 
 ### Regex patterns used in lookup
-TERM_RE = r"(\+|-)?(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
-STERM_RE = r"(\+|-)(\d*[A-Za-z]|\d+\*[A-Za-z]|\d+)(\^\d+)?"
-POLY_RE = re.compile(TERM_RE + "(" + STERM_RE + ")*")
-POLYLIST_RE = re.compile(r"(\[|)" + POLY_RE.pattern + r"," + POLY_RE.pattern + r"(\]|)")
-ZLIST_RE = re.compile(r"\[(|((|-)\d+)*(,(|-)\d+)*)\]")
-ZLLIST_RE = re.compile(r"(\[|)" + ZLIST_RE.pattern + r"," + ZLIST_RE.pattern + r"(\]|)")
-G2_LOOKUP_RE = re.compile(r"(" + "|".join([elt.pattern for elt in [POLY_RE, POLYLIST_RE, ZLIST_RE, ZLLIST_RE]]) + r")")
+LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
+LHASH_RE = re.compile(r"\#\d+")
 
 def genus2_lookup_equation(input_str):
     # returns:
@@ -494,9 +492,21 @@ def geom_inv_to_G2(inv):
         return igusa_to_G2(inv)
 
 
-LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
-ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
-LHASH_RE = re.compile(r"\#\d+")
+def unpack_hyperelliptic_polys(f):
+    
+    R = f.parent()
+    if len(R.gens()) != 2:
+        errmsg = "The input polynomial %s is not in two variables"
+        raise ValueError(errmsg)
+    quadratic_variables = [ y for y in R.gens() if f.degree(y) == 2 ]
+    if len(quadratic_variables) != 1:
+        errmsg = "The input polynomial %s is not in Weierstrass form"
+        raise ValueError(errmsg)
+    y = quadratic_variables[0]
+    y_sq_coeff = f.coefficient({y:2})
+    F = (1/y_sq_coeff) * -f.coefficient({y:0})
+    H = (1/y_sq_coeff) * f.coefficient({y:1})
+    return F,H
 
 
 def genus2_jump(info):
@@ -513,21 +523,41 @@ def genus2_jump(info):
         else:
             errmsg = "hash %s not found"
     elif G2_LOOKUP_RE.fullmatch(jump):
+        label, eqn_str = genus2_lookup_equation(jump)
+        if label:
+            return redirect(url_for_curve_label(label), 301)
+        elif label is None:
+            # the input was parsed
+            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
+    elif jump.count('=') == 1:
+        lhs_str, rhs_str = jump.split('=')
         try:
-            label, eqn_str = genus2_lookup_equation(jump)
-            if label:
-                return redirect(url_for_curve_label(label), 301)
-            elif label is None:
-                # the input was parsed
-                errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
-        except ValueError:
-            errmsg = "%s does not define a genus 2 curve"
+            rhs_poly = coeff_to_poly_multi(rhs_str)
+            main_poly_str = lhs_str + "+" + str(-rhs_poly)
+            main_poly = coeff_to_poly_multi(main_poly_str)
+        except Exception:
+            errmsg = "Unable to parse input %s into a polynomial"
+            flash_error(errmsg, main_poly_str)
+            return redirect(url_for(".index"))
+        try:
+            f,h = unpack_hyperelliptic_polys(main_poly)    
+        except ValueError as e:
+            flash_error(str(e), main_poly)
+            return redirect(url_for(".index"))  
+        new_input = str(f) + "," + str(h)
+        label, eqn_str = genus2_lookup_equation(new_input)
+        if label:
+            return redirect(url_for_curve_label(label), 301)
+        elif label is None:
+            # the input was parsed
+            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
         errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
-        errmsg += "."
+        errmsg += ", or a Weierstrass equation, e.g., y^2=x^5 + 1."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
+
 
 class G2C_download(Downloader):
     table = db.g2c_curves
@@ -1152,6 +1182,7 @@ class G2CSearchArray(SearchArray):
         info["jump_example"] = "169.a.169.1"
         info["jump_egspan"] = "e.g. 169.a.169.1 or 169.a or 1088.b"
         info["jump_egspan"] += " or x^5 + 1 or x^5, x^2 + x + 1"
+        info["jump_egspan"] += " or b^2 = k^5 + 1 or m^2 + m*(x^2 + x + 1) = x^5"
         info["jump_knowl"] = "g2c.search_input"
         info["jump_prompt"] = "Label or polynomial"
         return SearchArray.jump_box(self, info)
