@@ -10,7 +10,17 @@ jobs:
         uses: peter-evans/autopep8@v1
         if: ${{ github.repository }} == 'edgarcosta/lmfdb'
         with:
-          args: --recursive --in-place --aggressive --aggressive lmfdb/
+          # E203 whitespace before ‘,’, ‘;’, or ‘:’
+          # E222 multiple spaces after operator
+          # E241 multiple spaces after ‘,’
+          # E251 unexpected spaces around keyword / parameter equals
+          # E301 expected 1 blank line, found 0
+          # E302 expected 2 blank lines, found 0
+          # E303 too many blank lines
+          # E304 blank lines found after function decorator
+          # E702 multiple statements on one line (semicolon)
+
+          args: --recursive --in-place --aggressive --select=E203,E222,E241,E251,E301,E302,E303,E304,E702 lmfdb/
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
