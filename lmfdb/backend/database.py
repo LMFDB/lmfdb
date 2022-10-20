@@ -143,7 +143,6 @@ class PostgresDatabase(PostgresBase):
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
-
         if self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]:
             self._read_only = True
         else:

@@ -470,7 +470,6 @@ class ECNF():
             else:
                 self.bsd_status = "missing_gens"
 
-
         # Regulator only in conditional/unconditional cases, or when we know the rank:
         if self.bsd_status in ["conditional", "unconditional"]:
             if self.ar == 0:
@@ -555,7 +554,6 @@ class ECNF():
         else:
             self.isodeg = " and ".join([", ".join(isodegs[:-1]), isodegs[-1]])
 
-
         sig = self.signature
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
@@ -595,7 +593,6 @@ class ECNF():
                     self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
                 else:
                     self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
-
 
         self.properties = [('Label', self.label)]
 

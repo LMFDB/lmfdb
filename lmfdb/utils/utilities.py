@@ -575,7 +575,6 @@ def splitcoeff(coeff):
     return answer
 
 
-
 ################################################################################
 #  display and formatting utilities
 ################################################################################
@@ -644,7 +643,6 @@ def pol_to_html(p):
 
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
-
 
 
 def code_snippet_knowl(D, full=True):

@@ -274,8 +274,6 @@ def render_hecke_algebras_webpage(**args):
     return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
 
 
-
-
 hecke_algebras_orbit_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
 def split(lab):
@@ -368,7 +366,6 @@ def render_hecke_algebras_webpage_l_adic(**args):
 
     t = "%s-adic and mod %s data for the Hecke algebra orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
-
 
 
 #data quality pages

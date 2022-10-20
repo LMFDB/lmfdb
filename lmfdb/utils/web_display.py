@@ -42,7 +42,6 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     raw = re.sub(r'\s+', ' ', str(raw).strip())
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
-
     # the doublesclick behavior is set on load in javascript
     out = f"""
 <span class="raw-tset-container tset {"compressed" if compressed else ""}">
@@ -223,9 +222,6 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 
-
-
-
 def web_latex_factored_integer(x, enclose=True, equals=False):
     r"""
     Given any x that can be converted to a ZZ, creates latex string representing x in factored form
@@ -368,7 +364,6 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     return A
 
 
-
 def compress_polynomial(poly, threshold, decreasing=True):
     if poly == 0:
         return '0'
@@ -505,7 +500,6 @@ def raw_typeset_poly(coeffs,
     if final_rawvar:
         raw = raw.replace(var, final_rawvar)
 
-
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
 def raw_typeset_poly_factor(factors, # list of pairs (f,e)
@@ -552,7 +546,6 @@ def raw_typeset_qexp(coeffs_list,
 
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
-
 
     def rawtset_coeff(i, coeffs):
         poly = R(coeffs)
@@ -661,7 +654,6 @@ def compress_poly_Q(rawpoly,
     return tset[1:]
 
 
-
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
@@ -691,9 +683,6 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
     return o_str
 
 
-
-
-
 def to_ordinal(n):
     a = (n % 100) // 10
     if a == 1:
@@ -707,7 +696,6 @@ def to_ordinal(n):
         return '%srd' % n
     else:
         return '%sth' % n
-
 
 
 def add_space_if_positive(texified_pol):

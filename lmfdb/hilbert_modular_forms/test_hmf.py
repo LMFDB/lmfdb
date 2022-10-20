@@ -45,7 +45,6 @@ class HMFTest(LmfdbTest):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&deg=2..5&disc=60-200&level_norm=40-90&dimension=3..5&count=100')
         assert '70.1-o' in L.get_data(as_text=True)
 
-
     def test_search_CM(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&field_label=&deg=5&disc=&weight=2&level_norm=&dimension=&cm=only&bc=include&count=100')
         assert '121.1-b' in L.get_data(as_text=True)

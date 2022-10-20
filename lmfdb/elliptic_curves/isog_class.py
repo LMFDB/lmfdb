@@ -174,7 +174,6 @@ class ECisog_class():
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.iso_label, limit=1000)),
                          ('All stored data to text', url_for(".download_EC_all", label=self.iso_label))]
 
-
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                       (r'$\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % self.conductor, url_for(".by_conductor", conductor=self.conductor)),
@@ -265,7 +264,6 @@ def make_graph(M, vertex_labels=None):
                            left[0]:[-0.14,0.15], right[0]:[0.14,0.15],
                            left[1]:[-0.14,-0.15],right[1]:[0.14,-0.15],
                            left[2]:[-0.14,-0.3],right[2]:[0.14,-0.3]})
-
 
     if vertex_labels:
         G.relabel(vertex_labels)

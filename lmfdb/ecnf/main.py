@@ -177,7 +177,6 @@ def index():
     # the dict data will hold additional information to be displayed on
     # the main browse and search page
 
-
     # info['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
 

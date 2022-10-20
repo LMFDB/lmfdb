@@ -631,7 +631,6 @@ def higher_genus_w_automorphisms_search(info, query):
     parse_ints(info,query,'dim')
     parse_group_order(info,query,'group_order')
 
-
     if 'inc_hyper' in info:
         if info['inc_hyper'] == 'exclude':
             query['hyperelliptic'] = False
@@ -727,14 +726,12 @@ def render_family(args):
         info.update({'passport': Lall})
         info.update({'passport_num': len(Lall)})
 
-
         g2List = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
         if g == 2 and data['group'] in g2List:
             g2url = "/Genus2Curve/Q/?geom_aut_grp_label=" + ".".join(data['group'][1:-1].split(','))
             friends = [(r"Genus 2 curves over $\Q$", g2url)]
         else:
             friends = []
-
 
         br_g, br_gp, br_sign = split_family_label(label)
 
@@ -933,7 +930,6 @@ def render_passport(args):
                          'signH': sign_display(ast.literal_eval(data['signH'])),
                          'higgenlabel': data['full_label']})
 
-
         urlstrng, br_g, br_gp, br_sign, _ = split_passport_label(label)
 
         if Lfriends:
@@ -963,7 +959,6 @@ def render_passport(args):
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
                              (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))]
         downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
-
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
@@ -1088,8 +1083,6 @@ def how_computed_page():
                            learnmore=learnmore_list_remove('Source'))
 
 
-
-
 _curdir = os.path.dirname(os.path.abspath(__file__))
 code_list = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
@@ -1132,7 +1125,6 @@ def hgcwa_code_download(**args):
     code += s + " The results are stored in a list of records called 'data'\n\n"
     code += code_list['top_matter'][lang] + '\n\n'
     code += "data:=[];" + '\n\n'
-
 
     if label_is_one_vector(label):
         fam, cc_1, cc_2 = split_vector_label(label)

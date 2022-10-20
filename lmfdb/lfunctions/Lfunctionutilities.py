@@ -150,7 +150,6 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
 
     ans += coeff_display
 
-
     if seriescoefftype == "serieshtml":
         ans = ans.replace('i',"<em>i</em>").replace('-',"&minus;")
         if coeff_display[-1] not in [')', ' ']:
@@ -267,8 +266,6 @@ def lfuncDShtml(L, fmt):
     return(ans)
 
 
-
-
 def lfuncEPtex(L, fmt):
     """
         Returns the LaTex for displaying the Euler product of the L-function L.
@@ -327,7 +324,6 @@ def lfuncEPtex(L, fmt):
                         r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
             else:
                 ans += r"\displaystyle\prod_p \  (1 - \alpha_{p}\,  p^{-s})^{-1}"
-
 
         else:
             return("No information is available about the Euler product.")
@@ -854,7 +850,6 @@ def getConductorIsogenyFromLabel(label):
 
     except Exception:
         return None, None
-
 
 
 def get_bread(breads=[]):

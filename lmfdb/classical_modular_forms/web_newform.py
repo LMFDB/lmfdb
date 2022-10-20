@@ -1166,7 +1166,6 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + r'+O(q^{%d})\)' % prec
 
-
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.embedding_label:

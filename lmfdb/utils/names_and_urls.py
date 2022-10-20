@@ -77,7 +77,6 @@ def name_and_object_from_url(url, check_existence=False):
             #name = 'Curve ' + label_curve
             name = 'Genus 2 curve ' + label_curve
 
-
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
@@ -138,7 +137,6 @@ def name_and_object_from_url(url, check_existence=False):
         # FIXME
         #print("unknown url", url)
         pass
-
 
     return name, obj_exists
 

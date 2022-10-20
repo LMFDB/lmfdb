@@ -350,9 +350,6 @@ class CMF_download(Downloader):
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newspaces', lang=lang)
 
-
-
-
     # Magma
     """
     For possible later use: functions to cut out a space of modular symbols using a linear combination of T_n's.
