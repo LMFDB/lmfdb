@@ -317,7 +317,6 @@ def render_field_webpage(args):
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra=r'$\ \in'+Qp+'(t)[x]$')
 
-
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
         if rflabel is None:
             logger.fatal("Cannot find discriminant root field!")

@@ -64,7 +64,6 @@ class mf_hecke_nf(MfChecker):
                                   'hecke_ring_inverse_denominators':None},
                                  {'hecke_ring_cyclotomic_generator':{'$gt':0}})
 
-
     @overall
     def check_field_poly_is_cyclotomic(self):
         """

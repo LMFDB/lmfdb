@@ -718,8 +718,6 @@ def convert_conductor(conductor):
     return conductor.replace('e', '^')
 
 
-
-
 @l_function_page.route("/rational/<int:degree>", defaults={elt: None for elt in ['conductor', 'character', 'spectral_label']})
 @l_function_page.route("/rational/<int:degree>/<conductor>", defaults={elt: None for elt in ['character', 'spectral_label']})
 @l_function_page.route("/rational/<int:degree>/<conductor>/<character>", defaults={elt: None for elt in ['spectral_label']})
@@ -913,8 +911,6 @@ def label_redirect_wrapper(f):
     return wrapper
 
 
-
-
 # L-function of Dirichlet character ############################################
 @l_function_page.route("/Character/Dirichlet/<modulus>/<number>/")
 @label_redirect_wrapper
@@ -956,7 +952,6 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 # L-function of Cusp form ############################################
 
 
-
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:character>/<int:number>/")
 @label_redirect_wrapper
 def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character, number):
@@ -982,7 +977,6 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
                                     hecke_orbit=hecke_orbit,
                                     number=number),
                                     code=301)
-
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
@@ -1235,7 +1229,6 @@ def set_gaga_properties(L):
         ans.append(('Analytic cond.', '$%s$' % display_float(L.analytic_conductor, 6, extra_truncation_digits=40, latex=True)))
         ans.append(('Root an. cond.', '$%s$' % display_float(L.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)))
 
-
     if L.algebraic: # always set
         ans.append(('Motivic weight', prop_int_pretty(L.motivic_weight)))
     ans.append(('Arithmetic', 'yes' if L.arithmetic else 'no'))
@@ -1310,7 +1303,6 @@ def set_bread_and_friends(info, L, request):
         info['downloads'] = L.downloads
         info['downloads'].append(("Underlying data", url_for(".lfunc_data", label=L.label)))
 
-
         for elt in [info['origins'], info['friends'], info['factors_origins'], info['Linstances']]:
             if elt is not None:
                 elt.sort(key=lambda x: key_for_numerically_sort(x[0]))
@@ -1371,7 +1363,6 @@ def set_bread_and_friends(info, L, request):
             info['bread'] = get_bread([(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
-
 
     elif L.Ltype() == 'SymmetricPower':
         def ordinal(n):
@@ -1549,7 +1540,6 @@ def plotLfunction(args):
 def zerosLfunction(args):
     args = tuple(args.rstrip('/').split('/'))
     return render_zerosLfunction(request, *args)
-
 
 
 def download_route_wrapper(f):

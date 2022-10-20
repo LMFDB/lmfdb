@@ -158,7 +158,6 @@ geom_aut_grp_dict_pretty = {
 }
 
 
-
 ###############################################################################
 # Routing for top level and random_curve
 ###############################################################################
@@ -431,7 +430,6 @@ def genus2_lookup_equation(input_str):
     if len(fg) == 1:
         fg.append(R(0))
 
-
     magma.quit() # force a new magma session
     C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
     try:
@@ -493,7 +491,7 @@ def geom_inv_to_G2(inv):
 
 
 def unpack_hyperelliptic_polys(f):
-    
+
     R = f.parent()
     if len(R.gens()) != 2:
         errmsg = "The input polynomial %s is not in two variables"
@@ -540,10 +538,10 @@ def genus2_jump(info):
             flash_error(errmsg, main_poly_str)
             return redirect(url_for(".index"))
         try:
-            f,h = unpack_hyperelliptic_polys(main_poly)    
+            f,h = unpack_hyperelliptic_polys(main_poly)
         except ValueError as e:
             flash_error(str(e), main_poly)
-            return redirect(url_for(".index"))  
+            return redirect(url_for(".index"))
         new_input = str(f) + "," + str(h)
         label, eqn_str = genus2_lookup_equation(new_input)
         if label:

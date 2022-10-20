@@ -290,7 +290,6 @@ class CmfTest(LmfdbTest):
         assert '1-24' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
-
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
         assert '253' in page.get_data(as_text=True) # Level 23, Weight 13
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
@@ -458,7 +457,6 @@ class CmfTest(LmfdbTest):
             page = self.tc.get(url)
             assert r'0.984139\pi' in page.get_data(as_text=True)
             assert r'0.317472\pi' in page.get_data(as_text=True)
-
 
         #test large floats
         for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',

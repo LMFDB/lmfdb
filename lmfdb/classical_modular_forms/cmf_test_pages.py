@@ -154,15 +154,12 @@ class CMFTest(LmfdbTest):
                 errors.append(url)
                 res.append((None, url))
 
-
         if errors:
             print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
             for url in errors:
                 print(url)
 
         return res
-
-
 
     def test_all(self):
         todo = []

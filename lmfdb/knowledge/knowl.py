@@ -387,7 +387,6 @@ class KnowlBackend(PostgresBase):
                     code_snippet_knowl(D, full=False)
                     for D in self.code_references(k)]
 
-
     def needs_review(self, days):
         now = datetime.utcnow()
         tdelta = timedelta(days=days)

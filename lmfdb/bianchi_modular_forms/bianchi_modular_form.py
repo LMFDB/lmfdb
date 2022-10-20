@@ -455,7 +455,6 @@ def download_bmf_magma(**args):
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
 
-
     if f.have_AL:
         AL_eigs    = f.AL_table_data
         outstr += '\nALEigenvalues := AssociativeArray();\n'

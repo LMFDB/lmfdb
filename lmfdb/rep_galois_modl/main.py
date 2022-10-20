@@ -171,7 +171,6 @@ def render_rep_galois_modl_webpage(**args):
 
     info['friends'] = []
 
-
     bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")), ('%s' % data['label'], ' ')]
     credit = rep_galois_modl_credit
 
@@ -191,14 +190,12 @@ def render_rep_galois_modl_webpage(**args):
     else:
         info['rep_type']="Linear"
 
-
     if info['field_deg'] > int(1):
         try:
             pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
             info['field_str']=str(r'$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
         except Exception:
             info['field_str']=""
-
 
     info['bad_prime_list']=[]
     info['good_prime_list']=[]

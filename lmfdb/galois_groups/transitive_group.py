@@ -394,7 +394,6 @@ def galois_group_data(n, t):
     return inf + rest
 
 
-
 @cached_function
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)

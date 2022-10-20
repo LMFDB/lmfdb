@@ -344,7 +344,6 @@ class GaloisRepresentation( Lfunction):
         self.local_euler_factor = eu
         self.ld.gp().quit()
 
-
     def init_tensor_product(self, V, W):
         """
         We are given two Galois representations and we
@@ -499,7 +498,6 @@ class GaloisRepresentation( Lfunction):
             # such that the root must be the sign
             raise NotImplementedError
 
-
     def set_number_of_coefficients(self):
         """
         Determines the number of coefficients needed using Dokchitser's
@@ -546,7 +544,6 @@ class GaloisRepresentation( Lfunction):
             return tensor_get_an(L1, L2, V.dim, W.dim, self.bad_primes_info)
         else:
             raise ValueError("You asked for a type that we don't have")
-
 
     def renormalise_coefficients(self):
         """

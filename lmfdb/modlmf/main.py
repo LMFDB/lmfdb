@@ -198,7 +198,6 @@ def render_modlmf_webpage(**args):
         except Exception:
             info['field']=""
 
-
     ncoeff=int(round(20/data['deg']))
     av_coeffs=min(data['n_coeffs'],100)
     info['av_coeffs']=int(av_coeffs)
@@ -219,7 +218,6 @@ def render_modlmf_webpage(**args):
         ('Level', '%s' %info['level']),
         ('Weight grading', '%s' %info['weight_grading'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
-
 
 
 #auxiliary function for displaying more coefficients of the theta series
@@ -268,7 +266,6 @@ def render_modlmf_webpage_download(**args):
     response = make_response(download_modlmf_full_lists(**args))
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 
 def download_modlmf_full_lists(**args):

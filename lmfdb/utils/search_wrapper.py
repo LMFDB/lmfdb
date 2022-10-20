@@ -96,7 +96,6 @@ class Wrapper():
             template, info=info, title=self.err_title, **template_kwds
         )
 
-
     def raw_parsing_error(self, info, query, err, err_title, template, template_kwds):
         flash_error('Error parsing %s.', str(err))
         info['err'] = str(err)

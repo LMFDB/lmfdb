@@ -88,7 +88,6 @@ def conjideals(ideals, auts): #(label,g) -> label
     return cideals
 
 
-
 class HilbertNumberField(WebNumberField):
     """
     Subclass of WebNumberField which also facilitates extraction of

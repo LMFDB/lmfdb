@@ -211,7 +211,6 @@ def makeLfromdata(L):
         #  convert to string in case it is in unicode string
         L.values = [ [float(x), CC(str(xval))] for x, xval in data['values']] + [ central_value ]
 
-
     # Optional properties
     L.coefficient_field = data.get('coefficient_field', None)
 
@@ -222,10 +221,8 @@ def makeLfromdata(L):
         #this assumes that the base field of the Galois representation is QQ
         L.st_link = st_link_by_name(L.motivic_weight, L.degree, L.st_group)
 
-
     if data.get('credit', None) is not None:
         L.credit = data.get('credit', None)
-
 
     # Dirichlet coefficients
     L.localfactors = data.get('euler_factors', None)
@@ -277,7 +274,6 @@ def makeLfromdata(L):
     else:
         L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)]
 
-
     if L.analytic_normalization == 0:
         L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
     else:
@@ -285,7 +281,6 @@ def makeLfromdata(L):
 
     if 'coeff_info' in data and L.analytic_normalization == 0:   # hack, works only for Dirichlet L-functions
         apply_coeff_info(L, data['coeff_info'])
-
 
     # Configure the data for the zeros
 
@@ -359,10 +354,6 @@ def makeLfromdata(L):
     L.types = data.get('types', None)
 
     L.fromDB = True
-
-
-
-
 
 
 def apply_coeff_info(L, coeff_info):
@@ -450,8 +441,6 @@ def generateSageLfunction(L):
                                         L.poles, L.residues)
 
 
-
-
 #############################################################################
 # The subclasses
 #############################################################################
@@ -536,14 +525,11 @@ class Lfunction_from_db(Lfunction):
     def origin_label(self):
         return self.Lhash
 
-
-
     def get_Lhash_by_url(self, url):
         instance = get_instance_by_url(url)
         if instance is None:
             raise KeyError('No L-function instance data for "%s" was found in the database.' % url)
         return instance['Lhash']
-
 
     @lazy_attribute
     def origins(self):
@@ -1113,7 +1099,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 #############################################################################
 
 
-
 class DedekindZeta(Lfunction):
     """Class representing the Dedekind zeta-function
 
@@ -1234,7 +1219,6 @@ class DedekindZeta(Lfunction):
 
     def original_object(self):
         return self.NF
-
 
 
 class ArtinLfunction(Lfunction):
@@ -1393,7 +1377,6 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficients, self.coefficient_period,
                                             self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
 
-
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "hgm"
@@ -1506,7 +1489,6 @@ class SymmetricPowerLfunction(Lfunction):
         self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of elliptic curve isogeny class %s"
                       % (ordinal(self.m), self.m, self.origin_label))
 
-
     def original_object(self):
         return self.S
 
@@ -1565,7 +1547,6 @@ class TensorProductLfunction(Lfunction):
         self.sign = self.tp.root_number()
         self.coefficient_type = 3
         self.coefficient_period = 0
-
 
         # We may want to change this later to a better estimate.
         self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))

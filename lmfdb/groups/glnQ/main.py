@@ -54,7 +54,6 @@ def index():
     return render_template("glnQ-index.html", title=r"Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
-
 @glnQ_page.route("/random")
 def random_glnQ_group():
     label = db.gps_qrep.random(projection='label')

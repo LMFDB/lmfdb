@@ -300,8 +300,6 @@ class mf_newforms(MfChecker):
         # from mf_newform_portraits
         return self.check_crosstable_count('mf_newform_portraits', 1, 'label')
 
-
-
     @overall
     def check_field_disc_factorization(self):
         """
@@ -318,7 +316,6 @@ class mf_newforms(MfChecker):
         # TIME about 2s
         return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}})
 
-
     @overall(max_failures=1000)
     def check_analytic_rank_set(self):
         """
@@ -326,7 +323,6 @@ class mf_newforms(MfChecker):
         """
         return accumulate_failures(self.check_non_null(['analytic_rank'], self._box_query(box))
                                    for box in db.mf_boxes.search({'lfunctions':True}))
-
 
     @overall_long
     def check_analytic_rank(self):

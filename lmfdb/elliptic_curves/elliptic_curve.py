@@ -316,7 +316,7 @@ def ec_lookup_equation(input_str):
         C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
         return None, ("invalid_poly",C_str_latex)
     lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
-    
+
     if lmfdb_label is None:
         return None, ("not_in_db",EC_ainvs(E))
     return lmfdb_label,""
