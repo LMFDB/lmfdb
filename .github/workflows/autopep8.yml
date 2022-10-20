@@ -7,11 +7,10 @@ jobs:
       - uses: actions/checkout@v2
         id: checkout
         with:
-          ref: ${{github.event.push.head.ref}}
-          organization: ${{github.event.push.organization}}
+          repository: ${{github.event.push.repository}}
       - name: autopep8
         uses: peter-evans/autopep8@v1
-        if: steps.checkout.organization == 'edgarcosta'
+        if: steps.checkout.repository.full_name == 'edgarcosta/lmfdb'
         with:
           args: --recursive --in-place --aggressive --aggressive lmfdb/
       - name: Create Pull Request
