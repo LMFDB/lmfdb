@@ -9,8 +9,8 @@ jobs:
         with:
           repository: ${{github.event.push.repository}}
       - name: foo
-          env:
-            FOO: ${{ steps.checkout.repository.full_name }}
+        env:
+          FOO: ${{ steps.checkout.repository.full_name }}
         run: echo "$FOO"
       - name: autopep8
         uses: peter-evans/autopep8@v1
