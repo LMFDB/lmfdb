@@ -8,7 +8,7 @@ jobs:
         id: checkout
       - name: autopep8
         uses: peter-evans/autopep8@v1
-        if: ${{ github.repository }} == 'edgarcosta/lmfdb'
+        if: ${{ github.repository }} == 'LMFDB/lmfdb'
         with:
           # see generate_autopep8codes.py
           # E241 - Fix extraneous whitespace around keywords.
