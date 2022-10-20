@@ -11,7 +11,7 @@ jobs:
           organization: ${{github.event.push.organization}}
       - name: autopep8
         uses: peter-evans/autopep8@v1
-        if: steps.checkout.organization == 'LMFDB'
+        if: steps.checkout.organization == 'edgarcosta'
         with:
           args: --recursive --in-place --aggressive --aggressive lmfdb/
       - name: Create Pull Request
