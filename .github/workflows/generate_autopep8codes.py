@@ -45,6 +45,7 @@ W605 - Fix invalid escape sequence 'x'.
 W690 - Fix various deprecated code (via lib2to3).
 """
 allcodes.pop('E26')
+allcodes.pop('E301')
 
 pairs = [tuple(elt.strip().replace(' - ', ' ').split(' ', 1)) for elt in autopep8.strip('\n').split('\n')]
 allcodes = dict(elt for elt in pairs if len(elt) == 2)
