@@ -1,6 +1,9 @@
 import subprocess
+
 pro = subprocess.run('pycodestyle lmfdb', shell=True, capture_output=True)
 failedcodes = {line.split(':', 4)[3].lstrip().split(' ', 1)[0]  for line in pro.stdout.decode().splitlines()}
+failedcodes.discard('E26')
+
 autopep8 = r"""
 E241 - Fix extraneous whitespace around keywords.
 E242 - Remove extraneous whitespace around operator.
@@ -42,9 +45,11 @@ W604 - Use "repr()" instead of backticks.
 W605 - Fix invalid escape sequence 'x'.
 W690 - Fix various deprecated code (via lib2to3).
 """
+
 pairs = [tuple(elt.strip().replace(' - ', ' ').split(' ', 1)) for elt in autopep8.strip('\n').split('\n')]
 allcodes = dict(elt for elt in pairs if len(elt) == 2)
-passingcodes = set(allcodes).difference(failedcodes)
+
+passingcodes = sorted(set(allcodes).difference(failedcodes), key=lambda x:x[1:])
 for elt in passingcodes:
     print(f"          # {elt} - {allcodes[elt]}")
 print(f"          args: --recursive --in-place --aggressive --select={','.join(passingcodes)} lmfdb/")
