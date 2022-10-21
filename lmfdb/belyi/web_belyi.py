@@ -240,7 +240,7 @@ class WebBelyiGalmap():
         F = belyi_base_field(galmap)
         if F._data is None:
             fld_coeffs = galmap["base_field"]
-            pol = PolynomialRing(QQ, "t")(fld_coeffs)
+            pol = PolynomialRing(QQ, "T")(fld_coeffs)
             data["base_field"] = latex(pol)
         else:
             data["in_LMFDB"] = True
