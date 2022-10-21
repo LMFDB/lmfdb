@@ -599,3 +599,10 @@ class LfunctionTest(LmfdbTest):
         assert ("lfunc_lfunctions" in data and "st_group" in data and
                 "lfunc_search" in data and "euler19" in data and
                 "lfunc_instances" in data and "Lhash_array" in data)
+
+    def test_trivial_chi(self):
+        L = self.tc.get('/L/4/13e2/1.1/c1e2/0/0')
+        assert 'Trivial' in L.get_data(as_text=True)
+
+        L = self.tc.get('/L/4/851472/1.1/c1e2/0/0')
+        assert 'Trivial' in L.get_data(as_text=True)
