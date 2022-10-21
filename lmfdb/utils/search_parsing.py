@@ -301,7 +301,7 @@ def parse_multiset(inp, query, qfield):
 
 def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors
-    if type(arg) == parse_singleton:
+    if isinstance(arg, parse_singleton):
         return arg
     if "," in arg:
         if use_dollar_vars:
@@ -325,9 +325,9 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
 def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus=True):
     if parse_endpoint is None:
         parse_endpoint = parse_singleton
-    if type(arg) == str:
+    if isinstance(arg, str):
         arg = arg.replace(" ", "")
-    if type(arg) == parse_singleton:
+    if isinstance(arg, parse_singleton):
         return [key, arg]
     if "," in arg:
         tmp = [
@@ -356,7 +356,7 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus
 # Like parse_range2, but to deal with strings which could be rational numbers
 # process is a function to apply to arguments after they have been parsed
 def parse_range2rat(arg, key, process):
-    if type(arg) == str:
+    if isinstance(arg, str):
         arg = arg.replace(" ", "")
     if QQ_DEC_RE.match(arg):
         return [key, process(arg)]
@@ -379,7 +379,7 @@ def parse_range2rat(arg, key, process):
 # We parse into a list of singletons and pairs, like [[-5,-2], 10, 11, [16,100]]
 # If split0, we split ranges [-a,b] that cross 0 into [-a, -1], [1, b]
 def parse_range3(arg, split0=False):
-    if type(arg) == str:
+    if isinstance(arg, str):
         arg = arg.replace(" ", "")
     if "," in arg:
         return sum([parse_range3(a, split0) for a in arg.split(",")], [])
@@ -698,14 +698,14 @@ def parse_not_element_of(inp, query, qfield, parse_singleton=int):
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None:
-        parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1, 0)
+        def parse_one(x): return (int(x.sign()), int(x.abs())) if x != 0 else (1, 0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, split0=True)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
             parsed = parsed[0]
-            if type(parsed) == list:
+            if isinstance(parsed, list):
                 s0, d0 = parse_one(parsed[0])
                 s1, d1 = parse_one(parsed[1])
                 if s0 < 0:
@@ -720,7 +720,7 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
         else:
             iquery = []
             for x in parsed:
-                if type(x) == list:
+                if isinstance(x, list):
                     if len(x) == 1:
                         s0, abs_D = parse_one(x[0])
                     else:
@@ -744,7 +744,7 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_rats(inp, query, qfield, process=None):
     if process is None:
-        process = lambda x: x
+        def process(x): return x
     if LIST_RAT_RE.match(inp):
         collapse_ors(parse_range2rat(inp, qfield, process), query)
     else:
@@ -1437,7 +1437,7 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
     if process is None:
-        process = lambda x: x
+        def process(x): return x
     if inp in ["True", "yes", "1", "even"]:
         # artin reps use parse_bool for an is_even parity field
         query[qfield] = process(True)
@@ -1468,7 +1468,7 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
     if inp in blank:
         return
     if process is None:
-        process = lambda x: x
+        def process(x): return x
     allowed = [str(a) for a in allowed]
     if inp not in allowed:
         if len(allowed) == 0:
@@ -1613,9 +1613,9 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             # asking for each value to be in the array
             if parse_singleton is str:
                 all_operand = [val for val in parsed_values
-                               if type(val) == parse_singleton and "-" not in val and "," not in val]
+                               if isinstance(val, parse_singleton) and "-" not in val and "," not in val]
             else:
-                all_operand = [val for val in parsed_values if type(val) == parse_singleton]
+                all_operand = [val for val in parsed_values if isinstance(val, parse_singleton)]
 
             if all_operand:
                 sub_query[qfield] = {"$all": all_operand}
@@ -1623,7 +1623,7 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             # if there are other condition, we can add the first of those
             # conditions the query, in the hope of reducing the search space
             elemMatch_operand = [val for val in parsed_values
-                                 if type(val) != parse_singleton and type(val) is dict]
+                                 if not isinstance(val, parse_singleton) and isinstance(val, dict)]
             if elemMatch_operand:
                 if qfield in sub_query:
                     sub_query[qfield]["$elemMatch"] = elemMatch_operand[0]

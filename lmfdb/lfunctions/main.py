@@ -738,11 +738,11 @@ def by_url_degree_conductor_character_spectral(degree, conductor, character, spe
 def by_url_bread(degree, conductor, character, spectral_label, rational):
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if (
-        'degree' in info or
-        (conductor and 'conductor' in info) or
-        (character and 'character' in info) or
-        (spectral_label and 'spectral_label' in info) or
-        (rational and 'rational' in info)
+        'degree' in info
+        or (conductor and 'conductor' in info)
+        or (character and 'character' in info)
+        or (spectral_label and 'spectral_label' in info)
+        or (rational and 'rational' in info)
     ):
         return redirect(url_for('.index', **request.args), code=307)
     else:
@@ -1328,8 +1328,8 @@ def set_bread_and_friends(info, L, request):
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
-    elif (L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or
-          L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift'):
+    elif (L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein'
+          or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift'):
         weight = str(L.weight)
         label = 'Sp4Z.' + weight + '_' + L.orbit
         friendlink = '/'.join(friendlink.split('/')[:-3]) + '.' + weight + '_' + L.orbit
@@ -1435,15 +1435,15 @@ def set_navi(L):
     if L.Ltype() == 'maass' and L.group == 'GL2':
         next_form_id = L.mf.next_maass_form()
         if next_form_id:
-            next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
-                         url_for('maass.by_label',
+            next_data = ("next",r"$L(s,f_{\text next})$", '/L'
+                         + url_for('maass.by_label',
                          label=next_form_id) )
         else:
             next_data = ('','','')
         prev_form_id = L.mf.prev_maass_form()
         if prev_form_id:
-            prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
-                         url_for('maass.by_lavel',
+            prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L'
+                         + url_for('maass.by_lavel',
                          label=prev_form_id) )
         else:
             prev_data = ('','','')
@@ -1627,9 +1627,9 @@ def getLfunctionPlot(request, *args):
         plotrange = min(plotrange, -F[0][0], F[-1][0])
         # aim to display at most 25 axis crossings
         # if the L-function is nonprimitive
-        if (hasattr(pythonL, 'positive_zeros') and
-            hasattr(pythonL, 'primitive') and
-            not pythonL.primitive):
+        if (hasattr(pythonL, 'positive_zeros')
+            and hasattr(pythonL, 'primitive')
+            and not pythonL.primitive):
             # we stored them ready to display
             zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
             if len(zeros) >= 25:

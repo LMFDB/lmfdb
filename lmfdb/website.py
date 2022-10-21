@@ -129,13 +129,13 @@ def main():
         app.wsgi_app = CocalcWrap(app.wsgi_app)
         stars = "\n" + "*" * 80
         info(stars +
-             "\n\033[1mCocalc\033[0m environment detected!\n" +
-             "Visit" +
-             "\n  \033[1m https://cocalc.com" +
-             app.wsgi_app.app_root +
-             " \033[0m" +
-             "\nto access this LMFDB instance" +
-             stars
+             "\n\033[1mCocalc\033[0m environment detected!\n"
+             + "Visit"
+             + "\n  \033[1m https://cocalc.com"
+             + app.wsgi_app.app_root
+             + " \033[0m"
+             + "\nto access this LMFDB instance"
+             + stars
              )
 
     set_running()

@@ -265,7 +265,7 @@ class WebDirichlet(WebCharObject):
     def nextprimchar(m, n):
         if m < 3:
             return 3, 2
-        while 1:
+        while True:
             n += 1
             if n >= m:
                 m, n = m + 1, 2
@@ -721,8 +721,7 @@ class WebCharGroup(WebCharObject):
     def structure(self):
         inv = self.H.invariants()
         if inv:
-            inv_list = list(inv)
-            inv_list.sort()
+            inv_list = sorted(inv)
             return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
         else:
             return r"\(C_1\)"

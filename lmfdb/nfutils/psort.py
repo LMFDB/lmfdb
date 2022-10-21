@@ -10,19 +10,19 @@ from sage.all import ZZ, GF, Set, prod, srange, flatten, cartesian_product_itera
 # list of the coefficients in terms of the power basis, constant
 # first.
 
-nf_key = lambda a: a.list()
+def nf_key(a): return a.list()
 
 # Elements of GF(p) already have a good cmp function
 
 # Sort key for GF(p)[X]
 
-FpX_key = lambda a: a.list()
+def FpX_key(a): return a.list()
 
 # Sort key for Z_p.  The start_val=0 is needed for elements whose
 # parent is Qp rather than Zp since over Qp the first entry is the
 # coefficient of p^v with v the valuation
 
-Zp_key = lambda a: a.list(start_val=0)
+def Zp_key(a): return a.list(start_val=0)
 
 # Sort key for Zp[X].  For example the key for
 # (7 + 8*37 + 9*37^2 + O(37^3))*x^2 + (4 + 5*37 + 6*37^2 + O(37^3))*x

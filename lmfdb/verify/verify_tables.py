@@ -59,15 +59,15 @@ if __name__ == '__main__':
         'tablename',
         metavar='TABLENAME',
         type=str,
-        help=('the table name to run the verification tests.' +
-              ' Allowed values are: ' + ', '.join(['all'] + validated_tables)),
+        help=('the table name to run the verification tests.'
+              + ' Allowed values are: ' + ', '.join(['all'] + validated_tables)),
         choices=['all'] + validated_tables)
     parser.add_argument(
         'speedtype',
         metavar='TYPE',
         type=str,
-        help=('the type of test to run on the chosen table.' +
-              ' Allowed values are: ' + ', '.join(['all'] + speedtypes)),
+        help=('the type of test to run on the chosen table.'
+              + ' Allowed values are: ' + ', '.join(['all'] + speedtypes)),
         choices=['all'] + speedtypes + ['over', 'long'])
 
     args, parallel_args = parser.parse_known_args()

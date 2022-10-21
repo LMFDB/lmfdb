@@ -38,7 +38,7 @@ from lmfdb.number_fields.web_number_field import (
 
 assert nf_logger
 
-bread_prefix = lambda: [('Number fields', url_for(".number_field_render_webpage"))]
+def bread_prefix(): return [('Number fields', url_for(".number_field_render_webpage"))]
 
 Completename = 'Completeness of the data'
 dnc = 'data not computed'
@@ -1168,8 +1168,8 @@ class NFSearchArray(SearchArray):
             name="subfield",
             label="Intermediate field",
             knowl="nf.intermediate_fields",
-            example_span="2.2.5.1 or x^2-5 or a "+
-                display_knowl("nf.nickname", "field nickname"),
+            example_span="2.2.5.1 or x^2-5 or a "
+                + display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
         completion = TextBox(
             name="completions",

@@ -72,7 +72,7 @@ def get_character_modulus(a, b, limit=7):
                 entry.append(el)
                 entries[(row, col)] = entry
     entries2 = {}
-    out = lambda chi: (chi.number, chi.is_primitive(),
+    def out(chi): return (chi.number, chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
     for k, v in entries.items():
         l = []

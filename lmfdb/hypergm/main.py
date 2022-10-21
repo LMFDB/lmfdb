@@ -147,8 +147,7 @@ def ab2gammas(A, B):
             else:
                 incdict(ab[1-wh], d)
     gamma[1] = [-1*z for z in gamma[1]]
-    gamma = gamma[1]+gamma[0]
-    gamma.sort()
+    gamma = sorted(gamma[1]+gamma[0])
     return gamma
 
 # Convert cyclotomic indices to rational numbers

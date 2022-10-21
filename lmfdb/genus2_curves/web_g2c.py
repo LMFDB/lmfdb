@@ -519,8 +519,9 @@ def gsp4_subgroup_data(label):
         data = db.gps_gsp4zhat.lookup(label)
     except ValueError:
         return "Invalid label for subgroup of GSp(4,Zhat): %s" % label
-    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
-    matrix = lambda m: r'$\begin{bmatrix}%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15])
+
+    def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    def matrix(m): return r'$\begin{bmatrix}%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\\%s&%s&%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15])
     info = '<table>\n'
     info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
@@ -920,8 +921,8 @@ class WebG2C():
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
         data['factorsRR_base'] = endo['factorsRR_base']
-        data['end_statement_base'] = (r"Endomorphism %s over \(\Q\):<br>" % ("ring" if is_curve else "algebra") +
-            end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None))
+        data['end_statement_base'] = (r"Endomorphism %s over \(\Q\):<br>" % ("ring" if is_curve else "algebra")
+            + end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None))
 
         # Field over which all endomorphisms are defined
         data['end_field_label'] = endo['fod_label']
@@ -933,8 +934,8 @@ class WebG2C():
         data['factorsRR_geom'] = endo['factorsRR_geom']
         if data['end_field_label'] != '1.1.1.1':
             data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
-            data['end_statement_geom'] = (r"Endomorphism %s over \(\overline{\Q}\):" % ("ring" if is_curve else "algebra") +
-                end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
+            data['end_statement_geom'] = (r"Endomorphism %s over \(\overline{\Q}\):" % ("ring" if is_curve else "algebra")
+                + end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
         data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
         data['end_alg_name'] = end_alg_name(curve['end_alg'])
