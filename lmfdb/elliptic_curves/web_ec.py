@@ -71,8 +71,8 @@ def gl2_subgroup_data(label):
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
-    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
-    matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
+    def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
     info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"

@@ -392,8 +392,8 @@ def st_knowl(label):
     except ValueError:
         return "Unable to locate data for Sato-Tate group with label %s" % label
     label = data['label'] # label might have been converted
-    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
-    math_mode = lambda s: '$%s$'%s
+    def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    def math_mode(s): return '$%s$'%s
     info = '<table>\n'
     info += row_wrap('Sato-Tate group <b>%s</b>'%label, math_mode(data['pretty']))
     info += "<tr><td></td><td></td></tr>\n"
@@ -877,7 +877,7 @@ def render_by_label(label):
         info['abelian']=boolean_name(G['abelian'])
         info['solvable']=boolean_name(G['solvable'])
     if data.get('gens'):
-        info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']]) if type(data['gens']) == list else data['gens']
+        info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']]) if isinstance(data['gens'], list) else data['gens']
         info['numgens'] = len(info['gens'])
     else:
         info['numgens'] = 0

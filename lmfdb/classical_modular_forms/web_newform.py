@@ -297,8 +297,8 @@ class WebNewform():
         zeta = F.gens()[0]
         ret = []
         l = len(self.hecke_ring_numerators)
-        betas = [F(self.hecke_ring_numerators[i]) /
-                 self.hecke_ring_denominators[i] for i in range(l)]
+        betas = [F(self.hecke_ring_numerators[i])
+                 / self.hecke_ring_denominators[i] for i in range(l)]
         write_in_powers = zeta.coordinates_in_terms_of_powers()
         for coeffs in self.qexp:
             elt = sum([coeffs[i] * betas[i] for i in range(l)])
@@ -339,8 +339,8 @@ class WebNewform():
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:
             res.append(('Newform orbit ' + self.label, nf_url))
-            if (self.dual_label is not None and
-                    self.dual_label != self.embedding_label):
+            if (self.dual_label is not None
+                    and self.dual_label != self.embedding_label):
                 dlabel = self.label + '.' + self.dual_label
                 d_url = nf_url + '/' + self.dual_label.replace('.', '/') + '/'
                 res.append(('Dual form ' + dlabel, d_url))

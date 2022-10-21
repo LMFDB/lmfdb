@@ -103,7 +103,7 @@ def constructor_logger(obj, args):
 
 # Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):
-    if type(euler_factors[0][0]) is int:
+    if isinstance(euler_factors[0][0], int):
         R = ZZ
     else:
         R = euler_factors[0][0].parent()
@@ -178,13 +178,13 @@ def makeLfromdata(L):
 
     L.mu_fe = []
     for i in range(len(data['gamma_factors'][0])):
-        L.mu_fe.append(L.analytic_normalization +
-                       string2number(data['gamma_factors'][0][i]))
+        L.mu_fe.append(L.analytic_normalization
+                       + string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
     for i in range(len(data['gamma_factors'][1])):
-        L.nu_fe.append(L.analytic_normalization +
-                       string2number(data['gamma_factors'][1][i]))
+        L.nu_fe.append(L.analytic_normalization
+                       + string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
     # central_value and values
@@ -237,13 +237,13 @@ def makeLfromdata(L):
 
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF
-        pairtoCC = lambda x: CC(*tuple(x))
+        def pairtoCC(x): return CC(*tuple(x))
         L.localfactors = [[pairtoCC(q) for q in x] for x in L.localfactors]
         L.bad_lfactors = [[p, [pairtoCC(q) for q in elt]]
                           for p, elt in L.bad_lfactors]
     elif 'Maass' in data.get('origin', ''):
         R = ComplexField(ceil(data['precision']*log(10)/log(2)))
-        stringtoR = lambda x: R(x) if x != '??' else R(NaN)
+        def stringtoR(x): return R(x) if x != '??' else R(NaN)
         L.localfactors = [[stringtoR(q) for q in x] for x in L.localfactors]
         L.bad_lfactors = [[p, [stringtoR(q) for q in elt]]
                           for p, elt in L.bad_lfactors]
@@ -329,7 +329,7 @@ def makeLfromdata(L):
 
     # Configure the data for the plot
     plot_delta = float(data['plot_delta'])
-    if type(data['plot_values'][0]) is str:
+    if isinstance(data['plot_values'][0], str):
         plot_values = [string2number(elt) for elt in data['plot_values']]
     else:
         plot_values = data['plot_values']
@@ -340,7 +340,7 @@ def makeLfromdata(L):
         neg_plot = [ [-1*pt[0], L.sign * pt[1]]
                      for pt in pos_plot ][1:]
     else:
-        if type(dual_L_data['plot_values'][0]) is str:
+        if isinstance(dual_L_data['plot_values'][0], str):
             dual_plot_values = [string2number(elt) for elt in dual_L_data['plot_values']]
         else:
             dual_plot_values = dual_L_data['plot_values']
@@ -843,8 +843,8 @@ class Lfunction_HMF(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Hilbert modular form ' +
-                                'L-function.', args, 'label', 'number', 'character')
+        validate_required_args ('Unable to construct Hilbert modular form '
+                                + 'L-function.', args, 'label', 'number', 'character')
         validate_integer_args ('Unable to construct Hilbert modular form L-function.',
                                args, 'character','number')
 
@@ -927,8 +927,8 @@ class Lfunction_HMF(Lfunction):
                     + (T ** (2 * primes[l][2])))
 
         # Compute inverses up to given degree
-        heckepolsinv = [heckepols[i].xgcd(T ** ceil(log(PP * 1.0) /
-                                    log(ratl_primes[i] * 1.0)))[1]
+        heckepolsinv = [heckepols[i].xgcd(T ** ceil(log(PP * 1.0)
+                                    / log(ratl_primes[i] * 1.0)))[1]
                                     for i in range(len(heckepols))]
 
         dcoeffs = [0, 1]
@@ -957,8 +957,8 @@ class Lfunction_HMF(Lfunction):
             # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
             # but now the sign is wrong (i.e., not of absolute value 1 *)
             AL_signs = [iota(K(str(al))) for al in ALeigs]
-            self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
-                                                        self.field_degree / 2))
+            self.sign = prod(AL_signs) * (-1) ** (float(self.weight
+                                                        * self.field_degree / 2))
         self.checkselfdual()
 
         # Text for the web page
@@ -1090,8 +1090,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         generateSageLfunction(self)
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "mf.siegel"
-        self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
-                      "Modular form of weight " + str(self.weight) + ".")
+        self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel "
+                      + "Modular form of weight " + str(self.weight) + ".")
 
     def original_object(self):
         return self.S
@@ -1168,8 +1168,8 @@ class DedekindZeta(Lfunction):
                 while dir_group[j] != 1:
                     j += 1
                 dir_group.pop(j)
-                self.factorization = (r'\(\zeta_K(s) =\) ' +
-                                      r'<a href="/L/Riemann/">\(\zeta(s)\)</a>')
+                self.factorization = (r'\(\zeta_K(s) =\) '
+                                      + r'<a href="/L/Riemann/">\(\zeta(s)\)</a>')
                 cond = wnf.conductor()
                 for j in dir_group:
                     chij = ConreyCharacter(cond, j)
@@ -1185,8 +1185,8 @@ class DedekindZeta(Lfunction):
                 for j in range(len(ar)):
                     if nfgg[j]>0:
                         the_rep = ar[j]
-                        if (the_rep.dimension()>1 or
-                                  str(the_rep.conductor())!=str(1)):
+                        if (the_rep.dimension()>1
+                                  or str(the_rep.conductor())!=str(1)):
                             ar_url = url_for("l_functions.l_function_artin_page",
                                              label=the_rep.label())
                             right = (r'\({}^{%d}\)' % (nfgg[j])
@@ -1286,8 +1286,8 @@ class ArtinLfunction(Lfunction):
             self.texnamecompleted1ms = r"\Lambda(1-s)"
         else:
             self.texnamecompleted1ms = r"\overline{\Lambda(1-\overline{s})}"
-        self.credit = ('Sage, lcalc, and data precomputed in ' +
-                       'Magma by Tim Dokchitser')
+        self.credit = ('Sage, lcalc, and data precomputed in '
+                       + 'Magma by Tim Dokchitser')
 
         # Generate a function to do computations
         if self.sign == 0:
@@ -1414,8 +1414,8 @@ class SymmetricPowerLfunction(Lfunction):
         self.m = int(self.power)
         self.origin_label = str(self.conductor) + '.' + self.isogeny
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
-            raise TypeError("The symmetric L-functions have been implemented " +
-                            "only for elliptic curves over Q.")
+            raise TypeError("The symmetric L-functions have been implemented "
+                            + "only for elliptic curves over Q.")
 
         # Create the elliptic curve
         Edata = getEllipticCurveData(self.origin_label + '1')
@@ -1425,10 +1425,10 @@ class SymmetricPowerLfunction(Lfunction):
             self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
         if self.E.has_cm():
-            raise TypeError('This Elliptic curve has complex multiplication' +
-                            ' and the symmetric power of its L-function is ' +
-                            'then not primitive. This has not yet been ' +
-                            'implemented')
+            raise TypeError('This Elliptic curve has complex multiplication'
+                            + ' and the symmetric power of its L-function is '
+                            + 'then not primitive. This has not yet been '
+                            + 'implemented')
 
         # Create the symmetric power L-function
         from lmfdb.symL.symL import SymmetricPowerLFunction
@@ -1483,8 +1483,8 @@ class SymmetricPowerLfunction(Lfunction):
             elif 10 <= n % 100 < 20:
                 return str(n) + "th Power"
             else:
-                return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") +
-                        " Power")
+                return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th")
+                        + " Power")
 
         self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of elliptic curve isogeny class %s"
                       % (ordinal(self.m), self.m, self.origin_label))

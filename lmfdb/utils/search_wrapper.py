@@ -25,10 +25,10 @@ def use_split_ors(info, query, split_ors, offset, table):
         split_ors is not None
         and len(query.get("$or", [])) > 1
         and any(field in opt for field in split_ors for opt in query["$or"])
-        and
-        # We don't support large offsets since sorting in Python requires
-        # fetching all records, starting from 0
-        offset < table._count_cutoff
+
+ # We don't support large offsets since sorting in Python requires
+ # fetching all records, starting from 0
+        and offset < table._count_cutoff
     )
 
 

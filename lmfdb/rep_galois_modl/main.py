@@ -120,7 +120,7 @@ def download_search(info):
     s += download_assignment_start[lang] + list_start + '\\\n'
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the gram matrix
     s += ",\\\n".join(entry(gram) for gram in res)
     s += list_end
@@ -295,7 +295,7 @@ def download_rep_galois_modl_full_lists_g(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '[\\\n'

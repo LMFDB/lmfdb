@@ -20,7 +20,7 @@ from sage.all import gcd
 CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
 MAASS_ID_RE = re.compile(r"^[0-9a-f]+$")
 
-bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
+def bread_prefix(): return [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
 ###############################################################################
 # Learnmore display functions

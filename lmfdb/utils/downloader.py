@@ -202,7 +202,7 @@ class Downloader():
             proj = [label_col] + proj
         # set up column wrappers
         cw = self.get('column_wrappers', {})
-        identity = lambda x: x
+        def identity(x): return x
         for col in wo_label:
             if col not in cw:
                 cw[col] = identity

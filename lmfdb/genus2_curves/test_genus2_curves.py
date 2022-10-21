@@ -349,11 +349,11 @@ class Genus2Test(LmfdbTest):
     def test_underlying_data(self):
         data = self.tc.get("/Genus2Curve/Q/data/576.a.576.1").get_data(as_text=True)
         assert ('g2c_curves' in data and 'bad_lfactors' in data and
-                'g2c_endomorphisms' in data and 'factorsQQ_base' in data and
-                'g2c_ratpts' in data and 'mw_gens_v' in data and
-                'g2c_galrep' in data and 'modell_image' in data and
-                'g2c_tamagawa' in data and 'tamagawa_number' in data and
-                'g2c_plots' in data and "data:image/png;base64" in data)
+                'g2c_endomorphisms' in data and 'factorsQQ_base' in data
+                and 'g2c_ratpts' in data and 'mw_gens_v' in data
+                and 'g2c_galrep' in data and 'modell_image' in data
+                and 'g2c_tamagawa' in data and 'tamagawa_number' in data
+                and 'g2c_plots' in data and "data:image/png;base64" in data)
 
     def test_jump(self):
         from sage.all import magma

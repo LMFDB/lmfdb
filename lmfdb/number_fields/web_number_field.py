@@ -233,8 +233,7 @@ def field_pretty(label):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
-                labels = [[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels]
-                labels.sort()
+                labels = sorted([[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels])
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
                 labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]

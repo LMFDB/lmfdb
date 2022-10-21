@@ -43,9 +43,9 @@ Int = ImmutableExtensionFactory(int, "Int")
 Str = String = ImmutableExtensionFactory(str, "Str")
 Float = ImmutableExtensionFactory(float, "Float")
 
-Anything = lambda x: x
+def Anything(x): return x
 
-id = lambda x: x
+def id(x): return x
 
 
 def Array(*f, **kwargs):

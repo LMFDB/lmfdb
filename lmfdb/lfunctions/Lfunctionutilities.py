@@ -57,7 +57,7 @@ def string2number(s):
                 return CDF(exp(2*pi*I*q))
         if 'I' in strs:
             return CDF(strs)
-        elif (type(s) is list or type(s) is tuple) and len(s) == 2:
+        elif (isinstance(s, list) or isinstance(s, tuple)) and len(s) == 2:
             return CDF(tuple(s))
         elif '/' in strs:
             return Rational(strs)
@@ -98,7 +98,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
                 coeff = CDF(-I)
             else:
                 coeff = string2number(coeff)
-        if type(coeff) == complex:
+        if isinstance(coeff, complex):
             rp = coeff.real
             ip = coeff.imag
         else:
@@ -261,8 +261,8 @@ def lfuncDShtml(L, fmt):
             ans = ans + ", number " + str(L.characternumber) + "."
 
         else:
-            ans = (r"\[\begin{aligned}" + L.texname +
-                r" = \sum_{n=1}^{\infty} a(n) n^{-s} \end{aligned}\]")
+            ans = (r"\[\begin{aligned}" + L.texname
+                + r" = \sum_{n=1}^{\infty} a(n) n^{-s} \end{aligned}\]")
     return(ans)
 
 
@@ -309,19 +309,19 @@ def lfuncEPtex(L, fmt):
             elif L.group == 'GL3':
                 ans += r"\displaystyle\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1}  \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
-                ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
-                    r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
+                ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree)
+                    + r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
         elif L.Ltype() == "SymmetricPower":
             ans += lfuncEpSymPower(L)
 
         elif L.langlands:
             if L.degree > 1:
                 if fmt == "arithmetic":
-                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree) +
-                        r"} (1 - \alpha_{j,p}\,    p^{" + str(L.motivic_weight) + "/2 - s})^{-1}")
+                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree)
+                        + r"} (1 - \alpha_{j,p}\,    p^{" + str(L.motivic_weight) + "/2 - s})^{-1}")
                 else:
-                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree) +
-                        r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
+                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree)
+                        + r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
             else:
                 ans += r"\displaystyle\prod_p \  (1 - \alpha_{p}\,  p^{-s})^{-1}"
 
@@ -812,8 +812,8 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
     for i in range(1, len(coefs)):
         sum1 += coefs[i - 1] * math.exp(- 2 * math.pi * i * num / math.sqrt(level))
         logger.debug("Sum1: {0}".format(sum1))
-        sum2 += (coefs[i - 1].conjugate() * math.exp(- 2 * math.pi * i / num / math.sqrt(level)) /
-            num ** weight)
+        sum2 += (coefs[i - 1].conjugate() * math.exp(- 2 * math.pi * i / num / math.sqrt(level))
+            / num ** weight)
         logger.debug("Sum2: {0}".format(sum2))
     sign = sum1 / sum2
     if abs(abs(sign) - 1) > tol:

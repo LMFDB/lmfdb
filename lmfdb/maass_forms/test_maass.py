@@ -48,5 +48,5 @@ class MaassTest(LmfdbTest):
 
     def test_underlying_data(self):
         data = self.tc.get("/ModularForm/GL2/Q/Maass/data/54119c4cacf7560af58dd8ba").get_data(as_text=True)
-        assert ("maass_newforms" in data and "symmetry" in data and
-                "maass_portraits" in data and "data:image/png;base64" in data)
+        assert ("maass_newforms" in data and "symmetry" in data
+                and "maass_portraits" in data and "data:image/png;base64" in data)

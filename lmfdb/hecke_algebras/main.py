@@ -115,7 +115,7 @@ def download_search(info):
     s += download_assignment_start[lang] + list_start + '\\\n'
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the Hecke operators stored
     for c, rr in enumerate(res):
         s += list_start
@@ -433,7 +433,7 @@ def download_hecke_algebras_full_lists_op(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start, str(r), mat_end])
+    def entry(r): return "".join([mat_start, str(r), mat_end])
 
     outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of Hecke operators T_1, ..., T_%s. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'],res['num_hecke_op'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
@@ -453,7 +453,7 @@ def download_hecke_algebras_full_lists_gen(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
 
     outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of generators for the algebra. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
@@ -489,7 +489,7 @@ def download_hecke_algebras_full_lists_mod_op(**args):
     field='GF(%s), %s, %s, '%(res['ell'], sqrt(len(res['operators'][0])), sqrt(len(res['operators'][0])))
     mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
 
     outstr = c + ' List of Hecke operators T_1, ..., T_%s mod %s for orbit %s index %s downloaded from the LMFDB on %s. \n\n'%(len(res['operators']), ell, label, index, mydate)
     outstr += download_assignment_start[lang] +'[\\\n'
