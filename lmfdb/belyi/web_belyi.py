@@ -246,7 +246,7 @@ class WebBelyiGalmap():
             data["in_LMFDB"] = True
             if F.poly().degree() == 1:
                 data["isQQ"] = True
-            F.latex_poly = web_latex(F.poly(var="t"))
+            F.latex_poly = web_latex(F.poly(var="T"))
             data["base_field"] = F
 
         data['embeddings'] = galmap['embeddings']
@@ -473,7 +473,7 @@ class WebBelyiPassport():
                 field["in_LMFDB"] = True
                 if F.poly().degree() == 1:
                     field["isQQ"] = True
-                F.latex_poly = web_latex(F.poly(var="t"))
+                F.latex_poly = web_latex(F.poly(var="T"))
                 field["base_field"] = F
 
             galmapdatum = [
