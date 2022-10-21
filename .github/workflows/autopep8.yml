@@ -41,7 +41,7 @@ jobs:
           # E714 - Use 'is not' test for object identity.
           # E721 - Use "isinstance()" instead of comparing types directly.
           # E722 - Fix bare except.
-          args: --recursive --in-place --aggressive --select=E241,E242,E251,E252,E27,W291,W292,W293,E303,E304,E306,W391,E401,E502,W503,W601,W602,W603,W604,W605,W690,E70,E701,E711,E712,E713,E714,E721,E722 lmfdb/
+          args: --recursive --in-place --aggressive --select=E241,E242,E251,E252,E27,W291,W292,W293,E303,E304,E306,W391,E401,E502,W504,W601,W602,W603,W604,W605,W690,E70,E701,E711,E712,E713,E714,E721,E722 lmfdb/
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
