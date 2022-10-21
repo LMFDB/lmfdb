@@ -1,5 +1,6 @@
 name: Format python code
 on: push
+  #  branches: [ 'master' ]
 jobs:
   autopep8:
     runs-on: ubuntu-latest
@@ -25,7 +26,7 @@ jobs:
           # W391 - Remove trailing blank lines.
           # E401 - Put imports on separate lines.
           # E502 - Remove extraneous escape of newline.
-          # W503 - Fix line break before binary operator.
+          # W504 - Fix line break after binary operator.
           # W601 - Use "in" rather than "has_key()".
           # W602 - Fix deprecated form of raising exception.
           # W603 - Use "!=" instead of "<>"
@@ -50,5 +51,5 @@ jobs:
           body: This is an auto-generated PR with fixes by autopep8.
           labels: autopep8, automated pr
           branch: autopep8-patches
-          branch-suffix: timestamp
+            # branch-suffix: timestamp
           delete-branch: true
