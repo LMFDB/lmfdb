@@ -516,8 +516,8 @@ class TableChecker():
         return self.check_values({col: None for col in columns}, constraint)
 
     def check_iff(self, condition1, condition2):
-        return (self.check_values(condition1, condition2) +
-                self.check_values(condition2, condition1))
+        return (self.check_values(condition1, condition2)
+                + self.check_values(condition2, condition1))
 
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """

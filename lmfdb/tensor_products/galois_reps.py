@@ -125,16 +125,16 @@ class GaloisRepresentation( Lfunction):
         elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        elif (isinstance(thingy, list) and
-              len(thingy) == 2 and
-              isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform) and
-              isinstance(thingy[1],sage.rings.integer.Integer) ):
+        elif (isinstance(thingy, list)
+              and len(thingy) == 2
+              and isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform)
+              and isinstance(thingy[1],sage.rings.integer.Integer) ):
             self.init_elliptic_modular_form(thingy[0],thingy[1])
 
-        elif (isinstance(thingy, list) and
-              len(thingy) == 2 and
-              isinstance(thingy[0], GaloisRepresentation) and
-              isinstance(thingy[1], GaloisRepresentation) ):
+        elif (isinstance(thingy, list)
+              and len(thingy) == 2
+              and isinstance(thingy[0], GaloisRepresentation)
+              and isinstance(thingy[1], GaloisRepresentation) ):
             self.init_tensor_product(thingy[0], thingy[1])
 
         else:
@@ -376,8 +376,8 @@ class GaloisRepresentation( Lfunction):
             Vans = V.algebraic_coefficients(50)
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
-            if ((Vans[2] in ZZ and Wans[2] in ZZ and
-                    all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
+            if ((Vans[2] in ZZ and Wans[2] in ZZ
+                    and all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
                     all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
                 raise NotImplementedError("It seems you are asking to tensor a "
                                           "Galois representation with its dual "

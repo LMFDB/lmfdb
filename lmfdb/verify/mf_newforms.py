@@ -105,10 +105,10 @@ class mf_newforms(MfChecker):
         check that traces is present and has length at least 1000*k for a k depending on th level
         """
         # TIME about 20s
-        return (self.check_non_null(['traces']) +
-                self.check_array_len_gte_constant('traces', 1000, constraint={'level':{'$lte':1000}}) +
-                self.check_array_len_gte_constant('traces', 2000, constraint={'level':{'$gt':1000, '$lte':4000}}) +
-                self.check_array_len_gte_constant('traces', 3000, constraint={'level':{'$gt':4000}}))
+        return (self.check_non_null(['traces'])
+                + self.check_array_len_gte_constant('traces', 1000, constraint={'level':{'$lte':1000}})
+                + self.check_array_len_gte_constant('traces', 2000, constraint={'level':{'$gt':1000, '$lte':4000}})
+                + self.check_array_len_gte_constant('traces', 3000, constraint={'level':{'$gt':4000}}))
 
     @overall
     def check_trace_display(self):
@@ -116,8 +116,8 @@ class mf_newforms(MfChecker):
         check that trace_display is present and has length at least 4
         """
         # TIME about 150s
-        return (self.check_non_null(['trace_display']) +
-                self.check_array_len_gte_constant('traces', 4))
+        return (self.check_non_null(['trace_display'])
+                + self.check_array_len_gte_constant('traces', 4))
 
     @overall
     def check_number_field(self):
@@ -129,10 +129,10 @@ class mf_newforms(MfChecker):
         """
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
-        return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) +
-                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) +
-                self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) +
-                self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], 'label', constraint=nfyes))
+        return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes)
+                + self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes)
+                + self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual)
+                + self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], 'label', constraint=nfyes))
 
     @overall
     def check_field_disc(self):
@@ -155,11 +155,11 @@ class mf_newforms(MfChecker):
         check that self_twist_type is in {0,1,2,3} and matches is_cm and is_rm
         """
         # TIME about 6s
-        return (self.check_non_null(['is_cm', 'is_rm']) +
-                self.check_iff({'self_twist_type':0}, {'is_cm':False, 'is_rm':False}) +
-                self.check_iff({'self_twist_type':1}, {'is_cm':True, 'is_rm':False}) +
-                self.check_iff({'self_twist_type':2}, {'is_cm':False, 'is_rm':True}) +
-                self.check_iff({'self_twist_type':3}, {'is_cm':True, 'is_rm':True}))
+        return (self.check_non_null(['is_cm', 'is_rm'])
+                + self.check_iff({'self_twist_type':0}, {'is_cm':False, 'is_rm':False})
+                + self.check_iff({'self_twist_type':1}, {'is_cm':True, 'is_rm':False})
+                + self.check_iff({'self_twist_type':2}, {'is_cm':False, 'is_rm':True})
+                + self.check_iff({'self_twist_type':3}, {'is_cm':True, 'is_rm':True}))
 
     @overall
     def check_cmrm_discs(self):
@@ -169,11 +169,11 @@ class mf_newforms(MfChecker):
         self_twist_discs, one pos, two neg)
         """
         # TIME about 10s
-        return (self.check_array_len_eq_constant('rm_discs', 0, {'is_rm': False}) +
-                self.check_array_len_eq_constant('rm_discs', 1, {'is_rm': True}) +
-                self.check_array_len_eq_constant('cm_discs', 0, {'is_cm': False}) +
-                self.check_array_len_eq_constant('cm_discs', 1, {'self_twist_type': 1}) +
-                self.check_array_len_eq_constant('cm_discs', 2, {'self_twist_type': 3}))
+        return (self.check_array_len_eq_constant('rm_discs', 0, {'is_rm': False})
+                + self.check_array_len_eq_constant('rm_discs', 1, {'is_rm': True})
+                + self.check_array_len_eq_constant('cm_discs', 0, {'is_cm': False})
+                + self.check_array_len_eq_constant('cm_discs', 1, {'self_twist_type': 1})
+                + self.check_array_len_eq_constant('cm_discs', 2, {'self_twist_type': 3}))
 
     @overall
     def check_self_twist_discs(self):
@@ -181,9 +181,9 @@ class mf_newforms(MfChecker):
         check that cm_discs and rm_discs have correct signs and that their union is self_twist_discs
         """
         # TIME about 2s
-        return (self.check_array_bound('cm_discs', -1) +
-                self.check_array_bound('rm_discs', 1, upper=False) +
-                self.check_array_concatenation('self_twist_discs', ['cm_discs', 'rm_discs']))
+        return (self.check_array_bound('cm_discs', -1)
+                + self.check_array_bound('rm_discs', 1, upper=False)
+                + self.check_array_concatenation('self_twist_discs', ['cm_discs', 'rm_discs']))
 
     @overall
     def check_fricke_eigenval(self):
@@ -207,8 +207,8 @@ class mf_newforms(MfChecker):
         and char_order (it should be (k-1).2.3.cn where n=char_order
         if is_cm is false, and (k-1).2.1.dn if is_cm is true)
         """
-        return (self._run_query(SQL("sato_tate_group != (weight-1) || {0} || char_order").format(Literal(".2.3.c")), constraint={'is_cm':False, 'weight':{'$gt':1}}) +
-                self._run_query(SQL("sato_tate_group != (weight-1) || {0} || char_order").format(Literal(".2.1.d")), constraint={'is_cm':True, 'weight':{'$gt':1}}))
+        return (self._run_query(SQL("sato_tate_group != (weight-1) || {0} || char_order").format(Literal(".2.3.c")), constraint={'is_cm':False, 'weight':{'$gt':1}})
+                + self._run_query(SQL("sato_tate_group != (weight-1) || {0} || char_order").format(Literal(".2.1.d")), constraint={'is_cm':True, 'weight':{'$gt':1}}))
 
     @overall
     def check_projective_image_type(self):
@@ -222,8 +222,8 @@ class mf_newforms(MfChecker):
         """
         if present, check that projective_image is consistent with projective_image_type
         """
-        return (self.check_eq('projective_image_type', 'projective_image', {'projective_image_type':{'$ne':'Dn'}}) +
-                self.check_string_startswith('projective_image', 'D', {'projective_image_type':'Dn'}))
+        return (self.check_eq('projective_image_type', 'projective_image', {'projective_image_type':{'$ne':'Dn'}})
+                + self.check_string_startswith('projective_image', 'D', {'projective_image_type':'Dn'}))
 
     @overall_long
     def check_projective_field(self):
@@ -232,8 +232,8 @@ class mf_newforms(MfChecker):
         number field in nf_fields with coeffs = projective_field
         """
         # TIME > 240s
-        return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}}) +
-                self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
+        return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}})
+                + self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
 
     @overall_long
     def check_artin_field(self):
@@ -242,8 +242,8 @@ class mf_newforms(MfChecker):
         field in nf_fields with coeffs = artin_field
         """
         # TIME > 600s
-        return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) +
-                self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
+        return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}})
+                + self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
 
     @overall
     def check_artin_degree(self):
@@ -271,8 +271,8 @@ class mf_newforms(MfChecker):
         check that inner_twists is consistent with inner_twist_count
         and that both are present if field_poly is set
         """
-        return (self._run_query(SQL("inner_twist_count != (SELECT SUM(s) FROM UNNEST((inner_twists[1:array_length(inner_twists,1)][2:2])) s)"), constraint={'inner_twist_count':{'$gt':0}}) +
-                self.check_values({'inner_twists':{'$exists':True}, 'inner_twist_count':{'$gt':0}}, {'field_poly':{'$exists':True}}))
+        return (self._run_query(SQL("inner_twist_count != (SELECT SUM(s) FROM UNNEST((inner_twists[1:array_length(inner_twists,1)][2:2])) s)"), constraint={'inner_twist_count':{'$gt':0}})
+                + self.check_values({'inner_twists':{'$exists':True}, 'inner_twist_count':{'$gt':0}}, {'field_poly':{'$exists':True}}))
 
     @overall
     def check_has_non_self_twist(self):
@@ -282,14 +282,14 @@ class mf_newforms(MfChecker):
         # TIME about 3s
         # TODO - is there a better way to do this?
         return (self.check_iff({'inner_twist_count':-1}, {'has_non_self_twist':-1}) +
-                self.check_values({'inner_twist_count':1}, {'has_non_self_twist':0, 'self_twist_type':0}) +
-                self.check_values({'inner_twist_count':2}, {'has_non_self_twist':0, 'self_twist_type':1}) +
-                self.check_values({'inner_twist_count':2}, {'has_non_self_twist':0, 'self_twist_type':2}) +
-                self.check_values({'inner_twist_count':4}, {'has_non_self_twist':0, 'self_twist_type':3}) +
-                self.check_values({'inner_twist_count':{'$gt':1}}, {'has_non_self_twist':1, 'self_twist_type':0}) +
-                self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':1}) +
-                self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':2}) +
-                self.check_values({'inner_twist_count':{'$gt':4}}, {'has_non_self_twist':1, 'self_twist_type':3}))
+                self.check_values({'inner_twist_count':1}, {'has_non_self_twist':0, 'self_twist_type':0})
+                + self.check_values({'inner_twist_count':2}, {'has_non_self_twist':0, 'self_twist_type':1})
+                + self.check_values({'inner_twist_count':2}, {'has_non_self_twist':0, 'self_twist_type':2})
+                + self.check_values({'inner_twist_count':4}, {'has_non_self_twist':0, 'self_twist_type':3})
+                + self.check_values({'inner_twist_count':{'$gt':1}}, {'has_non_self_twist':1, 'self_twist_type':0})
+                + self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':1})
+                + self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':2})
+                + self.check_values({'inner_twist_count':{'$gt':4}}, {'has_non_self_twist':1, 'self_twist_type':3}))
 
     @overall
     def check_portraits(self):
@@ -494,8 +494,8 @@ class mf_newforms(MfChecker):
                         if verbose:
                             print("EC level failure", url, rec['level'], int(name.split()[-1].split('.')[0]))
                         return False
-        if (rec['weight'] == 2 and rec['char_orbit_index'] == 1 and rec['dim'] == 1 and
-            not any(url.startswith('/EllipticCurve/Q/') for name, url in names)):
+        if (rec['weight'] == 2 and rec['char_orbit_index'] == 1 and rec['dim'] == 1
+            and not any(url.startswith('/EllipticCurve/Q/') for name, url in names)):
             if verbose:
                 print("Modularity failure")
             return False

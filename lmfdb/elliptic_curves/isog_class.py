@@ -115,7 +115,7 @@ class ECisog_class():
         # permute rows/cols to match labelling: the rows/cols in the
         # ec_classdata table are with respect to LMFDB ordering.
         if self.label_type == 'Cremona':
-            perm = lambda i: next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
+            def perm(i): return next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
             M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         M = Matrix(M)

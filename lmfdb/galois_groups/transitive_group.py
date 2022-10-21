@@ -477,8 +477,7 @@ def subfield_display(n, subs):
 def otherrep_display(n, t, reps):
     reps = [(j[0], j[1]) for j in reps]
     me = (n, t)
-    difreps = list(set(reps))
-    difreps.sort()
+    difreps = sorted(set(reps))
     ans = ''
     for k in difreps:
         if ans != '':

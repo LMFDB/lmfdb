@@ -457,8 +457,8 @@ class ECNF():
             self.ar = "not available"
 
         # for debugging:
-        assert self.rk == "not available" or (self.rk_lb == self.rank and
-                                              self.rank == self.rk_ub)
+        assert self.rk == "not available" or (self.rk_lb == self.rank
+                                              and self.rank == self.rk_ub)
         assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
 
         self.bsd_status = "incomplete"

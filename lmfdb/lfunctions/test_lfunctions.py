@@ -217,7 +217,7 @@ class LfunctionTest(LmfdbTest):
         assert r'(2,\ 490,\ (\ :1/2),\ 1)' in L.get_data(as_text=True)
         assert '0.940863335931152039286421559408' in L.get_data(as_text=True)
         assert '1 + 7 T + p T^{2}' in L.get_data(as_text=True)
-        assert r'\chi_{490} (1, \cdot )' in L.get_data(as_text=True)
+        assert 'Trivial' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/Q/490/a/', follow_redirects=True)
         assert '0.9408633359311520' in L.get_data(as_text=True)

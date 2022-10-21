@@ -14,8 +14,8 @@ class mf_hecke_nf(MfChecker):
         there should be a record present for every record in mf_newforms that has field_poly set (and no others, check count)
         """
         # TIME about 20s
-        return (self.check_crosstable_count('mf_newforms', 1, 'label') +
-                self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
+        return (self.check_crosstable_count('mf_newforms', 1, 'label')
+                + self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
 
     @overall
     def check_hecke_orbit_code_newforms(self):

@@ -1009,10 +1009,10 @@ class ECSearchArray(SearchArray):
             example="1728",
             example_span="1728 or -4096/11")
         # ℤ is &#8484; in html
-        torsion_opts = ([("", ""), ("[]", "trivial")] +
-                        [("%s" % n, "order %s" % n) for n in range(4, 16, 4)] +
-                        [("[%s]" % n, "ℤ/%sℤ" % n) for n in range(2, 13) if n != 11] +
-                        [("[2,%s]" % n, "ℤ/2ℤ&oplus;ℤ/%sℤ" % n) for n in range(2, 10, 2)])
+        torsion_opts = ([("", ""), ("[]", "trivial")]
+                        + [("%s" % n, "order %s" % n) for n in range(4, 16, 4)]
+                        + [("[%s]" % n, "ℤ/%sℤ" % n) for n in range(2, 13) if n != 11]
+                        + [("[2,%s]" % n, "ℤ/2ℤ&oplus;ℤ/%sℤ" % n) for n in range(2, 10, 2)])
         torsion = SelectBox(
             name="torsion",
             label="Torsion",
@@ -1080,9 +1080,9 @@ class ECSearchArray(SearchArray):
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=nonmax_quant)
-        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
-                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
+                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",

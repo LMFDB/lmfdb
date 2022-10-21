@@ -126,8 +126,7 @@ def split_perm(strg):
             startpoint = i+1
 
 def sort_sign(L):
-    L1 = L[1:]
-    L1.sort()
+    L1 = sorted(L[1:])
     return [L[0]] + L1
 
 def label_to_breadcrumbs(L):
@@ -505,9 +504,9 @@ def hgcwa_code_download_search(info):
 def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, instance=1):
     if parse_endpoint is None:
         parse_endpoint = parse_singleton
-    if type(arg) == str:
+    if isinstance(arg, str):
         arg = arg.replace(' ', '')
-    if type(arg) == parse_singleton:
+    if isinstance(arg, parse_singleton):
         return [key, arg]
     if ',' in arg:
         instance = len(arg.split(','))
@@ -526,8 +525,7 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
     elif 'g' in arg: # linear function of variable g (ax+b)
         if GENUS_RE.match(arg):
             a = GENUS_RE.match(arg).groups()[0]
-            genus_list = db.hgcwa_passports.distinct('genus')
-            genus_list.sort()
+            genus_list = sorted(db.hgcwa_passports.distinct('genus'))
             min_genus = genus_list[0]
             max_genus = genus_list[-1]
             queries = []
