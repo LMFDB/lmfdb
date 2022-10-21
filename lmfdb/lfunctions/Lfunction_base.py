@@ -218,9 +218,14 @@ class Lfunction():
             info['chi'] = ''
             if self.charactermodulus != self.level:
                 info['chi'] += "induced by "
+
             info['chi'] += '<a href="' + url_for('characters.render_Dirichletwebpage',
                                                  modulus=self.charactermodulus, number=self.characternumber)
             info['chi'] += '">' + chilatex + '</a>'
+            if self.characternumber == 1:
+                info['chi'] = '<a href="' + url_for('characters.render_Dirichletwebpage',
+                                                 modulus=self.charactermodulus, number=self.characternumber)
+                info['chi'] += '">Trivial'+'</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link

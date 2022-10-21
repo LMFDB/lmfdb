@@ -217,7 +217,7 @@ class LfunctionTest(LmfdbTest):
         assert r'(2,\ 490,\ (\ :1/2),\ 1)' in L.get_data(as_text=True)
         assert '0.940863335931152039286421559408' in L.get_data(as_text=True)
         assert '1 + 7 T + p T^{2}' in L.get_data(as_text=True)
-        assert r'\chi_{490} (1, \cdot )' in L.get_data(as_text=True)
+        assert 'Trivial' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/Q/490/a/', follow_redirects=True)
         assert '0.9408633359311520' in L.get_data(as_text=True)
@@ -596,6 +596,13 @@ class LfunctionTest(LmfdbTest):
 
     def test_underlying_data(self):
         data = self.tc.get("/L/data/2-289379-1.1-c1-0-0").get_data(as_text=True)
-        assert ("lfunc_lfunctions" in data and "st_group" in data
-                and "lfunc_search" in data and "euler19" in data
-                and "lfunc_instances" in data and "Lhash_array" in data)
+        assert ("lfunc_lfunctions" in data and "st_group" in data and
+                "lfunc_search" in data and "euler19" in data and
+                "lfunc_instances" in data and "Lhash_array" in data)
+
+    def test_trivial_chi(self):
+        L = self.tc.get('/L/4/13e2/1.1/c1e2/0/0')
+        assert 'Trivial' in L.get_data(as_text=True)
+
+        L = self.tc.get('/L/4/851472/1.1/c1e2/0/0')
+        assert 'Trivial' in L.get_data(as_text=True)
