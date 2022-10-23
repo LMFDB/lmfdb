@@ -73,6 +73,7 @@ def ctx_galois_groups():
     return {'group_alias_table': group_alias_table,
             'galois_module_data': galois_module_knowl_guts}
 
+
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 @galois_groups_page.route("/<label>")
@@ -98,6 +99,7 @@ def index():
 def make_order_key(order):
     order1 = int(ZZ(order).log(10))
     return '%03d%s'%(order1,str(order))
+
 
 gg_columns = SearchColumns([
     LinkCol("label", "gg.label", "Label", url_for_label, default=True),

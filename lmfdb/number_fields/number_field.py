@@ -40,6 +40,7 @@ assert nf_logger
 
 def bread_prefix(): return [('Number fields', url_for(".number_field_render_webpage"))]
 
+
 Completename = 'Completeness of the data'
 dnc = 'data not computed'
 
@@ -821,6 +822,7 @@ def number_field_jump(info):
 #    t = 'Number field algebra'
 #    info = {'results': fields2}
 #    return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
+
 
 nf_columns = SearchColumns([
     ProcessedCol("label", "nf.label", "Label",

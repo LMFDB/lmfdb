@@ -671,6 +671,7 @@ def jump(info):
         jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
     return by_label(jump_box)
 
+
 abvar_columns = SearchColumns([
     LinkCol("label", "ab.fq.lmfdb_label", "Label", url_for_label, default=True),
     MathCol("g", "ag.dimension", "Dimension", default=True),
@@ -863,6 +864,7 @@ def labels_page():
         bread=bread,
         learnmore=learnmore_list_remove("Labels"),
     )
+
 
 lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
 

@@ -232,6 +232,7 @@ class PostgresUserTable(PostgresBase):
         updator = SQL("UPDATE userdb.users SET color_scheme = %s WHERE username = %s")
         self._execute(updator, [new_color, uid])
 
+
 userdb = PostgresUserTable()
 
 
@@ -349,6 +350,7 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
     # property. To match the behavior of LmfdbUser, we make it callable always.
     def is_anonymous(self):
         return True
+
 
 if __name__ == "__main__":
     print("Usage:")

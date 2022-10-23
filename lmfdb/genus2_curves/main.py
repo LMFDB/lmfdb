@@ -399,6 +399,7 @@ def G2C_data(label):
 # Searching
 ################################################################################
 
+
 ### Regex patterns used in lookup
 LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
@@ -575,6 +576,7 @@ class G2C_download(Downloader):
         ],
         "gp": ["[apply(Polrev,c)|c<-data];"],
     }
+
 
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
@@ -882,6 +884,7 @@ def labels_page():
         bread=bread,
         learnmore=learnmore_list_remove("labels"),
     )
+
 
 sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
 

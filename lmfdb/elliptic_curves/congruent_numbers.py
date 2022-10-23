@@ -19,6 +19,7 @@ def get_CN_data_old(fs, n):
 def get_CN_data_new(fs, n):
     return linecache.getline(CNfilename(fs), n).split()
 
+
 get_CN_data = get_CN_data_new
 
 def parse_gens_string(s):

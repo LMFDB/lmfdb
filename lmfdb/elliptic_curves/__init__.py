@@ -13,6 +13,7 @@ ec_logger = make_logger(ec_page)
 def body_class():
     return {'body_class': 'ec'}
 
+
 from . import elliptic_curve
 assert elliptic_curve # for pyflakes
 

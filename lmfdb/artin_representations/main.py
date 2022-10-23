@@ -151,6 +151,7 @@ def artin_representation_jump(info):
             return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
+
 dihedrals =[ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
   [ 18, 1 ], [ 20, 4 ], [ 22, 1 ], [ 24, 6 ], [ 26, 1 ], [ 28, 3 ], [ 30, 3 ],
   [ 32, 18 ], [ 34, 1 ], [ 36, 4 ], [ 38, 1 ], [ 40, 6 ], [ 42, 5 ], [ 44, 3 ],
@@ -225,6 +226,7 @@ def parse_projective_type(inp, query, qfield):
 
 def url_for_label(label):
     return url_for(".render_artin_representation_webpage", label=label)
+
 
 artin_columns = SearchColumns([
     SearchCol("galois_links", "artin.label", "Label", default=True),
@@ -638,6 +640,7 @@ def scinot(rng, minlen=None):
     if minlen > 3 and rng[0] == "1" and rng[-1] in ["0", "1"] and all(ch == "0" for ch in rng[1:-1]):
         return "$10^{%s}$" % (len(rng)-1)
     return "$%s$" % rng
+
 
 tpow = re.compile(r"10\^\{(\d+)\}")
 def unsci(rng, first=False):

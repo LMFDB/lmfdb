@@ -11,6 +11,7 @@ api_logger = make_logger(api_page)
 def body_class():
     return {'body_class': 'api'}
 
+
 from . import api
 assert api # silence pyflakes
 

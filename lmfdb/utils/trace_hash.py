@@ -104,6 +104,7 @@ def TraceHash_from_ap(aplist):
     """
     return ZZ(sum([TH_F(a*c) for a,c in zip(aplist,TH_C)]))
 
+
 TH_P_cache = {}
 
 
@@ -124,6 +125,7 @@ def TraceHash(E):
         return sum([E.reduction(P).trace_of_frobenius() for P in TH_P_cache[K][p]], 0)
 
     return TraceHash_from_ap([ap(p) for p in TH_P])
+
 
 # Dictionary to hold the trace hashes of isogeny classes by label.  We
 # store the trace hash for every curve but isogenous curves have the

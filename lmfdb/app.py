@@ -42,6 +42,7 @@ class ReverseProxied():
 
         return self.app(environ, start_response)
 
+
 app = Flask(__name__)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)

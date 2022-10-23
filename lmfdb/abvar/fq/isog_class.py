@@ -42,6 +42,7 @@ def maxq(g, p):
     else:
         return maxgen[g]
 
+
 logger = make_logger("abvarfq")
 
 #########################

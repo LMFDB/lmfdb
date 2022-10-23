@@ -208,6 +208,7 @@ def parse_character(inp, query, qfield):
     query[level_field] = level
     query[conrey_index_field] = conrey_index
 
+
 maass_columns = SearchColumns([
     MathCol("level", "mf.maass.mwf.level", "Level", default=True),
     MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),

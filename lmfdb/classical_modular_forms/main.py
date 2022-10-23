@@ -692,6 +692,7 @@ def parse_character(inp, query, qfield, prim=False):
             raise ValueError("You must use the orbit label when searching by primitive character")
         query['conrey_indexes'] = {'$contains': int(orbit)}
 
+
 newform_only_fields = {
     'nf_label': 'Coefficient field',
     'cm': 'Self-twists',
@@ -790,6 +791,7 @@ def _trace_col(i):
 
 def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
+
 
 newform_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
@@ -1000,6 +1002,8 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large: at most 1000 options for level")
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 10000 entries")
+
+
 na_msg_nontriv = '"n/a" means that not all modular forms of this weight and level are available, but those of trivial character may be; set character order to 1 to restrict to newforms of trivial character.'
 na_msg_triv = '"n/a" means that no modular forms of this weight and level are available.'
 
@@ -1153,6 +1157,7 @@ def dimension_space_search(info, query):
     newspace_parse(info, query)
     # We don't need to sort, since the dimensions are just getting added up
     query['__sort__'] = []
+
 
 space_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),

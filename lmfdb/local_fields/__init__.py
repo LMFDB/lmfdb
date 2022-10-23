@@ -11,6 +11,7 @@ logger = make_logger(local_fields_page)
 def body_class():
     return {'body_class': 'local_fields'}
 
+
 from . import main
 assert main
 

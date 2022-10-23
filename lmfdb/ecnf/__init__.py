@@ -12,6 +12,7 @@ logger = make_logger(ecnf_page)
 def body_class():
     return {'body_class': 'ecnf'}
 
+
 from . import main
 assert main # to keep pyflakes quiet
 

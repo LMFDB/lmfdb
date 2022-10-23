@@ -128,6 +128,7 @@ def url_for_label(label):
                        label.split('-')
                    )))
 
+
 bmf_columns = SearchColumns([
     ProcessedCol("field_label", "nf", "Base field",
                  lambda fld: nf_display_knowl(fld, field_pretty(fld)),
@@ -774,6 +775,7 @@ class BMFSearchArray(SearchArray):
             [field, level, CM],
             [sign, base_change, field_bad_primes, level_bad_primes]
         ]
+
 
 label_finder = re.compile(r"label=([0-9.]+)")
 def field_unformatter(label):

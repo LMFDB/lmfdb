@@ -961,6 +961,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes=False
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
+
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.datetime.utcfromtimestamp(0)
 def datetime_to_timestamp_in_ms(dt):

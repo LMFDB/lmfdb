@@ -311,6 +311,7 @@ def common_parse(info, query):
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
     info['bigint_knowl'] = bigint_knowl
 
+
 lfunc_columns = SearchColumns([
     MultiProcessedCol("label", "lfunction.label", "Label",
                          ["label", "url"],

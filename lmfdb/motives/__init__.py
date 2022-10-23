@@ -12,6 +12,7 @@ motive_logger = make_logger(motive_page)
 def body_class():
     return {'body_class': 'motive'}
 
+
 from . import main
 assert main # silence pyflakes
 

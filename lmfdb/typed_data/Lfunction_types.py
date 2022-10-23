@@ -6,6 +6,7 @@ def schema_extract(x, **types_dict):
     # dtype is the datatype to be used internally in the database
     return {key: dtype(x[key]) for key, dtype in types_dict}
 
+
 # We are dealing with many sources of Lfunctions, so we need to cast everything to make sure we control the type
 database_format = {
         "mu_fe": int,

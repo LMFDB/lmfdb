@@ -744,6 +744,7 @@ class KnowlBackend(PostgresBase):
         updater = SQL("UPDATE kwl_knowls SET authors = array_remove(authors, %s) WHERE id = %s")
         self._execute(updater, [uid, kid])
 
+
 knowldb = KnowlBackend()
 
 def knowl_title(kid):
@@ -762,6 +763,7 @@ def knowl_url_prefix():
         return 'https://cocalc.com/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(flask_options['port'])
     else:
         return ""
+
 
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}

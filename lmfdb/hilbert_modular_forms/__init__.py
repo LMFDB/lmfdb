@@ -12,6 +12,7 @@ hmf_logger = make_logger(hmf_page)
 def body_class():
     return {'body_class': 'hmf'}
 
+
 from . import hilbert_modular_form
 assert hilbert_modular_form
 

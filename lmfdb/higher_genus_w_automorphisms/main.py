@@ -277,6 +277,7 @@ def by_label(label):
 def by_passport_label(label):
     return render_passport({'passport_label': label})
 
+
 cur_expr = None
 cur_index = 0
 #FIXME all these err is None should be done through raising exceptions
@@ -591,6 +592,7 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
                     a range of integers (such as 2-10 or 2..10), \
                     a linear function of variable g for genus (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
 
 hgcwa_columns = SearchColumns([
     LinkCol("passport_label", "dq.curve.highergenus.aut.label", "Refined passport label",

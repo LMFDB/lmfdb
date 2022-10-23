@@ -114,6 +114,7 @@ def statistics():
     bread = get_bread('Statistics')
     return render_template("display_stats.html", info=Lattice_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
+
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
 def split_lattice_label(lab):
@@ -135,6 +136,7 @@ def lattice_by_label_or_name(lab):
     else:
         flash_error("No integral lattice in the database has label or name %s", lab)
     return redirect(url_for(".lattice_render_webpage"))
+
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
@@ -172,6 +174,7 @@ def download_search(info):
     strIO.seek(0)
     return send_file(strIO, download_name=filename, as_attachment=True)
 
+
 lattice_search_projection = ['label','dim','det','level','class_number','aut','minimum']
 def lattice_search_isometric(res, info, query):
     """
@@ -199,6 +202,7 @@ def lattice_search_isometric(res, info, query):
 
 def url_for_label(label):
     return url_for(".render_lattice_webpage", label=label)
+
 
 lattice_columns = SearchColumns([
     LinkCol("label", "lattice.label", "Label", url_for_label, default=True),

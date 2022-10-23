@@ -12,6 +12,7 @@ logger = make_logger(crystals_page)
 def body_class():
     return {'body_class': 'Crystals'}
 
+
 from . import main
 assert main # silence pyflakes
 

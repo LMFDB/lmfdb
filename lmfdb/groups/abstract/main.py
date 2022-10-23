@@ -761,6 +761,7 @@ def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     else:
         return f'Non-Solvable - {clen}'
 
+
 CYCLIC_PRODUCT_RE = re.compile(r"[Cc][0-9]+(\^[0-9]+)?(\s*[*Xx]\s*[Cc][0-9]+(\^[0-9]+)?)*")
 #### Searching
 def group_jump(info):
@@ -812,6 +813,7 @@ def get_url(label):
 
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
+
 
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url, default=True),
@@ -899,6 +901,7 @@ def group_parse(info, query):
     )
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
+
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),

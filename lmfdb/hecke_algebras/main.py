@@ -405,6 +405,7 @@ def history_page():
     return render_template("single.html", kid='hecke_algebras.history',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))
 
+
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
 download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}

@@ -12,6 +12,7 @@ logger = make_logger(permutations_page)
 def body_class():
     return {'body_class': 'Permutations'}
 
+
 from . import main
 assert main
 

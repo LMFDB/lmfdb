@@ -23,6 +23,7 @@ class SearchParsingError(ValueError):
 # query language                                                 #
 ##################################################################
 
+
 # These operators are used in the filter_sql_injection function
 # If you make any additions or changes, ensure that it doesn't
 # open the LMFDB up to SQL injection attacks.
@@ -212,6 +213,7 @@ class DelayCommit():
             self.obj.conn.commit()
         if exc_type is not None:
             self.obj.conn.rollback()
+
 
 # Reraise an exception, possibly with a different message, type, or traceback.
 if sys.version_info.major < 3:  # Python 2?

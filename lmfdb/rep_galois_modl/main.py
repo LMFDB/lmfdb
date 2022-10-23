@@ -95,6 +95,7 @@ def rep_galois_modl_by_label_or_name(lab):
         flash_error("No integral rep_galois_modl in the database has label or name %s", lab)
     return redirect(url_for(".rep_galois_modl_render_webpage"))
 
+
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
 download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}

@@ -39,6 +39,7 @@ def ImmutableExtensionFactory(t, t_name):
 
     return ImmutableExtensionClass
 
+
 Int = ImmutableExtensionFactory(int, "Int")
 Str = String = ImmutableExtensionFactory(str, "Str")
 Float = ImmutableExtensionFactory(float, "Float")

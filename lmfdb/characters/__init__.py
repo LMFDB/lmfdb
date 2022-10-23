@@ -13,6 +13,7 @@ logger = make_logger(characters_page)
 def body_class():
     return {'body_class': 'characters'}
 
+
 from . import main
 assert main # silence pyflakes
 

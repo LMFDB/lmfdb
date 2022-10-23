@@ -207,6 +207,7 @@ def display_galois_orbit(orbit, modulus):
         disp = "$,$&nbsp".join(disp)
     return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
+
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],

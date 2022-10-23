@@ -11,6 +11,7 @@ logger = make_logger(maass_page)
 def body_class():
     return {'body_class': 'maass'}
 
+
 from . import main
 assert main # silence pyflakes
 

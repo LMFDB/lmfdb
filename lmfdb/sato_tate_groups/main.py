@@ -43,6 +43,7 @@ def st_label_components(label):
         a = re.match(ST_LABEL_SPLIT_RE,label)
         return [int(a[1]),int(a[2]),class_to_int(a[3].lower()),int(a[4]),int(a[5]),class_to_int(a[6])]
 
+
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
 st0_list = (
     'SO(1)', 'SO(2)', 'SO(3)', 'SO(4)', 'SO(5)', 'SO(6)',
@@ -415,6 +416,7 @@ def st_knowl(label):
 def st_display_knowl(label):
     return display_knowl('st_group.data',title=st_anchor(label),kwargs={'label':label})
 
+
 # We want to support aliases like S3.  The following table is an analogue of the list of aliases in lmfdb/galois_groups/transitive_group.py, but with GAP ids as output.
 aliases = {'C1': '1.1',
            'C2': '2.1',
@@ -596,6 +598,7 @@ def search_by_label(label):
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
     return redirect(url_for('.by_label', label=rlabel), 301)
+
 
 st_columns = SearchColumns([
     LinkCol("label", "st_group.label", "Label", lambda label: url_for('.by_label', label=label), default=True),
@@ -1143,6 +1146,8 @@ class STSearchArray(SearchArray):
 @cached_function
 def compcache():
     return abstract_group_namecache(db.gps_st.distinct("component_group"))
+
+
 gapidre = re.compile(r"(\d+)\.(\d+)")
 def compdata(comp):
     return [int(x) for x in gapidre.findall(comp)[0]]

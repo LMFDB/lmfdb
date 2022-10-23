@@ -12,6 +12,7 @@ hiwf_logger = make_logger(hiwf_page)
 def body_class():
     return {'body_class': 'hiwf'}
 
+
 from . import half_integral_form
 assert half_integral_form
 

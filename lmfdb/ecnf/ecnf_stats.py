@@ -26,6 +26,7 @@ def sort_field(F):
     """
     return [int(c) for c in F.split(".")]
 
+
 logger = make_logger("ecnf")
 
 def latex_tor(t):

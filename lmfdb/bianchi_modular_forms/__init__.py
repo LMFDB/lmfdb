@@ -12,6 +12,7 @@ bmf_logger = make_logger(bmf_page)
 def body_class():
     return {'body_class': 'bmf'}
 
+
 from . import bianchi_modular_form
 assert bianchi_modular_form
 

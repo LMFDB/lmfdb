@@ -233,6 +233,7 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
         string = ntj
     return string
 
+
 # These functions are used for displaying statistics.
 Tfinder = re.compile(r"(\d+)T(\d+)")
 def galdata(gal):

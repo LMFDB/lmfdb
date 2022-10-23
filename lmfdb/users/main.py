@@ -35,6 +35,7 @@ base_url = "http://beta.lmfdb.org"
 def load_user(userid):
     return LmfdbUser(userid)
 
+
 login_manager.login_view = "users.info"
 
 # this anonymous user has the is_admin() method

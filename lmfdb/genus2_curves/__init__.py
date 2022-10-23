@@ -11,6 +11,7 @@ g2c_logger = make_logger(g2c_page)
 def body_class():
     return {'body_class': 'g2c'}
 
+
 from . import main
 assert main # silence pyflakes
 

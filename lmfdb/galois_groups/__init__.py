@@ -12,6 +12,7 @@ logger = make_logger(galois_groups_page)
 def body_class():
     return {'body_class': 'galois_groups'}
 
+
 from . import main
 assert main
 

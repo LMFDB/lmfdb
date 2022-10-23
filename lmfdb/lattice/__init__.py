@@ -12,6 +12,7 @@ lattice_logger = make_logger(lattice_page)
 def body_class():
     return {'body_class': 'lattice'}
 
+
 from . import main
 assert main
 

@@ -12,6 +12,7 @@ logger = make_logger("LF")
 def body_class():
     return {'body_class': 'l_functions'}
 
+
 from . import main
 assert main # silence pyflakes
 

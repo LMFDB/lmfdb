@@ -101,6 +101,7 @@ def url_for_label(label):
 def get_url(label):
     return url_for(".by_label", label=label)
 
+
 glnQ_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url, default=True),
     MathCol("tex_name", "group.name", "Name", default=True),

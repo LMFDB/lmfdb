@@ -14,6 +14,7 @@ logger = make_logger(higher_genus_w_automorphisms_page)
 def body_class():
     return {'body_class': 'higher_genus_w_automorphisms'}
 
+
 from . import main
 assert main # silence pyflakes
 

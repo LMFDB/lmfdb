@@ -12,6 +12,7 @@ hecke_algebras_logger = make_logger(hecke_algebras_page)
 def body_class():
     return {'body_class': 'hecke_algebras'}
 
+
 from . import main
 assert main
 

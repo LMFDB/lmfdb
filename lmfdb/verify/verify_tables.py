@@ -29,6 +29,7 @@ def find_validated_tables():
     curdir = os.path.dirname(os.path.abspath(__file__))
     return [tablename for tablename in db.tablenames if os.path.exists(os.path.join(curdir, tablename + '.py'))]
 
+
 if __name__ == '__main__':
     validated_tables = find_validated_tables()
     speedtypes = ['overall', 'overall_long', 'fast', 'slow']

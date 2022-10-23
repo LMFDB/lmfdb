@@ -59,6 +59,7 @@ def class_lmfdb_label(conductor, iso_class):
 def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
+
 logger = make_logger("ec")
 
 def gl2_subgroup_data(label):

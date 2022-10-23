@@ -182,6 +182,7 @@ def zeros_starting_at_N(N, number_of_zeros=1000):
     t0, N0, filename, offset, block_number = c.fetchone()
     return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, N_start=N)
 
+
 if __name__ == "__main__":
     t = float(sys.argv[1])
     count = int(sys.argv[2])

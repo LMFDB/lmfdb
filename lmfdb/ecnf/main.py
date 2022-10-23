@@ -479,6 +479,7 @@ def make_cm_query(cm_disc_str):
 def parse_cm_list(inp, query, qfield):
     query[qfield] = {'$in': make_cm_query(inp)}
 
+
 Ra=PolynomialRing(QQ,'a')
 
 ecnf_columns = SearchColumns([

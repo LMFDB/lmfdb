@@ -12,6 +12,7 @@ abvarfq_logger = make_logger(abvarfq_page)
 def body_class():
     return {"body_class": "abvarfq"}
 
+
 from . import main
 assert main
 

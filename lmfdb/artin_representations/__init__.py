@@ -15,6 +15,7 @@ artin_logger = make_logger("artin", hl=True)
 def body_class():
     return {'body_class': 'artin_representations'}
 
+
 from . import main
 assert main # silence pyflakes
 

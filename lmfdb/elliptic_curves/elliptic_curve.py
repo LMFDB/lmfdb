@@ -371,6 +371,7 @@ def url_for_label(label):
         return url_for(".random_curve")
     return url_for(".by_ec_label", label=label)
 
+
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
 
@@ -389,6 +390,7 @@ class EC_download(Downloader):
         ],
         "gp": ["[ellinit(ai)|ai<-data];"],
     }
+
 
 ec_columns = SearchColumns([
      LinkCol("lmfdb_label", "ec.q.lmfdb_label", "Label", lambda label: url_for(".by_ec_label", label=label),
@@ -924,6 +926,7 @@ def tor_struct_search_Q(prefill="any"):
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
     return "\n".join(["<select name='torsion_structure', style='width: 155px'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)

@@ -132,6 +132,7 @@ def hilbert_modular_form_jump(info):
     except ValueError:
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
+
 hmf_columns = SearchColumns([
     MultiProcessedCol("label", "mf.hilbert.label", "Label",
                       ["field_label", "label", "short_label"],

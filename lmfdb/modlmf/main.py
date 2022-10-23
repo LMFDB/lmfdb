@@ -84,6 +84,7 @@ def random_modlmf():
     label = db.modlmf_forms.random()
     return url_for(".render_modlmf_webpage", label=label)
 
+
 modlmf_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
 def split_modlmf_label(lab):
@@ -97,6 +98,7 @@ def modlmf_by_label(lab):
     else:
         flash_error("No mod &#x2113; modular form in the database has label %s", lab)
     return redirect(url_for(".modlmf_render_webpage"))
+
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}

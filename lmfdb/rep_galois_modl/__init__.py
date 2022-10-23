@@ -12,6 +12,7 @@ rep_galois_modl_logger = make_logger(rep_galois_modl_page)
 def body_class():
     return {'body_class': 'rep_galois_modl'}
 
+
 from . import main
 assert main #silence pyflakes
 

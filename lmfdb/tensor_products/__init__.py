@@ -12,6 +12,7 @@ tensor_products_logger = make_logger("tensor_products", hl=True)
 def body_class():
     return {'body_class': 'tensor_products'}
 
+
 from . import main
 assert main #silence pyflakes
 

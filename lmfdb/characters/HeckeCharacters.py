@@ -199,6 +199,7 @@ class HeckeChar(DualAbelianGroupElement):
         order = self.multiplicative_order()
         return [ self.__pow__(k) for k in range(order) if gcd(k,order) == 1 ]
 
+
 """
 k.<a> = NumberField(x^4+7*x^2+13)
 G = RayClassGroup(k,7)

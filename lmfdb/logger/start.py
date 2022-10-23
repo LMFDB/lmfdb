@@ -12,10 +12,12 @@ def get_logfocus():
     # set by start_logging
     return logfocus
 
+
 file_handler = None
 def logger_file_handler():
     # set by start_logging
     return file_handler
+
 
 LMFDB_SAGE_VERSION = '9.3'
 def check_sage_version():

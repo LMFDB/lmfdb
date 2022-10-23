@@ -319,6 +319,7 @@ def _dimension_Gamma0_4_half(k):
 
 # David's code for the dimension of S_k(K(p)), originally written by Cris in Maple #########
 
+
 _sage_const_3 = ZZ(3)
 _sage_const_2 = ZZ(2)
 _sage_const_1 = ZZ(1)

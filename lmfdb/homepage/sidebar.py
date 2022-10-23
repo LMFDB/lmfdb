@@ -31,6 +31,7 @@ def linked_name(item, level=""):
 
 # The unique instance of the class SideBar:
 
+
 the_sidebar = None
 
 # Function to create the unique SideBar instance if necessary, and return it:

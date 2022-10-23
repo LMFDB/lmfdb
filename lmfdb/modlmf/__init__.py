@@ -12,6 +12,7 @@ modlmf_logger = make_logger(modlmf_page)
 def body_class():
     return {'body_class': 'modlmf'}
 
+
 from . import main
 assert main
 

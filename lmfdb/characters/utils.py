@@ -45,6 +45,7 @@ def complex2str(g, digits=10):
     else:
         return str(real) + '+' + str(imag) + 'i'
 
+
 ###############################################################################
 ## url_for modified for characters
 from flask import url_for
