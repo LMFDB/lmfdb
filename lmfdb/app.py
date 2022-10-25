@@ -415,8 +415,7 @@ def workshops():
 @app.route("/lucant")
 @app.route("/LuCaNT")
 def lucant():
-    bread = [("LuCaNT", '')]
-    return render_template("lucant.html", title="LMFDB, Computation, and Number Theory (LuCaNT)", contribs=contribs, bread=bread)
+    return redirect("https://lucant.org/")
 
 # google's CSE for www.lmfdb.org/* (and *only* those pages!)
 
