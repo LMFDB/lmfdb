@@ -331,7 +331,7 @@ def render_field_webpage(args):
         else:
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
-        if 'wild_gap' in data:
+        if 'wild_gap' in data and data['wild_gap'] != [0,0]:
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
             wild_inertia = 'data not computed'
