@@ -71,6 +71,8 @@ class HomePageTest(LmfdbTest):
         # Check that variables are only single characters
         self.check_args("/EllipticCurve/Q/?jump=%28banana%29%5E2%3Dx%5E3%2B1", "does not define an elliptic curve")
 
+        # Check that the coefficient of x^3 does not need to be 1
+        self.check_args("/EllipticCurve/Q/?jump=4x%5E3+%2B+4x+%2B+1", '91a1')
     #
     # Various search combinations
     def test_search(self):
