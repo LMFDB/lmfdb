@@ -287,7 +287,7 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
-    if data == None:
+    if data is None:
         label = thefield.get_label()
     else:
         label = data['label']
