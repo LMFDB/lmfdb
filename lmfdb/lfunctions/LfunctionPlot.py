@@ -182,11 +182,11 @@ def getOneGraphHtml(gls):
     ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
-    ans += ("<embed src='" + graphInfo['src'] + "' width='" +
-            str(graphInfo['width']) +
-            "' height='" + str(graphInfo['height']) +
-            "' type='image/svg+xml' " +
-            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+    ans += ("<embed src='" + graphInfo['src'] + "' width='"
+            + str(graphInfo['width'])
+            + "' height='" + str(graphInfo['height'])
+            + "' type='image/svg+xml' "
+            + "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
@@ -318,45 +318,45 @@ def paintSvgFileAll(glslist):  # list of group and level
 
 
 def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height)
+                         + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
     for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='"
+                             + str(height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(5, xMax + 1, 5):
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='"
+                             + str(height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
-                             "' y2='" + str(height) + "' x2='" +
-                             str(i * xfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor)
+                             + "' y2='" + str(height) + "' x2='"
+                             + str(i * xfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(5, yMax + 1, 5):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+        xmlText = xmlText + ("<text x='5' y='"
+                             + str(height - i * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" + str(width) +
-                             "' y2='" + str(height - i * yfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='" + str(width)
+                             + "' y2='" + str(height - i * yfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
 
@@ -374,46 +374,46 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
 def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, yMin=1, xoffset=1, dashedx=5, dashedy=5):
     # x-axis
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")
     xsign = 1 if xMax >= 0 else -1
     ysign = 1 if yMax >= 0 else -1
     for i in srange(xMin, xMax, xsign * dashedx):
-        xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='" +
-                             str(xsign * height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='"
+                             + str(xsign * height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + "{:.5g}".format(i + xoffset) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor) +
-                             "' y2='" + str(ysign * height) + "' x2='" +
-                             str(i * xsign * xfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor)
+                             + "' y2='" + str(ysign * height) + "' x2='"
+                             + str(i * xsign * xfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in srange(xMin, xMax, xsign * dashedx):
-        xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='" +
-                             str(ysign*height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(ysign * height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='"
+                             + str(ysign*height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(ysign * height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     # y-axis
     xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
     for i in srange(yMin, yMax + 1, ysign*dashedy):
-        xmlText = xmlText + ("<text x='-10' y='" +
-                             str(ysign*height - i * ysign * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             "{:.5g}".format(float(i)) + "</text>\n")
+        xmlText = xmlText + ("<text x='-10' y='"
+                             + str(ysign*height - i * ysign * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + "{:.5g}".format(float(i)) + "</text>\n")
 
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width) +
-                             "' y2='" + str(height - i * ysign * yfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width)
+                             + "' y2='" + str(height - i * ysign * yfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
     for i in srange(yMin, yMax + 1, ysign*dashedy):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * ysign * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * ysign * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * ysign * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * ysign * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     return(xmlText)
 
@@ -436,8 +436,8 @@ def getOneGraphHtmlHolo(condmax):
         logger.debug("Warning: image is generated on the fly, not from static, this is slow!")
         pic = (url_for('.browseGraphHoloNew', **{'condmax': condmax}), 1010, 600)
     logger.debug(pic[0])
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic +
-           "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic
+           + "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
@@ -632,9 +632,9 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
     #  TODO: Implement when there is more than maxdots forms
 
-                        ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
-                                str(height - float(ybase) * yfactor)[0:7] +
-                                "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
+                        ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='"
+                                + str(height - float(ybase) * yfactor)[0:7]
+                                + "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
                                 + str(numberwithlabel) + "</text>\n")
                         ans += "</a>\n"
                         if self_dual < 0:
@@ -679,49 +679,49 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 # ticlength = the length of the tickmarks
 # ============================================
 def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height)
+                         + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
     for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='"
+                             + str(height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(1, xMax + 1, 1):
         digitoffset = 6
         if i < 10:
             digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='"
+                             + str(height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
-                             "' y2='" + str(height) + "' x2='" +
-                             str(i * xfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor)
+                             + "' y2='" + str(height) + "' x2='"
+                             + str(i * xfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(2, yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+        xmlText = xmlText + ("<text x='5' y='"
+                             + str(height - i * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
 
         if i % 4 == 0:  # put dashes every four units
-            xmlText = xmlText + ("<line x1='0' y1='" +
-                                 str(height - i * yfactor) + "' x2='" + str(width) +
-                                 "' y2='" + str(height - i * yfactor) +
-                                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+            xmlText = xmlText + ("<line x1='0' y1='"
+                                 + str(height - i * yfactor) + "' x2='" + str(width)
+                                 + "' y2='" + str(height - i * yfactor)
+                                 + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
 
@@ -868,9 +868,9 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
 
 
 def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
+    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
 #     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
 #    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
     xmlText = xmlText + ("<line x1='0' y1='" + str(
@@ -884,18 +884,18 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     # xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)"
     # style="stroke:none" font-style = "italic";>weight</text>'
     for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='"
+                             + str(height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(1, xMax + 1, 1):
         digitoffset = 6
         if i < 10:
             digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='"
+                             + str(height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
         # xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
@@ -904,17 +904,17 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
         #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(2, yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+        xmlText = xmlText + ("<text x='5' y='"
+                             + str(height - i * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
 
         # if i%4==0 :  #  put dahes every four units
         #   xmlText = xmlText + ("<line x1='0' y1='" +

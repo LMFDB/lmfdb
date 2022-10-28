@@ -1023,8 +1023,8 @@ def delete_false(D):
 
 def dimension_space_postprocess(res, info, query):
     if ((query.get('weight_parity') == -1 and query.get('char_parity') == 1)
-            or
-        (query.get('weight_parity') == 1 and query.get('char_parity') == -1)):
+
+        or (query.get('weight_parity') == 1 and query.get('char_parity') == -1)):
         raise ValueError("Inconsistent parity for character and weight")
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
@@ -1421,6 +1421,7 @@ class CMFSearchArray(SearchArray):
         'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
         'nf_label': "coefficient field not computed when dimension larger than 20",
     }
+
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',

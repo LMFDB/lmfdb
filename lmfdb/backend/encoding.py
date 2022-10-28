@@ -38,6 +38,7 @@ except ImportError:
     SAGE_MODE = False
 else:
     SAGE_MODE = True
+
     class LmfdbRealLiteral(RealLiteral):
         """
         A real number that prints using the string used to construct it.

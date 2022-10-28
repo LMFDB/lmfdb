@@ -54,7 +54,6 @@ def index():
     return render_template("glnQ-index.html", title=r"Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
-
 @glnQ_page.route("/random")
 def random_glnQ_group():
     label = db.gps_qrep.random(projection='label')
@@ -145,7 +144,7 @@ def render_glnQ_group(args):
 
         title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
 
-        prop = [('Label', '%s' %  label),
+        prop = [('Label', '%s' % label),
                 ('Order', r'\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
@@ -209,6 +208,7 @@ class GLnQSearchArray(SearchArray):
     plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
+
     def __init__(self):
         order = TextBox(
             name="order",

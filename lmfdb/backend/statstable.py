@@ -564,7 +564,7 @@ class PostgresStatsTable(PostgresBase):
         ).format(Identifier(self.counts), thresh)
         cur = self._execute(selecter, [jallcols, split_list])
         if one_col:
-            _make_tuple = lambda x: make_tuple(x)[0]
+            def _make_tuple(x): return make_tuple(x)[0]
         else:
             _make_tuple = make_tuple
         if constraint is None:
@@ -1096,7 +1096,7 @@ class PostgresStatsTable(PostgresBase):
         selecter = selecter.format(Identifier(self.stats), threshold)
         nstats = defaultdict(dict)
         if onegroup:
-            _make_tuple = lambda x: make_tuple(x)[0]
+            def _make_tuple(x): return make_tuple(x)[0]
         else:
             _make_tuple = make_tuple
         for rec in self._execute(selecter, values):

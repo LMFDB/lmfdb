@@ -4,6 +4,7 @@ from sage.structure.unique_representation import UniqueRepresentation
 
 class TdElt():
     _wrap_type = 'td'
+
     def _add_class(self, D, clsname):
         if 'class' in D:
             D['class'] = D['class'] + ' ' + clsname
@@ -539,8 +540,10 @@ class ColumnController(SelectBox):
             "".join("\n" + " " * 10 + opt for opt in options),
         )
 
+
 class SortController(SelectBox):
     wrap_mixins = {'width': '170px'}
+
     def __init__(self, options, knowl):
         extra = [
             '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
@@ -577,8 +580,10 @@ class SortController(SelectBox):
     #    select_box1=sort_box,
     #    select_box2=sort_dir)
 
+
 class SearchButton(SearchBox):
     _default_width = 170
+
     def __init__(self, value, description, **kwds):
         kwds['label'] = kwds.get('label', '')
         SearchBox.__init__(self, **kwds)
@@ -641,6 +646,7 @@ class SearchArray(UniqueRepresentation):
     null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
     plural_noun = "results"
+
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         if self.sorts is not None:

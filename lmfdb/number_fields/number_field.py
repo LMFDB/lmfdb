@@ -38,7 +38,7 @@ from lmfdb.number_fields.web_number_field import (
 
 assert nf_logger
 
-bread_prefix = lambda: [('Number fields', url_for(".number_field_render_webpage"))]
+def bread_prefix(): return [('Number fields', url_for(".number_field_render_webpage"))]
 
 Completename = 'Completeness of the data'
 dnc = 'data not computed'
@@ -1075,6 +1075,7 @@ def nf_code(**args):
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
 
+
 class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
@@ -1090,6 +1091,7 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, or polynomial"
+
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -1166,8 +1168,8 @@ class NFSearchArray(SearchArray):
             name="subfield",
             label="Intermediate field",
             knowl="nf.intermediate_fields",
-            example_span="2.2.5.1 or x^2-5 or a "+
-                display_knowl("nf.nickname", "field nickname"),
+            example_span="2.2.5.1 or x^2-5 or a "
+                + display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
         completion = TextBox(
             name="completions",

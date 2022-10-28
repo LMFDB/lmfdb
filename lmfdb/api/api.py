@@ -289,7 +289,7 @@ def api_query(table, id=None):
     if 'bytea' in coll.col_type.values():
         for row in data:
             for key, val in row.items():
-                if type(val) == buffer:
+                if isinstance(val, buffer):
                     row[key] = "[binary data]"
         #data = [ dict([ (key, val if coll.col_type[key] != 'bytea' else "binary data") for key, val in row.items() ]) for row in data]
     data = Json.prep(data)
