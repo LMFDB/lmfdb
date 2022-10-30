@@ -535,9 +535,8 @@ def group_display_inertia(code):
     if code[1] == [1,1]:
         return "trivial"
     if code[1][1] < 0:
-        ans = "intransitive group not computed"
-    ans = "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
-    return ans
+        return "intransitive group not computed"
+    return "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
