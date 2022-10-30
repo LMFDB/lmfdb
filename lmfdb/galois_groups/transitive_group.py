@@ -534,6 +534,8 @@ def group_display_inertia(code):
         return group_pretty_and_nTj(code[1][0], code[1][1], useknowls=True)
     if code[1] == [1,1]:
         return "trivial"
+    if code[1][1] < 0:
+        ans = "intransitive group not computed"
     ans = "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
     return ans
 
