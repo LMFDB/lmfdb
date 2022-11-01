@@ -125,13 +125,22 @@ def main():
     if "COCALC_PROJECT_ID" in os.environ:
         from .utils.cocalcwrap import CocalcWrap
         # we must accept external connections
+        from requests import get
+        external_ip = get('https://api.ipify.org').content.decode('utf8')
+        if external_ip == "18.18.21.20": # saint-germain
+            host = "saint-germain.mit.edu"
+            if flask_options["port"] == 37777: # default
+                flask_options["port"] = 10000 + (os.environ["COCALC_USERNAME"] % 55536)
+        else:
+            host = "cocalc.com"
         flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
         stars = "\n" + "*" * 80
         info(stars +
              "\n\033[1mCocalc\033[0m environment detected!\n"
              + "Visit"
-             + "\n  \033[1m https://cocalc.com"
+             + "\n  \033[1m https://"
+             + host
              + app.wsgi_app.app_root
              + " \033[0m"
              + "\nto access this LMFDB instance"
