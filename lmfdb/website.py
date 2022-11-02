@@ -12,6 +12,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 
 import os
+import getpass
 # Needs to be done first so that other modules and gunicorn can use logging
 from .logger import info
 from .app import app, set_running  # So that we can set it running below
@@ -130,7 +131,9 @@ def main():
         if external_ip == "18.18.21.20": # saint-germain
             host = "saint-germain.mit.edu"
             if flask_options["port"] == 37777: # default
-                flask_options["port"] = 10000 + (os.environ["COCALC_USERNAME"] % 55536)
+                username = getpass.getuser()
+                intusername = int(username, base=36)
+                flask_options["port"] = 10000 + (intusername % 55536)
         else:
             host = "cocalc.com"
         flask_options["host"] = "0.0.0.0"
