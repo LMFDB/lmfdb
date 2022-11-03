@@ -11,8 +11,6 @@ start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
 
-import os
-import getpass
 # Needs to be done first so that other modules and gunicorn can use logging
 from .logger import info
 from .app import app, set_running  # So that we can set it running below
@@ -110,9 +108,11 @@ if db.is_verifying:
 def main():
     info("main: ...done.")
     from .utils.config import Configuration
-
-    flask_options = Configuration().get_flask()
+    
+    C = Configuration()
+    flask_options = C.get_flask()
     flask_options['threaded'] = False
+    cocalc_options = C.get_cocalc()
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
@@ -123,32 +123,10 @@ def main():
         )
         del flask_options["profiler"]
 
-    if "COCALC_PROJECT_ID" in os.environ:
+    if cocalc_options:
         from .utils.cocalcwrap import CocalcWrap
-        # we must accept external connections
-        from requests import get
-        external_ip = get('https://api.ipify.org').content.decode('utf8')
-        if external_ip == "18.18.21.20": # saint-germain
-            host = "saint-germain.mit.edu"
-            if flask_options["port"] == 37777: # default
-                username = getpass.getuser()
-                intusername = int(username, base=36)
-                flask_options["port"] = 10000 + (intusername % 55536)
-        else:
-            host = "cocalc.com"
-        flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
-        stars = "\n" + "*" * 80
-        info(stars +
-             "\n\033[1mCocalc\033[0m environment detected!\n"
-             + "Visit"
-             + "\n  \033[1m https://"
-             + host
-             + app.wsgi_app.app_root
-             + " \033[0m"
-             + "\nto access this LMFDB instance"
-             + stars
-             )
+        info(cocalc_options["message"])
 
     set_running()
     app.run(**flask_options)
