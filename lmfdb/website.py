@@ -108,9 +108,11 @@ if db.is_verifying:
 def main():
     info("main: ...done.")
     from .utils.config import Configuration
-
-    flask_options = Configuration().get_flask()
+    
+    C = Configuration()
+    flask_options = C.get_flask()
     flask_options['threaded'] = False
+    cocalc_options = C.get_cocalc()
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
@@ -121,11 +123,10 @@ def main():
         )
         del flask_options["profiler"]
 
-    if "cocalcmessage" in flask_options:
+    if cocalc_options:
         from .utils.cocalcwrap import CocalcWrap
         app.wsgi_app = CocalcWrap(app.wsgi_app)
-        info(flask_options["cocalcmessage"].format(app.wsgi_app.app_root))
-        del flask_options["cocalcmessage"]
+        info(cocalc_options["message"])
 
     set_running()
     app.run(**flask_options)
