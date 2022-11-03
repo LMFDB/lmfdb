@@ -115,7 +115,7 @@ class ECisog_class():
         # permute rows/cols to match labelling: the rows/cols in the
         # ec_classdata table are with respect to LMFDB ordering.
         if self.label_type == 'Cremona':
-            perm = lambda i: next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
+            def perm(i): return next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
             M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         M = Matrix(M)
@@ -129,8 +129,7 @@ class ECisog_class():
         self.graph_img = encode_plot(P)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
-
-        self.newform =  raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
+        self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         if self.newform_exists_in_db:
@@ -139,7 +138,7 @@ class ECisog_class():
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label=self.conductor, isogeny_class_label=self.iso_label)
 
-        self.friends =  [('L-function', self.lfunction_link)]
+        self.friends = [('L-function', self.lfunction_link)]
 
         if self.cm:
             # set CM field for Properties box.
@@ -154,7 +153,7 @@ class ECisog_class():
             if self.conductor <= 50:
                 self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
         if self.newform_exists_in_db:
-            self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
+            self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
         if self.label_type == 'Cremona':
             self.title = "Elliptic curve isogeny class with Cremona label {} (LMFDB label {})".format(self.Ciso, self.lmfdb_iso)
@@ -174,7 +173,6 @@ class ECisog_class():
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.iso_label, limit=1000)),
                          ('All stored data to text', url_for(".download_EC_all", label=self.iso_label))]
-
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                       (r'$\Q$', url_for(".rational_elliptic_curves")),
@@ -266,7 +264,6 @@ def make_graph(M, vertex_labels=None):
                            left[0]:[-0.14,0.15], right[0]:[0.14,0.15],
                            left[1]:[-0.14,-0.15],right[1]:[0.14,-0.15],
                            left[2]:[-0.14,-0.3],right[2]:[0.14,-0.3]})
-
 
     if vertex_labels:
         G.relabel(vertex_labels)

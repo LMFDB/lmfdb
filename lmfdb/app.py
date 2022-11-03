@@ -277,8 +277,8 @@ def netloc_redirect():
         return redirect(url, code=301)
     elif (
         urlparts.netloc == "www.lmfdb.org"
-        and
-        not white_listed(urlparts.path)
+
+        and not white_listed(urlparts.path)
         and valid_bread(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
@@ -417,8 +417,7 @@ def workshops():
 @app.route("/lucant")
 @app.route("/LuCaNT")
 def lucant():
-    bread = [("LuCaNT", '')]
-    return render_template("lucant.html", title="LMFDB, Computation, and Number Theory (LuCaNT)", contribs=contribs, bread=bread)
+    return redirect("https://lucant.org/")
 
 # google's CSE for www.lmfdb.org/* (and *only* those pages!)
 

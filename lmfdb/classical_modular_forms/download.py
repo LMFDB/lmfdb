@@ -134,13 +134,9 @@ class CMF_download(Downloader):
             'return PS(an)']
 
     header = ["from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
-    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_powbasis = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_sparse_cyclotomic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
-
-
-
-
+    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_powbasis = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
         hecke_nf = self._get_hecke_nf(label)
@@ -163,17 +159,17 @@ class CMF_download(Downloader):
         hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
+            func_body = self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
             explain += c + ' Each a_p is given as list of pairs\n'
             explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
             basis_data = ''
-            poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            poly_data = self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
         else:
             explain += c + ' Each a_p is given as a linear combination\n'
             explain += c + ' of the following basis for the coefficient ring.\n'
             poly_data = '\n' + c + ' The following line gives the coefficients of\n'
             poly_data += c + ' the defining polynomial for the coefficient field.\n'
-            poly_data =  self.assign(lang, 'poly_data', hecke_nf['field_poly'], level=1)
+            poly_data = self.assign(lang, 'poly_data', hecke_nf['field_poly'], level=1)
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
@@ -353,9 +349,6 @@ class CMF_download(Downloader):
         s += ',\n'.join('[' + ', '.join(str(spc[col]) for col in proj) + ']' for spc in spaces)
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newspaces', lang=lang)
-
-
-
 
     # Magma
     """

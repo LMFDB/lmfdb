@@ -131,7 +131,6 @@ def build_api_search(api_key, mddtuple, max_count=None, request=None):
 
 
 def build_api_searchers(names, human_names, descriptions, request=None):
-
     """
     Build an API response for the list of available searchers
     human_names -- List of human readable names
@@ -145,7 +144,6 @@ def build_api_searchers(names, human_names, descriptions, request=None):
 
 
 def build_api_descriptions(api_key, description_object, request=None):
-
     """
     Build an API response for the descriptions of individual searches provided by a searcher
     api_key -- Named API key as registered with register_search_function
@@ -156,7 +154,6 @@ def build_api_descriptions(api_key, description_object, request=None):
 
 
 def build_api_inventory(api_key, description_object, request=None):
-
     """
     Build an API response for the keys that could be returned by the searcher
     api_key -- Named API key as registered with register_search_function
@@ -167,7 +164,6 @@ def build_api_inventory(api_key, description_object, request=None):
 
 
 def build_api_error(string, request=None):
-
     """
     Build an API response for an error
     string -- string to return as error
@@ -207,7 +203,6 @@ def build_description(objlist, name, desc, typ, h_name, db_name=None,
 
 
 def get_filtered_fields(coll_pair):
-
     """
     Get a list of fields on which searching is possible
     coll_pair -- Two element list or tuple (prefix, name)
@@ -309,7 +304,6 @@ def compare_db_strings(str1, str2):
     return (splt1[0] == splt2[0]) and (splt1[1] == splt2[1])
 
 def trim_comparator(value, comparators):
-
     """
     Check for a comparator value and trim it off if found
     value -- Value to test
@@ -326,7 +320,6 @@ def trim_comparator(value, comparators):
     return value_new, result
 
 def interpret(query, qkey, qval, type_info):
-
     """
     Try to interpret a user supplied value into a mongo query
     query -- Existing (can be blank) dictionary to build the query in

@@ -225,13 +225,13 @@ class WebNewform():
 
         # lookup twists (of newform orbits or embedded newforms as appropriate)
         if self.embedding_label is None:
-            self.twists = list(db.mf_twists_nf.search({'source_label':self.label}))
+            self.twists = list(db.mf_twists_nf.search({'source_label': self.label}))
         else:
-            self.embedded_twists = list(db.mf_twists_cc.search({'source_label':self.label + '.' + self.embedding_label}))
+            self.embedded_twists = list(db.mf_twists_cc.search({'source_label': self.label + '.' + self.embedding_label}))
             if self.embedded_twists:
                 self.embedded_minimal_twist = self.embedded_twists[0]["twist_class_label"]
 
-        self.plot =  db.mf_newform_portraits.lookup(self.label, projection="portrait")
+        self.plot = db.mf_newform_portraits.lookup(self.label, projection="portrait")
 
         # properties box
         if embedding_label is None:
@@ -260,10 +260,10 @@ class WebNewform():
         if self.projective_image:
             self.properties += [('Projective image', '$%s$' % self.projective_image_latex)]
         # Artin data would make the property box scroll
-        #if self.artin_degree: # artin_degree > 0
-        #    self.properties += [('Artin image size', str(self.artin_degree))]
-        #if self.artin_image:
-        #    self.properties += [('Artin image', r'\(%s\)' %  self.artin_image_display)]
+        # if self.artin_degree: # artin_degree > 0
+        #     self.properties += [('Artin image size', str(self.artin_degree))]
+        # if self.artin_image:
+        #     self.properties += [('Artin image', r'\(%s\)' %  self.artin_image_display)]
 
         if self.is_cm and self.is_rm:
             disc = ', '.join(str(d) for d in self.self_twist_discs)
@@ -280,7 +280,7 @@ class WebNewform():
             self.properties += [('CM', 'no')]
         if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
-        self.title = "Newform orbit %s"%(self.label)
+        self.title = "Newform orbit %s" % (self.label)
 
     # Breadcrumbs
     @property
@@ -297,8 +297,8 @@ class WebNewform():
         zeta = F.gens()[0]
         ret = []
         l = len(self.hecke_ring_numerators)
-        betas = [F(self.hecke_ring_numerators[i]) /
-                 self.hecke_ring_denominators[i] for i in range(l)]
+        betas = [F(self.hecke_ring_numerators[i])
+                 / self.hecke_ring_denominators[i] for i in range(l)]
         write_in_powers = zeta.coordinates_in_terms_of_powers()
         for coeffs in self.qexp:
             elt = sum([coeffs[i] * betas[i] for i in range(l)])
@@ -318,10 +318,10 @@ class WebNewform():
         if self.embedding_label is None:
             return [make_label(character, j)
                     for character in self.conrey_indexes
-                    for j in range(self.dim//self.char_degree)]
+                    for j in range(self.dim // self.char_degree)]
         else:
             character, j = map(int, self.embedding_label.split('.'))
-            return [make_label(character, j-1)]
+            return [make_label(character, j - 1)]
 
     @property
     def friends(self):
@@ -339,13 +339,13 @@ class WebNewform():
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:
             res.append(('Newform orbit ' + self.label, nf_url))
-            if (self.dual_label is not None and
-                    self.dual_label != self.embedding_label):
+            if (self.dual_label is not None
+                    and self.dual_label != self.embedding_label):
                 dlabel = self.label + '.' + self.dual_label
-                d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
+                d_url = nf_url + '/' + self.dual_label.replace('.', '/') + '/'
                 res.append(('Dual form ' + dlabel, d_url))
             if self.embedded_minimal_twist is not None and self.embedded_minimal_twist != self.label + '.' + self.embedding_label:
-                minimal_twist_url = cmf_base + self.embedded_minimal_twist.replace('.','/') + '/'
+                minimal_twist_url = cmf_base + self.embedded_minimal_twist.replace('.', '/') + '/'
                 res.append(('Minimal twist ' + self.embedded_minimal_twist, minimal_twist_url))
             if self.dim == 1:
                 # use the Galois orbits friends for the unique embedding
@@ -361,26 +361,25 @@ class WebNewform():
                     related_objects = self.related_objects
         else:
             if self.minimal_twist is not None and self.minimal_twist != self.label:
-                minimal_twist_url = cmf_base + self.minimal_twist.replace('.','/') + '/'
+                minimal_twist_url = cmf_base + self.minimal_twist.replace('.', '/') + '/'
                 res.append(('Minimal twist ' + self.minimal_twist, minimal_twist_url))
             related_objects = self.related_objects
         res += names_and_urls(related_objects)
 
         # finally L-functions
         if self.weight <= 200:
-            if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
+            if (self.dim == 1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
-            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
+            if self.embedding_label is None and len(self.conrey_indexes) * self.rel_dim > 50:
                 res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
-                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' % (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.embedding_labels:
-                    lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                    lfun_url = '/L' + cmf_base + lfun_label.replace('.', '/')
                     res.append(('L-function ' + lfun_label, lfun_url))
 
         return res
-
 
     @property
     def downloads(self):
@@ -392,12 +391,12 @@ class WebNewform():
             if self.has_exact_qexp:
                 downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=label)))
-            #if self.has_complex_qexp:
-            #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=label)))
-            #    downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=label)))
+            # if self.has_complex_qexp:
+            #     downloads.append(('Embeddings to text', url_for('.download_cc_data', label=label)))
+            #     downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=label)))
             downloads.append(('All stored data to text', url_for('.download_newform', label=label)))
         else:
-            label = '%s.%s'%(self.label, self.embedding_label)
+            label = '%s.%s' % (self.label, self.embedding_label)
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
@@ -432,24 +431,23 @@ class WebNewform():
           - ``CC_n`` -- a list of desired a_n
           - ``format`` -- one of 'embed', 'analytic_embed', 'satake', or 'satake_angle'
         """
-        an_formats = ['embed','analytic_embed', None]
-        angles_formats = ['satake','satake_angle', None]
+        an_formats = ['embed', 'analytic_embed', None]
+        angles_formats = ['satake', 'satake_angle', None]
         analytic_shift_formats = ['embed', None]
-        cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
+        cc_proj = ['conrey_index', 'embedding_index', 'embedding_m', 'embedding_root_real', 'embedding_root_imag']
         format = info.get('format')
-        query = {'hecke_orbit_code':self.hecke_orbit_code}
-
+        query = {'hecke_orbit_code': self.hecke_orbit_code}
 
         # deal with m
         if self.embedding_label is None:
-            m = info.get('m','1-%s'%(min(self.dim,20)))
+            m = info.get('m', '1-%s' % (min(self.dim, 20)))
             if '.' in m:
                 m = re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, m)
             CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
             CC_m = sorted(set(CC_m))
             # if it is a range
             if len(CC_m) - 1 == CC_m[-1] - CC_m[0]:
-                query['embedding_m'] = {'$gte':CC_m[0], '$lte':CC_m[-1]}
+                query['embedding_m'] = {'$gte': CC_m[0], '$lte': CC_m[-1]}
             else:
                 query['embedding_m'] = {'$in': CC_m}
             self.embedding_m = None
@@ -462,11 +460,11 @@ class WebNewform():
             # for download
             CC_n = (1, self.an_cc_bound)
         else:
-            n = info.get('n','1-10')
+            n = info.get('n', '1-10')
             CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
             # convert CC_n to an interval in [1,an_bound]
-            CC_n = ( max(1, min(CC_n)), min(self.an_cc_bound, max(CC_n)) )
-        an_keys = (CC_n[0]-1, CC_n[1])
+            CC_n = (max(1, min(CC_n)), min(self.an_cc_bound, max(CC_n)))
+        an_keys = (CC_n[0] - 1, CC_n[1])
         # extra 5 primes in case we hit too many bad primes
         angles_keys = (
                 bisect.bisect_left(primes_for_angles, CC_n[0]),
@@ -1092,8 +1090,12 @@ function switch_basis(btype) {
             else:
                 return 'CM' if r['parity'] < 0 else 'RM'
 
-        def revcode(x):    # reverse encoding of newform orbit N.k.o.i for sorting (so N is in the high 24 bits not the low 24 bits)
-            return ((x&((1<<24)-1))<<40) | (((x>>24)&((1<<12)-1))<<28) | (((x>>36)&((1<<16)-1))<<12) | (x>>52)
+        def revcode(x):
+            """
+            reverse encoding of newform orbit N.k.o.i for sorting
+            (so N is in the high 24 bits not the low 24 bits)
+            """
+            return ((x & ((1 << 24) - 1)) << 40) | (((x >> 24) & ((1 << 12) - 1)) << 28) | (((x >> 36) & ((1 << 16) - 1)) << 12) | (x >> 52)
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisting character'), '<tr>',
@@ -1164,7 +1166,6 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + r'+O(q^{%d})\)' % prec
 
-
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.embedding_label:
@@ -1217,6 +1218,7 @@ function switch_basis(btype) {
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
+
     def embedded_mf_link(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
@@ -1344,9 +1346,9 @@ function switch_basis(btype) {
         theta = self._get_theta(m, p, i)
         s = display_float(2*theta, prec, method='round')
         if s == "1":
-            s =  r'\pi'
+            s = r'\pi'
         elif s== "-1":
-            s =  r'-\pi'
+            s = r'-\pi'
         elif s != "0":
             s += r'\pi'
         return r'\(%s\)'%s
@@ -1356,12 +1358,12 @@ function switch_basis(btype) {
         theta = CBF(self.cc_data[m]['angles'][p])
         unit = (2 * theta).exppii()
         if i == 0:
-            res =  unit
+            res = unit
         else:
             # it is very likely that the real or imag part are a half integer
             # as it returns a CDF, we need to convert it to CBF again
             chival = CBF(round_CBF_to_half_int(CBF(self.character_values[p][(m-1) // self.rel_dim][1])))
-            res =  chival / unit
+            res = chival / unit
         return round_CBF_to_half_int(res)
 
     @cached_method

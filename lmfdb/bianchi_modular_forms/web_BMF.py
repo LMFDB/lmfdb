@@ -116,7 +116,6 @@ class WebBMF():
         raise ValueError("Bianchi newform %s not found" % label)
         # caller must catch this and raise an error
 
-
     def make_form(self,nap0=50):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these and compute some

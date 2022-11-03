@@ -59,7 +59,6 @@ class ApiTest(LmfdbTest):
         data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
         assert '"label": "12.2.167630295667.1",' in data
 
-
     def test_api_usage(self):
         r"""
         Check that the queries used by ODK demo all work

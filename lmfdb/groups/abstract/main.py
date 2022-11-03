@@ -1721,6 +1721,7 @@ class GroupsSearchArray(SearchArray):
 
     sort_knowl = "group.sort_order"
 
+
 class SubgroupSearchArray(SearchArray):
     null_column_explanations = { # No need to display warnings for these
         "quotient": False,
@@ -1733,6 +1734,7 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient', 'quotient_order', 'subgroup']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient', 'subgroup']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient', 'subgroup'])]
+
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")

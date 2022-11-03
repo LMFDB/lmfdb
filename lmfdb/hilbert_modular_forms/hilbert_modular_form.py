@@ -405,7 +405,6 @@ def render_hmf_webpage(**args):
         ('Underlying data', url_for(".hmf_data", label=info['label'])),
         ]
 
-
     # figure out friends
     # first try to see if there is an instance of this HMF on Lfun db
     url = 'ModularForm/GL2/TotallyReal/{}/holomorphic/{}'.format(
@@ -431,7 +430,6 @@ def render_hmf_webpage(**args):
                                 url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
         else:
             info['friends'] = [('L-function not available', "")]
-
 
         if data['dimension'] == 1:   # Try to attach associated elliptic curve
             lab = split_class_label(info['label'])
@@ -637,6 +635,7 @@ class HMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
     jump_knowl = "mf.hilbert.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         field = TextBox(
             name='field_label',

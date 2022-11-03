@@ -283,8 +283,7 @@ def bmf_field_dim_table(**args):
     weights = set()
     for dat in data:
         weights = weights.union(set(dat[gl_or_sl].keys()))
-    weights = [int(w) for w in weights]
-    weights.sort()
+    weights = sorted([int(w) for w in weights])
     info['weights'] = weights
     info['nweights'] = len(weights)
 
@@ -454,7 +453,6 @@ def download_bmf_magma(**args):
     outstr += '\nheckeEigenvaluesList := [*\n'+ ',\n'.join(hecke_eigs_processed) + '\n*];\n'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
-
 
     if f.have_AL:
         AL_eigs    = f.AL_table_data
@@ -704,6 +702,7 @@ class BMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
+
     def __init__(self):
         field = TextBox(
             name='field_label',

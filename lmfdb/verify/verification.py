@@ -40,6 +40,7 @@ class speed_decorator():
     disabled = False # set to True to skip this check
     max_failures = 1 # maximum number of failures to show
     ratio = 1 # ratio of rows to run this test on
+
     def __init__(self, f=None, **kwds):
         self._kwds = kwds
         if f is not None:
@@ -53,11 +54,13 @@ class speed_decorator():
                 self.f = timeout(self.timeout)(f)
         else:
             self.f = None
+
     def __call__(self, *args, **kwds):
         if self.f is None:
             assert len(args) == 1 and len(kwds) == 0
             return self.__class__(args[0], **self._kwds)
         return self.f(*args, **kwds)
+
 
 class per_row(speed_decorator):
     """
@@ -70,6 +73,7 @@ class per_row(speed_decorator):
     projection = 1 # default projection; override in order to not fetch large columns.  label_col is appended
     report_slow = 0.1
     max_slow = 100
+
 
 class one_query(speed_decorator):
     """
@@ -507,8 +511,8 @@ class TableChecker():
         return self.check_values({col: None for col in columns}, constraint)
 
     def check_iff(self, condition1, condition2):
-        return (self.check_values(condition1, condition2) +
-                self.check_values(condition2, condition1))
+        return (self.check_values(condition1, condition2)
+                + self.check_values(condition2, condition1))
 
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
@@ -667,6 +671,7 @@ class TableChecker():
             return self.check_string_concatenation(self.label_col, self.label, convert_to_base26=self.label_conversion)
 
     uniqueness_constraints = []
+
     @overall
     def check_uniqueness_constraints(self):
         """

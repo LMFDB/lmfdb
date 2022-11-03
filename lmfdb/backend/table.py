@@ -1443,7 +1443,6 @@ class PostgresTable(PostgresBase):
                     self.stats.refresh_stats(total=False)
             self.log_db_change("insert_many", nrows=len(search_data))
 
-
     def resort(self, suffix="", sort=None):
         """
         Restores the sort order on the id column.
@@ -1720,7 +1719,6 @@ class PostgresTable(PostgresBase):
                 # Also restores constraints
                 self.restore_indexes(suffix=suffix)
 
-
             if resort:
                 if metafile:
                     # read the metafile
@@ -1759,7 +1757,6 @@ class PostgresTable(PostgresBase):
                 ordered = self.resort(suffix=suffix)
             else:
                 ordered = False
-
 
             if restat and self.stats.saving:
                 # create tables before restating

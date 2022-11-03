@@ -15,7 +15,6 @@ class HomePageTest(LmfdbTest):
         assert '1.58740105196819947475170563927' in L #Hermite number
         assert '11612160' in L #group order
 
-
     def test_lattice_classnumber(self):
         L = self.tc.get("/Lattice/?class_number=1").get_data(as_text=True)
         assert '2.13.26.1.2' in L #label (class number 1)
@@ -92,7 +91,6 @@ class HomePageTest(LmfdbTest):
     def test_download_genus(self):
         L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").get_data(as_text=True)
         assert ']~)' in L
-
 
     def test_favorite(self):
         for elt in ['A2', 'Z2', 'D3', 'D3*', '3.1942.3884.56.1', 'A5',

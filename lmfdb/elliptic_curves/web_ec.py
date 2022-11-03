@@ -7,6 +7,7 @@ from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
+from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
@@ -26,6 +27,13 @@ lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
+
+
+def match_coeff_vec(lab):
+    return ZLIST_RE.fullmatch(lab)
+
+def match_weierstrass_polys(lab):
+    return G1_LOOKUP_RE.fullmatch(lab)
 
 def match_lmfdb_label(lab):
     return lmfdb_label_regex.fullmatch(lab)
@@ -63,8 +71,8 @@ def gl2_subgroup_data(label):
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
-    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
-    matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
+    def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
     info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
@@ -242,7 +250,7 @@ class WebEC():
         # Some data fields of self are just those from the database.
         # These only need some reformatting.
 
-        data['ainvs'] =  self.ainvs
+        data['ainvs'] = self.ainvs
         data['conductor'] = N = self.conductor
         data['j_invariant'] = QQ(tuple(self.jinv))
         data['j_inv_factor'] = latex(0)
@@ -320,8 +328,8 @@ class WebEC():
             data['cm_sqf'] = integer_squarefree_part(ZZ(self.cm))
 
             data['CM'] = r"yes (\(D=%s\))" % data['CMD']
-            if data['CMD']%4==0:
-                d4 = ZZ(data['CMD'])//4
+            if data['CMD'] % 4 == 0:
+                d4 = ZZ(data['CMD']) // 4
                 data['EndE'] = r"\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = r"\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
@@ -421,8 +429,8 @@ class WebEC():
 
         # Newform
 
-        rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
-        data['newform'] =  raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
+        rawnewform = str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        data['newform'] = raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
@@ -471,7 +479,6 @@ class WebEC():
         except AttributeError:
             self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
 
-
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label),
                            (None, self.plot_link),
@@ -511,7 +518,6 @@ class WebEC():
             mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         else:
             mwbsd['tamagawa_factors'] = None
-
 
         try:
             mwbsd['rank'] = self.rank
@@ -690,7 +696,7 @@ class WebEC():
 
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
             for lang in ['sage', 'pari', 'magma']:

@@ -146,7 +146,7 @@ class PostgresUserTable(PostgresBase):
                 if oldpass == self.hashpwd(pwd, str(i)):
                     bcpass = self.bchash(pwd)
                     if bcpass:
-                        logger.info("user " + uid  +  " logged in with old style password, trying to update")
+                        logger.info("user " + uid + " logged in with old style password, trying to update")
                         try:
                             #TODO: use identifiers
                             updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")

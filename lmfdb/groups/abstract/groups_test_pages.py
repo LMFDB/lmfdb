@@ -74,8 +74,7 @@ class GroupsTest(LmfdbTest):
         res = sum((outp for (inp, outp) in self.abstract_groups_of_order(inputs)), [])
         errors = [url for (t, url) in res if t is None]
         errors
-        working_urls = [(t, url) for (t, url) in res if t is not None]
-        working_urls.sort()
+        working_urls = sorted([(t, url) for (t, url) in res if t is not None])
         times = [t for (t, url) in working_urls]
         total = len(times)
         if errors:
@@ -108,4 +107,4 @@ class GroupsTest(LmfdbTest):
             bins[i] += 1
         for i, b in enumerate(bins):
             d = 100*float(b)/total
-            print('%.2f\t|' %((i + 0.5)*h +  times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
+            print('%.2f\t|' %((i + 0.5)*h + times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)

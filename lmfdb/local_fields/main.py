@@ -317,7 +317,6 @@ def render_field_webpage(args):
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra=r'$\ \in'+Qp+'(t)[x]$')
 
-
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
         if rflabel is None:
             logger.fatal("Cannot find discriminant root field!")
@@ -332,7 +331,7 @@ def render_field_webpage(args):
         else:
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
-        if 'wild_gap' in data:
+        if 'wild_gap' in data and data['wild_gap'] != [0,0]:
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
             wild_inertia = 'data not computed'
@@ -482,6 +481,7 @@ def reliability():
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+
 class LFSearchArray(SearchArray):
     noun = "field"
     sorts = [("", "prime", ['p', 'n', 'c', 'label']),
@@ -497,6 +497,7 @@ class LFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         degree = TextBox(
             name='n',
