@@ -108,7 +108,7 @@ if db.is_verifying:
 def main():
     info("main: ...done.")
     from .utils.config import Configuration
-    
+
     C = Configuration()
     flask_options = C.get_flask()
     flask_options['threaded'] = False
