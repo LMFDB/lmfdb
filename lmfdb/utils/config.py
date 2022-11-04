@@ -276,8 +276,8 @@ class Configuration(_Configuration):
             self.flask_options["host"] = "0.0.0.0"
             self.cocalc_options["host"] = "cocalc.com"
             external_ip = get('https://api.ipify.org').content.decode('utf8')
-            if external_ip == "18.18.21.20": # saint-germain
-                self.cocalc_options["host"] = "saint-germain.mit.edu"
+            if external_ip == "18.18.21.21": # chatelet
+                self.cocalc_options["host"] = "chatelet.mit.edu"
                 # randomify port, we have only container
                 if self.flask_options["port"] == 37777: # default
                     username = getpass.getuser()
