@@ -50,7 +50,7 @@ from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
     search_wrap, list_to_factored_poly_otherorder, flash_error,
-    parse_primes, coeff_to_poly,
+    parse_primes, coeff_to_poly, Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
@@ -349,14 +349,21 @@ lfunc_columns = SearchColumns([
                  lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
                  default=True)],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
-lfunc_columns.dummy_download = True
+# lfunc_columns.dummy_download = True
+
+class G2C_download(Downloader):
+    table = db.lfunc_search
+    title = "L-functions"
+    
+
 
 @search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
              columns=lfunc_columns,
-             shortcuts={'jump':jump_box},
+             shortcuts={'jump':jump_box,
+                        'download':G2C_download()},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
