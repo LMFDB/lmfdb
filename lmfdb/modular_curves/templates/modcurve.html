@@ -11,7 +11,7 @@
   <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.gonality", "$K$-gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le \\gamma \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
-  <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "$\\textsf{yes}$ $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "$\\textsf{none}$" }} </td></tr>
+  <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "yes $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
 </table>
 
 {% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
@@ -185,7 +185,7 @@
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
     {% if curve.genus > 0 %}
-    <td><span>{{ kernel if kernel else "$\\textsf{dimension zero}$" | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -207,7 +207,7 @@
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
-    <td><span>{{ kernel if kernel else "$\\textsf{dimension zero}$" | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
   </tr>
   {% endfor %}
   </tbody>
