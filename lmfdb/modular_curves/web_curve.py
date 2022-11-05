@@ -265,11 +265,11 @@ class WebModCurve(WebObj):
     def qtwist_description(self):
         if self.contains_negative_one:
             if len(self.qtwists) > 1:
-                return r"$\textsf{yes}\quad$ (see %s for level structures without $-I$)"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
+                return r"yes$\quad$ (see %s for level structures without $-I$)"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
             else:
-                return r"$\textsf{yes}$"
+                return r"yes"
         else:
-            return r"$\textsf{no}\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
+            return r"no$\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
 
     @lazy_attribute
     def cusp_display(self):
@@ -380,7 +380,7 @@ class WebModCurve(WebObj):
                 limit=None,
                 projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])))
             curves.sort(key=lambda x: (x["conductor"], x["iso_nlabel"], x["lmfdb_number"]))
-            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r'$\textsf{no}$' if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
+            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
                     for rec in curves]
         else:
             return []
@@ -392,8 +392,8 @@ class WebModCurve(WebObj):
             pts.append(
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
-                 r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                 r"$\textsf{yes}$" if rec["isolated"] is True else (r"$\textsf{no}$" if rec["isolated"] is False else r"$\textsf{maybe}$"),
+                 "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                 "yes" if rec["isolated"] is True else ("no" if rec["isolated"] is False else "maybe"),
                  showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
                  rec["residue_field"],
                  url_for_NF_label(rec["residue_field"]),
@@ -416,8 +416,8 @@ class WebModCurve(WebObj):
             return [(rec["label"],
                      url_for_ECNF_label(rec["label"]),
                      rec["equation"],
-                     r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                     r"$\textsf{yes}$" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else r"$\textsf{maybe}$",
+                     "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                     "yes" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "maybe",
                      web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []
