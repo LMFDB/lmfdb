@@ -244,6 +244,7 @@ def modcurve_search(info, query):
             query["cm_discriminants"] = {"$contains": int(info["cm_discriminants"])}
     parse_noop(info, query, "CPlabel")
     parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
+    parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     #parse_element_of(info, query, "covered_by", qfield="children")
     if "covered_by" in info:
         # sort of hacky
@@ -337,6 +338,12 @@ class ModCurveSearchArray(SearchArray):
             example_span="2, 3-6",
             select_box=gonality_quantifier,
         )
+        factor = TextBox(
+            name="factor",
+            knowl="modcurve.fiber_product",
+            label="Fiber product of",
+            example="3.8.0.1",
+        )
         covers = TextBox(
             name="covers",
             knowl="modcurve.modular_cover",
@@ -408,13 +415,14 @@ class ModCurveSearchArray(SearchArray):
             [simple, squarefree],
             [covers, covered_by],
             [cm_discriminants, contains_negative_one],
-            [count, family]
+            [count, family],
+            [factor]
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, squarefree],
-            [covers, covered_by, cm_discriminants, contains_negative_one, family],
+            [factor, covers, covered_by, cm_discriminants, contains_negative_one, family],
             [CPlabel],
         ]
 
