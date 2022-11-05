@@ -322,6 +322,10 @@ class WebModCurve(WebObj):
         curves = self.table.search({"parents":{"$contains": self.label},"contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
         return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
 
+    def fiber_product_of(self):
+        curves = self.table.search({"label":{"$in": self.factorization, "$not": self.label}}, ["label", "name", "rank", "dims"])
+        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(self.dims,C.get("dims",[])))) for C in curves]        
+
     @lazy_attribute
     def newform_level(self):
         return lcm([int(f.split('.')[0]) for f in self.newforms])
