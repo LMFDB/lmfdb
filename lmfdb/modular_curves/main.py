@@ -607,13 +607,13 @@ class ModCurve_stats(StatsDisplay):
               }
     stat_list = [
         {'cols': ['level', 'genus'],
-         'proportioner': proportioners.per_col_total,
+         'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
         {'cols': ['genus', 'rank'],
-         'proportioner': proportioners.per_col_total,
+         'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
         {'cols': ['genus', 'gonality'],
-         'proportioner': proportioners.per_col_total,
+         'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
     ]
 
