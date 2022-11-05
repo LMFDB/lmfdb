@@ -204,10 +204,6 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
-        if self.genus > 0:
-            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
-                if r['newforms'] == self.newforms and r['label'] != self.label:
-                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
@@ -223,6 +219,10 @@ class WebModCurve(WebObj):
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
+        if self.genus > 0:
+            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
+                if r['newforms'] == self.newforms and r['label'] != self.label:
+                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         return friends
 
     @lazy_attribute
