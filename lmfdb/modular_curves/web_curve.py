@@ -421,4 +421,3 @@ class WebModCurve(WebObj):
                      web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []
-
