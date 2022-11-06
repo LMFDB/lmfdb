@@ -187,7 +187,7 @@ modcurve_columns = SearchColumns([
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("gonality_bounds", "modcurve.gonality", "$\QQ$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
+    ProcessedCol("gonality_bounds", "modcurve.gonality", "$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
@@ -350,7 +350,7 @@ class ModCurveSearchArray(SearchArray):
         gonality = TextBoxWithSelect(
             name="gonality",
             knowl="modcurve.gonality",
-            label="$\QQ$-gonality",
+            label="$\Q$-gonality",
             example="2",
             example_span="2, 3-6",
             select_box=gonality_quantifier,
