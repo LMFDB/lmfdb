@@ -67,14 +67,35 @@
 </table>
 {% endif %}
 
-{% if curve.plane_model %}
-<h2> {{ KNOWL('ag.plane_model', 'Plane model') }} </h2>
-{% if curve.plane_model == "P1" %}
-<p>$\mathbb{P}^1$</p>
-{% else %}
-<p>${{curve.latexed_plane_model}} = 0$</p>
+{% set models = curve.models_to_display() %}
+{% if models or (curve.genus == 0 and curve.low_genus_pointless == 0) or curve.has_more_models() %}
+<h2> {{ KNOWL('ag.model', 'Models') }} </h2>
+{% if models %}
+{% for equation, nb_var, type, smooth in curve.models_to_display() %}
+{% if type == 0 %}
+<p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{{nb_var-1}}$: ${{ equation }}$ </p>
+{% elif type == 2 %}
+<p> {%  if smooth == 1 %}
+  {{ KNOWL('ag.smooth', 'Smooth') }} {{ KNOWL('ag.plane_model', 'plane model') }}:
+  {% else %}
+  {{ KNOWL('ag.plane_model', 'plane model') }} (not {{ KNOWL('ag.smooth', 'smooth') }}:
+  {% endif %}
+  ${{ equation }}$ </p>
+{% endfor %}
+{% if curve.genus == 0 and curve.low_genus_pointless == 0 %}
+<p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
 {% endif %}
-{% endif %}
+{% if curve.has_more_models() %}
+<p> Some stored models are too large to be displayed and are available for download. </p>
+
+<!-- {% if curve.plane_model %} -->
+<!-- <h2> {{ KNOWL('ag.plane_model', 'Plane model') }} </h2> -->
+<!-- {% if curve.plane_model == "P1" %} -->
+<!-- <p>$\mathbb{P}^1$</p> -->
+<!-- {% else %} -->
+<!-- <p>${{curve.latexed_plane_model}} = 0$</p> -->
+<!-- {% endif %} -->
+<!-- {% endif %} -->
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 

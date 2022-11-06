@@ -116,50 +116,50 @@ def remove_leading_coeff(jfac):
     else:
         return str(jfac)
 
-def jmap_factored(j_str):
-    if 't' in j_str:
-        R = PolynomialRing(QQ, 't')
-        F = FractionField(R)
-    else:
-        #assert ('x' in j_str or 'z' in j_str)
-        R = PolynomialRing(QQ,2,'x,z')
-        F = FractionField(R)
-    j = F(j_str)
-    # deal with leading coefficient
-    j_lc = j.factor().unit()
-    j_no_lc = j/j_lc
-    jmap_parts = [j_no_lc.numerator(), j_no_lc.denominator()]
-    j_lc_1728 = (j-1728).factor().unit()
-    j_no_lc_1728 = (j-1728)/j_lc_1728
-    jmap_parts_1728 = [j_no_lc_1728.numerator(), j_no_lc_1728.denominator()]
-    js_tex = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts]
-    js_tex_1728 = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts_1728]
-    if j_lc != 1:
-        lc_str = "%s" % latex(j_lc)
-        #if lc_str[0] == "-": # parens if minus sign
-            #lc_str = "(%s)" % lc_str
-        if "+" in lc_str[1:] or "-" in lc_str[1:]:
-            lc_str = "\\left(%s\\right)" % lc_str
-    else:
-        lc_str = ""
-    if j_lc_1728 != 1:
-        lc_str_1728 = "%s" % latex(j_lc_1728)
-        if "+" in lc_str_1728 or "-" in lc_str_1728:
-            lc_str_1728 = "\\left(%s\\right)" % lc_str_1728
-    else:
-        lc_str_1728 = ""
-    # good test case for lc stuff: 8.96.1.183
-    # also 4.8.0.2
-    # TODO: model after cmfs, e.g., https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/11/7/d/a/
-    if j.denominator() == 1: # no denom, so polynomial
-        js_tex_frac = []
-        js_tex_frac.append(r"%s%s" % (lc_str, js_tex[0]))
-        js_tex_frac.append(r"1728 + %s%s" % (lc_str_1728, js_tex_1728[0]))
-    else: # has denom
-        js_tex_frac = []
-        js_tex_frac.append(r"%s\frac{%s}{%s}" % (lc_str, js_tex[0], js_tex[1]))
-        js_tex_frac.append(r"1728 + %s\frac{%s}{%s}" % (lc_str_1728, js_tex_1728[0], js_tex_1728[1]))
-    return js_tex_frac
+# def jmap_factored(j_str):
+#     if 't' in j_str:
+#         R = PolynomialRing(QQ, 't')
+#         F = FractionField(R)
+#     else:
+#         #assert ('x' in j_str or 'z' in j_str)
+#         R = PolynomialRing(QQ,2,'x,z')
+#         F = FractionField(R)
+#     j = F(j_str)
+#     # deal with leading coefficient
+#     j_lc = j.factor().unit()
+#     j_no_lc = j/j_lc
+#     jmap_parts = [j_no_lc.numerator(), j_no_lc.denominator()]
+#     j_lc_1728 = (j-1728).factor().unit()
+#     j_no_lc_1728 = (j-1728)/j_lc_1728
+#     jmap_parts_1728 = [j_no_lc_1728.numerator(), j_no_lc_1728.denominator()]
+#     js_tex = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts]
+#     js_tex_1728 = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts_1728]
+#     if j_lc != 1:
+#         lc_str = "%s" % latex(j_lc)
+#         #if lc_str[0] == "-": # parens if minus sign
+#             #lc_str = "(%s)" % lc_str
+#         if "+" in lc_str[1:] or "-" in lc_str[1:]:
+#             lc_str = "\\left(%s\\right)" % lc_str
+#     else:
+#         lc_str = ""
+#     if j_lc_1728 != 1:
+#         lc_str_1728 = "%s" % latex(j_lc_1728)
+#         if "+" in lc_str_1728 or "-" in lc_str_1728:
+#             lc_str_1728 = "\\left(%s\\right)" % lc_str_1728
+#     else:
+#         lc_str_1728 = ""
+#     # good test case for lc stuff: 8.96.1.183
+#     # also 4.8.0.2
+#     # TODO: model after cmfs, e.g., https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/11/7/d/a/
+#     if j.denominator() == 1: # no denom, so polynomial
+#         js_tex_frac = []
+#         js_tex_frac.append(r"%s%s" % (lc_str, js_tex[0]))
+#         js_tex_frac.append(r"1728 + %s%s" % (lc_str_1728, js_tex_1728[0]))
+#     else: # has denom
+#         js_tex_frac = []
+#         js_tex_frac.append(r"%s\frac{%s}{%s}" % (lc_str, js_tex[0], js_tex[1]))
+#         js_tex_frac.append(r"1728 + %s\frac{%s}{%s}" % (lc_str_1728, js_tex_1728[0], js_tex_1728[1]))
+#     return js_tex_frac
 
 def formatted_dims(dims):
     if not dims:
@@ -293,11 +293,39 @@ class WebModCurve(WebObj):
         return factored_conductor(self.conductor)
 
     @lazy_attribute
-    def jmap_factored(self):
-        if self.jmap:
-            return jmap_factored(self.jmap)
-        else:
-            return ""
+    def models_to_display(self):
+        return list(db.modcurve_models.search({"modcurve": self.label, "dont_display": 0}, ["equation", "number_variables", "model_type", "smooth"]))
+    
+    @lazy_attribute
+    def models_count(self):
+        return db.modcurve_models.count({"modcurve": self.label})
+
+    @lazy_attribute
+    def has_more_models(self):
+        return len(self.models_to_display()) < self.models_count()
+
+    @lazy_attribute
+    def models_to_download(self):
+        return list(db.modcurve_models.search({"modcurve": self.label}, ["equation", "number_variables", "model_type"]))
+    
+    @lazy_attribute
+    def modelmaps_to_display(self):
+        return list(db.modcurve_modelmaps.search({"modcurve": self.label, "dont_display": 0}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+    
+    @lazy_attribute
+    def modelmaps_count(self):
+        return db.modcurve_modelmaps.count({"modcurve": self.label})
+
+    @lazy_attribute
+    def modelmaps_to_download(self):
+        return list(db.modcurve_modelmaps.search({"modcurve": self.label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+        
+    # @lazy_attribute
+    # def jmap_factored(self):
+    #     if self.jmap:
+    #         return jmap_factored(self.jmap)
+    #     else:
+    #         return ""
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
