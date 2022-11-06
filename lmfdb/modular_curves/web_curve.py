@@ -165,7 +165,7 @@ def formatted_dims(dims):
     if not dims:
         return ""
     C = Counter(dims)
-    return "$" + ",".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
+    return "$" + "\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
 def formatted_newforms(newforms):
     if not newforms:
@@ -196,7 +196,7 @@ class WebModCurve(WebObj):
             ("Genus", str(self.genus)),
         ]
         if hasattr(self,"rank"):
-            props.append(("Rank", str(self.rank)))
+            props.append(("Analytic rank", str(self.rank)))
         props.extend([("Cusps", str(self.cusps)),
                       (r"$\Q$-cusps", str(self.rational_cusps))])
         return props
@@ -277,7 +277,7 @@ class WebModCurve(WebObj):
             if len(self.qtwists) > 1:
                 return r"%s"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
             else:
-                return r"None"
+                return r"none"
         else:
             return "none"
         
