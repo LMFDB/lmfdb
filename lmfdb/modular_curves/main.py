@@ -168,8 +168,8 @@ def modcurve_jump(info):
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
     else:
-        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels}}, "factorization"))
-        if len(factors) != len(lmfdb_labels):
+        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels, "$not": "1.1.0.1"}}, "factorization"))
+        if len(factors) != len([label for label in lmfdb_labels if label != "1.1.0.1"]):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
         factors = sorted(sum(factors, []), key=lambda x:[int(i) for i in x.split(".")])
