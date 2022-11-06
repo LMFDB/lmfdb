@@ -170,8 +170,9 @@ def modcurve_jump(info):
     else:
         factors = []
         for label in lmfdb_labels:
-            factors += db.gps_gl2zhat_test.lucky({"label": label}, "factorization")        
-        label = db.gps_gl2zhat_test.lucky({'factorization': lmfdb_labels}, "label")
+            factors += db.gps_gl2zhat_test.lucky({"label": label}, "factorization")
+        factors.sort(key=lambda x:[int(i) for i in x.split(".")])
+        label = db.gps_gl2zhat_test.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
