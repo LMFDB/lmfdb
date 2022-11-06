@@ -135,44 +135,45 @@ def url_for_modcurve_label(label):
 
 def modcurve_lmfdb_label(label):
     if CP_LABEL_RE.fullmatch(label):
+        other_db = "Cummins & Pauli "
         lmfdb_label = db.gps_gl2zhat_test.lucky({"CPlabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Cummins & Pauli label %s", label)
-            return redirect(url_for(".index"))
     elif SZ_LABEL_RE.fullmatch(label):
+        other_db = "Sutherland & Zywina "
         lmfdb_label = db.gps_gl2zhat_test.lucky({"SZlabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Sutherland & Zywina label %s", label)
-            return redirect(url_for(".index"))
     elif RZB_LABEL_RE.fullmatch(label):
+        other_db = "Rousse & Zureick-Brown "
         lmfdb_label = db.gps_gl2zhat_test.lucky({"RZBlabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Rousse & Zureick-Brown label %s", label)
-            return redirect(url_for(".index"))
     elif S_LABEL_RE.fullmatch(label):
+        other_db = "Sutherland "
         lmfdb_label = db.gps_gl2zhat_test.lucky({"Slabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Sutherland label %s", label)
-            return redirect(url_for(".index"))
     elif NAME_RE.fullmatch(label.upper()):
+        other_db = ""
         lmfdb_label = db.gps_gl2zhat_test.lucky({"name": canonicalize_name(label)}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with name %s", label)
-            return redirect(url_for(".index"))
     else:
-        lmfdb_label = label
-    return lmfdb_label
+        other_db = ""
+        lmfdb_label = db.gps_gl2zhat_test.lucky({"label": label}, "label")
+    return lmfdb_label, other_db
     
 def modcurve_jump(info):
     labels = (info["jump"]).split("*")
-    lmfdb_labels = [modcurve_lmfdb_label(label) for label in labels]
+    lmfdb_labels = []    
+    for label in labels:
+        lmfdb_label, other_db = modcurve_lmfdb_label(label)
+        if lmfdb_label is None:
+            flash_error("There is no modular curve in the database with %s label %s", other_db, label)
+            return redirect(url_for(".index"))
+        lmfdb_labels.append(lmfdb_label)
+    
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
     else:
+        factors = []
+        for label in lmfdb_labels:
+            factors += db.gps_gl2zhat_test.lucky({"label": label}, "factorization")        
         label = db.gps_gl2zhat_test.lucky({'factorization': lmfdb_labels}, "label")
         if label is None:
-            flash_error("There is no modular curve in the database that is the fiber product %s", info["jump"])
+            flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
         else:
             return redirect(url_for_modcurve_label(label))        
@@ -272,7 +273,7 @@ def modcurve_search(info, query):
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.1"
-    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product)"
+    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, 13A3, or 3.8.0.1*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
