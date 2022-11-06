@@ -277,7 +277,7 @@ class WebModCurve(WebObj):
             if len(self.qtwists) > 1:
                 return r"%s"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
             else:
-                return r"(JV is confused, is that we just don't know if there are any or if there are none)"
+                return r"None"
         else:
             return "none"
         
