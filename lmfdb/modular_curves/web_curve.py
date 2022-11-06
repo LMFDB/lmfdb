@@ -172,7 +172,7 @@ def formatted_newforms(newforms):
         return ""
     C = Counter(newforms)
     # Make sure that the Counter doesn't break the ordering
-    return ",&nbsp;".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
 def difference(A,B):
     C = A.copy()
