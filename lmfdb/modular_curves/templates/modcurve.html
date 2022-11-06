@@ -168,7 +168,7 @@
 
 {% set covered_by = curve.modular_covered_by() %}
 {% set fiber_product_of = curve.fiber_product_of() %}
-{% if curve.fiber_product_of or curve.parents or curve.modular_covered_by %}
+{% if fiber_product_of or curve.parents or covered_by %}
 <h2> {{ KNOWL('modcurve.modular_cover', 'Modular covers') }} </h2>
 
 {% if fiber_product_of %}
@@ -178,15 +178,17 @@
     <tr><th>{{ KNOWL('modcurve.modular_cover','Factor curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th></tr>
   </thead>
   <tbody>
-  {% for label, disp, level, degree, genus, rank, kernel in curve.fiber_product_of() %}
+  {% for label, disp, level, degree, genus, rank, kernel in fiber_product_of %}
   <tr>
     <td><a href="{{url_for('.by_label', label=label)}}">{{disp}}</a></td>
     <td align="center">${{ level }}$</td>
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
-    {% if curve.genus > 0 %}
+    {% if genus > 0 %}
     <td><span>{{ kernel if kernel else "$\\textsf{dimension zero}$" | safe }}</span></td>
+    {% else %}
+    <td><span>{{ "$\\textsf{full Jacobian}$" }}</span></td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -208,8 +210,10 @@
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
-    {% if curve.genus > 0 %}
-    <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
+    {% if genus > 0 %}
+    <td><span>{{ kernel if kernel else "$\\textsf{dimension zero}$" | safe }}</span></td>
+    {% else %}
+    <td><span>{{ "$\\textsf{full Jacobian}$" }}</span></td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -221,7 +225,11 @@
 <p> This modular curve is {{ KNOWL('modcurve.modular_cover','minimally covered by') }} the modular curves in the database listed below.
 <table class="ntdata">
   <thead>
-    <tr><th>{{ KNOWL('modcurve.modular_cover','Covering curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th><th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th></tr>
+    <tr><th>{{ KNOWL('modcurve.modular_cover','Covering curve') }}</th><th>{{ KNOWL('modcurve.level','Level') }}</th><th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th><th>{{ KNOWL('modcurve.genus','Genus') }}</th><th>{{ KNOWL('modcurve.rank','Rank') }}</th>
+      {% if curve.genus > 0 %}
+      <th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th>
+      {% endif %}
+    </tr>
   </thead>
   <tbody>
   {% for label, disp, level, degree, genus, rank, kernel in covered_by %}
@@ -231,7 +239,9 @@
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
+    {% if curve.genus > 0 %}
     <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
+    {% endif %}
   </tr>
   {% endfor %}
   </tbody>
