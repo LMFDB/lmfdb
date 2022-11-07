@@ -295,7 +295,7 @@ class WebModCurve(WebObj):
         return [(teXify_pol(m["equation"].lower()),
                  m["number_variables"],
                  m["model_type"],
-                 m["smooth"]) for m in models]
+                 m["smooth"] if m.get("smooth") else None) for m in models]
     
     @lazy_attribute
     def models_count(self):
