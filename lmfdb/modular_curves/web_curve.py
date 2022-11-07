@@ -212,7 +212,7 @@ class WebModCurve(WebObj):
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
                 s = self.newforms[0].split(".")
-                label = s[0] + "." + s[2]
+                label = s[0] + "." + s[3]
                 friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
             if self.genus == 2:
                 g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
@@ -314,13 +314,33 @@ class WebModCurve(WebObj):
     def show_generators(self):
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
 
+    @lazy_attribute
     def modular_covers(self):
-        curves = self.table.search({"label":{"$in": self.parents}, "contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
-        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], self.index // int(C["label"].split(".")[1]), C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(self.dims,C.get("dims",[])))) for C in curves]
+        curves = self.table.search({"label":{"$in": self.parents}}, ["label", "level", "index", "psl2index", "genus", "name", "rank", "dims"])
+        return [(
+            C["label"],
+            name_to_latex(C["name"]) if C.get("name") else C["label"],
+            C["level"],
+            self.index // C["index"], # relative index
+            self.psl2index // C["psl2index"], # relative degree
+            C["genus"],
+            C.get("rank", ""),
+            formatted_dims(difference(self.dims,C.get("dims",[]))))
+                for C in curves]
 
+    @lazy_attribute
     def modular_covered_by(self):
-        curves = self.table.search({"parents":{"$contains": self.label},"contains_negative_one": self.contains_negative_one}, ["label", "name", "rank", "dims"])
-        return [(C["label"], name_to_latex(C["name"]) if C.get("name") else C["label"], C["label"].split(".")[0], int(C["label"].split(".")[1]) // self.index, C["label"].split(".")[2], C["rank"] if C.get("rank") is not None else "", formatted_dims(difference(C.get("dims",[]),self.dims))) for C in curves]
+        curves = self.table.search({"parents":{"$contains": self.label}}, ["label", "level", "index", "psl2index", "genus", "name", "rank", "dims"])
+        return [(
+            C["label"],
+            name_to_latex(C["name"]) if C.get("name") else C["label"], # display name
+            C["level"],
+            C["index"] // self.index, # relative index
+            C["psl2index"] // self.psl2index, # relative degree
+            C["genus"],
+            C.get("rank", ""),
+            formatted_dims(difference(C.get("dims",[]),self.dims)))
+                for C in curves]
 
     @lazy_attribute
     def newform_level(self):
