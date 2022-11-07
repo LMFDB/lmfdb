@@ -131,7 +131,6 @@ def formatted_newforms(newforms):
     return ",&nbsp;".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
-    print(m)
     f = {}
     for key in ["degree", "domain_model_type", "codomain_label", "codomain_model_type"]:
         f[key] = m[key]
@@ -148,7 +147,7 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     else: #x0,...,xn
         f["coord_names"] = ["x_{}".format(i) for i in [0..nb_coords-1]]
     f["nb_coords"] = nb_coords
-    
+
     if nb_coords == 1: #display only one coordinate as a quotient
         if eqs[1] == "1" and lead == ["1","1"]:
             equations = [eqs[0]]
