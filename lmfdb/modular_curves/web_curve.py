@@ -137,7 +137,9 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f["codomain_name"] = codomain_name
     f["codomain_equation"] = codomain_equation
     nb_coords = len(m["coordinates"][0])    
-    lead = m["leading_coefficients"][0] if m.get("leading_coefficients") else ["1"]*nb_coords
+    lead = m["leading_coefficients"][0]
+    if lead is None:
+        lead = ["1"]*nb_coords
     eqs = [teXify_pol(p) for p in m["coordinates"][0]]
     if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
@@ -295,7 +297,7 @@ class WebModCurve(WebObj):
         return [(teXify_pol(m["equation"].lower()),
                  m["number_variables"],
                  m["model_type"],
-                 m["smooth"] if m.get("smooth") else None) for m in models]
+                 m["smooth"]) for m in models]
     
     @lazy_attribute
     def models_count(self):
@@ -346,7 +348,9 @@ class WebModCurve(WebObj):
         if j1728map:
             nb_coords += 1
             cst = "1728"
-            lead = j1728map[0]["leading_coefficients"][0] if j1728map[0].get("leading_coefficients") else ["1","1"]
+            lead = j1728map[0]["leading_coefficients"][0]
+            if lead is None:
+                lead = ["1","1"]
             if not(int(lead[0]) < 0 and int(lead[1]) == 1):
                 cst += "+"
             f["equations"] += [cst + f2["equations"][0]]
@@ -373,9 +377,9 @@ class WebModCurve(WebObj):
         res = []
         for m in maps:
             codomain = [crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
-            codomain_name = codomain["name"] if codomain.get("name") else ""
+            codomain_name = codomain["name"]
             image_eq = [model for model in image_eqs if model["modcurve"] == m["codomain_label"] and model["model_type"] == m["codomain_model_type"]]
-            if len(image_eq) > 0 and image_eq[0].get("equation"):
+            if len(image_eq) > 0:
                 codomain_equation = image_eq[0]["equation"]
             else:
                 codomain_equation = ""
