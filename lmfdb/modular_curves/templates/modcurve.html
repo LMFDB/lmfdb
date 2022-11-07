@@ -67,26 +67,31 @@
 </table>
 {% endif %}
 
-{% set models = curve.models_to_display() %}
-{% if models or (curve.genus == 0 and curve.low_genus_pointless == 0) or curve.has_more_models() %}
+{% set models = curve.models_to_display %}
+{% if models or (curve.genus == 0 and not curve.low_genus_pointless) or curve.has_more_models %}
 <h2> {{ KNOWL('ag.model', 'Models') }} </h2>
 {% if models %}
-{% for equation, nb_var, type, smooth in curve.models_to_display() %}
+{% for equation, nb_var, type, smooth in models %}
 {% if type == 0 %}
 <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{{nb_var-1}}$: ${{ equation }}$ </p>
 {% elif type == 2 %}
 <p> {%  if smooth == 1 %}
-  {{ KNOWL('ag.smooth', 'Smooth') }} {{ KNOWL('ag.plane_model', 'plane model') }}:
+  {{ KNOWL('ag.smooth', 'Smooth') }}
+  {{ KNOWL('ag.plane_model', 'plane model') }}:
   {% else %}
-  {{ KNOWL('ag.plane_model', 'plane model') }} (not {{ KNOWL('ag.smooth', 'smooth') }}:
+  {{ KNOWL('ag.smooth', 'Singular') }} {{ KNOWL('ag.plane_model', 'plane model') }} :
   {% endif %}
   ${{ equation }}$ </p>
+{% endif %}
 {% endfor %}
-{% if curve.genus == 0 and curve.low_genus_pointless == 0 %}
+{% endif %}
+{% if curve.genus == 0 and not curve.low_genus_pointless %}
 <p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
 {% endif %}
-{% if curve.has_more_models() %}
+{% if curve.has_more_models %}
 <p> Some stored models are too large to be displayed and are available for download. </p>
+{% endif %}
+{% endif %}
 
 <!-- {% if curve.plane_model %} -->
 <!-- <h2> {{ KNOWL('ag.plane_model', 'Plane model') }} </h2> -->
@@ -171,21 +176,29 @@
 </table>
 {% endif %}
 
-{% if curve.jmap_factored %}
-<h2> {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}</h2>
-<table valign="center">
-  <tr>
-    <td>$j$</td>
-    <td style="padding: 15px 0px;">$=$</td>
-    <td>$\displaystyle {{ curve['jmap_factored'][0] }}$</td>
-  </tr>
-  <tr>
-    <td></td>
-    <td style="padding: 15px 0px;">$=$</td>
-    <td>$\displaystyle {{ curve['jmap_factored'][1] }}$</td>
-  </tr>
-</table>
+{% set modelmaps = curve.modelmaps_to_display %}
+{% if modelmaps or curve.has_more_modelmaps %}
+<h2> Maps from this modular curve </h2>
+{% if modelmaps %}
 {% endif %}
+{% endif %}
+
+
+<!-- {% if curve.jmap_factored %} -->
+<!-- <h2> {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}</h2> -->
+<!-- <table valign="center"> -->
+<!--   <tr> -->
+<!--     <td>$j$</td> -->
+<!--     <td style="padding: 15px 0px;">$=$</td> -->
+<!--     <td>$\displaystyle {{ curve['jmap_factored'][0] }}$</td> -->
+<!--   </tr> -->
+<!--   <tr> -->
+<!--     <td></td> -->
+<!--     <td style="padding: 15px 0px;">$=$</td> -->
+<!--     <td>$\displaystyle {{ curve['jmap_factored'][1] }}$</td> -->
+<!--   </tr> -->
+<!-- </table> -->
+<!-- {% endif %} -->
 
 {% set covered_by = curve.modular_covered_by() %}
 {% set fiber_product_of = curve.fiber_product_of() %}

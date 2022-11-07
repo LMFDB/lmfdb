@@ -253,9 +253,9 @@ class WebModCurve(WebObj):
     def formatted_newforms(self):
         return formatted_newforms(self.newforms)
 
-    @lazy_attribute
-    def latexed_plane_model(self):
-        return teXify_pol(self.plane_model.lower())
+    # @lazy_attribute
+    # def latexed_plane_model(self):
+    #     return teXify_pol(self.plane_model.lower())
 
     @lazy_attribute
     def obstruction_primes(self):
@@ -294,7 +294,11 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.modcurve_models.search({"modcurve": self.label, "dont_display": 0}, ["equation", "number_variables", "model_type", "smooth"]))
+        models = db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"])
+        return [(teXify_pol(m["equation"].lower()),
+                 m["number_variables"],
+                 m["model_type"],
+                 m["smooth"]) for m in models]
     
     @lazy_attribute
     def models_count(self):
@@ -302,7 +306,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def has_more_models(self):
-        return len(self.models_to_display()) < self.models_count()
+        return len(self.models_to_display) < self.models_count
 
     @lazy_attribute
     def models_to_download(self):
@@ -310,16 +314,20 @@ class WebModCurve(WebObj):
     
     @lazy_attribute
     def modelmaps_to_display(self):
-        return list(db.modcurve_modelmaps.search({"modcurve": self.label, "dont_display": 0}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+        return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
     
     @lazy_attribute
     def modelmaps_count(self):
-        return db.modcurve_modelmaps.count({"modcurve": self.label})
+        return db.modcurve_modelmaps.count({"domain_label": self.label})
+
+    @lazy_attribute
+    def has_more_modelmaps(self):
+        return len(self.modelmaps_to_display) < self.modelmaps_count
 
     @lazy_attribute
     def modelmaps_to_download(self):
-        return list(db.modcurve_modelmaps.search({"modcurve": self.label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
-        
+        return list(db.modcurve_modelmaps.search({"domain_label": self.label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+    
     # @lazy_attribute
     # def jmap_factored(self):
     #     if self.jmap:
