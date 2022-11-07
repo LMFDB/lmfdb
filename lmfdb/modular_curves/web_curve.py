@@ -574,16 +574,16 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def rational_points_description(self):
         curve = self
-        if curve.rational_cusps or curve.cm_discriminants or curve.known_degree1_noncm_points or curve.plane_model == "P1":
+        if curve.known_degree1_noncm_points or curve.pointless == -1:
             if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
-                    return 'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    return r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
                     return 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
-                    return 'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    return r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     return 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
@@ -619,10 +619,8 @@ class WebModCurve(WebObj):
             if curve.obstructions == [0]:
                 return 'This modular curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
-                return f'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+                return fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.obstructions:
-                return f'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
-            elif curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1):
-                return "This modular curve has infinitely many rational points."
+                return fr'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 return "This modular curve has finitely many rational points, none of which are cusps."

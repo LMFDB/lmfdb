@@ -751,13 +751,14 @@ class ModCurve_download(Downloader):
         s += "conductor := %s;\n" % rec['conductor']
         s += "bad_primes := %s;\n" % rec['bad_primes']
         s += "// Make plane model, if computed;\n"
-        if rec["plane_model"]:
-            s += "QQ := Rationals();\n"
-            if rec["plane_model"] == "P1":
-                s += "XX := Curve(ProjectiveSpace(QQ,1));\n"
-            else:
-                s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
-                s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
+        ## This should get updated to take the new
+        #if rec["plane_model"]:
+        #    s += "QQ := Rationals();\n"
+        #    if rec["plane_model"] == "P1":
+        #        s += "XX := Curve(ProjectiveSpace(QQ,1));\n"
+        #    else:
+        #        s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
+        #        s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
         s += "// Genus\n"
         s += "g := %s;\n" % rec['genus']
         s += "// Rank\n"
