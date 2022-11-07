@@ -11,6 +11,7 @@ from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
+from string import ascii_lowercase
 
 
 def get_bread(tail=[]):
@@ -116,51 +117,6 @@ def remove_leading_coeff(jfac):
     else:
         return str(jfac)
 
-def jmap_factored(j_str):
-    if 't' in j_str:
-        R = PolynomialRing(QQ, 't')
-        F = FractionField(R)
-    else:
-        #assert ('x' in j_str or 'z' in j_str)
-        R = PolynomialRing(QQ,2,'x,z')
-        F = FractionField(R)
-    j = F(j_str)
-    # deal with leading coefficient
-    j_lc = j.factor().unit()
-    j_no_lc = j/j_lc
-    jmap_parts = [j_no_lc.numerator(), j_no_lc.denominator()]
-    j_lc_1728 = (j-1728).factor().unit()
-    j_no_lc_1728 = (j-1728)/j_lc_1728
-    jmap_parts_1728 = [j_no_lc_1728.numerator(), j_no_lc_1728.denominator()]
-    js_tex = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts]
-    js_tex_1728 = [teXify_pol(remove_leading_coeff(el.factor())) for el in jmap_parts_1728]
-    if j_lc != 1:
-        lc_str = "%s" % latex(j_lc)
-        #if lc_str[0] == "-": # parens if minus sign
-            #lc_str = "(%s)" % lc_str
-        if "+" in lc_str[1:] or "-" in lc_str[1:]:
-            lc_str = "\\left(%s\\right)" % lc_str
-    else:
-        lc_str = ""
-    if j_lc_1728 != 1:
-        lc_str_1728 = "%s" % latex(j_lc_1728)
-        if "+" in lc_str_1728 or "-" in lc_str_1728:
-            lc_str_1728 = "\\left(%s\\right)" % lc_str_1728
-    else:
-        lc_str_1728 = ""
-    # good test case for lc stuff: 8.96.1.183
-    # also 4.8.0.2
-    # TODO: model after cmfs, e.g., https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/11/7/d/a/
-    if j.denominator() == 1: # no denom, so polynomial
-        js_tex_frac = []
-        js_tex_frac.append(r"%s%s" % (lc_str, js_tex[0]))
-        js_tex_frac.append(r"1728 + %s%s" % (lc_str_1728, js_tex_1728[0]))
-    else: # has denom
-        js_tex_frac = []
-        js_tex_frac.append(r"%s\frac{%s}{%s}" % (lc_str, js_tex[0], js_tex[1]))
-        js_tex_frac.append(r"1728 + %s\frac{%s}{%s}" % (lc_str_1728, js_tex_1728[0], js_tex_1728[1]))
-    return js_tex_frac
-
 def formatted_dims(dims):
     if not dims:
         return ""
@@ -173,6 +129,51 @@ def formatted_newforms(newforms):
     C = Counter(newforms)
     # Make sure that the Counter doesn't break the ordering
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+
+def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
+    f = {}
+    for key in ["degree", "domain_model_type", "codomain_label", "codomain_model_type"]:
+        f[key] = m[key]
+    f["codomain_name"] = codomain_name
+    f["codomain_equation"] = codomain_equation
+    nb_coords = len(m["coordinates"][0])    
+    lead = m["leading_coefficients"][0] if m.get("leading_coefficients") else ["1"]*nb_coords
+    eqs = [teXify_pol(p) for p in m["coordinates"][0]]
+    if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.1" and f["codomain_model_type"] == 4):
+        nb_coords = 1
+        f["coord_names"] = ["f"]
+    elif nb_coords <= 12: #p',...,z'
+        f["coord_names"] = [x+"'" for x in ascii_lowercase[-nb_coords]]
+    else: #x0,...,xn
+        f["coord_names"] = ["x_{}".format(i) for i in [0..nb_coords-1]]
+    f["nb_coords"] = nb_coords
+
+    if nb_coords == 1: #display only one coordinate as a quotient
+        if eqs[1] == "1" and lead == ["1","1"]:
+            equations = [eqs[0]]
+        elif eqs[1] == "1" and lead[1] == "1" and m["factored"] and eqs[0].count("(") > 0:
+            equations = ["{}{}".format(lead[0], eqs[0])]
+        elif eqs[1] == "1" and lead[1] == "1":
+            equations = ["{}({})".format(lead[0], eqs[0])]
+        elif eqs[1] == "1":
+            equations = [r"\frac{%s}{%s}" % (eqs[0], lead[0])]
+        elif lead == ["1","1"]:
+            equations = [r"\frac{%s}{%s}" % (eqs[0], eqs[1])]
+        elif lead[1] == "1":
+            equations = [r"%s\,\frac{%s}{%s}" % (lead[0], eqs[0], eqs[1])]
+        else:
+            equations = [r"\frac{%s}{%s}\cdot\frac{%s}{%s}" % (lead[0], lead[1], eqs[0], eqs[1])]
+    else: #2 or more coordinates, do not display as quotients
+        equations = []
+        for j in range(len(eqs)):
+            if lead[j] == "1":
+                equations.append(eqs[j])
+            elif m["factored"] and eqs[j].count("(") > 0:
+                equations.append("{}{}".format(lead[j], eqs[j]))
+            else:
+                equations.append("{}({})".format(lead[j], eqs[j]))
+    f["equations"] = equations
+    return(f)
 
 def difference(A,B):
     C = A.copy()
@@ -254,10 +255,6 @@ class WebModCurve(WebObj):
         return formatted_newforms(self.newforms)
 
     @lazy_attribute
-    def latexed_plane_model(self):
-        return teXify_pol(self.plane_model.lower())
-
-    @lazy_attribute
     def obstruction_primes(self):
         return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
 
@@ -303,11 +300,119 @@ class WebModCurve(WebObj):
         return factored_conductor(self.conductor)
 
     @lazy_attribute
-    def jmap_factored(self):
-        if self.jmap:
-            return jmap_factored(self.jmap)
-        else:
-            return ""
+    def models_to_display(self):
+        models = db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"])
+        return [(teXify_pol(m["equation"].lower()),
+                 m["number_variables"],
+                 m["model_type"],
+                 m["smooth"]) for m in models]
+    
+    @lazy_attribute
+    def models_count(self):
+        return db.modcurve_models.count({"modcurve": self.label})
+
+    @lazy_attribute
+    def has_more_models(self):
+        return len(self.models_to_display) < self.models_count
+
+    @lazy_attribute
+    def models_to_download(self):
+        return list(db.modcurve_models.search({"modcurve": self.label}, ["equation", "number_variables", "model_type"]))
+    
+    @lazy_attribute
+    def modelmaps_to_display(self):
+        return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients", "factored"]))
+
+    @lazy_attribute
+    def display_j(self):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1"]
+        return len(jmaps) >= 1
+    
+    @lazy_attribute
+    def display_E4E6(self):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4]
+        return len(jmaps) >= 1        
+
+    @lazy_attribute
+    def formatted_jmap(self):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1"]
+        jmap = [m for m in jmaps if m["codomain_model_type"] == 1]
+        j1728map = [m for m in jmaps if m["codomain_model_type"] == 3]
+        f1 = formatted_map(jmap[0]) if jmap else {}
+        f2 = formatted_map(j1728map[0]) if j1728map else {}
+        f = {}
+        f["degree"] = jmaps[0]["degree"]
+        f["domain_model_type"] = jmaps[0]["domain_model_type"]
+        f["codomain_model_type"] = 1
+        f["codomain_label"] = "1.1.0.1"
+        f["codomain_name"] = "X(1)"
+        f["codomain_equation"] = ""
+        nb_coords = 0
+        f["coord_names"] = []
+        f["equations"] = []
+        if jmap:
+            nb_coords += 1
+            f["equations"] += f1["equations"]
+        if j1728map:
+            nb_coords += 1
+            cst = "1728"
+            lead = j1728map[0]["leading_coefficients"][0] if j1728map[0].get("leading_coefficients") else ["1","1"]
+            if not(int(lead[0]) < 0 and int(lead[1]) == 1):
+                cst += "+"
+            f["equations"] += [cst + f2["equations"][0]]
+        if self.display_E4E6:
+            nb_coords += 1
+            f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
+        f["nb_coords"] = nb_coords
+        f["coord_names"] = ["j"] + [""]*(nb_coords-1)
+        return(f)
+
+    @lazy_attribute
+    def formatted_E4E6(self):        
+        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4][0]
+        f = formatted_map(E4E6)
+        f["coord_names"] = ["E_4", "E_6"]
+        return(f)
+
+    @lazy_attribute
+    def other_formatted_maps(self):
+        maps = [m for m in self.modelmaps_to_display if m["codomain_label"] != "1.1.0.1"]
+        codomain_labels = [m["codomain_label"] for m in maps]
+        codomains = list(db.gps_gl2zhat_test.search({"label": {"$in": codomain_labels}}))
+        image_eqs = list(db.modcurve_models.search({"modcurve": {"$in": codomain_labels}}))
+        res = []
+        for m in maps:
+            codomain = [crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
+            codomain_name = codomain["name"] if codomain.get("name") else ""
+            image_eq = [model for model in image_eqs if model["modcurve"] == m["codomain_label"] and model["model_type"] == m["codomain_model_type"]]
+            if len(image_eq) > 0 and image_eq[0].get("equation"):
+                codomain_equation = image_eq[0]["equation"]
+            else:
+                codomain_equation = ""
+            res.append(formatted_map(m, codomain_name=codomain_name, codomain_equation=codomain_equation))
+        return res
+        
+    @lazy_attribute
+    def all_formatted_maps(self):
+        maps = []
+        if self.display_j:
+            maps.append(self.formatted_jmap)
+        if self.display_E4E6:
+            maps.append(self.formatted_E4E6)
+        maps += self.other_formatted_maps
+        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], list(range(m["nb_coords"])), m["coord_names"], m["equations"]) for m in maps]        
+    
+    @lazy_attribute
+    def modelmaps_count(self):
+        return db.modcurve_modelmaps.count({"domain_label": self.label})
+
+    @lazy_attribute
+    def has_more_modelmaps(self):
+        return len(self.modelmaps_to_display) < self.modelmaps_count
+
+    @lazy_attribute
+    def modelmaps_to_download(self):
+        maps = list(db.modcurve_modelmaps.search({"domain_label": self.label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
