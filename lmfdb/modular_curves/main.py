@@ -133,35 +133,52 @@ def by_label(label):
 def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
-def modcurve_jump(info):
-    label = info["jump"]
+def modcurve_lmfdb_label(label):
     if CP_LABEL_RE.fullmatch(label):
-        return redirect(url_for(".index", CPlabel=label))
+        label_type = "Cummins & Pauli label"
+        lmfdb_label = db.gps_gl2zhat_test.lucky({"CPlabel": label}, "label")
     elif SZ_LABEL_RE.fullmatch(label):
+        label_type = "Sutherland & Zywina label"
         lmfdb_label = db.gps_gl2zhat_test.lucky({"SZlabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Sutherland & Zywina label %s", label)
-            return redirect(url_for(".index"))
-        label = lmfdb_label
     elif RZB_LABEL_RE.fullmatch(label):
+        label_type = "Rousse & Zureick-Brown label"
         lmfdb_label = db.gps_gl2zhat_test.lucky({"RZBlabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Rousse & Zureick-Brown label %s", label)
-            return redirect(url_for(".index"))
-        label = lmfdb_label
     elif S_LABEL_RE.fullmatch(label):
+        label_type = "Sutherland label"
         lmfdb_label = db.gps_gl2zhat_test.lucky({"Slabel": label}, "label")
-        if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with Sutherland label %s", label)
-            return redirect(url_for(".index"))
-        label = lmfdb_label
     elif NAME_RE.fullmatch(label.upper()):
+        label_type = "name"
         lmfdb_label = db.gps_gl2zhat_test.lucky({"name": canonicalize_name(label)}, "label")
+    else:
+        label_type = "label"
+        lmfdb_label = label
+    return lmfdb_label, label_type
+    
+def modcurve_jump(info):
+    labels = (info["jump"]).split("*")
+    lmfdb_labels = []    
+    for label in labels:
+        lmfdb_label, label_type = modcurve_lmfdb_label(label)
         if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with name %s", label)
+            flash_error("There is no modular curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
-        label = lmfdb_label
-    return redirect(url_for_modcurve_label(label))
+        lmfdb_labels.append(lmfdb_label)
+    
+    if len(lmfdb_labels) == 1:
+        label = lmfdb_labels[0]
+        return redirect(url_for_modcurve_label(label))
+    else:
+        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels, "$not": "1.1.0.1"}}, "factorization"))
+        if len(factors) != len([label for label in lmfdb_labels if label != "1.1.0.1"]):
+            flash_error("Fiber product decompositions cannot contain repeated terms")
+            return redirect(url_for(".index"))
+        factors = sorted(sum(factors, []), key=lambda x:[int(i) for i in x.split(".")])
+        label = db.gps_gl2zhat_test.lucky({'factorization': factors}, "label")
+        if label is None:
+            flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
+            return redirect(url_for(".index"))
+        else:
+            return redirect(url_for_modcurve_label(label))        
 
 modcurve_columns = SearchColumns([
     LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
@@ -170,7 +187,7 @@ modcurve_columns = SearchColumns([
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("gonality_bounds", "modcurve.gonality", "$K$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
+    ProcessedCol("gonality_bounds", "modcurve.gonality", "$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
     ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
@@ -244,6 +261,7 @@ def modcurve_search(info, query):
             query["cm_discriminants"] = {"$contains": int(info["cm_discriminants"])}
     parse_noop(info, query, "CPlabel")
     parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
+    parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     #parse_element_of(info, query, "covered_by", qfield="children")
     if "covered_by" in info:
         # sort of hacky
@@ -257,7 +275,7 @@ def modcurve_search(info, query):
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.1"
-    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, or 13A3"
+    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, 13A3, or 3.8.0.1*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
@@ -332,10 +350,16 @@ class ModCurveSearchArray(SearchArray):
         gonality = TextBoxWithSelect(
             name="gonality",
             knowl="modcurve.gonality",
-            label="$K$-gonality",
+            label="$\Q$-gonality",
             example="2",
             example_span="2, 3-6",
             select_box=gonality_quantifier,
+        )
+        factor = TextBox(
+            name="factor",
+            knowl="modcurve.fiber_product",
+            label="Fiber product with",
+            example="3.8.0.1",
         )
         covers = TextBox(
             name="covers",
@@ -406,16 +430,17 @@ class ModCurveSearchArray(SearchArray):
             [genus_minus_rank, gonality],
             [cusps, rational_cusps],
             [simple, squarefree],
+            [cm_discriminants, factor],
             [covers, covered_by],
-            [cm_discriminants, contains_negative_one],
-            [count, family]
+            [contains_negative_one, family],
+            [count],
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, simple, squarefree],
-            [covers, covered_by, cm_discriminants, contains_negative_one, family],
-            [CPlabel],
+            [factor, covers, covered_by, cm_discriminants, contains_negative_one],
+            [family, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"

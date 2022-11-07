@@ -165,14 +165,14 @@ def formatted_dims(dims):
     if not dims:
         return ""
     C = Counter(dims)
-    return "$" + ",".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
+    return "$" + "\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
 def formatted_newforms(newforms):
     if not newforms:
         return ""
     C = Counter(newforms)
     # Make sure that the Counter doesn't break the ordering
-    return ",&nbsp;".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
 def difference(A,B):
     C = A.copy()
@@ -196,7 +196,7 @@ class WebModCurve(WebObj):
             ("Genus", str(self.genus)),
         ]
         if hasattr(self,"rank"):
-            props.append(("Rank", str(self.rank)))
+            props.append(("Analytic rank", str(self.rank)))
         props.extend([("Cusps", str(self.cusps)),
                       (r"$\Q$-cusps", str(self.rational_cusps))])
         return props
@@ -204,10 +204,6 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
-        if self.genus > 0:
-            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
-                if r['newforms'] == self.newforms and r['label'] != self.label:
-                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
@@ -223,6 +219,10 @@ class WebModCurve(WebObj):
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
+        if self.genus > 0:
+            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
+                if r['newforms'] == self.newforms and r['label'] != self.label:
+                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         return friends
 
     @lazy_attribute
@@ -265,12 +265,22 @@ class WebModCurve(WebObj):
     def qtwist_description(self):
         if self.contains_negative_one:
             if len(self.qtwists) > 1:
-                return r"$\textsf{yes}\quad$ (see %s for level structures without $-I$)"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
+                return r"yes"
             else:
-                return r"$\textsf{yes}$"
+                return r"yes"
         else:
-            return r"$\textsf{no}\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
+            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
 
+    @lazy_attribute
+    def quadratic_refinements(self):
+        if self.contains_negative_one:
+            if len(self.qtwists) > 1:
+                return r"%s"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
+            else:
+                return r"none"
+        else:
+            return "none"
+        
     @lazy_attribute
     def cusp_display(self):
         if self.cusps == 1:
@@ -325,7 +335,7 @@ class WebModCurve(WebObj):
             self.psl2index // C["psl2index"], # relative degree
             C["genus"],
             C.get("rank", ""),
-            formatted_dims(difference(self.dims,C.get("dims",[]))))
+            formatted_dims(difference(self.dims, C.get("dims",[]))))
                 for C in curves]
 
     @lazy_attribute
@@ -339,7 +349,21 @@ class WebModCurve(WebObj):
             C["psl2index"] // self.psl2index, # relative degree
             C["genus"],
             C.get("rank", ""),
-            formatted_dims(difference(C.get("dims",[]),self.dims)))
+            formatted_dims(difference(C.get("dims",[]), self.dims)))
+                for C in curves]
+
+    @lazy_attribute
+    def fiber_product_of(self):
+        curves = self.table.search({"label": {"$in": self.factorization, "$not": self.label}}, ["label", "level", "index", "psl2index", "genus", "name", "rank", "dims"])
+        return [(
+            C["label"],
+            name_to_latex(C["name"]) if C.get("name") else C["label"],
+            C["level"],
+            self.index // C["index"], # relative index
+            self.psl2index // C["psl2index"], # relative degree
+            C["genus"],
+            C.get("rank", ""),
+            formatted_dims(difference(self.dims, C.get("dims",[]))))
                 for C in curves]
 
     @lazy_attribute
@@ -400,7 +424,7 @@ class WebModCurve(WebObj):
                 limit=None,
                 projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])))
             curves.sort(key=lambda x: (x["conductor"], x["iso_nlabel"], x["lmfdb_number"]))
-            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), r'$\textsf{no}$' if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
+            return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
                     for rec in curves]
         else:
             return []
@@ -412,8 +436,8 @@ class WebModCurve(WebObj):
             pts.append(
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
-                 r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                 r"$\textsf{yes}$" if rec["isolated"] is True else (r"$\textsf{no}$" if rec["isolated"] is False else r"$\textsf{maybe}$"),
+                 "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                 "yes" if rec["isolated"] is True else ("no" if rec["isolated"] is False else "maybe"),
                  showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
                  rec["residue_field"],
                  url_for_NF_label(rec["residue_field"]),
@@ -436,9 +460,8 @@ class WebModCurve(WebObj):
             return [(rec["label"],
                      url_for_ECNF_label(rec["label"]),
                      rec["equation"],
-                     r"$\textsf{no}$" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                     r"$\textsf{yes}$" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else r"$\textsf{maybe}$",
+                     "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                     "yes" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "maybe",
                      web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []
-
