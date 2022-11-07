@@ -184,6 +184,9 @@ def difference(A,B):
 def modcurve_link(label):
     return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
 
+def formatted_map(m):
+    return (m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], "")
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_test
 
@@ -314,7 +317,7 @@ class WebModCurve(WebObj):
     
     @lazy_attribute
     def modelmaps_to_display(self):
-        return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+        return [formatted_map(m) for m in db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"])]
     
     @lazy_attribute
     def modelmaps_count(self):
