@@ -260,7 +260,10 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def obstruction_primes(self):
-        return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
+        if len(self.obstructions) < 10:
+            return ",".join(str(p) for p in self.obstructions if p != 0)
+        else:
+            return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r",\ldots," + str(self.obstructions[-1])
 
     @lazy_attribute
     def qtwist_description(self):
