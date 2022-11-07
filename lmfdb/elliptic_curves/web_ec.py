@@ -7,6 +7,7 @@ from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
+from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
@@ -315,7 +316,19 @@ class WebEC():
         # remove adelic image record (prime set to 0) from ell-adic data if present
         galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
         data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
-        data['adelic_data'] = [r for r in galois_data if r["prime"] == 0]
+        adelic_data = [r for r in galois_data if r["prime"] == 0]
+        if adelic_data:
+            assert len(adelic_data) == 1
+            my_adelic_data = adelic_data[0]
+            # import pdb; pdb.set_trace()
+            # my_adelic_data['adelic_gens'] = [dispZmat_from_list(z,2) for z in my_adelic_data['adelic_gens']]
+            my_adelic_data['adelic_gens'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+            data['adelic_data'] = my_adelic_data
+            
+        else:
+            data['adelic_data'] = {}
+        
+        # import pdb; pdb.set_trace()
 
         # CM and Endo ring:
 
