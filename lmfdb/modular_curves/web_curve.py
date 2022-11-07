@@ -137,9 +137,11 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f["codomain_name"] = codomain_name
     f["codomain_equation"] = codomain_equation
     nb_coords = len(m["coordinates"][0])    
-    lead = m["leading_coefficients"][0]
+    lead = m["leading_coefficients"]
     if lead is None:
         lead = ["1"]*nb_coords
+    else:
+        lead = lead[0]
     eqs = [teXify_pol(p) for p in m["coordinates"][0]]
     if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
@@ -348,9 +350,11 @@ class WebModCurve(WebObj):
         if j1728map:
             nb_coords += 1
             cst = "1728"
-            lead = j1728map[0]["leading_coefficients"][0]
+            lead = j1728map[0]["leading_coefficients"]
             if lead is None:
                 lead = ["1","1"]
+            else:
+                lead = lead[0]
             if not(int(lead[0]) < 0 and int(lead[1]) == 1):
                 cst += "+"
             f["equations"] += [cst + f2["equations"][0]]
