@@ -81,7 +81,9 @@
   {% else %}
   {{ KNOWL('ag.smooth', 'Singular') }} {{ KNOWL('ag.plane_model', 'plane model') }} :
   {% endif %}
-  ${{ equation }}$ </p>
+</p>
+<p>  ${{ equation }}$ </p>
+
 {% endif %}
 {% endfor %}
 {% endif %}
@@ -92,15 +94,6 @@
 <p> Some stored models are too large to be displayed and are available for download. </p>
 {% endif %}
 {% endif %}
-
-<!-- {% if curve.plane_model %} -->
-<!-- <h2> {{ KNOWL('ag.plane_model', 'Plane model') }} </h2> -->
-<!-- {% if curve.plane_model == "P1" %} -->
-<!-- <p>$\mathbb{P}^1$</p> -->
-<!-- {% else %} -->
-<!-- <p>${{curve.latexed_plane_model}} = 0$</p> -->
-<!-- {% endif %} -->
-<!-- {% endif %} -->
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
@@ -176,17 +169,17 @@
 </table>
 {% endif %}
 
-{% set modelmaps = curve.modelmaps_to_display %}
+{% set modelmaps = curve.all_formatted_maps %}
 {% if modelmaps or curve.has_more_modelmaps %}
 <h2> Maps from this modular curve </h2>
 {% if modelmaps %}
-{% for degree, domain_model_type, codomain_label, codomain_model_type, codomain_name in modelmaps %}
-<p> {% if codomain_label == "1.1.0.1" and codomain_model_type == 1 %}
-  {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}
-  {% elif codomain_label == "1.1.0.1" and codomain_model_type == 3 %}
-  Alternative formula for the $j$-invariant map
-  {% elif codomain_label == "1.1.0.1" and codomain_model_type == 4 %}
-  {{ KNOWL('modcurve.E4_E6_map', '$E4/E6\,$ map') }}
+{% for degree, domain_model_type, codomain_label, codomain_model_type, codomain_name, codomain_equation, num_coords, coord_names, equations in modelmaps %}
+<p>
+  {% if codomain_label == "1.1.0.1" and codomain_model_type == 4 %}
+  where the projective coordinates $(E_4:E_6)$ of weights $4$ and $6$ are as follows
+  {% else %}
+  {% if codomain_label == "1.1.0.1" and codomain_model_type == 1 %}
+  {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}  
   {% else %}
   Map
   {% endif %}
@@ -202,19 +195,28 @@
   {% elif codomain_model_type == 2 %}
   the plane model of
   {% endif %}
+  the modular curve
   {% if codomain_name %}
-  {{codomain_name}}
+  <a href="{{url_for('.by_label', label=codomain_label)}}">${{codomain_name}}$  </a>
   {% else %}
-  the modular curve {{codomain_label}}
+  <a href="{{url_for('.by_label', label=codomain_label)}}">{{codomain_label}}</a>
   {% endif %}
   {% if codomain_model_type == 1 and codomain_label != "1.1.0.1" %}
   isomorphic to $P^1$
   {% endif %}
+  {% endif %}
   : </p>
-<!-- print equation... -->
+<table valign="center">
+  {% for j in num_coords %}
+  <tr>
+    <td> $\displaystyle {{ coord_names[j] }}$ </td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td> $\displaystyle {{ equations[j] }}$</td>
+  </tr>
+  {% endfor %}
+</table>
 {% if codomain_model_type in ["0","2"] %}
-<p> Equation of the image curve: </p>
-<!-- print equation... -->
+<p> Equation of the image curve: ${{ codomain_equation }}</p>
 {% endif %}
 {% endfor %}
 {% endif %}
@@ -222,23 +224,6 @@
 <p> Some stored maps are too large to be displayed and are available for download. </p>
 {% endif %}
 {% endif %}
-
-
-<!-- {% if curve.jmap_factored %} -->
-<!-- <h2> {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}</h2> -->
-<!-- <table valign="center"> -->
-<!--   <tr> -->
-<!--     <td>$j$</td> -->
-<!--     <td style="padding: 15px 0px;">$=$</td> -->
-<!--     <td>$\displaystyle {{ curve['jmap_factored'][0] }}$</td> -->
-<!--   </tr> -->
-<!--   <tr> -->
-<!--     <td></td> -->
-<!--     <td style="padding: 15px 0px;">$=$</td> -->
-<!--     <td>$\displaystyle {{ curve['jmap_factored'][1] }}$</td> -->
-<!--   </tr> -->
-<!-- </table> -->
-<!-- {% endif %} -->
 
 {% set covered_by = curve.modular_covered_by() %}
 {% set fiber_product_of = curve.fiber_product_of() %}
