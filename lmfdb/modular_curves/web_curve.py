@@ -579,7 +579,9 @@ class WebModCurve(WebObj):
                 if curve.level == 1:
                     return 'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
-                    return 'This modular curve has infinitely many rational points, including <a href="%s">{{pluralize(curve.known_degree1_points, "stored non-cuspidal point")}}</a>.' % url_for('.low_degree_points', curve=curve.label, degree=1)
+                    return 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
+                        url_for('.low_degree_points', curve=curve.label, degree=1),
+                        pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
                     return 'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):

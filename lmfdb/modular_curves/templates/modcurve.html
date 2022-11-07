@@ -104,7 +104,7 @@
 
 <h2> {{ KNOWL('modcurve.rational_points', 'Rational points') }} </h2>
 
-<p> {{curve.rational_points_description}} </p>
+<p> {{curve.rational_points_description | safe}} </p>
 
 {% if curve.db_rational_points and (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) %}
 <p> The following are the known non-cuspidal rational points on this modular curve (one per $j$-invariant).</p>
