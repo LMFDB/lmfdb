@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import subprocess
-import os
 import sys
 
 from lmfdb.backend.base import PostgresBase
@@ -17,6 +16,7 @@ from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
+from sage.all import cached_function
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -752,16 +752,12 @@ def knowl_title(kid):
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
 
+@cached_function
 def knowl_url_prefix():
     """
-    why is this function needed?
-    if you're running lmfdb in cocalc, front-end javascript (see: lmfdb.js) doesn't know your prefix isn't just a website domain.
+    if one is running lmfdb in cocalc, front-end javascript (see: lmfdb.js) doesn't know your prefix isn't just a website domain.
     """
-    flask_options = Configuration().get_flask()
-    if "COCALC_PROJECT_ID" in os.environ:
-        return 'https://cocalc.com/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(flask_options['port'])
-    else:
-        return ""
+    return Configuration().get_url_prefix()
 
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}

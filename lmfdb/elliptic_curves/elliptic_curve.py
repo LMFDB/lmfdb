@@ -5,7 +5,7 @@ import re
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex, Jacobian
 from sage.databases.cremona import parse_cremona_label, class_to_int
 from sage.schemes.elliptic_curves.constructor import EllipticCurve_from_Weierstrass_polynomial
 
@@ -310,11 +310,21 @@ def ec_lookup_equation(input_str):
 
     ec_defining_poly = y**2 + y*(fg[1]) - fg[0]
     S = PolynomialRing(QQ, 2, ["x", "y"])
-    try:
-        E = EllipticCurve_from_Weierstrass_polynomial(S(ec_defining_poly)).minimal_model()
-    except ValueError:
-        C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
-        return None, ("invalid_poly",C_str_latex)
+    x,_ = S.gens()
+    ec_defining_poly = S(ec_defining_poly)
+
+    if ec_defining_poly.coefficient(x**3) == -1:
+        try:
+            E = EllipticCurve_from_Weierstrass_polynomial(ec_defining_poly).minimal_model()
+        except ValueError:
+            C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
+            return None, ("invalid_poly",C_str_latex)
+    else:
+        try:
+            E = Jacobian(ec_defining_poly).minimal_model()
+        except ValueError:
+            C_str_latex = fr"\({latex(y**2 + y*fg[1])} = {latex(fg[0])}\)"
+            return None, ("invalid_poly",C_str_latex)
     lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
 
     if lmfdb_label is None:
