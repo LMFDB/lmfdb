@@ -320,16 +320,11 @@ class WebEC():
         if adelic_data:
             assert len(adelic_data) == 1
             my_adelic_data = adelic_data[0]
-            # import pdb; pdb.set_trace()
-            # my_adelic_data['adelic_gens'] = [dispZmat_from_list(z,2) for z in my_adelic_data['adelic_gens']]
             my_adelic_data['adelic_gens'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
             data['adelic_data'] = my_adelic_data
-            
         else:
             data['adelic_data'] = {}
         
-        # import pdb; pdb.set_trace()
-
         # CM and Endo ring:
 
         data['CMD'] = self.cm
