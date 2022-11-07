@@ -313,7 +313,9 @@ class WebEC():
         # ell-adic Galois images:
 
         # remove adelic image record (prime set to 0) from ell-adic data if present
-        data['galois_data'] = [r for r in list(db.ec_galrep.search({'lmfdb_label': lmfdb_label})) if r["prime"] > 0]
+        galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
+        data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
+        data['adelic_data'] = [r for r in galois_data if r["prime"] == 0]
 
         # CM and Endo ring:
 
