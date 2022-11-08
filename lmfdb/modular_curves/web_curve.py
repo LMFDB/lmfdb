@@ -141,7 +141,7 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
         f[key] = m[key]
     f["codomain_name"] = codomain_name
     f["codomain_equation"] = codomain_equation
-    nb_coords = len(m["coordinates"][0])    
+    nb_coords = len(m["coordinates"][0])
     lead = m["leading_coefficients"]
     if lead is None:
         lead = ["1"]*nb_coords
@@ -315,7 +315,7 @@ class WebModCurve(WebObj):
     def models_to_display(self):
         models = db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"])
         return [formatted_model(m) for m in models]
-    
+
     @lazy_attribute
     def models_count(self):
         return db.modcurve_models.count({"modcurve": self.label})
@@ -327,7 +327,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def models_to_download(self):
         return list(db.modcurve_models.search({"modcurve": self.label}, ["equation", "number_variables", "model_type"]))
-    
+
     @lazy_attribute
     def modelmaps_to_display(self):
         return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients", "factored"]))
@@ -335,10 +335,10 @@ class WebModCurve(WebObj):
     def display_j(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
-    
-    def display_E4E6(self, domain_model_type):        
+
+    def display_E4E6(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
-        return len(jmaps) >= 1        
+        return len(jmaps) >= 1
 
     def formatted_jmap(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
@@ -377,7 +377,7 @@ class WebModCurve(WebObj):
         f["coord_names"] = ["j"] + [""]*(nb_coords-1)
         return(f)
 
-    def formatted_E4E6(self, domain_model_type):        
+    def formatted_E4E6(self, domain_model_type):
         E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
@@ -410,12 +410,12 @@ class WebModCurve(WebObj):
                 codomain_equation = ""
             res.append(formatted_map(m, codomain_name=codomain_name, codomain_equation=codomain_equation))
         return res
-        
+
     @lazy_attribute
     def all_formatted_maps(self):
         maps = self.formatted_jmaps + self.other_formatted_maps
-        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], list(range(m["nb_coords"])), m["coord_names"], m["equations"]) for m in maps]        
-    
+        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], list(range(m["nb_coords"])), m["coord_names"], m["equations"]) for m in maps]
+
     @lazy_attribute
     def modelmaps_count(self):
         return db.modcurve_modelmaps.count({"domain_label": self.label})
@@ -637,5 +637,11 @@ class WebModCurve(WebObj):
                 return fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.obstructions:
                 return fr'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+            elif curve.pointless == 0:
+                if curve.genus <= 90:
+                    pexp = "$p$ not dividing the level"
+                else:
+                    pexp = "good $p < 8192"
+                return fr'This modular curve has real points and $\Q_p$ points for {pexp, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 return "This modular curve has finitely many rational points, none of which are cusps."
