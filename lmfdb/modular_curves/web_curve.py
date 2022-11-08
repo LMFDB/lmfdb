@@ -12,6 +12,7 @@ from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_lab
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
 from string import ascii_lowercase
+from time import time
 
 
 def get_bread(tail=[]):
@@ -43,6 +44,7 @@ def showj_fac(j):
         return "$= %s$" % latex((ZZ(j[0]) / ZZ(j[1])).factor())
 
 def showj_nf(j, jfield, jorig, resfield):
+    start = time()
     Ra = PolynomialRing(QQ, 'a')
     if "," in j:
         s = None
@@ -84,6 +86,8 @@ def showj_nf(j, jfield, jorig, resfield):
         if "," in j:
             j = str(f).replace(" ", "")
         url = url_for("ecnf.index", jinv=j, field=resfield, showcol="jinv")
+    end = time()
+    print("showj_nf: {}\n\n".format(end-start))
     return '<a href="%s">%s</a>' % (url, s)
 
 def canonicalize_name(name):
@@ -208,6 +212,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
+        start = time()
         friends = []
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
@@ -228,6 +233,8 @@ class WebModCurve(WebObj):
             for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
                 if r['newforms'] == self.newforms and r['label'] != self.label:
                     friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
+        end = time()
+        print("friends: {}\n\n".format(end-start))
         return friends
 
     @lazy_attribute
@@ -327,19 +334,16 @@ class WebModCurve(WebObj):
     def modelmaps_to_display(self):
         return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients", "factored"]))
 
-    @lazy_attribute
-    def display_j(self):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1"]
+    def display_j(self, domain_model_type):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
     
-    @lazy_attribute
-    def display_E4E6(self):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4]
+    def display_E4E6(self, domain_model_type):        
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1        
 
-    @lazy_attribute
-    def formatted_jmap(self):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1"]
+    def formatted_jmap(self, domain_model_type):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
         jmap = [m for m in jmaps if m["codomain_model_type"] == 1]
         j1728map = [m for m in jmaps if m["codomain_model_type"] == 3]
         f1 = formatted_map(jmap[0]) if jmap else {}
@@ -375,12 +379,21 @@ class WebModCurve(WebObj):
         f["coord_names"] = ["j"] + [""]*(nb_coords-1)
         return(f)
 
-    @lazy_attribute
-    def formatted_E4E6(self):        
-        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4][0]
+    def formatted_E4E6(self, domain_model_type):        
+        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
         return(f)
+
+    @lazy_attribute
+    def formatted_jmaps(self):
+        maps = []
+        for domain_model_type in [0,1,2]:
+            if self.display_j(domain_model_type):
+                maps.append(self.formatted_jmap(domain_model_type))
+            if self.display_E4E6(domain_model_type):
+                maps.append(self.formatted_E4E6(domain_model_type))
+        return maps
 
     @lazy_attribute
     def other_formatted_maps(self):
@@ -402,12 +415,7 @@ class WebModCurve(WebObj):
         
     @lazy_attribute
     def all_formatted_maps(self):
-        maps = []
-        if self.display_j:
-            maps.append(self.formatted_jmap)
-        if self.display_E4E6:
-            maps.append(self.formatted_E4E6)
-        maps += self.other_formatted_maps
+        maps = self.formatted_jmaps + self.other_formatted_maps
         return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], list(range(m["nb_coords"])), m["coord_names"], m["equations"]) for m in maps]        
     
     @lazy_attribute
@@ -524,18 +532,20 @@ class WebModCurve(WebObj):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
         if ZZ(self.level).is_prime_power():
-            curves = (list(db.ec_curvedata.search(
+            start = time()
+            search_noncm = db.ec_curvedata.search(
                 {"elladic_images": {"$contains": self.label}, "cm": 0},
                 sort=["conductor", "iso_nlabel", "lmfdb_number"],
                 one_per=["jinv"],
                 limit=limit,
-                projection=["lmfdb_label", "ainvs", "jinv", "cm"])) +
-                      list(db.ec_curvedata.search(
+                projection=["lmfdb_label", "ainvs", "jinv", "cm"])
+            search_cm = db.ec_curvedata.search(
                 {"elladic_images": {"$contains": self.label}, "cm": {"$ne": 0}},
                 sort=["conductor", "iso_nlabel", "lmfdb_number"],
                 one_per=["jinv"],
                 limit=None,
-                projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])))
+                projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])
+            curves = list(search_noncm) + list(search_cm)
             curves.sort(key=lambda x: (x["conductor"], x["iso_nlabel"], x["lmfdb_number"]))
             return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
                     for rec in curves]
@@ -581,8 +591,11 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def rational_points_description(self):
+        start = time()
         curve = self
         if curve.rational_cusps or curve.cm_discriminants or curve.known_degree1_noncm_points or curve.plane_model == "P1":
+            end = time()
+            print("rational_pts: {}\n\n".format(end-start))
             if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
                     return 'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
@@ -624,6 +637,8 @@ class WebModCurve(WebObj):
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
+            end = time()
+            print("rational_pts: {}\n\n".format(end-start))
             if curve.obstructions == [0]:
                 return 'This modular curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
