@@ -134,6 +134,12 @@ def formatted_newforms(newforms):
     # Make sure that the Counter doesn't break the ordering
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
+def formatted_model(m):
+    lines = [l for l in m["equation"].replace(" ","").split("")]
+    if len(lines)>2: #display as 0 = ...
+        lines = ["0"] + [l for l in lines if l != "0"]
+    return (lines, list(range(len(lines)-2)), m["number_variables"], m. m["model_type"],  m["smooth"])
+
 def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f = {}
     for key in ["degree", "domain_model_type", "codomain_label", "codomain_model_type"]:
@@ -313,10 +319,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def models_to_display(self):
         models = db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"])
-        return [(teXify_pol(m["equation"].lower()),
-                 m["number_variables"],
-                 m["model_type"],
-                 m["smooth"]) for m in models]
+        return [formatted_model(m) for m in models]
     
     @lazy_attribute
     def models_count(self):
