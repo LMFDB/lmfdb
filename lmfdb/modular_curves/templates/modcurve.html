@@ -75,10 +75,10 @@
 {% endif %}
 
 {% set models = curve.models_to_display %}
-{% if models or (curve.genus == 0 and not curve.low_genus_pointless) or curve.has_more_models %}
+{% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
 <h2> {{ KNOWL('ag.model', 'Models') }} </h2>
 {% if models %}
-{% for equation, nb_var, type, smooth in models %}
+{% for lines, extra_lines, nb_var, type, smooth in models %}
 {% if type == 0 %}
 <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{{nb_var-1}}$: </p>
 {% elif type == 2 %}
@@ -87,17 +87,30 @@
   {{ KNOWL('ag.plane_model', 'plane model') }}:
   {% elif smooth == False %}
   {{ KNOWL('ag.smooth', 'Singular') }}
-  {{ KNOWL('ag.plane_model', 'plane model') }} :
+  {{ KNOWL('ag.plane_model', 'plane model') }}:
   {% else %}
-  {{ KNOWL('ag.plane_model', 'Plane model') }} :
+  {{ KNOWL('ag.plane_model', 'Plane model') }}:
   {% endif %}
 </p>
-<p>  ${{ equation }}$ </p>
+<table valign="center">
+  <tr>
+    <td> $\displaystyle {{ lines[0] }}$ </td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td> $\displaystyle {{ lines[1] }}$</td>
+  </tr>
+  {% for j in extra_lines %}
+  <tr>
+    <td> </td>
+    <td style="padding: 15px 0px;">$=$</td>
+    <td> $\displaystyle {{ lines[j] }}$</td>
+  </tr>
+  {% endfor %}
+</table>
 
 {% endif %}
 {% endfor %}
 {% endif %}
-{% if curve.genus == 0 and not curve.low_genus_pointless %}
+{% if curve.genus == 0 and not curve.pointless %}
 <p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
 {% endif %}
 {% if curve.has_more_models %}
