@@ -642,6 +642,6 @@ class WebModCurve(WebObj):
                     pexp = "$p$ not dividing the level"
                 else:
                     pexp = "good $p < 8192"
-                return fr'This modular curve has real points and $\Q_p$ points for {pexp, but no known rational points.'
+                return fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 return "This modular curve has finitely many rational points, none of which are cusps."
