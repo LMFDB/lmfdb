@@ -360,12 +360,14 @@ class ModCurveSearchArray(SearchArray):
             name="nu2",
             knowl="modcurve.elliptic_points",
             label="Elliptic points of order 2",
+            example="1",
             example_span="1,3-5",
         )
         nu3 = TextBox(
             name="nu3",
             knowl="modcurve.elliptic_points",
             label="Elliptic points of order 3",
+            example="1",
             example_span="1,3-5",
         )        
         factor = TextBox(
@@ -490,7 +492,7 @@ ratpoint_columns = SearchColumns([
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
-    FloatCol("j_height", "modcurve.j_height", "$j$-height", default=True)])
+    FloatCol("j_height", "ec.j_height", "$j$-height", default=True)])
 
 @search_wrap(
     table=db.modcurve_points,
@@ -563,19 +565,19 @@ class RatPointSearchArray(SearchArray):
         )
         j_field = TextBox(
             name="j_field",
-            knowl="modcurve.j_invariant",
+            knowl="ec.j_invariant",
             label=r"$\Q(j)$",
             example="2.0.4.1",
         )
         jinv = TextBox(
             name="jinv",
-            knowl="modcurve.j_invariant",
+            knowl="ec.j_invariant",
             label="$j$-invariant",
             example="30887/73-9927/73*a",
         )
         j_height = TextBox(
             name="j_height",
-            knowl="modcurve.j_height",
+            knowl="ec.j_height",
             label="$j$-height",
             example="1.0-4.0",
         )
