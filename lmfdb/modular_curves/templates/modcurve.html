@@ -75,7 +75,7 @@
 {% endif %}
 
 {% set models = curve.models_to_display %}
-{% if models or (curve.genus == 0 and not curve.low_genus_pointless) or curve.has_more_models %}
+{% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
 <h2> {{ KNOWL('ag.model', 'Models') }} </h2>
 {% if models %}
 {% for lines, extra_lines, nb_var, type, smooth in models %}
@@ -110,7 +110,7 @@
 {% endif %}
 {% endfor %}
 {% endif %}
-{% if curve.genus == 0 and not curve.low_genus_pointless %}
+{% if curve.genus == 0 and not curve.pointless %}
 <p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
 {% endif %}
 {% if curve.has_more_models %}

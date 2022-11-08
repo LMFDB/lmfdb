@@ -130,10 +130,10 @@ def formatted_newforms(newforms):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
 
 def formatted_model(m):
-    lines = [l for l in m["equation"].replace(" ","").split("")]
+    lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
     if len(lines)>2: #display as 0 = ...
         lines = ["0"] + [l for l in lines if l != "0"]
-    return (lines, list(range(len(lines)-2)), m["number_variables"], m. m["model_type"],  m["smooth"])
+    return (lines, list(range(len(lines)-2)), m["number_variables"], m["model_type"],  m["smooth"])
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f = {}
@@ -370,7 +370,7 @@ class WebModCurve(WebObj):
             if not(int(lead[0]) < 0 and int(lead[1]) == 1):
                 cst += "+"
             f["equations"] += [cst + f2["equations"][0]]
-        if self.display_E4E6:
+        if self.display_E4E6(domain_model_type):
             nb_coords += 1
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
         f["nb_coords"] = nb_coords
