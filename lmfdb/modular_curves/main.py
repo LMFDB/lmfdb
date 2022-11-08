@@ -610,8 +610,9 @@ class RatPointSearchArray(SearchArray):
             label="Family",
             example="X0(N), Xsp(N)")
 
-        self.refine_array = [[curve, level, genus, degree, cm, family],
-                             [residue_field, j_field, jinv, j_height, isolated]]
+        self.refine_array = [[curve, level, genus, degree, cm],
+                             [residue_field, j_field, jinv, j_height, isolated],
+                             [family]]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
