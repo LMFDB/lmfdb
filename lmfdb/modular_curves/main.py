@@ -242,6 +242,8 @@ def modcurve_search(info, query):
     parse_ints(info, query, "cusps")
     parse_interval(info, query, "gonality", quantifier_type=info.get("gonality_type", "exactly"))
     parse_ints(info, query, "rational_cusps")
+    parse_ints(info, query, "nu2")
+    parse_ints(info, query, "nu3")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
     parse_bool(info, query, "contains_negative_one")
@@ -354,6 +356,18 @@ class ModCurveSearchArray(SearchArray):
             example_span="2, 3-6",
             select_box=gonality_quantifier,
         )
+        nu2 = TextBox(
+            name="nu2",
+            knowl="modcurve.elliptic_points",
+            label="Elliptic points of order 2",
+            example_span="1,3-5",
+        )
+        nu3 = TextBox(
+            name="nu3",
+            knowl="modcurve.elliptic_points",
+            label="Elliptic points of order 3",
+            example_span="1,3-5",
+        )        
         factor = TextBox(
             name="factor",
             knowl="modcurve.fiber_product",
@@ -428,6 +442,7 @@ class ModCurveSearchArray(SearchArray):
             [genus, rank],
             [genus_minus_rank, gonality],
             [cusps, rational_cusps],
+            [nu2, nu3],
             [simple, squarefree],
             [cm_discriminants, factor],
             [covers, covered_by],
@@ -437,9 +452,9 @@ class ModCurveSearchArray(SearchArray):
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
-            [gonality, cusps, rational_cusps, simple, squarefree],
-            [factor, covers, covered_by, cm_discriminants, contains_negative_one],
-            [family, CPlabel],
+            [gonality, cusps, rational_cusps, nu2, nu3],
+            [simple, squarefree, cm_discriminants, factor, covers],
+            [covered_by, contains_negative_one, family, CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
