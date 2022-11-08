@@ -284,7 +284,7 @@ class WebModCurve(WebObj):
                 return r"none"
         else:
             return "none"
-        
+
     @lazy_attribute
     def cusp_display(self):
         if self.cusps == 1:
