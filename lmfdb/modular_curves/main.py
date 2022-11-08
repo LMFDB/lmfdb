@@ -195,7 +195,6 @@ modcurve_columns = SearchColumns([
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("squarefree", "av.squarefree", "Squarefree"),
     CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-    CheckCol("plane_model", "ag.plane_model", "Model"),
     ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
@@ -751,13 +750,14 @@ class ModCurve_download(Downloader):
         s += "conductor := %s;\n" % rec['conductor']
         s += "bad_primes := %s;\n" % rec['bad_primes']
         s += "// Make plane model, if computed;\n"
-        if rec["plane_model"]:
-            s += "QQ := Rationals();\n"
-            if rec["plane_model"] == "P1":
-                s += "XX := Curve(ProjectiveSpace(QQ,1));\n"
-            else:
-                s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
-                s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
+        ## This should get updated to take the new
+        #if rec["plane_model"]:
+        #    s += "QQ := Rationals();\n"
+        #    if rec["plane_model"] == "P1":
+        #        s += "XX := Curve(ProjectiveSpace(QQ,1));\n"
+        #    else:
+        #        s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
+        #        s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
         s += "// Genus\n"
         s += "g := %s;\n" % rec['genus']
         s += "// Rank\n"

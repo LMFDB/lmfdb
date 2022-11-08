@@ -12,8 +12,6 @@ from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_lab
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
 from string import ascii_lowercase
-from time import time
-
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -44,7 +42,6 @@ def showj_fac(j):
         return "$= %s$" % latex((ZZ(j[0]) / ZZ(j[1])).factor())
 
 def showj_nf(j, jfield, jorig, resfield):
-    start = time()
     Ra = PolynomialRing(QQ, 'a')
     if "," in j:
         s = None
@@ -86,8 +83,6 @@ def showj_nf(j, jfield, jorig, resfield):
         if "," in j:
             j = str(f).replace(" ", "")
         url = url_for("ecnf.index", jinv=j, field=resfield, showcol="jinv")
-    end = time()
-    print("showj_nf: {}\n\n".format(end-start))
     return '<a href="%s">%s</a>' % (url, s)
 
 def canonicalize_name(name):
@@ -218,7 +213,6 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        start = time()
         friends = []
         if self.simple:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
@@ -239,8 +233,6 @@ class WebModCurve(WebObj):
             for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
                 if r['newforms'] == self.newforms and r['label'] != self.label:
                     friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
-        end = time()
-        print("friends: {}\n\n".format(end-start))
         return friends
 
     @lazy_attribute
@@ -273,7 +265,10 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def obstruction_primes(self):
-        return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r"\ldots"
+        if len(self.obstructions) < 10:
+            return ",".join(str(p) for p in self.obstructions if p != 0)
+        else:
+            return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r",\ldots," + str(self.obstructions[-1])
 
     @lazy_attribute
     def qtwist_description(self):
@@ -535,7 +530,6 @@ class WebModCurve(WebObj):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
         if ZZ(self.level).is_prime_power():
-            start = time()
             search_noncm = db.ec_curvedata.search(
                 {"elladic_images": {"$contains": self.label}, "cm": 0},
                 sort=["conductor", "iso_nlabel", "lmfdb_number"],
@@ -594,20 +588,17 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def rational_points_description(self):
-        start = time()
         curve = self
-        if curve.rational_cusps or curve.cm_discriminants or curve.known_degree1_noncm_points or curve.plane_model == "P1":
-            end = time()
-            print("rational_pts: {}\n\n".format(end-start))
+        if curve.known_degree1_noncm_points or curve.pointless == -1:
             if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
-                    return 'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    return r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
                     return 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
-                    return 'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    return r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     return 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
@@ -640,15 +631,11 @@ class WebModCurve(WebObj):
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
-            end = time()
-            print("rational_pts: {}\n\n".format(end-start))
             if curve.obstructions == [0]:
                 return 'This modular curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
-                return f'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+                return fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.obstructions:
-                return f'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
-            elif curve.plane_model == "P1" or (curve.genus == 0 and curve.num_bad_primes == 1):
-                return "This modular curve has infinitely many rational points."
+                return fr'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 return "This modular curve has finitely many rational points, none of which are cusps."
