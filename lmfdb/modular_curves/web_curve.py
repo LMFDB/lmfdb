@@ -13,7 +13,6 @@ from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
 from string import ascii_lowercase
 
-
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
     if not isinstance(tail, list):
@@ -129,6 +128,12 @@ def formatted_newforms(newforms):
     C = Counter(newforms)
     # Make sure that the Counter doesn't break the ordering
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+
+def formatted_model(m):
+    lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
+    if len(lines)>2: #display as 0 = ...
+        lines = ["0"] + [l for l in lines if l != "0"]
+    return (lines, list(range(len(lines)-2)), m["number_variables"], m["model_type"],  m["smooth"])
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f = {}
@@ -309,10 +314,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def models_to_display(self):
         models = db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"])
-        return [(teXify_pol(m["equation"].lower()),
-                 m["number_variables"],
-                 m["model_type"],
-                 m["smooth"]) for m in models]
+        return [formatted_model(m) for m in models]
     
     @lazy_attribute
     def models_count(self):
@@ -330,19 +332,16 @@ class WebModCurve(WebObj):
     def modelmaps_to_display(self):
         return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients", "factored"]))
 
-    @lazy_attribute
-    def display_j(self):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1"]
+    def display_j(self, domain_model_type):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
     
-    @lazy_attribute
-    def display_E4E6(self):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4]
+    def display_E4E6(self, domain_model_type):        
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1        
 
-    @lazy_attribute
-    def formatted_jmap(self):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1"]
+    def formatted_jmap(self, domain_model_type):
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
         jmap = [m for m in jmaps if m["codomain_model_type"] == 1]
         j1728map = [m for m in jmaps if m["codomain_model_type"] == 3]
         f1 = formatted_map(jmap[0]) if jmap else {}
@@ -371,19 +370,28 @@ class WebModCurve(WebObj):
             if not(int(lead[0]) < 0 and int(lead[1]) == 1):
                 cst += "+"
             f["equations"] += [cst + f2["equations"][0]]
-        if self.display_E4E6:
+        if self.display_E4E6(domain_model_type):
             nb_coords += 1
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
         f["nb_coords"] = nb_coords
         f["coord_names"] = ["j"] + [""]*(nb_coords-1)
         return(f)
 
-    @lazy_attribute
-    def formatted_E4E6(self):        
-        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4][0]
+    def formatted_E4E6(self, domain_model_type):        
+        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
         return(f)
+
+    @lazy_attribute
+    def formatted_jmaps(self):
+        maps = []
+        for domain_model_type in [0,1,2]:
+            if self.display_j(domain_model_type):
+                maps.append(self.formatted_jmap(domain_model_type))
+            if self.display_E4E6(domain_model_type):
+                maps.append(self.formatted_E4E6(domain_model_type))
+        return maps
 
     @lazy_attribute
     def other_formatted_maps(self):
@@ -405,12 +413,7 @@ class WebModCurve(WebObj):
         
     @lazy_attribute
     def all_formatted_maps(self):
-        maps = []
-        if self.display_j:
-            maps.append(self.formatted_jmap)
-        if self.display_E4E6:
-            maps.append(self.formatted_E4E6)
-        maps += self.other_formatted_maps
+        maps = self.formatted_jmaps + self.other_formatted_maps
         return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], list(range(m["nb_coords"])), m["coord_names"], m["equations"]) for m in maps]        
     
     @lazy_attribute
@@ -527,18 +530,19 @@ class WebModCurve(WebObj):
         # Use the db.ec_curvedata table to automatically find rational points
         limit = None if (self.genus > 1 or self.genus == 1 and self.rank == 0) else 10
         if ZZ(self.level).is_prime_power():
-            curves = (list(db.ec_curvedata.search(
+            search_noncm = db.ec_curvedata.search(
                 {"elladic_images": {"$contains": self.label}, "cm": 0},
                 sort=["conductor", "iso_nlabel", "lmfdb_number"],
                 one_per=["jinv"],
                 limit=limit,
-                projection=["lmfdb_label", "ainvs", "jinv", "cm"])) +
-                      list(db.ec_curvedata.search(
+                projection=["lmfdb_label", "ainvs", "jinv", "cm"])
+            search_cm = db.ec_curvedata.search(
                 {"elladic_images": {"$contains": self.label}, "cm": {"$ne": 0}},
                 sort=["conductor", "iso_nlabel", "lmfdb_number"],
                 one_per=["jinv"],
                 limit=None,
-                projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])))
+                projection=["lmfdb_label", "ainvs", "jinv", "cm", "conductor", "iso_nlabel", "lmfdb_number"])
+            curves = list(search_noncm) + list(search_cm)
             curves.sort(key=lambda x: (x["conductor"], x["iso_nlabel"], x["lmfdb_number"]))
             return [(rec["lmfdb_label"], url_for_EC_label(rec["lmfdb_label"]), EC_equation(rec["ainvs"]), "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]))
                     for rec in curves]
