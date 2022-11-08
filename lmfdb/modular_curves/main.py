@@ -702,21 +702,44 @@ class ModCurve_download(Downloader):
     }
 
 # cols currently unused in individual page download
+    #'cusp_orbits',
     #'determinant_label',
-    #'scalar_label',
-    #'reductions',
-    #'orbits',
-    #'kummer_orbits',
-    #'isogeny_orbits',
-    #'obstructions',
-    #'gassmann_class',
-    #'newforms',
     #'dims',
+    #'gassmann_class',
+    #'genus_minus_rank',
+    #'isogeny_orbits',
+    #'kummer_orbits',
+    #'level_is_squarefree',
+    #'level_radical',
+    #'log_conductor',
+    #'newforms',
+    #'nu2',
+    #'nu3',
+    #'num_bad_primes',
+    #'obstructions',
+    #'orbits',
+    #'pointless',
+    #'psl2index',
+    #'psl2level',
+    #'qtwists',
+    #'rational_cusps',
+    #'reductions',
+    #'scalar_label',
     #'simple',
+    #'sl2level',
     #'squarefree',
+    #'tiebreaker',
     #'trace_hash',
     #'traces',
-
+# cols currently unused in modcurve_models
+    #'dont_display'
+    #'gonality_bounds'
+    #'modcurve'
+# cols currently unused in modcurve_modelmaps
+    #'domain_label',
+    #'dont_display',
+    #'factored'
+    
     def download_modular_curve_magma_str(self, label):
         s = ""
         rec = db.gps_gl2zhat_test.lookup(label)
@@ -724,7 +747,7 @@ class ModCurve_download(Downloader):
             return abort(404, "Label not found: %s" % label)
         s += "// Magma code for modular curve with label %s\n\n" % label
         if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
-            s += "// other names and/or labels\n"
+            s += "// Other names and/or labels\n"
             if rec['name']:
                 s += "// Curve name: %s\n" % rec['name']
             if rec['CPlabel']:
@@ -749,15 +772,6 @@ class ModCurve_download(Downloader):
         s += "\n// Curve data\n"
         s += "conductor := %s;\n" % rec['conductor']
         s += "bad_primes := %s;\n" % rec['bad_primes']
-        s += "// Make plane model, if computed;\n"
-        ## This should get updated to take the new
-        #if rec["plane_model"]:
-        #    s += "QQ := Rationals();\n"
-        #    if rec["plane_model"] == "P1":
-        #        s += "XX := Curve(ProjectiveSpace(QQ,1));\n"
-        #    else:
-        #        s += "R<X,Y,Z> := PolynomialRing(QQ,3);\n"
-        #        s += "XX := Curve(ProjectiveSpace(R), %s);\n" % rec['plane_model']
         s += "// Genus\n"
         s += "g := %s;\n" % rec['genus']
         s += "// Rank\n"
@@ -773,20 +787,99 @@ class ModCurve_download(Downloader):
         s += "Ncusps := %s\n;" % rec['cusps']
         s += "// Number of rational cusps\n"
         s += "Nrat_cusps := %s\n;" % rec['cusps']
-        if rec['jmap']:
-            s += "// Map to j-line\n"
-            s += "jmap := %s;\n" % rec['jmap']
-        if rec['Emap']:
-            s += "// Map to j-line\n"
-            Emap_mag = "%s" % rec['Emap']
-            Emap_mag = Emap_mag.replace("'", "\"")
-            s += "Emap := %s;\n" % Emap_mag
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
-        s += "// groups containing given group, corresponding to curves covered by given curve\n"
+        if rec['factorization'] != [label]:
+            s += "// Modular curve is a fiber product of the following curves"
+            s += "factors := %s\n" % [f.replace("'", "\"") for f in rec['factorization']]
+        s += "// Groups containing given group, corresponding to curves covered by given curve\n"
         parents_mag = "%s" % rec['parents']
         parents_mag = parents_mag.replace("'", "\"")
         s += "covers := %s;\n" % parents_mag
+
+        s += "\n// Models for this modular curve, if computed\n"
+        s += "// Isomorphic to P^1?\n"
+        is_P1 = "true" if (rec['genus'] == 0 and rec['pointless'] is False) else "false"
+        s += "is_P1 := %s" % is_P1
+        models = list(db.modcurve_models.search({"modcurve": label, "model_type":{"$not":1}}, ["equation", "number_variables", "model_type", "smooth"]))
+        model_id = 0
+        for m in models:
+            if m["model_type"] == 0:
+                name = "Canonical model"
+            elif m["model_type"] == 2:
+                if m["smooth"] is True:
+                    name = "Smooth plane model"
+                elif m["smooth"] is False:
+                    name = "Singular plane model"
+                else:
+                    name = "Plane model"
+            else:
+                name = "Other model"
+            s += "\n// %s\n" % name
+            s += "model_%s := " % model_id
+            s += "\"%s\"" % m['equation']
+            s += "\n"
+            model_id += 1
+
+        s += "\n// Maps from this modular curve, if computed\n"
+        maps = list(db.modcurve_modelmaps.search({"domain_label": label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+        codomain_labels = [m["codomain_label"] for m in maps]
+        image_eqs = list(db.modcurve_models.search({"modcurve": {"$in": codomain_labels}}))
+        map_id = 0
+        for m in maps:
+            prefix = "map_%s_" % map_id
+            has_codomain_equation = False
+            if m["codomain_label"] == "1.1.0.1":
+                if m["codomain_model_type"] == 1:
+                    name = "j-invariant map"
+                elif m["codomain_model_type"] == 3:
+                    name = "j-invariant minus 1728"
+                elif m["codomain_model_type"] == 4:
+                    name = "E4, E6"
+                else:
+                    name = "Other map to X(1)"
+            else:
+                name = "Map"
+            if m["domain_model_type"] == 0:
+                name += " from the canonical model"
+            elif m["domain_model_type"] == 2:
+                name += " from the plane model"
+            if m["codomain_label"] != "1.1.0.1":
+                has_codomain_equation = True
+                if m["codomain_label_type"] == 0:
+                    name += " to canonical model of modular curve"
+                elif m["codomain_label_type"] == 1:
+                    has_codomain_equation = False
+                    name += " to modular curve isomorphic to P^1"
+                elif m["codomain_label_type"] == 2:
+                    name += " to plane model of modular curve"
+                else:
+                    name += " to other model of modular curve"
+                name += " with label %s" % m["codomain_label"]
+            s += "\n// %s\n" % name
+            nb_affines = len(m["coordinates"])
+            if nb_affines > 1:
+                s += "// Equations are available on %s different open affines\n" % nb_affine
+            for i in range(nb_affines):
+                if nb_affines > 1:
+                    s += "\n// On open affine no. %s:\n" % i
+                suffix = "open_%s" % i if nb_affines > 1 else ""
+                coord = m["coordinates"][i]
+                if m["leading_coefficients"] is None:
+                    lead = [1]*len(coord)
+                else:
+                    lead = m["leading_coefficients"][i]
+                for j in range(len(coord)):
+                    s += "//   Coordinate number %s:\n" % j
+                    s += "//     Leading coefficient:\n"
+                    s += prefix + suffix + ("lead_%s := " % j) + "%s\n" % lead[j]
+                    s += "//     Equation:\n"
+                    s += prefix + suffix + ("coord_%s := " % j) + "\"%s\"\n" % coord[j]
+            if has_codomain_equation:
+                s += "// Codomain equation:\n"
+                eq = [eq for eq in image_eqs if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
+                s += prefix + "codomain := " + "%s\n" % eq["equation"]            
+            map_id += 1
         return s
 
     def download_modular_curve_magma(self, label):
@@ -798,7 +891,6 @@ class ModCurve_download(Downloader):
         s = s.replace(":=", "=")
         s = s.replace(";", "")
         s = s.replace("//", "#")
-        s = s.replace("R<X,Y,Z>", "R.<X,Y,Z>")
         return self._wrap(s, label, lang="sage")
 
     def download_modular_curve(self, label, lang):

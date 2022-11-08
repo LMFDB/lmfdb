@@ -323,10 +323,6 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def has_more_models(self):
         return len(self.models_to_display) < self.models_count
-
-    @lazy_attribute
-    def models_to_download(self):
-        return list(db.modcurve_models.search({"modcurve": self.label}, ["equation", "number_variables", "model_type"]))
     
     @lazy_attribute
     def modelmaps_to_display(self):
@@ -398,7 +394,7 @@ class WebModCurve(WebObj):
         maps = [m for m in self.modelmaps_to_display if m["codomain_label"] != "1.1.0.1"]
         codomain_labels = [m["codomain_label"] for m in maps]
         codomains = list(db.gps_gl2zhat_test.search({"label": {"$in": codomain_labels}}))
-        image_eqs = list(db.modcurve_models.search({"modcurve": {"$in": codomain_labels}}))
+        image_eqs = list(db.modcurve_models.search({"modcurve": {"$in": codomain_labels}, "dont_display": False}))
         res = []
         for m in maps:
             codomain = [crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
@@ -423,10 +419,6 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def has_more_modelmaps(self):
         return len(self.modelmaps_to_display) < self.modelmaps_count
-
-    @lazy_attribute
-    def modelmaps_to_download(self):
-        maps = list(db.modcurve_modelmaps.search({"domain_label": self.label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
 
     def cyclic_isogeny_field_degree(self):
         return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
