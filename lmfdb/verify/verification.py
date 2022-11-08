@@ -139,7 +139,7 @@ class TableChecker():
         return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
 
     def get_checks(self, typ):
-        return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
+        return [MethodType(f, self) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
 
     def get_check(self, check):
         check = getattr(self.__class__, check)
