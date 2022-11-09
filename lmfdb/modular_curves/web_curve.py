@@ -313,8 +313,11 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        models = db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"])
-        return [formatted_model(m) for m in models]
+        return list(db.modcurve_models.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+
+    @lazy_attribute
+    def formatted_models(self):
+        return [formatted_model(m) for m in self.models_to_display]
 
     @lazy_attribute
     def models_count(self):
@@ -326,7 +329,14 @@ class WebModCurve(WebObj):
     
     @lazy_attribute
     def modelmaps_to_display(self):
-        return list(db.modcurve_modelmaps.search({"domain_label": self.label, "dont_display": False}, ["degree", "domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients", "factored"]))
+        # Ensure domain model and map have dont_display = False
+        domain_types = [m["model_type"] for m in self.models_to_display]
+        return list(db.modcurve_modelmaps.search(
+            {"domain_label": self.label,
+             "dont_display": False,
+             "domain_model_type":{"$in": domain_types}},
+            ["degree", "domain_model_type", "codomain_label", "codomain_model_type",
+             "coordinates", "leading_coefficients", "factored"]))
 
     def display_j(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
@@ -393,18 +403,25 @@ class WebModCurve(WebObj):
     def other_formatted_maps(self):
         maps = [m for m in self.modelmaps_to_display if m["codomain_label"] != "1.1.0.1"]
         codomain_labels = [m["codomain_label"] for m in maps]
-        codomains = list(db.gps_gl2zhat_test.search({"label": {"$in": codomain_labels}}))
-        image_eqs = list(db.modcurve_models.search({"modcurve": {"$in": codomain_labels}, "dont_display": False}))
+        codomains = list(db.gps_gl2zhat_test.search(
+            {"label": {"$in": codomain_labels}},
+            ["label","name"]))
+        # Do not display maps for which the codomain model has dont_display = False
+        image_eqs = list(db.modcurve_models.search(
+            {"modcurve": {"$in": codomain_labels},
+             "dont_display": False},
+            ["modcurve", "model_type", "equation"]))
         res = []
         for m in maps:
             codomain = [crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
             codomain_name = codomain["name"]
-            image_eq = [model for model in image_eqs if model["modcurve"] == m["codomain_label"] and model["model_type"] == m["codomain_model_type"]]
+            image_eq = [model for model in image_eqs
+                        if model["modcurve"] == m["codomain_label"]
+                        and model["model_type"] == m["codomain_model_type"]]
             if len(image_eq) > 0:
                 codomain_equation = image_eq[0]["equation"]
-            else:
-                codomain_equation = ""
-            res.append(formatted_map(m, codomain_name=codomain_name, codomain_equation=codomain_equation))
+                res.append(formatted_map(m, codomain_name=codomain_name,
+                                         codomain_equation=codomain_equation))
         return res
 
     @lazy_attribute
@@ -544,7 +561,11 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def db_nf_points(self):
         pts = []
-        for rec in db.modcurve_points.search({"curve_label": self.label, "degree": {"$gt": 1}}, sort=["degree"]):
+        for rec in db.modcurve_points.search(
+                {"curve_label": self.label, "degree": {"$gt": 1}},
+                sort=["degree"],
+                projection=["Elabel","cm","isolated","jinv","j_field",
+                            "jorig","residue_field","degree"]):
             pts.append(
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
