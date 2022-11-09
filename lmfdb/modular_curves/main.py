@@ -164,16 +164,17 @@ def modcurve_jump(info):
             flash_error("There is no modular curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
-    
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
     else:
-        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels, "$not": "1.1.0.1"}}, "factorization"))
+        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels, "$not": "1.1.0.1"}}, ["label","factorization"]))
+        factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]]) for f in factors]
         if len(factors) != len([label for label in lmfdb_labels if label != "1.1.0.1"]):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
         factors = sorted(sum(factors, []), key=lambda x:[int(i) for i in x.split(".")])
+        print(factors)
         label = db.gps_gl2zhat_test.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
