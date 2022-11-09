@@ -205,8 +205,15 @@ def parse_family(inp, query, qfield):
     inp = inp.replace("plus", "+")
     if inp == "any":
         query[qfield] = {"$like": "X%"}
-    else:
+    elif inp == "X" or inp == "XS4": #add nothing
         query[qfield] = {"$like": inp + "(%"}
+    elif inp == "Xns+" or inp == "Xns": #add X(1)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)"]}]}
+    elif inp == "Xsp": #add X(1),X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
+    else: #add X(1),X0(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
+        
 
 @search_wrap(
     table=db.gps_gl2zhat_test,
