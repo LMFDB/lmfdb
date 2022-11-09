@@ -9,9 +9,7 @@
   <tr><td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td><td style="width:20px;"></td><td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:<td>${{ curve.psl2index }}$</td></tr>
   <tr><td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td> ${{ curve.genus }} = 1 + \frac{ {{curve.psl2index}} }{12} - \frac{ {{curve.nu2}} }{4} - \frac{ {{curve.nu3}} }{3} - \frac{ {{curve.cusps}} }{2}$</td></tr>
   <tr><td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td><td> ${{curve.cusps}}$</td></tr>
-{# {% <tr><td>{{ KNOWL("modcurve.ell_points_order_2", "Elliptic points of order $2$") }}:</td><td> ${{curve.nu2}}$</td></tr> %} #}
-{# {% <tr><td>{{ KNOWL("modcurve.ell_points_order_3", "Elliptic points of order $3$") }}:</td><td> ${{curve.nu3}}$</td></tr> %} #}
-<tr><td>{{ KNOWL("modcurve.ell_points", "Elliptic points") }}:</td> <td> ${{curve.nu2}}$ of order $2$ and ${{curve.nu3}}$ of order $3$ </td></tr>
+<tr><td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td> <td> ${{curve.nu2}}$ of order $2$ and ${{curve.nu3}}$ of order $3$ </td></tr>
   <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le \\gamma \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
@@ -74,7 +72,7 @@
 </table>
 {% endif %}
 
-{% set models = curve.models_to_display %}
+{% set models = curve.formatted_models %}
 {% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
 <h2> {{ KNOWL('ag.model', 'Models') }} </h2>
 {% if models %}
@@ -224,7 +222,9 @@
       <th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th>
       <th>{{ KNOWL('modcurve.genus','Genus') }}</th>
       <th>{{ KNOWL('modcurve.rank','Rank') }}</th>
+      {% if curve.genus > 0 %}
       <th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
@@ -238,7 +238,7 @@
     <td align="center">${{ rank }}$</td>
     {% if genus > 0 %}
     <td><span>{{ kernel if kernel else "$\\text{dimension zero}$" | safe }}</span></td>
-    {% else %}
+    {% elif curve.genus > 0 %}
     <td><span>{{ "$\\text{full Jacobian}$" }}</span></td>
     {% endif %}
   </tr>
@@ -258,7 +258,9 @@
       <th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th>
       <th>{{ KNOWL('modcurve.genus','Genus') }}</th>
       <th>{{ KNOWL('modcurve.rank','Rank') }}</th>
+      {% if curve.genus > 0 %}
       <th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
@@ -272,7 +274,7 @@
     <td align="center">${{ rank }}$</td>
     {% if genus > 0 %}
     <td><span>{{ kernel if kernel else "$\\text{dimension zero}$" | safe }}</span></td>
-    {% else %}
+    {% elif curve.genus > 0 %}
     <td><span>{{ "$\\text{full Jacobian}$" }}</span></td>
     {% endif %}
   </tr>
