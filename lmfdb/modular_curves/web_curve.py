@@ -98,9 +98,9 @@ def name_to_latex(name):
     if "+" in name:
         name = name.replace("+", "^+")
     if "ns" in name:
-        name = name.replace("ns", "{\mathrm{ns}}")
+        name = name.replace("ns", r"{\mathrm{ns}}")
     elif "sp" in name:
-        name = name.replace("sp", "{\mathrm{sp}}")
+        name = name.replace("sp", r"{\mathrm{sp}}")
     elif "S4" in name:
         name = name.replace("S4", "{S_4}")
     if name[1] != "(":
@@ -120,7 +120,7 @@ def formatted_dims(dims):
     if not dims:
         return ""
     C = Counter(dims)
-    return "$" + "\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
+    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
 
 def formatted_newforms(newforms):
     if not newforms:
@@ -645,3 +645,50 @@ class WebModCurve(WebObj):
                 return fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 return "This modular curve has finitely many rational points, none of which are cusps."
+
+    @lazy_attribute
+    def nearby_lattice(self):
+        # The poset of curves near this one in the lattice of subgroups of GL2(Zhat).
+        # Goes up one level (higher index), and down to some collection of named curves
+        # May be empty (if it's too far to a named curve)
+        class LatNode:
+            def __init__(self, label, x):
+                self.label = label
+                self.level, self.index, self.genus, tie = [ZZ(c) for c in label.split(".")]
+                #if label == self.label:
+                #    self.tex = self.label #r"\text{%s}" % self.label
+                #else:
+                if label in names:
+                    self.tex = names[label]
+                else:
+                    level, index, genus, tie = label.split(".")
+                    self.tex = "%s_{%s}^{%s}" % (self.level, self.index, self.genus)
+                self.img = texlabels[self.tex]
+                self.rank = sum(e for (p,e) in self.index.factor())
+                self.x = x
+        parents = {}
+        names = {}
+        for rec in db.gps_gl2zhat_test.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
+            if rec["name"]:
+                names[rec["label"]] = rec["name"]
+            parents[rec["label"]] = rec["parents"]
+        texlabels = []
+        for label in self.lattice_labels:
+            level, index, genus, tie = label.split(".")
+            texlabels.append("%s_{%s}^{%s}" % (level, index, genus))
+        texlabels = list(set(texlabels))
+        texlabels.extend(names.values())
+        texlabels = {rec["label"]: rec["image"] for rec in db.modcurve_teximages.search({"label": {"$in": list(texlabels)}})}
+        nodes, edges = [], []
+        for lab, x in zip(self.lattice_labels, self.lattice_x):
+            nodes.append(LatNode(lab, x))
+        nodes, edges = [LatNode(lab, x) for (lab, x) in zip(self.lattice_labels, self.lattice_x)], []
+        if nodes:
+            minrank = min(node.rank for node in nodes)
+            for node in nodes: node.rank -= minrank
+            below = [node.label for node in nodes if node.index < self.index]
+            above = [node.label for node in nodes if node.index > self.index]
+            edges = [[lab, self.label] for lab in above] + [[self.label, lab] for lab in self.parents if lab in self.lattice_labels]
+            for label, P in parents.items():
+                edges.extend([[label, lab] for lab in P if lab in self.lattice_labels])
+        return nodes, edges

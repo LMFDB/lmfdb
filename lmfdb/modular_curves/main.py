@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from collections import Counter
 from lmfdb import db
 
 from flask import render_template, url_for, request, redirect, abort
@@ -118,9 +119,13 @@ def by_label(label):
     if curve.is_null():
         flash_error("There is no modular curve %s in the database", label)
         return redirect(url_for(".index"))
+    dojs, display_opts = diagram_js_string(curve)
+    wide = display_opts["w"] > 1600
     return render_template(
         "modcurve.html",
         curve=curve,
+        dojs=dojs,
+        wide=wide,
         properties=curve.properties,
         friends=curve.friends,
         bread=curve.bread,
@@ -129,6 +134,71 @@ def by_label(label):
         KNOWL_ID=f"modcurve.{label}",
         learnmore=learnmore_list(),
     )
+
+@modcurve_page.route("/Q/diagram/<label>")
+def lat_diagram(label):
+    if not LABEL_RE.fullmatch(label):
+        flash_error("Invalid label %s", label)
+        return redirect(url_for(".index"))
+    curve = WebModCurve(label)
+    if curve.is_null():
+        flash_error("There is no modular curve %s in the database", label)
+        return redirect(url_for(".index"))
+    dojs, display_opts = diagram_js_string(curve)
+    info = {"dojs": dojs}
+    info.update(display_opts)
+    return render_template(
+        "lat_diagram_page.html",
+        info=info,
+        title="Diagram of nearby modular curves for %s" % label,
+        bread=get_bread("Subgroup diagram"),
+        learnmore=learnmore_list(),
+    )
+
+def diagram_js(curve, layers, display_opts):
+    ll = [
+        [
+            node.label, # grp.subgroup
+            node.label, # grp.short_label
+            node.tex, # grp.subgroup_tex
+            1, # grp.count (never want conjugacy class counts)
+            node.rank, # grp.subgroup_order
+            node.img,
+            node.x, # grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1])
+            [node.x, node.x, node.x, node.x], # grp.diagram_aut_x if aut else grp.diagram_x
+        ]
+        for node in layers[0]
+    ]
+    ranks = [node[4] for node in ll]
+    rank_ctr = Counter(ranks)
+    ranks = sorted(rank_ctr)
+    # We would normally make rank_lookup a dictionary, but we're passing it to the horrible language known as javascript
+    # The format is for compatibility with subgroup lattices
+    rank_lookup = [[r, r, 0] for r in ranks]
+    max_width = max(rank_ctr.values())
+    display_opts["w"] = min(100 * max_width, 20000)
+    display_opts["h"] = 160 * len(ranks)
+
+    return [ll, layers[1]], rank_lookup, len(ranks)
+
+def diagram_js_string(curve):
+    display_opts = {}
+    graph, rank_lookup, num_layers = diagram_js(curve, curve.nearby_lattice, display_opts)
+    return f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{curve.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
+
+@modcurve_page.route("/Q/curveinfo/<label>")
+def curveinfo(label):
+    if not LABEL_RE.fullmatch(label):
+        return ""
+    level, index, genus, tiebreak = label.split(".")
+
+    ans = 'Information on the modular curve <a href="%s">%s</a><br>\n' % (url_for_modcurve_label(label), label)
+    ans += "<table>\n"
+    ans += f"<tr><td>{display_knowl('modcurve.level', 'Level')}</td><td>${level}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('modcurve.index', 'Index')}</td><td>${index}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('modcurve.genus', 'Genus')}</td><td>${genus}$</td></tr>\n"
+    ans += "</table>"
+    return ans
 
 def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
@@ -153,10 +223,10 @@ def modcurve_lmfdb_label(label):
         label_type = "label"
         lmfdb_label = label
     return lmfdb_label, label_type
-    
+
 def modcurve_jump(info):
     labels = (info["jump"]).split("*")
-    lmfdb_labels = []    
+    lmfdb_labels = []
     for label in labels:
         lmfdb_label, label_type = modcurve_lmfdb_label(label)
         if lmfdb_label is None:
@@ -187,10 +257,10 @@ modcurve_columns = SearchColumns([
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("gonality_bounds", "modcurve.gonality", "$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
+    ProcessedCol("gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
     MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
-    ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\textsf{yes}$" if d else r"$\textsf{no}$", align="center", default=True),
+    ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\text{yes}$" if d else r"$\text{no}$", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("squarefree", "av.squarefree", "Squarefree"),
@@ -349,7 +419,7 @@ class ModCurveSearchArray(SearchArray):
         gonality = TextBoxWithSelect(
             name="gonality",
             knowl="modcurve.gonality",
-            label="$\Q$-gonality",
+            label=r"$\Q$-gonality",
             example="2",
             example_span="2, 3-6",
             select_box=gonality_quantifier,
@@ -467,7 +537,7 @@ ratpoint_columns = SearchColumns([
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"$\textsf{yes}$" if x == 1 else (r"$\textsf{no}$" if x == -1 else r"$\textsf{maybe}$"),
+                 lambda x: r"$\text{yes}$" if x == 1 else (r"$\text{no}$" if x == -1 else r"$\text{maybe}$"),
                  default=True),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),

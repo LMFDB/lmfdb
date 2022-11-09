@@ -1,6 +1,9 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<script type="text/javascript" src="{{ url_for('static', filename='modcurve.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+
 {# Add generators here #}
 
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
@@ -212,6 +215,54 @@
 
 {% if curve.fiber_product_of or curve.modular_covers or curve.modular_covered_by %}
 <h2> {{ KNOWL('modcurve.modular_cover', 'Modular covers') }} </h2>
+
+{% if curve.lattice_labels %}
+
+{# An invisible span to get the select color in the diagram into the DOM #}
+<div>
+<span id="group-diagram-selected" style="display:none;">Hi</span>
+</div>
+
+{% if wide %}
+<canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+  Sorry, your browser does not support the subgroup diagram.
+</canvas>
+
+<div class="subgroup_diagram">
+  <a href="{{url_for('.lattice', label=curve.label)}}">See a full page version of the diagram</a>
+</div>
+
+<h4>Cover information</h4>
+<div class="selectedsub">
+  Click on a modular curve in the diagram to see information about it.
+</div>
+{% else %} {# not wide #}
+<table>
+  <tr>
+    <td>
+      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+        Sorry, your browser does not support the nearby lattice.
+      </canvas>
+    <td valign="top">
+      <h4>Cover information</h4>
+      <div class="selectedsub">
+        Click on a modular curve in the diagram to see information about it.
+      </div>
+    </td>
+  </tr>
+</table>
+<div class="subgroup_diagram">
+  <a href="{{url_for('.lat_diagram', label=curve.label)}}">See a full page version of the diagram</a>
+</div>
+{% endif %} {# wide #}
+
+<script type="text/javascript">
+  {{ dojs|safe }}
+  sdiagram.setSize();
+  sdiagram.draw();
+</script>
+
+{% endif %} {# curve.lattice_labels #}
 
 {% if curve.fiber_product_of %}
 <p> The following {{ KNOWL('modcurve.modular_cover','modular covers') }} realize this modular curve as a {{ KNOWL('modcurve.fiber_product','fiber product') }} over $X(1)$.
