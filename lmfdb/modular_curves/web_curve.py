@@ -330,7 +330,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def modelmaps_to_display(self):
         # Ensure domain model and map have dont_display = False
-        domain_types = [m["model_type"] for m in self.models_to_display]
+        domain_types = [1] + [m["model_type"] for m in self.models_to_display]
         return list(db.modcurve_modelmaps.search(
             {"domain_label": self.label,
              "dont_display": False,
