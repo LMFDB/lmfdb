@@ -52,6 +52,7 @@ from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf,
 )
+from string import ascii_lowercase
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
@@ -822,11 +823,22 @@ class ModCurve_download(Downloader):
         parents_mag = parents_mag.replace("'", "\"")
         s += "covers := %s;\n" % parents_mag
 
+        
         s += "\n// Models for this modular curve, if computed\n"
+        models = list(db.modcurve_models.search(
+            {"modcurve": label, "model_type":{"$not":1}},
+            ["equation", "number_variables", "model_type", "smooth"]))
+        if models:
+            max_nb_variables = max([m["number_variables"] for m in models])
+            variables = ascii_lowercase[-max_nb_variables:]
+            s += "K<%s" % variables[0]
+            for x in variables[1:]:
+                s += ",%s" % x
+            s += "> := PolynomialRing(Rationals(), %s);\n" % max_nb_variables
+        
         s += "// Isomorphic to P^1?\n"
         is_P1 = "true" if (rec['genus'] == 0 and rec['pointless'] is False) else "false"
-        s += "is_P1 := %s" % is_P1
-        models = list(db.modcurve_models.search({"modcurve": label, "model_type":{"$not":1}}, ["equation", "number_variables", "model_type", "smooth"]))
+        s += "is_P1 := %s\n" % is_P1
         model_id = 0
         for m in models:
             if m["model_type"] == 0:
@@ -842,15 +854,23 @@ class ModCurve_download(Downloader):
                 name = "Other model"
             s += "\n// %s\n" % name
             s += "model_%s := " % model_id
-            s += "\"%s\"" % m['equation']
+            s += "%s" % m['equation']
             s += "\n"
             model_id += 1
 
         s += "\n// Maps from this modular curve, if computed\n"
-        maps = list(db.modcurve_modelmaps.search({"domain_label": label}, ["domain_model_type", "codomain_label", "codomain_model_type", "coordinates", "leading_coefficients"]))
+        maps = list(db.modcurve_modelmaps.search(
+            {"domain_label": label},
+            ["domain_model_type", "codomain_label", "codomain_model_type",
+             "coordinates", "leading_coefficients"]))
         codomain_labels = [m["codomain_label"] for m in maps]
-        image_eqs = list(db.modcurve_models.search({"modcurve": {"$in": codomain_labels}}))
+        codomain_models = list(db.modcurve_models.search(
+            {"modcurve": {"$in": codomain_labels}},
+            ["equation", "modcurve", "model_type"]))
         map_id = 0
+        if maps and is_P1: #variable t has not been introduced above
+            s += "K<t> := PolynomialRing(Rationals());\n"
+        
         for m in maps:
             prefix = "map_%s_" % map_id
             has_codomain_equation = False
@@ -896,13 +916,12 @@ class ModCurve_download(Downloader):
                     lead = m["leading_coefficients"][i]
                 for j in range(len(coord)):
                     s += "//   Coordinate number %s:\n" % j
-                    s += "//     Leading coefficient:\n"
-                    s += prefix + suffix + ("lead_%s := " % j) + "%s\n" % lead[j]
-                    s += "//     Equation:\n"
-                    s += prefix + suffix + ("coord_%s := " % j) + "\"%s\"\n" % coord[j]
+                    s += prefix + suffix + ("coord_%s := " % j)
+                    s += "%s*(" % lead[j]
+                    s += "%s)\n" % coord[j]
             if has_codomain_equation:
                 s += "// Codomain equation:\n"
-                eq = [eq for eq in image_eqs if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
+                eq = [eq for eq in codomain_models if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
                 s += prefix + "codomain := " + "%s\n" % eq["equation"]            
             map_id += 1
         return s
@@ -916,6 +935,7 @@ class ModCurve_download(Downloader):
         s = s.replace(":=", "=")
         s = s.replace(";", "")
         s = s.replace("//", "#")
+        s = s.replace("K<", "K.<")
         return self._wrap(s, label, lang="sage")
 
     def download_modular_curve(self, label, lang):
