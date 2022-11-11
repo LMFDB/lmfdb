@@ -170,6 +170,9 @@ def diagram_js(curve, layers, display_opts):
         ]
         for node in layers[0]
     ]
+    if len(ll) == 0:
+        display_opts["w"] = display_opts["h"] = 0
+        return [], [], 0
     ranks = [node[4] for node in ll]
     rank_ctr = Counter(ranks)
     ranks = sorted(rank_ctr)
