@@ -679,6 +679,8 @@ class WebModCurve(WebObj):
                 self.img = texlabels[self.tex]
                 self.rank = sum(e for (p,e) in self.index.factor())
                 self.x = x
+        if not self.lattice_labels:
+            return [],[]
         parents = {}
         names = {}
         for rec in db.gps_gl2zhat_test.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
