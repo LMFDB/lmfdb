@@ -388,6 +388,7 @@ def reliability():
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+
 class GalSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
@@ -399,6 +400,7 @@ class GalSearchArray(SearchArray):
     jump_egspan = "e.g. 8T14"
     jump_knowl = "gg.search_input"
     jump_prompt = "Label, name, or identifier"
+
     def __init__(self):
         parity = ParityBox(
             name="parity",

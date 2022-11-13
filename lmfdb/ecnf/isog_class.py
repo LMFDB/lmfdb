@@ -70,7 +70,6 @@ class ECNF_isoclass():
             self.rank_bounds = [0, Infinity]
             self.rk_bnds = "not recorded"
 
-
         # Extract the isogeny degree matrix from the database
         if not hasattr(self, 'isogeny_matrix'):
             # this would happen if the class is initiated with a curve
@@ -153,7 +152,6 @@ class ECNF_isoclass():
             self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]
-
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),

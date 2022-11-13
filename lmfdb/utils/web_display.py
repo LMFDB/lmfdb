@@ -42,7 +42,6 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     raw = re.sub(r'\s+', ' ', str(raw).strip())
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
-
     # the doublesclick behavior is set on load in javascript
     out = f"""
 <span class="raw-tset-container tset {"compressed" if compressed else ""}">
@@ -223,9 +222,6 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 
-
-
-
 def web_latex_factored_integer(x, enclose=True, equals=False):
     r"""
     Given any x that can be converted to a ZZ, creates latex string representing x in factored form
@@ -368,7 +364,6 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     return A
 
 
-
 def compress_polynomial(poly, threshold, decreasing=True):
     if poly == 0:
         return '0'
@@ -505,7 +500,6 @@ def raw_typeset_poly(coeffs,
     if final_rawvar:
         raw = raw.replace(var, final_rawvar)
 
-
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
 def raw_typeset_poly_factor(factors, # list of pairs (f,e)
@@ -552,7 +546,6 @@ def raw_typeset_qexp(coeffs_list,
 
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
-
 
     def rawtset_coeff(i, coeffs):
         poly = R(coeffs)
@@ -643,23 +636,22 @@ def compress_poly_Q(rawpoly,
         return r'\frac{%s}{%s}'%(compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
 
     tset = ''
-    for j in range(1,d+1):
-        csign = coefflist[d-j].sign()
+    for j in range(1, d + 1):
+        csign = coefflist[d - j].sign()
         if csign:
-            cabs = coefflist[d-j].abs()
-            if csign>0:
+            cabs = coefflist[d - j].abs()
+            if csign > 0:
                 tset += '+'
             else:
                 tset += '-'
-            if cabs != 1 or d-j==0:
+            if cabs != 1 or d == j:
                 tset += frac_string(cabs)
-            if d-j>0:
-                if d-j == 1:
+            if d > j:
+                if d - j == 1:
                     tset += var
                 else:
-                    tset += r'%s^{%s}'%(var,d-j)
+                    tset += r'%s^{%s}' % (var, d - j)
     return tset[1:]
-
 
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
@@ -691,9 +683,6 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
     return o_str
 
 
-
-
-
 def to_ordinal(n):
     a = (n % 100) // 10
     if a == 1:
@@ -707,7 +696,6 @@ def to_ordinal(n):
         return '%srd' % n
     else:
         return '%sth' % n
-
 
 
 def add_space_if_positive(texified_pol):
@@ -732,19 +720,18 @@ def sparse_cyclotomic_to_latex(n, dat):
     and return sum_{j=1}^k cj zeta_n^ej in latex form as it is given
     (converting to sage will rewrite the element in terms of a basis)
     """
-
     dat.sort(key=lambda p: p[1])
-    ans=''
+    ans = ''
     z = r'\zeta_{%d}' % n
     for p in dat:
         if p[0] == 0:
             continue
-        if p[1]==0:
+        if p[1] == 0:
             if p[0] == 1 or p[0] == -1:
                 zpart = '1'
             else:
                 zpart = ''
-        elif p[1]==1:
+        elif p[1] == 1:
             zpart = z
         else:
             zpart = z+r'^{'+str(p[1])+'}'

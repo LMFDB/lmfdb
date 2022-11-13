@@ -177,7 +177,6 @@ def index():
     # the dict data will hold additional information to be displayed on
     # the main browse and search page
 
-
     # info['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
 
@@ -811,6 +810,7 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
@@ -820,7 +820,7 @@ def ecnf_code(**args):
         lang = 'pari'
 
     from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode =  make_code(label, lang)
+    Ecode = make_code(label, lang)
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     for k in sorted_code_names:
@@ -828,6 +828,7 @@ def ecnf_code(**args):
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
             code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
     return code
+
 
 def disp_tor(t):
     if len(t) == 1:
@@ -852,6 +853,7 @@ class ECNFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     jump_knowl = "ec.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         field = TextBox(
             name="field",

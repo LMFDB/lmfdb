@@ -90,8 +90,8 @@ class char_dir_orbits(TableChecker):
         the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits
         """
         # TIME about 500s
-        return (self._run_crosstable(SQL("2*t2.values[1][2]"), 'char_dir_values', 'order', 'orbit_label', constraint={'parity':-1}, subselect_wrapper="ALL") +
-                self._run_crosstable(SQL("t2.values[1][2]"), 'char_dir_values', 0, 'orbit_label', constraint={'parity':1}, subselect_wrapper="ALL"))
+        return (self._run_crosstable(SQL("2*t2.values[1][2]"), 'char_dir_values', 'order', 'orbit_label', constraint={'parity':-1}, subselect_wrapper="ALL")
+                + self._run_crosstable(SQL("t2.values[1][2]"), 'char_dir_values', 0, 'orbit_label', constraint={'parity':1}, subselect_wrapper="ALL"))
 
     @fast(projection=['char_degree', 'order'])
     def check_char_degree(self, rec, verbose=False):

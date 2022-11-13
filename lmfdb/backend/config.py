@@ -172,8 +172,6 @@ class Configuration():
                         sec, opt = sec_opt(key)
                         write_args[sec][opt] = str(val)
 
-
-
             _cfgp = ConfigParser()
             # create sections
             for sec, options in write_args.items():

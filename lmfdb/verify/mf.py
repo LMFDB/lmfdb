@@ -75,6 +75,7 @@ class MfChecker(TableChecker):
         return success
 
     hecke_orbit_code = []
+
     @overall
     def check_hecke_orbit_code(self):
         """

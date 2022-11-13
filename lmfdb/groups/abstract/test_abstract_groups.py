@@ -22,8 +22,6 @@ class AbGpsTest(LmfdbTest):
  #       assert r'<tdclass="label">Order</td><td>${2^{8}}$</td></tr>' in page
        # self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
-
-
     def test_abstract_group_download(self):
 #        r"""
 #        Test downloading on search results page.
