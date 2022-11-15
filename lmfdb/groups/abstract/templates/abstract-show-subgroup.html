@@ -6,7 +6,7 @@
 <h2> Subgroup ($H$) information</h2>
 <p>
   <table>
-    <tr><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.subgroup_order)}} </td></tr>
     <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.sub.exponent)}} </td></tr>
