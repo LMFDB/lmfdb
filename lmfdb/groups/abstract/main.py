@@ -556,7 +556,7 @@ def index():
         ("perfect=yes", "perfect"),
         ("rational=yes", "rational"),
     ]
-    info["maxgrp"] = db.gps_groups.max("order")
+    info["maxgrp"] = db.gps_groups_test.max("order")
 
     return render_template(
         "abstract-index.html",
@@ -595,7 +595,7 @@ def dynamic_statistics():
 
 @abstract_page.route("/random")
 def random_abstract_group():
-    label = db.gps_groups.random(projection="label")
+    label = db.gps_groups_test.random(projection="label")
     response = make_response(redirect(url_for(".by_label", label=label), 307))
     response.headers["Cache-Control"] = "no-cache, no-store"
     return response
@@ -605,7 +605,7 @@ def random_abstract_group():
 def interesting():
     return interesting_knowls(
         "group.abstract",
-        db.gps_groups,
+        db.gps_groups_test,
         url_for_label,
         title="Some interesting groups",
         bread=get_bread([("Interesting", " ")]),
@@ -658,7 +658,7 @@ def by_abelian_label(label):
     # Avoid database error on a hopeless search
     dblabel = None
     if not [z for z in primary if z>2**31-1]:
-        dblabel = db.gps_groups.lucky(
+        dblabel = db.gps_groups_test.lucky(
             {"abelian": True, "primary_abelian_invariants": primary}, "label"
         )
     if dblabel is None:
@@ -776,7 +776,7 @@ def group_jump(info):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
         return redirect(url_for(".by_abelian_label", label=".".join(invs)))
     # by name
-    labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
+    labs = db.gps_groups_test.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
         return redirect(url_for(".by_label", label=labs[0]))
     elif len(labs) == 2:
@@ -837,7 +837,7 @@ group_columns = SearchColumns([
 group_columns.dummy_download=True
 
 @search_wrap(
-    table=db.gps_groups,
+    table=db.gps_groups_test,
     title="Abstract group search results",
     err_title="Abstract groups search input error",
     columns=group_columns,
@@ -941,7 +941,7 @@ subgroup_columns = SearchColumns([
 subgroup_columns.dummy_download = True
 
 @search_wrap(
-    table=db.gps_subgroups,
+    table=db.gps_subgroups_test,
     title="Subgroup search results",
     err_title="Subgroup search input error",
     columns=subgroup_columns,
@@ -1318,7 +1318,7 @@ def sgp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_subgroup_label(label)), ("Data", " ")])
     title = f"Abstract subgroup data - {label}"
-    data = db.gps_subgroups.lookup(label, ["ambient", "subgroup", "quotient"])
+    data = db.gps_subgroups_test.lookup(label, ["ambient", "subgroup", "quotient"])
     if data is None:
         return abort(404)
     if data["quotient"] is None:
@@ -1334,7 +1334,7 @@ def download_group(**args):
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
-    gp_data = db.gps_groups.lucky({"label": label})
+    gp_data = db.gps_groups_test.lucky({"label": label})
 
     filename = "group" + label
     mydate = time.strftime("%d %B %Y")
@@ -1848,7 +1848,7 @@ def abstract_group_namecache(labels, cache=None, reverse=None):
     # and serve as keys for the cache dictionary.
     if cache is None:
         cache = {}
-    for rec in db.gps_groups.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
+    for rec in db.gps_groups_test.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
         label = rec["label"]
         cache[label] = rec
         if reverse is not None:
@@ -1867,7 +1867,7 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
             if label in cache and "tex_name" in cache[label]:
                 name = cache[label]["tex_name"]
             else:
-                name = db.gps_groups.lookup(label, "tex_name")
+                name = db.gps_groups_test.lookup(label, "tex_name")
             if name is None:
                 name = f"Group {label}"
             else:
