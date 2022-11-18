@@ -2,7 +2,6 @@ import re
 # import timeout_decorator
 
 from lmfdb import db
-
 from flask import url_for
 
 from sage.all import (
@@ -11,8 +10,10 @@ from sage.all import (
     PermutationGroup,
     SymmetricGroup,
     ZZ,
+    GF,
     Zmod,
     factor,
+    matrix,
     latex,
     lazy_attribute,
     prod,
@@ -35,7 +36,6 @@ from .circles import find_packing
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 perm_re = re.compile(r"^\(\d+(,\d+)*\)(,?\(\d+(,\d+)*\))*$")
 
-
 def label_sortkey(label):
     L = []
     for piece in label.split("."):
@@ -47,7 +47,6 @@ def label_sortkey(label):
                     x = int(x)
                 L.append(x)
     return L
-
 
 def group_names_pretty(label):
     # Avoid using this function if you have the tex_name available without a database lookup
@@ -70,7 +69,6 @@ def group_names_pretty(label):
     else:
         return label
 
-
 def group_pretty_image(label):
     # Avoid using this function if you have the tex_name available without a database lookup
     pretty = group_names_pretty(label)
@@ -83,7 +81,6 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
-
 def primary_to_smith(invs):
     by_p = defaultdict(list)
     for q in invs:
@@ -94,13 +91,11 @@ def primary_to_smith(invs):
         by_p[p] = [1] * (M - len(qs)) + qs
     return [prod(qs) for qs in zip(*by_p.values())]
 
-
 def abelian_gp_display(invs):
     return r" \times ".join(
         ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
         for (q, e) in Counter(invs).items()
     )
-
 
 def product_sort_key(sub):
     s = sub.subgroup_tex_parened + sub.quotient_tex_parened
@@ -117,7 +112,6 @@ def product_sort_key(sub):
         v.append(-s.count(c))
     return len(s), v
 
-
 def var_name(i):
     if i < 26:
         return chr(97 + i)  # a-z
@@ -128,7 +122,6 @@ def var_name(i):
     else:
         raise RuntimeError("too many variables in presentation")
 
-
 def abelian_get_elementary(snf):
     plist = ZZ(snf[0]).prime_factors()
     if len(snf) == 1:  # cyclic group, all primes are good
@@ -137,6 +130,7 @@ def abelian_get_elementary(snf):
     if len(possiblep) > 1:
         return 1
     return possiblep[0]
+
 
 
 class WebObj():
@@ -156,7 +150,6 @@ class WebObj():
     def _get_dbdata(self):
         # self.table must be defined in subclasses
         return self.table.lookup(self.label)
-
 
 class WebAbstractGroup(WebObj):
     table = db.gps_groups_test
@@ -228,23 +221,28 @@ class WebAbstractGroup(WebObj):
             elif isinstance(self._data, GapElement):
                 return self._data
         # Reconstruct the group from the stored data
-        if self.order == 1:  # trvial
-            return libgap.TrivialGroup()
-        elif self.elt_rep_type == 0:  # PcGroup
-            return libgap.PcGroupCode(self.pc_code, self.order)
-        elif self.elt_rep_type < 0:  # Permutation group
-            gens = [self.decode(g) for g in self.perm_gens]
-            return libgap.Group(gens)
+        if self.order == 1 or self.element_repr_type == "PC":  # trvial
+            return self.PCG
         else:
-            # TODO: Matrix groups
-            raise NotImplementedError
+            gens = [self.decode(g) for g in self.representations[self.element_repr_type]["gens"]]
+            return libgap.Group(gens)
+
+    @lazy_attribute
+    def PCG(self):
+        if self.order == 1:
+            return libgap.TrivialGroup()
+        elif "PC" in self.representations:
+            return libgap.PcGroupCode(self.pc_code, self.order)
+        G = self.G
+        if G.IsPcGroup():
+            return G
+        return G.IsomorphismPcGroup().Image()
 
     # The following are used for live groups to emulate database groups
     # by computing relevant quantities in GAP
     @lazy_attribute
     def order(self):
         return ZZ(self.G.Order())
-
     @lazy_attribute
     def exponent(self):
         return ZZ(self.G.Exponent())
@@ -252,32 +250,42 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def cyclic(self):
         return bool(self.G.IsCyclic())
-
     @lazy_attribute
     def abelian(self):
         return bool(self.G.IsAbelian())
-
     @lazy_attribute
     def nilpotent(self):
         return bool(self.G.IsNilpotent())
+    @lazy_attribute
+    def supersolvable(self):
+        return bool(self.G.IsSupersolvable())
+    @lazy_attribute
+    def monomial(self):
+        return bool(self.G.IsMonomial())
+    @lazy_attribute
+    def solvable(self):
+        return bool(self.G.IsSolvable())
+    @lazy_attribute
+    def metabelian(self):
+        return bool(self.G.DerivedSubgroup().IsAbelian())
+    @lazy_attribute
+    def almost_simple(self):
+        return bool(self.G.IsAlmostSimpleGroup())
+    @lazy_attribute
+    def simple(self):
+        return bool(self.G.IsSimple())
+    @lazy_attribute
+    def perfect(self):
+        return bool(self.G.IsPerfect())
+    @lazy_attribute
+    def quasisimple(self):
+        return not self.solvable and self.perfect and (self.G / self.G.Center()).IsSimple()
 
     @lazy_attribute
     def nilpotency_class(self):
         if self.nilpotent:
             return ZZ(self.G.NilpotencyClassOfGroup())
         return ZZ(-1)
-
-    @lazy_attribute
-    def supersolvable(self):
-        return bool(self.G.IsSupersolvable())
-
-    @lazy_attribute
-    def monomial(self):
-        return bool(self.G.IsMonomial())
-
-    @lazy_attribute
-    def solvable(self):
-        return bool(self.G.IsSolvable())
 
     @lazy_attribute
     def derived_length(self):
@@ -299,7 +307,6 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def Zgroup(self):
         return all(P.IsCyclic() for P in self.Sylows)
-
     @lazy_attribute
     def Agroup(self):
         return all(P.IsAbelian() for P in self.Sylows)
@@ -308,26 +315,6 @@ class WebAbstractGroup(WebObj):
     def metacyclic(self):
         # for now, we don't try to determine whether G is metacyclic
         return None
-
-    @lazy_attribute
-    def metabelian(self):
-        return bool(self.G.DerivedSubgroup().IsAbelian())
-
-    @lazy_attribute
-    def quasisimple(self):
-        return not self.solvable and self.perfect and (self.G / self.G.Center()).IsSimple()
-
-    @lazy_attribute
-    def almost_simple(self):
-        return bool(self.G.IsAlmostSimpleGroup())
-
-    @lazy_attribute
-    def simple(self):
-        return bool(self.G.IsSimple())
-
-    @lazy_attribute
-    def perfect(self):
-        return bool(self.G.IsPerfect())
 
     @lazy_attribute
     def rational(self):
@@ -484,15 +471,10 @@ class WebAbstractGroup(WebObj):
         return len(self.conjugacy_classes)
 
     @lazy_attribute
-    def elt_rep_type(self):
+    def element_repr_type(self):
         if isinstance(self._data, (tuple, list)) and self.solvable:
-            return 0
-        return -ZZ(self.G.LargestMovedPoint())
-
-    @lazy_attribute
-    def gens_used(self):
-        # We can figure out which generators are used by looking at the generators
-        return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
+            return "PC"
+        return "Perm"
 
     @lazy_attribute
     def rank(self):
@@ -1237,7 +1219,10 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def cc_statistics(self):
-        return [(o, m) for (o, s, m) in self.cc_stats]
+        D = Counter()
+        for (o, s, m) in self.cc_stats:
+            D[o] += m
+        return sorted(D.items())
 
     @lazy_attribute
     def div_stats(self):
@@ -1249,7 +1234,10 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def div_statistics(self):
-        return [(o, m) for (o, s, k, m) in self.div_stats]
+        D = Counter()
+        for (o, s, k, m) in self.div_stats:
+            D[o] += m
+        return sorted(D.items())
 
     @lazy_attribute
     def aut_stats(self):
@@ -1261,8 +1249,10 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def aut_statistics(self):
-        return [(o, m) for (o, s, k, m) in self.div_stats]
-        return sorted(Counter([cc.order for cc in self.autjugacy_classes]).items())
+        D = Counter()
+        for (o, s, k, m) in self.aut_stats:
+            D[o] += m
+        return sorted(D.items())
 
     @lazy_attribute
     def pcgs(self):
@@ -1272,7 +1262,7 @@ class WebAbstractGroup(WebObj):
     def pcgs_relative_orders(self):
         return [ZZ(c) for c in self.pcgs.RelativeOrders()]
 
-    def decode_as_pcgs(self, code, getvec=False):
+    def decode_as_pcgs(self, code, as_str=False):
         # Decode an element
         vec = []
         if code < 0 or code >= self.order:
@@ -1281,7 +1271,7 @@ class WebAbstractGroup(WebObj):
             c = code % m
             vec.insert(0, c)
             code = code // m
-        if getvec:
+        if as_str:
             # Need to combine some generators
             w = []
             e = 0
@@ -1293,34 +1283,90 @@ class WebAbstractGroup(WebObj):
                 else:
                     e *= m
             w.reverse()
-            return w
+            s = ""
+            for i, c in enumerate(w):
+                if c == 1:
+                    s += var_name(i)
+                elif c != 0:
+                    s += "%s^{%s}" % (var_name(i), c)
+            return s
         else:
             return self.pcgs.PcElementByExponents(vec)
 
-    def decode_as_pcgs_str(self, code):
-        vec = self.decode_as_pcgs(code, getvec=True)
-        s = ""
-        for i, c in enumerate(vec):
-            if c == 1:
-                s += var_name(i)
-            elif c != 0:
-                s += "%s^{%s}" % (var_name(i), c)
-        return s
-
-    def decode_as_perm(self, code):
+    def decode_as_perm(self, code, n=None, as_str=False):
+        if n is None:
+            n = self.representations["Perm"]["d"]
         # code should be an integer with 0 <= m < factorial(n)
-        n = -self.elt_rep_type
-        return str(SymmetricGroup(n)(Permutations(n).unrank(code)))
+        x = SymmetricGroup(n)(Permutations(n).unrank(code))
+        if as_str:
+            return str(x)
+        return x
+
+    def _matrix_coefficient_data(self, rep_type, as_str=False):
+        rep_data = self.representations[rep_type]
+        if rep_type == "Lie":
+            rep_type = "GLFq"
+        d = rep_data["d"]
+        k = 1
+        if rep_type == "GLZ":
+            N = rep_data["b"]
+            R = r"\Z" if as_str else ZZ
+        elif rep_type == "GLFp":
+            N = rep_data["p"]
+            R = rf"\F_{{{N}}}" if as_str else GF(N)
+        elif rep_type == "GLZN":
+            N = rep_data["p"]
+            R = rf"\Z/{N}\Z" if as_str else Zmod(N)
+        elif rep_type == "GLZq":
+            N = rep_data["q"]
+            R = rf"\Z/{N}\Z" if as_str else Zmod(N)
+        elif rep_type == "GLFq":
+            q = ZZ(rep_data["q"])
+            R = rf"\F_{{{q}}}" if as_str else GF(q)
+            N, k = q.is_prime_power(get_data=True)
+            if k == 1:
+                # Might happen for Lie
+                rep_type = "GLFp"
+        return R, N, k, d, rep_type
+
+    def decode_as_matrix(self, code, rep_type, as_str=False):
+        R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
+        L = ZZ(code).digits(N)
+        def pad(X, m):
+            return X + [0] * (m - len(L))
+        L = pad(L, k * d**2)
+        if rep_type == "GLFq":
+            L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
+        elif rep_type == "GLZ":
+            shift = (N - 1) // 2
+            L = [c - shift for c in L]
+        x = matrix(R, d, d, L)
+        if as_str:
+            return latex(x)
+        return x
+
+    def decode(self, code, rep_type=None, as_str=False):
+        if rep_type is None:
+            rep_type = self.element_repr_type
+        if rep_type == "Perm":
+            return self.decode_as_perm(code, as_str=as_str)
+        elif rep_type == "PC":
+            return self.decode_as_pcgs(code, as_str=as_str)
+        else:
+            return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str)
+
+    @lazy_attribute
+    def pc_code(self):
+        return ZZ(self.representations["PC"]["code"])
+
+    @lazy_attribute
+    def gens_used(self):
+        return self.representations["PC"]["gens"]
 
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
-        if self.elt_rep_type == 0:  # PC group
-            return ", ".join(self.decode_as_pcgs_str(g) for g in H.generators)
-        elif self.elt_rep_type < 0:  # permutation group
-            return ", ".join(self.decode_as_perm(g) for g in H.generators)
-        else:  # matrix groups
-            raise NotImplementedError
+        return ", ".join(self.decode(g, as_str=True) for g in H.generators)
 
     # @lazy_attribute
     # def fp_isom(self):
@@ -1341,83 +1387,106 @@ class WebAbstractGroup(WebObj):
     #        if j is None:
     #            # g^r is not another generator
 
-    def write_element(self, elt):
-        # Given a decoded element or free group lift, return a latex form for printing on the webpage.
-        if self.elt_rep_type == 0:
-            s = str(elt)
-            # reversed so that we don't replace f1 in f10.
-            for i in reversed(range(self.ngens)):
-                s = s.replace("f%s" % (i + 1), var_name(i))
+    def presentation(self):
+        # We use knowledge of the form of the presentation to construct it manually.
+        gens = list(self.PCG.GeneratorsOfGroup())
+        pcgs = self.PCG.FamilyPcgs()
+        used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed
+        rel_ords = [ZZ(p) for p in self.PCG.FamilyPcgs().RelativeOrders()]
+        assert len(gens) == len(rel_ords)
+        pure_powers = []
+        rel_powers = []
+        comm = []
+        relators = []
+
+        def print_elt(vec):
+            s = ""
+            e = 0
+            u = used[-1]
+            i = len(used) - 1
+            for j, (c, p) in reversed(list(enumerate(zip(vec, rel_ords)))):
+                e *= p
+                e += c
+                if j == u:
+                    if e == 1:
+                        s = var_name(i) + s
+                    elif e > 1:
+                        s = "%s^{%s}" % (var_name(i), e) + s
+                    i -= 1
+                    u = used[i]
+                    e = 0
             return s
 
-    # TODO: is this the presentation we want?
-    def presentation(self):
-        if self.elt_rep_type == 0:
-            # We use knowledge of the form of the presentation to construct it manually.
-            gens = list(self.G.GeneratorsOfGroup())
-            pcgs = self.G.FamilyPcgs()
-            used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed
-            rel_ords = [ZZ(p) for p in self.G.FamilyPcgs().RelativeOrders()]
-            assert len(gens) == len(rel_ords)
-            pure_powers = []
-            rel_powers = []
-            comm = []
-            relators = []
-
-            def print_elt(vec):
-                s = ""
-                e = 0
-                u = used[-1]
-                i = len(used) - 1
-                for j, (c, p) in reversed(list(enumerate(zip(vec, rel_ords)))):
-                    e *= p
-                    e += c
-                    if j == u:
-                        if e == 1:
-                            s = var_name(i) + s
-                        elif e > 1:
-                            s = "%s^{%s}" % (var_name(i), e) + s
-                        i -= 1
-                        u = used[i]
-                        e = 0
-                return s
-
-            ngens = len(used)
-            for i in range(ngens):
-                a = used[i]
-                e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
-                ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
-                if all(x == 0 for x in ae):
-                    pure_powers.append("%s^{%s}" % (var_name(i), e))
+        ngens = len(used)
+        for i in range(ngens):
+            a = used[i]
+            e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
+            ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
+            if all(x == 0 for x in ae):
+                pure_powers.append("%s^{%s}" % (var_name(i), e))
+            else:
+                rel_powers.append("%s^{%s}=%s" % (var_name(i), e, print_elt(ae)))
+            for j in range(i + 1, ngens):
+                b = used[j]
+                if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed
+                    if not self.abelian:
+                        comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
-                    rel_powers.append("%s^{%s}=%s" % (var_name(i), e, print_elt(ae)))
-                for j in range(i + 1, ngens):
-                    b = used[j]
-                    if all(
-                        x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)
-                    ):  # back to 1-indexed
-                        if not self.abelian:
-                            comm.append("[%s,%s]" % (var_name(i), var_name(j)))
-                    else:
-                        v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
-                        relators.append(
-                            "%s^{%s}=%s" % (var_name(j), var_name(i), print_elt(v))
-                        )
-            show_gens = ", ".join(var_name(i) for i in range(len(used)))
-            if pure_powers or comm:
-                rel_powers = ["=".join(pure_powers + comm) + "=1"] + rel_powers
-            relators = ", ".join(rel_powers + relators)
-            return r"\langle %s \mid %s \rangle" % (show_gens, relators)
-        elif self.live():
-            return r"\langle %s \rangle" % (
-                ", ".join(str(g) for g in self.G.GeneratorsOfGroup())
-            )
-        elif self.elt_rep_type < 0:
-            return r"\langle %s \rangle" % (
-                ", ".join(map(self.decode_as_perm, self.perm_gens))
-            )
+                    v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
+                    relators.append("%s^{%s}=%s" % (var_name(j), var_name(i), print_elt(v)))
+        show_gens = ", ".join(var_name(i) for i in range(len(used)))
+        if pure_powers or comm:
+            rel_powers = ["=".join(pure_powers + comm) + "=1"] + rel_powers
+        relators = ", ".join(rel_powers + relators)
+        return r"\langle %s \mid %s \rangle" % (show_gens, relators)
+
+    @lazy_attribute
+    def representations(self):
+        # For live groups
+        return {}
+
+    def representation_line(self, rep_type):
+        # TODO: Add links to searches for other representations when available
+        rdata = self.representations[rep_type]
+        if rep_type == "Lie":
+            if self.element_repr_type == "Lie":
+                # Omit first description since it's used in the latex name
+                desc = "Other groups of " + display_knowl("group.lie_type", "Lie type")
+                rdata = rdata[1:]
+            else:
+                desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
+            reps = ",".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
+            return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
+        elif rep_type == "PC":
+            pres = f"${self.presentation()}$"
+            if self.abelian and not self.cyclic:
+                pres = f"Abelian group {pres}"
+            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
+        elif rep_type == "Perm":
+            gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
+            gens = fr"$\langle {gens} \rangle$"
+            d = rdata["d"]
+            if d >= 10:
+                gens = f"Degree {d}, {gens}"
+            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
         else:
+            # Matrix group
+            R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
+            gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
+            gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
+            return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+
+    @lazy_attribute
+    def stored_representations(self):
+        if self.live():
+            if self.solvable:
+                return self.representation_line("PC")
             raise NotImplementedError
+        def sort_key(typ):
+            if typ == self.element_repr_type:
+                return -1
+            return ["Lie", "PC", "Perm", "GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
+        return "\n".join(self.representation_line(rep_type) for rep_type in sorted(self.representations, key=sort_key))
 
     def is_null(self):
         return self._data is None
@@ -1603,7 +1672,6 @@ class WebAbstractGroup(WebObj):
     def is_hyperelementary(self):
         return self.hyperelementary > 1
 
-
 # We may get abelian groups which are too large for GAP, so handle them directly
 class LiveAbelianGroup():
     def __init__(self, data):
@@ -1726,8 +1794,6 @@ class LiveAbelianGroup():
             lcm(c.additive_order() for c in T)
             for T in cartesian_product_iterator(
                     [Zmod(m) for m in self.snf]))
-
-# Abstract Group object
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups_test
@@ -1981,27 +2047,21 @@ class WebAbstractSubgroup(WebObj):
     @lazy_attribute
     def thecenter(self):
         return any(x.split(".")[-1] == "Z" for x in self.special_labels)
-
     @lazy_attribute
     def thecommutator(self):
         return any(x.split(".")[-1] == "D" for x in self.special_labels)
-
     @lazy_attribute
     def thefrattini(self):
         return any(x.split(".")[-1] == "Phi" for x in self.special_labels)
-
     @lazy_attribute
     def thefitting(self):
         return any(x.split(".")[-1] == "F" for x in self.special_labels)
-
     @lazy_attribute
     def theradical(self):
         return any(x.split(".")[-1] == "R" for x in self.special_labels)
-
     @lazy_attribute
     def thesocle(self):
         return any(x.split(".")[-1] == "S" for x in self.special_labels)
-
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
@@ -2017,7 +2077,6 @@ class WebAbstractConjClass(WebObj):
             name = self.label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
 
-
 class WebAbstractDivision():
     def __init__(self, group, label, classes):
         self.group = group
@@ -2030,14 +2089,12 @@ class WebAbstractDivision():
             name = self.label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Crational">{name}</a>'
 
-
 class WebAbstractAutjClass():
     def __init__(self, group, label, classes):
         self.group = group
         self.label = label
         self.classes = classes
         self.order = classes[0].order
-
 
 class WebAbstractCharacter(WebObj):
     table = db.gps_char_test
@@ -2055,7 +2112,6 @@ class WebAbstractCharacter(WebObj):
             name = label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cchar_data&args={label}">{name}</a>'
 
-
 class WebAbstractRationalCharacter(WebObj):
     table = db.gps_qchar_test
 
@@ -2067,7 +2123,6 @@ class WebAbstractRationalCharacter(WebObj):
             '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=rchar_data&args=%s">%s</a>'
             % (name, label, name)
         )
-
 
 class WebAbstractSupergroup(WebObj):
     table = db.gps_subgroups_test

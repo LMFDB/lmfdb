@@ -88,7 +88,8 @@
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
     {% if not gp.live() %}
-    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
+    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.permutation_degree}}</td></tr>
+    <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
     {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
     {% endif %}
@@ -189,10 +190,7 @@
 <h2>Constructions</h2>
 
 <table class=nowrap>
-  <tr>
-    <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
-    <td colspan="5">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
-  </tr>
+  {{ gp.stored_representations | safe }}
   {% if not gp.live() %}
   {% if gp.direct_product %}
     <tr>

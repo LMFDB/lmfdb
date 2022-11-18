@@ -1360,29 +1360,32 @@ def download_group(**args):
     s += "\n" + com2
     s += "\n"
 
-    if gp_data["solvable"]:
+    ### This all needs to change
+    reps = gp_data["representations"]
+    rep_type = gp_data["element_repr_type"]
+    if rep_type == "PC":
         s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-        s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
+        s += "encd:= " + str(reps["PC"]["code"]) + "; \n"
 
         if dltype == "magma":
             s += "G:=SmallGroupDecoding(encd,gpsize); \n"
         elif dltype == "gap":
             s += "G:=PcGroupCode(encd, gpsize); \n"
 
-        gen_index = gp_data["gens_used"]
+        gen_index = reps["PC"]["gens"]
         num_gens = len(gen_index)
         for i in range(num_gens):
             s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
 
-    # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
-    else:
-        d = -gp_data["elt_rep_type"]
+        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+    elif rep_type == "Perm":
+        d = reps["Perm"]["d"]
         s += "d:=" + str(d) + "; \n"
         s += "Sd:=SymmetricGroup(d); \n"
 
         # Turn Lehmer code into permutations
         list_gens = []
-        for perm in gp_data["perm_gens"]:
+        for perm in reps["Perm"]["gens"]:
             perm_decode = Permutations(d).unrank(perm)
             list_gens.append(perm_decode)
 
