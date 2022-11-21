@@ -772,12 +772,6 @@ def common_parse(info, query, na_check=False):
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
-    if not na_check and info.get('search_type') != 'SpaceDimensions':
-        if info.get('dim_type') == 'rel':
-            parse_ints(info, query, 'cusp_dim', qfield='relative_dim', name="Cusp Dimension")
-        else:
-            parse_ints(info, query, 'cusp_dim', name="Cusp Dimension")
-
 
 def parse_discriminant(d, sign = 0):
     d = int(d)
@@ -805,7 +799,12 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
-
+    if info.get('search_type') != 'SpaceDimensions':
+        if info.get('dim_type') == 'rel':
+            parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
+        else:
+            parse_ints(info, query, 'dim', name="Dimension")
+    
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
         if key in info:
@@ -820,6 +819,11 @@ def newspace_parse(info, query):
         flash_error(msg)
         raise ValueError(msg)
     common_parse(info, query)
+    if info.get('search_type') != 'SpaceDimensions':
+        if info.get('dim_type') == 'rel':
+            parse_ints(info, query, 'cusp_dim', qfield='relative_dim', name="Cusp Dimension")
+        else:
+            parse_ints(info, query, 'cusp_dim', name="Cusp Dimension")
 #    if info['search_type'] != 'SpaceDimensions':
 #        parse_ints(info, query, 'num_forms', name='Number of newforms')
 #        if 'num_forms' not in query and info.get('all_spaces') != 'yes':
@@ -1596,8 +1600,8 @@ class SMFSearchArray(SearchArray):
             min_width=110)
 
         dim = TextBoxWithSelect(
-            name='cusp_dim',
-            label='Cusp Dim.',
+            name='dim',
+            label='Dim.',
             knowl='mf.siegel.dimension',
             example='1',
             example_span='2, 1-6',
