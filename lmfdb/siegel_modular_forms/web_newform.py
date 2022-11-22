@@ -34,7 +34,7 @@ INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 AUTOMORPHIC_TYPE = {'F' : 'Siegel-Eisentein',
                     'Q' : 'Klingen-Eisenstein',
                     'Y' : 'Yoshida Lift',
-                    'S' : 'Saito-Kurokawa Lift',
+                    'P' : 'Saito-Kurokawa Lift',
                     'G' : 'General type'
                     }
 
