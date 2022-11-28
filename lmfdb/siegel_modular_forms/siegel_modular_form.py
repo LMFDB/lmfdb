@@ -778,7 +778,8 @@ def common_parse(info, query, na_check=False):
     # parse_ints(info, query, 'weight', name="Weight")
     parse_weight(info, query, 'weight', fname="Weight")
     if 'family' in info:
-        query['family'] = family_str_to_char(info['family'])
+        #query['family'] = family_str_to_char(info['family'])
+        query['family'] = info['family']
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
@@ -856,11 +857,11 @@ def newspace_parse(info, query):
             parse_ints(info, query, 'cusp_dim', qfield='relative_dim', name="Cusp Dimension")
         else:
             parse_ints(info, query, 'cusp_dim', name="Cusp Dimension")
-#    if info['search_type'] != 'SpaceDimensions':
-#        parse_ints(info, query, 'num_forms', name='Number of newforms')
-#        if 'num_forms' not in query and info.get('all_spaces') != 'yes':
+    if info['search_type'] != 'SpaceDimensions':
+        parse_ints(info, query, 'num_forms', name='Number of newforms')
+        if 'num_forms' not in query and info.get('all_spaces') != 'yes':
             # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
-#            query['num_forms'] = {'$exists':True}
+            query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
     return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp:\
@@ -1125,22 +1126,24 @@ def dimension_space_postprocess(res, info, query):
     urlgen_info.pop('cusp_dim', None)
     urlgen_info.pop('search_array', None)
 
-    def url_generator_list(N, k):
+    def url_generator_list(g, F, N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'Spaces'
+        info_copy['degree'] = str(g)
+        info_copy['family'] = F
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
     if 'char_orbit_index' in query or 'prim_orbit_index' in query:
         url_generator = url_generator_list
     elif query.get('char_order') == 1:
-        def url_generator(N, k):
-            return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
+        def url_generator(g, F, N, k):
+            return url_for(".by_url_space_label", degree=g, family=F, level=N, weight=k, char_orbit_label="a")
     elif 'char_order' in query:
         url_generator = url_generator_list
     else:
-        def url_generator(N, k):
-            return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+        def url_generator(g, F, N, k):
+            return url_for(".by_url_full_gammma1_space_label", degree=g, family=F, level=N, weight=k)
 
     def pick_table(entry, X, typ):
         return entry[X][typ]
@@ -1161,15 +1164,17 @@ def dimension_space_postprocess(res, info, query):
                                  url_generator, pick_table, switch_text)
     dim_dict = {}
     for space in res:
+        g = space['degree']
+        F = space['family']
         N = space['level']
         k = tuple(space['weight'])
         dims = DimGrid.from_db(space)
         if space.get('num_forms') is None:
-            dim_dict[N,k] = False
-        elif (N,k) not in dim_dict:
-            dim_dict[N,k] = dims
-        elif dim_dict[N,k] is not False:
-            dim_dict[N,k] += dims
+            dim_dict[g,F,N,k] = False
+        elif (g,F,N,k) not in dim_dict:
+            dim_dict[g,F,N,k] = dims
+        elif dim_dict[g,F,N,k] is not False:
+            dim_dict[g,F,N,k] += dims
     delete_false(dim_dict)
     return dim_dict
 
@@ -1181,9 +1186,11 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info.pop('number', None)
     urlgen_info.pop('search_array', None)
 
-    def url_generator(N, k):
+    def url_generator(g, F, N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
+        info_copy['degree'] = str(g)
+        info_copy['family'] = F
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
@@ -1197,19 +1204,23 @@ def dimension_form_postprocess(res, info, query):
     na_query = {}
     common_parse(info, na_query, na_check=True)
     dim_dict = {}
-    for rec in db.smf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
+    for rec in db.smf_newspaces.search(na_query, ['degree', 'family', 'level', 'weight', 'num_forms']):
+        g = rec['degree']
+        F = rec['family']
         N = rec['level']
         k = tuple(rec['weight'])
-        if (N,k) not in dim_dict:
-            dim_dict[N,k] = 0
+        if (g,F,N,k) not in dim_dict:
+            dim_dict[g,F,N,k] = 0
         if rec.get('num_forms') is None:
-            dim_dict[N,k] = False
+            dim_dict[g,F,N,k] = False
     delete_false(dim_dict)
     for form in res:
+        g = form['degree']
+        F = form['family']
         N = form['level']
         k = tuple(form['weight'])
-        if (N,k) in dim_dict:
-            dim_dict[N,k] += form['dim']
+        if (g,F,N,k) in dim_dict:
+            dim_dict[g,F,N,k] += form['dim']
     return dim_dict
 
 @search_wrap(template="smf_dimension_search_results.html",
@@ -1237,16 +1248,21 @@ def dimension_form_search(info, query):
              err_title='Dimension search input error',
              per_page=None,
 #             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
-             projection=['label', 'level', 'weight', 'degree', 'total_dim', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_F_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim'],
+             projection=['label', 'level', 'weight', 'degree', 'family', 'total_dim', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_F_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
 def dimension_space_search(info, query):
     info.pop('count',None) # remove per_page so that we get all results
+    if 'degree' not in info:
+        info['degree'] = '2'
+    if 'family' not in info:
+        info['family'] = 'K'
     if 'weight' not in info:
         info['weight'] = '1-12'
     if 'level' not in info:
         info['level'] = '1-24'
+    
     newspace_parse(info, query)
     # We don't need to sort, since the dimensions are just getting added up
     query['__sort__'] = []
