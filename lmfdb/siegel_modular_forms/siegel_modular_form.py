@@ -754,24 +754,31 @@ newform_only_fields = {
     'analytic_rank': 'Analytic rank',
     'is_self_dual': 'Is self dual',
 }
+
+def parse_weight(info, query, qfield='weight', fname="Weight"):
+    if qfield in info:
+        if info[qfield][0] in ['(', '[']:
+            if '-' in info[qfield]:
+                wts = ['{' + w[1:-1] + '}' for w in info[qfield].split('-')]
+                query[qfield] = { '$gte' : wts[0], '$lte' : wts[1] }
+            else:
+                query[qfield] = str(list(eval(info[qfield]))).replace('[','{').replace(']','}')
+        else:
+            parse_ints(info, query, qfield, name=fname)
+            if type(query[qfield]) == int:
+                query[qfield] = '{ %d, 0 } ' % query[qfield]
+            else:
+                query[qfield] = { key : '{ %d, 0 }' % query[qfield][key] for key in query[qfield].keys()}
+    return 
+
 def common_parse(info, query, na_check=False):
     parse_ints(info, query, 'level', name="Level")
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     # parse_ints(info, query, 'weight', name="Weight")
-    if 'weight' in info:
-        if info['weight'][0] in ['(', '[']:
-            if '-' in info['weight']:
-                wts = ['{' + w[1:-1] + '}' for w in info['weight'].split('-')]
-                query['weight'] = { '$gte' : wts[0], '$lte' : wts[1] }
-            else:
-                query['weight'] = str(list(eval(info['weight']))).replace('[','{').replace(']','}')
-        else:
-            parse_ints(info, query, 'weight', name="Weight")
-            if type(query['weight']) == int:
-                query['weight'] = '{ %d, 0 } ' % query['weight']
-            else:
-                query['weight'] = { key : '{ %d, 0 }' % query['weight'][key] for key in query['weight'].keys()}
+    parse_weight(info, query, 'weight', fname="Weight")
+    if 'family' in info:
+        query['family'] = family_str_to_char(info['family'])
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
@@ -867,7 +874,8 @@ newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
     MathCol("level", "mf.siegel.level", "Level"),
     MathCol("degree", "mf.siegel.degree", "Degree"),
-    ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
+    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
+    MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
@@ -1031,13 +1039,20 @@ def set_rows_cols(info, query):
     """
     try:
         info['weight_list'] = integer_options(info['weight'], max_opts=200)
+        wt_list = []
+        for wt in info['weight_list']:
+            subinfo = {'weight' : wt}
+            query = {}
+            parse_weight(subinfo, query, 'weight')
+            wt_list.append(query['weight'])
+        info['weight_list'] = wt_list
     except ValueError:
         raise ValueError("Table too large: at most 200 options for weight")
     if 'weight_parity' in query:
         if query['weight_parity'] == -1:
-            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
+            info['weight_list'] = [(k,j) for (k,j) in info['weight_list'] if j%2 == 1]
         else:
-            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
+            info['weight_list'] = [(k,j) for (k,j) in info['weight_list'] if j%2 == 0]
     if 'char_orbit_index' in query:
         # Character was set, consistent with level
         info['level_list'] = [query['level']]
@@ -1090,9 +1105,6 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
     if switch_text:
         info['switch_text'] = switch_text
     info['count'] = 50 # put count back in so that it doesn't show up as none in url
-    for key in info.keys():
-        print(key)
-        print(info[key])
 
 def delete_false(D):
     for key, val in list(D.items()): # for py3 compat: can't iterate over items while deleting
@@ -1361,7 +1373,7 @@ class SMF_stats(StatsDisplay):
         # !!! WARNING : at the moment not too long, but we do not want to
         # retain this
         self.ndim = sum([f['dim'] for f in db.smf_newforms.search()])
-        self.weight_knowl = display_knowl('mf.siegel.weight', title='weight')
+        self.weight_knowl = display_knowl('mf.siegel.weight_k_j', title='weight')
         self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
         self.newspace_knowl = display_knowl('mf.siegel.newspace', title='newspaces')
@@ -1394,7 +1406,7 @@ class SMF_stats(StatsDisplay):
     # sort_keys = {'projective_image': projective_image_sort_key}
     sort_keys = {}
     knowls = {'level': 'mf.siegel.level',
-              'weight': 'mf.siegel.weight',
+              'weight': 'mf.siegel.weight_k_j',
               'degree' : 'mf.siegel.degree',
               'dim' : 'mf.siegel.dimension',
 #              'relative_dim': 'mf.siegel.dimension',
@@ -1586,7 +1598,7 @@ class SMFSearchArray(SearchArray):
         weight = TextBoxWithSelect(
             name='weight',
             label='Weight',
-            knowl='mf.siegel.weight',
+            knowl='mf.siegel.weight_k_j',
             example='2',
             example_span='2, 4-8',
             select_box=weight_quantifier)
