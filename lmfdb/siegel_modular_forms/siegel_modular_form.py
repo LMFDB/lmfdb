@@ -1090,6 +1090,9 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
     if switch_text:
         info['switch_text'] = switch_text
     info['count'] = 50 # put count back in so that it doesn't show up as none in url
+    for key in info.keys():
+        print(key)
+        print(info[key])
 
 def delete_false(D):
     for key, val in list(D.items()): # for py3 compat: can't iterate over items while deleting
@@ -1147,14 +1150,14 @@ def dimension_space_postprocess(res, info, query):
     dim_dict = {}
     for space in res:
         N = space['level']
-        k = space['weight']
+        k = tuple(space['weight'])
         dims = DimGrid.from_db(space)
         if space.get('num_forms') is None:
-            dim_dict[N,k[0], k[1]] = False
-        elif (N,k[0],k[1]) not in dim_dict:
-            dim_dict[N,k[0],k[1]] = dims
-        elif dim_dict[N,k[0],k[1]] is not False:
-            dim_dict[N,k[0],k[1]] += dims
+            dim_dict[N,k] = False
+        elif (N,k) not in dim_dict:
+            dim_dict[N,k] = dims
+        elif dim_dict[N,k] is not False:
+            dim_dict[N,k] += dims
     delete_false(dim_dict)
     return dim_dict
 
@@ -1184,7 +1187,7 @@ def dimension_form_postprocess(res, info, query):
     dim_dict = {}
     for rec in db.smf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
         N = rec['level']
-        k = rec['weight']
+        k = tuple(rec['weight'])
         if (N,k) not in dim_dict:
             dim_dict[N,k] = 0
         if rec.get('num_forms') is None:
@@ -1192,7 +1195,7 @@ def dimension_form_postprocess(res, info, query):
     delete_false(dim_dict)
     for form in res:
         N = form['level']
-        k = form['weight']
+        k = tuple(form['weight'])
         if (N,k) in dim_dict:
             dim_dict[N,k] += form['dim']
     return dim_dict
