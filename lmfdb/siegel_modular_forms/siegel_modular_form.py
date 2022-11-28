@@ -755,20 +755,20 @@ newform_only_fields = {
     'is_self_dual': 'Is self dual',
 }
 
-def parse_weight(info, query, qfield='weight', fname="Weight"):
+def parse_weight(info, query, qfield='weight', fname="Weight", braces="{}"):
     if qfield in info:
         if info[qfield][0] in ['(', '[']:
             if '-' in info[qfield]:
-                wts = ['{' + w[1:-1] + '}' for w in info[qfield].split('-')]
+                wts = [braces[0] + w[1:-1] + braces[1] for w in info[qfield].split('-')]
                 query[qfield] = { '$gte' : wts[0], '$lte' : wts[1] }
             else:
-                query[qfield] = str(list(eval(info[qfield]))).replace('[','{').replace(']','}')
+                query[qfield] = str(list(eval(info[qfield]))).replace('[',braces[0]).replace(']',braces[1])
         else:
             parse_ints(info, query, qfield, name=fname)
             if type(query[qfield]) == int:
-                query[qfield] = '{ %d, 0 } ' % query[qfield]
+                query[qfield] = (braces[:1] + ' %d, 0 ' + braces[1:]) % query[qfield]
             else:
-                query[qfield] = { key : '{ %d, 0 }' % query[qfield][key] for key in query[qfield].keys()}
+                query[qfield] = { key : (braces[:1] + ' %d, 0 ' + braces[1:]) % query[qfield][key] for key in query[qfield].keys()}
     return 
 
 def common_parse(info, query, na_check=False):
@@ -1041,10 +1041,10 @@ def set_rows_cols(info, query):
         info['weight_list'] = integer_options(info['weight'], max_opts=200)
         wt_list = []
         for wt in info['weight_list']:
-            subinfo = {'weight' : wt}
+            subinfo = {'weight' : str(wt)}
             query = {}
-            parse_weight(subinfo, query, 'weight')
-            wt_list.append(query['weight'])
+            parse_weight(subinfo, query, 'weight',braces="()")
+            wt_list.append(eval(query['weight']))
         info['weight_list'] = wt_list
     except ValueError:
         raise ValueError("Table too large: at most 200 options for weight")
