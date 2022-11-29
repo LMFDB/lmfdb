@@ -820,7 +820,7 @@ class ModCurve_download(Downloader):
     #'pointless',
     #'psl2index',
     #'psl2level',
-    #'qtwists',
+    #'qtwist',
     #'rational_cusps',
     #'reductions',
     #'scalar_label',
@@ -977,7 +977,7 @@ class ModCurve_download(Downloader):
             s += "\n// %s\n" % name
             nb_affines = len(m["coordinates"])
             if nb_affines > 1:
-                s += "// Equations are available on %s different open affines\n" % nb_affine
+                s += "// Equations are available on %s different open affines\n" % nb_affines
             for i in range(nb_affines):
                 if nb_affines > 1:
                     s += "\n// On open affine no. %s:\n" % i

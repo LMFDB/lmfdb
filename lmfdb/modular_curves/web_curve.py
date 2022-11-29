@@ -3,7 +3,7 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField, FractionField
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -273,25 +273,23 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def qtwist_description(self):
         if self.contains_negative_one:
-            if len(self.qtwists) > 1:
-                return r"yes"
-            else:
-                return r"yes"
+            return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwists[0]))
+            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwist))
 
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
-            if len(self.qtwists) > 1:
-                return r"%s"%(', '.join([modcurve_link(label) for label in self.qtwists[1:]]))
+            qtwists = list(self.table.search({'qtwist':self.label},projection='label'))
+            if len(qtwists) > 1:
+                return r"%s"%(', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
             else:
                 return r"none"
         else:
             return "none"
 
     @lazy_attribute
-    def cusp_display(self):
+    def cusps_display(self):
         if self.cusps == 1:
             return "$1$ (which is rational)"
         elif self.rational_cusps == 0:
@@ -302,6 +300,18 @@ class WebModCurve(WebObj):
             return f"${self.cusps}$ (all of which are rational)"
         else:
             return f"${self.cusps}$ (of which ${self.rational_cusps}$ are rational)"
+
+    @lazy_attribute
+    def cusp_widths_display(self):
+        if not self.cusp_widths:
+            return ""
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_widths) + "$"
+
+    @lazy_attribute
+    def cusp_orbits_display(self):
+        if not self.cusp_orbits:
+            return ""
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):
@@ -701,7 +711,7 @@ class WebModCurve(WebObj):
         if nodes:
             minrank = min(node.rank for node in nodes)
             for node in nodes: node.rank -= minrank
-            below = [node.label for node in nodes if node.index < self.index]
+            # below = [node.label for node in nodes if node.index < self.index] -- why is this not used?
             above = [node.label for node in nodes if node.index > self.index]
             edges = [[lab, self.label] for lab in above] + [[self.label, lab] for lab in self.parents if lab in self.lattice_labels]
             for label, P in parents.items():
