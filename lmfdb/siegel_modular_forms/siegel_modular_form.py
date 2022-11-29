@@ -203,7 +203,8 @@ def index():
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
     # info["degree_list"] = ('2', '3-%d' % degree_bound())
-    info["degree_list"] = ('2')
+    # info["degree_list"] = ('2')
+    info["degree"] = 2
     info["weight_list"] = ('2', '3', '4', '5-8', '9-16', '17-%d' % weight_bound()[0] )
     info["vector_weight_list"] = ('(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1]) )
     info["level_list"] = ('1', '2-10', '11-100', '101-%d' % level_bound() )
@@ -490,7 +491,7 @@ def check_valid_weight(weight, degree):
         return (False, "Invalid weight: not integers")
     return (True, "")
 
-@smf.route("/<degree>/")
+@smf.route("/<int:degree>/")
 def by_url_degree(degree):
     # print("routed to by_url_degree")
     if not POSINT_RE.match(degree):
@@ -772,6 +773,7 @@ def parse_weight(info, query, qfield='weight', fname="Weight", braces="{}"):
     return 
 
 def common_parse(info, query, na_check=False):
+    parse_ints(info, query, 'degree', name="Degree")
     parse_ints(info, query, 'level', name="Level")
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
@@ -1106,6 +1108,8 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
     if switch_text:
         info['switch_text'] = switch_text
     info['count'] = 50 # put count back in so that it doesn't show up as none in url
+    info['family'] = ord(info['family'])
+    info['degree'] = int(info['degree'])
 
 def delete_false(D):
     for key, val in list(D.items()): # for py3 compat: can't iterate over items while deleting
@@ -1130,20 +1134,22 @@ def dimension_space_postprocess(res, info, query):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'Spaces'
         info_copy['degree'] = str(g)
-        info_copy['family'] = F
+        info_copy['family'] = chr(F)
         info_copy['level'] = str(N)
-        info_copy['weight'] = str(k)
+        info_copy['weight'] = '.'.join([str(kk) for kk in k])
         return url_for(".index", **info_copy)
     if 'char_orbit_index' in query or 'prim_orbit_index' in query:
         url_generator = url_generator_list
     elif query.get('char_order') == 1:
         def url_generator(g, F, N, k):
-            return url_for(".by_url_space_label", degree=g, family=F, level=N, weight=k, char_orbit_label="a")
+            return url_for(".by_url_space_label", degree=g, family=chr(F), level=N,
+                           weight= '.'.join([str(kk) for kk in k]), char_orbit_label="a")
     elif 'char_order' in query:
         url_generator = url_generator_list
     else:
         def url_generator(g, F, N, k):
-            return url_for(".by_url_full_gammma1_space_label", degree=g, family=F, level=N, weight=k)
+            return url_for(".by_url_full_gammma1_space_label", degree=g, family=chr(F), level=N,
+                           weight= '.'.join([str(kk) for kk in k]))
 
     def pick_table(entry, X, typ):
         return entry[X][typ]
@@ -1165,7 +1171,7 @@ def dimension_space_postprocess(res, info, query):
     dim_dict = {}
     for space in res:
         g = space['degree']
-        F = space['family']
+        F = ord(space['family'])
         N = space['level']
         k = tuple(space['weight'])
         dims = DimGrid.from_db(space)
@@ -1190,7 +1196,7 @@ def dimension_form_postprocess(res, info, query):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
         info_copy['degree'] = str(g)
-        info_copy['family'] = F
+        info_copy['family'] = chr(F)
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
@@ -1206,7 +1212,7 @@ def dimension_form_postprocess(res, info, query):
     dim_dict = {}
     for rec in db.smf_newspaces.search(na_query, ['degree', 'family', 'level', 'weight', 'num_forms']):
         g = rec['degree']
-        F = rec['family']
+        F = ord(rec['family'])
         N = rec['level']
         k = tuple(rec['weight'])
         if (g,F,N,k) not in dim_dict:
@@ -1216,7 +1222,7 @@ def dimension_form_postprocess(res, info, query):
     delete_false(dim_dict)
     for form in res:
         g = form['degree']
-        F = form['family']
+        F = ord(form['family'])
         N = form['level']
         k = tuple(form['weight'])
         if (g,F,N,k) in dim_dict:
@@ -1248,16 +1254,41 @@ def dimension_form_search(info, query):
              err_title='Dimension search input error',
              per_page=None,
 #             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
-             projection=['label', 'level', 'weight', 'degree', 'family', 'total_dim', 'cusp_dim', 'eis_dim', 'eis_Q_dim', 'eis_F_dim', 'cusp_Y_dim', 'cusp_P_dim', 'cusp_G_dim', 'num_forms'],
+             projection=['label', 'level', 'weight', 'degree', 'family', 'num_forms',
+                         'total_dim',
+                         'cusp_dim',
+                         'eis_dim',
+                         'eis_Q_dim',
+                         'eis_F_dim',
+                         'cusp_Y_dim',
+                         'cusp_P_dim',
+                         'cusp_G_dim',
+                         'new_total_dim',
+                         'new_cusp_dim',
+                         'new_eis_dim',
+                         'new_eis_Q_dim',
+                         'new_eis_F_dim',
+                         'new_cusp_Y_dim',
+                         'new_cusp_P_dim',
+                         'new_cusp_G_dim',
+                         'old_total_dim',
+                         'old_cusp_dim',
+                         'old_eis_dim',
+                         'old_eis_Q_dim',
+                         'old_eis_F_dim',
+                         'old_cusp_Y_dim',
+                         'old_cusp_P_dim',
+                         'old_cusp_G_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
 def dimension_space_search(info, query):
     info.pop('count',None) # remove per_page so that we get all results
     if 'degree' not in info:
-        info['degree'] = '2'
+        info['degree'] = 2
     if 'family' not in info:
-        info['family'] = 'K'
+        info['family'] = 'paramodular'
+    info['family'] = family_str_to_char(info['family'])
     if 'weight' not in info:
         info['weight'] = '1-12'
     if 'level' not in info:

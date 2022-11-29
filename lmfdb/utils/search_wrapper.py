@@ -282,7 +282,6 @@ class SearchWrapper(Wrapper):
                         msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
                         msg += ", ".join(nulls.values())
                         flash_info(msg)
-            print(info)
             return render_template(template, info=info, title=title, **template_kwds)
 
 
