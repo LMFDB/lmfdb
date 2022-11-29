@@ -869,7 +869,7 @@ def newspace_parse(info, query):
 
 def _trace_col(i):
     return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp:\
- bigint_knowl(tdisp[i], 12), orig="trace_lambda_p", align="right", default=True)
+ "" if tdisp == '' else bigint_knowl(tdisp[i], 12), orig="trace_lambda_p", align="right", default=True)
 #    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
 
 def _AL_col(i, p):
