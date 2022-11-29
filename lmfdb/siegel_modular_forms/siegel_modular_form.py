@@ -774,6 +774,8 @@ def parse_weight(info, query, qfield='weight', fname="Weight", braces="{}"):
 
 def common_parse(info, query, na_check=False):
     parse_ints(info, query, 'degree', name="Degree")
+    if 'degree' in info:
+        info['degree'] = int(info['degree'])
     parse_ints(info, query, 'level', name="Level")
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
@@ -817,7 +819,6 @@ def parse_discriminant(d, sign = 0):
 
 def newform_parse(info, query):
     common_parse(info, query)
-    parse_ints(info, query, 'degree')
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
     parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
@@ -1040,6 +1041,7 @@ def set_rows_cols(info, query):
     """
     Sets weight_list and level_list, which are the row and column headers
     """
+    info['degree'] = int(info['degree'])
     try:
         info['weight_list'] = integer_options(info['weight'], max_opts=200)
         wt_list = []
@@ -1108,6 +1110,8 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
     if switch_text:
         info['switch_text'] = switch_text
     info['count'] = 50 # put count back in so that it doesn't show up as none in url
+    if len(info['family']) > 1:
+        info['family'] = family_str_to_char(info['family'])
     info['family'] = ord(info['family'])
     info['degree'] = int(info['degree'])
 
@@ -1170,7 +1174,7 @@ def dimension_space_postprocess(res, info, query):
                                  url_generator, pick_table, switch_text)
     dim_dict = {}
     for space in res:
-        g = space['degree']
+        g = int(space['degree'])
         F = ord(space['family'])
         N = space['level']
         k = tuple(space['weight'])
@@ -1209,9 +1213,10 @@ def dimension_form_postprocess(res, info, query):
     # Determine which entries should have an "n/a"
     na_query = {}
     common_parse(info, na_query, na_check=True)
+    na_query['family'] = chr(info['family'])
     dim_dict = {}
     for rec in db.smf_newspaces.search(na_query, ['degree', 'family', 'level', 'weight', 'num_forms']):
-        g = rec['degree']
+        g = int(rec['degree'])
         F = ord(rec['family'])
         N = rec['level']
         k = tuple(rec['weight'])
@@ -1221,7 +1226,7 @@ def dimension_form_postprocess(res, info, query):
             dim_dict[g,F,N,k] = False
     delete_false(dim_dict)
     for form in res:
-        g = form['degree']
+        g = int(form['degree'])
         F = ord(form['family'])
         N = form['level']
         k = tuple(form['weight'])
@@ -1234,12 +1239,19 @@ def dimension_form_postprocess(res, info, query):
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
-             projection=['level', 'weight', 'dim'],
+             projection=['level', 'weight', 'dim', 'degree', 'family'],
              postprocess=dimension_form_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
 def dimension_form_search(info, query):
     info.pop('count',None) # remove per_page so that we get all results
+    if 'degree' not in info:
+        info['degree'] = 2
+    info['degree'] = int(info['degree'])
+    if 'family' not in info:
+        info['family'] = 'paramodular'
+    if len(info['family']) > 1:
+        info['family'] = family_str_to_char(info['family'])
     if 'weight' not in info:
         info['weight'] = '1-12'
     if 'level' not in info:
@@ -1286,9 +1298,11 @@ def dimension_space_search(info, query):
     info.pop('count',None) # remove per_page so that we get all results
     if 'degree' not in info:
         info['degree'] = 2
+    info['degree'] = int(info['degree'])
     if 'family' not in info:
         info['family'] = 'paramodular'
-    info['family'] = family_str_to_char(info['family'])
+    if len(info['family']) > 1:
+        info['family'] = family_str_to_char(info['family'])
     if 'weight' not in info:
         info['weight'] = '1-12'
     if 'level' not in info:
