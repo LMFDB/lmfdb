@@ -782,8 +782,9 @@ def common_parse(info, query, na_check=False):
     # parse_ints(info, query, 'weight', name="Weight")
     parse_weight(info, query, 'weight', fname="Weight")
     if 'family' in info:
-        #query['family'] = family_str_to_char(info['family'])
         query['family'] = info['family']
+        if (type(query['family']) == str) and (len(query['family']) > 1):
+            query['family'] = family_str_to_char(info['family'])
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
