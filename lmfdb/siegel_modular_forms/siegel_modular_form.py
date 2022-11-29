@@ -958,7 +958,7 @@ def trace_postprocess(res, info, query, spaces=False):
             q = None
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
-        table = db.mf_hecke_newspace_traces if spaces else db.mf_hecke_traces
+        table = db.smf_hecke_newspace_traces if spaces else db.smf_hecke_traces
         for rec in table.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             if q:
                 trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
