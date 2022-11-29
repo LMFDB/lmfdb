@@ -5,6 +5,7 @@ import bisect
 import re
 
 from flask import url_for
+from functools import reduce
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
@@ -17,7 +18,7 @@ from lmfdb.utils import (
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
     integer_squarefree_part,
-    raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp, raw_typeset
+    raw_typeset_poly, raw_typeset_poly_factor, raw_typeset
 )
 from lmfdb.utils.web_display import compress_polynomial
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -155,6 +156,118 @@ def raw_typeset_lfunc(coeffs_list,
 
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
+def raw_typeset_qexp(coeffs_dict,
+                     compress_threshold=100,
+                     coeff_compress_threshold=30,
+                     var=r"\beta",
+                     final_rawvar='b',
+                     superscript=False,
+                     **kwargs):
+
+    plus = r" + "
+    minus = r" - "
+
+    rawvar = var.lstrip("\\")
+    R = PolynomialRing(ZZ, rawvar)
+
+
+    def rawtset_coeff(exps, coeffs, first):
+        poly = R(coeffs)
+        if poly == 0:
+            return "", ""
+        if (exps[2] not in [0,1]):
+            rawq = f" * q_{{12}}^{exps[2]}"
+            tsetq = f" q_{{{{12}}}}^{{{exps[2]}}}"
+        elif (exps[2] == 1):
+            rawq = f" * q_{{12}}"
+            tsetq = f" q_{{{{12}}}}"
+        else:
+            rawq = f" * "
+            tsetq = f" "
+
+        if (exps[0] > 1):
+            rawq += f"q_{1}^{exps[0]}"
+            tsetq += f"q_{{{1}}}^{{{exps[0]}}}"
+        else:
+            rawq += f"q_{1}"
+            tsetq += f"q_{{{1}}}"
+
+        if (exps[1] > 1):
+            rawq += f"q_{2}^{exps[1]}"
+            tsetq += f"q_{{{2}}}^{{{exps[1]}}}"
+        else:
+            rawq += f"q_{2}"
+            tsetq += f"q_{{{2}}}"
+            
+        raw = str(poly)
+        if poly in [1, -1]:
+            rawq = rawq[3:]
+            if poly == -1:
+                return minus + rawq, minus + tsetq
+            elif (not first):
+                return plus + rawq, plus + tsetq
+            else:
+                return rawq, tsetq
+        else:
+            tset = compress_polynomial(
+                poly,
+                coeff_compress_threshold,
+                decreasing=True)
+        if not superscript:
+            raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
+            tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
+            # in case the last replace doesn't trigger because is at the end
+            if raw.endswith(rawvar):
+                raw += "1"
+            if tset.endswith(var):
+                tset += "_1"
+        if poly.number_of_terms() == 1:
+            if (not first):
+                if raw.startswith('-'):
+                    raw = minus + raw[1:]
+                else:
+                    raw = plus + raw
+                    tset = plus + tset
+        else:
+            tset = f"({tset})"
+            raw = f"({raw})"
+            if (not first):
+                raw = plus + raw
+                tset = plus + tset
+        raw += rawq
+        tset += tsetq
+        return raw, tset
+
+    tset = ''
+    raw = ''
+    add_to_tset = True
+    lastt = None
+    exps = coeffs_dict.keys()
+    max_deg = max([exp[0] + exp[1] for exp in exps])
+    exps_by_deg = [sorted([k for k in exps if k[0]+k[1] == deg]) for deg in range(max_deg)]
+    exps = reduce(lambda x,y : x+y, exps_by_deg)
+    for i,exp in enumerate(exps):
+        coeffs = [coeffs_dict[exp]]
+        r, t = rawtset_coeff(exp, coeffs, (i == 0))
+        if t:
+            lastt = t
+        raw += r
+        if add_to_tset:
+            tset += t
+        if add_to_tset and "cdots" in tset:
+            add_to_tset = False
+            lastt = None
+    else:
+        if lastt and not add_to_tset:
+            tset += r"+ \cdots "
+            tset += lastt
+
+    tset += rf'+O(q^{{{max_deg+1}}})'
+    raw = raw.lstrip(" ")
+    # use final_rawvar
+    raw = raw.replace(rawvar, final_rawvar)
+    
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
 
 # we may store alpha_p with p <= 3000
 primes_for_angles = prime_range(3000)
@@ -321,12 +434,12 @@ class WebNewform():
             if eigenvals:
                 if eigenvals.get('qexp'):
                     self.has_exact_qexp = True
-                    self.qexp = eigenvals['qexp']
+                    self.qexp = {eval(k) : eigenvals['qexp'][k] for k in eigenvals['qexp'].keys()}
                     self.qexp_prec = max([k[0]+k[1] for k in self.qexp.keys()])
+                for attr in hecke_cols:
+                    setattr(self, attr, eigenvals.get(attr))
                 if eigenvals.get('an'):
                     self.has_exact_lfunc = True
-                    for attr in hecke_cols:
-                        setattr(self, attr, eigenvals.get(attr))
                     self.primes = prime_range(self.maxp_square+1)
                     self.range_evs = range(len(self.primes))
                 m = self.hecke_ring_cyclotomic_generator
@@ -1374,12 +1487,14 @@ function switch_basis(btype) {
     def trace_lfunction(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
         return raw_typeset_lfunc([[elt] for elt in self.texp[:prec]])
-        
+
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.embedding_label:
             return self.q_expansion_cc(prec_max)
         elif self.has_exact_qexp:
+            def truncate(series, prec):
+                return {k : series[k] for k in series.keys() if k[0] + k[1] < prec}
             prec = min(self.qexp_prec, prec_max)
             m = self.hecke_ring_cyclotomic_generator
             if m is not None and m != 0:
@@ -1392,15 +1507,15 @@ function switch_basis(btype) {
                     for c, e in data:
                         out[e] = c
                     return out
-                coeffs = [to_list(data) for data in self.qexp[:prec]]
+                coeffs = [to_list(data) for data in truncate(self.qexp, prec)]
                 return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
             elif self.single_generator:
                 var = str(self._PrintRing.gen(0))
-                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
+                return raw_typeset_qexp(truncate(self.qexp, prec), superscript=True, var=var, final_rawvar=var[0])
             else:
                 # in this case str(self._PrintRing.gen(0)) = beta1
                 # and thus the extra case
-                return raw_typeset_qexp(self.qexp[:prec])
+                return raw_typeset_qexp(truncate(self.qexp,prec))
 
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()

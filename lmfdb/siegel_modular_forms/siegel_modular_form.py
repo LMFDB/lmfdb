@@ -1586,7 +1586,7 @@ class SMFSearchArray(SearchArray):
         ('character', 'character', ['level', 'char_orbit_index', 'weight']),
         ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
-#        ('Nk2', 'Nk^2', ['Nk2', 'level']),
+        ('Nk2', 'N(2k+j-2)^2', ['Nk2', 'level']),
         ('dim', 'dimension', ['dim', 'level', 'weight']),
         ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
         ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
@@ -1740,12 +1740,12 @@ class SMFSearchArray(SearchArray):
  #           example='1-10',
  #           example_span='1-10')
 
- #       Nk2 = TextBox(
- #           name='Nk2',
- #           knowl='mf.siegel.nk2',
- #           label=r'\(Nk^2\)',
- #           example='40-100',
- #           example_span='40-100')
+        Nk2 = TextBox(
+            name='Nk2',
+            knowl='mf.siegel.nk2',
+            label=r'\(N(2k+j-2)^2\)',
+            example='40-100',
+            example_span='40-100')
 
  #       cm = SelectBox(
  #           name='cm',
@@ -1871,6 +1871,7 @@ class SMFSearchArray(SearchArray):
             [char_order, char_primitive],
             [dim, coefficient_field],
             [results],
+            [Nk2],
 #            [analytic_conductor, Nk2],
 #            [self_twist, self_twist_discs],
 #            [inner_twist_count, is_self_dual],
@@ -1879,7 +1880,7 @@ class SMFSearchArray(SearchArray):
 #            [results, projective_image_type]]
 ]
         self.refine_array = [
-            [degree, family, level, weight, aut_type, dim],
+            [degree, family, level, weight, aut_type, Nk2, dim],
 #            [level, weight, analytic_conductor, Nk2, dim],
             [level_primes, character, char_primitive, char_order, coefficient_field],
 #            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
@@ -1887,14 +1888,14 @@ class SMFSearchArray(SearchArray):
 #            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
-            [degree, family, level, weight, dim],
+            [degree, family, level, weight, Nk2, dim],
             [level_primes, character, char_primitive, char_order]
 #            [level, weight, analytic_conductor, Nk2, dim],
 #            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
-            [degree, family, level, weight, hdim],
+            [degree, family, level, weight, Nk2, hdim],
             [level_primes, character, char_primitive, char_order]
 #            [level, weight, analytic_conductor, Nk2, hdim],
 #            [level_primes, character, char_primitive, char_order, hnum_newforms]
