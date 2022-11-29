@@ -302,7 +302,9 @@ class WebNewform():
         self.hecke_ring_power_basis = None
         self.qexp_converted = False  # set to True if the q-expansion is rewritten in terms of a root of unity
         self.single_generator = None
+        self.has_exact_lfunc = False
         self.has_exact_qexp = False
+ 
         if self.embedding_label is None:
             hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp', 'maxp_square']
             self.hecke_types = ['lambda_p', 'lambda_p_square', 'lambda_p_square_0', 'lambda_p_square_1', 'lambda_p_square_2']
@@ -313,15 +315,20 @@ class WebNewform():
                                'lambda_p_square_2' : 'p^2, 2'
                                }
             hecke_cols += self.hecke_types
-            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
+            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp'])
+            # !! TODO : change it to a field containing the entire fourier expansion !!
+ 
             if eigenvals:
-# right now we still don't have the general an
-#            if eigenvals and eigenvals.get('an'):
-                self.has_exact_qexp = True
-                for attr in hecke_cols:
-                    setattr(self, attr, eigenvals.get(attr))
-                self.primes = prime_range(self.maxp_square+1)
-                self.range_evs = range(len(self.primes))
+                if eigenvals.get('qexp'):
+                    self.has_exact_qexp = True
+                    self.qexp = eigenvals['qexp']
+                    self.qexp_prec = max([k[0]+k[1] for k in self.qexp.keys()])
+                if eigenvals.get('an'):
+                    self.has_exact_lfunc = True
+                    for attr in hecke_cols:
+                        setattr(self, attr, eigenvals.get(attr))
+                    self.primes = prime_range(self.maxp_square+1)
+                    self.range_evs = range(len(self.primes))
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
                     m = 0
@@ -329,16 +336,18 @@ class WebNewform():
                 else:
                     zero = []
                 if eigenvals.get('an'):
-                    self.qexp = [zero] + eigenvals['an']
-                    self.qexp_prec = len(self.qexp)
+                    self.lfunc = [zero] + eigenvals['an']
+                    self.lfunc_prec = len(self.lfunc)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
                 # This is not enough, for some reason
                 # if (m != 0) and (not self.single_generator):
                 # This is the only thing I could make work:
                 if (m != 0) and self.field_poly_is_cyclotomic and (self.hecke_ring_numerators is not None):
                     attribs = self.hecke_types
-                    if eigenvals.get('an'):
+                    if eigenvals.get('qexp'):
                         attribs += ['qexp']
+                    if eigenvals.get('an'):
+                        attribs += ['lfunc']
                     for attr in attribs:
                         self.convert_to_cyclotomic(m, attr)
                     self.show_hecke_ring_basis = False
@@ -1340,7 +1349,7 @@ function switch_basis(btype) {
 
     def L_function(self, prec_max=10):
         # Display the L-function, truncating to precision prec_max. Will be inside \( \).
-        prec = min(self.qexp_prec, prec_max)
+        prec = min(self.lfunc_prec, prec_max)
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
             # sum of powers of zeta_m
@@ -1352,15 +1361,15 @@ function switch_basis(btype) {
                 for c, e in data:
                     out[e] = c
                     return out
-            coeffs = [to_list(data) for data in self.qexp[:prec]]
+            coeffs = [to_list(data) for data in self.lfunc[:prec]]
             return raw_typeset_lfunc(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
         elif self.single_generator:
             var = str(self._PrintRing.gen(0))
-            return raw_typeset_lfunc(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
+            return raw_typeset_lfunc(self.lfunc[:prec], superscript=True, var=var, final_rawvar=var[0])
         else:
             # in this case str(self._PrintRing.gen(0)) = beta1
             # and thus the extra case
-            return raw_typeset_lfunc(self.qexp[:prec])
+            return raw_typeset_lfunc(self.lfunc[:prec])
 
     def trace_lfunction(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
