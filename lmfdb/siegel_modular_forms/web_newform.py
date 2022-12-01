@@ -1439,6 +1439,9 @@ function switch_basis(btype) {
     def hecke_eigenvalue(self, hecke_type, n):
         # Display the hecke eigenvalue of this hecke_type at place n. Will be inside \( \).
         m = self.hecke_ring_cyclotomic_generator
+        evs = getattr(self, hecke_type)
+        if evs is None:
+            return '' 
         ev = getattr(self, hecke_type)[n]
         if m is not None and m != 0:
             # sum of powers of zeta_m
