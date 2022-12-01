@@ -237,15 +237,24 @@ def modcurve_jump(info):
             flash_error("There is no modular curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
-    
+    lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.1"]
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
+    elif len(lmfdb_labels_not_X1) == 1:
+        label = lmfdb_labels_not_X1[0]
+        return redirect(url_for_modcurve_label(label))        
     else:
-        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels, "$not": "1.1.0.1"}}, "factorization"))
-        if len(factors) != len([label for label in lmfdb_labels if label != "1.1.0.1"]):
+        # Get factorization for each label
+        factors = list(db.gps_gl2zhat_test.search({"label": {"$in": lmfdb_labels_not_X1}},
+                                                  ["label","factorization"]))
+        factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
+                   for f in factors]
+        # Check labels are indeed distinct
+        if len(factors) != len(lmfdb_labels_not_X1):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
+        # Get list of all factors, lexicographically sorted
         factors = sorted(sum(factors, []), key=lambda x:[int(i) for i in x.split(".")])
         label = db.gps_gl2zhat_test.lucky({'factorization': factors}, "label")
         if label is None:
