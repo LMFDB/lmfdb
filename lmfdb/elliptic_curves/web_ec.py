@@ -310,9 +310,11 @@ class WebEC():
         data['an'] = classdata['anlist']
         data['ap'] = classdata['aplist']
 
-        # mod-p Galois images:
+        # ell-adic Galois images:
 
-        data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
+        # remove adelic image record (prime set to 0) from ell-adic data if present
+        data['galois_data'] = [r for r in list(db.ec_galrep.search({'lmfdb_label': lmfdb_label})) if r["prime"] > 0]
+
         # CM and Endo ring:
 
         data['CMD'] = self.cm
