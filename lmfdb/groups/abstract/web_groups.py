@@ -1361,6 +1361,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def gens_used(self):
+        if self.live():
+            return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
     def show_subgroup_generators(self, H):
@@ -1447,12 +1449,15 @@ class WebAbstractGroup(WebObj):
 
     def representation_line(self, rep_type):
         # TODO: Add links to searches for other representations when available
-        rdata = self.representations[rep_type]
+        if rep_type != "PC":
+            rdata = self.representations[rep_type]
         if rep_type == "Lie":
             if self.element_repr_type == "Lie":
                 # Omit first description since it's used in the latex name
                 desc = "Other groups of " + display_knowl("group.lie_type", "Lie type")
                 rdata = rdata[1:]
+                if not rdata:
+                    return ""
             else:
                 desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ",".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
