@@ -205,11 +205,18 @@ class WebModCurve(WebObj):
             ("Index", str(self.index)),
             ("Genus", str(self.genus)),
         ]
+        if self.image is not None:
+            props.append((None, self.image))
         if hasattr(self,"rank"):
             props.append(("Analytic rank", str(self.rank)))
         props.extend([("Cusps", str(self.cusps)),
                       (r"$\Q$-cusps", str(self.rational_cusps))])
         return props
+
+    @lazy_attribute
+    def image(self):
+        img = db.modcurve_images.lookup(self.CPlabel, "image")
+        return f'<img src="{img}" width="200" height="200"/>'
 
     @lazy_attribute
     def friends(self):
