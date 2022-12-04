@@ -22,7 +22,7 @@ fields = ['2.0.{}.1'.format(d) for d in abs_discs]
 
 x = polygen(QQ)
 def poly(d):
-    return x**2+d if d%4 in [1,2] else x**2-x+(d+1)//4
+    return x**2+(d//4) if d%4==0 else x**2-x+(d+1)//4
 
 polys = dict([(field,poly(d)) for field,d in zip(fields, abs_discs)])
 
