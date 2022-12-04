@@ -1,3 +1,11 @@
+User-agent: *
+Crawl-delay: 5
+Disallow: /static/
+Disallow: /api/
+
+User-agent: linabot
+Disallow: /
+
 User-agent: SemrushBot
 Crawl-delay: 5
 Disallow: /static/
@@ -12,9 +20,3 @@ User-agent: SemrushBot-SI
 Crawl-delay: 5
 Disallow: /static/
 Disallow: /api/
-
-User-agent: *
-Crawl-delay: 5
-Disallow: /static/
-Disallow: /api/
-
