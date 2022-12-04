@@ -4,19 +4,5 @@ Disallow: /static/
 Disallow: /api/
 
 User-agent: linabot
+User-agent: Honolulu-bot
 Disallow: /
-
-User-agent: SemrushBot
-Crawl-delay: 5
-Disallow: /static/
-Disallow: /api/
-
-User-agent: SemrushBot-SA
-Crawl-delay: 5
-Disallow: /static/
-Disallow: /api/
-
-User-agent: SemrushBot-SI
-Crawl-delay: 5
-Disallow: /static/
-Disallow: /api/
