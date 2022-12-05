@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from lmfdb.logger import make_logger
 typed_data_logger = make_logger("typed_data_logger", hl=True)
 

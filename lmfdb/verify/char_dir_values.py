@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from sage.all import Integer, euler_phi
 
 from lmfdb import db
@@ -33,7 +33,7 @@ class char_dir_values(TableChecker):
         """
         # TIME about 3000s for full table
         N = Integer(rec['modulus'])
-        v2, u2 = N.val_unit(2)
+        v2, _ = N.val_unit(2)
         if v2 == 1:
             # Z/2 doesn't contribute generators, but 2 divides N
             adjust2 = -1

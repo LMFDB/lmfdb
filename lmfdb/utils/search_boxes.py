@@ -1,9 +1,10 @@
-from .utilities import display_knowl
+from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 
 
-class TdElt(object):
+class TdElt():
     _wrap_type = 'td'
+
     def _add_class(self, D, clsname):
         if 'class' in D:
             D['class'] = D['class'] + ' ' + clsname
@@ -17,6 +18,7 @@ class TdElt(object):
             kwds.update(self.wrap_mixins)
         if self.advanced:
             self._add_class(kwds, 'advanced')
+        kwds['valign'] = 'top'
         for key, val in kwds.items():
             keys.append(' %s="%s"' % (key, val))
         return "<%s%s>" % (typ, "".join(keys))
@@ -132,7 +134,9 @@ class SearchBox(TdElt):
     def _label(self, info):
         label = self.label if info is None else self.short_label
         if self.knowl is not None:
-            label = display_knowl(self.knowl, label)
+            knowl = display_knowl(self.knowl, label)
+            if knowl is not None:
+                return knowl
         return label
 
     def has_label(self, info):
@@ -366,6 +370,14 @@ class CheckBox(SearchBox):
             keys.append("checked")
         return '<input type="checkbox" %s>' % (" ".join(keys),)
 
+class SneakyBox(SearchBox):
+    """
+    Only displayed in result refinement if the corresponding input is present.
+    Intended for use in displaying statistics and jump boxes
+    """
+
+class SneakyTextBox(TextBox, SneakyBox):
+    pass
 
 class SkipBox(TextBox):
     def _input(self, info=None):
@@ -397,7 +409,9 @@ class DoubleSelectBox(SearchBox):
     def __init__(self, label, select_box1, select_box2, **kwds):
         self.select_box1 = select_box1
         self.select_box2 = select_box2
-        SearchBox.__init__(self, label, **kwds)
+        if 'name' not in kwds:
+            kwds['name'] = label
+        SearchBox.__init__(self, label=label, **kwds)
 
     def _input(self, info):
         return (
@@ -460,8 +474,116 @@ class CountBox(TextBox):
             example_value=True,
             example_span="")
 
+class ColumnController(SelectBox):
+    def __init__(self):
+        super().__init__(
+            name="column_control",
+            knowl="doc.select_search_columns",
+            label="Select",
+            width=170)
+
+    def _label(self, info):
+        if info is None:
+            return ""
+        C = info.get("columns")
+        if C is None:
+            return ""
+        R = info.get("results")
+        if R is None:
+            return ""
+        return super()._label(info)
+
+    def _input(self, info):
+        if info is None:
+            print("WARNING: Column controller should not be included on browse page")
+            return ""
+        C = info.get("columns")
+        if C is None:
+            print("WARNING: Column controller included but no columns specified in @search_wrap")
+            return ""
+        R = info.get("results")
+        if R is None:
+            # can happen if search input error for example
+            return ""
+        keys = [
+            '''onmousedown="this.size=this.length; this.value='';"''',
+            '''onmousemove="return false;"''',
+            '''onmouseup="this.focus();"''',
+            '''onblur="this.size=0; this.value='none';"''',
+            '''oninput="control_columns(this);"''',
+            '''id="column-selector"''',
+        ]
+        style="position: absolute; z-index: 9999;"
+        if self.short_width is not None:
+            style += f'width: {self.short_width}px;'
+        keys.append(f'style="{style}"')
+        options = [("none", " selected", "columns to display")]
+        use_rank = 0 # which rank to iterate over in determining the columns listed in the select
+        for col in C.columns_shown(info, 0):
+            if col.height > 1 and any(sub.name != col.name for sub in col.show(info, 1)):
+                # A ColGroup with columns that should be shown/hidden individually
+                use_rank = 1
+                break
+        for col in C.columns_shown(info, use_rank):
+            if col.short_title is None: # probably a spacer column:
+                continue
+            title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
+            if col.default(info):
+                disp = "✓ " + title # The space is a unicode space the size of an emdash
+            else:
+                disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
+            options.append((col.name, "", disp))
+        # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
+        options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
+        return "        <select %s>\n%s\n        </select>" % (
+            " ".join(keys),
+            "".join("\n" + " " * 10 + opt for opt in options),
+        )
+
+
+class SortController(SelectBox):
+    wrap_mixins = {'width': '170px'}
+
+    def __init__(self, options, knowl):
+        extra = [
+            '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
+            '''onmousemove="return false;"''',
+            '''onmouseup="this.focus();"''',
+            '''onblur="blur_sort(this);"''',
+            '''oninput="control_sort(this);"''',
+            '''id="sort-selecter"''',
+            '''style="width: 170px; position: absolute; z-index: 9999;"''',
+        ]
+        super().__init__(
+            name="sort_order",
+            label="Sort order",
+            options=options,
+            knowl=knowl,
+            width=None,
+            extra=extra,
+        )
+
+    #sort_box = SelectBox(
+    #    name='sort_order',
+    #    options=list(sort),
+    #    width=130)
+    #sort_dir = SelectBox(
+    #    name='sort_dir',
+    #    options=[('', '&#9650;'), ('op', '&#9660;')],
+    #    width=None,
+    #    extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
+    #)
+    #sort_ord = DoubleSelectBox(
+    #    name='sort_combo',
+    #    label='Sort order',
+    #    knowl=self.sort_knowl,
+    #    select_box1=sort_box,
+    #    select_box2=sort_dir)
+
+
 class SearchButton(SearchBox):
     _default_width = 170
+
     def __init__(self, value, description, **kwds):
         kwds['label'] = kwds.get('label', '')
         SearchBox.__init__(self, **kwds)
@@ -470,7 +592,7 @@ class SearchButton(SearchBox):
 
     def td(self, colspan=None, **kwds):
         kwds = dict(kwds)
-        self._add_class(kwds, 'button')
+        #self._add_class(kwds, 'button')
         return SearchBox.td(self, colspan, **kwds)
 
     def _input(self, info):
@@ -483,8 +605,7 @@ class SearchButton(SearchBox):
             width=self.width,
             val=self.value,
             desc=self.description,
-            onclick=onclick,
-        )
+            onclick=onclick)
 
 class SearchButtonWithSelect(SearchButton):
     def __init__(self, value, description, select_box, **kwds):
@@ -494,15 +615,13 @@ class SearchButtonWithSelect(SearchButton):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return (
-            self.td(colspan)
-            + '<div style="display: flex; justify-content: space-between;">'
-            + self._label(info)
-            + '<span style="margin-left: 5px;"></span>'
-            + self.select_box._input(info)
-            + "</div>"
-            + "</td>"
-        )
+        return (self.td(colspan)
+                + '<div style="display: flex; justify-content: space-between;">'
+                + self._label(info)
+                + '<span style="margin-left: 5px;"></span>'
+                + self.select_box._input(info)
+                + "</div>"
+                + "</td>")
 
 class SearchArray(UniqueRepresentation):
     """
@@ -523,11 +642,20 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
+    sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
+    null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
     plural_noun = "results"
+
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
-        return None
+        if self.sorts is not None:
+            sorts = self.sorts if isinstance(self.sorts, list) else self.sorts.get(self._st(info))
+            if sorts is not None:
+                #for name, display, prefix in self.sorts:
+                #    yield (name, display + " &#9650;")
+                #    yield (name + "op", display + " &#9660;")
+                return [(name, display) for (name, display, sort_order) in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:
@@ -561,13 +689,15 @@ class SearchArray(UniqueRepresentation):
                 lines.append("\n      " + row.html(info))
             elif layout_type == 'vertical':
                 if any(box.has_label(info) for box in row):
-                    labels = [box.label_html(info) for box in row]
+                    labels = [box.label_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                     lines.append("".join("\n      " + label for label in labels))
-                inputs = [box.input_html(info) for box in row]
+                inputs = [box.input_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
                 lines.append("".join("\n      " + inp for inp in inputs))
             elif layout_type == 'horizontal':
                 cols = []
                 for box in row:
+                    if isinstance(box, SneakyBox) and info is not None and box.name not in info:
+                        continue
                     cols.append(box.label_html(info))
                     cols.append(box.input_html(info))
                     ex = box.example_html(info)
@@ -578,6 +708,8 @@ class SearchArray(UniqueRepresentation):
                 top_cols = []
                 bot_cols = []
                 for box in row:
+                    if isinstance(box, SneakyBox) and info is not None and box.name not in info:
+                        continue
                     top_cols.append(box.label_html(info))
                     bot_cols.append(box.input_html(info))
                     ex = box.example_html(info)
@@ -664,6 +796,7 @@ class SearchArray(UniqueRepresentation):
     def buttons(self, info=None):
         st = self._st(info)
         buttons = []
+        spacer = RowSpacer(8)
         if st == "DynStats":
             buttons.append(SearchButton("DynStats", "Generate statistics"))
         else:
@@ -677,14 +810,21 @@ class SearchArray(UniqueRepresentation):
             if st is not None:
                 sort = self.sort_order(info)
                 if sort:
-                    sort_box = SelectBox(
-                        name='sort_order',
-                        label='Sort order',
-                        knowl=self.sort_knowl,
-                        options=sort,
-                        width=170)
-                    buttons.append(sort_box)
-        return self._print_table([RowSpacer(22), buttons], info, layout_type="vertical")
+                    spacer = RowSpacer(6)
+                    cur_sort = info.get('sort_order', '')
+                    cur_dir = info.get('sort_dir', '')
+                    options = []
+                    for name, disp in sort:
+                        if name == cur_sort:
+                            if cur_dir == 'op':
+                                options.append((name, '▼ ' + disp)) # the space is U+2006, a 1/6 em space
+                            else:
+                                options.append((name, '▲ ' + disp)) # the space is U+2006, a 1/6 em space
+                        else:
+                            options.append((name, '  ' + disp)) # the spaces are U+2006 and U+2003, totaling 7/6 em
+                    buttons.append(SortController(options, self.sort_knowl))
+                buttons.append(ColumnController())
+        return self._print_table([spacer,buttons], info, layout_type="vertical")
 
     def html(self, info=None):
         return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])

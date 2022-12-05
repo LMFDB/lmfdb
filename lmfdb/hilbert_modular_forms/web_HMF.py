@@ -5,8 +5,6 @@
 #
 # In particular this code assumes that all the data for one HMF is in
 # a single collection, which is no longer the case.
-from __future__ import print_function
-from six import text_type
 from sage.all import QQ, polygen
 
 from lmfdb import db
@@ -15,17 +13,18 @@ from lmfdb.logger import make_logger
 
 logger = make_logger("hmf")
 
+
 def construct_full_label(field_label, weight, level_label, label_suffix):
-    if all([w==2 for w in weight]):           # Parellel weight 2
+    if all(w == 2 for w in weight):            # Parallel weight 2
         weight_label = ''
-    elif all([w==weight[0] for w in weight]): # Parellel weight
+    elif all(w == weight[0] for w in weight):  # Parallel weight
         weight_label = str(weight[0]) + '-'
-    else:                                     # non-parallel weight
+    else:                                      # non-parallel weight
         weight_label = str(weight) + '-'
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
 
 
-class WebHMF(object):
+class WebHMF():
     """
     Class for an Hilbert Modular Newform
     """
@@ -93,7 +92,7 @@ class WebHMF(object):
         j = L.find(']')
         data['level_ideal'] = L[i:j+1]
         #print("data['level_ideal'] = %s" % data['level_ideal'])
-        N, n, alpha = data['level_ideal'][1:-1].split(',')
+        N, _, _ = data['level_ideal'][1:-1].split(',')
         data['level_norm'] = int(N)
         #print("data['level_norm'] = %s" % data['level_norm'])
         level = F.ideal_from_str(data['level_ideal'])[2]
@@ -140,7 +139,7 @@ class WebHMF(object):
         i = L.rfind("[")
         j = L.rfind("]")
         data['hecke_eigenvalues'] = L[i+1:j].replace(" ","").split(",")
-        data['hecke_eigenvalues'] = [text_type(s) for s in data['hecke_eigenvalues']]
+        data['hecke_eigenvalues'] = [str(s) for s in data['hecke_eigenvalues']]
         #print("hecke_eigenvalues = %s..." % data['hecke_eigenvalues'][:20])
 
         # Find (some of the) AL-eigenvalues
@@ -152,8 +151,8 @@ class WebHMF(object):
         #print("BP_exponents = %s" % BP_exponents)
         AL_eigs = [int(data['hecke_eigenvalues'][k]) for k in BP_indices]
         #print("AL_eigs      = %s" % AL_eigs)
-        if not all([(e==1 and eig in [-1,1]) or (eig==0)
-                    for e,eig in zip(BP_exponents,AL_eigs)]):
+        if not all((e == 1 and eig in [-1, 1]) or (eig == 0)
+                   for e, eig in zip(BP_exponents, AL_eigs)):
             print("Some bad AL-eigenvalues found")
         # NB the following will put 0 for the eigenvalue for primes
         # whose quare divides the level; this will need fixing later.

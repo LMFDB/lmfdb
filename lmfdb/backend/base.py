@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import csv
 import logging
 import re
@@ -19,7 +17,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 
 from .encoding import Json
-from .utils import reraise, DelayCommit, QueryLogFilter
+from .utils import reraise, DelayCommit, QueryLogFilter, psycopg2_version
 
 
 # This list is used when creating new tables
@@ -206,7 +204,7 @@ def _meta_table_name(meta_name):
     return table_name
 
 
-class PostgresBase(object):
+class PostgresBase():
     """
     A base class for various objects that interact with Postgres.
 
@@ -223,7 +221,7 @@ class PostgresBase(object):
         logging_options = db.config.options["logging"]
         self.slow_cutoff = logging_options["slowcutoff"]
         self.logger = l = logging.getLogger(loggername)
-        l.propogate = False
+        l.propagate = False
         l.setLevel(logging.INFO)
         fhandler = logging.FileHandler(logging_options["slowlogfile"])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
@@ -425,7 +423,7 @@ class PostgresBase(object):
         A list of pairs (locktype, pid) where locktype is a string as above,
         and pid is the process id of the postgres transaction holding the lock.
         """
-        if isinstance(types, string_types):
+        if isinstance(types, str):
             if types in ["update", "delete", "insert"]:
                 types = [
                     "ShareLock",
@@ -672,7 +670,7 @@ class PostgresBase(object):
         INPUT:
 
         - ``sort_list`` -- a list, either of strings (which are interpreted as
-        column names in the ascending direction) or of pairs (column name, 1 or -1).
+          column names in the ascending direction) or of pairs (column name, 1 or -1).
 
         OUTPUT:
 
@@ -680,12 +678,12 @@ class PostgresBase(object):
         """
         L = []
         for col in sort_list:
-            if isinstance(col, string_types):
+            if isinstance(col, str):
                 L.append(Identifier(col))
             elif col[1] == 1:
                 L.append(Identifier(col[0]))
             else:
-                L.append(SQL("{0} DESC").format(Identifier(col[0])))
+                L.append(SQL("{0} DESC NULLS LAST").format(Identifier(col[0])))
         return SQL(", ").join(L)
 
     def _column_types(self, table_name, data_types=None):
@@ -699,34 +697,34 @@ class PostgresBase(object):
 
         - ``table_name`` -- a string or list of strings
         - ``data_types`` -- (optional) a dictionary providing a list of column names and
-        types for each table name.  If not provided, will be looked up from the database.
+          types for each table name.  If not provided, will be looked up from the database.
 
-        EXAMPLE:
-        sage: db._column_types('non_existant')
-        ([], {}, False)
-        sage: db._column_types('test_table')
-        ([u'dim',
-          u'label',
-          u'discriminant',
-          u'bad_primes',
-          u'new_column1',
-          u'new_label',
-          u'bar'],
-         {u'bad_primes': 'jsonb',
-          u'bar': 'text',
-          u'dim': 'smallint',
-          u'discriminant': 'numeric',
-          u'id': 'bigint',
-          u'label': 'text',
-          u'new_column1': 'text',
-          u'new_label': 'text'},
-         True)
+        EXAMPLES::
 
+            sage: db._column_types('non_existant')
+            ([], {}, False)
+            sage: db._column_types('test_table')
+            ([u'dim',
+              u'label',
+              u'discriminant',
+              u'bad_primes',
+              u'new_column1',
+              u'new_label',
+              u'bar'],
+             {u'bad_primes': 'jsonb',
+              u'bar': 'text',
+              u'dim': 'smallint',
+              u'discriminant': 'numeric',
+              u'id': 'bigint',
+              u'label': 'text',
+              u'new_column1': 'text',
+              u'new_label': 'text'},
+             True)
         """
         has_id = False
         col_list = []
         col_type = {}
-        if isinstance(table_name, string_types):
+        if isinstance(table_name, str):
             table_name = [table_name]
         for tname in table_name:
             if data_types is None or tname not in data_types:
@@ -871,11 +869,12 @@ class PostgresBase(object):
                 else:
                     addid = False
 
-                # We have to add quotes manually since copy_from doesn't accept
-                # psycopg2.sql.Identifiers
-                # None of our column names have double quotes in them. :-D
-                assert all('"' not in col for col in columns)
-                columns = ['"' + col + '"' for col in columns]
+                if psycopg2_version < (2, 9, 0):
+                    # We have to add quotes manually since copy_from doesn't accept
+                    # psycopg2.sql.Identifiers
+                    # None of our column names have double quotes in them. :-D
+                    assert all('"' not in col for col in columns)
+                    columns = ['"' + col + '"' for col in columns]
                 if addid:
                     # create sequence
                     cur_count = self.max_id(table)
@@ -932,13 +931,13 @@ class PostgresBase(object):
 
     def _create_table(self, name, columns):
         """
-        Utility function: creates a table with the schema specified by `columns`
+        Utility function: creates a table with the schema specified by ``columns``
 
         INPUT:
 
         - ``name`` -- the desired name
-        - ``columns`` -- list of pairs, where the first entry is the column name
-        and the second one is the corresponding type
+        - ``columns`` -- list of pairs, where the first entry is
+          the column name and the second one is the corresponding type
         """
         # FIXME make the code use this
         for col, typ in columns:
@@ -1030,7 +1029,7 @@ class PostgresBase(object):
                 tablename_new = table + target
                 self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
 
-                done = set({})  # done constraints/indexes
+                done = set()  # done constraints/indexes
                 # We threat pkey separately
                 pkey_old = table + source + "_pkey"
                 pkey_new = table + target + "_pkey"
@@ -1150,16 +1149,16 @@ class PostgresBase(object):
         meta_name_hist_sql = Identifier(meta_name + "_hist")
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter=str(sep))]
-            if len(lines) == 0:
-                return
-            for line in lines:
-                if line[table_name_idx] != search_table:
-                    raise RuntimeError(
-                        f"column {table_name_idx} (= {line[table_name_idx]}) "
-                        f"in the file {filename} doesn't match "
-                        f"the search table name {search_table}"
-                    )
+            lines = list(csv.reader(F, delimiter=str(sep)))
+        if not lines:
+            return
+        for line in lines:
+            if line[table_name_idx] != search_table:
+                raise RuntimeError(
+                    f"column {table_name_idx} (= {line[table_name_idx]}) "
+                    f"in the file {filename} doesn't match "
+                    f"the search table name {search_table}"
+                )
 
         with DelayCommit(self, silence=True):
             # delete the current columns

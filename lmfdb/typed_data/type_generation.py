@@ -43,24 +43,29 @@ Int = ImmutableExtensionFactory(int, "Int")
 Str = String = ImmutableExtensionFactory(str, "Str")
 Float = ImmutableExtensionFactory(float, "Float")
 
-Anything = lambda x: x
+def Anything(x): return x
 
-id = lambda x: x
+def id(x): return x
 
 
 def Array(*f, **kwargs):
-    # Cases:
-        # Array(f, n=3)
-        # Array(f)
-        # Array(id, n=3)
+    """
+    Cases:
 
-        # Use initOneFunction
-    # Cases:
-        # Array(f1,f2,f3)
-        # Redundant: Array(f1,f2,f3,n=3)
-        # Bad: Array(f1,f2,f3, n = 4)
+        Array(f, n=3)
+        Array(f)
+        Array(id, n=3)
 
-        # Use initMultipleFunctions
+        Use initOneFunction
+
+    Cases:
+
+        Array(f1,f2,f3)
+        Redundant: Array(f1,f2,f3, n=3)
+        Bad: Array(f1,f2,f3, n=4)
+
+        Use initMultipleFunctions
+    """
     class SmartArray(list):
         pass
 
@@ -88,17 +93,21 @@ def Array(*f, **kwargs):
 
 
 def Dict(*f, **kwargs):
-    # Cases:
-        # Dict(f) Not allowed (or syntax would be confusing)
-        # Use instead Dict(Str, g)
-        # Not valid JSON, but should be handled: Dict(f,g)
+    """
+    Cases:
 
-        # Use ConstantValueTypes
+        Dict(f) Not allowed (or syntax would be confusing)
+        Use instead Dict(Str, g)
+        Not valid JSON, but should be handled: Dict(f,g)
 
-    # Cases:
-        # Dict({key1 : f1, key2 : f2, ...})
+        Use ConstantValueTypes
 
-        # Use VariableValueTypes
+    Cases:
+
+        Dict({key1 : f1, key2 : f2, ...})
+
+        Use VariableValueTypes
+    """
 
     class SmartDict(dict):
         pass

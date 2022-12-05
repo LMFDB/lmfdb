@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -13,5 +13,8 @@ def body_class():
 
 from . import api
 assert api # silence pyflakes
+
+from .api import datapage
+assert datapage
 
 app.register_blueprint(api_page, url_prefix="/api")

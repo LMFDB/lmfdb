@@ -3,7 +3,7 @@ from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
-from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
+from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label, prime_key
 from lmfdb.utils import web_latex, names_and_urls, prop_int_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
         get_instances_by_Lhash_and_trace_hash)
@@ -85,7 +85,7 @@ def cremona_label_to_lmfdb_label(lab):
         return lab
     return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
-class WebBMF(object):
+class WebBMF():
     """
     Class for a Bianchi Newform
     """
@@ -116,7 +116,6 @@ class WebBMF(object):
         raise ValueError("Bianchi newform %s not found" % label)
         # caller must catch this and raise an error
 
-
     def make_form(self,nap0=50):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these and compute some
@@ -143,6 +142,7 @@ class WebBMF(object):
             self.hecke_poly = Qx(str(self.hecke_poly))
             F = NumberField(self.hecke_poly,'z')
             self.hecke_poly = web_latex(self.hecke_poly)
+
             def conv(ap):
                 if '?' in ap:
                     return 'not known'
@@ -153,19 +153,20 @@ class WebBMF(object):
         self.level = ideal_from_label(K,self.level_label)
         self.level_ideal2 = web_latex(self.level)
         badp = self.level.prime_factors()
+        badp.sort(key=prime_key)
 
         self.nap = len(self.hecke_eigs)
         self.nap0 = min(nap0, self.nap)
         self.neigs = self.nap0 + len(badp)
         self.hecke_table = [[web_latex(p.norm()),
                              ideal_label(p),
-                             web_latex(p.gens_reduced()[0]),
+                             web_latex(p.gens_reduced()),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if p not in badp]
         self.have_AL = self.AL_eigs[0]!='?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),
                              ideal_label(p),
-                              web_latex(p.gens_reduced()[0]),
+                              web_latex(p.gens_reduced()),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
             # The following helps to create Sage download data
             self.AL_table_data = [[p.gens_reduced(),ap] for p,ap in zip(badp, self.AL_eigs)]
@@ -262,7 +263,7 @@ class WebBMF(object):
 
             # This will also add the EC/G2C, as this how the Lfun was computed
             # and not add itself
-            self.friends = names_and_urls(instances, exclude = {url})
+            self.friends = names_and_urls(instances, exclude={url})
             self.friends.append(('L-function', '/L/'+url))
         else:
             # old code

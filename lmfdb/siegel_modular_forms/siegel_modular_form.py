@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
-
-from __future__ import absolute_import
-from six import BytesIO
+from io import BytesIO
 
 from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set
@@ -37,7 +35,7 @@ def download_sample(name):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
+    return send_file(strIO, download_name=name + '.json', as_attachment=True)
 
 
 ###############################################################################
@@ -101,7 +99,7 @@ def Sp4Z_j_space(k,j):
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title = r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
                            info=info)
 
@@ -144,8 +142,8 @@ def Sp4Z_j():
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title=r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
-                           bread = bread,
-                           info = info
+                           bread=bread,
+                           info=info
                            )
 
 ##########################################################
@@ -278,10 +276,12 @@ def render_sample_page(family, sam, args, bread):
     except ValueError:
         evs_to_show = []
         fcs_to_show = []
-    info['evs_to_show'] = sorted([n for n in (evs_to_show if len(evs_to_show) else sam.available_eigenvalues()[:10])])
-    info['fcs_to_show'] = sorted([n for n in (fcs_to_show if len(fcs_to_show) else sam.available_Fourier_coefficients()[1:6])])
-    info['evs_avail'] = [n for n in sam.available_eigenvalues()]
-    info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
+    info['evs_to_show'] = sorted(evs_to_show if len(evs_to_show)
+                                 else sam.available_eigenvalues()[:10])
+    info['fcs_to_show'] = sorted(fcs_to_show if len(fcs_to_show)
+                                 else sam.available_Fourier_coefficients()[1:6])
+    info['evs_avail'] = list(sam.available_eigenvalues())
+    info['fcs_avail'] = list(sam.available_Fourier_coefficients())
 
     # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant
@@ -304,11 +304,14 @@ def render_sample_page(family, sam, args, bread):
                 m = 0
         info['modulus'] = m
         # Hack to reduce polynomials and to handle non integral stuff
+
         def redc(c):
-            return m.reduce(c*c.denominator())/m.reduce(c.denominator())
+            return m.reduce(c * c.denominator()) / m.reduce(c.denominator())
+
         def redp(f):
             c = f.dict()
-            return f.parent()(dict((e,redc(c[e])) for e in c))
+            return f.parent()({e: redc(ce) for e, ce in c.items()})
+
         def safe_reduce(f):
             if not m:
                 return latex(f)
@@ -322,11 +325,11 @@ def render_sample_page(family, sam, args, bread):
         info['reduce'] = safe_reduce
     else:
         info['reduce'] = latex
-        
+
     # check that explicit formula is not ridiculously big
     if sam.explicit_formula():
         info['explicit_formula_bytes'] = len(sam.explicit_formula())
         if len(sam.explicit_formula()) < 100000:
             info['explicit_formula'] = sam.explicit_formula()
-        
+
     return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties=properties, info=info)

@@ -78,3 +78,9 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
     def braid_summary_pages(self):
         L = self.tc.get('/HigherGenus/C/Aut/3.8-3.0.2-2-4-4/T.1.1')
         assert 'braid inequivalent' in L.get_data(as_text=True)
+
+    def underlying_data(self):
+        page = self.tc.get('/HigherGenus/C/Aut/3.8-3.0.2-2-4-4.1').get_data(as_text=True)
+        assert 'Underlying data' in page and 'api/hgcwa_passports/?passport_label=3.8-3.0.2-2-4-4.1' in page
+        page = self.tc.get('/HigherGenus/C/Aut/3.8-3.0.2-2-4-4').get_data(as_text=True)
+        assert 'Underlying data' in page and 'api/hgcwa_passports/?label=3.8-3.0.2-2-4-4' in page

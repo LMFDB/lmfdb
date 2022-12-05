@@ -8,7 +8,7 @@ from lmfdb.number_fields.web_number_field import (
     nf_display_knowl,
     field_pretty,
 )
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 
 lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
 
@@ -32,8 +32,7 @@ def av_data(label):
                 + nf_display_knowl(nf, name=field_pretty(nf))
                 + "<br />"
             )
-            gal = abvar["galois_groups"][0].split("T")
-            inf += "Galois group: " + group_display_knowl(gal[0], gal[1]) + "<br />"
+            inf += "Galois group: " + transitive_group_display_knowl(abvar["galois_groups"][0]) + "<br />"
     inf += "$p$-rank: " + str(abvar["p_rank"]) + "</div>"
     inf += '<div align="right">'
     g, q, iso = split_label(label)

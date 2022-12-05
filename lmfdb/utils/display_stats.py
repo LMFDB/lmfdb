@@ -1,16 +1,20 @@
-from six import string_types
 from collections import defaultdict
 
 from flask import url_for
 from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
-from lmfdb.utils.utilities import format_percentage, display_knowl
+from .utilities import format_percentage
+from .web_display import display_knowl
 from lmfdb.backend.utils import KeyedDefaultDict, range_formatter
 
-class formatters(object):
+class formatters():
     @classmethod
     def boolean(cls, value):
         return 'True' if value else 'False'
+
+    @classmethod
+    def yesno(cls, value):
+        return 'yes' if value else 'no'
 
     @classmethod
     def boolean_unknown(cls, value):
@@ -30,7 +34,7 @@ def _format_percentage(cnt, total, show_zero=False):
     else:
         return format_percentage(cnt, total) + '%'
 
-class proportioners(object):
+class proportioners():
     ##################################################################
     #                     Proportion strategies                      #
     ##################################################################
@@ -155,6 +159,7 @@ class proportioners(object):
         attr['constraint'] = {}
         attr['proportioner'] = False
         attr['totaler'] = False
+
         def inner(grid, row_headers, col_headers, stats):
             total_data = stats.display_data(**attr)
             total_grid = total_data['grid']
@@ -187,6 +192,7 @@ class proportioners(object):
         attr['constraint'] = None
         attr['proportioner'] = False
         attr['totaler'] = False
+
         def inner(counts, headers, stats):
             total_counts = stats.display_data(**attr)['counts']
             for D, tD in zip(counts, total_counts):
@@ -204,7 +210,7 @@ class proportioners(object):
                 D['proportion'] = _format_percentage(D['count'], overall, show_zero=True)
         return inner
 
-class totaler(object):
+class totaler():
     ##################################################################
     #                     Totaler strategies                         #
     ##################################################################
@@ -297,9 +303,12 @@ class totaler(object):
                 if not corner_count and i == num_cols:
                     break
                 total = sum(elt['count'] for elt in col)
-                query = self.common_link([elt['query'] for elt in col]) if include_links else '?'
-                if query[-1] == '?': # no common search queries
+                if total == 0:
                     query = None
+                else:
+                    query = self.common_link([elt['query'] for elt in col if elt['count'] > 0]) if include_links else '?'
+                    if query[-1] == '?': # no common search queries
+                        query = None
                 if recursive_prop:
                     overall = sum(D['count'] for D in total_grid_cols[i])
                 proportion = _format_percentage(total, overall) if (col_proportions and i != num_cols or corner_prop and i == num_cols) else ''
@@ -455,7 +464,9 @@ class StatsDisplay(UniqueRepresentation):
     def stats(self):
         return self
 
-    def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, baseurl_func=None, url_extras=None, **kwds):
+    def display_data(self, cols, table=None, constraint=None, avg=None,
+                     buckets=None, totaler=None, proportioner=None,
+                     baseurl_func=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -482,20 +493,21 @@ class StatsDisplay(UniqueRepresentation):
 
         A dictionary.
 
-        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys.
+        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys:
+
         - ``value`` -- a tuple of values taken on by the given columns.
         - ``count`` -- The number of rows with that tuple of values.
         - ``query`` -- a url resulting in a list of entries with the given tuple of values.
         - ``proportion`` -- the fraction of rows having this tuple of values,
-            as a string formatted as a percentage.
+          as a string formatted as a percentage.
 
-        In the 2d case, it has two keys, ``grid`` and ``col_headers``.
+        In the 2d case, it has two keys, ``grid`` and ``col_headers``:
 
         - ``grid`` is a list of pairs, the first being a row header and the second
-            being a list of dictionaries as above.
+          being a list of dictionaries as above.
         - ``col_headers`` is a list of column headers.
         """
-        if isinstance(cols, string_types):
+        if isinstance(cols, str):
             cols = [cols]
         if buckets is None:
             buckets = {col: self._buckets[col] for col in cols if self._buckets[col]}
@@ -600,7 +612,7 @@ class StatsDisplay(UniqueRepresentation):
             raise NotImplementedError
 
     def prep(self, attr):
-        if isinstance(attr['cols'], string_types):
+        if isinstance(attr['cols'], str):
             attr['cols'] = [attr['cols']]
         cols = attr['cols']
         # default value for top_title from row_title/columns
@@ -608,7 +620,7 @@ class StatsDisplay(UniqueRepresentation):
             top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
         else:
             top_title = attr['top_title']
-        if not isinstance(top_title, string_types):
+        if not isinstance(top_title, str):
             missing_knowl = any(knowl is None for text, knowl in top_title)
             joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
             attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
@@ -621,7 +633,7 @@ class StatsDisplay(UniqueRepresentation):
             attr['row_title'] = self._short_display[cols[0]]
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
-            rows = [counts[i:i+10] for i in range(0,len(counts),10)]
+            rows = [counts[i:i+10] for i in range(0, len(counts), 10)]
             if len(rows) > max_rows:
                 short_rows = rows[:max_rows]
                 data['divs'] = [(short_rows, "short_table_" + hsh, "short"),
@@ -656,7 +668,7 @@ class StatsDisplay(UniqueRepresentation):
             cols = attr["cols"]
             if not cols:
                 continue
-            if isinstance(cols, string_types):
+            if isinstance(cols, str):
                 cols = [cols]
             buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
             if isinstance(buckets, list) and len(cols) == 1:

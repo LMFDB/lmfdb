@@ -63,12 +63,12 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #
 # * The tensor product of a modular form with a representation of
 # dimension > 1, requires a lot of terms to be computed (numcoeff)
-#and this takes a lot of time. We instead atrificially cap the number
+#and this takes a lot of time. We instead artificially cap the number
 #by an arbitrary bound (besancon_bound). Ideally, the dirichlet_coefficients
 #of objects of small conductor should be stored on the database. Or at least
 #stored as soon as someone makes us compute them once.
 
-#* Currently we use dokchitsers function to compurte numcoeff. This creates
+#* Currently we use dokchitsers function to compute numcoeff. This creates
 #a gp where this number is computed. The computation is very fast there,
 #but I am not sure the gp().quit() really exits the gp session. They might
 #pile up.
@@ -78,7 +78,7 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #
 
 #* This code is specific to tensor products of dimension \leq 2.  To handle
-# higher dimension there are several pieces of code which one must check 
+# higher dimension there are several pieces of code which one must check
 # still hold true.
 ########################################################################
 # (C) Alberto Camara, Martin Dickson, Mark Watkins, Chris Wuthrich 2014
@@ -125,16 +125,16 @@ class GaloisRepresentation( Lfunction):
         elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        elif (isinstance(thingy, list) and
-              len(thingy) == 2 and
-              isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform) and
-              isinstance(thingy[1],sage.rings.integer.Integer) ):
+        elif (isinstance(thingy, list)
+              and len(thingy) == 2
+              and isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform)
+              and isinstance(thingy[1],sage.rings.integer.Integer) ):
             self.init_elliptic_modular_form(thingy[0],thingy[1])
 
-        elif (isinstance(thingy, list) and
-              len(thingy) == 2 and
-              isinstance(thingy[0], GaloisRepresentation) and
-              isinstance(thingy[1], GaloisRepresentation) ):
+        elif (isinstance(thingy, list)
+              and len(thingy) == 2
+              and isinstance(thingy[0], GaloisRepresentation)
+              and isinstance(thingy[1], GaloisRepresentation) ):
             self.init_tensor_product(thingy[0], thingy[1])
 
         else:
@@ -188,7 +188,7 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             N = self.conductor
-            if N % p != 0 : # good reduction
+            if N % p != 0: # good reduction
                 return 1 - E.ap(p) * T + p * T**2
             elif N % (p**2) != 0: # multiplicative reduction
                 return 1 - E.ap(p) * T
@@ -256,7 +256,6 @@ class GaloisRepresentation( Lfunction):
     def init_artin_rep(self, rho):
         """
         Initiate with an Artin representation
- 
         """
         self.original_object = [rho]
         self.object_type = "Artin representation"
@@ -335,7 +334,7 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(K, "T")
             T = R.gens()[0]
             N = self.conductor
-            if N % p != 0 : # good reduction
+            if N % p != 0: # good reduction
                 return 1 - ans[p-1][self.number] * T + T**2
             elif N % (p**2) != 0: # semistable reduction
                 return 1 - ans[p-1][self.number] * T
@@ -344,7 +343,6 @@ class GaloisRepresentation( Lfunction):
 
         self.local_euler_factor = eu
         self.ld.gp().quit()
-
 
     def init_tensor_product(self, V, W):
         """
@@ -363,28 +361,28 @@ class GaloisRepresentation( Lfunction):
         bad2 = ZZ(W.conductor).prime_factors()
         bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
-            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes) :
+            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes):
                 # this condition above only applies to the current type of objects
                 # for general reps we would have to test the lines below
                 # to be certain that the formulae are correct.
                 #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                    #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
-                    #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
+                #    (p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                #    (p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
                 raise NotImplementedError("Currently tensor products of Galois representations are only implemented under some conditions.",
                                           "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
         # check for the possibility of getting poles
-        if V.weight == W.weight and V.conductor == W.conductor :
+        if V.weight == W.weight and V.conductor == W.conductor:
             Vans = V.algebraic_coefficients(50)
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
-            if ((Vans[2] in ZZ and Wans[2] in ZZ and
-                all(Vans[n] == Wans[n] for n in range(1,50) ) ) or
-                all( CC(Vans[n]) == CC(Wans[n]) for n in range(1,50) ) ):
-                    raise NotImplementedError("It seems you are asking to tensor a "+
-                                              "Galois representation with its dual " +
-                                              "which results in the L-function having "+
-                                              "a pole. This is not implemented here.")
+            if ((Vans[2] in ZZ and Wans[2] in ZZ
+                    and all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
+                    all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
+                raise NotImplementedError("It seems you are asking to tensor a "
+                                          "Galois representation with its dual "
+                                          "which results in the L-function having "
+                                          "a pole. This is not implemented here.")
 
         scommon = [x for x in V.bad_semistable_primes if x in W.bad_semistable_primes]
 
@@ -402,7 +400,7 @@ class GaloisRepresentation( Lfunction):
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
         h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
         h = tensor_hodge(h1, h2)
-        w,m,n = hodge_to_selberg(h)
+        _, m, n = hodge_to_selberg(h)
         self.mu_fe = m
         self.nu_fe = n
         _, self.gammaV = gamma_factors(h)
@@ -476,8 +474,7 @@ class GaloisRepresentation( Lfunction):
         self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
         self.ld.gp().quit()
 
-
-## These are used when creating the classes with the above
+    # These are used when creating the classes with the above
 
     def set_dokchitser_Lfunction(self):
         """
@@ -486,12 +483,12 @@ class GaloisRepresentation( Lfunction):
         if hasattr(self, "sign"):
             # print type(self.sign)
             # type complex would yield an error here.
-            self.ld = Dokchitser(conductor = self.conductor,
-                                gammaV = self.gammaV,
-                                weight = self.motivic_weight,
-                                eps = self.sign,
-                                poles = [],
-                                residues = [])
+            self.ld = Dokchitser(conductor=self.conductor,
+                                gammaV=self.gammaV,
+                                weight=self.motivic_weight,
+                                eps=self.sign,
+                                poles=[],
+                                residues=[])
         else:
             # find the sign from the functional equation
             # this should be implemented later:
@@ -500,7 +497,6 @@ class GaloisRepresentation( Lfunction):
             # and it will return a linear polynomial in x
             # such that the root must be the sign
             raise NotImplementedError
-
 
     def set_number_of_coefficients(self):
         """
@@ -549,7 +545,6 @@ class GaloisRepresentation( Lfunction):
         else:
             raise ValueError("You asked for a type that we don't have")
 
-
     def renormalise_coefficients(self):
         """
         This turns a list of algebraically normalised coefficients
@@ -560,8 +555,7 @@ class GaloisRepresentation( Lfunction):
         for n in range(len(self.dirichlet_coefficients)):
             self.dirichlet_coefficients[n] /= sqrt(float(n+1)**self.motivic_weight)
 
-
-## The tensor product
+    # The tensor product
 
     def __mul__(self, other):
         """
@@ -570,15 +564,13 @@ class GaloisRepresentation( Lfunction):
         """
         return GaloisRepresentation([self,other])
 
-## various direct accessible functions
-
+    # various direct accessible functions
 
     def root_number(self):
         """
         Root number
         """
         return self.sign
-
 
     def dimension(self):
         """
@@ -592,8 +584,7 @@ class GaloisRepresentation( Lfunction):
         """
         return self.conductor
 
-
-## Now to the L-function itself
+    # Now to the L-function itself
 
     def lfunction(self):
         """
@@ -615,7 +606,7 @@ class GaloisRepresentation( Lfunction):
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
-        self.texnamecompleted1ms = "\\Lambda(1-s, \\widehat{\\rho})" 
+        self.texnamecompleted1ms = "\\Lambda(1-s, \\widehat{\\rho})"
         self.title = "$L(s,\\rho)$, where $\\rho$ is a Galois representation"
 
         self.credit = 'Workshop in Besancon, 2014'
@@ -647,6 +638,7 @@ def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
     if d2==1:
         return tensor_get_an_deg1(L1,L2,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
     return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
+
 
 def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
     """
@@ -755,7 +747,7 @@ def all_an_from_prime_powers(L):
         q = 1
         Sr = RealField()(len(L))
         f = Sr.log(base=p).floor()
-        for k in range(f):
+        for _ in range(f):
             q = q*p
             for m in range(2, 1+(S//q)):
                 if (m%p) != 0:
@@ -784,7 +776,7 @@ def get_euler_factor(L,p):
     f = S.log(base=p).floor()
     E = []
     q = 1
-    for i in range(f):
+    for _ in range(f):
         q = q*p
         E.append(L[q-1])
     return list_to_euler_factor(E,f)
@@ -801,9 +793,10 @@ def list_to_euler_factor(L,d):
         K = L[0].parent()
     R = PowerSeriesRing(K, "T")
     # T = R.gens()[0]
-    f =  1/ R([1]+L)
+    f = 1 / R([1]+L)
     f = f.add_bigoh(d+1)
     return f
+
 
 def tensor_local_factors(f1, f2, d):
     """
@@ -852,32 +845,32 @@ def tensor_local_factors(f1, f2, d):
 ## test functions to check if the above agrees with magma
 
 def test_tensprod_121_chi():
-    C121=[1,2,-1,2,1,-2,2,0,-2,2,0,-2,-4,4,-1,-4,2,-4,0,2,-2,0,\
-    -1,0,-4,-8,5,4,0,-2,7,-8,0,4,2,-4,3,0,4,0,8,-4,6,0,-2,-2,\
-    8,4,-3,-8,-2,-8,-6,10,0,0,0,0,5,-2,-12,14,-4,-8,-4,0,-7,4,\
-    1,4,-3,0,-4,6,4,0,0,8,10,-4,1,16,6,-4,2,12,0,0,15,-4,-8,\
-    -2,-7,16,0,8,-7,-6,0,-8,-2,-4,-16,0,-2,-12,-18,10,-10,0,-3,\
-    -8,9,0,-1,0,8,10,4,0,0,-24,-8,14,-9,-8,-8,0,-6,-8,18,0,0,\
-    -14,5,0,-7,2,-10,4,-8,-6,0,8,0,-8,3,6,10,8,-2,0,-4,0,7,8,\
-    -7,20,6,-8,-2,2,4,16,0,12,12,0,3,4,0,12,6,0,-8,0,-5,30,\
+    C121=[1,2,-1,2,1,-2,2,0,-2,2,0,-2,-4,4,-1,-4,2,-4,0,2,-2,0,
+    -1,0,-4,-8,5,4,0,-2,7,-8,0,4,2,-4,3,0,4,0,8,-4,6,0,-2,-2,
+    8,4,-3,-8,-2,-8,-6,10,0,0,0,0,5,-2,-12,14,-4,-8,-4,0,-7,4,
+    1,4,-3,0,-4,6,4,0,0,8,10,-4,1,16,6,-4,2,12,0,0,15,-4,-8,
+    -2,-7,16,0,8,-7,-6,0,-8,-2,-4,-16,0,-2,-12,-18,10,-10,0,-3,
+    -8,9,0,-1,0,8,10,4,0,0,-24,-8,14,-9,-8,-8,0,-6,-8,18,0,0,
+    -14,5,0,-7,2,-10,4,-8,-6,0,8,0,-8,3,6,10,8,-2,0,-4,0,7,8,
+    -7,20,6,-8,-2,2,4,16,0,12,12,0,3,4,0,12,6,0,-8,0,-5,30,
     -15,-4,7,-16,12,0,3,-14,0,16,10,0,17,8,-4,-14,4,-6,2,0,0,0]
-    chi=[1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,\
-    1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,\
-    -1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,\
-    1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,\
-    1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,\
-    1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,\
-    -1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,\
-    -1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,\
+    chi=[1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,
+    1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,
+    -1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,
+    1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,
+    1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,
+    1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,
+    -1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,
+    -1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,
     -1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1]
-    ANS=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
-    -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,\
-    2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,\
-    1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,\
-    -2,-7,-16,0,-8,-7,6,-2,-8,2,-4,-16,0,2,12,18,10,10,-2,-3,8,\
-    9,0,-1,0,-8,-10,4,0,1,-24,8,14,-9,-8,8,0,6,-8,-18,-2,0,14,\
-    5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,\
-    20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,\
+    ANS=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,
+    -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,
+    2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,
+    1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,
+    -2,-7,-16,0,-8,-7,6,-2,-8,2,-4,-16,0,2,12,18,10,10,-2,-3,8,
+    9,0,-1,0,-8,-10,4,0,1,-24,8,14,-9,-8,8,0,6,-8,-18,-2,0,14,
+    5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,
+    20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,
     -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
     R = PowerSeriesRing(ZZ, "T")
     T = R.gens()[0]
@@ -888,33 +881,33 @@ def test_tensprod_121_chi():
     assert get_euler_factor(ANS,5)==(1-T+5*T**2+O(T**4))
 
 def test_tensprod_11a_17a():
-    C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
-    -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,\
-    2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,\
-    1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,\
-    -2,-7,-16,0,-8,-7,6,-2,-8,2,-4,-16,0,2,12,18,10,10,-2,-3,8,\
-    9,0,-1,0,-8,-10,4,0,1,-24,8,14,-9,-8,8,0,6,-8,-18,-2,0,14,\
-    5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,\
-    20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,\
+    C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,
+    -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,
+    2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,
+    1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,
+    -2,-7,-16,0,-8,-7,6,-2,-8,2,-4,-16,0,2,12,18,10,10,-2,-3,8,
+    9,0,-1,0,-8,-10,4,0,1,-24,8,14,-9,-8,8,0,6,-8,-18,-2,0,14,
+    5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,
+    20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,
     -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
-    C17=[1,-1,0,-1,-2,0,4,3,-3,2,0,0,-2,-4,0,-1,1,3,-4,2,0,0,4,\
-    0,-1,2,0,-4,6,0,4,-5,0,-1,-8,3,-2,4,0,-6,-6,0,4,0,6,-4,0,\
-    0,9,1,0,2,6,0,0,12,0,-6,-12,0,-10,-4,-12,7,4,0,4,-1,0,8,\
-    -4,-9,-6,2,0,4,0,0,12,2,9,6,-4,0,-2,-4,0,0,10,-6,-8,-4,0,\
-    0,8,0,2,-9,0,1,-10,0,8,-6,0,-6,8,0,6,0,0,-4,-14,0,-8,-6,\
-    6,12,4,0,-11,10,0,-4,12,12,8,3,0,-4,16,0,-16,-4,0,3,-6,0,\
-    -8,8,0,4,0,3,-12,6,0,2,-10,0,-16,-12,-3,0,-8,0,-2,-12,0,10,\
-    16,-9,24,6,0,4,-4,0,-9,2,12,-4,22,0,-4,0,0,-10,12,-6,-2,8,\
+    C17=[1,-1,0,-1,-2,0,4,3,-3,2,0,0,-2,-4,0,-1,1,3,-4,2,0,0,4,
+    0,-1,2,0,-4,6,0,4,-5,0,-1,-8,3,-2,4,0,-6,-6,0,4,0,6,-4,0,
+    0,9,1,0,2,6,0,0,12,0,-6,-12,0,-10,-4,-12,7,4,0,4,-1,0,8,
+    -4,-9,-6,2,0,4,0,0,12,2,9,6,-4,0,-2,-4,0,0,10,-6,-8,-4,0,
+    0,8,0,2,-9,0,1,-10,0,8,-6,0,-6,8,0,6,0,0,-4,-14,0,-8,-6,
+    6,12,4,0,-11,10,0,-4,12,12,8,3,0,-4,16,0,-16,-4,0,3,-6,0,
+    -8,8,0,4,0,3,-12,6,0,2,-10,0,-16,-12,-3,0,-8,0,-2,-12,0,10,
+    16,-9,24,6,0,4,-4,0,-9,2,12,-4,22,0,-4,0,0,-10,12,-6,-2,8,
     0,12,4,0,0,0,0,-8,-16,0,2,-2,0,-9,-18,0,-20,-3]
-    ANS=[1,2,0,2,-2,0,-8,8,15,-4,0,0,-8,-16,0,12,-2,30,0,-4,0,0,\
-    -4,0,29,-16,0,-16,0,0,28,-8,0,-4,16,30,-6,0,0,-16,48,0,-24,\
-    0,-30,-8,0,0,22,58,0,-16,-36,0,0,-64,0,0,-60,0,-120,56,-120,\
-    -8,16,0,-28,-4,0,32,12,120,-24,-12,0,0,0,0,-120,-24,144,96,\
-    24,0,4,-48,0,0,150,-60,64,-8,0,0,0,0,-14,44,0,58,-20,0,-128,\
-    -64,0,-72,144,0,60,0,0,-96,-126,0,8,0,-120,-120,16,0,-11,-240,\
-    0,56,-158,-240,64,-32,0,32,-288,0,0,-56,0,-16,42,0,-80,32,0,\
-    24,0,180,0,-48,0,-12,100,0,-32,0,-30,0,-56,0,14,-240,0,16,32,\
-    288,96,96,0,48,48,0,142,8,0,-48,-132,0,-232,0,0,300,-180,-60,\
+    ANS=[1,2,0,2,-2,0,-8,8,15,-4,0,0,-8,-16,0,12,-2,30,0,-4,0,0,
+    -4,0,29,-16,0,-16,0,0,28,-8,0,-4,16,30,-6,0,0,-16,48,0,-24,
+    0,-30,-8,0,0,22,58,0,-16,-36,0,0,-64,0,0,-60,0,-120,56,-120,
+    -8,16,0,-28,-4,0,32,12,120,-24,-12,0,0,0,0,-120,-24,144,96,
+    24,0,4,-48,0,0,150,-60,64,-8,0,0,0,0,-14,44,0,58,-20,0,-128,
+    -64,0,-72,144,0,60,0,0,-96,-126,0,8,0,-120,-120,16,0,-11,-240,
+    0,56,-158,-240,64,-32,0,32,-288,0,0,-56,0,-16,42,0,-80,32,0,
+    24,0,180,0,-48,0,-12,100,0,-32,0,-30,0,-56,0,14,-240,0,16,32,
+    288,96,96,0,48,48,0,142,8,0,-48,-132,0,-232,0,0,300,-180,-60,
     -14,128,0,-32,12,0,0,0,0,0,-272,0,8,-28,0,44,36,0,0,232]
     R = PowerSeriesRing(ZZ, "T")
     T = R.gens()[0]
@@ -1038,4 +1031,3 @@ def test_tensprod_11a_17a():
  #3.41069503105848,
  #0.0271836144379852,
  #-1.78984692692272]
-

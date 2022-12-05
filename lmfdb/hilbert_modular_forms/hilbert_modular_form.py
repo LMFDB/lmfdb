@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from six import string_types
-from flask import render_template, url_for, request, redirect, make_response
+from flask import abort, render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -10,14 +9,19 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache)
 from lmfdb.ecnf.main import split_class_label
-from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.number_field import field_pretty, FIELD_LABEL_RE
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.api import datapage
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
+
+import re
+HMF_LABEL_RE = re.compile("^"+FIELD_LABEL_RE.pattern[1:-1] + r"-\d+\.\d+-[a-z]+$")
 
 def get_bread(tail=[]):
     base = [("Modular forms", url_for('modular_forms')),
@@ -94,8 +98,9 @@ def url_for_label(label):
                    field_label=split_full_label(label)[0],
                    label=label)
 
+
 def hilbert_modular_form_by_label(lab):
-    if isinstance(lab, string_types):
+    if isinstance(lab, str):
         res = db.hmf_forms.lookup(lab, projection=0)
     else:
         res = lab
@@ -127,15 +132,28 @@ def hilbert_modular_form_jump(info):
     except ValueError:
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
-@search_wrap(template="hilbert_modular_form_search.html",
-             table=db.hmf_forms,
+hmf_columns = SearchColumns([
+    MultiProcessedCol("label", "mf.hilbert.label", "Label",
+                      ["field_label", "label", "short_label"],
+                      lambda fld, label, short: '<a href="%s">%s</a>' % (url_for('hmf.render_hmf_webpage', field_label=fld, label=label), short),
+                      default=True),
+    ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
+    MathCol("deg", "nf.degree", "Field degree"),
+    MathCol("disc", "nf.discriminant", "Field discriminant"),
+    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
+    MathCol("level_norm", "mf.level_norm", "Level norm"),
+    MathCol("weight", "mf.hilbert.weight_vector", "Weight"),
+    MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center"),
+    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center")])
+hmf_columns.dummy_download = True
+
+@search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',
              err_title='Hilbert modular form search error',
+             columns=hmf_columns,
              per_page=50,
              shortcuts={'jump':hilbert_modular_form_jump},
-             projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
-             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal']),
-                       "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
@@ -162,15 +180,19 @@ def hilbert_modular_form_search(info, query):
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
 
+
 def search_input_error(info=None, bread=None):
-    if info is None: info = {'err':''}
+    if info is None:
+        info = {'err': ''}
     info['search_array'] = HMFSearchArray()
+    info['columns'] = hmf_columns
     if bread is None:
         bread = get_bread("Search results")
-    return render_template("hilbert_modular_form_search.html",
+    return render_template("search_results.html",
                            info=info,
                            title="Hilbert modular forms search error",
                            bread=bread)
+
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
 def render_hmf_webpage_download(**args):
@@ -216,7 +238,7 @@ def download_hmf_magma(**args):
 
     outstr += 'NN := ideal<ZF | {' + f["level_ideal"][1:-1] + '}>;\n\n'
 
-    outstr += 'primesArray := [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[', '],\n[') + '];\n'
+    outstr += 'primesArray := [\n' + ','.join(F_hmf["primes"]).replace('],[', '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
     if hecke_pol != 'x':
@@ -225,7 +247,7 @@ def download_hmf_magma(**args):
     else:
         outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
 
-    outstr += '\nheckeEigenvaluesArray := [' + ', '.join([st for st in hecke_eigs]) + '];'
+    outstr += '\nheckeEigenvaluesArray := [' + ', '.join(hecke_eigs) + '];'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i := 1 to #heckeEigenvaluesArray do\n  heckeEigenvalues[primes[i]] := heckeEigenvaluesArray[i];\nend for;\n\n'
 
@@ -325,7 +347,7 @@ def download_hmf_sage(**args):
 
     outstr += 'NN = ZF.ideal(' + f["level_ideal"] + ')\n\n'
 
-    outstr += 'primes_array = [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[',
+    outstr += 'primes_array = [\n' + ','.join(F_hmf["primes"]).replace('],[',
                                                                                       '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
@@ -335,7 +357,7 @@ def download_hmf_sage(**args):
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 
-    outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in hecke_eigs]) + ']'
+    outstr += '\nhecke_eigenvalues_array = [' + ', '.join(hecke_eigs) + ']'
     outstr += '\nhecke_eigenvalues = {}\n'
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
@@ -379,9 +401,9 @@ def render_hmf_webpage(**args):
 
     info['downloads'] = [
         ('Modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
-        ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
+        ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage')),
+        ('Underlying data', url_for(".hmf_data", label=info['label'])),
         ]
-
 
     # figure out friends
     # first try to see if there is an instance of this HMF on Lfun db
@@ -408,7 +430,6 @@ def render_hmf_webpage(**args):
                                 url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
         else:
             info['friends'] = [('L-function not available', "")]
-
 
         if data['dimension'] == 1:   # Try to attach associated elliptic curve
             lab = split_class_label(info['label'])
@@ -516,12 +537,23 @@ def render_hmf_webpage(**args):
         KNOWL_ID="mf.hilbert.%s"%label,
     )
 
+@hmf_page.route("/data/<label>")
+def hmf_data(label):
+    if not HMF_LABEL_RE.match(label):
+        return abort(404, f"Invalid label {label}")
+    field_label = label.split("-")[0]
+    title = f"Hilbert modular form data - {label}"
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage([label, label, field_label, field_label], ["hmf_forms", "hmf_hecke", "hmf_fields", "nf_fields"], title=title, bread=bread)
+
 #data quality pages
 @hmf_page.route("/Source")
 def how_computed_page():
     t = 'Source and acknowledgments for Hilbert modular form data'
     bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.mf.hilbert', kid2='rcs.ack.mf.hilbert',
+    return render_template("multi.html", kids=['rcs.source.mf.hilbert',
+                                               'rcs.ack.mf.hilbert',
+                                               'rcs.cite.mf.hilbert'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @hmf_page.route("/Completeness")
@@ -597,10 +629,14 @@ def statistics_by_degree(d):
 class HMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
+    sorts = [("", "base field", ['deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
+             ("level_norm", "level norm", ['level_norm', 'deg', 'disc', 'level_label', 'label_nsuffix']),
+             ("dimension", "dimension", ['dimension', 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix'])]
     jump_example = "2.2.5.1-31.1-a"
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
     jump_knowl = "mf.hilbert.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         field = TextBox(
             name='field_label',

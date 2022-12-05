@@ -1,7 +1,5 @@
 Soon:
-- Upload the rest of our data
 - Improve the pages under "Learn more about" and add a reliability page
-- see statistics on base field data
 - browsing and searching on passports in general? adding passport knowl on main browse page
 - degs and gs: change column names in db?
 - fix breadcrumbs (top of galmap pages)
@@ -9,6 +7,7 @@ Soon:
 - add improved equations for genus 0 maps computed by Ciaran
 
 Short term:
+- Fix erroneous Galois orbits in BelyiDB, e.g., 8T50-[6,10,4]-62-521-41111-g0.m
 - add friends: specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good reduction outside of 2 and 3?
 - improve display of equations; table of coeffs? Polredfunctionfieldabs?
 - Compute L-functions of curves, if possible

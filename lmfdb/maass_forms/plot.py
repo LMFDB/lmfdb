@@ -5,11 +5,12 @@ from lmfdb import db
 from lmfdb.utils import signtocolour
 from flask import url_for
 
+
 def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=20, L=""):
     ''' Returns the contents (as a string) of the svg-file for
         all Maass forms in the database of the specified weight.
         Takes all levels from min_level to max_level
-        Spectral parameter in [min_R, max_R] 
+        Spectral parameter in [min_R, max_R]
         Set L="/L" to make link go to the L-function
     '''
     xMax = int(max_R)
@@ -47,7 +48,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
         s = f.get('symmetry',0)
         y -= s    # Shifting even slightly up and odd slightly down
         color = signtocolour(s)
-            
+
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
         ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
         ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
@@ -106,9 +107,9 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax, xfactor, yfactor, ticlen
         ans += "style='stroke:rgb(0,0,0);'/>\n"
 
     # ----------- Values and gridlines y axis
-    for i in range(yMin , yMax + 1, 2):
+    for i in range(yMin, yMax + 1, 2):
         yvalue = (i - yMin + 1) * yfactor
-        ans += "<text x='5' y='{0}' ".format(str(yvalue + 3)) 
+        ans += "<text x='5' y='{0}' ".format(str(yvalue + 3))
         ans += "style='fill:rgb(102,102,102);font-size:11px;'>"
         ans += "{0}</text>\n".format(str(i))
 
@@ -119,7 +120,7 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax, xfactor, yfactor, ticlen
     # ----------- Axes labels
     ans += "<text x='5' y='{0}' ".format(str(height-5))
     ans += "style='fill:rgb(102,102,102);font-size:12px;'>Level</text>\n"
-    (xvalue, yvalue) = (str(width + 10) , 15)
+    (xvalue, yvalue) = (str(width + 10), 15)
     ans += "<text x='{0}' y='{1}' ".format(xvalue,yvalue)
     ans += "style='fill:rgb(102,102,102);font-size:14px;'>R</text>\n"
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import random
+import time
 from itertools import islice
 
 from psycopg2.extensions import cursor as pg_cursor
@@ -97,8 +96,8 @@ class PostgresSearchTable(PostgresTable):
                 projection.pop(col, None)
             if projection:  # there were more columns requested
                 raise ValueError("%s not column of %s" % (", ".join(projection), self.search_table))
-        else:  # iterable or string_types
-            if isinstance(projection, string_types):
+        else:  # iterable or str
+            if isinstance(projection, str):
                 projection = [projection]
             include_id = False
             for col in projection:
@@ -138,6 +137,7 @@ class PostgresSearchTable(PostgresTable):
         inequalities, containment and disjunctions.
 
         INPUT:
+
         - ``key`` -- a code starting with $ from the following list:
             - ``$and`` -- and
             - ``$or`` -- or
@@ -202,7 +202,11 @@ class PostgresSearchTable(PostgresTable):
                 joiner = " OR " if key == "$or" else " AND "
                 return SQL("({0})").format(SQL(joiner).join(strings)), values
             else:
-                return None, None
+                if key == "$or":
+                    # the empty or clause should be False
+                    return SQL("false"), []
+                else:
+                    return None, None
         elif key == "$not":
             negated, values = self._parse_dict(value, outer=col, outer_type=col_type)
             if negated is None:
@@ -394,6 +398,23 @@ class PostgresSearchTable(PostgresTable):
             else:
                 return None, None
 
+    def _columns_searched(self, D):
+        """
+        The list of columns included in a search query
+        """
+        if isinstance(D, list): # can happen recursively in $or queries
+            return sum((self._columns_searched(part) for part in D), [])
+        L = []
+        for key, value in D.items():
+            if key in ["$not", "$and", "$or"]:
+                L.extend(self._columns_searched(value))
+            else:
+                if "." in key:
+                    key = key.split(".")[0]
+                if key in self.search_cols:
+                    L.append(key)
+        return sorted(set(L))
+
     def _process_sort(self, query, limit, offset, sort):
         """
         OUTPUT:
@@ -426,7 +447,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return self._sort_str(sort), bool(sort), sort
 
-    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, one_per=None, raw_values=[]):
+    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, one_per=None, raw_values=None):
         """
         Build an SQL query from a dictionary, including limit, offset and sorting.
 
@@ -462,6 +483,8 @@ class PostgresSearchTable(PostgresTable):
             sage: statement.as_string(db.conn), vals
             (' WHERE "class_number" = %s ORDER BY "id" LIMIT %s', [1, 20])
         """
+        if raw_values is None:
+            raw_values = []
         if raw is None:
             qstr, values = self._parse_dict(query)
         else:
@@ -490,7 +513,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return where + olo, values
 
-    def _search_iterator(self, cur, search_cols, extra_cols, projection):
+    def _search_iterator(self, cur, search_cols, extra_cols, projection, query=""):
         """
         Returns an iterator over the results in a cursor,
         filling in columns from the extras table if needed.
@@ -501,6 +524,7 @@ class PostgresSearchTable(PostgresTable):
         - ``search_cols`` -- the columns in the search table in the results
         - ``extra_cols`` -- the columns in the extras table in the results
         - ``projection`` -- the projection requested.
+        - ``query`` -- the dictionary specifying the query (optional, only used for slow query print statements)
 
         OUTPUT:
 
@@ -510,9 +534,12 @@ class PostgresSearchTable(PostgresTable):
         """
         # Eventually want to batch the queries on the extra_table so that we
         # make fewer SQL queries here.
+        total = 0
+        t = time.time()
         try:
             for rec in cur:
-                if projection == 0 or isinstance(projection, string_types):
+                total += time.time() -t
+                if projection == 0 or isinstance(projection, str):
                     yield rec[0]
                 else:
                     yield {
@@ -520,7 +547,10 @@ class PostgresSearchTable(PostgresTable):
                         for k, v in zip(search_cols + extra_cols, rec)
                         if (self._include_nones or v is not None)
                     }
+                t = time.time()
         finally:
+            if total > self.slow_cutoff:
+                self.logger.info("Search iterator for {0} {1} required a total of \033[91m{2!s}s\033[0m".format(self.search_table, query, total))
             if isinstance(cur, pg_cursor):
                 cur.close()
                 if (
@@ -550,7 +580,7 @@ class PostgresSearchTable(PostgresTable):
 
         def is_special(v):
             return isinstance(v, dict) and all(
-                isinstance(k, string_types) and k.startswith("$") for k in v
+                isinstance(k, str) and k.startswith("$") for k in v
             )
 
         for orc in ors:
@@ -570,7 +600,7 @@ class PostgresSearchTable(PostgresTable):
                 queries.append(Q)
         if sort:
             col = sort[0]
-            if isinstance(col, string_types):
+            if isinstance(col, str):
                 asc = 1
             else:
                 col, asc = col
@@ -662,7 +692,7 @@ class PostgresSearchTable(PostgresTable):
         cur = self._execute(selecter, values)
         if cur.rowcount > 0:
             rec = cur.fetchone()
-            if projection == 0 or isinstance(projection, string_types):
+            if projection == 0 or isinstance(projection, str):
                 return rec[0]
             else:
                 return {
@@ -764,13 +794,13 @@ class PostgresSearchTable(PostgresTable):
         if split_ors or one_per:
             # We need to be able to extract the sort columns, so they need to be added
             _, _, raw_sort = self._process_sort(query, limit, offset, sort)
-            raw_sort = [((col, 1) if isinstance(col, string_types) else col) for col in raw_sort]
+            raw_sort = [((col, 1) if isinstance(col, str) else col) for col in raw_sort]
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
         cols = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
-        nres = None if limit is None else self.stats.quick_count(query)
+        nres = None if (one_per or limit is None) else self.stats.quick_count(query)
 
         def run_one_query(Q, lim, off):
             if lim is None:
@@ -798,7 +828,7 @@ class PostgresSearchTable(PostgresTable):
             for rec in islice(it, off, lim + off):
                 if projection == 0:
                     yield rec[self._label_col]
-                elif isinstance(projection, string_types):
+                elif isinstance(projection, str):
                     yield rec[projection]
                 else:
                     for col in sort_only:
@@ -830,7 +860,7 @@ class PostgresSearchTable(PostgresTable):
                     # but the sorting runtime is small compared to getting the records from
                     # postgres in the first place, so we use a simpler option.
                     # We override the projection on the iterator since we need to sort
-                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1))
+                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1, query=Q))
                 if all(
                     (asc == 1 or self.col_type[col] in number_types)
                     for col, asc in raw_sort
@@ -865,14 +895,14 @@ class PostgresSearchTable(PostgresTable):
                 if info is not None:
                     # caller is requesting count data
                     info["number"] = self.count(query)
-                return self._search_iterator(cur, search_cols, extra_cols, projection)
+                return self._search_iterator(cur, search_cols, extra_cols, projection, query=query)
             if nres is None:
                 exact_count = cur.rowcount < prelimit
                 nres = offset + cur.rowcount
             else:
                 exact_count = True
             results = cur.fetchmany(limit)
-            results = list(self._search_iterator(results, search_cols, extra_cols, projection))
+            results = list(self._search_iterator(results, search_cols, extra_cols, projection, query=query))
         if info is not None:
             if offset >= nres > 0:
                 # We're passing in an info dictionary, so this is a front end query,
@@ -964,7 +994,7 @@ class PostgresSearchTable(PostgresTable):
                 raise ValueError("Lookup method not supported for tables with no label column")
         return self.exists({label_col: label})
 
-    def random(self, query={}, projection=0):
+    def random(self, query={}, projection=0, pick_first=None):
         """
         Return a random label or record from this table.
 
@@ -975,6 +1005,11 @@ class PostgresSearchTable(PostgresTable):
         - ``projection`` -- which columns are requested
           (default 0, meaning just the label).
           See ``_parse_projection`` for more details.
+        - ``pick_first`` -- a column name.  If provided, a value is chosen uniformly
+          from the distinct values (subject to the given query), then a random
+          element is chosen with that value.  Note that the set of distinct values
+          is computed and stored, so be careful not to choose a column that takes
+          on too many values.
 
         OUTPUT:
 
@@ -993,6 +1028,11 @@ class PostgresSearchTable(PostgresTable):
             sage: nf.random()
             u'2.0.294787.1'
         """
+        if pick_first:
+            colvals = self.distinct(pick_first, query)
+            query = dict(query)
+            query[pick_first] = random.choice(colvals)
+            return self.random(query, projection)
         if query:
             # See if we know how many results there are
             cnt = self.stats.quick_count(query)
@@ -1105,7 +1145,7 @@ class PostgresSearchTable(PostgresTable):
                 "SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}"
             ).format(cols, Identifier(self.search_table), repeatable, qstr)
             cur = self._execute(selecter, values, buffered=True)
-            return self._search_iterator(cur, search_cols, extra_cols, projection)
+            return self._search_iterator(cur, search_cols, extra_cols, projection, query=query)
 
     def copy_to_example(self, searchfile, extrafile=None, id=None, sep=u"|", commit=True):
         """

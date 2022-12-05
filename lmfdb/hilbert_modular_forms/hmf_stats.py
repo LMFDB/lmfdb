@@ -63,7 +63,6 @@ class HMFstats(StatsDisplay):
     def counts(self):
         counts = {}
 
-
         counts['nforms']  = self.nforms
         counts['nforms_c']  = comma(self.nforms)
 
@@ -76,9 +75,9 @@ class HMFstats(StatsDisplay):
         counts["nfields_c"] = comma(len(fields))
         counts["maxdeg"] = max(degrees)
         counts["max_deg_c"] = comma(max(degrees))
-        counts["fields_by_degree"] = {d : [F["label"] for F in by_deg[d]] for d in degrees}
-        counts["nfields_by_degree"] = {d : len(by_deg[d]) for d in degrees}
-        counts["max_disc_by_degree"] = {d : max(F["discriminant"] for F in by_deg[d]) for d in degrees}
+        counts["fields_by_degree"] = {d: [F["label"] for F in by_deg[d]] for d in degrees}
+        counts["nfields_by_degree"] = {d: len(by_deg[d]) for d in degrees}
+        counts["max_disc_by_degree"] = {d: max(F["discriminant"] for F in by_deg[d]) for d in degrees}
         return counts
 
     @cached_method

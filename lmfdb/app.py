@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from .utils.config import get_secret_key
 import os
 from socket import gethostname
 import time
-import six
 from urllib.parse import urlparse, urlunparse
 
 from flask import (
@@ -33,7 +31,7 @@ LMFDB_VERSION = "LMFDB Release 1.2.1"
 ############################
 
 
-class ReverseProxied(object):
+class ReverseProxied():
     def __init__(self, app):
         self.app = app
 
@@ -41,8 +39,8 @@ class ReverseProxied(object):
         scheme = environ.get('HTTP_X_FORWARDED_PROTO')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
-        return self.app(environ, start_response)
 
+        return self.app(environ, start_response)
 
 app = Flask(__name__)
 
@@ -65,7 +63,6 @@ def set_beta_state():
 
 
 def is_beta():
-    from flask import g
     return g.BETA
 
 
@@ -147,6 +144,7 @@ def ctx_proc_userdata():
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
+    vars['zip'] = zip
 
     return vars
 
@@ -185,8 +183,7 @@ def git_infos():
                     '''git reflog -n5''',
                     '''git log --graph  -n 10''']
         kwdargs = {'shell': True, 'stdout': PIPE, 'cwd': cwd}
-        if six.PY3:
-            kwdargs['encoding'] = 'utf-8'
+        kwdargs['encoding'] = 'utf-8'
         pairs = [(c, Popen(c, **kwdargs).communicate()[0]) for c in commands]
         rev = pairs[0][1]
         date = pairs[0][1]
@@ -243,7 +240,7 @@ def nl2br(s):
 
 @app.template_filter('urlencode')
 def urlencode(kwargs):
-    from six.moves.urllib.parse import urlencode
+    from urllib.parse import urlencode
     return urlencode(kwargs)
 
 ##############################
@@ -259,7 +256,7 @@ def netloc_redirect():
         Force https on www.lmfdb.org
         Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
     """
-    from six.moves.urllib.parse import urlparse, urlunparse
+    from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
 
@@ -278,8 +275,8 @@ def netloc_redirect():
         return redirect(url, code=301)
     elif (
         urlparts.netloc == "www.lmfdb.org"
-        and
-        not white_listed(urlparts.path)
+
+        and not white_listed(urlparts.path)
         and valid_bread(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
@@ -418,8 +415,7 @@ def workshops():
 @app.route("/lucant")
 @app.route("/LuCaNT")
 def lucant():
-    bread = [("LuCaNT", '')]
-    return render_template("lucant.html", title="LMFDB, Computation, and Number Theory (LuCaNT)", contribs=contribs, bread=bread)
+    return redirect("https://lucant.org/")
 
 # google's CSE for www.lmfdb.org/* (and *only* those pages!)
 
@@ -760,7 +756,7 @@ def WhiteListedRoutes():
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
-        'Group',
+        'Group/foo', # allows /Group but not /Groups/*
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
@@ -792,7 +788,7 @@ def WhiteListedRoutes():
         'acknowledgment',
         'alive',
         'api',
-        'api2',
+        #'api2',
         'bigpicture',
         'callback_ajax',
         'citation',
@@ -805,7 +801,6 @@ def WhiteListedRoutes():
         'humans.txt',
         'info',
         'intro',
-        'inventory',
         'knowledge',
         'lucant',
         'management',
@@ -865,8 +860,8 @@ def NotWhiteListedBreads():
     res = set()
     for _, endpoint in routes():
         if not white_listed(endpoint):
-            print(endpoint.lstrip("/").split('/', 1))
             res.add(endpoint.lstrip("/").split('/', 1)[0])
+    res.remove('L') # all the valid breads are whitelisted
     return res
 
 

@@ -20,7 +20,7 @@ In general "number" means an int or double or string representing a number (e.g.
    - 'analytic_normalization' (number), translation needed to obtain
      the analytic normalization: 0.5
 
-   - 'coefficient_field' (string), label of the the coefficient field Q: '1.1.1.1'
+   - 'coefficient_field' (string), label of the coefficient field Q: '1.1.1.1'
    - 'degree' (int), degree of the L-function: 2
    - 'gamma_factors' (list of length 2 of lists of numbers), encoding of Gamma factors: [[],[0]]
    - 'motivic_weight' (int), motivic weight: 1
@@ -58,7 +58,7 @@ In general "number" means an int or double or string representing a number (e.g.
    - 'plot_values' (list of numbers): list of y-coordinates of points on the plot
 
 """
-from __future__ import print_function
+
 import os
 from sage.all import ZZ, primes, sqrt, EllipticCurve, prime_pi
 
@@ -87,7 +87,7 @@ def constant_data():
 
    - 'algebraic', whether the L-function is algebraic: True
    - 'analytic_normalization', translation needed to obtain the analytic normalization: 0.5
-   - 'coefficient_field', label of the the coefficient field Q: '1.1.1.1'
+   - 'coefficient_field', label of the coefficient field Q: '1.1.1.1'
    - 'degree', degree of the L-function: 2
    - 'gamma_factors', encoding of Gamma factors: [[],[0]]
    - 'motivic_weight', motivic weight: 1

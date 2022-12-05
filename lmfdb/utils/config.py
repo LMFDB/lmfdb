@@ -13,14 +13,16 @@ It's purpose is to parse a config file (create a default one if none
 is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
-from __future__ import print_function
+
 
 import argparse
+import getpass
 import os
 import sys
 import random
 import string
 import __main__
+from requests import get
 
 
 root_lmfdb_path = os.path.abspath(
@@ -64,12 +66,19 @@ class Configuration(_Configuration):
         )
 
         parser.add_argument(
-            "-c",
             "--config-file",
             dest="config_file",
             metavar="FILE",
             help="configuration file [default: %(default)s]",
             default=default_config_file,
+        )
+        # gunicorn uses '-c' to specify its config file
+        # we don't want the config parser to get confused
+        # when the app is ran via gunicorn
+        parser.add_argument(
+            "-c",
+            help=argparse.SUPPRESS,
+            dest="trash_becauseofgunicorn"
         )
         parser.add_argument(
             "-s",
@@ -86,6 +95,14 @@ class Configuration(_Configuration):
             action="store_true",
             dest="core_debug",
             help="enable debug mode",
+        )
+
+        parser.add_argument(
+            "-r",
+            "--restart",
+            action="store_true",
+            dest="core_restart",
+            help="enable restart mode",
         )
 
         parser.add_argument(
@@ -236,7 +253,7 @@ class Configuration(_Configuration):
             default=argparse.SUPPRESS,
         )
         # if start-lmfdb.py was executed
-        startlmfdbQ =  getattr(__main__, '__file__').endswith("start-lmfdb.py") if hasattr(__main__, '__file__') else False
+        startlmfdbQ = getattr(__main__, '__file__').endswith("start-lmfdb.py") if hasattr(__main__, '__file__') else False
         writeargstofile = writeargstofile or startlmfdbQ
         readargs = readargs or startlmfdbQ
         _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
@@ -247,10 +264,36 @@ class Configuration(_Configuration):
             "port": opts["web"]["port"],
             "host": opts["web"]["bindip"],
             "debug": opts["core"]["debug"],
+            "use_reloader": opts["core"]["restart"],
         }
         for opt in ["use_debugger", "use_reloader", "profiler"]:
             if opt in extopts:
                 self.flask_options[opt] = extopts[opt]
+
+        self.cocalc_options = {}
+        if "COCALC_PROJECT_ID" in os.environ:
+            # we must accept external connections
+            self.flask_options["host"] = "0.0.0.0"
+            self.cocalc_options["host"] = "cocalc.com"
+            external_ip = get('https://api.ipify.org').content.decode('utf8')
+            if external_ip == "18.18.21.21": # chatelet
+                self.cocalc_options["host"] = "chatelet.mit.edu"
+                # randomify port, we have only container
+                if self.flask_options["port"] == 37777: # default
+                    username = getpass.getuser()
+                    intusername = int(username, base=36)
+                    self.flask_options["port"] = 10000 + (intusername % 55536)
+            self.cocalc_options["root"] = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(self.flask_options['port'])
+            self.cocalc_options["prefix"] = ("https://"
+                                             + self.cocalc_options["host"]
+                                             + self.cocalc_options["root"])
+            stars = "\n" + "*" * 80
+            self.cocalc_options["message"] = (stars +
+             "\n\033[1mCocalc\033[0m environment detected!\n"
+             + "Visit"
+             + f"\n  \033[1m {self.cocalc_options['prefix']} \033[0m"
+             + "\nto access this LMFDB instance"
+             + stars)
 
         self.color = opts["core"]["color"]
 
@@ -283,6 +326,12 @@ class Configuration(_Configuration):
 
     def get_flask(self):
         return self.flask_options
+
+    def get_cocalc(self):
+        return self.cocalc_options
+
+    def get_url_prefix(self):
+        return self.cocalc_options.get('prefix', '')
 
     def get_color(self):
         return self.color

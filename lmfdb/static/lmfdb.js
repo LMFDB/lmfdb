@@ -419,7 +419,97 @@ function simult_change(event) {
     $(".simult_select").each(function (i) { this.selectedIndex = event.target.selectedIndex;});
 };
 
+function control_columns(S) {
+  if (S.selectedIndex == 0) {
+    S.blur();
+  } else {
+    var show = $("input[name=showcol]");
+    var shown_cols = show.val().split(".").filter(o=>o); // remove empty strings
+    var hide = $("input[name=hidecol]");
+    var hidden_cols = hide.val().split(".").filter(o=>o);
+    var label = S.options[S.selectedIndex].text;
+    label = label.slice(2, label.length);
+    $('.col-'+S.value).toggle();
+    // For column groups, have to adjust the width of the top column
+    $('th.col-'+S.value).each(function(i, obj) {
+      // We need to adjust the column width for any colgroup header containing this column.
+      // there should only be one in the list, but doing this more than once won't hurt.
+      var classes = $(this).attr('class').split(' ');
+      for (i = 0; i < classes.length; i++) {
+        if (classes[i].startsWith("colgroup-")) {
+          var colspan = $('th.'+classes[i]+':visible').length;
+          var header = $('.col-' + classes[i].slice(9));
+          if (colspan == 0) {
+            header.hide();
+          } else {
+            header.show();
+            header.prop("colSpan", $('th.'+classes[i]+':visible').length);
+          }
+        }
+      }
+    })
+    if ($('.col-'+S.value+':visible').length > 0) {
+      S.options[S.selectedIndex].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
+      var i = hidden_cols.indexOf(S.value);
+      if (i == -1) {
+        shown_cols.push(S.value);
+        show.val(shown_cols.join("."));
+      } else {
+        hidden_cols.splice(i, 1);
+        hide.val(hidden_cols.join("."));
+      }
+    } else {
+      S.options[S.selectedIndex].text = '  ' + label; // the spaces are unicode: an em-dash and a thinspace
+      var i = shown_cols.indexOf(S.value);
+      if (i == -1) {
+        hidden_cols.push(S.value);
+        hide.val(hidden_cols.join("."));
+      } else {
+        shown_cols.splice(i, 1);
+        show.val(shown_cols.join("."));
+      }
+    }
+  }
+  S.value = '';
+};
 
+function control_sort(S) {
+  console.log("Starting control");
+  var n = S.selectedIndex;
+  var t, label = S.options[n].text;
+  var spaces = '  '; // the spaces are U+2006 and U+2003, totaling 7/6 em
+  var asc = '▲ '; // the space is U+2006, a 1/6 em space
+  var dec = '▼ '; // the space is U+2006, a 1/6 em space
+  var curdir = label.slice(0, 2);
+  label = label.slice(2, label.length);
+  for (var i = 0; i < S.length; i++) {
+    t = S.options[i].text;
+    S.options[i].text = spaces + t.slice(2, t.length);
+  }
+  if (curdir == asc) {
+    console.log("Setting dir op");
+    S.options[n].text = dec + label;
+    $("input[name=sort_dir]").val('op');
+  } else {
+    console.log("Setting dir std");
+    S.options[n].text = asc + label;
+    $("input[name=sort_dir]").val('');
+  }
+  $("input[name=sort_order]").val(S.value);
+  S.selectedIndex = -1;
+};
+
+function blur_sort(S) {
+  S.size = 0;
+  for (var i = 0; i < S.length; i++) {
+    t = S.options[i].text;
+    if (t.slice(0, 1) != ' ') { // unicode space
+      S.selectedIndex = i;
+      console.log("Blurring at ", i);
+      break;
+    }
+  }
+};
 
 function resetStart()
 {
@@ -619,3 +709,16 @@ function show_moreless(ml) {
   $('.'+ml).show();
 }
 
+function show_schema(tbl) {
+  $("div."+tbl+"-schema-holder").show();
+  $("#"+tbl+"-schema-hider").show();
+  $("#"+tbl+"-schema-shower").hide();
+  return false;
+}
+
+function hide_schema(tbl) {
+  $("div."+tbl+"-schema-holder").hide();
+  $("#"+tbl+"-schema-hider").hide();
+  $("#"+tbl+"-schema-shower").show();
+  return false;
+}

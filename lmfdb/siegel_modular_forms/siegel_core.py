@@ -5,7 +5,8 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from sage.all import QQ, ZZ, PowerSeriesRing, is_even, is_prime, divisors
+from sage.all import QQ, ZZ, PowerSeriesRing, is_even, is_prime
+from lmfdb.utils import integer_divisors
 
 tbi = 't.b.i.'
 uk = '?'
@@ -69,14 +70,14 @@ def _dimension_Sp6Z(wt):
     (y,) = R._first_ngens(1)
     H_all = 1 / ((1 - x ** 4) * (1 - x ** 12) ** 2 * (1 - x ** 14) * (1 - x ** 18) *
                 (1 - x ** 20) * (1 - x ** 30)) * (
-        1 + x ** 6 + x ** 10 + x ** 12 + 3 * x ** 16 + 2 * x ** 18 + 2 * x ** 20 +
-        5 * x ** 22 + 4 * x ** 24 + 5 * x ** 26 + 7 * x ** 28 + 6 * x ** 30 + 9 * x ** 32 +
-        10 * x ** 34 + 10 * x ** 36 + 12 * x ** 38 + 14 * x ** 40 + 15 * x ** 42 + 16 * x ** 44 +
-        18 * x ** 46 + 18 * x ** 48 + 19 * x ** 50 + 21 * x ** 52 + 19 * x ** 54 + 21 * x ** 56 +
-        21 * x ** 58 + 19 * x ** 60 + 21 * x ** 62 + 19 * x ** 64 + 18 * x ** 66 + 18 * x ** 68 +
-        16 * x ** 70 + 15 * x ** 72 + 14 * x ** 74 + 12 * x ** 76 + 10 * x ** 78 + 10 * x ** 80 +
-        9 * x ** 82 + 6 * x ** 84 + 7 * x ** 86 + 5 * x ** 88 + 4 * x ** 90 + 5 * x ** 92 +
-        2 * x ** 94 + 2 * x ** 96 + 3 * x ** 98 + x ** 102 + x ** 104 + x ** 108 + x ** 114)
+        1 + x ** 6 + x ** 10 + x ** 12 + 3 * x ** 16 + 2 * x ** 18 + 2 * x ** 20
+        + 5 * x ** 22 + 4 * x ** 24 + 5 * x ** 26 + 7 * x ** 28 + 6 * x ** 30 + 9 * x ** 32
+        + 10 * x ** 34 + 10 * x ** 36 + 12 * x ** 38 + 14 * x ** 40 + 15 * x ** 42 + 16 * x ** 44
+        + 18 * x ** 46 + 18 * x ** 48 + 19 * x ** 50 + 21 * x ** 52 + 19 * x ** 54 + 21 * x ** 56
+        + 21 * x ** 58 + 19 * x ** 60 + 21 * x ** 62 + 19 * x ** 64 + 18 * x ** 66 + 18 * x ** 68
+        + 16 * x ** 70 + 15 * x ** 72 + 14 * x ** 74 + 12 * x ** 76 + 10 * x ** 78 + 10 * x ** 80
+        + 9 * x ** 82 + 6 * x ** 84 + 7 * x ** 86 + 5 * x ** 88 + 4 * x ** 90 + 5 * x ** 92
+        + 2 * x ** 94 + 2 * x ** 96 + 3 * x ** 98 + x ** 102 + x ** 104 + x ** 108 + x ** 114)
     H_noncusp = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     H_E = y ** 12 / (1 - y ** 4) / (1 - y ** 6)
     H_Miyawaki1 = H_E[wt] * H_E[2 * wt - 4]
@@ -121,7 +122,7 @@ def __JacobiDimension(k, m):
     if (k % 2) == 0:
         x = 0
         if k == 2:
-            x = (len(divisors(m)) - 1) // 2
+            x = (len(integer_divisors(m)) - 1) // 2
         for j in range(1, m + 1):
             x += (__S1k(k + 2 * j) - ((j * j) // (4 * m)))
         return x
@@ -205,8 +206,8 @@ def _dimension_Gamma0_3(wt):
     """
     R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
     (x,) = R._first_ngens(1)
-    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 -
-                                                                                              x ** 4) / (1 - x ** 6) ** 2
+    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1
+                                                                                              - x ** 4) / (1 - x ** 6) ** 2
     # H_cusp  = ??
     # H_Kl   = ??
     # H_MS = ??
@@ -311,8 +312,8 @@ def _dimension_Gamma0_4_half(k):
     R = PowerSeriesRing(ZZ, default_prec=k, names=('x',))
     (x,) = R._first_ngens(1)
     H_all = 1 / (1 - x) / (1 - x ** 2) ** 2 / (1 - x ** 3)
-    H_cusp = (2 * x ** 5 + x ** 7 + x ** 9 - 2 * x ** 11 + 4 * x ** 6 - x ** 8 + x ** 10 - 3 *
-              x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
+    H_cusp = (2 * x ** 5 + x ** 7 + x ** 9 - 2 * x ** 11 + 4 * x ** 6 - x ** 8 + x ** 10 - 3
+              * x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
     a, c = H_all[k - 1], H_cusp[k - 1]
     return (a, a - c, c)
 
@@ -338,14 +339,14 @@ def H1(k, p):
 
 
 def H2(k, p):
-    S1 = ((-_sage_const_1) ** k) * (_sage_const_2 * k - _sage_const_2) * (_sage_const_2 * k -
-                                                                          _sage_const_4) / (_sage_const_2 ** _sage_const_8 * _sage_const_3 ** _sage_const_2)
+    S1 = ((-_sage_const_1) ** k) * (_sage_const_2 * k - _sage_const_2) * (_sage_const_2 * k
+                                                                          - _sage_const_4) / (_sage_const_2 ** _sage_const_8 * _sage_const_3 ** _sage_const_2)
     if p == _sage_const_2:
-        S2 = ((-_sage_const_1) ** k) * (_sage_const_2 * k - _sage_const_2) * (_sage_const_2 *
-                                                                              k - _sage_const_4) / (_sage_const_2 ** _sage_const_9)
+        S2 = ((-_sage_const_1) ** k) * (_sage_const_2 * k - _sage_const_2) * (_sage_const_2
+                                                                              * k - _sage_const_4) / (_sage_const_2 ** _sage_const_9)
     else:
-        S2 = ((-_sage_const_1) ** k) * (_sage_const_2 * k - _sage_const_2) * (_sage_const_2 *
-                                                                              k - _sage_const_4) / (_sage_const_2 ** _sage_const_7 * _sage_const_3)
+        S2 = ((-_sage_const_1) ** k) * (_sage_const_2 * k - _sage_const_2) * (_sage_const_2
+                                                                              * k - _sage_const_4) / (_sage_const_2 ** _sage_const_7 * _sage_const_3)
     return S1 + S2
 
 
@@ -433,20 +434,18 @@ def LS5(p):  # Gives the Legendre Symbol (5/p)
     return tink5(_sage_const_0, _sage_const_1, -_sage_const_1, -_sage_const_1, _sage_const_1, p)
 
 
-def LS2(p):  # Gives the Legendre Symbol (2/p)
-    S1 = (p ** _sage_const_2 - _sage_const_1) / _sage_const_8
-    S = (-_sage_const_1) ** (S1)
-    if p == _sage_const_2:
-        S = _sage_const_0
-    return S
+def LS2(p):
+    """
+    Gives the Legendre Symbol (2/p)
+    """
+    return 0 if p == 2 else (-1)**((p**2 - 1) // 8)
 
 
-def LSminus1(p):  # Gives the Legendre Symbol (-1/p)
-    S1 = (p - _sage_const_1) / _sage_const_2
-    S = (-_sage_const_1) ** (S1)
-    if p == _sage_const_2:
-        S = _sage_const_1
-    return S
+def LSminus1(p):
+    """
+    Gives the Legendre Symbol (-1/p)
+    """
+    return 1 if p == 2 else (-1)**((p - 1) // 2)
 
 
 def LSminus3(p):  # Gives the Legendre Symbol (-3/p) ==(p/3)
@@ -502,8 +501,8 @@ def H7(k, p):
     if ((p % _sage_const_3) == _sage_const_2):
         S = (_sage_const_2 * k - _sage_const_3) * (p - _sage_const_1) / (_sage_const_2 ** _sage_const_2 * _sage_const_3 ** _sage_const_3) + S1 * (p - _sage_const_1) / (_sage_const_2 * _sage_const_3 ** _sage_const_3)
     if p == _sage_const_3:
-        S = _sage_const_5 * (_sage_const_2 * k - _sage_const_3) / (_sage_const_2 ** _sage_const_2 *
-                                                                   _sage_const_3 ** _sage_const_3) + S1 / (_sage_const_3 ** _sage_const_3)
+        S = _sage_const_5 * (_sage_const_2 * k - _sage_const_3) / (_sage_const_2 ** _sage_const_2
+                                                                   * _sage_const_3 ** _sage_const_3) + S1 / (_sage_const_3 ** _sage_const_3)
     return S
 
 
@@ -646,8 +645,10 @@ def II(k, p):
 
 
 def dimKp(k, p):
-# This returns the dimension of cusp forms for K(p)
-# of weight k>=3 and PRIME level p
+    """
+    This returns the dimension of cusp forms for K(p)
+    of weight k>=3 and PRIME level p
+    """
     S = H(k, p) + II(k, p)
     if k == _sage_const_3:
         S = H(k, p) + II(k, p) + _sage_const_1

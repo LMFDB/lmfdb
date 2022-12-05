@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
-from six.moves import input  # in python2, this is raw_input
 import csv
 import logging
 import os
@@ -146,7 +143,23 @@ class PostgresDatabase(PostgresBase):
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
-        self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
+        if self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]:
+            self._read_only = True
+        else:
+            # Check if there is a table where we can insert/update
+            privileges = ["INSERT", "UPDATE"]
+            cur = self._execute(
+                SQL(
+                    "SELECT count(*) FROM information_schema.role_table_grants "
+                    + "WHERE grantee = %s AND table_schema = %s "
+                    + "AND privilege_type IN ("
+                    + ",".join(["%s"] * len(privileges))
+                    + ")"
+                ),
+                [self._user, "public"] + privileges,
+            )
+            self._read_only = cur.fetchone()[0] ==0
+
         self._super_user = (self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0] == "on")
 
         if self._read_only:
@@ -509,7 +522,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``new_name`` -- a string giving the desired table name.
         - ``table`` -- a string or PostgresSearchTable object giving an existing table.
         """
-        if isinstance(table, string_types):
+        if isinstance(table, str):
             table = self[table]
         search_columns = {
             typ: [col for col in table.search_cols if table.col_type[col] == typ]
@@ -628,7 +641,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if id_ordered is None:
             id_ordered = sort is not None
         for typ, L in list(search_columns.items()):
-            if isinstance(L, string_types):
+            if isinstance(L, str):
                 search_columns[typ] = [L]
         valid_list = sum(search_columns.values(), [])
         valid_set = set(valid_list)
@@ -664,7 +677,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             dictorder = []
             for typ, cols in coldict.items():
                 self._check_col_datatype(typ)
-                if isinstance(cols, string_types):
+                if isinstance(cols, str):
                     cols = [cols]
                 for col in cols:
                     if col == "id":
@@ -947,7 +960,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.tablenames.remove(old_name)
             self.tablenames.sort()
 
-    def copy_to(self, search_tables, data_folder, **kwds):
+    def copy_to(self, search_tables, data_folder, fail_on_error=True, **kwds):
         """
         Copy a set of search tables to a folder on the disk.
 
@@ -957,6 +970,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``data_folder`` -- a path to a folder to save the data.  The folder must not currently exist.
         - ``**kwds`` -- other arguments are passed on to the ``copy_to`` method of each table.
         """
+        if fail_on_error:
+            for tablename in search_tables:
+                if tablename not in self.tablenames:
+                    raise ValueError(f"{tablename} is not in tablenames")
+
         if os.path.exists(data_folder):
             raise ValueError("The path {} already exists".format(data_folder))
         os.makedirs(data_folder)
@@ -989,7 +1007,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if failures:
             print("Failed to copy %s (not in tablenames)" % (", ".join(failures)))
 
-    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, **kwds):
+    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, fail_on_error=True, **kwds):
         """
         Copy data to a folder from a postgres instance on another server.
 
@@ -1006,7 +1024,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         source = PostgresDatabase(**remote_opts)
 
         # copy all the data
-        source.copy_to(search_tables, data_folder, **kwds)
+        source.copy_to(search_tables, data_folder, fail_on_error=fail_on_error, **kwds)
 
     def reload_all(
         self,
@@ -1076,9 +1094,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     if not os.path.exists(metafile):
                         raise ValueError("meta file missing for {0}".format(tablename))
                     # read metafile
-                    rows = []
                     with open(metafile, "r") as F:
-                        rows = [line for line in csv.reader(F, delimiter=str(sep))]
+                        rows = list(csv.reader(F, delimiter=str(sep)))
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))

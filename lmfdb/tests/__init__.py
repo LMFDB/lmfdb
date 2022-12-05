@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-
-from __future__ import print_function
 import unittest2
-from six.moves.urllib.request import Request, urlopen
-from six.moves.urllib.error import URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 import ssl
 import errno
 from lmfdb.app import app
@@ -38,9 +36,11 @@ class LmfdbTest(unittest2.TestCase):
         ), "%s not in the %s" % (text, path)
 
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).get_data(
-            as_text=True
-        ), "%s not in the %s" % (text, path)
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            assert t in page, "%s not in the %s" % (t, path)
 
     def check_args_with_timeout(self, path, text):
         timeout_error = "The search query took longer than expected!"
@@ -51,9 +51,11 @@ class LmfdbTest(unittest2.TestCase):
         )
 
     def not_check_args(self, path, text):
-        assert not (
-            text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
-        ), "%s in the %s" % (text, path)
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            assert t not in page, "%s in the %s" % (t, path)
 
     def check_external(self, homepage, path, text):
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -90,17 +92,35 @@ class LmfdbTest(unittest2.TestCase):
             else:
                 raise
 
+    def check_sage_compiles_and_extract_variables(self, sage_code):
+        """
+        Simulates a user downloading the sage code, and then loading it
+        into a sage session. This requires the sage imports at the top of
+        the file. It returns a desired variable for further checks.
+
+        INPUT:
+
+        - sage_code [Type: str] : the sage code to execute
+
+        - my_name [Type: str] : name of the variable to extract from the
+          sage code. This then allows the developer
+          to implement subsequent checks.
+        """
+        exec(sage_code, globals())
+        return globals()
+
     def check_sage_compiles_and_extract_var(self, sage_code, my_name):
         """
         Simulates a user downloading the sage code, and then loading it
         into a sage session. This requires the sage imports at the top of
         the file. It returns a desired variable for further checks.
 
-        sage_code [Type: str] : the sage code to execute
-        my_name [Type: str] : name of the variable to extract from the
-                              sage code. This then allows the developer
-                              to implement subsequent checks.
-        """
+        INPUT:
 
-        exec(sage_code, globals())
-        return globals()[my_name]
+        - sage_code [Type: str] : the sage code to execute
+
+        - my_name [Type: str] : name of the variable to extract from the
+          sage code. This then allows the developer
+          to implement subsequent checks.
+        """
+        return self.check_sage_compiles_and_extract_variables(sage_code)[my_name]

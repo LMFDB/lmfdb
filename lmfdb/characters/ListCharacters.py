@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
-from six.moves import range
-
 import re
-from sage.all import lcm, factor, divisors, Integers
+from sage.all import lcm, factor, Integers
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.utils import flash_error
+from lmfdb.utils import flash_error, integer_divisors
 
 # utility functions #
+
 
 def modn_exponent(n):
     """ given a nonzero integer n, returns the group exponent of (Z/nZ)* """
@@ -18,14 +17,14 @@ def modn_exponent(n):
 
 def divisors_in_interval(n, a, b):
     """ given a nonzero integer n and an interval [a,b] returns a list of the divisors of n in [a,b] """
-    return [d for d in divisors(n) if a <= d and d <= b]
+    return [d for d in integer_divisors(n) if a <= d and d <= b]
 
 def parse_interval(arg, name):
     """ parses a user specified interval of positive integers (or a single integer), flashes errors and raises exceptions """
     a,b = 0,0
     arg = arg.replace (' ','')
     if re.match('^[0-9]+$', arg):
-        a,b =  (int(arg),int(arg))
+        a,b = (int(arg), int(arg))
     elif re.match('^[0-9]+-[0-9]+$', arg):
         s = arg.split('-')
         a,b = (int(s[0]), int(s[1]))
@@ -73,7 +72,7 @@ def get_character_modulus(a, b, limit=7):
                 entry.append(el)
                 entries[(row, col)] = entry
     entries2 = {}
-    out = lambda chi: (chi.number, chi.is_primitive(),
+    def out(chi): return (chi.number, chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
     for k, v in entries.items():
         l = []
@@ -189,12 +188,11 @@ class CharacterSearch:
         self.mmin = max(self.mmin,self.cmin,self.omin)
 
         if self.parity:
-            self.is_odd = True if self.parity == parity_string(-1) else False
+            self.is_odd = self.parity == parity_string(-1)
         if self.primitive:
-            self.is_primitive = True if self.primitive == bool_string(True) else False
+            self.is_primitive = self.primitive == bool_string(True)
 
         self.start = int(query.get('start', '0'))
-
 
     def results(self):
         info = {}

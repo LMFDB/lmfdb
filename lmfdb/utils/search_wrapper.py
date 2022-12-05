@@ -6,7 +6,7 @@ from sage.misc.decorators import decorator_keywords
 
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
-from lmfdb.utils.utilities import flash_error, to_dict
+from lmfdb.utils.utilities import flash_error, flash_info, to_dict
 
 
 def use_split_ors(info, query, split_ors, offset, table):
@@ -25,14 +25,14 @@ def use_split_ors(info, query, split_ors, offset, table):
         split_ors is not None
         and len(query.get("$or", [])) > 1
         and any(field in opt for field in split_ors for opt in query["$or"])
-        and
-        # We don't support large offsets since sorting in Python requires
-        # fetching all records, starting from 0
-        offset < table._count_cutoff
+
+ # We don't support large offsets since sorting in Python requires
+ # fetching all records, starting from 0
+        and offset < table._count_cutoff
     )
 
 
-class Wrapper(object):
+class Wrapper():
     def __init__(self, f, template, table, title, err_title, postprocess=None, one_per=None, **kwds):
         self.f = f
         self.template = template
@@ -42,6 +42,20 @@ class Wrapper(object):
         self.postprocess = postprocess
         self.one_per = one_per
         self.kwds = kwds
+
+    def get_sort(self, info, query):
+        sort = query.pop("__sort__", None)
+        SA = info.get("search_array")
+        if sort is None and SA is not None and SA.sorts is not None:
+            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            for name, display, S in sorts:
+                sord = info.get('sort_order', '')
+                if name == sord:
+                    sop = info.get('sort_dir', '')
+                    if sop == 'op':
+                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
+                    return S
+        return sort
 
     def make_query(self, info, random=False):
         query = {}
@@ -57,8 +71,8 @@ class Wrapper(object):
             err_title = query.pop("__err_title__", self.err_title)
         if errpage is not None:
             return errpage
-        sort = query.pop("__sort__", None)
         table = query.pop("__table__", self.table)
+        sort = self.get_sort(info, query)
         # We want to pop __title__ even if overridden by info.
         title = query.pop("__title__", self.title)
         title = info.get("title", title)
@@ -82,7 +96,6 @@ class Wrapper(object):
             template, info=info, title=self.err_title, **template_kwds
         )
 
-
     def raw_parsing_error(self, info, query, err, err_title, template, template_kwds):
         flash_error('Error parsing %s.', str(err))
         info['err'] = str(err)
@@ -100,13 +113,14 @@ class SearchWrapper(Wrapper):
     def __init__(
         self,
         f,
-        template,
-        table,
-        title,
-        err_title,
+        template="search_results.html",
+        table=None,
+        title=None,
+        err_title=None,
         per_page=50,
         shortcuts={},
         longcuts={},
+        columns=None,
         projection=1,
         url_for_label=None,
         cleaners={},
@@ -121,7 +135,11 @@ class SearchWrapper(Wrapper):
         self.per_page = per_page
         self.shortcuts = shortcuts
         self.longcuts = longcuts
-        self.projection = projection
+        self.columns = columns
+        if columns is None:
+            self.projection = projection
+        else:
+            self.projection = columns.db_cols
         self.url_for_label = url_for_label
         self.cleaners = cleaners
         self.split_ors = split_ors
@@ -131,6 +149,7 @@ class SearchWrapper(Wrapper):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
         info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
@@ -234,6 +253,34 @@ class SearchWrapper(Wrapper):
                 if info.get(key, "").strip():
                     return func(res, info, query)
             info["results"] = res
+            # Display warning message if user searched on column(s) with null values
+            if query:
+                nulls = table.stats.null_counts()
+                if nulls:
+                    search_columns = table._columns_searched(query)
+                    nulls = {col: cnt for (col, cnt) in nulls.items() if col in search_columns}
+                    col_display = {}
+                    if "search_array" in info:
+                        for row in info["search_array"].refine_array:
+                            if isinstance(row, (list, tuple)):
+                                for item in row:
+                                    if hasattr(item, "name") and hasattr(item, "label"):
+                                        col_display[item.name] = item.label
+                        for col, cnt in list(nulls.items()):
+                            override = info["search_array"].null_column_explanations.get(col)
+                            if override is False:
+                                del nulls[col]
+                            elif override:
+                                nulls[col] = override
+                            else:
+                                nulls[col] = f"{col_display.get(col, col)} ({cnt} objects)"
+                    else:
+                        for col, cnt in list(nulls.items()):
+                            nulls[col] = f"{col} ({cnt} objects)"
+                    if nulls:
+                        msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
+                        msg += ", ".join(nulls.values())
+                        flash_info(msg)
             return render_template(template, info=info, title=title, **template_kwds)
 
 

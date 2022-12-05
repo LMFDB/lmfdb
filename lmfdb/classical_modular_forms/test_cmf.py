@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 import unittest2
 
@@ -64,7 +64,8 @@ class CmfTest(LmfdbTest):
         assert '168' in data
 
     def test_level_bread(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/',
+                           follow_redirects=True)
         assert '1124.1.d.a' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{-281})' in page.get_data(as_text=True)
         assert '1124.1.d.d' in page.get_data(as_text=True)
@@ -72,24 +73,24 @@ class CmfTest(LmfdbTest):
         assert '1124.1.ba.a' in page.get_data(as_text=True)
         assert r'\Q(\zeta_{35})' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/?weight=10&level=10', follow_redirects=True)
-        assert 'Results (4 matches)'
+        assert 'Results (4 matches)' in page.get_data(as_text=True)
         assert '10.10.b.a' in page.get_data(as_text=True)
         assert '2580' in page.get_data(as_text=True)
 
     @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
-        from sage.all import ZZ, sqrt
-        for Nk2 in range(1,2001):
+        from sage.all import ZZ
+        for Nk2 in range(1, 2001):
             for N in ZZ(Nk2).divisors():
-                    k = sqrt(Nk2/N)
-                    if k in ZZ and k > 1:
-                        print("testing (N, k) = (%s, %s)" % (N, k))
-                        url  = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(N, k)
-                        rv = self.tc.get(url,follow_redirects=True)
-                        self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
-                        assert str(N) in rv.get_data(as_text=True)
-                        assert str(k) in rv.get_data(as_text=True)
-                        assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
+                k = (Nk2 // N).sqrt()
+                if k in ZZ and k > 1:
+                    print("testing (N, k) = (%s, %s)" % (N, k))
+                    url = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(N, k)
+                    rv = self.tc.get(url,follow_redirects=True)
+                    self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                    assert str(N) in rv.get_data(as_text=True)
+                    assert str(k) in rv.get_data(as_text=True)
+                    assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
     def test_favorite(self):
         favorite_newform_labels = [
@@ -178,8 +179,8 @@ class CmfTest(LmfdbTest):
         assert '1.12.a.a' in page.get_data(as_text=True)
         assert '16744' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/")
-        assert '24q^{2}' in page.get_data(as_text=True)
-        assert '84480q^{8}' in page.get_data(as_text=True)
+        assert '24 q^{2}' in page.get_data(as_text=True)
+        assert '84480 q^{8}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/?format=satake")
         assert '0.299367' in page.get_data(as_text=True)
         assert '0.954138' in page.get_data(as_text=True)
@@ -191,8 +192,7 @@ class CmfTest(LmfdbTest):
         Check that the weight 2 form of level 11 works.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
-        assert '2q^{2}' in page.get_data(as_text=True)
-        assert '2q^{4}' in page.get_data(as_text=True)
+        assert '2 q^{2}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake")
         assert r'0.707107' in page.get_data(as_text=True)
         assert r'0.957427' in page.get_data(as_text=True)
@@ -204,10 +204,10 @@ class CmfTest(LmfdbTest):
 
     def test_triv_character(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/a/a/")
-        assert r'1016q^{7}' in page.get_data(as_text=True)
+        assert r'1016 q^{7}' in page.get_data(as_text=True)
         assert '1680' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
-        assert '168q^{8}' in page.get_data(as_text=True)
+        assert '168 q^{8}' in page.get_data(as_text=True)
         assert '36' in page.get_data(as_text=True)
 
     def test_non_triv_character(self):
@@ -217,9 +217,9 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/e/a/")
         assert r'\Q(\sqrt{-3})' in page.get_data(as_text=True)
         assert '0.866025' in page.get_data(as_text=True)
-        assert r'6q^{6}' in page.get_data(as_text=True)
+        assert r'6 q^{6}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/b/a/")
-        assert r'46q^{9}' in page.get_data(as_text=True)
+        assert r'46 q^{9}' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{-1})' in page.get_data(as_text=True)
         assert r'10' in page.get_data(as_text=True)
 
@@ -227,7 +227,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/a/")
         assert '11241' in page.get_data(as_text=True)
         assert '10099' in page.get_data(as_text=True)
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/",  follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/", follow_redirects=True)
         assert '11241' in page.get_data(as_text=True)
         assert '10099' in page.get_data(as_text=True)
 
@@ -290,7 +290,6 @@ class CmfTest(LmfdbTest):
         assert '1-24' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
-
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
         assert '253' in page.get_data(as_text=True) # Level 23, Weight 13
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
@@ -314,7 +313,7 @@ class CmfTest(LmfdbTest):
         assert 'Dimension search results' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
-        assert 'Error: Table too large: must have at most 10000 entries'
+        assert 'Error: Table too large: must have at most 10000 entries' in page.get_data(as_text=True)
 
         #the other dim table
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/")
@@ -459,7 +458,6 @@ class CmfTest(LmfdbTest):
             assert r'0.984139\pi' in page.get_data(as_text=True)
             assert r'0.317472\pi' in page.get_data(as_text=True)
 
-
         #test large floats
         for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/1/']:
@@ -549,3 +547,33 @@ class CmfTest(LmfdbTest):
         assert 'Only' in page.get_data(as_text=True)
         assert 'up to 1000 are available' in page.get_data(as_text=True)
         assert 'a_{1000}' in page.get_data(as_text=True)
+
+    def test_underlying_data(self):
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
+        assert ('mf_gamma1' in data and 'newspace_dims' in data
+                and 'mf_gamma1_subspaces' in data and 'sub_mult' in data
+                and 'mf_gamma1_portraits' in data and "data:image/png;base64" in data)
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)
+        assert ('mf_newspaces' in data and 'num_forms' in data
+                and 'mf_subspaces' in data and 'sub_mult' in data
+                and 'mf_newspace_portraits' in data and "data:image/png;base64" in data
+                and 'mf_hecke_newspace_traces' in data and 'trace_an' in data)
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a').get_data(as_text=True)
+        assert ('mf_newforms' in data and 'field_disc_factorization' in data and
+                'mf_hecke_nf' in data and 'hecke_ring_character_values' in data
+                and 'mf_newspaces' in data and 'num_forms' in data
+                and 'mf_twists_nf' in data and 'twisting_char_label' in data
+                and 'mf_hecke_charpolys' in data and 'charpoly_factorization' in data
+                and 'mf_newform_portraits' in data and "data:image/png;base64" in data
+                and 'mf_hecke_traces' in data and 'trace_an' in data)
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a.4.1').get_data(as_text=True)
+        assert ('mf_newforms' in data and 'field_disc_factorization' in data and
+                'mf_hecke_cc' in data and 'an_normalized' in data
+                and 'mf_newspaces' in data and 'num_forms' in data
+                and 'mf_twists_cc' in data and 'twisting_conrey_index' in data
+                and 'mf_hecke_charpolys' in data and 'charpoly_factorization' in data
+                and 'mf_newform_portraits' in data and "data:image/png;base64" in data
+                and 'mf_hecke_traces' in data and 'trace_an' in data)

@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from six import integer_types as six_integers
-from six import string_types
 import traceback
 import time
 import os
@@ -17,7 +14,9 @@ from lmfdb.lmfdb_database import db
 from psycopg2.sql import SQL, Composable, Literal
 from lmfdb.backend.utils import IdentifierWrapper as Identifier
 
-integer_types = six_integers + (Integer,)
+integer_types = (int, Integer)
+
+
 def accumulate_failures(L):
     """
     Accumulates a list of bad labels
@@ -39,13 +38,14 @@ def pluralize(n, noun):
 class TooManyFailures(AssertionError):
     pass
 
-class speed_decorator(object):
+class speed_decorator():
     """
     Transparently wraps a function, so that functions can be classified by "isinstance".  Allow keyword arguments
     """
     disabled = False # set to True to skip this check
     max_failures = 1 # maximum number of failures to show
     ratio = 1 # ratio of rows to run this test on
+
     def __init__(self, f=None, **kwds):
         self._kwds = kwds
         if f is not None:
@@ -59,11 +59,13 @@ class speed_decorator(object):
                 self.f = timeout(self.timeout)(f)
         else:
             self.f = None
+
     def __call__(self, *args, **kwds):
         if self.f is None:
             assert len(args) == 1 and len(kwds) == 0
             return self.__class__(args[0], **self._kwds)
         return self.f(*args, **kwds)
+
 
 class per_row(speed_decorator):
     """
@@ -76,6 +78,7 @@ class per_row(speed_decorator):
     projection = 1 # default projection; override in order to not fetch large columns.  label_col is appended
     report_slow = 0.1
     max_slow = 100
+
 
 class one_query(speed_decorator):
     """
@@ -114,7 +117,7 @@ class overall_long(one_query):
     shortname = "long"
     timeout = 3600
 
-class TableChecker(object):
+class TableChecker():
     label_col = 'label' # default
 
     @staticmethod
@@ -150,11 +153,13 @@ class TableChecker(object):
         return MethodType(check, self), check.__class__
 
     def get_total(self, check, ratio):
-        if ratio is None: ratio=check.ratio
+        if ratio is None:
+            ratio = check.ratio
         return int(self.table.count(check.constraint) * ratio)
 
     def get_iter(self, check, label, ratio):
-        if ratio is None: ratio = check.ratio
+        if ratio is None:
+            ratio = check.ratio
         projection = check.projection
         if self.label_col not in projection:
             projection = [self.label_col] + projection
@@ -379,7 +384,7 @@ class TableChecker(object):
         if query is None:
             if table is None:
                 table = self.table.search_table
-            if isinstance(table, string_types):
+            if isinstance(table, str):
                 if ratio == 1:
                     table = Identifier(table)
                 else:
@@ -422,7 +427,7 @@ class TableChecker(object):
         # so should only be run locally in data validation
         join = self._make_join(join1, join2)
         col = self._make_sql(col, "t1")
-        if isinstance(quantity, string_types):
+        if isinstance(quantity, str):
             quantity = SQL("t2.{0}").format(Identifier(quantity))
         # This is unsafe
         subselect_wrapper = SQL(subselect_wrapper)
@@ -448,9 +453,9 @@ class TableChecker(object):
         return self._run_query(SQL("{0} != {1}").format(Identifier(col1), Identifier(col2)), constraint)
 
     def _check_arith(self, a_columns, b_columns, constraint, op):
-        if isinstance(a_columns, string_types):
+        if isinstance(a_columns, str):
             a_columns = [a_columns]
-        if isinstance(b_columns, string_types):
+        if isinstance(b_columns, str):
             b_columns = [b_columns]
         return self._run_query(SQL(" != ").join([
             SQL(" %s "%op).join(map(Identifier, a_columns)),
@@ -501,18 +506,18 @@ class TableChecker(object):
             return self._run_query(SQL("NOT ({0})").format(vstr), constraint, values=vvalues)
 
     def check_non_null(self, columns, constraint={}):
-        if isinstance(columns, string_types):
+        if isinstance(columns, str):
             columns = [columns]
         return self.check_values({col: {'$exists':True} for col in columns}, constraint)
 
     def check_null(self, columns, constraint={}):
-        if isinstance(columns, string_types):
+        if isinstance(columns, str):
             columns = [columns]
         return self.check_values({col: None for col in columns}, constraint)
 
     def check_iff(self, condition1, condition2):
-        return (self.check_values(condition1, condition2) +
-                self.check_values(condition2, condition1))
+        return (self.check_values(condition1, condition2)
+                + self.check_values(condition2, condition1))
 
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
@@ -521,7 +526,7 @@ class TableChecker(object):
         return self._run_query(SQL("array_length({0}, 1) < %s").format(Identifier(column)),
                                constraint, [limit])
 
-    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim = 1):
+    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim=1):
         """
         Length of array equal to constant
         """
@@ -532,7 +537,7 @@ class TableChecker(object):
             ),
             constraint)
 
-    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim = 1):
+    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim=1):
         """
         Length of array_column matches len_column
         """
@@ -552,9 +557,9 @@ class TableChecker(object):
         return self._run_query(SQL("NOT ({0} %s ALL({1}))" % op).format(Literal(bound), Identifier(array_column)), constraint=constraint)
 
     def check_array_concatenation(self, a_columns, b_columns, constraint={}):
-        if isinstance(a_columns, string_types):
+        if isinstance(a_columns, str):
             a_columns = [a_columns]
-        if isinstance(b_columns, string_types):
+        if isinstance(b_columns, str):
             b_columns = [b_columns]
         return self._run_query(SQL("{0} != {1}").format(
             SQL(" || ").join(map(Identifier, a_columns)),
@@ -565,7 +570,7 @@ class TableChecker(object):
             other_columns,
             constraint={},
             sep='.',
-            convert_to_base26 = {}):
+            convert_to_base26={}):
         """
         Check that the label_column is the concatenation of the other columns with the given separator
 
@@ -587,7 +592,7 @@ class TableChecker(object):
 
     def check_string_startswith(self, col, head, constraint={}):
         value = head.replace('_',r'\_').replace('%',r'\%') + '%'
-        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values = [value])
+        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values=[value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -656,20 +661,22 @@ class TableChecker(object):
             sort = SQL(" ORDER BY {0}").format(SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort))
         return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", extra=sort)
 
-    def check_letter_code(self, index_column, letter_code_column, constraint = {}):
+    def check_letter_code(self, index_column, letter_code_column, constraint={}):
         return self._run_query(SQL("{0} != to_base26({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
 
     label = None
     label_conversion = {}
+
     @overall
     def check_label(self):
         """
         check that label matches self.label
         """
         if self.label is not None:
-            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26 = self.label_conversion)
+            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26=self.label_conversion)
 
     uniqueness_constraints = []
+
     @overall
     def check_uniqueness_constraints(self):
         """

@@ -44,7 +44,8 @@ The design is the following:
 """
 
 from flask import url_for
-from sage.all import (gcd, Rational, Integers, cached_method,
+from collections import defaultdict
+from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
                       euler_phi, latex)
 from sage.databases.cremona import cremona_letter_code
 from sage.misc.lazy_attribute import lazy_attribute
@@ -56,7 +57,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf
 from lmfdb.characters.TinyConrey import (ConreyCharacter, kronecker_symbol,
                 symbol_numerator, PariConreyGroup, get_sage_genvalues)
 from lmfdb.characters.utils import url_character, complex2str
-
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
 def parity_string(n):
@@ -71,7 +72,7 @@ def bool_string(b):
 ###
 #############################################################################
 
-class WebCharObject(object):
+class WebCharObject():
     """ class for all characters and character groups """
     def __init__(self, **args):
         self.type = args.get('type',None)
@@ -114,9 +115,10 @@ class WebCharObject(object):
             return s
 
     @staticmethod
-    def textuple(l,tag=True):
+    def textuple(l, tag=True):
         t = ','.join(l)
-        if len(l) > 1: t='(%s)'%t
+        if len(l) > 1:
+            t = '(%s)' % t
         if tag:
             t = r'\(%s\)' % t
         return t
@@ -172,9 +174,9 @@ class WebDirichlet(WebCharObject):
     def char2tex(modulus, number, val=r'\cdot', tag=True):
         c = r'\chi_{%s}(%s,%s)'%(modulus,number,val)
         if tag:
-           return r'\(%s\)' % c
+            return r'\(%s\)' % c
         else:
-           return c
+            return c
 
     group2tex = int
     group2label = int
@@ -202,7 +204,7 @@ class WebDirichlet(WebCharObject):
                 n += 1
             k += 1
         if n > self.maxcols:
-          self.coltruncate = True
+            self.coltruncate = True
 
         return [-1] + res
 
@@ -263,7 +265,7 @@ class WebDirichlet(WebCharObject):
     def nextprimchar(m, n):
         if m < 3:
             return 3, 2
-        while 1:
+        while True:
             n += 1
             if n >= m:
                 m, n = m + 1, 2
@@ -479,19 +481,19 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def vflabel(self):
-      order2 = self.order if self.order % 4 != 2 else self.order / 2
-      nf =  WebNumberField.from_cyclo(order2)
-      if not nf.is_null():
-          return nf.label
-      else:
-          return ''
+        order2 = self.order if self.order % 4 != 2 else self.order / 2
+        nf = WebNumberField.from_cyclo(order2)
+        if not nf.is_null():
+            return nf.label
+        else:
+            return ''
 
     @lazy_attribute
     def valuefield(self):
         order2 = self.order if self.order % 4 != 2 else self.order / 2
-        nf =  WebNumberField.from_cyclo(order2)
+        nf = WebNumberField.from_cyclo(order2)
         if not nf.is_null():
-            return nf_display_knowl(nf.get_label(),nf.field_pretty())
+            return nf_display_knowl(nf.get_label(), nf.field_pretty())
         else:
             return r'$\Q(\zeta_{%d})$' % order2
 
@@ -704,7 +706,7 @@ class WebCharGroup(WebCharObject):
     headers = [ 'order', 'primitive']
     _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
-            'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
+            'prevmod', 'next', 'nextmod', 'structure', 'structure_group_knowl', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties', 'friends', 'rowtruncate', 'coltruncate']
@@ -718,7 +720,34 @@ class WebCharGroup(WebCharObject):
     @lazy_attribute
     def structure(self):
         inv = self.H.invariants()
-        return r'\(%s\)' % ('\\times '.join('C_{%s}' % d for d in inv))
+        if inv:
+            inv_list = sorted(inv)
+            return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
+        else:
+            return r"\(C_1\)"
+
+    @lazy_attribute
+    def structure_group_knowl(self):
+        inv = self.H.invariants()
+        label = ".".join(str(v) for v in inv)
+        parts = defaultdict(list)
+        if label:
+            for piece in label.split("."):
+                if "_" in piece:
+                    base, exp = map(ZZ, piece.split("_"))
+                else:
+                    base = ZZ(piece)
+                    exp = 1
+                for p, e in base.factor():
+                    parts[p].extend([p ** e] * exp)
+        for v in parts.values():
+            v.sort()
+        primary = sum((parts[p] for p in sorted(parts)), [])
+        dblabel = db.gps_groups.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
+        if dblabel is None:
+            abgp_url = url_for('abstract.by_abelian_label', label=label)
+            return f'<a href= %s >{self.structure}</a>' % abgp_url
+        return abstract_group_display_knowl(dblabel, f"{self.structure}")
 
     @lazy_attribute
     def codestruct(self):
@@ -798,7 +827,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @lazy_attribute
     def title(self):
-      return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
+        return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
 
     @lazy_attribute
     def codegen(self):
@@ -834,8 +863,10 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     def add_row(self, c):
         """
         Add a row to _contents for display on the webpage.
-        Each row of content takes the form
+        Each row of content takes the form::
+
             character_name, (header..data), (several..values)
+
         where `header..data` is expected to be a tuple of length the same
         size as `len(headers)`, and given in the same order as in `headers`,
         and where `several..values` are the values of the character
@@ -943,9 +974,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character group", cglink) )
-        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
-        friendlist.append( ("Character orbit", gal_orb_link) )
+        friendlist.append(("Character group", cglink))
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus,
+                                     orbit_label=self.orbit_label)
+        friendlist.append(("Character orbit", gal_orb_link))
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
@@ -1123,7 +1155,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     def get_orbit_data(self, orbit_label):
         mod_and_label = "{}.{}".format(self.modulus, orbit_label)
-        orbit_data =  db.char_dir_orbits.lucky(
+        orbit_data = db.char_dir_orbits.lucky(
             {'modulus': self.modulus, 'label': mod_and_label}
         )
 
@@ -1187,9 +1219,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def add_row(self, c):
         """
         Add a row to _contents for display on the webpage.
-        Each row of content takes the form
+        Each row of content takes the form::
+
             character_name, (header..data), (several..values)
-        where `header..data` is expected to be a tuple of length the same
+
+        where ``header..data`` is expected to be a tuple of length the same
         size as `len(headers)`, and given in the same order as in `headers`,
         and where `several..values` are the values of the character
         on self.groupelts, in order.

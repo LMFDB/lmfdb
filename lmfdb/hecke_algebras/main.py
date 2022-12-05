@@ -2,10 +2,10 @@
 
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
-from flask import render_template, request, url_for, redirect, make_response,  send_file
+from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
 from lmfdb import db
@@ -14,7 +14,7 @@ from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
-l_range=[ell for ell in prime_range(14)]
+l_range = list(prime_range(14))
 
 #breadcrumbs and links for data quality entries
 
@@ -103,7 +103,7 @@ def download_search(info):
         res = list(db.hecke_orbits.search(ast.literal_eval(info["query"])))
     last = len(res)
     c = download_comment_prefix[lang]
-    s =  '\n'
+    s = '\n'
     if 'ell' in info["query"]:
         s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight and the Hecke orbits for which l-adic data is available.\n\n'%(mydate, len(res))
     else:
@@ -115,15 +115,17 @@ def download_search(info):
     s += download_assignment_start[lang] + list_start + '\\\n'
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the Hecke operators stored
     for c, rr in enumerate(res):
         s += list_start
-        s += ",".join([str(rr['level']), str(rr['weight']),""])
+        s += ",".join([str(rr['level']), str(rr['weight']), ""])
         if 'ell' in info["query"]:
             s += '"%s"' % (str(rr['orbit_label']))
         else:
-            s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
+            s += ",".join(entry(r)
+                          for r in (sage_eval(rr['hecke_op'])[i]
+                                    for i in range(min(10, rr['num_hecke_op']))))
         if c != last:
             s += list_end + ',\\\n'
         else:
@@ -134,7 +136,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 def hecke_algebras_postprocess(res, info, query):
     if info.get('ell'):
@@ -272,8 +274,6 @@ def render_hecke_algebras_webpage(**args):
     return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
 
 
-
-
 hecke_algebras_orbit_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
 def split(lab):
@@ -292,7 +292,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         except ValueError:
             base_lab=".".join([split(lab)[i] for i in [0,1,2]])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
-        data = db.hecke_ladic.lucky({'orbit_label': lab , 'ell': ell})
+        data = db.hecke_ladic.lucky({'orbit_label': lab, 'ell': ell})
     if data is None:
         t = "Hecke algebra search error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
@@ -368,7 +368,6 @@ def render_hecke_algebras_webpage_l_adic(**args):
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
 
 
-
 #data quality pages
 @hecke_algebras_page.route("/Completeness")
 def completeness_page():
@@ -419,7 +418,7 @@ def render_hecke_algebras_webpage_download(**args):
         response = make_response(download_hecke_algebras_full_lists_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'gen': 
+    elif args['obj'] == 'gen':
         response = make_response(download_hecke_algebras_full_lists_gen(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
@@ -434,11 +433,11 @@ def download_hecke_algebras_full_lists_op(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start, str(r), mat_end])
 
     outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of Hecke operators T_1, ..., T_%s. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'],res['num_hecke_op'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
+    outstr += ",\\\n".join(entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(res['num_hecke_op'])])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
@@ -454,7 +453,7 @@ def download_hecke_algebras_full_lists_gen(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
 
     outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of generators for the algebra. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
@@ -468,10 +467,10 @@ def download_hecke_algebras_full_lists_gen(**args):
 @hecke_algebras_page.route('/<orbit_label>/<index>/<prime>/download/<lang>/<obj>')
 def render_hecke_algebras_webpage_ell_download(**args):
     if args['obj'] == 'operators':
-        response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
+        response = make_response(download_hecke_algebras_full_lists_mod_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'idempotents': 
+    elif args['obj'] == 'idempotents':
         response = make_response(download_hecke_algebras_full_lists_id(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
@@ -488,9 +487,9 @@ def download_hecke_algebras_full_lists_mod_op(**args):
     lang = args['lang']
     c = download_comment_prefix[lang]
     field='GF(%s), %s, %s, '%(res['ell'], sqrt(len(res['operators'][0])), sqrt(len(res['operators'][0])))
-    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field 
+    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
 
     outstr = c + ' List of Hecke operators T_1, ..., T_%s mod %s for orbit %s index %s downloaded from the LMFDB on %s. \n\n'%(len(res['operators']), ell, label, index, mydate)
     outstr += download_assignment_start[lang] +'[\\\n'
@@ -519,7 +518,7 @@ def download_hecke_algebras_full_lists_id(**args):
     mat_start = "Mat("+ladic if lang == 'gp' else "Matrix("+ladic
     mat_end = "~)" if lang == 'gp' else ")"
 
-    outstr = c + ' Idempotent for the Hecke orbit %s mod %s and index %s downloaded from the LMFDB on %s. \n\n'%( label, ell , index, mydate)
+    outstr = c + ' Idempotent for the Hecke orbit %s mod %s and index %s downloaded from the LMFDB on %s. \n\n'%( label, ell, index, mydate)
     outstr += download_assignment_start[lang] +'['
     outstr += " ".join([mat_start, idempotent, mat_end])
     outstr += ']'

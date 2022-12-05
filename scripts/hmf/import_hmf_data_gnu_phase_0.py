@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from six import string_types
 Dan_test = True
 import os.path
 
@@ -338,7 +336,7 @@ def attach_new_label(f):
     # assert statement is for pyflakes.
     assert P
 
-    if isinstance(f['level_ideal'], string_types):
+    if isinstance(f['level_ideal'], str):
         N = eval(f['level_ideal'])
     else:
         N = f['level_ideal']
@@ -423,9 +421,9 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
                 for apfix in data[6:]:
                     pp = apfix.rstrip()[1:-1].split('],')[0] + ']'
                     ap = apfix.rstrip()[1:-1].split('],')[1]
-                    if not ap in {'1','-1'}:
-                        print('?????   ',ap,label)
-                    assert ap in {'1','-1'}
+                    if ap not in {'1', '-1'}:
+                        print('?????   ', ap, label)
+                    assert ap in {'1', '-1'}
                     if clean_primes.index(pp) < len(f['hecke_eigenvalues']):
                         try: 
                             assert f['hecke_eigenvalues'][clean_primes.index(pp)] in {'0','1','-1'}

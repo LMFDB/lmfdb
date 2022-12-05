@@ -6,8 +6,6 @@
 
 {# end defs #}
 
-* { zoom: 0; }
-
 img { border: 0; }
 
 body {
@@ -699,6 +697,9 @@ table.chardata a {
 table td.top {
   vertical-align:top;
 }
+table.ntdata tr.bottom-align {
+  vertical-align:bottom;
+}
 table.ntdata td {
   white-space: nowrap;
   padding-top: 3px;
@@ -1032,6 +1033,9 @@ table.ntdata tr.first {
 table.ntdata .border-right {
   border-right: 2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata .border-left {
+  border-left: 2px solid {{ color.table_ntdata_border }};
+}
 table.ntdata .border-bottom {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
@@ -1046,6 +1050,9 @@ table.ntdata .right {
 }
 td.right {
     text-align: right;
+}
+td.center {
+    text-align: center;
 }
 table.ntdata .middle {
     vertical-align: middle;
@@ -1077,6 +1084,7 @@ table.knowl_review tr:first-child td {
 table.knowl_review tr:nth-child(even) {
     background: {{ color.table_ntdata_background_2 }};
 }
+
 table.euler {
     margin-left:auto;
     margin-right:auto;
@@ -2259,6 +2267,9 @@ div.table-scroll-wrapper thead > tr:last-child > th {
     position: sticky; left: 0; top: 0;
     z-index:3;
 }
+table.nowrap td {
+    white-space:nowrap;
+}
 td.nowrap {
     white-space:nowrap;
 }
@@ -2399,6 +2410,17 @@ input.color_selecter {
     margin: 10px;
 }
 
+span.chargp {
+    color: {{color.col_main}};
+}
+
+span.normgp {
+    color: #BB1188;
+}
+
+span.activesubgp {
+    background: {{color.col_main_ll}};
+    }
 /* the button to show advanced search options */
 #advancedtoggle {
     margin-left: 20px;
@@ -2409,10 +2431,121 @@ input.color_selecter {
     display: none;
 }
 
-.tset-icon {
-  visibility: hidden;
+span.chargp {
+    color: {{color.col_main}};
 }
 
-.tset-container:hover .tset-icon {
-  visibility: visible;
+span.normgp {
+    color: #BB1188;
 }
+
+span.activesubgp {
+    background: {{color.col_main_ll}};
+}
+
+
+#group-diagram-selected {
+    color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+    background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+}
+
+#column-selector, #sort-selecter {
+  scrollbar-width: none; /*For Firefox*/;
+  -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
+  overflow-y:auto;
+}
+#column-selector:-webkit-scrollbar, #sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
+    width: 0;
+}
+
+
+/*************** raw type set styling ****************/
+
+/** generic, i.e., static stuff **/
+
+/* buttons */
+span.raw-tset-copy-btn > img {
+    content: url({{url_for('static', filename='images/copy.svg')}});
+}
+span.raw-tset-copy-btn > img, span.raw-tset-toggle > img {
+    vertical-align: top;
+    height: 11px;
+}
+span.raw-tset-copy-btn, span.raw-tset-toggle {
+    box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+    display: inline-block;
+    padding: 2px;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid;
+    border-radius: 3px;
+    appearance: none;
+    line-height: 12px;
+    position: relative;
+    transition: .2s cubic-bezier(0.3, 0, 0.5, 1);
+    transition-property: color,background-color,border-color;
+    color: rgb(36, 41, 47);
+}
+span.raw-tset-copy-btn:active, span.raw-tset-toggle:active {
+    box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
+}
+
+/* textarea/pre */
+span.raw-tset-container > .raw-container {
+    font-size: 95%;
+    line-height: 1.25;
+    padding: 1px 3px 1.5px 2px;
+    border: 1px solid {{color.input_border}};
+    vertical-align: middle;
+    margin: 0px;
+    font-family: monospace;
+}
+
+span.raw-tset-container.compressed > .raw-container {
+    min-width: 250px;
+    word-break: break-all;
+}
+
+/* non static */
+
+
+/* hide the opposite class enable */
+span.raw-tset-container.tset > .raw-container {
+    display: none;
+}
+span.raw-tset-container.raw > .tset-container {
+    display: none;
+}
+
+/* proper icon  based on the mode */
+span.raw-tset-container.tset > span.raw-tset-toggle > img.tset-icon {
+  content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
+}
+
+span.raw-tset-container.raw > span.raw-tset-toggle > img.tset-icon {
+  content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
+}
+
+/* do not show toggle buttons in general */
+span.raw-tset-container > span.raw-tset-toggle,
+span.raw-tset-container > span.raw-tset-copy-btn {
+  visibility: hidden;
+  position:relative;
+}
+
+/* when to show them */
+span.raw-tset-container.all > span.raw-tset-toggle,
+span.raw-tset-container.raw > span.raw-tset-copy-btn,
+span.raw-tset-container:hover > span.raw-tset-toggle,
+span.raw-tset-container:hover > span.raw-tset-copy-btn {
+  visibility: visible;
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+

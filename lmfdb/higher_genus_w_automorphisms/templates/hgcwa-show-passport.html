@@ -29,7 +29,9 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 {% if info.jacobian_decomp %}
   <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} {{KNOWL('curve.highergenus.aut.groupalgebradecomp', title='group algebra decomposition')}}:</td><td>${{info.jacobian_decomp}}$</td></tr>
+{% if not info.cyclic %}{# temporarily hide characters for cyclic groups pending recomputation of this data (some of which is incorrect) #}
     <tr><td >Corresponding {{KNOWL('curve.highergenus.aut.characters',title="character(s)")}}:</td><td> ${{info.corrChar}}$</td></tr>
+{% endif %}
   </table>
  {% endif %}
 

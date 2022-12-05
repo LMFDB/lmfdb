@@ -76,6 +76,7 @@ iscm(pol,subs)=
   deg=poldegree(pol);
   if(deg % 2 == 1, return(0));
   if(polsturm(pol) != 0, return(0));
+  if(deg ==2, return(1));
   subs = apply(z->z[1],subs);
   subs = apply(Polrev,subs);
   s2 = select(z->poldegree(z)*2==deg, subs);
@@ -85,6 +86,49 @@ iscm(pol,subs)=
 }
 
 load(p,n)=return(read(Str("/scratch/home/jj/local-fields/file-src/p"p"d"n"all")));
+
+gpmont(pol,p)=
+{
+  /* only call if there is a unique prime above p */
+  my(nf,ipd);
+  nf=nfinit([pol,[p]]);
+  ipd = idealprimedec(nf,p)[1];
+  return([ipd.e,ipd.f,valuation(nf.disc, p)]);
+}
+
+/* Make a vector with data on the polynomial at p 
+   Returns [0,[p,e,f,c]] 
+   not [0,[p,e,f,c,n,t,order]] */
+fake(pol, p)=
+{
+  if(poldegree(pol)==1, return([0,[p,1,1,0]]));
+  a = gpmont(pol,p);
+  /*a = pmont(pol,p);*/ /* from magma */
+  return([0,concat([p],a)]);
+}
+
+newonealg(pol,p)=
+{
+  my(fp,degs,loc,lpols);
+  if(p>200, /* definitely tame, and not in the db */
+    fp = ef(pol,p);
+    fp = apply(z->[p,z[1],z[2],(z[1]-1)*z[2],z[1]*z[2]], fp);
+    fp = vecsort(fp, [5,2,4]);
+    fp = apply(z->drop(z,-1),fp);
+    lpols = apply(z->[0,z], fp),
+    /* else */
+    fp=lift((factorpadic(pol,p,1000)[,1]~)*Mod(1,p^1000));
+    degs=vecsort(apply(poldegree,fp));
+    lpols=vector(#fp);
+    for(j=1,#fp,
+      loc=iferr(load(p,poldegree(fp[j])),E,0);
+      if(loc==0, lpols[j]=fake(fp[j],p),
+        lpols[j] = findinlistold(fp[j],loc)[1];
+        lpols[j] = [1, Vecrev(lpols[j])])
+    );
+  );
+  return(lpols);
+}
 
 onealg(pol,p)=
 {
@@ -97,7 +141,7 @@ onealg(pol,p)=
   for(j=1,#fp,
     loc=iferr(load(p,poldegree(fp[j])),E,0);
     if(loc==0, return([]);lpols[j]=fake(fp[j],p),
-      lpols[j]=findinlist(fp[j],loc)[1]);
+      lpols[j]=findinlistold(fp[j],loc)[1]);
   );
   return(vector(#lpols,h,Str(lpols[h])));
 }

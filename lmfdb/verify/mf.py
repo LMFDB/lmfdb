@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from collections import defaultdict
 
 from sage.all import cached_function, psi, RR, Integer, prod
@@ -6,19 +6,23 @@ from sage.all import cached_function, psi, RR, Integer, prod
 from psycopg2.sql import SQL, Identifier
 from .verification import TableChecker, overall
 
+
 @cached_function
 def kbarbar(weight):
     # The weight part of the analytic conductor
     return psi(RR(weight)/2).exp() / (2*RR.pi())
 
+
 def analytic_conductor(level, weight):
     return level * kbarbar(weight)**2
 
-def check_analytic_conductor(level, weight, analytic_conductor_stored, verbose=False, threshold = 1e-12):
+
+def check_analytic_conductor(level, weight, analytic_conductor_stored, verbose=False, threshold=1e-12):
     success = (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
     if not success and verbose:
         print("Analytic conductor failure", analytic_conductor(level, weight), analytic_conductor_stored)
     return success
+
 
 @cached_function
 def level_attributes(level):
@@ -58,7 +62,9 @@ class MfChecker(TableChecker):
         """
         check level_* attributes (radical,primes,is_prime,...)
         """
-        attributes = ['level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square']
+        attributes = ['level_radical', 'level_primes', 'level_is_prime',
+                      'level_is_prime_power', 'level_is_squarefree',
+                      'level_is_square']
         stored = [rec[attr] for attr in attributes]
         computed = level_attributes(rec['level'])
         success = stored == computed
@@ -69,12 +75,13 @@ class MfChecker(TableChecker):
         return success
 
     hecke_orbit_code = []
+
     @overall
     def check_hecke_orbit_code(self):
         """
         hecke_orbit_code is as defined
         """
-        if self.hecke_orbit_code != []:
+        if self.hecke_orbit_code:
             # test enabled
             assert len(self.hecke_orbit_code) == 2
             hoc_column = self.hecke_orbit_code[0]

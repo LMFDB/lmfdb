@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from sage.all import prime_pi, mod, euler_phi, prime_range
 
 from lmfdb.lmfdb_database import db, SQL
@@ -14,8 +14,8 @@ class mf_hecke_nf(MfChecker):
         there should be a record present for every record in mf_newforms that has field_poly set (and no others, check count)
         """
         # TIME about 20s
-        return (self.check_crosstable_count('mf_newforms', 1, 'label') +
-                self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
+        return (self.check_crosstable_count('mf_newforms', 1, 'label')
+                + self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -64,7 +64,6 @@ class mf_hecke_nf(MfChecker):
                                   'hecke_ring_inverse_denominators':None},
                                  {'hecke_ring_cyclotomic_generator':{'$gt':0}})
 
-
     @overall
     def check_field_poly_is_cyclotomic(self):
         """
@@ -107,6 +106,7 @@ class mf_hecke_nf(MfChecker):
             return False
         m = rec['hecke_ring_cyclotomic_generator']
         d = rec['hecke_ring_rank']
+
         def check_val(val):
             if not isinstance(val, list):
                 return False

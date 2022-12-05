@@ -2,7 +2,6 @@
 from collections import Counter
 import os
 import yaml
-from six import text_type
 
 from flask import url_for
 from sage.all import (
@@ -10,11 +9,12 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
-        raw_typeset, display_multiset, factor_base_factor, 
+from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+        raw_typeset_poly, display_multiset, factor_base_factor,
+        integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
 wnflog = make_logger("WNF")
 
@@ -202,15 +202,15 @@ def string2list(s):
 def is_fundamental_discriminant(d):
     if d in [0, 1]:
         return False
-    if d.is_squarefree():
+    if integer_is_squarefree(d):
         return d % 4 == 1
     else:
-        return d % 16 in [8, 12] and (d // 4).is_squarefree()
+        return d % 16 in [8, 12] and integer_is_squarefree(d // 4)
 
 
 @cached_function
 def field_pretty(label):
-    d, r, D, i = label.split('.')
+    d, r, D, _ = label.split('.')
     if d == '1':  # Q
         return r'\(\Q\)'
     if d == '2':  # quadratic field
@@ -233,8 +233,7 @@ def field_pretty(label):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
-                labels = [[ZZ(z[2]).squarefree_part(), - int(z[1])] for z in labels]
-                labels.sort()
+                labels = sorted([[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels])
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
                 labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]
@@ -252,6 +251,7 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+
 def formatfield(coef, show_poly=False, missing_text=None):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
@@ -263,7 +263,7 @@ def formatfield(coef, show_poly=False, missing_text=None):
       If show_poly is set to true and the polynomial is not in the
       database, just display the polynomial (no knowl).
     """
-    if isinstance(coef, text_type):
+    if isinstance(coef, str):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
@@ -307,7 +307,7 @@ def nf_knowl_guts(label):
     out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += raw_typeset(wnf.poly(), r"\(%s\)" % latex(wnf.poly()))
+    out += raw_typeset_poly(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
@@ -441,12 +441,12 @@ class WebNumberField:
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
 
     # Return a nice string for the Galois group
-    def galois_string(self):
+    def galois_string(self, cache=None):
         if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])
-        return group_pretty_and_nTj(n, t)
+        return group_pretty_and_nTj(n, t, cache=cache)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
@@ -501,6 +501,27 @@ class WebNumberField:
             zkstrings = self._data['zk']
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
+
+    def monogenic(self):
+        if self.haskey('monogenic'):
+            if self._data['monogenic'] == 1:
+                return 'Yes'
+            if self._data['monogenic'] == 0:
+                return 'Not computed'
+            if self._data['monogenic'] == -1:
+                return 'No'
+        return 'Not computed'
+
+    def index(self):
+        if self.haskey('index'):
+            return r'$%d$'%self._data['index']
+        return 'Not computed'
+
+    def inessentialp(self):
+        if self.haskey('inessentialp'):
+            inep = self._data['inessentialp']
+            return ', '.join(r'$%s$' % z for z in inep) if inep else 'None'
+        return 'Not computed'
 
     # 2018-4-1: is this actually used?  grep -r doesn't find anywhere it's called....
     # Used by subfields and resolvent functions to
@@ -691,23 +712,12 @@ class WebNumberField:
             return 1
         return na_text()
 
-    def units_safe(self):  # fundamental units, if they are not too long
-        units = self.units()
-        if len(units) > 500:
-            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
-        return units
-
     def units(self):  # fundamental units
         res = None
         if self.haskey('units'):
-            res = ',&nbsp; '.join(self._data['units'])
+            return self._data['units']
         elif self.unit_rank() == 0:
-            res = ''
-        elif self.haskey('class_number'):
-            K = self.K()
-            units = [web_latex(u) for u in K.unit_group().fundamental_units()]
-            units = ',&nbsp; '.join(units)
-            res = units
+            res = []
         if res:
             res = res.replace('\\\\', '\\')
             return res
@@ -739,18 +749,22 @@ class WebNumberField:
         s = ''
         if D < 0:
             s = r'-\,'
-        return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()))
+        return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()), cutoff=30)
 
     def web_poly(self):
         return pol_to_html(str(coeff_to_poly(self.coeffs())))
 
-    def class_group_invariants(self):
+    def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):
-            return na_text()
+            return "n/a" if in_search_results else na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'trivial'
-        return '$%s$'%str(cg_list)
+            invs = 'trivial'
+        else:
+            invs = '$%s$'%str(cg_list)
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
 
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):
@@ -889,8 +903,8 @@ class WebNumberField:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
-                thisdat = [lab, f, LF['e'], LF['f'], LF['c'], 
-                    group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
+                thisdat = [lab, f, LF['e'], LF['f'], LF['c'],
+                    transitive_group_display_knowl(LF['galois_label']),
                     LF['t'], LF['u'], LF['slopes']]
                 if str(p) not in local_algebra_dict:
                     local_algebra_dict[str(p)] = [thisdat]
@@ -905,7 +919,7 @@ class WebNumberField:
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
     def make_code_snippets(self):
-         # read in code.yaml from numberfields directory:
+        # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names

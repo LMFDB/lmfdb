@@ -36,14 +36,41 @@ function loadzeros(save_history) {
         if(request.readyState == 4 && request.status == 200) {
             var zero_table = document.getElementById('zero_table');
             var old_length = zero_table.rows.length
-            for(var n = 0; n < old_length - 1; n++) {
+            for(var n = 0; n < old_length; n++) {
                 zero_table.deleteRow(-1);
             }
             var lines = request.responseText.split('\n');
             N = Number(lines[0].split(' ')[0]);
-            t = Number(lines[0].split(' ')[1]);
-            document.getElementById("Nbox").value = N;
-            document.getElementById("tbox").value = t;
+            if ( N ) {
+                t = Number(lines[0].split(' ')[1]);
+                document.getElementById("Nbox").value = N;
+                document.getElementById("tbox").value = t;
+                document.getElementById("results").innerHTML = "Results (" + N + "-" + Math.min(N+limit-1,103800788359) + " of 103800788359)";
+                $("#prev").hide();
+                if ( N > 1 && N < limit ) {
+                    document.getElementById("prev").innerHTML = "Previous " + (N-1);
+                    $("#prev").show();
+                } else if ( N >= limit ) {
+                    document.getElementById("prev").innerHTML = "Previous " + limit;
+                    $("#prev").show();
+                }
+                if ( N+limit > 103800788359 ) {
+                    $("#next").hide();
+                } else if ( N+2*limit > 103800788359 ) {
+                    document.getElementById("next").innerHTML = "Next " + (103800788359-(N+limit-1));
+                    $("#next").show();
+                } else if ( N >= limit ) {
+                    document.getElementById("next").innerHTML = "Next " + limit;
+                    $("#next").show();
+                }
+                $("#view").show();
+            } else {
+                document.getElementById("results").innerHTML = "No matches";
+                $("#next").hide();
+                $("#prev").hide();
+                $("#view").hide();
+            }
+
             for(var n = 0; n < lines.length; n++) {
                 if(lines[n] == "") {
                     continue;
@@ -101,29 +128,27 @@ window.onpopstate = function(event) {
     }
 };
 </script>
-<form align="center">
-List <input type="text" name="limit" value="{{limit}}" style="width:5em"/> zeros of the zeta function starting with
-zero number <input type="text" value="{{N}}" name="N" id="Nbox"/> <button type="submit" value="Go">Go</button>
-</form>
-<form align="center">
-List <input type="text" name="limit" value="{{limit}}" style="width:5em"/> zeros of the zeta function starting with imaginary part 
-<input type="text" value="{{t}}" name="t" id="tbox" /> <button type="submit" value="Go">Go</button>
-</form>
-<br/>
-<p>
-The zeros are accurate to within $\pm 2.5\times 10^{-31}$.
+<form align="left">
+<p>The database contains the first 103,800,788,359 zeros of the {{KNOWL('lfunction.riemann','Riemann zeta function')}} above the real line, all of which have real part $\frac{1}{2}$.  The imaginary parts have been computed to a precision of $\pm 2.5\times 10^{-31}$.</p>
+<p style="margin-bottom:5px;">
+List <input type="text" name="limit" value="{{limit}}" style="width:4em; height:14px;"/> zeros of the zeta function starting with
+zero number <input type="text" value="{{N}}" name="N" id="Nbox" style="width:10em; height:14px; margin-left:11px;"/> <button type="submit" value="Go">Go</button>
 </p>
-<div align="center">
-<a id="plainlink" href="">View</a> or <a id="plaindownloadlink" href="">download</a> this table as plain text.
+</form>
+<form align="left">
+<p style="margin-top:5px;">
+List <input type="text" name="limit" value="{{limit}}" style="width:4em; height:14px;"/> zeros of the zeta function starting with imaginary part
+<input type="text" value="{{t}}" name="t" id="tbox" style="width:10em; height:14px;"/> <button type="submit" value="Go">Go</button>
+</p>
+</form>
+<div>
+<h2 style="display: inline; color: #1565C0; font-weight: bold; font-family: sans-serif; text-decoration: none; font-size: 120%; text-align: left;" id='results'>Results</h2>
+<a href="#" class="navlink" onclick="prev(); return false" id='prev'>Previous {{limit}}</a>&nbsp; <a href="#" class="navlink" onclick="next(); return false" id='next'>Next {{limit}}</a>&nbsp;
+<span id="view"><a id="plainlink" href="">view</a> or <a id="plaindownloadlink" href="">download</a> table as plain text.</span>
 </div>
-<br/>
-<br/>
-<div align="center">
-<a href="#" class="navlink" onclick="prev(); return false">Previous {{limit}}</a>
-<a href="#" class="navlink" onclick="next(); return false">Next {{limit}}</a>
-</div>
-<table class='ntdata' id='zero_table' align="center">
-<thead><td>Zero number</td><td>Imaginary part</td></thead>
+<table class='ntdata'>
+<thead><tr><th>Zero number</th><th>Imaginary part</th></tr></thead>
+<tbody id='zero_table'></tbody>
 </table>
 
 {% endblock %}

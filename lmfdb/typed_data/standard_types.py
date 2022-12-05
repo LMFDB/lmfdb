@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .type_generation import String, Array, Int
 
 def PolynomialAsString(convention):
@@ -72,4 +72,3 @@ def AlgebraicNumberPolynomialString(pol_as_string_convention):
     class ParametrizedAlgebraicNumberPolynomialString(String):
         pass
     return ParametrizedAlgebraicNumberPolynomialString
-

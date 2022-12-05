@@ -2,7 +2,7 @@
 
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, request, url_for, make_response, redirect, send_file
@@ -17,11 +17,13 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 
 # utilitary functions for displays
 
-def print_q_expansion(list):
-    list = [str(c) for c in list]
-    Qb = PolynomialRing(QQ,'b')
-    Qq = PowerSeriesRing(Qb['a'],'q')
-    return web_latex(Qq([c for c in list]).add_bigoh(len(list)))
+
+def print_q_expansion(lst):
+    lst = [str(c) for c in lst]
+    Qb = PolynomialRing(QQ, 'b')
+    Qq = PowerSeriesRing(Qb['a'], 'q')
+    return web_latex(Qq(lst).add_bigoh(len(lst)))
+
 
 def my_latex(s):
     # This code was copy pasted and should be refactored
@@ -102,6 +104,7 @@ download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
 download_assignment_end = {'magma':';','sage':'','gp':''}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
+
 def download_search(info):
     lang = info["Submit"]
     filename = 'mod_l_modular_forms' + download_file_suffix[lang]
@@ -112,7 +115,7 @@ def download_search(info):
     res = list(db.modlmf_forms.search(ast.literal_eval(info["query"]), proj))
 
     c = download_comment_prefix[lang]
-    s =  '\n'
+    s = '\n'
     s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n'%(mydate, len(res))
     s += ' Each entry is given in the following format: field characteristic, field degree, level, minimal weight, conductor.\n\n'
     list_start = '[*' if lang=='magma' else '['
@@ -127,7 +130,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 @search_wrap(template="modlmf-search.html",
              table=db.modlmf_forms,
@@ -195,7 +198,6 @@ def render_modlmf_webpage(**args):
         except Exception:
             info['field']=""
 
-
     ncoeff=int(round(20/data['deg']))
     av_coeffs=min(data['n_coeffs'],100)
     info['av_coeffs']=int(av_coeffs)
@@ -216,7 +218,6 @@ def render_modlmf_webpage(**args):
         ('Level', '%s' %info['level']),
         ('Weight grading', '%s' %info['weight_grading'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
-
 
 
 #auxiliary function for displaying more coefficients of the theta series
@@ -265,7 +266,6 @@ def render_modlmf_webpage_download(**args):
     response = make_response(download_modlmf_full_lists(**args))
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 
 def download_modlmf_full_lists(**args):

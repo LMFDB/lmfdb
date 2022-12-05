@@ -11,9 +11,9 @@ Note that labels contain no information about weight.
 Initial version (University of Warwick 2015) Aurel Page
 
 """
-from __future__ import print_function
+
 import sys
-sys.path.append("../..");
+sys.path.append("../..")
 from copy import copy
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
@@ -22,7 +22,7 @@ from sage.all import oo
 
 from lmfdb.base import getDBConnection
 print("getting connection")
-C= getDBConnection()
+C = getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
 # Run the following function to authenticate on the hmfs database
@@ -49,18 +49,22 @@ nfcurves = C.elliptic_curves.nfcurves
 WNFs = {}
 Fdata = {}
 
+
 def get_WNF(label, gen_name):
-    if not label in WNFs:
+    if label not in WNFs:
         WNFs[label] = WebNumberField(label, gen_name=gen_name)
     return WNFs[label]
 
+
 def get_Fdata(label):
-    if not label in Fdata:
-        Fdata[label] = fields.find_one({'label':label})
+    if label not in Fdata:
+        Fdata[label] = fields.find_one({'label': label})
     return Fdata[label]
+
 
 def nautos(label):
     return len(get_WNF(label, 'a').K().automorphisms())
+
 
 def checkprimes(label):
     Fdata = get_Fdata(label)
@@ -102,7 +106,7 @@ def fldlabel2conjdata(label):
     return data
 
 def conjstringideal(F,stridl,g):
-    """Given a string representing an ideal of F and an automorpism g of F,
+    """Given a string representing an ideal of F and an automorphism g of F,
     return the string representing the conjugate ideal.
     """
     N,n,_,gen = str2ideal(F,stridl)
@@ -117,7 +121,7 @@ def conjform(f, h, g, ig, cideals, cprimes, F):
     """
     f is a 'short' newform from the forms collection;
     h is its hecke data from the hecke collection
-    g is an tuomorphism of the base field, ig it index in auts
+    g is an automorphism of the base field, ig it index in auts
     cideals, cprimes are the lists of conjugated ideals and primes
     """
     if 'is_base_change' in f and f['is_base_change'][0:3] == 'yes':
@@ -223,8 +227,8 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
                 if buildform:
                     fg, hg = conjform(f, h, g, ig, cideals, cprimes, F)
                 if fix:
-                    if fg != None: #else: is a lift (self-conjugate), should have been detected
-                        print("adding it : "+fg['label'])
+                    if fg is not None:  # else: is a lift (self-conjugate), should have been detected
+                        print("adding it : " + fg['label'])
                         forms.insert_one(fg)
                         hecke.insert_one(fg)
                         count += 1

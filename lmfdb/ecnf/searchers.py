@@ -1,4 +1,4 @@
-from six.moves.urllib_parse import unquote
+from urllib.parse import unquote
 
 from lmfdb.utils import nf_string_to_label
 

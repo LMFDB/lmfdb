@@ -1,7 +1,6 @@
 ################################################################################
 #  logging utilities
 ################################################################################
-from six import string_types
 import logging
 import os
 
@@ -49,7 +48,7 @@ class LmfdbFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
+def make_logger(bp_or_name, hl=False, fmt=None, extraHandlers=[]):
     """
     creates a logger for the given blueprint. if hl is set
     to true, the corresponding lines will be bold.
@@ -57,10 +56,10 @@ def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
     import flask
     from .start import get_logfocus
     logfocus = get_logfocus()
-    if type(bp_or_name) == flask.Blueprint:
+    if isinstance(bp_or_name, flask.Blueprint):
         name = bp_or_name.name
     else:
-        assert isinstance(bp_or_name, string_types)
+        assert isinstance(bp_or_name, str)
         name = bp_or_name
     l = logging.getLogger(name)
     l.propagate = False
@@ -78,7 +77,7 @@ def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
     else:
         l.setLevel(logging.WARNING)
     if len(l.handlers) == 0:
-        formatter = LmfdbFormatter(hl=name if hl else None)
+        formatter = LmfdbFormatter(hl=name if hl else None, fmt=fmt)
         ch = logging.StreamHandler()
         ch.setFormatter(formatter)
         l.addHandler(ch)

@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
+
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, euler_phi, PolynomialRing, QQ
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
-    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset,
+    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
     StatsDisplay, totaler, proportioners, comma, flash_warning)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
+from lmfdb.api import datapage
 from lmfdb.characters.web_character import (
     WebSmallDirichletCharacter,
     WebDBDirichletCharacter,
@@ -72,6 +74,9 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     noun = "character"
     plural_noun = "characters"
+    sorts = [("", "modulus", ["modulus", "orbit_index"]),
+             ("conductor", "conductor", ["conductor", "prim_orbit_index", "modulus", "orbit_index"]),
+             ("order", "order", ["order", "modulus", "orbit_index"])]
     jump_example = "13.2"
     jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl = "character.dirichlet.search_input"
@@ -191,12 +196,34 @@ def url_for_label(label):
     number = label_to_number(modulus, number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
+def display_galois_orbit(orbit, modulus):
+    trunc = (len(orbit) > 5)
+    if trunc:
+        orbit = [orbit[0], orbit[-1]]
+    disp = [r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, o) for o in orbit]
+    if trunc:
+        disp = r"$, \cdots ,$".join(disp)
+    else:
+        disp = "$,$&nbsp".join(disp)
+    return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
+
+character_columns = SearchColumns([
+    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
+    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],
+                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
+    MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
+    MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
+    MathCol("order", "character.dirichlet.order", "Order", default=True),
+    ProcessedCol("parity", "character.dirichlet.primitive", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
+
+character_columns.dummy_download = True
 
 @search_wrap(
-    template="character_search_results.html",
     table=db.char_dir_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
+    columns=character_columns,
     shortcuts={"jump": jump},
     url_for_label=url_for_label,
     learnmore=learn,
@@ -308,7 +335,9 @@ def how_computed_page():
     info['title'] = 'Source and acknowledgments for Dirichlet character data'
     info['bread'] = bread('Source')
     info['learnmore'] = learn('source')
-    return render_template("double.html", kid='rcs.source.character.dirichlet', kid2='rcs.ack.character.dirichlet',
+    return render_template("multi.html", kids=['rcs.source.character.dirichlet',
+                            'rcs.ack.character.dirichlet',
+                            'rcs.cite.character.dirichlet'],
                            **info)
 
 
@@ -418,6 +447,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                     return redirect(url_for(".render_DirichletNavigation"))
 
                 info['show_orbit_label'] = True
+                info['downloads'] = [('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))]
                 info['learnmore'] = learn()
                 info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
                 info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
@@ -455,6 +485,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                                         orbit_label=real_orbit_label,
                                         number=number))
         args['orbit_label'] = real_orbit_label
+        downloads = [('Underlying data', url_for(".dirchar_data", label=f"{modulus}.{real_orbit_label}.{number}"))]
     else:
         if orbit_label is not None:
             flash_warning(
@@ -465,17 +496,35 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             return redirect(url_for("characters.render_Dirichletwebpage",
                                     modulus=modulus,
                                     number=number))
+        downloads = []
 
     args['number'] = number
     webchar, bread_crumbs = make_webchar(args, get_bread=True)
     info = webchar.to_dict()
     info['bread'] = bread_crumbs
     info['learnmore'] = learn()
+    info['downloads'] = downloads
     info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
 
+@characters_page.route("/Dirichlet/data/<label>")
+def dirchar_data(label):
+    if label.count(".") == 2:
+        modulus, orbit_label, number = label.split(".")
+        title = f"Dirichlet character data - {modulus}.{number}"
+        tail = [(f"{modulus}.{number}", url_for(".render_Dirichletwebpage", modulus=modulus, number=number)),
+                ("Data", " ")]
+        return datapage([f"{modulus}.{orbit_label}", f"{modulus}.{number}"], ["char_dir_orbits", "char_dir_values"], title=title, bread=bread(tail), label_cols=["label", "label"])
+    elif label.count(".") == 1:
+        modulus, orbit_label = label.split(".")
+        title = f"Dirichlet character data - {modulus}.{orbit_label}"
+        tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
+                ("Data", " ")]
+        return datapage(label, "char_dir_orbits", title=title, bread=bread(tail))
+    else:
+        return abort(404, f"Invalid label {label}")
 
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')
@@ -632,7 +681,7 @@ def dirichlet_group_table(**args):
     if info['poly'] != '???':
         try:
             info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
-            info['poly'] = raw_typeset(info['poly'])
+            info['poly'] = raw_typeset_poly(info['poly'])
         except Exception:
             pass
     return render_template("CharacterGroupTable.html", **info)
@@ -641,7 +690,7 @@ def dirichlet_group_table(**args):
 def get_group_table(modulus, char_list):
     # Move 1 to the front of the list
     char_list.insert(0, char_list.pop(next(j for j in range(len(char_list)) if char_list[j] == 1)))
-    headers = [j for j in char_list]  # Just a copy
+    headers = list(char_list)  # Just a copy
     if modulus == 1:
         rows = [[1]]
     else:

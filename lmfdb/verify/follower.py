@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import re
 import time
@@ -6,7 +6,7 @@ from collections import defaultdict
 
 redline = re.compile(r"An exception in|Exception in|failed test|FAILED with")
 
-class Follower(object):
+class Follower():
     """
     A class for printing the output of a verification run while it's being generated in parallel.
 
@@ -19,6 +19,7 @@ class Follower(object):
     - ``poll_interval`` -- the interval in seconds between checking on the status of the output.
     """
     ok_suffixes = ['log', 'progress', 'errors']
+
     def __init__(self, logdir, tabletypes, suffixes, poll_interval=0.1):
         self.logdir = logdir
         self.basenames = tabletypes

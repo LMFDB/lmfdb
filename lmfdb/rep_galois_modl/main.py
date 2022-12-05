@@ -1,8 +1,6 @@
-from six.moves import range
-
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import make_response, send_file, request, render_template, redirect, url_for
@@ -18,6 +16,7 @@ from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
 # utilitary functions for displays
+
 
 def my_latex(s):
     # This code was copy pasted and should be refactored
@@ -102,6 +101,7 @@ download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
 download_assignment_end = {'magma':';','sage':'','gp':''}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
+
 def download_search(info):
     lang = info["submit"]
     filename = 'integral_rep_galois_modls' + download_file_suffix[lang]
@@ -111,7 +111,7 @@ def download_search(info):
     res = list(db.modlgal_reps.search(ast.literal_eval(info["query"]), "gram"))
 
     c = download_comment_prefix[lang]
-    s =  '\n'
+    s = '\n'
     s += c + ' Integral rep_galois_modls downloaded from the LMFDB on %s. Found %s rep_galois_modls.\n\n'%(mydate, len(res))
     # The list entries are matrices of different sizes.  Sage and gp
     # do not mind this but Magma requires a different sort of list.
@@ -120,7 +120,7 @@ def download_search(info):
     s += download_assignment_start[lang] + list_start + '\\\n'
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the gram matrix
     s += ",\\\n".join(entry(gram) for gram in res)
     s += list_end
@@ -129,7 +129,7 @@ def download_search(info):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    return send_file(strIO, download_name=filename, as_attachment=True)
 
 @search_wrap(template="rep_galois_modl-search.html",
              table=db.modlgal_reps,
@@ -151,7 +151,7 @@ def rep_galois_modl_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].",  gram)
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -170,7 +170,6 @@ def render_rep_galois_modl_webpage(**args):
     info.update(data)
 
     info['friends'] = []
-
 
     bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")), ('%s' % data['label'], ' ')]
     credit = rep_galois_modl_credit
@@ -191,14 +190,12 @@ def render_rep_galois_modl_webpage(**args):
     else:
         info['rep_type']="Linear"
 
-
     if info['field_deg'] > int(1):
         try:
             pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
             info['field_str']=str(r'$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
         except Exception:
             info['field_str']=""
-
 
     info['bad_prime_list']=[]
     info['good_prime_list']=[]
@@ -298,7 +295,7 @@ def download_rep_galois_modl_full_lists_g(**args):
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    def entry(r): return "".join([mat_start,str(r),mat_end])
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
@@ -307,4 +304,3 @@ def download_rep_galois_modl_full_lists_g(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-

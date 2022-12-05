@@ -15,7 +15,6 @@ class HomePageTest(LmfdbTest):
         assert '1.58740105196819947475170563927' in L #Hermite number
         assert '11612160' in L #group order
 
-
     def test_lattice_classnumber(self):
         L = self.tc.get("/Lattice/?class_number=1").get_data(as_text=True)
         assert '2.13.26.1.2' in L #label (class number 1)
@@ -79,6 +78,7 @@ class HomePageTest(LmfdbTest):
     def test_downloadstring2(self):
         L = self.tc.get("/Lattice/2.156.312.1.2").get_data(as_text=True)
         assert 'vector' in L
+        assert 'Underlying data' in L and 'data/2.156.312.1.2' in L
 
     def test_downloadstring_search(self):
         L = self.tc.get("/Lattice/?class_number=8").get_data(as_text=True)
@@ -87,11 +87,10 @@ class HomePageTest(LmfdbTest):
     def test_download_shortest(self):
         L = self.tc.get("/Lattice/13.14.28.8.1/download/magma/shortest_vectors").get_data(as_text=True)
         assert 'data := ' in L
- 
+
     def test_download_genus(self):
         L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").get_data(as_text=True)
-        assert ']~)' in L 
-
+        assert ']~)' in L
 
     def test_favorite(self):
         for elt in ['A2', 'Z2', 'D3', 'D3*', '3.1942.3884.56.1', 'A5',
@@ -104,7 +103,3 @@ class HomePageTest(LmfdbTest):
                     "/Lattice/{}".format(elt),
                     follow_redirects=True)
             assert elt in L.get_data(as_text=True)
-
-
-
-

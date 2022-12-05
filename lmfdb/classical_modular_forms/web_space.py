@@ -28,7 +28,10 @@ def get_bread(**kwds):
     bread = [('Modular forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
-        return bread + [(kwds['other'], ' ')]
+        if isinstance(kwds['other'], str):
+            return bread + [(kwds['other'], ' ')]
+        else:
+            return bread + kwds['other']
     url_kwds = {}
     for key, display, link in links:
         if key not in kwds:
@@ -151,7 +154,8 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
 def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
     Returns the label for the space using the orbit index
-    eg:
+    eg::
+
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
@@ -163,7 +167,7 @@ def trace_expansion_generic(space, prec_max=10):
     return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
 
-class DimGrid(object):
+class DimGrid():
     def __init__(self, grid=None):
         if grid is None:
             self._grid = {'M':{'all':0,'new':0,'old':0},
@@ -218,7 +222,7 @@ class DimGrid(object):
                      'old':data['eis_dim']-data['eis_new_dim']}}
         return DimGrid(grid)
 
-class WebNewformSpace(object):
+class WebNewformSpace():
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
@@ -234,7 +238,7 @@ class WebNewformSpace(object):
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
-        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
+        self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
 
         # Properties
         self.properties = [('Label',self.label)]
@@ -264,6 +268,7 @@ class WebNewformSpace(object):
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('.download_newspace', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
         if self.conrey_indexes[0] == 1:
@@ -363,7 +368,7 @@ class WebNewformSpace(object):
     def display_character_field(self):
         return cyc_display(self.char_order, self.char_degree, False)
 
-class WebGamma1Space(object):
+class WebGamma1Space():
     def __init__(self, level, weight):
         data = db.mf_gamma1.lucky({'level':level,'weight':weight})
         if data is None:
@@ -398,7 +403,7 @@ class WebGamma1Space(object):
                 self.has_uncomputed_char = True
             else:
                 self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
-        self.plot =  db.mf_gamma1_portraits.lookup(self.label, projection = "portrait")
+        self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.new_dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
@@ -418,7 +423,8 @@ class WebGamma1Space(object):
         # Downloads
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
+            ('All stored data to text', url_for('cmf.download_full_space', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
         self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
         self.friends = []

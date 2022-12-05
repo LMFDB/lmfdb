@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
+
 import sys
 import re
 from collections import defaultdict
 
 from psycopg2.sql import SQL, Identifier, Placeholder
+from psycopg2 import __version__ as pg_ver_str
+
+psycopg2_version = pg_ver_str.split(" ")[0].split(".")[:3]
+if len(psycopg2_version) < 3:
+    psycopg2_version += ["0"] * (3 - len(psycopg2_version))
+psycopg2_version = tuple(int(c) for c in psycopg2_version)
+
 
 class SearchParsingError(ValueError):
     """
@@ -89,7 +96,7 @@ def IdentifierWrapper(name, convert=True):
     Returns a composable representing an SQL identifier.
 
     This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
-    and coverts them (if desired) from the Python format to SQL,
+    and converts them (if desired) from the Python format to SQL,
     as SQL starts at 1, and it is inclusive at the end
 
     EXAMPLES::
@@ -154,7 +161,7 @@ class LockError(RuntimeError):
     pass
 
 
-class QueryLogFilter(object):
+class QueryLogFilter():
     """
     A filter used when logging slow queries.
     """
@@ -166,7 +173,7 @@ class QueryLogFilter(object):
             return 0
 
 
-class EmptyContext(object):
+class EmptyContext():
     """
     Used to simplify code in cases where we may or may not want to open an extras file.
     """
@@ -180,7 +187,7 @@ class EmptyContext(object):
         pass
 
 
-class DelayCommit(object):
+class DelayCommit():
     """
     Used to set default behavior for whether to commit changes to the database connection.
 

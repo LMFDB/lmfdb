@@ -134,13 +134,9 @@ class CMF_download(Downloader):
             'return PS(an)']
 
     header = ["from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
-    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_powbasis = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_sparse_cyclotomic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
-
-
-
-
+    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_powbasis = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
         hecke_nf = self._get_hecke_nf(label)
@@ -163,17 +159,17 @@ class CMF_download(Downloader):
         hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
+            func_body = self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
             explain += c + ' Each a_p is given as list of pairs\n'
             explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
             basis_data = ''
-            poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            poly_data = self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
         else:
             explain += c + ' Each a_p is given as a linear combination\n'
             explain += c + ' of the following basis for the coefficient ring.\n'
             poly_data = '\n' + c + ' The following line gives the coefficients of\n'
             poly_data += c + ' the defining polynomial for the coefficient field.\n'
-            poly_data =  self.assign(lang, 'poly_data', hecke_nf['field_poly'], level = 1)
+            poly_data = self.assign(lang, 'poly_data', hecke_nf['field_poly'], level=1)
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
@@ -182,13 +178,12 @@ class CMF_download(Downloader):
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
                 basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-                basis_data += self.assign(lang,  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
+                basis_data += self.assign(lang, 'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
                 func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
 
         if lang in ['sage']:
             explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
-
 
         if lang in ['sage']:
             code = '\n' + '\n'.join(func_start) + '\n'
@@ -351,12 +346,9 @@ class CMF_download(Downloader):
         s += c + ' Each entry in the list has the form:\n'
         s += c + " %s\n" % proj
         s += 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += ',\n'.join('[' + ', '.join([str(spc[col]) for col in proj]) + ']' for spc in spaces)
+        s += ',\n'.join('[' + ', '.join(str(spc[col]) for col in proj) + ']' for spc in spaces)
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newspaces', lang=lang)
-
-
-
 
     # Magma
     """
@@ -396,7 +388,7 @@ class CMF_download(Downloader):
                     ]
         elif hecke_nf['hecke_ring_power_basis']:
             return begin + [
-                    '        ' + self.assign('magma', 'poly', newform.field_poly, level = 1).rstrip('\n'),
+                    '        ' + self.assign('magma', 'poly', newform.field_poly, level=1).rstrip('\n'),
                     '        Kf := NumberField(Polynomial([elt : elt in poly]));',
                     '        AssignNames(~Kf, ["nu"]);',
                     '    end if;',
@@ -407,7 +399,7 @@ class CMF_download(Downloader):
                     ]
         else:
             return begin + [
-                    '        ' + self.assign('magma', 'poly', newform.field_poly, level = 1).rstrip('\n'),
+                    '        ' + self.assign('magma', 'poly', newform.field_poly, level=1).rstrip('\n'),
                     '        Kf := NumberField(Polynomial([elt : elt in poly]));',
                     '        AssignNames(~Kf, ["nu"]);',
                     '    end if;',
@@ -430,12 +422,14 @@ class CMF_download(Downloader):
         level = newform.level
         order = newform.char_values[1]
         char_gens = newform.char_values[2]
+        explain = '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"' % (newform.level, newform.char_orbit_label)
+        self.explain.append(explain)
         out = [
-                '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"' % (newform.level, newform.char_orbit_label),
+                explain,
                 'function MakeCharacter_%d_%s()' % (newform.level, newform.char_orbit_label),
                 '    ' + self.assign('magma', 'N', level).rstrip('\n'), # level
                 '    ' + self.assign('magma', 'order', order).rstrip('\n'), # order of the character
-                '    ' + self.assign('magma', 'char_gens', char_gens, level = 1).rstrip('\n'), # generators
+                '    ' + self.assign('magma', 'char_gens', char_gens, level=1).rstrip('\n'), # generators
                 '    ' + self.assign('magma', 'v', newform.char_values[3]).rstrip('\n'),
                 '    // chi(gens[i]) = zeta^v[i]',
                 '    assert SequenceToList(UnitGenerators(DirichletGroup(N))) eq char_gens;',
@@ -459,13 +453,15 @@ class CMF_download(Downloader):
             #   [[c,e]] encoding c x zeta_m^e where m is hecke_ring_cyclotomic_generator
             assert char_gens == [elt[0] for elt in hecke_nf['hecke_ring_character_values']]
             char_values = [elt[1] for elt in hecke_nf['hecke_ring_character_values']]
+            explain = '// To make the character of type GrpDrchElt with Codomain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label)
+            self.explain.append(explain)
             out += [
-                '// To make the character of type GrpDrchElt with Codamain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label),
+                explain,
                 'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
                     '    ' + self.assign('magma', 'N', level).rstrip('\n'), # level
                     '    ' + self.assign('magma', 'order', order).rstrip('\n'), # order of the character
-                    '    ' + self.assign('magma', 'char_gens', char_gens, level = 1).rstrip('\n'), # generators
-                    '    ' + self.assign('magma', 'char_values', char_values, level = 1).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
+                    '    ' + self.assign('magma', 'char_gens', char_gens, level=1).rstrip('\n'), # generators
+                    '    ' + self.assign('magma', 'char_values', char_values, level=1).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
                     '    assert SequenceToList(UnitGenerators(DirichletGroup(N))) eq char_gens;',
                     '    values := ConvertToHeckeField(char_values : pass_field := true, Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
                     '    F := Universe(values);// the Hecke field',
@@ -517,11 +513,13 @@ class CMF_download(Downloader):
                 ]
 
     def _magma_qexpCoeffs(self, newform, hecke_nf):
+        explain = '// To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"'
+        self.explain.append(explain)
         return [
             'function qexpCoeffs()',
-            '    // To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"',
+            '    ' + explain,
             '    ' + self.assign('magma', 'weight', newform.weight).rstrip('\n'),
-            '    ' + self.assign('magma', 'raw_aps', hecke_nf['ap'], prepend = '    '*2).rstrip('\n'),
+            '    ' + self.assign('magma', 'raw_aps', hecke_nf['ap'], prepend='    ' * 2).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
             '    chi := MakeCharacter_%d_%s_Hecke(Universe(aps));' % (newform.level, newform.char_orbit_label),
             '    return ExtendMultiplicatively(weight, aps, chi);',
@@ -530,8 +528,10 @@ class CMF_download(Downloader):
 
     def _magma_MakeNewformModSym(self, newform, hecke_nf ):
         """
-        Given a WebNewform r from mf_newforms containing columns
-           label,level,weight,char_orbit_label,char_values,cutters
+        Given a WebNewform r from mf_newforms containing columns::
+
+            label,level,weight,char_orbit_label,char_values,cutters
+
         returns a string containing magma code to create the newform
         Galois orbit as a modular symbols space using Hecke cutters in magma.
         """
@@ -541,12 +541,13 @@ class CMF_download(Downloader):
 
         assert k >= 2   # modular symbols only in weight >= 2
 
-        cutters = "[" + ",".join(["<%d,R!%s"%(c[0],c[1])+">" for c in newform.hecke_cutters]) + "]"
-
-        return [
-                '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
-                '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
-                '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.',
+        cutters = "[" + ",".join("<%d,R!%s" % (c[0], c[1]) + ">" for c in newform.hecke_cutters) + "]"
+        explain = [ '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
+                    '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
+                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.'
+        ]
+        self.explain += explain
+        return explain + [
                 "function MakeNewformModSym_%s()"  % (newform.label.replace(".","_"), ),
                 "    R<x> := PolynomialRing(Rationals());",
                 "    chi := MakeCharacter_%d_%s();" % (N, o),
@@ -559,11 +560,15 @@ class CMF_download(Downloader):
 
     def _magma_MakeNewformModFrm(self, newform, hecke_nf):
         """
-        Given a WebNewform r from mf_newforms containing columns
-           label,level,weight,char_orbit_label,char_values
-        and h a row from mf_hecke_nf containing columns
-           hecke_ring_numerators,hecke_ring_denominators,
-           hecke_ring_cyclotomic_generator
+        Given a WebNewform r from mf_newforms containing columns::
+
+            label,level,weight,char_orbit_label,char_values
+
+        and h a row from mf_hecke_nf containing columns::
+
+            hecke_ring_numerators,hecke_ring_denominators,
+            hecke_ring_cyclotomic_generator
+
         and v a list whose nth entry is the entry an from the table mf_hecke_nf
         (consisting of a list of integers giving the Hecke eigenvalue
         as a linear combination of the basis specified in the orbit table)
@@ -571,11 +576,14 @@ class CMF_download(Downloader):
         returns a string containing magma code to create the newform
         as a representative q-expansion (type ModFrm) in magma.
         """
-        return [
+        explain = [
                 '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (newform.label.replace(".", "_"), ),
                 '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.',
                 '// The precision argument determines an initial guess on how many Fourier coefficients to use.',
-                '// This guess is increased enough to uniquely determine the newform.',
+                '// This guess is increased enough to uniquely determine the newform.'
+        ]
+        self.explain += explain
+        return explain + [
                 'function MakeNewformModFrm_%s(:prec:=%d)' % (newform.label.replace(".","_"), newform.dim),
                 '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                 '    f_vec := qexpCoeffs();',
@@ -603,14 +611,14 @@ class CMF_download(Downloader):
                 'end function;'
                 ]
 
-
     def download_newform_to_magma(self, label, lang='magma'):
         data = db.mf_newforms.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         newform = WebNewform(data)
         hecke_nf = self._get_hecke_nf(label)
 
+        self.explain = []
         out = []
         newlines = [''] * 2
         if newform.has_exact_qexp:
@@ -621,11 +629,10 @@ class CMF_download(Downloader):
         if newform.has_exact_qexp:
             # to return errors
             # this line will never be ran if the data is correct
-            if not isinstance(hecke_nf, dict): # pragma: no cover
+            if not isinstance(hecke_nf, dict):  # pragma: no cover
                 return hecke_nf  # pragma: no cover
             out += self._magma_ExtendMultiplicatively() + newlines
             out += self._magma_qexpCoeffs(newform, hecke_nf) + newlines
-
 
             # The Sturm bound is not enough precision; see Github issue 4354
             # prec = db.mf_newspaces.lucky({'label': newform.space_label}, 'sturm_bound')
@@ -633,11 +640,9 @@ class CMF_download(Downloader):
         if newform.hecke_cutters is not None and newform.weight > 1:
             out += self._magma_MakeNewformModSym(newform, hecke_nf)
 
-        outstr = "\n".join(out)
-
+        outstr = "\n".join(self.explain + out)
 
         return self._wrap(outstr,
                           label,
                           lang=lang,
-                          title='Make newform %s in Magma,'%(label))
-
+                          title='Make newform %s in Magma,' % (label))
