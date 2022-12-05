@@ -117,6 +117,10 @@ galrep:
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
+adelicimage:
+  sage: HALLO!
+  magma: HALLO!;
+
 padicreg:
   sage: |
     [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]

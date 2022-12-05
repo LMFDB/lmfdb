@@ -349,21 +349,14 @@ lfunc_columns = SearchColumns([
                  lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
                  default=True)],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
-# lfunc_columns.dummy_download = True
-
-class G2C_download(Downloader):
-    table = db.lfunc_search
-    title = "L-functions"
-    
-
+lfunc_columns.dummy_download = True
 
 @search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
              columns=lfunc_columns,
-             shortcuts={'jump':jump_box,
-                        'download':G2C_download()},
+             shortcuts={'jump':jump_box},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))

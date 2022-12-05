@@ -320,8 +320,7 @@ class WebEC():
         if adelic_data:
             assert len(adelic_data) == 1
             my_adelic_data = adelic_data[0]
-            my_adelic_data['adelic_gens'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
-            data['adelic_data'] = my_adelic_data
+            data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
         else:
             data['adelic_data'] = {}
         

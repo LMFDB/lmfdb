@@ -786,12 +786,12 @@ def list_to_latex_matrix(li):
     return mm
 
 
-def dispZmat_from_list(a_list, my_dim):
+def dispZmat_from_list(a_list, dim):
     r"""Display a matrix with integer entries from a list
     """
     num_entries = len(a_list)
-    assert num_entries == my_dim ** 2
+    assert num_entries == dim ** 2
     output = []
-    for i in range(my_dim):
-        output.append(a_list[i:i+my_dim])
+    for i in range(0,dim**2,dim):
+        output.append(a_list[i:i+dim])
     return matrix(output)
