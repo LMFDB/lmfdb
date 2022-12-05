@@ -282,7 +282,6 @@ def netloc_redirect():
         return redirect(urlunparse(replaced), code=302)
 
 
-
 @cached_function
 def bad_bots_list():
     return [
@@ -292,7 +291,6 @@ def bad_bots_list():
             "Wolfram",
         ]
     ]
-
 
 
 @app.before_request
