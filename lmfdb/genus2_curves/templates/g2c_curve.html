@@ -199,12 +199,9 @@ function show_eqns(invstyle) {
 
 <h2> {{KNOWL('g2c.galois_rep', 'Galois representations')}} </h2>
 
-<p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not the maximal image $\GSp(4,\F_\ell)$ </p>
-<p>{{ data.galrep_table | safe }}</p>
-
 <p>
     {% if data.exists_nonsurj_data %}
-        The mod \( \ell \) {{KNOWL('ec.galois_rep', title='Galois representation')}}
+        The {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}}
         has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
         for all primes \( \ell \)
     
@@ -234,6 +231,9 @@ function show_eqns(invstyle) {
         not generic.
     {% endif %}
 </p>
+
+<p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not the maximal image $\GSp(4,\F_\ell)$ </p>
+<p>{{ data.galrep_table | safe }}</p>
 
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 

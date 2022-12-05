@@ -984,8 +984,8 @@ class WebG2C():
         else:
             print('Data!!!')
             data['exists_nonsurj_data'] = True
-            data['nonmax_primes'] = galrep['nonmax_primes']
-            data['torsion_primes'] = galrep['torsion_primes']
+            data['nonmax_primes'] = nonsurj['nonmax_primes']
+            data['torsion_primes'] = nonsurj['torsion_primes']
             if data['nonmax_primes']:
                 data['galois_data'] = make_galois_data_table(data['nonmax_primes'],
                                                             data['torsion_primes'])
