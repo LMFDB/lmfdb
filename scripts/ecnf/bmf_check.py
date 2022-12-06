@@ -16,14 +16,20 @@ nfcurves = db.ec_nfcurves
 print("setting bmf forms")
 forms = db.bmf_forms
 
-fields = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
+abs_discs = [4,8,3,7,11,18,43,67,163,23,31,47, 59, 71, 79, 83, 20, 24, 15, 35, 52,
+                                         40, 51, 88, 84, 91, 56, 55, 68, 39, 87,95]
+fields = ['2.0.{}.1'.format(d) for d in abs_discs]
+
 x = polygen(QQ)
+def poly(d):
+    return x**2+(d//4) if d%4==0 else x**2-x+(d+1)//4
 
-polys = {'2.0.4.1': x**2+1, '2.0.8.1': x**2+2, '2.0.3.1': x**2-x+1,
-         '2.0.7.1': x**2-x+2, '2.0.11.1': x**2-x+3, }
+polys = dict([(field,poly(d)) for field,d in zip(fields, abs_discs)])
 
-gen_names = {'2.0.4.1': 'i', '2.0.8.1': 't', '2.0.3.1': 'w',
-             '2.0.7.1': 'a', '2.0.11.1': 'a', }
+def gen_name(d):
+    return 'i' if d==4 else 't' if d==8 else 'w' if d==3 else 'a'
+
+gen_names = dict([(field,gen_name(d)) for field,d in zip(fields, abs_discs)])
 
 false_curves = {'2.0.4.1': ['34225.7-a', '34225.7-b', '34225.3-a', '34225.3-b'],
                 
@@ -39,7 +45,10 @@ false_curves = {'2.0.4.1': ['34225.7-a', '34225.7-b', '34225.3-a', '34225.3-b'],
                             '40000.1-b', '40000.7-b'],
 
                 '2.0.11.1': [] }
-                
+
+for fld in fields:
+    if fld not in false_curves:
+        false_curves[fld] = []
 
 def field_from_label(lab):
     r"""
