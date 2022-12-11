@@ -201,7 +201,7 @@ def combined_data(label):
     if data is None:
         return
     if not data["contains_negative_one"]:
-        coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "class", "class_num", "dims", "newforms", "obstructions", "traces"])
+        coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
     data.update(coarse)
     return data

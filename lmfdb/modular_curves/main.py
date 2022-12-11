@@ -285,7 +285,7 @@ modcurve_columns = SearchColumns([
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("squarefree", "av.squarefree", "Squarefree"),
     CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-    #ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
+    ProcessedCol("dims", "modcurve.decomposition", "Decomposition", formatted_dims, align="center"),
 ])
 
 @search_parser
@@ -383,7 +383,7 @@ def modcurve_search(info, query):
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.1"
-    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, 13A3, or 3.8.0.1*X1(5) (fiber product over $X(1)$)"
+    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, 13A3, or 3.4.0.a.1-3.1*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
@@ -481,7 +481,7 @@ class ModCurveSearchArray(SearchArray):
             name="factor",
             knowl="modcurve.fiber_product",
             label="Fiber product with",
-            example="3.8.0.1",
+            example="3.4.0.a.1-3.1",
         )
         covers = TextBox(
             name="covers",
@@ -493,7 +493,7 @@ class ModCurveSearchArray(SearchArray):
             name="covered_by",
             knowl="modcurve.modular_cover",
             label="Minimally covered by",
-            example="6.12.0.1",
+            example="6.12.0.a.1",
         )
         simple = YesNoBox(
             name="simple",
