@@ -150,7 +150,7 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     else:
         lead = lead[0]
     eqs = [teXify_pol(p) for p in m["coordinates"][0]]
-    if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.1" and f["codomain_model_type"] == 4):
+    if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.a.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
         f["coord_names"] = ["f"]
     elif nb_coords <= 12: #p',...,z'
@@ -370,15 +370,15 @@ class WebModCurve(WebObj):
              "coordinates", "leading_coefficients", "factored"]))
 
     def display_j(self, domain_model_type):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
 
     def display_E4E6(self, domain_model_type):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
 
     def formatted_jmap(self, domain_model_type):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["domain_model_type"] == domain_model_type]
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
         jmap = [m for m in jmaps if m["codomain_model_type"] == 1]
         j1728map = [m for m in jmaps if m["codomain_model_type"] == 3]
         f1 = formatted_map(jmap[0]) if jmap else {}
@@ -387,7 +387,7 @@ class WebModCurve(WebObj):
         f["degree"] = jmaps[0]["degree"]
         f["domain_model_type"] = jmaps[0]["domain_model_type"]
         f["codomain_model_type"] = 1
-        f["codomain_label"] = "1.1.0.1"
+        f["codomain_label"] = "1.1.0.a.1"
         f["codomain_name"] = "X(1)"
         f["codomain_equation"] = ""
         nb_coords = 0
@@ -415,7 +415,7 @@ class WebModCurve(WebObj):
         return(f)
 
     def formatted_E4E6(self, domain_model_type):
-        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
+        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
         return(f)
@@ -432,7 +432,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def other_formatted_maps(self):
-        maps = [m for m in self.modelmaps_to_display if m["codomain_label"] != "1.1.0.1"]
+        maps = [m for m in self.modelmaps_to_display if m["codomain_label"] != "1.1.0.a.1"]
         codomain_labels = [m["codomain_label"] for m in maps]
         codomains = list(db.gps_gl2zhat_fine.search(
             {"label": {"$in": codomain_labels}},

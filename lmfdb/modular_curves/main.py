@@ -231,7 +231,7 @@ def modcurve_lmfdb_label(label):
         label_type = "label"
         lmfdb_label = label
     else:
-        lmfdb_type = "label"
+        label_type = "label"
         lmfdb_label = None
     return lmfdb_label, label_type
 
@@ -244,7 +244,7 @@ def modcurve_jump(info):
             flash_error("There is no modular curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
-    lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.1"]
+    lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.a.1"]
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
@@ -487,7 +487,7 @@ class ModCurveSearchArray(SearchArray):
             name="covers",
             knowl="modcurve.modular_cover",
             label="Minimally covers",
-            example="1.1.0.1",
+            example="1.1.0.a.1",
         )
         covered_by = TextBox(
             name="covered_by",
@@ -978,7 +978,7 @@ class ModCurve_download(Downloader):
         for m in maps:
             prefix = "map_%s_" % map_id
             has_codomain_equation = False
-            if m["codomain_label"] == "1.1.0.1":
+            if m["codomain_label"] == "1.1.0.a.1":
                 if m["codomain_model_type"] == 1:
                     name = "j-invariant map"
                 elif m["codomain_model_type"] == 3:
@@ -993,7 +993,7 @@ class ModCurve_download(Downloader):
                 name += " from the canonical model"
             elif m["domain_model_type"] == 2:
                 name += " from the plane model"
-            if m["codomain_label"] != "1.1.0.1":
+            if m["codomain_label"] != "1.1.0.a.1":
                 has_codomain_equation = True
                 if m["codomain_label_type"] == 0:
                     name += " to canonical model of modular curve"
