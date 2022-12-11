@@ -14,7 +14,7 @@
   <tr><td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td><td> {{ curve.cusps_display }}</td><td style="width:20px;"></td><td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td><td>{{ curve.cusp_widths_display }}</td><td style="width:60px;"></td><td>{{ KNOWL("modcurve.cusp_orbits", "Cusp orbits") }}</td><td>{{ curve.cusp_orbits_display }}</td></tr>
 <tr><td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td> <td> ${{curve.nu2}}$ of order $2$ and ${{curve.nu3}}$ of order $3$ </td></tr>
   <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
-  <tr><td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td><td> ${{ curve.gonality if curve.gonality > 0 else "%s \\le \\gamma \\le %s"%(curve.gonality_bounds[0],curve.gonality_bounds[1]) }}$ </td></tr>
+  <tr><td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td><td> ${{ curve.q_gonality if curve.q_gonality > 0 else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td><td> ${{ curve.rational_cusps }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "yes $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
 </table>

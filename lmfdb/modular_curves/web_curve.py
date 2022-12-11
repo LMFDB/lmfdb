@@ -103,6 +103,8 @@ def name_to_latex(name):
         name = name.replace("sp", r"{\mathrm{sp}}")
     elif "S4" in name:
         name = name.replace("S4", "{S_4}")
+    elif "pm1" in name:
+        name = name.replace("pm1", r"{\pm1}")
     if name[1] != "(":
         name = "X_" + name[1:]
     return f"${name}$"
@@ -194,8 +196,20 @@ def difference(A,B):
 def modcurve_link(label):
     return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
 
+def combined_data(label):
+    data = db.gps_gl2zhat_fine.lookup(label)
+    if data is None:
+        return
+    coarse = db.gps_gl2zhat_coarse.lookup(data["coarse_label"], ["parents", "class", "class_num", "dims", "newforms", "obstructions", "traces"])
+    if "-" in label:
+        data["coarse_parents"] = coarse.pop("parents")
+    data.update(coarse)
+    return data
+
 class WebModCurve(WebObj):
-    table = db.gps_gl2zhat_test
+    # We have to modify _get_dbdata, since we need to draw from both coarse and fine tables
+    def _get_dbdata(self):
+        return combined_data(self.label)
 
     @lazy_attribute
     def properties(self):
@@ -282,7 +296,7 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.qtwist))
+            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
@@ -420,7 +434,7 @@ class WebModCurve(WebObj):
     def other_formatted_maps(self):
         maps = [m for m in self.modelmaps_to_display if m["codomain_label"] != "1.1.0.1"]
         codomain_labels = [m["codomain_label"] for m in maps]
-        codomains = list(db.gps_gl2zhat_test.search(
+        codomains = list(db.gps_gl2zhat_fine.search(
             {"label": {"$in": codomain_labels}},
             ["label","name"]))
         # Do not display maps for which the codomain model has dont_display = False
@@ -611,7 +625,7 @@ class WebModCurve(WebObj):
                      url_for_ECNF_label(rec["label"]),
                      rec["equation"],
                      "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                     "yes" if (rec["degree"] < ZZ(self.gonality_bounds[0]) / 2 or rec["degree"] < self.gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "maybe",
+                     "yes" if (rec["degree"] < ZZ(self.q_gonality_bounds[0]) / 2 or rec["degree"] < self.q_gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "maybe",
                      web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []
@@ -696,11 +710,11 @@ class WebModCurve(WebObj):
                 self.img = texlabels[self.tex]
                 self.rank = sum(e for (p,e) in self.index.factor())
                 self.x = x
-        if not self.lattice_labels:
+        if "-" in self.label or not self.lattice_labels:
             return [],[]
         parents = {}
         names = {}
-        for rec in db.gps_gl2zhat_test.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
+        for rec in db.gps_gl2zhat_coarse.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
             if rec["name"]:
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]
