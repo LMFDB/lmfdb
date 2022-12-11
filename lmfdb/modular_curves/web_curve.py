@@ -203,7 +203,7 @@ def combined_data(label):
     if not data["contains_negative_one"]:
         coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
-    data.update(coarse)
+        data.update(coarse)
     return data
 
 class WebModCurve(WebObj):
