@@ -200,8 +200,8 @@ def combined_data(label):
     data = db.gps_gl2zhat_fine.lookup(label)
     if data is None:
         return
-    coarse = db.gps_gl2zhat_coarse.lookup(data["coarse_label"], ["parents", "class", "class_num", "dims", "newforms", "obstructions", "traces"])
-    if "-" in label:
+    if not data["contains_negative_one"]:
+        coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "class", "class_num", "dims", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
     data.update(coarse)
     return data
@@ -714,7 +714,7 @@ class WebModCurve(WebObj):
             return [],[]
         parents = {}
         names = {}
-        for rec in db.gps_gl2zhat_coarse.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
+        for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
             if rec["name"]:
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]

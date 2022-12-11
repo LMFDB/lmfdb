@@ -211,10 +211,10 @@ def url_for_modcurve_label(label):
 def modcurve_lmfdb_label(label):
     if CP_LABEL_RE.fullmatch(label):
         label_type = "Cummins & Pauli label"
-        lmfdb_label = db.gps_gl2zhat_coarse.lucky({"CPlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat_fine.lucky({"CPlabel": label}, "label")
     elif SZ_LABEL_RE.fullmatch(label):
         label_type = "Sutherland & Zywina label"
-        lmfdb_label = db.gps_gl2zhat_coarse.lucky({"SZlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat_fine.lucky({"SZlabel": label}, "label")
     elif RZB_LABEL_RE.fullmatch(label):
         label_type = "Rousse & Zureick-Brown label"
         lmfdb_label = db.gps_gl2zhat_fine.lucky({"RZBlabel": label}, "label")
@@ -373,7 +373,7 @@ def modcurve_search(info, query):
                 parents = [rec["coarse_label"]] + rec["parents"]
             else:
                 # coarse label
-                parents = db.gps_gl2zhat_coarse.lookup(lmfdb_label, "parents")
+                parents = db.gps_gl2zhat_fine.lookup(lmfdb_label, "parents")
         if parents is None:
             msg = "%s not the label of a modular curve in the database"
             flash_error(msg, info["covered_by"])
@@ -808,12 +808,13 @@ def modcurve_data(label):
     m = LABEL_RE.fullmatch(label)
     if m:
         if m.group(2): # fine label
-            return datapage([m.group(1), label], ["gps_gl2zhat_coarse", "gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
+            return datapage([label, m.group(1)], ["gps_gl2zhat_fine", "gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
+        else:
+            return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
     else:
         return abort(404)
 
 class ModCurve_download(Downloader):
-    # TODO: this should be updated to also download relevant data from gps_gl2zhat_coarse
     table = db.gps_gl2zhat_fine
     title = "Modular curves"
     #columns = ['level', 'genus', 'plane_model']
