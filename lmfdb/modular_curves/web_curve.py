@@ -89,6 +89,18 @@ def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
     if cname[:4] == "Xs4(":
         cname = cname.upper()
+    elif cname in ["X(2,2)", "Xsp(2)"]:
+        cname = "X(2)"
+    elif cname in ["X0(2)", "Xpm1(2)", "Xsp+(2)"]:
+        cname = "X1(2)"
+    elif cname == "Xpm1(3)":
+        cname = "X0(3)"
+    elif cname == "Xns+(2)":
+        cname = "X(1)"
+    elif cname == "Xpm1(4)":
+        cname = "X0(4)"
+    elif cname == "Xpm1(6)":
+        cname = "X0(6)"
     return cname
 
 def name_to_latex(name):
