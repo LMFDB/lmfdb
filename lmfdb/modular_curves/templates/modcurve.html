@@ -21,7 +21,7 @@
   <tr><td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td><td> {{ "yes $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td></tr>
 </table>
 
-{% if curve.CPlabel or curve.SZlabel or curve.RZBlabel %}
+{% if curve.CPlabel or curve.SZlabel or curve.RZBlabel or curve.RSZBlabel or curve.Slabel %}
 <h2> {{ KNOWL('modcurve.other_labels', 'Other labels') }} </h2>
 
 <table>
@@ -35,7 +35,7 @@
   <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.RSZBlabel %}
-  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse, Sutherland & Zureick-Brown label') }}:</td><td>{{curve.RSZBlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse, Sutherland & Zureick-Brown label') }}:</td><td><a href="https://blue.lmfdb.xyz/ModularCurve/Q/{curve.RSZBlabel}">{{curve.RSZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.Slabel %}
   <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland label') }}:</td><td>{{curve.Slabel}}</td></tr>
