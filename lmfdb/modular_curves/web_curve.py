@@ -219,7 +219,9 @@ def combined_data(label):
     return data
 
 class WebModCurve(WebObj):
-    # We have to modify _get_dbdata, since we need to draw from both coarse and fine tables
+    table = db.gps_gl2zhat_fine
+
+    # We have to modify _get_dbdata, since we need to also include information from the coarse modular curve
     def _get_dbdata(self):
         return combined_data(self.label)
 
