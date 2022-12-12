@@ -306,7 +306,7 @@ class WebModCurve(WebObj):
             return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r",\ldots," + str(self.obstructions[-1])
 
     @lazy_attribute
-    def qtwist_description(self):
+    def coarse_description(self):
         if self.contains_negative_one:
             return r"yes"
         else:
@@ -315,11 +315,11 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
-            qtwists = list(self.table.search({'qtwist':self.label},projection='label'))
+            qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
                 return r"%s"%(', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
             else:
-                return r"none"
+                return r"none in database"
         else:
             return "none"
 

@@ -48,7 +48,7 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
-  <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}:</td><td> {{ curve.qtwist_description | safe }}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}:</td><td> {{ curve.coarse_description | safe }}</td></tr>
   {% if curve.contains_negative_one %}
   <tr><td>{{ KNOWL('modcurve.quadratic_refinements', 'Quadratic refinements') }}:</td><td> {{ curve.quadratic_refinements | safe }}</td></tr>
   {% endif %}
