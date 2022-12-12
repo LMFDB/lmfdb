@@ -4,6 +4,7 @@ from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
+from sage.databases.cremona import class_to_int
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -130,18 +131,15 @@ def remove_leading_coeff(jfac):
     else:
         return str(jfac)
 
-def formatted_dims(dims):
+def formatted_dims(dims, mults):
     if not dims:
         return ""
-    C = Counter(dims)
-    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in sorted(C.items())) + "$"
+    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in zip(dims, mults)) + "$"
 
-def formatted_newforms(newforms):
+def formatted_newforms(newforms, mults):
     if not newforms:
         return ""
-    C = Counter(newforms)
-    # Make sure that the Counter doesn't break the ordering
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in C.items())
+    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model(m):
     lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
@@ -198,12 +196,27 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f["equations"] = equations
     return(f)
 
-def difference(A,B):
-    C = A.copy()
-    for f in B:
-        if f in C:
-            C.pop(C.index(f))
-    return C
+def difference(A, B, Ad, Bd, Am, Bm):
+    # A and B are lists of newforms, Ad, Bd of dimensions, Am, Bm of multiplicities
+    # Returns two lists (dims, mult) for A - B.
+    if A is None:
+        A, Ad, Am = [], [], []
+    if B is None:
+        B, Bd, Bm = [], [], []
+    C = {(label, dim) : mult for (label, dim, mult) in zip(A, Ad, Am)}
+    for label, dim, mult in zip(B, Bd, Bm):
+        if (label, dim) not in C or mult > C[label,dim]:
+            raise ValueError("negative multiplicity")
+        elif mult == C[label,dim]:
+            del C[label, dim]
+        else:
+            C[label, dim] -= mult
+    def split_label(label):
+        N, k, a, x = label.split(".")
+        return int(N), int(k), class_to_int(a), class_to_int(x)
+    C = [(split_label(label), dim, mult) for (label, dim), mult in C.items()]
+    C.sort()
+    return [dim for (slabel, dim, mult) in C], [mult for (slabel, dim, mult) in C]
 
 def modcurve_link(label):
     return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
@@ -292,11 +305,11 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def formatted_dims(self):
-        return formatted_dims(self.dims)
+        return formatted_dims(self.dims, self.mults)
 
     @lazy_attribute
     def formatted_newforms(self):
-        return formatted_newforms(self.newforms)
+        return formatted_newforms(self.newforms, self.mults)
 
     @lazy_attribute
     def obstruction_primes(self):
@@ -497,50 +510,47 @@ class WebModCurve(WebObj):
     def show_generators(self):
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
 
-    @lazy_attribute
-    def modular_covers(self):
-        curves = self.table.search({"label":{"$in": self.parents}}, ["label", "level", "index", "psl2index", "genus", "name", "rank", "dims"])
+    def _curvedata(self, query, flip=False):
+        # Return display data for covers/covered by/factorization
+        curves = self.table.search(query, ["label", "coarse_label", "level", "index", "psl2index", "genus", "name", "rank", "newforms", "dims", "mults"])
+        if not self.contains_negative_one:
+            # newforms are not stored when the curve does not contain -1
+            curves = list(curves)
+            newform_lookup = {rec["label"]: rec["newforms"] for rec in self.table.search({"label": {"$in": list(set(C["coarse_label"] for C in curves))}}, ["label", "newforms"])}
+            for C in curves:
+                C["newforms"] = newform_lookup[C["coarse_label"]]
         return [(
             C["label"],
             name_to_latex(C["name"]) if C.get("name") else C["label"],
             C["level"],
-            self.index // C["index"], # relative index
-            self.psl2index // C["psl2index"], # relative degree
+            C["index"] // self.index if flip else self.index // C["index"], # relative index
+            C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"], # relative degree
             C["genus"],
-            C.get("rank", ""),
-            formatted_dims(difference(self.dims, C.get("dims",[]))))
+            "" if C["rank"] is None else C["rank"],
+            (formatted_dims(*difference(C["newforms"], self.newforms,
+                                        C["dims"], self.dims,
+                                        C["mults"], self.mults)) if flip else
+             formatted_dims(*difference(self.newforms, C["newforms"],
+                                        self.dims, C["dims"],
+                                        self.mults, C["mults"]))))
                 for C in curves]
+
+    @lazy_attribute
+    def modular_covers(self):
+        return self._curvedata({"label":{"$in": self.parents}})
 
     @lazy_attribute
     def modular_covered_by(self):
-        curves = self.table.search({"parents":{"$contains": self.label}}, ["label", "level", "index", "psl2index", "genus", "name", "rank", "dims"])
-        return [(
-            C["label"],
-            name_to_latex(C["name"]) if C.get("name") else C["label"], # display name
-            C["level"],
-            C["index"] // self.index, # relative index
-            C["psl2index"] // self.psl2index, # relative degree
-            C["genus"],
-            C.get("rank", ""),
-            formatted_dims(difference(C.get("dims",[]), self.dims)))
-                for C in curves]
+        return self._curvedata({"parents":{"$contains": self.label}}, flip=True)
 
     @lazy_attribute
     def fiber_product_of(self):
-        curves = self.table.search({"label": {"$in": self.factorization, "$not": self.label}}, ["label", "level", "index", "psl2index", "genus", "name", "rank", "dims"])
-        return [(
-            C["label"],
-            name_to_latex(C["name"]) if C.get("name") else C["label"],
-            C["level"],
-            self.index // C["index"], # relative index
-            self.psl2index // C["psl2index"], # relative degree
-            C["genus"],
-            C.get("rank", ""),
-            formatted_dims(difference(self.dims, C.get("dims",[]))))
-                for C in curves]
+        return self._curvedata({"label": {"$in": self.factorization, "$not": self.label}})
 
     @lazy_attribute
     def newform_level(self):
+        if self.newforms is None:
+            return 1
         return lcm([int(f.split('.')[0]) for f in self.newforms])
 
     @lazy_attribute
