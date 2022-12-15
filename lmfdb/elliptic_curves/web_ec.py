@@ -716,9 +716,10 @@ class WebEC():
 
             # Fill in adelic image placeholders for this specific curve:
             for lang in ['sage', 'magma']:
-                adelic_image_str = self.data['adelic_data']['adelic_image']
-                adelic_gens = self.data['adelic_data']['adelic_gens']
-                adelic_level_str = adelic_image_str.split(".")[0]
-                self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
+                if self.data['adelic_data']:
+                    adelic_image_str = self.data['adelic_data']['adelic_image']
+                    adelic_gens = self.data['adelic_data']['adelic_gens']
+                    adelic_level_str = adelic_image_str.split(".")[0]
+                    self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
 
         return self._code
