@@ -681,17 +681,22 @@ def local_table(N, D, tama, bad_lpolys, cluster_pics):
     return '\n'.join(loctab)
 
 
-def galrep_table(galrep):
+def galrep_table(galrep, torsion_order):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
               th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
+              th_wrap('', r'Is torsion prime?'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
         p = galrep[i]['prime']
         modellimage_lbl = galrep[i]['modell_image']
+        is_torsion = 'yes' if torsion_order % p == 0 else 'no'
         galtab.append('  <tr>')
-        modellimg = display_knowl('gsp4.subgroup_data', title=modellimage_lbl, kwargs={'label':modellimage_lbl})
-        galtab.extend([td_wrapc(p),td_wrapcn(modellimg)])
+        if modellimage_lbl == 'not computed':
+            modellimg = 'not computed'
+        else:
+            modellimg = display_knowl('gsp4.subgroup_data', title=modellimage_lbl, kwargs={'label':modellimage_lbl})
+        galtab.extend([td_wrapc(p),td_wrapcn(modellimg),td_wrapcn(is_torsion)])
         galtab.append('  </tr>')
     galtab.extend(['</tbody>', '</table>'])
     return '\n'.join(galtab)
@@ -731,20 +736,15 @@ def ratpts_simpletable(pts, pts_v, fh):
     return ratpts_table(spts, pts_v)
 
 
-def make_galois_data_table(nonmax_primes, torsion_primes):
-    """Unpack nonsurjective prime arrays into output for html templates"""
-    print(nonmax_primes)
-    print(torsion_primes)
+def augment_galrep_and_nonsurj(galrep, nonsurj):
+    
+    output = galrep.copy()
+    if nonsurj:
+        for p in nonsurj['nonmax_primes']:
+            if p > 3:
+                output.append({'prime': p, 'modell_image' : 'not computed'})
+    return output
 
-    is_torsion = [p in torsion_primes for p in nonmax_primes]
-    is_torsion = ['yes' if t else 'no' for t in is_torsion]
-
-    table = [{'p': p,
-              'is_torsion' : tors}
-                               for p,tors in zip(nonmax_primes,
-                                                        is_torsion)]
-    print(table)
-    return table
 
 ###############################################################################
 # Genus 2 curve class definition
@@ -813,6 +813,7 @@ class WebG2C():
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
         nonsurj = db.g2c_nonmaximal_test.lookup(curve['label'])
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
+        galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
         return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
 
 
@@ -910,7 +911,7 @@ class WebG2C():
 
             tamalist = [[item['p'], item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], clus)
-            data['galrep_table'] = galrep_table(galrep)
+            data['galrep_table'] = galrep_table(galrep, data['torsion_order'])
 
             lmfdb_label = data['label']
             cond, alpha, disc, num = split_g2c_lmfdb_label(lmfdb_label)
@@ -980,15 +981,10 @@ class WebG2C():
         # Nonsurjective primes data
         if not nonsurj:
             data['exists_nonsurj_data'] = False
-            print('No data')
         else:
-            print('Data!!!')
             data['exists_nonsurj_data'] = True
             data['nonmax_primes'] = nonsurj['nonmax_primes']
-            data['torsion_primes'] = nonsurj['torsion_primes']
-            if data['nonmax_primes']:
-                data['galois_data'] = make_galois_data_table(data['nonmax_primes'],
-                                                            data['torsion_primes'])
+
 
         # Properties
         self.properties = properties = [('Label', data['label'])]

@@ -209,31 +209,18 @@ function show_eqns(invstyle) {
             except those listed.
             </p>
             <p>
-            <table class="ntdata"><thead>
-            <tr>
-            <th>prime</th>
-            <th>Is Torsion prime?</th>
-            </tr>
-            </thead><tbody>
-            {% for pr in data.galois_data %}
-            <tr>
-            <td align=center> \({{pr.p}}\)</td>
-            <td align=center>{{pr.is_torsion}}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-            </table>
+            <p>{{ data.galrep_table | safe }}
         {% else %}
             .
         {% endif %}
     {% else %}
         For primes $\ell \ge 5$ the Galois representation data has not been computed for this curve since it is
         not generic.
+
+        <p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not the maximal image $\GSp(4,\F_\ell)$. </p>
+        <p>{{ data.galrep_table | safe }}</p>
     {% endif %}
 </p>
-
-<p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not the maximal image $\GSp(4,\F_\ell)$ </p>
-<p>{{ data.galrep_table | safe }}</p>
 
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 
