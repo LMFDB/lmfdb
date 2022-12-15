@@ -118,8 +118,12 @@ galrep:
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
 adelicimage:
-  sage: HALLO!
-  magma: HALLO!;
+  sage:   |
+    gens = %s
+    GL(2,Integers(%s)).subgroup(gens)
+  magma:   |
+    Gens := %s;
+    sub<GL(2,Integers(%s))|Gens>;
 
 padicreg:
   sage: |

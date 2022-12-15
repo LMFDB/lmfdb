@@ -320,6 +320,7 @@ class WebEC():
         if adelic_data:
             assert len(adelic_data) == 1
             my_adelic_data = adelic_data[0]
+            data['adelic_data'] =  my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
         else:
             data['adelic_data'] = {}
@@ -712,5 +713,12 @@ class WebEC():
             # Fill in placeholders for this specific curve:
             for lang in ['sage', 'pari', 'magma']:
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
+
+            # Fill in adelic image placeholders for this specific curve:
+            for lang in ['sage', 'magma']:
+                adelic_image_str = self.data['adelic_data']['adelic_image']
+                adelic_gens = self.data['adelic_data']['adelic_gens']
+                adelic_level_str = adelic_image_str.split(".")[0]
+                self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
 
         return self._code
