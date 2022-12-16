@@ -610,11 +610,15 @@ class ECNF():
             # ('j-invariant', self.j),
             ('CM', self.cm_bool)]
 
+        if not self.base_change:
+            self.base_change = []  # in case it was False or None instead of []
+        # (temporary) delete labels of curves over intermediate fields (not Q)
+        self.base_change = [lab for lab in self.base_change if '-' not in lab]
         if self.base_change:
+            # delete incomplete labels
             self.base_change = [lab for lab in self.base_change if '?' not in lab]
             self.properties += [('Base change', 'yes: %s' % ','.join(str(lab) for lab in self.base_change))]
         else:
-            self.base_change = []  # in case it was False instead of []
             self.properties += [('Base change', 'no')]
         self.properties += [('Q-curve', self.qc)]
 
