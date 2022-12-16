@@ -383,6 +383,7 @@ def url_for_label(label):
 
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
+modm_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)(-(\d+).(\d+))?')
 
 class EC_download(Downloader):
     table = db.ec_curvedata
@@ -401,54 +402,58 @@ class EC_download(Downloader):
     }
 
 ec_columns = SearchColumns([
-     LinkCol("lmfdb_label", "ec.q.lmfdb_label", "Label", lambda label: url_for(".by_ec_label", label=label),
+    LinkCol("lmfdb_label", "ec.q.lmfdb_label", "Label", lambda label: url_for(".by_ec_label", label=label),
              default=True, align="center", short_title="LMFDB curve label"),
-     MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
+    MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
                        ["Clabel", "conductor"],
                        lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
                        align="center", short_title="Cremona curve label"),
-     LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "Class", lambda label: url_for(".by_ec_label", label=label),
+    LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "Class", lambda label: url_for(".by_ec_label", label=label),
              default=True, align="center", short_title="LMFDB class label"),
-     MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona class",
+    MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona class",
                        ["Ciso", "conductor"],
                        lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
                        align="center", short_title="Cremona class label"),
-     MathCol("class_size", "ec.isogeny_class", "Class size", align="center", default=lambda info: info.get("class_size") or info.get("optimal") == "on"),
-     MathCol("class_deg", "ec.isogeny_class_degree", "Class degree", align="center", default=lambda info: info.get("class_deg")),
-     ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
-     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
+    MathCol("class_size", "ec.isogeny_class", "Class size", align="center", default=lambda info: info.get("class_size") or info.get("optimal") == "on"),
+    MathCol("class_deg", "ec.isogeny_class_degree", "Class degree", align="center", default=lambda info: info.get("class_deg")),
+    ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
+    MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
                        default=lambda info: info.get("discriminant"), align="center"),
-     MathCol("rank", "ec.rank", "Rank", default=True),
-     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
+    MathCol("rank", "ec.rank", "Rank", default=True),
+    ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
                   lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
-     ProcessedCol("geom_end_alg", "ag.endomorphism_algebra", r"$\textrm{End}^0(E_{\overline\Q})$",
+    ProcessedCol("geom_end_alg", "ag.endomorphism_algebra", r"$\textrm{End}^0(E_{\overline\Q})$",
                   lambda v: r"$\Q$" if not v else r"$\Q(\sqrt{%d})$"%(integer_squarefree_part(v)),
                   short_title="Qbar-end algebra", align="center", orig="cm"),
-     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
+    ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                   short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
-     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
+    ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
                   short_title="Sato-Tate group", align="center", orig="cm"),
-     CheckCol("semistable", "ec.reduction", "Semistable"),
-     CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
-     ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
+    CheckCol("semistable", "ec.reduction", "Semistable"),
+    CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
+    ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
                   default=lambda info: info.get("nonmax_primes"), short_title="nonmaximal primes", mathmode=True, align="center"),
-     ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+    ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="ℓ-adic images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
-     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+    ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
-     ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
-     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
-     ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
+    MathCol("adelic_level", "ec.adelic_galois_image", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index")),
+    MathCol("adelic_index", "ec.adelic_galois_image", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index")),
+    ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
+    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
+    ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
                   default=lambda info: info.get("sha_primes"), mathmode=True, align="center"),
-     MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
+    MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
              default=lambda info: info.get("num_int_pts"), align="center"),
-     MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center"),
-     ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)), short_title="Faltings height",
+    MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center"),
+    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)), short_title="Faltings height",
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
-     ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
+    ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
                   short_title="j-invariant", align="center"),
-     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
-     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
+    MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
+    ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
+    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: ", ".join([s for s in v if not "?" in s]),
+                  short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
 
@@ -482,6 +487,8 @@ def elliptic_curve_search(info, query):
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
+    parse_ints(info,query,'adelic_level')
+    parse_ints(info,query,'adelic_index')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_ints(info,query,'class_size','class_size')
@@ -528,7 +535,8 @@ def elliptic_curve_search(info, query):
         labels = [a.strip() for a in info['galois_image'].split(',')]
         elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
         modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a) and is_prime(modell_image_label_regex.match(a)[1])]
-        if len(elladic_labels)+len(modell_labels) != len(labels):
+        modm_labels = [a for a in labels if modm_image_label_regex.fullmatch(a)]
+        if len(elladic_labels)+len(modell_labels)+len(modm_labels) != len(labels):
             err = "Unrecognized Galois image label, it should be the label of a subgroup of GL(2,Z_ell), such as %s, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
             flash_error(err, "13.91.3.2", "13S4")
             raise ValueError(err)
@@ -536,6 +544,8 @@ def elliptic_curve_search(info, query):
             query['elladic_images'] = {'$contains': elladic_labels}
         if modell_labels:
             query['modell_images'] = {'$contains': modell_labels}
+        if modm_labels:
+            query['modm_images'] = {'$contains': modm_labels}
         if 'cm' not in query:
             query['cm'] = 0
             info['cm'] = "noCM"
@@ -951,12 +961,18 @@ class ECSearchArray(SearchArray):
              ("class_deg", "isogeny class degree", ["class_deg", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("num_int_pts", "integral points", ["num_int_pts", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("degree", "modular degree", ["degree", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("adelic_level", "adelic level", ["adelic_level", "adelic_index", "adelic_genus"]),
+             ("adelic_index", "adelic index", ["adelic_index", "adelic_level", "adelic_genus"]),
              ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
     plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
+    null_column_explanations = { 
+                                 'adelic_level': False, # not applicable to CM curves, computed for all non-CM curves
+                                 'adelic_index': False, # not applicable to CM curves, computed for all non-CM curves
+                               }
 
     def __init__(self):
         conductor_quantifier = SelectBox(
@@ -1090,6 +1106,17 @@ class ECSearchArray(SearchArray):
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=nonmax_quant)
+        adelic_level = TextBox(
+            name="adelic_level",
+            label="Adelic level",
+            knowl="ec.galois_rep_adelic_image",
+            example="550")
+        adelic_index = TextBox(
+            name="adelic_index",
+            label="Adelic index",
+            knowl="ec.galois_rep_adelic_image",
+            example="1200")
+
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
                    + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
@@ -1109,16 +1136,18 @@ class ECSearchArray(SearchArray):
             [torsion, cm],
             [rank, sha],
             [regulator, sha_primes],
-            [galois_image, nonmax_primes],
             [class_size, class_deg],
             [num_int_pts, isodeg],
             [optimal, reduction],
+            [galois_image, nonmax_primes],
+            [adelic_level, adelic_index],
             [count, faltings_height]
             ]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, cm],
-            [bad_primes, disc, regulator, sha, galois_image],
-            [class_size, class_deg, isodeg, sha_primes, nonmax_primes],
-            [optimal, reduction, num_int_pts, faltings_height]
+            [bad_primes, disc, regulator, reduction],
+            [class_deg, isodeg, optimal, class_size],
+            [sha, sha_primes, num_int_pts, faltings_height],
+            [galois_image, nonmax_primes, adelic_level, adelic_index]
             ]
