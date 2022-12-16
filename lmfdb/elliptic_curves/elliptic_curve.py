@@ -437,8 +437,9 @@ ec_columns = SearchColumns([
                   short_title="ℓ-adic images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("adelic_level", "ec.adelic_galois_image", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index")),
-    MathCol("adelic_index", "ec.adelic_galois_image", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index")),
+    MathCol("adelic_level", "ec.adelic_galois_image", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_index", "ec.adelic_galois_image", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_genus", "ec.adelic_galois_image", "Adelic genus", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
     ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
     ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
@@ -489,6 +490,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'rank')
     parse_ints(info,query,'adelic_level')
     parse_ints(info,query,'adelic_index')
+    parse_ints(info,query,'adelic_genus')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_ints(info,query,'class_size','class_size')
@@ -963,6 +965,7 @@ class ECSearchArray(SearchArray):
              ("degree", "modular degree", ["degree", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("adelic_level", "adelic level", ["adelic_level", "adelic_index", "adelic_genus"]),
              ("adelic_index", "adelic index", ["adelic_index", "adelic_level", "adelic_genus"]),
+             ("adelic_genus", "adelic genus", ["adelic_genus", "adelic_level", "adelic_index"]),
              ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
     plural_noun = "curves"
     jump_example = "11.a2"
@@ -1116,6 +1119,11 @@ class ECSearchArray(SearchArray):
             label="Adelic index",
             knowl="ec.galois_rep_adelic_image",
             example="1200")
+        adelic_genus = TextBox(
+            name="adelic_genus",
+            label="Adelic genus",
+            knowl="ec.galois_rep_adelic_image",
+            example="3")
 
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
@@ -1141,7 +1149,8 @@ class ECSearchArray(SearchArray):
             [optimal, reduction],
             [galois_image, nonmax_primes],
             [adelic_level, adelic_index],
-            [count, faltings_height]
+            [adelic_genus, faltings_height],
+            [count]
             ]
 
         self.refine_array = [
@@ -1149,5 +1158,5 @@ class ECSearchArray(SearchArray):
             [bad_primes, disc, regulator, reduction],
             [class_deg, isodeg, class_size, optimal],
             [sha, sha_primes, num_int_pts, faltings_height],
-            [galois_image, nonmax_primes, adelic_level, adelic_index]
+            [galois_image, nonmax_primes, adelic_level, adelic_index, adelic_genus]
             ]
