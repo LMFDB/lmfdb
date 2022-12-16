@@ -48,6 +48,7 @@ table.ntdata a {
   {% endif %}
   {% if nf.is_cm_field() %}
     <tr><td colspan="3">This is a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+    <tr><td>{{ KNOWL('nf.reflex_field', title='Reflex fields') }}<td>&nbsp;&nbsp;<td>{{ info.reflex_fields | safe }}</tr>
   {% else %}
     <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
   {% endif %}
@@ -112,18 +113,6 @@ table.ntdata a {
 <center>
 $\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_label|safe }}
 </center>
-
-{% if nf.is_cm_field() %}
-        <p><h2> {{ KNOWL('nf.reflex_field', title='Reflex fields') }}</h2>
-  <table  style="margin-left:5%;" border="2">
-    <thead><tr style="border-bottom: 1px solid #000;">
-      <th>Field<th>Number of CM types
-    </tr></thead>
-    <tbody>
-    {{ info.reflex_fields | safe }}
-    </tbody>
-  </table>
-{% endif %}
 
         <h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <p>

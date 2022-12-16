@@ -34,7 +34,7 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
-    factor_base_factorization_latex, formatfield)
+    factor_base_factorization_latex, fake_label, formatfield)
 
 assert nf_logger
 
@@ -516,16 +516,30 @@ def render_field_webpage(args):
         reflex_fields_list = []
         field_labels_dict = dict()
         for reflex_field in reflex_fields:
-            reflex_fields_list.append([reflex_field['rf_coeffs'], reflex_field['multiplicity']])
+            reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])
             field_labels_dict[tuple(reflex_field['rf_coeffs'])] = "N/A"
-        field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[0]} for a in reflex_fields_list]}, ["label", "coeffs"])
+        field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[1]} for a in reflex_fields_list]}, ["label", "coeffs"])
         for field in field_labels:
             field_labels_dict[tuple(field["coeffs"])] = field["label"]
         for reflex_field in reflex_fields_list:
-            if field_labels_dict[tuple(reflex_field[0])] == "N/A":
-                table = table + '<tr><td>' + formatfield(reflex_field[0], data={'label' : field_labels_dict[tuple(reflex_field[0])]}) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
+            reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
+        total = 2 ** (nf.degree()//2)
+        reflex_fields_list.sort()
+        print(reflex_fields_list)
+        for reflex_field in reflex_fields_list:
+            if table != "":
+                table = table + ', '
+            if field_labels_dict[tuple(reflex_field[1])] == "N/A":
+                table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
             else:
-                table = table + '<tr><td>' + formatfield(reflex_field[0], data={'label' : field_labels_dict[tuple(reflex_field[0])]}) + '</td><td>' + str(reflex_field[1]) + '</td></tr>'
+                table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
+            if reflex_field[2] > 1:
+                table = table + '$^{' + str(reflex_field[2]) + '}$'
+            total = total - reflex_field[2]
+        if total > 0:
+            if table != "":
+                table = table + ', '
+            table = table + 'unavailable$^{' + str(total) + '}$'
         data['reflex_fields'] = table
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()

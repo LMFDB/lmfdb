@@ -251,6 +251,11 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+def fake_label(label, coef):
+    if label != "N/A":
+        return [int(x) for x in label.split('.')]
+    poly = coeff_to_poly(coef)
+    return [poly.degree(), poly.degree()+1, poly.discriminant(), 0]
 
 def formatfield(coef, show_poly=False, missing_text=None, data=None):
     r"""
@@ -282,7 +287,7 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">Deg %d</a>' % (mypol,mypolraw,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
