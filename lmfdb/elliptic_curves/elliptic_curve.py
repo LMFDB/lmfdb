@@ -975,6 +975,7 @@ class ECSearchArray(SearchArray):
     null_column_explanations = { 
                                  'adelic_level': False, # not applicable to CM curves, computed for all non-CM curves
                                  'adelic_index': False, # not applicable to CM curves, computed for all non-CM curves
+                                 'adelic_genus': False, # not applicable to CM curves, computed for all non-CM curves
                                }
 
     def __init__(self):
