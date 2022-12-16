@@ -29,7 +29,6 @@ class NumberFieldTest(LmfdbTest):
         # z^3 - 4*z + 2
         self.check_args('/NumberField/?jump=z%5E3+-+4*z%2B2', '3.3.148.1') # label
 
-
     def test_search_zeta(self):
         self.check_args('/NumberField/?jump=Qzeta23&search=Go', '[3]') # class group
 

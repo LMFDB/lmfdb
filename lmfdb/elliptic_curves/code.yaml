@@ -63,8 +63,8 @@ reg:
 
 real_period:
   sage:  E.period_lattice().omega()
-  pari:  E.omega[1]
-  magma: RealPeriod(E);
+  pari:  if(E.disc>0,2,1)*E.omega[1]
+  magma: (Discriminant(E) gt 0 select 2 else 1) * RealPeriod(E);
 
 cp:
   sage:  E.tamagawa_numbers()
@@ -116,6 +116,14 @@ galrep:
     [rho.image_type(p) for p in rho.non_surjective()]
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
+
+adelicimage:
+  sage:   |
+    gens = %s
+    GL(2,Integers(%s)).subgroup(gens)
+  magma:   |
+    Gens := %s;
+    sub<GL(2,Integers(%s))|Gens>;
 
 padicreg:
   sage: |

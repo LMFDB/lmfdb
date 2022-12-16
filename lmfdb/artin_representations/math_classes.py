@@ -941,7 +941,7 @@ class NumberFieldGaloisGroup():
         except AttributeError:
             from . import cyc_alt_res_engine
             self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict([str(m) for m in self.polynomial()], self.Frobenius_resolvents())
-            # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
+            # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the cycle types (as tuples),
             # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
             # cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict constructs this dictionary,
             # and only needs to know the defining polynomial of the number field and the frobenius resolvent

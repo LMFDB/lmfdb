@@ -56,7 +56,7 @@ def make_logger(bp_or_name, hl=False, fmt=None, extraHandlers=[]):
     import flask
     from .start import get_logfocus
     logfocus = get_logfocus()
-    if type(bp_or_name) == flask.Blueprint:
+    if isinstance(bp_or_name, flask.Blueprint):
         name = bp_or_name.name
     else:
         assert isinstance(bp_or_name, str)

@@ -54,20 +54,21 @@ def cm_info(cm):
     except TypeError:
         return str(cm)
 
+
 @bmf_page.route("/")
 def index():
     """Function to deal with the base URL
     /ModularForm/GL2/ImaginaryQuadratic.  If there are no request.args
-    we display the browse and serch page, otherwise (as happens when
+    we display the browse and search page, otherwise (as happens when
     submitting a jump or search button from that page) we hand over to
     the function bianchi_modular_form_search().
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11,19,43,67,163, 23,31]]
-        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [20]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11,19,43,67,163, 23,31]]
-        sl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [4,8,3,7,11,19,43,67,163,5]]
+        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
+        sl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,7,11,19,43,67,163]]
+        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
+        sl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
@@ -282,12 +283,11 @@ def bmf_field_dim_table(**args):
     weights = set()
     for dat in data:
         weights = weights.union(set(dat[gl_or_sl].keys()))
-    weights = [int(w) for w in weights]
-    weights.sort()
+    weights = sorted([int(w) for w in weights])
     info['weights'] = weights
     info['nweights'] = len(weights)
 
-    data.sort(key = lambda x: [int(y) for y in x['level_label'].split(".")])
+    data.sort(key=lambda x: [int(y) for y in x['level_label'].split(".")])
     dims = {}
     for dat in data:
         dims[dat['level_label']] = d = {}
@@ -453,7 +453,6 @@ def download_bmf_magma(**args):
     outstr += '\nheckeEigenvaluesList := [*\n'+ ',\n'.join(hecke_eigs_processed) + '\n*];\n'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
-
 
     if f.have_AL:
         AL_eigs    = f.AL_table_data
@@ -704,6 +703,7 @@ class BMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
+
     def __init__(self):
         field = TextBox(
             name='field_label',
@@ -866,4 +866,4 @@ class BianchiStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return r'The database currently contains %s %s of weight 2 over the nine imaginary quadratic fields of class number one.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), url_for(".statistics"))
+        return r'The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), self.nformfields, url_for(".statistics"))

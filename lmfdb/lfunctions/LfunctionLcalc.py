@@ -16,11 +16,11 @@ def parse_complex_number(z):
     """
     from sage.all import CC
     try:
-        # need to convert from unicode to orginary string type
+        # need to convert from unicode to ordinary string type
         x, y = CC(string2number(str(z)))
-        return "({},{})".format(x, y)
+        return f"({x},{y})"
     except (TypeError, SyntaxError):
-        print("Unable to parse {} as complex number".format(z))
+        print(f"Unable to parse {z} as complex number")
         return "(0,0)"
 
 # Lcalc Version 2 ###########################################################

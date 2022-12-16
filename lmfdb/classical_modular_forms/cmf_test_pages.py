@@ -39,7 +39,7 @@ class CMFTest(LmfdbTest):
             print_exc()
             return (None, url)
 
-    @parallel(ncpus = ncpus)
+    @parallel(ncpus=ncpus)
     def all_newforms(self, level, weight):
         logging.getLogger().disabled = True
         db = LMFDBDatabase()
@@ -61,7 +61,7 @@ class CMFTest(LmfdbTest):
 
         return res
 
-    @parallel(ncpus = ncpus)
+    @parallel(ncpus=ncpus)
     def all_newspaces(self, level, weight):
         logging.getLogger().disabled = True
         db = LMFDBDatabase()
@@ -72,7 +72,11 @@ class CMFTest(LmfdbTest):
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
         newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
-        dim = db.mf_gamma1_subspaces.lucky({'level':level,'weight':weight, 'sub_level':level, 'sub_mult': 1}, projection = 'sub_dim')
+        dim = db.mf_gamma1_subspaces.lucky({'level': level,
+                                            'weight': weight,
+                                            'sub_level': level,
+                                            'sub_mult': 1},
+                                           projection='sub_dim')
         if dim is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
@@ -150,15 +154,12 @@ class CMFTest(LmfdbTest):
                 errors.append(url)
                 res.append((None, url))
 
-
         if errors:
             print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
             for url in errors:
                 print(url)
 
         return res
-
-
 
     def test_all(self):
         todo = []
@@ -221,7 +222,7 @@ class CMFTest(LmfdbTest):
                     bins[i] += 1
                 for i, b in enumerate(bins):
                     d = 100*float(b)/total
-                    print('%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
+                    print('%.2f\t|' %((i + 0.5)*h + just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
         else:
             print("These pages didn't pass the tests:")
             for u in broken_urls:

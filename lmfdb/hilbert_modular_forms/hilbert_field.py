@@ -76,8 +76,7 @@ def niceideals(F, ideals): #HNF + sage ideal + label
 def conjideals(ideals, auts): #(label,g) -> label
     cideals = {}
     from copy import copy
-    ideals = copy(ideals)
-    ideals.sort()
+    ideals = sorted(copy(ideals))
     for ig,g in enumerate(auts):
         gideals = copy(ideals)
         for I in gideals:
@@ -86,7 +85,6 @@ def conjideals(ideals, auts): #(label,g) -> label
         for I,J in zip(ideals,gideals):
             cideals[(J[2],ig)] = I[2]
     return cideals
-
 
 
 class HilbertNumberField(WebNumberField):
