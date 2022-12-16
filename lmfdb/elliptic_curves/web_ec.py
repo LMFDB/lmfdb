@@ -324,7 +324,7 @@ class WebEC():
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
         else:
             data['adelic_data'] = {}
-        
+
         # CM and Endo ring:
 
         data['CMD'] = self.cm
