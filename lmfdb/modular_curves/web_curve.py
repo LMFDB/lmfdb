@@ -134,6 +134,11 @@ def remove_leading_coeff(jfac):
 def formatted_dims(dims, mults):
     if not dims:
         return ""
+    # Collapse newforms with the same dimension
+    collapsed = Counter()
+    for d, c in zip(dims, mults):
+        collapsed[d] += c
+    dims, mults = zip(*(sorted(collapsed.items())))
     return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in zip(dims, mults)) + "$"
 
 def formatted_newforms(newforms, mults):
@@ -196,27 +201,20 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
     f["equations"] = equations
     return(f)
 
-def difference(A, B, Ad, Bd, Am, Bm):
-    # A and B are lists of newforms, Ad, Bd of dimensions, Am, Bm of multiplicities
+def difference(Ad, Bd, Am, Bm):
+    # Ad and Bd are lists of dimensions, Am, Bm of multiplicities
     # Returns two lists (dims, mult) for A - B.
-    if A is None:
-        A, Ad, Am = [], [], []
-    if B is None:
-        B, Bd, Bm = [], [], []
-    C = {(label, dim) : mult for (label, dim, mult) in zip(A, Ad, Am)}
-    for label, dim, mult in zip(B, Bd, Bm):
-        if (label, dim) not in C or mult > C[label,dim]:
-            raise ValueError("negative multiplicity")
-        elif mult == C[label,dim]:
-            del C[label, dim]
-        else:
-            C[label, dim] -= mult
-    def split_label(label):
-        N, k, a, x = label.split(".")
-        return int(N), int(k), class_to_int(a), class_to_int(x)
-    C = [(split_label(label), dim, mult) for (label, dim), mult in C.items()]
-    C.sort()
-    return [dim for (slabel, dim, mult) in C], [mult for (slabel, dim, mult) in C]
+    if Ad is None:
+        Ad, Am = [], []
+    if Bd is None:
+        Bd, Bm = [], []
+    C = Counter()
+    for d, m in zip(Ad, Am):
+        C[d] += m
+    for d, m in zip(Bd, Bm):
+        C[d] -= m
+    C = {d: m for (d,m) in C.items() if m != 0}
+    return zip(*(sorted(C.items())))
 
 def modcurve_link(label):
     return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
@@ -513,12 +511,6 @@ class WebModCurve(WebObj):
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
         curves = self.table.search(query, ["label", "coarse_label", "level", "index", "psl2index", "genus", "name", "rank", "newforms", "dims", "mults"])
-        if not self.contains_negative_one:
-            # newforms are not stored when the curve does not contain -1
-            curves = list(curves)
-            newform_lookup = {rec["label"]: rec["newforms"] for rec in self.table.search({"label": {"$in": list(set(C["coarse_label"] for C in curves))}}, ["label", "newforms"])}
-            for C in curves:
-                C["newforms"] = newform_lookup[C["coarse_label"]]
         return [(
             C["label"],
             name_to_latex(C["name"]) if C.get("name") else C["label"],
@@ -527,11 +519,9 @@ class WebModCurve(WebObj):
             C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"], # relative degree
             C["genus"],
             "" if C["rank"] is None else C["rank"],
-            (formatted_dims(*difference(C["newforms"], self.newforms,
-                                        C["dims"], self.dims,
+            (formatted_dims(*difference(C["dims"], self.dims,
                                         C["mults"], self.mults)) if flip else
-             formatted_dims(*difference(self.newforms, C["newforms"],
-                                        self.dims, C["dims"],
+             formatted_dims(*difference(self.dims, C["dims"],
                                         self.mults, C["mults"]))))
                 for C in curves]
 
