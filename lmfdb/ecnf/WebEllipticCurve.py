@@ -11,7 +11,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField, field_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
 from lmfdb.sato_tate_groups.main import st_display_knowl
-from lmfdb.elliptic_curves.web_ec import conductor_from_label
+from lmfdb.elliptic_curves.web_ec import conductor_from_label, cremona_label_to_lmfdb_label
 
 # The conductor label seems to only have three parts for the trivial ideal (1.0.1)
 # field 3.1.23.1 uses upper case letters for isogeny class
@@ -691,6 +691,7 @@ class ECNF():
 
         if not self.base_change:
             self.base_change = []  # in case it was False or None instead of []
+        self.nbc = len(self.base_change)
 
         # add base_change yes/no to Properties box
         if self.base_change:
@@ -707,9 +708,11 @@ class ECNF():
             ('Rank', r),
         ]
 
-        # add links to base curves if base-change - first separate labels over Q from others:
+        # add links to base curves if base-change - first separate
+        # labels over Q from others, and convert any Cremona labels to
+        # LMFDB labels:
+        self.base_change_Q = [cremona_label_to_lmfdb_label(lab) for lab in self.base_change if '-' not in lab]
 
-        self.base_change_Q = [lab for lab in self.base_change if '-' not in lab]
         # sort by conductor (so also unkown curves come last)
         self.base_change_Q.sort(key=lambda lab:ZZ(conductor_from_label(lab)))
         self.bcQtext = [] # for the Base change section of the home page
@@ -731,10 +734,10 @@ class ECNF():
             field_knowl = FIELD(nf).knowl()
             if '?' in lab:
                 cond_norm = cond.split(".")[0]
-                self.bcNFtext.append("a curve over {} with conductor norm {} (not in the database)".format(field_knowl,cond_norm))
+                self.bcNFtext.append(["{}".format(field_knowl), "a curve with conductor norm {} (not in the database)".format(cond_norm)])
             else:
                 url = url_for(".show_ecnf", nf=nf, conductor_label=cond, class_label=cl, number=num)
-                self.bcNFtext.append('<a href="{}">{}</a> (defined over {})'.format(url,lab,field_knowl))
+                self.bcNFtext.append(["{}".format(field_knowl), '<a href="{}">{}</a>'.format(url,lab)])
                 self.friends += [(r'Base change of %s' % lab, url)]
         self._code = None # will be set if needed by get_code()
 

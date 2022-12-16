@@ -502,41 +502,52 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 
 <h2> {{KNOWL('ec.base_change','Base change')}} </h2>
 <div>
+
 <p>
-This curve {% if ec.base_change_Q %} is the
-{{KNOWL('ec.base_change','base change')}} from \(\Q\) of
-<ul>
-{% for E0 in ec.bcQtext%}
-  <li>
-{{E0 | safe}}
-</li>
-  {% endfor %}
-</ul>
-It is hence also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  {% if ec.qc=="yes" %}
+  This elliptic curve is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  {% elif ec.qc=="no" %}
+  This elliptic curve is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  {% else %}
+  It has not yet been determined whether or not this elliptic curve is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  {% endif %}
+
+  {% if ec.base_change %}
+It is the {{KNOWL('ec.base_change','base change')}} of the following
+{% if ec.nbc == 1 %}
+elliptic curve:
 {% else %}
-is not the {{KNOWL('ec.base_change','base change')}} of an elliptic curve defined over \(\Q\).
-{% if ec.qc=="yes" %}
-It is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
-{% elif ec.qc=="no" %}
-It is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
-{% else %}
-It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{{ ec.nbc }} elliptic curves:
 {% endif %}
-{% endif %}
-</p>
-{% if ec.base_change_NF %}
-<p>
-{% if ec.base_change_Q %} It is also {% else %} This curve is {% endif %} the
-{{KNOWL('ec.base_change','base change')}} of
-<ul>
-{% for E0 in ec.bcNFtext%}
-<li>
-  {{E0 | safe}}
-  </li>
+<table class="ntdata"><thead>
+<tr>
+<th>Base field</th>
+<th>Curve</th>
+</tr>
+</thead><tbody>
+{% for e in ec.bcQtext %}
+<tr>
+<td align=center> \(\Q\)</td>
+<td align=center>{{e | safe}}</td>
+</tr>
 {% endfor %}
-</ul>
+{% for e in ec.bcNFtext %}
+<tr>
+<td align=center>{{e[0] | safe}}</td>
+<td align=center>{{e[1] | safe}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</p>
+
+{% else %}
+
+<p>
+  It is not the {{KNOWL('ec.base_change','base change')}} of an elliptic curve defined over any subfield.
 </p>
 {% endif %}
+
 </div>
 
 {% if DEBUG %}

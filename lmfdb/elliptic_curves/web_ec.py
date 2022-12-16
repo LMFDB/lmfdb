@@ -64,6 +64,9 @@ def class_lmfdb_label(conductor, iso_class):
 def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
+def cremona_label_to_lmfdb_label(clab):
+    return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
+
 logger = make_logger("ec")
 
 def gl2_subgroup_data(label):
