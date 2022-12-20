@@ -453,7 +453,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
-    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: ", ".join([s for s in v if not "?" in s]),
+    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: ", ".join(['.'.join(s.split('.')[:5]) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])),
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
@@ -1001,43 +1001,17 @@ class ECSearchArray(SearchArray):
             knowl="ec.discriminant",
             example="389",
             example_span="389 or 100-200")
-        rank = TextBox(
-            name="rank",
-            label="Rank",
-            knowl="ec.rank",
-            example="0")
-        sha = TextBox(
-            name="sha",
-            label="Analytic order of &#1064;",
-            knowl="ec.analytic_sha_order",
-            example="4")
-        isodeg = TextBox(
-            name="isogeny_degrees",
-            label="Cyclic isogeny degree",
-            knowl="ec.isogeny",
-            example="16")
-        class_size = TextBox(
-            name="class_size",
-            label="Isogeny class size",
-            knowl="ec.isogeny_class",
-            example="4")
-        class_deg = TextBox(
-            name="class_deg",
-            label="Isogeny class degree",
-            knowl="ec.isogeny_class_degree",
-            example="16")
-        num_int_pts = TextBox(
-            name="num_int_pts",
-            label="Integral points",
-            knowl="ec.q.integral_points",
-            example="2",
-            example_span="2 or 4-15")
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
             knowl="ec.q.j_invariant",
             example="1728",
-            example_span="1728 or -4096/11")
+            example_span="0 or 1728 or -4096/11")
+        rank = TextBox(
+            name="rank",
+            label="Rank",
+            knowl="ec.rank",
+            example="0")
         # ℤ is &#8484; in html
         torsion_opts = ([("", ""), ("[]", "trivial")]
                         + [("%s" % n, "order %s" % n) for n in range(4, 16, 4)]
@@ -1049,6 +1023,15 @@ class ECSearchArray(SearchArray):
             knowl="ec.torsion_subgroup",
             example="C3",
             options=torsion_opts)
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
+                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
+        cm = SelectBox(
+            name="cm",
+            label="Complex multiplication",
+            example="potential CM by Q(i)",
+            knowl="ec.complex_multiplication",
+            options=cm_opts)
         optimal = SelectBox(
             name="optimal",
             label="Curves per isogeny class",
@@ -1060,11 +1043,42 @@ class ECSearchArray(SearchArray):
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad primes $p$",
+            label="Bad primes $p$&emsp;", # trailing &emsp; prevents caption moving when toggling advanced search opts
             short_label=r"Bad$\ p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
+        sha = TextBox(
+            name="sha",
+            label="Analytic order of &#1064;",
+            knowl="ec.analytic_sha_order",
+            example="4",
+            advanced=True)
+        isodeg = TextBox(
+            name="isogeny_degrees",
+            label="Cyclic isogeny degree",
+            knowl="ec.isogeny",
+            example="16",
+            advanced=True)
+        class_size = TextBox(
+            name="class_size",
+            label="Isogeny class size",
+            knowl="ec.isogeny_class",
+            example="4",
+            advanced=True)
+        class_deg = TextBox(
+            name="class_deg",
+            label="Isogeny class degree",
+            knowl="ec.isogeny_class_degree",
+            example="16",
+            advanced=True)
+        num_int_pts = TextBox(
+            name="num_int_pts",
+            label="Integral points",
+            knowl="ec.q.integral_points",
+            example="2",
+            example_span="2 or 4-15",
+            advanced=True)
         sha_quant = SubsetBox(
             name="sha_quantifier")
         sha_primes = TextBoxWithSelect(
@@ -1073,17 +1087,20 @@ class ECSearchArray(SearchArray):
             short_label=r"$p\ $div$\ $|&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
-            select_box=sha_quant)
+            select_box=sha_quant,
+            advanced=True)
         regulator = TextBox(
             name="regulator",
             label="Regulator",
             knowl="ec.q.regulator",
-            example="8.4-9.1")
+            example="8.4-9.1",
+            advanced=True)
         faltings_height = TextBox(
             name="faltings_height",
             label="Faltings height",
             knowl="ec.q.faltings_height",
-            example="-1-2")
+            example="-1-2",
+            advanced=True)
         reduction_opts = ([("", ""),
                            ("semistable", "semistable"),
                            ("not semistable", "not semistable"),
@@ -1094,13 +1111,15 @@ class ECSearchArray(SearchArray):
             label="Reduction",
             example="semistable",
             knowl="ec.reduction",
-            options=reduction_opts)
+            options=reduction_opts,
+            advanced=True)
         galois_image = TextBox(
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
             example="13S4 or 13.91.3.2",
-            knowl="ec.galois_image_search")
+            knowl="ec.galois_image_search",
+            advanced=True)
         nonmax_quant = SubsetBox(
             name="nonmax_quantifier")
         nonmax_primes = TextBoxWithSelect(
@@ -1109,45 +1128,38 @@ class ECSearchArray(SearchArray):
             short_label=r"Nonmax$\ \ell$",
             knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
-            select_box=nonmax_quant)
+            select_box=nonmax_quant,
+            advanced=True)
         adelic_level = TextBox(
             name="adelic_level",
             label="Adelic level",
             knowl="ec.galois_rep_adelic_image",
-            example="550")
+            example="550",
+            advanced=True)
         adelic_index = TextBox(
             name="adelic_index",
             label="Adelic index",
             knowl="ec.galois_rep_adelic_image",
-            example="1200")
+            example="1200",
+            advanced=True)
         adelic_genus = TextBox(
             name="adelic_genus",
             label="Adelic genus",
             knowl="ec.galois_rep_adelic_image",
-            example="3")
-
-        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
-                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
-        cm = SelectBox(
-            name="cm",
-            label="Complex multiplication",
-            example="potential CM by Q(i)",
-            knowl="ec.complex_multiplication",
-            options=cm_opts
-            )
+            example="3",
+            advanced=True)
 
         count = CountBox()
 
         self.browse_array = [
             [cond, bad_primes],
-            [disc, jinv],
-            [torsion, cm],
-            [rank, sha],
-            [regulator, sha_primes],
+            [disc, optimal],
+            [jinv, cm],
+            [rank, torsion],
             [class_size, class_deg],
             [num_int_pts, isodeg],
-            [optimal, reduction],
+            [sha, sha_primes],
+            [regulator, reduction],
             [galois_image, nonmax_primes],
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
@@ -1155,9 +1167,9 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, jinv, rank, torsion, cm],
-            [bad_primes, disc, regulator, reduction],
-            [class_deg, isodeg, class_size, optimal],
-            [sha, sha_primes, num_int_pts, faltings_height],
+            [cond, disc, jinv, rank],
+            [bad_primes, optimal, cm, torsion],
+            [class_deg, isodeg, class_size, num_int_pts],
+            [sha, sha_primes, regulator, reduction, faltings_height],
             [galois_image, nonmax_primes, adelic_level, adelic_index, adelic_genus]
             ]
