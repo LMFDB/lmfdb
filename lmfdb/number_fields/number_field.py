@@ -516,8 +516,9 @@ def render_field_webpage(args):
         reflex_fields_list = []
         field_labels_dict = dict()
         for reflex_field in reflex_fields:
-            reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])
-            field_labels_dict[tuple(reflex_field['rf_coeffs'])] = "N/A"
+            if len(reflex_field['rf_coeffs']) > 1:
+                reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])
+                field_labels_dict[tuple(reflex_field['rf_coeffs'])] = "N/A"
         field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[1]} for a in reflex_fields_list]}, ["label", "coeffs"])
         for field in field_labels:
             field_labels_dict[tuple(field["coeffs"])] = field["label"]
