@@ -533,9 +533,9 @@ def render_field_webpage(args):
                 table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
             else:
                 table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
-            if reflex_field[2] > 1:
-                table = table + '$^{' + str(reflex_field[2]) + '}$'
-            total = total - reflex_field[2]
+            #if reflex_field[2] > 1:
+            table = table + '$^{' + str(2*reflex_field[2]) + '}$'
+            total = total - 2*reflex_field[2]
         if total > 0:
             if table != "":
                 table = table + ', '
