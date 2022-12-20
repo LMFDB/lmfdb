@@ -9,6 +9,7 @@ from sage.all import (
     factor,
     PolynomialRing,
     TermOrder,
+    matrix
 )
 from . import coeff_to_poly
 ################################################################################
@@ -783,3 +784,14 @@ def list_to_latex_matrix(li):
     mm += r"\\".join(" & ".join(str(a) for a in row) for row in li)
     mm += r'\end{array}\right)'
     return mm
+
+
+def dispZmat_from_list(a_list, dim):
+    r"""Display a matrix with integer entries from a list
+    """
+    num_entries = len(a_list)
+    assert num_entries == dim ** 2
+    output = []
+    for i in range(0,dim**2,dim):
+        output.append(a_list[i:i+dim])
+    return matrix(output)
