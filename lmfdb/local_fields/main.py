@@ -304,16 +304,18 @@ def render_field_webpage(args):
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
+        unrampoly = ''
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(eisenp, web_latex(eisenp))
 
         else:
-            unramp = coeff_to_poly(unramdata['coeffs'])
-            #unramp = data['unram'].replace('t','x')
-            unramp = raw_typeset(unramp, web_latex(Px(str(unramp))))
+            unrampoly = coeff_to_poly(unramdata['coeffs'])
+            unramp = raw_typeset(unrampoly, web_latex(Px(str(unrampoly))))
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
+
+            unrampoly = raw_typeset(unrampoly, web_latex(Px(str(unrampoly))), extra='$\,\in\F_{}[x]$'.format(p))
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra=r'$\ \in'+Qp+'(t)[x]$')
 
@@ -335,6 +337,25 @@ def render_field_webpage(args):
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
             wild_inertia = 'data not computed'
+        ramverts = data['ram_poly_vert']
+        if not ramverts:
+            ramverts = 'None'
+        else:
+            ramverts = ["({},{})".format(z[0],z[1]) for z in ramverts]
+            ramverts = '$' + ','.join(ramverts) + '$'
+        residual_polys = data['residual_polynomials']
+        hastbar = False
+        if not residual_polys:
+            residual_polys='None'
+        else:
+            hastbar = 'tbar' in '.'.join(residual_polys)
+            Ptbar = PolynomialRing(QQ, 'tbar')
+            Ptbarz = PolynomialRing(Ptbar, 'z')
+            residual_polys = [latex(Ptbarz(z)) for z in residual_polys]
+            residual_polys = [z.replace('tbar',r'\overline{t}') for z in residual_polys]
+            residual_polys = ', '.join(residual_polys)
+            residual_polys = '$' + residual_polys + '$'
+
 
         info.update({
                     'polynomial': raw_typeset(polynomial),
@@ -355,8 +376,12 @@ def render_field_webpage(args):
                     'inertia': group_display_inertia(data['inertia']),
                     'wild_inertia': wild_inertia,
                     'unram': unramp,
+                    'unrampoly': unrampoly,
                     'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
+                    'ram_poly_vert': ramverts,
+                    'residual_polys': residual_polys,
+                    'hastbar': hastbar,
                     'gms': data['gms'],
                     'gsm': gsm,
                     'galphrase': galphrase,
