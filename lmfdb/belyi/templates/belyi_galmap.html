@@ -62,12 +62,18 @@ function show_eqns(eqnstyle) {
 </table>
 
 <!--<div class='plane_eqn' style="display:inline">-->
-<div class='plane_eqn' style="toggle">
-  (<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)
+<!--<div class='plane_eqn' style="toggle">-->
+<div class="toggle">
+  <span class='plane_eqn'>
+    (<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)
+  </span>
 </div>
 <!--<div class='std_eqn nodisplay' style="display:inline">-->
-<div class='std_eqn nodisplay' style="toggle">
-  (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
+<!--<div class='std_eqn nodisplay' style="toggle">-->
+<div class="toggle">
+  <span class='std_eqn nodisplay'>
+    (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
+  </span>
 </div>
 
 
