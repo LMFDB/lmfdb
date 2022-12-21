@@ -47,15 +47,11 @@
         intermediate fields are shown with their multiplicities.
         {% endif %}
 
+
   <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
       <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
       <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
-      <tr><td>{{KNOWL('lf.ramification_polygon', 'Ramification polygon')}} vertices:<td>{{info.ram_poly_vert}}
-      <tr><td>{{KNOWL('lf.residual_polynomials', 'Residual polynomials')}}:<td>{{info.residual_polys}}
-      {% if info.hastbar %}
-        &nbsp; where $\overline{t}$ is a root of {{info.unrampoly|safe}}
-      {% endif %}
       <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
     </table>
   </p>
