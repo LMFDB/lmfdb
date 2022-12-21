@@ -3,8 +3,8 @@
 from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
-from lmfdb.utils import names_and_urls, prop_int_pretty, teXify_pol
+from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing, NumberField, factor
+from lmfdb.utils import names_and_urls, prop_int_pretty
 from flask import url_for
 
 from lmfdb import db
@@ -123,11 +123,8 @@ def make_plane_model_latex(crv_str, nu=None):
 
 def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
     R0 = PolynomialRing(QQ,"T")
-    T = R0.gens()[0]
     K = NumberField(R0(numfld_cs), "nu") # sage factors out constants, ruining integrality
-    nu = K.gens()[0]
     S0 = PolynomialRing(K,"x")
-    x = S0.gens()[0]
     S = PolynomialRing(S0,"t")
     t = S.gens()[0]
     f = S(crv_str)
