@@ -269,8 +269,6 @@ class WebBelyiGalmap():
             data["plane_model"] = galmap["plane_model_latex"]
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
-            #data['plane_map'] = make_plane_map_latex(galmap['plane_constant'])
-            #data['plane_constant'] = make_plane_constant_latex(galmap['plane_constant'])
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},
