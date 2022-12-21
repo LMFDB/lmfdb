@@ -7,6 +7,8 @@ from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
+from lmfdb.utils.web_display import dispZmat_from_list
+from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
@@ -26,6 +28,13 @@ lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
+
+
+def match_coeff_vec(lab):
+    return ZLIST_RE.fullmatch(lab)
+
+def match_weierstrass_polys(lab):
+    return G1_LOOKUP_RE.fullmatch(lab)
 
 def match_lmfdb_label(lab):
     return lmfdb_label_regex.fullmatch(lab)
@@ -63,10 +72,10 @@ def gl2_subgroup_data(label):
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
-    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
-    matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
+    def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+    def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
-    info += row_wrap('Subgroup <b>%s</b>' % (label),  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
@@ -90,7 +99,7 @@ def gl2_subgroup_data(label):
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
-        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix=RZB_URL_PREFIX, label=data['RZBlabel']))
     if data.get('Slabel') and label != data.get('Slabel'):
         info += row_wrap('Sutherland label', data['Slabel'])
     if data.get('SZlabel'):
@@ -242,7 +251,7 @@ class WebEC():
         # Some data fields of self are just those from the database.
         # These only need some reformatting.
 
-        data['ainvs'] =  self.ainvs
+        data['ainvs'] = self.ainvs
         data['conductor'] = N = self.conductor
         data['j_invariant'] = QQ(tuple(self.jinv))
         data['j_inv_factor'] = latex(0)
@@ -286,7 +295,7 @@ class WebEC():
 
         data['minq_D'] = minqD = self.min_quad_twist_disc
         data['minq_label'] = db.ec_curvedata.lucky({'ainvs': self.min_quad_twist_ainvs},
-                                                   projection = 'lmfdb_label' if self.label_type=='LMFDB' else 'Clabel')
+                                                   projection='lmfdb_label' if self.label_type == 'LMFDB' else 'Clabel')
         data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
 
         # modular degree:
@@ -302,9 +311,20 @@ class WebEC():
         data['an'] = classdata['anlist']
         data['ap'] = classdata['aplist']
 
-        # mod-p Galois images:
+        # ell-adic Galois images:
 
-        data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
+        # remove adelic image record (prime set to 0) from ell-adic data if present
+        galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
+        data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
+        adelic_data = [r for r in galois_data if r["prime"] == 0]
+        if adelic_data:
+            assert len(adelic_data) == 1
+            my_adelic_data = adelic_data[0]
+            data['adelic_data'] =  my_adelic_data
+            data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+        else:
+            data['adelic_data'] = {}
+
         # CM and Endo ring:
 
         data['CMD'] = self.cm
@@ -320,8 +340,8 @@ class WebEC():
             data['cm_sqf'] = integer_squarefree_part(ZZ(self.cm))
 
             data['CM'] = r"yes (\(D=%s\))" % data['CMD']
-            if data['CMD']%4==0:
-                d4 = ZZ(data['CMD'])//4
+            if data['CMD'] % 4 == 0:
+                d4 = ZZ(data['CMD']) // 4
                 data['EndE'] = r"\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = r"\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
@@ -421,8 +441,8 @@ class WebEC():
 
         # Newform
 
-        rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
-        data['newform'] =  raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
+        rawnewform = str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        data['newform'] = raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
@@ -442,7 +462,7 @@ class WebEC():
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant']))]
 
-        lfun_url = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
+        lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
 
         if db.lfunc_instances.exists({'url':origin_url}):
@@ -452,9 +472,9 @@ class WebEC():
 
         if not self.cm:
             if N<=300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = N, isogeny = iso))]
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=N, isogeny=iso))]
             if N<=50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = N, isogeny = iso))]
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=N, isogeny=iso))]
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
@@ -470,7 +490,6 @@ class WebEC():
             self.plot = encode_plot(self.E.plot())
         except AttributeError:
             self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
-
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label),
@@ -511,7 +530,6 @@ class WebEC():
             mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         else:
             mwbsd['tamagawa_factors'] = None
-
 
         try:
             mwbsd['rank'] = self.rank
@@ -669,7 +687,7 @@ class WebEC():
             tg1['m'] = 0  # holds multiplicity per degree
             tgextra.append(tg1)
 
-        tgextra.sort(key = lambda x: x['d'])
+        tgextra.sort(key=lambda x: x['d'])
         tg['n'] = len(tgextra)
         lastd = 1
         for tg1 in tgextra:
@@ -690,10 +708,18 @@ class WebEC():
 
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
             # Fill in placeholders for this specific curve:
             for lang in ['sage', 'pari', 'magma']:
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
+
+            # Fill in adelic image placeholders for this specific curve:
+            for lang in ['sage', 'magma']:
+                if self.data['adelic_data']:
+                    adelic_image_str = self.data['adelic_data']['adelic_image']
+                    adelic_gens = self.data['adelic_data']['adelic_gens']
+                    adelic_level_str = adelic_image_str.split(".")[0]
+                    self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
 
         return self._code

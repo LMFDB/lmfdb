@@ -190,6 +190,7 @@ def ec_disc(ainvs):
     c6 = -b2*b2*b2 + 36*b2*b4 - 216*b6
     return (c4*c4*c4 - c6*c6) / 1728
 
+
 def latex_equation(ainvs):
     a1, a2, a3, a4, a6 = ainvs
 
@@ -197,9 +198,9 @@ def latex_equation(ainvs):
         pol = coeff.polynomial()
         mons = pol.monomials()
         n = len(mons)
-        if n==0:
+        if n == 0:
             return ""
-        if n>1:
+        if n > 1:
             return r"+\left({}\right)".format(latex(coeff))
         # now we have a numerical coefficient times a power of the generator
         if coeff == 1:
@@ -294,8 +295,8 @@ class ECNF():
             self.fact_cond_norm = '1'
         else:
             self.cond = pretty_ideal(Kgen, self.conductor_ideal)
-            self.fact_cond      = latex_factorization(badprimes, cond_ords)
-            self.fact_cond_norm = latex_factorization(badnorms,  cond_ords)
+            self.fact_cond = latex_factorization(badprimes, cond_ords)
+            self.fact_cond_norm = latex_factorization(badnorms, cond_ords)
 
         # Assumption: the curve models stored in the database are
         # either global minimal models or minimal at all but one
@@ -456,8 +457,8 @@ class ECNF():
             self.ar = "not available"
 
         # for debugging:
-        assert self.rk == "not available" or (self.rk_lb == self.rank and
-                                              self.rank == self.rk_ub)
+        assert self.rk == "not available" or (self.rk_lb == self.rank
+                                              and self.rank == self.rk_ub)
         assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
 
         self.bsd_status = "incomplete"
@@ -468,7 +469,6 @@ class ECNF():
                 self.bsd_status = "conditional"
             else:
                 self.bsd_status = "missing_gens"
-
 
         # Regulator only in conditional/unconditional cases, or when we know the rank:
         if self.bsd_status in ["conditional", "unconditional"]:
@@ -554,7 +554,6 @@ class ECNF():
         else:
             self.isodeg = " and ".join([", ".join(isodegs[:-1]), isodegs[-1]])
 
-
         sig = self.signature
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
@@ -595,7 +594,6 @@ class ECNF():
                 else:
                     self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
 
-
         self.properties = [('Label', self.label)]
 
         # Plot
@@ -612,11 +610,15 @@ class ECNF():
             # ('j-invariant', self.j),
             ('CM', self.cm_bool)]
 
+        if not self.base_change:
+            self.base_change = []  # in case it was False or None instead of []
+        # (temporary) delete labels of curves over intermediate fields (not Q)
+        self.base_change = [lab for lab in self.base_change if '-' not in lab]
         if self.base_change:
+            # delete incomplete labels
             self.base_change = [lab for lab in self.base_change if '?' not in lab]
             self.properties += [('Base change', 'yes: %s' % ','.join(str(lab) for lab in self.base_change))]
         else:
-            self.base_change = []  # in case it was False instead of []
             self.properties += [('Base change', 'no')]
         self.properties += [('Q-curve', self.qc)]
 
@@ -661,7 +663,7 @@ class ECNF():
 
     def code(self):
         if self._code is None:
-            self._code =  make_code(self.label)
+            self._code = make_code(self.label)
         return self._code
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
@@ -701,19 +703,19 @@ def make_code(label, lang=None):
 
     # Get the base field label and a-invariants:
 
-    E = db.ec_nfcurves.lookup(label, projection = ['field_label', 'ainvs'])
+    E = db.ec_nfcurves.lookup(label, projection=['field_label', 'ainvs'])
 
     # Look up the defining polynomial of the base field:
 
     from lmfdb.utils import coeff_to_poly
-    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection = 'coeffs'))
+    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection='coeffs'))
 
     # read in code.yaml from current directory:
 
     import os
     import yaml
     _curdir = os.path.dirname(os.path.abspath(__file__))
-    Ecode =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+    Ecode = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
     # Fill in placeholders for this specific curve and language:
     if lang:

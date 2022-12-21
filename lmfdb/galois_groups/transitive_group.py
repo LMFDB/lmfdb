@@ -394,7 +394,6 @@ def galois_group_data(n, t):
     return inf + rest
 
 
-
 @cached_function
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
@@ -478,8 +477,7 @@ def subfield_display(n, subs):
 def otherrep_display(n, t, reps):
     reps = [(j[0], j[1]) for j in reps]
     me = (n, t)
-    difreps = list(set(reps))
-    difreps.sort()
+    difreps = sorted(set(reps))
     ans = ''
     for k in difreps:
         if ans != '':
@@ -536,8 +534,9 @@ def group_display_inertia(code):
         return group_pretty_and_nTj(code[1][0], code[1][1], useknowls=True)
     if code[1] == [1,1]:
         return "trivial"
-    ans = "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
-    return ans
+    if code[1][1] < 0:
+        return "intransitive group not computed"
+    return "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)

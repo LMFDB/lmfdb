@@ -8,9 +8,9 @@ def get_default_func(default, name):
         if "showcol" in info and name in info["showcol"].split("."):
             return True
         sort_order = info.get('sort_order', '')
-        if (sort_order and sort_order == name and
-                "search_array" in info and
-                info["search_array"].sorts is not None):
+        if (sort_order and sort_order == name
+                and "search_array" in info
+                and info["search_array"].sorts is not None):
             return True
         if isinstance(default, bool):
             return default

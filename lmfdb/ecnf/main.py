@@ -177,7 +177,6 @@ def index():
     # the dict data will hold additional information to be displayed on
     # the main browse and search page
 
-
     # info['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
 
@@ -192,7 +191,7 @@ def index():
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
-    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11, 19, 43, 67, 163, 23, 31]]
+    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 20, 24, 7, 40, 11, 52]] #, 56, 15, 68, 19, 84, 88, 23, 43, 67, 163]]
     info['fields'].append(['By <a href="{}">imaginary quadratic field</a>'.format(url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
@@ -369,7 +368,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            title=title,
                            bread=bread,
                            ec=ec,
-                           code = code,
+                           code=code,
                            properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
@@ -524,7 +523,7 @@ ecnf_columns = SearchColumns([
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
                  short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("sha", "ec.analytic_sha_order",  r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
+    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
     ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
@@ -744,12 +743,14 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if r not in range(d%2,d+1,2):
-        info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
+    if r not in range(d%2,d+1,2):
+        info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
+    if not info['summary']:
+        info['error'] = "The database does not contain any curves defined over fields of signature %s" % info['sig']
 
     fields_by_sig = ECNF_stats().fields_by_sig
     counts_by_field = ECNF_stats().field_normstats
@@ -809,6 +810,7 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
@@ -818,7 +820,7 @@ def ecnf_code(**args):
         lang = 'pari'
 
     from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode =  make_code(label, lang)
+    Ecode = make_code(label, lang)
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     for k in sorted_code_names:
@@ -826,6 +828,7 @@ def ecnf_code(**args):
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
             code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
     return code
+
 
 def disp_tor(t):
     if len(t) == 1:
@@ -850,6 +853,7 @@ class ECNFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     jump_knowl = "ec.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         field = TextBox(
             name="field",
@@ -858,11 +862,11 @@ class ECNFSearchArray(SearchArray):
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         Qcurve_opts = ([("", ""),
-                        ("Q-curve",  "Q-curve"),
+                        ("Q-curve", "Q-curve"),
                         ("base-change", "base change"),
-                        ("non-Q-curve",  "not a Q-curve"),
-                        ("non-base-change",  "not a base change"),
-                        ("non-base-change-Q-curve",  "non-base-chg Q-curve"),
+                        ("non-Q-curve", "not a Q-curve"),
+                        ("non-base-change", "not a base change"),
+                        ("non-base-change-Q-curve", "non-base-chg Q-curve"),
                        ])
         Qcurves = SelectBox(
             name="Qcurves",
@@ -890,7 +894,7 @@ class ECNFSearchArray(SearchArray):
             options=[('', ''), ('PCM', 'potential CM'), ('PCMnoCM', 'potential CM but no CM'), ('CM', 'CM'), ('noPCM', 'no potential CM')])
         cm_disc = TextBox(
             name="cm_disc",
-            label= "CM discriminant",
+            label="CM discriminant",
             example="-4",
             example_span="-4 or -3,-8",
             knowl="ec.complex_multiplication"
@@ -956,8 +960,8 @@ class ECNFSearchArray(SearchArray):
             knowl="ec.isogeny",
             example="16")
         reduction_opts = ([("", ""),
-                           ("semistable",  "semistable"),
-                           ("not semistable",  "not semistable"),
+                           ("semistable", "semistable"),
+                           ("not semistable", "not semistable"),
                            ("potentially good", "potentially good"),
                            ("not potentially good", "not potentially good")])
         reduction = SelectBox(

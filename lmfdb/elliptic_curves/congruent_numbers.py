@@ -27,6 +27,7 @@ def parse_gens_string(s):
     g = s[2:-2].split('],[')
     return [[QQ(c) for c in gi.split(',')] for gi in g if '?' not in gi]
 
+
 def get_congruent_number_data(n):
     info = {'n': n}
     info['rank'] = rank = int(get_CN_data('rank', n)[1])
@@ -39,11 +40,11 @@ def get_congruent_number_data(n):
     gens_string = get_CN_data('MWgroup', n)[1]
     gens = [E(g) for g in parse_gens_string(gens_string)]
     info['gens'] = ", ".join(str(g) for g in gens)
-    info['missing_generator'] =  len(gens) < rank
+    info['missing_generator'] = len(gens) < rank
 
     # better typesetting of points
     info['gens'] = [raw_typeset(P.xy()) for P in gens]
-    if len(gens)==1:
+    if len(gens) == 1:
         info['gen'] = info['gens'][0]
 
     info['conductor'] = N = int(get_CN_data('conductor', n)[1])

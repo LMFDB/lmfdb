@@ -27,7 +27,7 @@ def make_curve_latex(crv_str, nu=None):
     else:
         R0 = PolynomialRing(QQ, "nu")
     R = PolynomialRing(R0, 2, "x,y")
-    #F = FractionField(R)
+    # F = FractionField(R)
     sides = crv_str.split("=")
     lhs = R(sides[0])
     rhs = R(sides[1])
@@ -40,12 +40,12 @@ def make_curve_latex(crv_str, nu=None):
             new_lhs[m] = c.subs(nu=nu)
         for m, c in rhs.dict().items():
             new_rhs[m] = c.subs(nu=nu)
-        lhs = S(new_lhs) # R, or something else, like CC[]?
+        lhs = S(new_lhs)  # R, or something else, like CC[]?
         rhs = S(new_rhs)
     eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
 
-def make_map_latex(map_str, nu = None):
+def make_map_latex(map_str, nu=None):
     if "nu" not in map_str:
         R0 = QQ
     else:
@@ -244,7 +244,7 @@ class WebBelyiGalmap():
         for i in range(len(data["triples_cyc"])):
             my_dict = {}
             triple_str = ', '.join(data['triples_cyc'][i])
-            triple_link = triple_str.replace(' ','')
+            triple_link = triple_str.replace(' ', '')
             if triple_link == triple:
                 self.triple = data['triples_cyc'][i]
                 self.embedding = CC(data['embeddings'][i])
@@ -260,9 +260,9 @@ class WebBelyiGalmap():
         if crv_str == "PP1":
             data["curve"] = r"\mathbb{P}^1"
         else:
-            data["curve"] = make_curve_latex(crv_str, nu = self.embedding)
+            data["curve"] = make_curve_latex(crv_str, nu=self.embedding)
 
-        data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
+        data["map"] = make_map_latex(galmap["map"], nu=self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         # plane model
         if galmap.get("plane_model"):
@@ -273,7 +273,8 @@ class WebBelyiGalmap():
             #data['plane_constant'] = make_plane_constant_latex(galmap['plane_constant'])
 
         # Properties
-        self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
+        self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},
+                                                    projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
         properties = [("Label", galmap["label"])]
         if triple:
@@ -294,7 +295,7 @@ class WebBelyiGalmap():
             self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
         self.friends.extend(names_and_urls(galmap['friends']))
 
-        #add curve link, if in LMFDB
+        # add curve link, if in LMFDB
         if 'curve_label' in galmap.keys():
             data['curve_label'] = galmap['curve_label']
             for name, url in self.friends:
