@@ -146,26 +146,6 @@ def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
         f_str += latex(factor(cs[-1])) + latex(mons[-1])
     return f_str
 
-def make_plane_map_latex(const_str, nu=None):
-    if "nu" not in const_str:
-        R0 = QQ
-    else:
-        R0 = PolynomialRing(QQ, "nu")
-    R = PolynomialRing(R0, 2, "t,x")
-    (t, x,) = R._first_ngens(2)
-    a = R(const_str)
-    #return teXify_pol(f)
-    return latex(1/a*t)
-
-def make_plane_constant_latex(const_str, nu=None):
-    if "nu" not in const_str:
-        R0 = QQ
-    else:
-        R0 = PolynomialRing(QQ, "nu")
-    a = R0(const_str)
-    return latex(a)
-
-
 ###############################################################################
 # Belyi map class definitions
 ###############################################################################
@@ -284,11 +264,13 @@ class WebBelyiGalmap():
 
         data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
+        # plane model
         if galmap.get("plane_model"):
             data["plane_model"] = galmap["plane_model_latex"]
-        if galmap.get('plane_constant'):
-            data['plane_map'] = make_plane_map_latex(galmap['plane_constant'])
-            data['plane_constant'] = make_plane_constant_latex(galmap['plane_constant'])
+        if galmap.get('plane_map_constant_factored'):
+            data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
+            #data['plane_map'] = make_plane_map_latex(galmap['plane_constant'])
+            #data['plane_constant'] = make_plane_constant_latex(galmap['plane_constant'])
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
