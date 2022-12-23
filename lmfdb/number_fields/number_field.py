@@ -524,7 +524,7 @@ def render_field_webpage(args):
             field_labels_dict[tuple(field["coeffs"])] = field["label"]
         for reflex_field in reflex_fields_list:
             reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
-        total = 2 ** (nf.degree()//2)
+        total = 2 ** (nf.degree()//2 - 1)
         reflex_fields_list.sort()
         print(reflex_fields_list)
         for reflex_field in reflex_fields_list:
@@ -534,9 +534,9 @@ def render_field_webpage(args):
                 table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
             else:
                 table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
-            #if reflex_field[2] > 1:
-            table = table + '$^{' + str(2*reflex_field[2]) + '}$'
-            total = total - 2*reflex_field[2]
+            if reflex_field[2] > 1:
+                table = table + '$^{' + str(reflex_field[2]) + '}$'
+            total = total - reflex_field[2]
         if total > 0:
             if table != "":
                 table = table + ', '
