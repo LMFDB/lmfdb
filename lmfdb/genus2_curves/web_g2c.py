@@ -811,7 +811,7 @@ class WebG2C():
                 except Exception:
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
-        nonsurj = curve['non_maximal_primes']
+        nonsurj = curve.get('non_maximal_primes')
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
         galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
         return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
