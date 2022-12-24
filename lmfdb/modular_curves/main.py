@@ -55,7 +55,7 @@ from lmfdb.modular_curves.web_curve import (
 )
 from string import ascii_lowercase
 
-LABEL_RE = re.compile(r"(\d+\.\d+\.\d+\.[a-z]+\.\d+)(-\d+\.\d+)?")
+LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.[a-z]+\.\d+|\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+")
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
 SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")

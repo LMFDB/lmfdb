@@ -43,6 +43,8 @@ def showj_fac(j):
         return "$= %s$" % latex((ZZ(j[0]) / ZZ(j[1])).factor())
 
 def showj_nf(j, jfield, jorig, resfield):
+    if j is None:
+        return ""
     Ra = PolynomialRing(QQ, 'a')
     if "," in j:
         s = None
@@ -613,6 +615,7 @@ class WebModCurve(WebObj):
                 sort=["degree"],
                 projection=["Elabel","cm","isolated","jinv","j_field",
                             "jorig","residue_field","degree"]):
+            print(rec)
             pts.append(
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
@@ -701,7 +704,7 @@ class WebModCurve(WebObj):
                 if curve.genus <= 90:
                     pexp = "$p$ not dividing the level"
                 else:
-                    pexp = "good $p < 8192"
+                    pexp = "good $p < 8192$"
                 return fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 return "This modular curve has finitely many rational points, none of which are cusps."
