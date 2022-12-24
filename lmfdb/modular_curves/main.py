@@ -521,7 +521,10 @@ class ModCurveSearchArray(SearchArray):
             name="contains_negative_one",
             knowl="modcurve.contains_negative_one",
             label="Contains $-I$",
+            example="yes",
+            example_value=True,
             example_col=True,
+            example_span="",
         )
         family = SelectBox(
             name="family",
