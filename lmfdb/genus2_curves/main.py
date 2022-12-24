@@ -610,6 +610,9 @@ g2c_columns = SearchColumns([
     ProcessedCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True),
     ProcessedCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True),
     ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True),
+    ProcessedCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes",
+                 lambda tors: r",".join([str(t) for t in tors]),
+                 mathmode=True, align="center")
 ])
 
 @search_wrap(

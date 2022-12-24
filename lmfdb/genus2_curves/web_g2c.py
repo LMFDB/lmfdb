@@ -685,7 +685,7 @@ def galrep_table(galrep, torsion_order):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
               th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
-              th_wrap('', r'Is torsion prime?'),
+              th_wrap('g2c.torsion_order', r'Is torsion prime?'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
         p = galrep[i]['prime']
@@ -740,7 +740,7 @@ def augment_galrep_and_nonsurj(galrep, nonsurj):
     
     output = galrep.copy()
     if nonsurj:
-        for p in nonsurj['nonmax_primes']:
+        for p in nonsurj:
             if p > 3:
                 output.append({'prime': p, 'modell_image' : 'not computed'})
     return output
@@ -811,7 +811,7 @@ class WebG2C():
                 except Exception:
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
-        nonsurj = db.g2c_nonmaximal_test.lookup(curve['label'])
+        nonsurj = curve['non_maximal_primes']
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
         galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
         return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
@@ -983,7 +983,7 @@ class WebG2C():
             data['exists_nonsurj_data'] = False
         else:
             data['exists_nonsurj_data'] = True
-            data['nonmax_primes'] = nonsurj['nonmax_primes']
+            data['nonmax_primes'] = nonsurj
 
 
         # Properties
