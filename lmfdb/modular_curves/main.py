@@ -476,7 +476,7 @@ class ModCurveSearchArray(SearchArray):
             label="Elliptic points of order 3",
             example="1",
             example_span="1,3-5",
-        )        
+        )
         factor = TextBox(
             name="factor",
             knowl="modcurve.fiber_product",
@@ -602,7 +602,7 @@ ratpoint_columns = SearchColumns([
     FloatCol("j_height", "ec.j_height", "$j$-height", default=True)])
 
 @search_wrap(
-    table=db.modcurve_points,
+    table=db.modcurve_points_test,
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
@@ -864,7 +864,7 @@ class ModCurve_download(Downloader):
     #'dont_display'
     #'gonality_bounds'
     #'modcurve'
-# cols currently unused in modcurve_modelmaps
+# cols currently unused in modcurve_modelmaps_test
     #'domain_label',
     #'dont_display',
     #'factored'
@@ -929,7 +929,7 @@ class ModCurve_download(Downloader):
         s += "covers := %s;\n" % parents_mag
 
         s += "\n// Models for this modular curve, if computed\n"
-        models = list(db.modcurve_models.search(
+        models = list(db.modcurve_models_test.search(
             {"modcurve": label, "model_type":{"$not":1}},
             ["equation", "number_variables", "model_type", "smooth"]))
         if models:
@@ -963,12 +963,12 @@ class ModCurve_download(Downloader):
             model_id += 1
 
         s += "\n// Maps from this modular curve, if computed\n"
-        maps = list(db.modcurve_modelmaps.search(
+        maps = list(db.modcurve_modelmaps_test.search(
             {"domain_label": label},
             ["domain_model_type", "codomain_label", "codomain_model_type",
              "coordinates", "leading_coefficients"]))
         codomain_labels = [m["codomain_label"] for m in maps]
-        codomain_models = list(db.modcurve_models.search(
+        codomain_models = list(db.modcurve_models_test.search(
             {"modcurve": {"$in": codomain_labels}},
             ["equation", "modcurve", "model_type"]))
         map_id = 0
