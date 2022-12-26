@@ -251,8 +251,13 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+def fake_label(label, coef):
+    if label != "N/A":
+        return [int(x) for x in label.split('.')]
+    poly = coeff_to_poly(coef)
+    return [poly.degree(), poly.degree()+1, poly.discriminant(), 0]
 
-def formatfield(coef, show_poly=False, missing_text=None):
+def formatfield(coef, show_poly=False, missing_text=None, data=None):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -265,8 +270,14 @@ def formatfield(coef, show_poly=False, missing_text=None):
     """
     if isinstance(coef, str):
         coef = string2list(coef)
-    thefield = WebNumberField.from_coeffs(coef)
-    if thefield._data is None:
+    if data is None:
+        thefield = WebNumberField.from_coeffs(coef)
+    else:
+        if data['label'] == "N/A":
+            thefield = None
+        else:
+            thefield = WebNumberField(data['label'], data=data)
+    if thefield is None or thefield._data is None:
         deg = len(coef) - 1
         mypolraw = coeff_to_poly(coef)
         mypol = latex(mypolraw)
@@ -276,11 +287,15 @@ def formatfield(coef, show_poly=False, missing_text=None):
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">Deg %d</a>' % (mypol,mypolraw,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
-    return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
+    if data is None:
+        label = thefield.get_label()
+    else:
+        label = data['label']
+    return nf_display_knowl(label,thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity
 def modules2string(n, t, modlist):
