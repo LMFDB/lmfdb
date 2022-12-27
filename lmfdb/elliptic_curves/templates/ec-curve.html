@@ -467,7 +467,11 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
 {% endif %}
 
 {% if data.adelic_level %}
-<p> The image of the {{KNOWL('ec.galois_rep', title='adelic Galois representation')}} has {{KNOWL('ec.galois_rep_adelic_image', title='level')}} ${{data.adelic_level}}$, {{KNOWL('ec.galois_rep_adelic_image', title='index')}} ${{data.adelic_index}}$, and {{KNOWL('ec.galois_rep_adelic_image', title='genus')}} ${{data.adelic_genus}}$.</p>
+
+  {{ place_code('adelicimage') }}
+
+<p> The image of the {{KNOWL('ec.galois_rep', title='adelic Galois representation')}} has {{KNOWL('ec.galois_rep_adelic_image', title='level')}} ${{data.adelic_level}}$, {{KNOWL('ec.galois_rep_adelic_image', title='index')}} ${{data.adelic_index}}$, {{KNOWL('ec.galois_rep_adelic_image', title='genus')}} ${{data.adelic_genus}}$, and generators</p>
+<p>${{data.data.adelic_gens_latex}}$</p>
 {% endif %}
 
 <h2>$p$-adic regulators</h2>
