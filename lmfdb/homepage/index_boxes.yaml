@@ -1,8 +1,8 @@
 ---
 title: A database
 image: families
-content: <p>The LMFDB is a database of mathematical objects arising in number theory and arithmetic geometry. Information regarding the source, reliability, and completeness of the database can be found <a href="/about">here</a></p>
-  <p>Click a heading on the left to browse, or <a href="/random">click here for a random page</a>.</p>
+content: <p>The LMFDB is a database of mathematical objects arising in number theory and arithmetic geometry. Information is available regarding the <a href="/about">source, reliability, and completeness</a> of the database.</p>
+  <p>Click a heading on the left to browse, or <a href="/random">go to a random page</a>.</p>
 control: 1
 links:
   - [ 0,0 ]
