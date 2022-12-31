@@ -49,9 +49,9 @@ def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
 def conductor_from_label(lab):
-    if "?" in lab: 
+    if "?" in lab:
         return lab.split(".")[0]
-    return split_lmfdb_label(lab)[0] if '.' in lab else  split_cremona_label(lab)[0]
+    return split_lmfdb_label(lab)[0] if '.' in lab else split_cremona_label(lab)[0]
 
 def curve_lmfdb_label(conductor, iso_class, number):
     return "%s.%s%s" % (conductor, iso_class, number)
