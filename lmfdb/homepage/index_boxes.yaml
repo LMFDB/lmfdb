@@ -1,7 +1,7 @@
 ---
 title: A database
 image: families
-content: <p>The LMFDB is a database of mathematical objects arising in number theory and arithmetic geometry. Information is available regarding the <a href="/about">source, reliability, and completeness</a> of the database.</p>
+content: <p>The LMFDB is a database of mathematical objects arising in number theory and arithmetic geometry that illustrates some of the mathematical connections predicted by the Langlands program.</p>
   <p>Click a heading on the left to browse, or <a href="/random">go to a random page</a>.</p>
 control: 1
 links:
@@ -9,7 +9,8 @@ links:
 ---
 title: Announcements
 content: <p>The first <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT</a> conference will take place July 10-14, 2023 at <a href="https://icerm.brown.edu">ICERM</a>.</p>
-  <p>Release 1.3 is live!  See the <a href="/release">release notes</a> for a list of new features.</p>
+  <p>Release 1.3 is live and includes a brand new section on <a href="/Groups/Abstract/">abstract groups</a>.</p>
+  <p>See the <a href="/release">release notes</a> for a list of all the new features.</p>
 image: announcements
 control: 0
 links:
@@ -17,8 +18,8 @@ links:
 ---
 title: Learn more
 image: smalluniverse
-content: <p>The LMFDB makes visible the mathematical connections predicted by the Langlands program.</p>
-  <p>Knowls provide explanations when you need them.</p><p><a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/knowledge/">Knowledge</a></p>
+content: <p>Information is available regarding the <a href="/knowledge/show/rcs">source, reliability, and completeness</a> of the database.</p>
+  <p><a href="/knowledge/show/doc.knowl">Knowls</a> provide explanations when you need them.</p><p><a href="/intro">Overview</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/knowledge/">Knowledge</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/api/">Data</a></p>
 control: 0
 links:
   - [ 0,0 ]
@@ -26,8 +27,8 @@ links:
 title: Citations and acknowledgments
 image: citations
 content: <ul>
-    <li><a href="https://github.com/LMFDB/lmfdb">Open source code</li>
     <li><a href="/citation">How to cite the LMFDB</a></li>
+    <li><a href="https://github.com/LMFDB/lmfdb">Source code repository</li>
     <li><a href="/management">Editorial board</li>
     <li><a href="/acknowledgment">Acknowledgments</li>
   </ul>
