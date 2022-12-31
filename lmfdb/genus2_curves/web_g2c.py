@@ -737,7 +737,7 @@ def ratpts_simpletable(pts, pts_v, fh):
 
 
 def augment_galrep_and_nonsurj(galrep, nonsurj):
-    
+
     output = galrep.copy()
     if nonsurj:
         for p in nonsurj:
@@ -815,7 +815,6 @@ class WebG2C():
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
         galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
         return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
-
 
     def make_object(self, curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
@@ -984,7 +983,6 @@ class WebG2C():
         else:
             data['exists_nonsurj_data'] = True
             data['nonmax_primes'] = nonsurj
-
 
         # Properties
         self.properties = properties = [('Label', data['label'])]
