@@ -98,6 +98,14 @@
   {{ KNOWL('ag.plane_model', 'Plane model') }}:
   {% endif %}
 </p>
+{% elif type == 5 %}
+<p> {% if curve.genus == 1 %}
+  {{ KNOWL('ec.weierstrass_coeffs', 'Weierstrass model') }}:
+  {% else %}
+  {{ KNOWL('ag.hyperelliptic_curve', 'Weierstrass model') }}:
+  {% endif %}
+</p>
+{% endif %}
 <table valign="center">
   <tr>
     <td> $\displaystyle {{ lines[0] }}$ </td>
@@ -112,11 +120,8 @@
   </tr>
   {% endfor %}
 </table>
-
-{% endif %}
 {% endfor %}
-{% endif %}
-{% if curve.genus == 0 and not curve.pointless %}
+{% elif curve.genus == 0 and not curve.pointless %}
 <p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
 {% endif %}
 {% if curve.has_more_models %}
@@ -154,7 +159,7 @@
   </thead>
   <tbody>
     {% for ec_label, ec_url, cm, isolated, jinv, res_field, res_field_url, j_field, j_field_url, degree in curve.db_nf_points %}
-      <tr><td>${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td><td><a href="{{url}}">{{label}}</a></td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}</tr>
+      <tr><td>${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}</tr>
     {% endfor %}
   </tbody>
 </table>
@@ -174,19 +179,7 @@
   {% else %}
   Map
   {% endif %}
-  of degree {{degree}}
-  {% if domain_model_type == 0 %}
-  from the canonical model of this modular curve
-  {% elif domain_model_type == 2 %}
-  from the plane model of this modular curve
-  {% endif %}
-  to
-  {% if codomain_model_type == 0 %}
-  the canonical model of
-  {% elif codomain_model_type == 2 %}
-  the plane model of
-  {% endif %}
-  the modular curve
+  of degree {{degree}} {{ curve.model_type_domain(domain_model_type) }} to {{ curve.model_type_codomain(codomain_model_type) }} the modular curve
   {% if codomain_name %}
   <a href="{{url_for('.by_label', label=codomain_label)}}">${{codomain_name}}$  </a>
   {% else %}

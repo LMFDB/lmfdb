@@ -147,9 +147,11 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model(m):
-    lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
-    if len(lines)>2: #display as 0 = ...
-        lines = ["0"] + [l for l in lines if l != "0"]
+    print("EQ", m["equation"])
+    #lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
+    lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]]
+    #if len(lines)>2: #display as 0 = ...
+    #    lines = ["0"] + [l for l in lines if l != "0"]
     return (lines, list(range(len(lines)-2)), m["number_variables"], m["model_type"],  m["smooth"])
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
@@ -158,20 +160,20 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=""):
         f[key] = m[key]
     f["codomain_name"] = codomain_name
     f["codomain_equation"] = codomain_equation
-    nb_coords = len(m["coordinates"][0])
+    nb_coords = len(m["coordinates"])
     lead = m["leading_coefficients"]
     if lead is None:
         lead = ["1"]*nb_coords
     else:
-        lead = lead[0]
-    eqs = [teXify_pol(p) for p in m["coordinates"][0]]
+        lead = lead
+    eqs = [teXify_pol(p) for p in m["coordinates"]]
     if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.a.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
         f["coord_names"] = ["f"]
     elif nb_coords <= 12: #p',...,z'
         f["coord_names"] = [x+"'" for x in ascii_lowercase[-nb_coords]]
     else: #x0,...,xn
-        f["coord_names"] = ["x_{}".format(i) for i in [0..nb_coords-1]]
+        f["coord_names"] = ["x_{}".format(i) for i in range(nb_coords)]
     f["nb_coords"] = nb_coords
 
     if nb_coords == 1: #display only one coordinate as a quotient
@@ -375,6 +377,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def formatted_models(self):
+        print("Models to display", self.label, len(self.models_to_display), self.models_count)
         return [formatted_model(m) for m in self.models_to_display]
 
     @lazy_attribute
@@ -384,7 +387,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def has_more_models(self):
         return len(self.models_to_display) < self.models_count
-    
+
     @lazy_attribute
     def modelmaps_to_display(self):
         # Ensure domain model and map have dont_display = False
@@ -403,6 +406,36 @@ class WebModCurve(WebObj):
     def display_E4E6(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
+
+    def model_type_str(self, model_type):
+        if model_type == 0:
+            return "canonical model"
+        elif model_type in [2, -2]:
+            return "plane model"
+        elif model_type == 5:
+            if self.genus == 1:
+                return "Weierstrass model"
+            else:
+                return "hyperelliptic model"
+        elif model_type == 7:
+            # Should this be called something else?
+            return "hyperelliptic model"
+        elif model_type == 8:
+            # Not sure what to call this either
+            return ""
+        return ""
+
+    def model_type_domain(self, model_type):
+        s = self.model_type_str(model_type)
+        if s:
+            s = f"from the {s} of this modular curve"
+        return s
+
+    def model_type_codomain(self, model_type):
+        s = self.model_type_str(model_type)
+        if s:
+            s = f"the {s} of"
+        return s
 
     def formatted_jmap(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
@@ -429,9 +462,7 @@ class WebModCurve(WebObj):
             lead = j1728map[0]["leading_coefficients"]
             if lead is None:
                 lead = ["1","1"]
-            else:
-                lead = lead[0]
-            if not(int(lead[0]) < 0 and int(lead[1]) == 1):
+            if not(lead[0][0] == "-" and lead[1] == "1"):
                 cst += "+"
             f["equations"] += [cst + f2["equations"][0]]
         if self.display_E4E6(domain_model_type):
@@ -450,7 +481,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def formatted_jmaps(self):
         maps = []
-        for domain_model_type in [0,1,2]:
+        for domain_model_type in [0,8,1,-2]:
             if self.display_j(domain_model_type):
                 maps.append(self.formatted_jmap(domain_model_type))
             if self.display_E4E6(domain_model_type):
@@ -609,7 +640,7 @@ class WebModCurve(WebObj):
     def db_nf_points(self):
         pts = []
         for rec in db.modcurve_points_test.search(
-                {"curve_label": self.label, "degree": {"$gt": 1}},
+                {"curve_label": self.label, "degree": {"$gt": 1}, "cusp": False},
                 sort=["degree"],
                 projection=["Elabel","cm","isolated","jinv","j_field",
                             "jorig","residue_field","degree"]):
@@ -649,7 +680,9 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def rational_points_description(self):
         curve = self
-        if curve.known_degree1_noncm_points or curve.pointless == -1:
+        if self.label == "1.1.0.a.1":
+            return r'The points of $X(1)$ parameterize elliptic curves, so there are infinitely many rational points: one for each $\bar{\Q}$-isomorphism class of elliptic curves over $\Q$.'
+        elif curve.known_degree1_noncm_points or curve.pointless == -1:
             if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
                     return r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
@@ -708,20 +741,22 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def nearby_lattice(self):
+        def get_lig(label):
+            return [ZZ(c) for c in label.split(".", 3)[:3]]
         # The poset of curves near this one in the lattice of subgroups of GL2(Zhat).
         # Goes up one level (higher index), and down to some collection of named curves
         # May be empty (if it's too far to a named curve)
         class LatNode:
             def __init__(self, label, x):
                 self.label = label
-                self.level, self.index, self.genus, tie = [ZZ(c) for c in label.split(".")]
+                self.level, self.index, self.genus = get_lig(label)
                 #if label == self.label:
                 #    self.tex = self.label #r"\text{%s}" % self.label
                 #else:
                 if label in names:
                     self.tex = names[label]
                 else:
-                    level, index, genus, tie = label.split(".")
+                    level, index, genus = get_lig(label)
                     self.tex = "%s_{%s}^{%s}" % (self.level, self.index, self.genus)
                 self.img = texlabels[self.tex]
                 self.rank = sum(e for (p,e) in self.index.factor())
@@ -736,7 +771,7 @@ class WebModCurve(WebObj):
             parents[rec["label"]] = rec["parents"]
         texlabels = []
         for label in self.lattice_labels:
-            level, index, genus, tie = label.split(".")
+            level, index, genus = get_lig(label)
             texlabels.append("%s_{%s}^{%s}" % (level, index, genus))
         texlabels = list(set(texlabels))
         texlabels.extend(names.values())

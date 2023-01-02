@@ -55,7 +55,10 @@ from lmfdb.modular_curves.web_curve import (
 )
 from string import ascii_lowercase
 
-LABEL_RE = re.compile(r"(\d+\.\d+\.\d+\.[a-z]+\.\d+)(-\d+\.\d+)?")
+coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
+fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
+LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
+FINE_LABEL_RE = re.compile(fine_label_re)
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
 SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
@@ -629,6 +632,7 @@ def rational_point_search(info, query):
         else:
             parse_ints(info, query, 'cm')
     parse_bool_unknown(info, query, "isolated")
+    parse_bool(info, query, "cusp")
 
 class RatPointSearchArray(SearchArray):
     noun = "point"
@@ -718,10 +722,17 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
+        cusp = SelectBox(
+            "cusp",
+            label="Cusp",
+            knowl="modcurve.cusp",
+            options=[("no", "no"),
+                     ("", ""),
+                     ("yes", "yes")])
 
         self.refine_array = [[curve, level, genus, degree, cm],
                              [residue_field, j_field, jinv, j_height, isolated],
-                             [family]]
+                             [family, cusp]]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
@@ -805,9 +816,8 @@ def labels_page():
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
-    m = LABEL_RE.fullmatch(label)
-    if m:
-        if m.group(2): # fine label
+    if LABEL_RE.fullmatch(label):
+        if FINE_LABEL_RE.fullmatch(label):
             return datapage([label, m.group(1)], ["gps_gl2zhat_fine", "gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
         else:
             return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
