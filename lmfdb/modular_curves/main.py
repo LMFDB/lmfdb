@@ -125,12 +125,10 @@ def by_label(label):
         flash_error("There is no modular curve %s in the database", label)
         return redirect(url_for(".index"))
     dojs, display_opts = diagram_js_string(curve)
-    wide = display_opts["w"] > 1600
     return render_template(
         "modcurve.html",
         curve=curve,
         dojs=dojs,
-        wide=wide,
         zip=zip,
         properties=curve.properties,
         friends=curve.friends,
@@ -155,6 +153,7 @@ def lat_diagram(label):
     info.update(display_opts)
     return render_template(
         "lat_diagram_page.html",
+        dojs=dojs,
         info=info,
         title="Diagram of nearby modular curves for %s" % label,
         bread=get_bread("Subgroup diagram"),
@@ -598,7 +597,7 @@ ratpoint_columns = SearchColumns([
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"$\text{yes}$" if x == 4 else (r"$\text{no}$" if x in [2,-1,-2,-3,-4] else r"$\text{maybe}$"),
+                 lambda x: r"$\text{yes}$" if x == 4 else (r"$\text{no}$" if x in [2,-1,-2,-3,-4] else r""), align="center",
                  default=True),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),

@@ -5,7 +5,7 @@ from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
 from sage.databases.cremona import class_to_int
-from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
@@ -29,7 +29,9 @@ def showexp(c, wrap=True):
         return f"^{{{c}}}"
 
 def showj(j):
-    if "/" in j:
+    if j is None:
+        return ""
+    elif "/" in j:
         return r"$\tfrac{%s}{%s}$" % tuple(j.split("/"))
     else:
         return f"${j}$"
@@ -160,22 +162,19 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
         f[key] = m[key]
     nb_coords = len(m["coordinates"])
     f["codomain_name"] = codomain_name
-    varlow = "xyzwtuvrsabcdefghijklmnopq"
-    ce = f["codomain_equation"] = ["0"] + [teXify_pol(l).lower() for l in codomain_equation]
-    for i in range(len(ce)):
-        for j in range(nb_coords):
-            ce[i] = ce[i].replace(varlow[j], varlow[j]+"'")
+    varhigh = "XYZWTUVRSABCDEFGHIKLMNOPQJ"
+    ce = f["codomain_equation"] = ["0"] + [teXify_pol(l).upper() for l in codomain_equation]
     lead = m["leading_coefficients"]
     if lead is None:
         lead = ["1"]*nb_coords
     else:
         lead = [c.replace("*", r"\cdot") for c in lead]
-    eqs = [teXify_pol(p) for p in m["coordinates"]]
+    eqs = [teXify_pol(p).lower() for p in m["coordinates"]]
     if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.a.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
         f["coord_names"] = ["f"]
-    elif nb_coords <= 26: #p',...,z'
-        f["coord_names"] = [x+"'" for x in varlow[:nb_coords]]
+    elif nb_coords <= 26:
+        f["coord_names"] = varhigh[:nb_coords]
     else: #x0,...,xn
         f["coord_names"] = ["x_{%s}" % i for i in range(nb_coords)]
     f["nb_coords"] = nb_coords
@@ -428,7 +427,21 @@ class WebModCurve(WebObj):
             return "hyperelliptic model"
         elif model_type == 8:
             # Not sure what to call this either
-            return "smooth model"
+            return "embedded model"
+        return ""
+
+    def model_type_knowl(self, model_type):
+        if model_type == 0:
+            return display_knowl('ag.canonical_model', 'canonical model')
+        elif model_type in [2, -2]:
+            return display_knowl('modcurve.plane_model', 'plane model')
+        elif model_type == 5:
+            if self.genus == 1:
+                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
+            else:
+                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
+        elif model_type == 8:
+            return display_knowl('modcurve.embedded_model', 'embedded model')
         return ""
 
     def model_type_domain(self, model_type):
@@ -446,9 +459,7 @@ class WebModCurve(WebObj):
     def formatted_jmap(self, domain_model_type):
         jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
         jmap = [m for m in jmaps if m["codomain_model_type"] == 1]
-        j1728map = [m for m in jmaps if m["codomain_model_type"] == 3]
         f1 = formatted_map(jmap[0]) if jmap else {}
-        f2 = formatted_map(j1728map[0]) if j1728map else {}
         f = {}
         f["degree"] = jmaps[0]["degree"]
         f["domain_model_type"] = jmaps[0]["domain_model_type"]
@@ -462,15 +473,6 @@ class WebModCurve(WebObj):
         if jmap:
             nb_coords += 1
             f["equations"] += f1["equations"]
-        if j1728map:
-            nb_coords += 1
-            cst = "1728"
-            lead = j1728map[0]["leading_coefficients"]
-            if lead is None:
-                lead = ["1","1"]
-            if not(lead[0][0] == "-" and lead[1] == "1"):
-                cst += "+"
-            f["equations"] += [cst + f2["equations"][0]]
         if self.display_E4E6(domain_model_type):
             nb_coords += 1
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
@@ -629,9 +631,9 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def db_points(self):
         return list(db.modcurve_points_test.search(
-            {"curve_label": self.label, "cusp": False},
-            sort=["degree"],
-            projection=["Elabel","cm","isolated","jinv","j_field",
+            {"curve_label": self.label},
+            sort=["degree", "j_height"],
+            projection=["Elabel","cm","isolated","jinv","j_field","j_height",
                         "jorig","residue_field","degree","coordinates"]))
 
     @lazy_attribute
@@ -641,7 +643,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def rational_point_coord_headers(self):
-        return "".join(f"<th>{self.model_type_str(t)}</th>" for t in self.rational_point_coord_types)
+        return "".join(f"<th>{self.model_type_knowl(t)}</th>" for t in self.rational_point_coord_types)
 
     @lazy_attribute
     def nf_point_coord_types(self):
@@ -650,9 +652,11 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def nf_point_coord_headers(self):
-        return "".join(f"<th>{self.model_type_str(t)}</th>" for t in self.nf_point_coord_types)
+        return "".join(f"<th>{self.model_type_knowl(t)}</th>" for t in self.nf_point_coord_types)
 
     def get_coordstr(self, rec):
+        if rec.get("coordinates") is None:
+            return ""
         def make_point(coord):
             if rec["degree"] != 1:
                 R = PolynomialRing(QQ, name="a")
@@ -667,7 +671,7 @@ class WebModCurve(WebObj):
         for model_type in coord_types:
             coords = rec["coordinates"][str(model_type)]
             coords = [make_point(coord) for coord in coords]
-            s += f"<td>{','.join(coords)}</td>"
+            s += f"<td>{', '.join(coords)}</td>"
         return s
 
     @lazy_attribute
@@ -678,8 +682,8 @@ class WebModCurve(WebObj):
             coordstr = self.get_coordstr(rec)
             pts.append(
                 (rec["Elabel"],
-                 url_for_EC_label(rec["Elabel"]),
-                 "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]), coordstr))
+                 url_for_EC_label(rec["Elabel"]) if rec["Elabel"] else "",
+                 "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]), rec["j_height"], coordstr))
         # Should sort pts
         return pts
 
@@ -693,13 +697,14 @@ class WebModCurve(WebObj):
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                 "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else "maybe"),
+                 "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else ""),
                  showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
                  rec["residue_field"],
                  url_for_NF_label(rec["residue_field"]),
                  rec["j_field"],
                  url_for_NF_label(rec["j_field"]),
                  rec["degree"],
+                 rec["j_height"],
                  coordstr))
         return pts
 
@@ -718,7 +723,7 @@ class WebModCurve(WebObj):
                      url_for_ECNF_label(rec["label"]),
                      rec["equation"],
                      "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                     "yes" if (rec["degree"] < ZZ(self.q_gonality_bounds[0]) / 2 or rec["degree"] < self.q_gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "maybe",
+                     "yes" if (rec["degree"] < ZZ(self.q_gonality_bounds[0]) / 2 or rec["degree"] < self.q_gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "",
                      web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []

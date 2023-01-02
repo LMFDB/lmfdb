@@ -84,6 +84,13 @@
 {% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
 <h2> {{ KNOWL('ag.model', 'Models') }} </h2>
 {% if models %}
+<script>
+  function show_model_lines(mstyle) {
+    $('tr.longmodel').hide();
+    $('tr.showmodel').hide();
+    $('tr.'+mstyle).show();
+  }
+</script>
 {% for lines, nb_var, type, smooth in models %}
 {% if type == 0 %}
 <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{ {{nb_var-1}} }$: </p>
@@ -106,7 +113,7 @@
   {% endif %}
 </p>
 {% elif type == 8 %}
-<p> Smooth model in $\mathbb{P}^{ {{nb_var-1}} } $: </p>
+<p> {{ KNOWL('modcurve.embedded_model', 'Embedded model') }} in $\mathbb{P}^{ {{nb_var-1}} } $: </p>
 {% endif %}
 <table valign="center">
   <tr>
@@ -114,6 +121,7 @@
     <td style="padding: 5px 0px;">$=$</td>
     <td> $ {{ lines[1] }}$</td>
   </tr>
+  {% if lines|length < 7 %}
   {% for line in lines[2:] %}
   <tr>
     <td> </td>
@@ -121,6 +129,30 @@
     <td> ${{ line }}$</td>
   </tr>
   {% endfor %}
+  {% else %}
+  <tr>
+    <td> </td>
+    <td style="padding: 5px 0px;">$=$</td>
+    <td> ${{ lines[2] }}$ </td>
+  </tr>
+  {% for line in lines[3:] %}
+  <tr class="longmodel" style="display: none;">
+    <td> </td>
+    <td style="padding: 5px 0px;">$=$</td>
+    <td> ${{ line }}$</td>
+  </tr>
+  {% endfor %}
+  <tr class="showmodel">
+    <td> </td>
+    <td> </td>
+    <td><a onclick="show_model_lines('longmodel'); return false;">Show {{ (lines|length) - 3 }} more</a> equations</td>
+  </tr>
+  <tr class="longmodel" style="display: none;">
+    <td> </td>
+    <td> </td>
+    <td><a onclick="show_model_lines('showmodel'); return false;">Hide {{ (lines|length) - 3 }}</a> equations</td>
+  </tr>
+  {% endif %}
 </table>
 {% endfor %}
 {% elif curve.genus == 0 and not curve.pointless %}
@@ -136,12 +168,12 @@
 <p> {{curve.rational_points_description | safe}} </p>
 
 {% if curve.db_rational_points and (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) %}
-<p> The following are the known non-cuspidal rational points on this modular curve (one per $j$-invariant).</p>
+<p> The following are the known rational points on this modular curve (one row per $j$-invariant).</p>
 
 <table class="ntdata">
-  <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Elliptic curve') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th>{{ curve.rational_point_coord_headers |safe}}</tr>
-  {% for label, url, cm, jinv, jfac, coords in curve.db_rational_points %}
-  <tr><td><a href="{{url}}">{{label}}</a></td><td>{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</td>{{coords | safe}}</tr>
+  <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Elliptic curve') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_height', '$j$-height') }}</th>{{ curve.rational_point_coord_headers |safe}}</tr>
+  {% for label, url, cm, jinv, jfac, jheight, coords in curve.db_rational_points %}
+  <tr><td>{% if url %}<a href="{{url}}">{{label}}</a>{% endif %}</td><td>{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</td><td>${{jheight}}$</td>{{coords | safe}}</tr>
   {% endfor %}
 </table>
 {% endif %}
@@ -157,11 +189,11 @@
 <p> The following are the known low degree points on this modular curve (one per $j$-invariant).</p>
 <table class="ntdata">
   <thead>
-    <tr><th>{{ KNOWL('modcurve.point_degree', 'degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>
+    <tr><th>{{ KNOWL('modcurve.point_degree', 'degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('ec.j_height', '$j$-height') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>
   </thead>
   <tbody>
-    {% for ec_label, ec_url, cm, isolated, jinv, res_field, res_field_url, j_field, j_field_url, degree, coords in curve.db_nf_points %}
-      <tr><td>${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
+    {% for ec_label, ec_url, cm, isolated, jinv, res_field, res_field_url, j_field, j_field_url, degree, j_height, coords in curve.db_nf_points %}
+      <tr><td>${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td>${{j_height}}$</td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
     {% endfor %}
   </tbody>
 </table>
