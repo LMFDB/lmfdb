@@ -683,7 +683,8 @@ class ECNF():
         self.properties += [('Base field', self.field.field_pretty())]
 
         self.properties += [
-            ('Conductor', self.cond),
+            # hide conductor in Properties box (can be very large)
+            # ('Conductor', self.cond),
             ('Conductor norm', self.cond_norm),
             # See issue #796 for why this is hidden (can be very large)
             # ('j-invariant', self.j),
