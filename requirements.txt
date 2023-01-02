@@ -13,4 +13,4 @@ pytest-cov
 pytest-xdist
 pyyaml
 timeout_decorator
-unittest2
+git+https://github.com/edgarcosta/unittest2
