@@ -131,6 +131,7 @@ def by_label(label):
         curve=curve,
         dojs=dojs,
         wide=wide,
+        zip=zip,
         properties=curve.properties,
         friends=curve.friends,
         bread=curve.bread,
@@ -198,7 +199,7 @@ def diagram_js_string(curve):
 def curveinfo(label):
     if not LABEL_RE.fullmatch(label):
         return ""
-    level, index, genus, tiebreak = label.split(".")
+    level, index, genus = label.split(".")[:3]
 
     ans = 'Information on the modular curve <a href="%s">%s</a><br>\n' % (url_for_modcurve_label(label), label)
     ans += "<table>\n"
@@ -597,7 +598,7 @@ ratpoint_columns = SearchColumns([
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"$\text{yes}$" if x == 1 else (r"$\text{no}$" if x == -1 else r"$\text{maybe}$"),
+                 lambda x: r"$\text{yes}$" if x == 4 else (r"$\text{no}$" if x in [2,-1,-2,-3,-4] else r"$\text{maybe}$"),
                  default=True),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
@@ -725,13 +726,10 @@ class RatPointSearchArray(SearchArray):
             knowl="modcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
-        cusp = SelectBox(
+        cusp = YesNoBox(
             "cusp",
             label="Cusp",
-            knowl="modcurve.cusp",
-            options=[("no", "no"),
-                     ("", ""),
-                     ("yes", "yes")])
+            knowl="modcurve.cusps")
 
         self.refine_array = [[curve, level, genus, degree, cm],
                              [residue_field, j_field, jinv, j_height, isolated],
