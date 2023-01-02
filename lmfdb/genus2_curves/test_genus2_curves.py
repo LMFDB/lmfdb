@@ -383,3 +383,13 @@ class Genus2Test(LmfdbTest):
                 pass
             else:
                 raise
+
+    def test_galrep(self):
+        # A generic example
+        L = self.tc.get("/Genus2Curve/Q/976/a/999424/1")
+        assert "2.6.1" in L.get_data(as_text=True)
+
+        # A nongeneric example
+        L = self.tc.get("/Genus2Curve/Q/961/a/961/1")
+        assert "3.72.2" in L.get_data(as_text=True)
+        assert "Galois representation data has not been computed for this curve" in L.get_data(as_text=True)

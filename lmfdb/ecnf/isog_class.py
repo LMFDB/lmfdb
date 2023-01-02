@@ -11,6 +11,12 @@ from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
 
 logger = make_logger("ecnf")
 
+def curve_url(c):
+    return url_for(".show_ecnf",
+                   nf=c['field_label'],
+                   conductor_label=c['conductor_label'],
+                   class_label=c['iso_label'],
+                   number=c['number'])
 
 class ECNF_isoclass():
 
@@ -88,13 +94,6 @@ class ECNF_isoclass():
         self.field = FIELD(self.field_label)
         self.field_name = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, self.field_name)
-
-        def curve_url(c):
-            return url_for(".show_ecnf",
-                           nf=c['field_label'],
-                           conductor_label=c['conductor_label'],
-                           class_label=c['iso_label'],
-                           number=c['number'])
 
         self.curves = [[c['short_label'], curve_url(c), web_ainvs(self.field_label,c['ainvs'])] for c in self.db_curves]
 
