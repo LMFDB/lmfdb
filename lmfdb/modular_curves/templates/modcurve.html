@@ -26,19 +26,19 @@
 
 <table>
   {% if curve.CPlabel %}
-  <tr><td>{{ KNOWL('modcurve.other_labels', 'Cummins & Pauli label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Cummins and Pauli (CP) label') }}:</td><td><a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a></td></tr>
   {% endif %}
   {% if curve.SZlabel %}
-  <tr><td>{{ KNOWL('modcurve.other_labels', 'Sutherland & Zywina label') }}:</td><td>{{curve.SZlabel}}</td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Sutherland  and Zywina (SZ) label') }}:</td><td>{{curve.SZlabel}}</td></tr>
   {% endif %}
   {% if curve.RZBlabel %}
-  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse & Zureick-Brown label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse and Zureick-Brown (RZB) label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.RSZBlabel %}
-  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse, Sutherland & Zureick-Brown label') }}:</td><td><a href="https://blue.lmfdb.xyz/ModularCurve/Q/{{curve.RSZBlabel}}">{{curve.RSZBlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse, Sutherland, and Zureick-Brown (RSZB) label') }}:</td><td><a href="https://blue.lmfdb.xyz/ModularCurve/Q/{{curve.RSZBlabel}}">{{curve.RSZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.Slabel %}
-  <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland label') }}:</td><td>{{curve.Slabel}}</td></tr>
+  <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland (S) label') }}:</td><td>{{curve.Slabel}}</td></tr>
   {% endif %}
 </table>
 {% endif %}
@@ -171,10 +171,14 @@
 <p> The following are the known rational points on this modular curve (one row per $j$-invariant).</p>
 
 <table class="ntdata">
-  <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Elliptic curve') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_height', '$j$-height') }}</th>{{ curve.rational_point_coord_headers |safe}}</tr>
+  <thead>
+  <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Elliptic curve') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th>{{ curve.rational_point_coord_headers |safe}}</tr>
+  </thead>
+  <tbody>
   {% for label, url, cm, jinv, jfac, jheight, coords in curve.db_rational_points %}
-  <tr><td>{% if url %}<a href="{{url}}">{{label}}</a>{% endif %}</td><td>{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</td><td>${{jheight}}$</td>{{coords | safe}}</tr>
+  <tr><td>{% if url %}<a href="{{url}}">{{label}}</a>{% endif %}</td><td align="center">{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</td><td align="right">${{"%.3f"%jheight}}$</td>{{coords | safe}}</tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endif %}
 
@@ -189,11 +193,11 @@
 <p> The following are the known low degree points on this modular curve (one per $j$-invariant).</p>
 <table class="ntdata">
   <thead>
-    <tr><th>{{ KNOWL('modcurve.point_degree', 'degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('ec.j_height', '$j$-height') }}</th><th>{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>
+    <tr><th>{{ KNOWL('modcurve.point_degree', 'Degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>
   </thead>
   <tbody>
     {% for ec_label, ec_url, cm, isolated, jinv, res_field, res_field_url, j_field, j_field_url, degree, j_height, coords in curve.db_nf_points %}
-      <tr><td>${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td>${{j_height}}$</td><td>{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
+      <tr><td align="center">${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td align="right">${{"%.3f"%j_height}}$</td><td align="center">{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
     {% endfor %}
   </tbody>
 </table>
@@ -351,9 +355,9 @@
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
     {% if genus > 0 %}
-    <td><span>{{ kernel if kernel else "$\\text{dimension zero}$" | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% elif curve.genus > 0 %}
-    <td><span>{{ "$\\text{full Jacobian}$" }}</span></td>
+    <td>full Jacobian</td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -387,9 +391,9 @@
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
     {% if genus > 0 %}
-    <td><span>{{ kernel if kernel else "$\\text{dimension zero}$" | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% elif curve.genus > 0 %}
-    <td><span>{{ "$\\text{full Jacobian}$" }}</span></td>
+    <td>full Jacobian</td>
     {% endif %}
   </tr>
   {% endfor %}
@@ -423,7 +427,7 @@
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
     {% if curve.genus > 0 %}
-    <td><span>{{ kernel if kernel else "$\\text{dimension zero}$" | safe }}</span></td>
+    <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% endif %}
   </tr>
   {% endfor %}
