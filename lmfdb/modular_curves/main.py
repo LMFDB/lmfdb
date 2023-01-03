@@ -655,16 +655,17 @@ def rational_point_search(info, query):
             query['cm'] = {'$ne': 0}
         else:
             parse_ints(info, query, 'cm')
-    if info['isolated'] == "yes":
-        query['isolated'] = 4
-    elif info['isolated'] == "no":
-        query['isolated'] = { "$in" : [2,-1,-2,-3,-4] }
-    elif info['isolated'] == "not_yes":
-        query['isolated'] = { "$ne" : 4 }
-    elif info['isolated'] == "not_no":
-        query['isolated'] = { "$in" : [0,1,3,4] }
-    elif info['isolated'] == "unknown":
-        query['isolated'] = { "$in" : [0,1,3] }
+    if 'isolated' in info:
+        if info['isolated'] == "yes":
+            query['isolated'] = 4
+        elif info['isolated'] == "no":
+            query['isolated'] = { "$in" : [2,-1,-2,-3,-4] }
+        elif info['isolated'] == "not_yes":
+            query['isolated'] = { "$ne" : 4 }
+        elif info['isolated'] == "not_no":
+            query['isolated'] = { "$in" : [0,1,3,4] }
+        elif info['isolated'] == "unknown":
+            query['isolated'] = { "$in" : [0,1,3] }
     parse_bool(info, query, "cusp")
 
 class RatPointSearchArray(SearchArray):
