@@ -167,7 +167,7 @@
 
 <p> {{curve.rational_points_description | safe}} </p>
 
-{% if curve.db_rational_points and (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) %}
+{% if (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) and curve.db_rational_points %}
 <p> The following are the known rational points on this modular curve (one row per $j$-invariant).</p>
 
 <table class="ntdata">
