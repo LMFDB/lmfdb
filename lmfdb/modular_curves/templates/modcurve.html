@@ -83,7 +83,7 @@
 
 {% set models = curve.formatted_models %}
 {% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
-<h2> {{ KNOWL('ag.model', 'Models') }} </h2>
+<h2> {{ KNOWL('modcurve.model', 'Models') }} </h2>
 {% if models %}
 <script>
   function show_model_lines(mstyle) {
