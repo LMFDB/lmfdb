@@ -432,16 +432,16 @@ class WebModCurve(WebObj):
 
     def model_type_knowl(self, model_type):
         if model_type == 0:
-            return display_knowl('ag.canonical_model', 'canonical model')
+            return display_knowl('ag.canonical_model', 'Canonical model')
         elif model_type in [2, -2]:
-            return display_knowl('modcurve.plane_model', 'plane model')
+            return display_knowl('modcurve.plane_model', 'Plane model')
         elif model_type == 5:
             if self.genus == 1:
                 return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
             else:
                 return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
         elif model_type == 8:
-            return display_knowl('modcurve.embedded_model', 'embedded model')
+            return display_knowl('modcurve.embedded_model', 'Embedded model')
         return ""
 
     def model_type_domain(self, model_type):

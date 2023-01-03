@@ -40,7 +40,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, FloatCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol,
+    SearchColumns, MathCol, FloatCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
@@ -61,6 +61,7 @@ LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]\d+")
+CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z](\d+)")
 SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+")
 S_LABEL_RE = re.compile(r"\d+(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
@@ -211,28 +212,38 @@ def curveinfo(label):
 def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
+def url_for_RSZB_label(label):
+    return "https://blue.lmfdb.xyz/ModularCurve/Q/" + label
+
+def url_for_RZB_label(label):
+    return "http://users.wfu.edu/rouseja/2adic/" + label + ".html"
+
+def url_for_CP_label(label):
+    genus = CP_LABEL_GENUS_RE.fullmatch(label)[1]
+    return "https://mathstats.uncg.edu/sites/pauli/congruence/csg" + genus + ".html#group" + label
+
 def modcurve_lmfdb_label(label):
-    if CP_LABEL_RE.fullmatch(label):
-        label_type = "Cummins & Pauli label"
+    if LABEL_RE.fullmatch(label):
+        label_type = "label"
+        lmfdb_label = label
+    elif RSZB_LABEL_RE.fullmatch(label):
+        label_type = "RSZB label"
+        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RSZBlabel": label}, "label")
+    elif CP_LABEL_RE.fullmatch(label):
+        label_type = "CP label"
         lmfdb_label = db.gps_gl2zhat_fine.lucky({"CPlabel": label}, "label")
     elif SZ_LABEL_RE.fullmatch(label):
-        label_type = "Sutherland & Zywina label"
+        label_type = "SZ label"
         lmfdb_label = db.gps_gl2zhat_fine.lucky({"SZlabel": label}, "label")
     elif RZB_LABEL_RE.fullmatch(label):
-        label_type = "Rousse & Zureick-Brown label"
+        label_type = "RZB label"
         lmfdb_label = db.gps_gl2zhat_fine.lucky({"RZBlabel": label}, "label")
-    elif RSZB_LABEL_RE.fullmatch(label):
-        label_type = "Rousee, Sutherland & Zureick-Brown label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RSZBlabel": label}, "label")
     elif S_LABEL_RE.fullmatch(label):
-        label_type = "Sutherland label"
+        label_type = "S label"
         lmfdb_label = db.gps_gl2zhat_fine.lucky({"Slabel": label}, "label")
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
         lmfdb_label = db.gps_gl2zhat_fine.lucky({"name": canonicalize_name(label)}, "label")
-    elif LABEL_RE.fullmatch(label):
-        label_type = "label"
-        lmfdb_label = label
     else:
         label_type = "label"
         lmfdb_label = None
@@ -275,15 +286,20 @@ def modcurve_jump(info):
 
 modcurve_columns = SearchColumns([
     LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
+    LinkCol("RSZBlabel", "modcurve.other_labels", "RSZB label", url_for_RSZB_label, short_title="RSZB label"),
+    LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label"),
+    LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
+    ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
+    ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
     ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
     MathCol("level", "modcurve.level", "Level", default=True),
     MathCol("index", "modcurve.index", "Index", default=True),
     MathCol("genus", "modcurve.genus", "Genus", default=True),
     ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", default=True),
+    ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality", default=True),
     MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-    MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", default=True),
-    ProcessedCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", lambda d: r"$\text{yes}$" if d else r"$\text{no}$", align="center", default=True),
+    MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps",  short_title="Q-cusps", default=True),
+    CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center", default=True),
     ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
     CheckCol("simple", "modcurve.simple", "Simple"),
     CheckCol("squarefree", "av.squarefree", "Squarefree"),
@@ -385,8 +401,8 @@ def modcurve_search(info, query):
 
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
-    jump_example = "13.78.3.1"
-    jump_egspan = "e.g. 13.78.3.1, XNS+(13), 13Nn, 13A3, or 3.8.0-3.a.1.1*X1(5) (fiber product over $X(1)$)"
+    jump_example = "13.78.3.a.1"
+    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
@@ -484,7 +500,7 @@ class ModCurveSearchArray(SearchArray):
             name="factor",
             knowl="modcurve.fiber_product",
             label="Fiber product with",
-            example="3.8.0-3.a.1.1",
+            example="3.4.0.a.1",
         )
         covers = TextBox(
             name="covers",
@@ -584,6 +600,7 @@ class ModCurveSearchArray(SearchArray):
         'squarefree': False,
         'rank': False,
         'genus_minus_rank': False,
+        'name': False,
     }
 
 @modcurve_page.route("/Q/low_degree_points")
@@ -667,7 +684,7 @@ class RatPointSearchArray(SearchArray):
         )
         degree = TextBox(
             name="degree",
-            knowl="modcurve.degree",
+            knowl="modcurve.point_degree",
             label="Degree",
             example="2-4",
         )
@@ -691,7 +708,7 @@ class RatPointSearchArray(SearchArray):
         )
         j_height = TextBox(
             name="j_height",
-            knowl="ec.j_height",
+            knowl="nf.weil_height",
             label="$j$-height",
             example="1.0-4.0",
         )
