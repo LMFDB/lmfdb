@@ -683,7 +683,11 @@ class WebModCurve(WebObj):
             pts.append(
                 (rec["Elabel"],
                  url_for_EC_label(rec["Elabel"]) if rec["Elabel"] else "",
-                 "no" if rec["cm"] == 0 else f'${rec["cm"]}$', showj(rec["jinv"]), showj_fac(rec["jinv"]), rec["j_height"], coordstr))
+                 "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
+                 r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj(rec["jinv"]),
+                 showj_fac(rec["jinv"]),
+                 rec["j_height"],
+                 coordstr))
         # Should sort pts
         return pts
 
@@ -698,7 +702,7 @@ class WebModCurve(WebObj):
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
                  "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else ""),
-                 showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
+                 r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
                  rec["residue_field"],
                  url_for_NF_label(rec["residue_field"]),
                  rec["j_field"],
