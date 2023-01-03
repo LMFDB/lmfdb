@@ -379,10 +379,9 @@ def modcurve_search(info, query):
     parse_noop(info, query, "CPlabel")
     parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
-    #parse_element_of(info, query, "covered_by", qfield="children")
     if "covered_by" in info:
         # sort of hacky
-        label_type, lmfdb_label = modcurve_lmfdb_label(info["covered_by"])
+        lmfdb_label, label_type = modcurve_lmfdb_label(info["covered_by"])
         if lmfdb_label is None:
             parents = None
         else:
@@ -608,13 +607,18 @@ def low_degree_points():
     info = to_dict(request.args, search_array=RatPointSearchArray())
     return rational_point_search(info)
 
+def rszb_link(label):
+    RSZBlabel = db.gps_gl2zhat_fine.lookup(label,"RSZBlabel")
+    return r'<a href="https://blue.lmfdb.xyz/ModularCurve/Q/%s">%s</a>'%(RSZBlabel,RSZBlabel) if RSZBlabel else ""
+
 ratpoint_columns = SearchColumns([
     LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-    ProcessedCol("curve_name", "modcurve.family", "Name", name_to_latex, default=True),
+    ProcessedCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", rszb_link, short_title="RSZB label", orig="curve_label"),
+    ProcessedCol("curve_name", "modcurve.family", "Name", name_to_latex),
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"$\text{yes}$" if x == 4 else (r"$\text{no}$" if x in [2,-1,-2,-3,-4] else r""), align="center",
+                 lambda x: r"&#x2713;" if x == 4 else (r"" if x in [2,-1,-2,-3,-4] else r"<i>?</i>"), align="center",
                  default=True),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
@@ -651,7 +655,16 @@ def rational_point_search(info, query):
             query['cm'] = {'$ne': 0}
         else:
             parse_ints(info, query, 'cm')
-    parse_bool_unknown(info, query, "isolated")
+    if info['isolated'] == "yes":
+        query['isolated'] = 4
+    elif info['isolated'] == "no":
+        query['isolated'] = { "$in" : [2,-1,-2,-3,-4] }
+    elif info['isolated'] == "not_yes":
+        query['isolated'] = { "$ne" : 4 }
+    elif info['isolated'] == "not_no":
+        query['isolated'] = { "$in" : [0,1,3,4] }
+    elif info['isolated'] == "unknown":
+        query['isolated'] = { "$in" : [0,1,3] }
     parse_bool(info, query, "cusp")
 
 class RatPointSearchArray(SearchArray):
