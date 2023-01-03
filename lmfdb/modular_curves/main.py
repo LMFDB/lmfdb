@@ -656,13 +656,13 @@ def rational_point_search(info, query):
 
 class RatPointSearchArray(SearchArray):
     noun = "point"
-    sorts = [("", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
-             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
-             ("degree", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
-             ("j_height", "height of j-invariant", ["j_height", "jinv", "conductor_norm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
+    sorts = [("", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "j_height", "jinv"]),
+             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "j_height", "jinv"]),
+             ("degree", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
+             ("j_height", "height of j-invariant", ["j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
              ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
-             ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
-             ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"])]
+             ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
+             ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"])]
     def __init__(self):
         curve = TextBox(
             name="curve",
