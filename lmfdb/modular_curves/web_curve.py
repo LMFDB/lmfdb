@@ -267,7 +267,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def image(self):
-        img = db.modcurve_images.lookup(self.CPlabel, "image")
+        img = db.modcurve_pictures.lookup(self.psl2label, "image")
         return f'<img src="{img}" width="200" height="200"/>'
 
     @lazy_attribute
