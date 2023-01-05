@@ -316,7 +316,8 @@ def render_bmf_space_webpage(field_label, level_label):
     downloads = []
 
     if not field_label_regex.match(field_label):
-        info['err'] = "{} is not a valid label for an imaginary quadratic field".format(field_label)
+        flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
+        return redirect(url_for(".index"))
     else:
         bread = get_bread([
             (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
