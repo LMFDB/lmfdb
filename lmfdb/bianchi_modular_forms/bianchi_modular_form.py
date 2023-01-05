@@ -310,16 +310,18 @@ def bmf_field_dim_table(**args):
 def render_bmf_space_webpage(field_label, level_label):
     info = {}
     t = "Bianchi modular forms of level %s over %s" % (level_label, field_label)
-    bread = get_bread([
-        (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
-        (level_label, '')])
+    bread = get_bread()
     friends = []
     properties = []
     downloads = []
 
     if not field_label_regex.match(field_label):
         flash_error("%s is not a valid label for an imaginary quadratic field", field_label)
+        return redirect(url_for(".index"))
     else:
+        bread = get_bread([
+            (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
+            (level_label, '')])
         pretty_field_label = field_pretty(field_label)
         if not db.bmf_dims.exists({'field_label': field_label}):
             info['err'] = "no dimension information exists in the database for field %s" % pretty_field_label
