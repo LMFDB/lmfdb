@@ -193,7 +193,7 @@
 {% elif curve.db_nf_points %}
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
 
-<p> The following are the known low degree points on this modular curve (one per $j$-invariant).</p>
+<p> The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant).</p>
 <table class="ntdata">
   <thead>
     <tr><th>{{ KNOWL('modcurve.point_degree', 'Degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>

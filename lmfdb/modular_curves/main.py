@@ -675,13 +675,13 @@ def rational_point_search(info, query):
 
 class RatPointSearchArray(SearchArray):
     noun = "point"
-    sorts = [("", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
-             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "conductor_norm", "j_height", "jinv"]),
-             ("degree", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
-             ("j_height", "height of j-invariant", ["j_height", "jinv", "conductor_norm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
+    sorts = [("", "level", ["curve_level", "curve_genus", "curve_index", "curve_label", "degree", "j_height", "jinv"]),
+             ("curve_genus", "genus", ["curve_genus", "curve_level", "curve_index", "curve_label", "degree", "j_height", "jinv"]),
+             ("degree", "degree", ["degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
+             ("j_height", "height of j-invariant", ["j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
              ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
-             ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"]),
-             ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "conductor_norm", "j_height", "jinv"])]
+             ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
+             ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"])]
     def __init__(self):
         curve = TextBox(
             name="curve",
@@ -966,7 +966,7 @@ class ModCurve_download(Downloader):
         s += "Nrat_cusps := %s\n;" % rec['cusps']
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
-        if rec['factorization'] != [label]:
+        if rec['factorization'] != []:
             s += "// Modular curve is a fiber product of the following curves"
             s += "factors := %s\n" % [f.replace("'", "\"") for f in rec['factorization']]
         s += "// Groups containing given group, corresponding to curves covered by given curve\n"
@@ -980,15 +980,15 @@ class ModCurve_download(Downloader):
             ["equation", "number_variables", "model_type", "smooth"]))
         if models:
             max_nb_variables = max([m["number_variables"] for m in models])
-            variables = ascii_lowercase[-max_nb_variables:]
-            s += "K<%s" % variables[0]
+            variables = "xyzwtuvrsabcdefghiklmnopqj"[:max_nb_variables]
+            s += "Pol<%s" % variables[0]
             for x in variables[1:]:
                 s += ",%s" % x
             s += "> := PolynomialRing(Rationals(), %s);\n" % max_nb_variables
 
         s += "// Isomorphic to P^1?\n"
         is_P1 = "true" if (rec['genus'] == 0 and rec['pointless'] is False) else "false"
-        s += "is_P1 := %s\n" % is_P1
+        s += "is_P1 := %s;\n" % is_P1
         model_id = 0
         for m in models:
             if m["model_type"] == 0:
@@ -1000,12 +1000,18 @@ class ModCurve_download(Downloader):
                     name = "Singular plane model"
                 else:
                     name = "Plane model"
+            elif m["model_type"] == 5:
+                name = "Weierstrass model"
+            elif m["model_type"] == 7:
+                name = "Double cover of conic"
+            elif m["model_type"] == 8:
+                name = "Embedded model"
             else:
                 name = "Other model"
             s += "\n// %s\n" % name
-            s += "model_%s := " % model_id
-            s += "%s" % m['equation']
-            s += "\n"
+            s += "model_%s := [" % model_id
+            s += ",".join(m['equation'])
+            s += "];\n"
             model_id += 1
 
         s += "\n// Maps from this modular curve, if computed\n"
@@ -1019,7 +1025,7 @@ class ModCurve_download(Downloader):
             ["equation", "modcurve", "model_type"]))
         map_id = 0
         if maps and is_P1: #variable t has not been introduced above
-            s += "K<t> := PolynomialRing(Rationals());\n"
+            s += "Pol<t> := PolynomialRing(Rationals());\n"
 
         for m in maps:
             prefix = "map_%s_" % map_id
@@ -1027,8 +1033,6 @@ class ModCurve_download(Downloader):
             if m["codomain_label"] == "1.1.0.a.1":
                 if m["codomain_model_type"] == 1:
                     name = "j-invariant map"
-                elif m["codomain_model_type"] == 3:
-                    name = "j-invariant minus 1728"
                 elif m["codomain_model_type"] == 4:
                     name = "E4, E6"
                 else:
@@ -1041,38 +1045,31 @@ class ModCurve_download(Downloader):
                 name += " from the plane model"
             if m["codomain_label"] != "1.1.0.a.1":
                 has_codomain_equation = True
-                if m["codomain_label_type"] == 0:
+                if m["codomain_model_type"] == 0:
                     name += " to canonical model of modular curve"
-                elif m["codomain_label_type"] == 1:
+                elif m["codomain_model_type"] == 1:
                     has_codomain_equation = False
                     name += " to modular curve isomorphic to P^1"
-                elif m["codomain_label_type"] == 2:
+                elif m["codomain_model_type"] == 2:
                     name += " to plane model of modular curve"
                 else:
                     name += " to other model of modular curve"
                 name += " with label %s" % m["codomain_label"]
             s += "\n// %s\n" % name
-            nb_affines = len(m["coordinates"])
-            if nb_affines > 1:
-                s += "// Equations are available on %s different open affines\n" % nb_affines
-            for i in range(nb_affines):
-                if nb_affines > 1:
-                    s += "\n// On open affine no. %s:\n" % i
-                suffix = "open_%s" % i if nb_affines > 1 else ""
-                coord = m["coordinates"][i]
-                if m["leading_coefficients"] is None:
-                    lead = [1]*len(coord)
-                else:
-                    lead = m["leading_coefficients"][i]
-                for j in range(len(coord)):
-                    s += "//   Coordinate number %s:\n" % j
-                    s += prefix + suffix + ("coord_%s := " % j)
-                    s += "%s*(" % lead[j]
-                    s += "%s)\n" % coord[j]
+            coord = m["coordinates"]
+            if m["leading_coefficients"] is None:
+                lead = [1]*len(coord)
+            else:
+                lead = m["leading_coefficients"]
+            for j in range(len(coord)):
+                s += "//   Coordinate number %s:\n" % j
+                s += prefix + ("coord_%s := " % j)
+                s += "%s*(" % lead[j]
+                s += "%s);\n" % coord[j]
             if has_codomain_equation:
                 s += "// Codomain equation:\n"
                 eq = [eq for eq in codomain_models if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
-                s += prefix + "codomain := " + "%s\n" % eq["equation"]
+                s += prefix + "codomain := " + "[%s];\n" % ",".join(eq["equation"])
             map_id += 1
         return s
 
