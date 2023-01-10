@@ -49,6 +49,9 @@
 
 <table>
   <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
+  {% if curve.Glabel %}
+  <tr><td>{{ KNOWL('modcurve.level_structure', '$\GL_2(\Z/%s\Z)$-subgroup'%(curve.level)) }}:</td><td>{{ curve.show_subgroup() | safe}}</td></tr>
+  {% endif %}
   <tr><td>{{ KNOWL('modcurve.contains_negative_one', 'Contains $-I$') }}:</td><td> {{ curve.coarse_description | safe }}</td></tr>
   {% if curve.contains_negative_one %}
   <tr><td>{{ KNOWL('modcurve.quadratic_refinements', 'Quadratic refinements') }}:</td><td> {{ curve.quadratic_refinements | safe }}</td></tr>
@@ -239,7 +242,7 @@
   {% endif %}
   of degree {{degree}} {{ curve.model_type_domain(domain_model_type) }} to {{ curve.model_type_codomain(codomain_model_type) }} the modular curve
   {% if codomain_name %}
-  <a href="{{url_for('.by_label', label=codomain_label)}}">${{codomain_name}}$  </a>
+  <a href="{{url_for('.by_label', label=codomain_label)}}">{{name_to_latex(codomain_name)}}  </a>
   {% else %}
   <a href="{{url_for('.by_label', label=codomain_label)}}">{{codomain_label}}</a>
   {% endif %}

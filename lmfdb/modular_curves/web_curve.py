@@ -12,6 +12,7 @@ from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from string import ascii_lowercase
 
 def get_bread(tail=[]):
@@ -93,10 +94,10 @@ def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
     if cname[:4] == "Xs4(":
         cname = cname.upper()
-    elif cname in ["X(2,2)", "Xsp(2)"]:
+    elif cname in ["X1(2,2)", "Xpm1(2,2)", "Xsp(2)"]:
         cname = "X(2)"
-    elif cname in ["X0(2)", "Xpm1(2)", "Xsp+(2)"]:
-        cname = "X1(2)"
+    elif cname in ["X1(2)", "Xpm1(2)", "Xsp+(2)"]:
+        cname = "X0(2)"
     elif cname == "Xpm1(3)":
         cname = "X0(3)"
     elif cname == "Xns+(2)":
@@ -268,7 +269,8 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def image(self):
         img = db.modcurve_pictures.lookup(self.psl2label, "image")
-        return f'<img src="{img}" width="200" height="200"/>'
+        if img:
+            return f'<img src="{img}" width="200" height="200"/>'
 
     @lazy_attribute
     def friends(self):
@@ -308,11 +310,15 @@ class WebModCurve(WebObj):
         return get_bread(tail)
 
     @lazy_attribute
-    def title(self):
+    def display_name(self):
         if self.name:
-            return f"Modular curve {name_to_latex(self.name)}"
+            return name_to_latex(self.name)
         else:
-            return f"Modular curve {self.label}"
+            return self.label
+
+    @lazy_attribute
+    def title(self):
+        return f"Modular curve {self.display_name}"
 
     @lazy_attribute
     def formatted_dims(self):
@@ -555,7 +561,14 @@ class WebModCurve(WebObj):
         return GL2size // self.index
 
     def show_generators(self):
+        if not self.generators: # 2.6.0.a.1
+            return "trivial subgroup"
         return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
+
+    def show_subgroup(self):
+        if self.Glabel:
+            return abstract_group_display_knowl(self.Glabel)
+        return ""
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization

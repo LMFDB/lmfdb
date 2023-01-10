@@ -131,6 +131,7 @@ def by_label(label):
         curve=curve,
         dojs=dojs,
         zip=zip,
+        name_to_latex=name_to_latex,
         properties=curve.properties,
         friends=curve.friends,
         bread=curve.bread,
@@ -284,36 +285,48 @@ def modcurve_jump(info):
         else:
             return redirect(url_for_modcurve_label(label))
 
+def modcurve_postprocess(res, info, query):
+    # Add in the number of models
+    num_models = Counter()
+    labels = [rec["label"] for rec in res]
+    for modcurve in db.modcurve_models_test.search({"modcurve":{"$in":labels}}, "modcurve"):
+        num_models[modcurve] += 1
+    for rec in res:
+        rec["models"] = num_models[rec["label"]]
+    return res
+
 def blankzeros(n):
     return "$%o$"%n if n else ""
 
-modcurve_columns = SearchColumns([
-    LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-    LinkCol("RSZBlabel", "modcurve.other_labels", "RSZB label", url_for_RSZB_label, short_title="RSZB label"),
-    LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label"),
-    LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
-    ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
-    ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
-    ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
-    MathCol("level", "modcurve.level", "Level", default=True),
-    MathCol("index", "modcurve.index", "Index", default=True),
-    MathCol("genus", "modcurve.genus", "Genus", default=True),
-    ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-    ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality", default=True),
-    MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-    MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps",  short_title="Q-cusps", default=True),
-    CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center", default=True),
-    ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
-    CheckCol("simple", "modcurve.simple", "Simple"),
-    CheckCol("squarefree", "av.squarefree", "Squarefree"),
-    CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-    MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
-    ProcessedCol("models", "modcurve.models", "Models", lambda x: blankzeros(db.modcurve_models_test.count({'modcurve':x})), orig="label"),
-])
+modcurve_columns = SearchColumns(
+    [
+        LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
+        LinkCol("RSZBlabel", "modcurve.other_labels", "RSZB label", url_for_RSZB_label, short_title="RSZB label"),
+        LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label"),
+        LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
+        ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
+        ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
+        ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
+        MathCol("level", "modcurve.level", "Level", default=True),
+        MathCol("index", "modcurve.index", "Index", default=True),
+        MathCol("genus", "modcurve.genus", "Genus", default=True),
+        ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
+        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality", default=True),
+        MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
+        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps",  short_title="Q-cusps", default=True),
+        CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center", default=True),
+        ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
+        CheckCol("simple", "modcurve.simple", "Simple"),
+        CheckCol("squarefree", "av.squarefree", "Squarefree"),
+        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
+        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
+        ProcessedCol("models", "modcurve.models", "Models", lambda x: blankzeros(x)),
+    ],
+    db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults"])
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -324,9 +337,16 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)"]}]}
     elif inp == "Xsp": #add X(1),X(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
+    elif inp == "X2": # X_1(2,2n); add X(2)
+        query[qfield] = {"$or":[{"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
+    elif inp == "Xpm2": # X_{\pm1}(2,2n); add X(2)
+        query[qfield] = {"$or":[{"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
+    elif inp == "Xpm1": # Add X(1) and X0(N) for N=2,3,4,6
+        query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
+    elif inp == "X1":
+        query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
-        
 
 @search_wrap(
     table=db.gps_gl2zhat_fine,
@@ -334,6 +354,7 @@ def parse_family(inp, query, qfield):
     err_title="Modular curves search input error",
     shortcuts={"jump": modcurve_jump},
     columns=modcurve_columns,
+    postprocess=modcurve_postprocess,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modcurve_label,
 )
@@ -554,7 +575,10 @@ class ModCurveSearchArray(SearchArray):
             options=[("", ""),
                      ("X0", "X0(N)"),
                      ("X1", "X1(N)"),
+                     ("Xpm1", "X±1(N)"),
                      ("X", "X(N)"),
+                     ("X2", "X1(2,2N)"),
+                     ("Xpm2", "X±1(2,2N)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),
@@ -751,7 +775,10 @@ class RatPointSearchArray(SearchArray):
             options=[("", ""),
                      ("X0", "X0(N)"),
                      ("X1", "X1(N)"),
+                     ("Xpm1", "Xpm1(N)"),
                      ("X", "X(N)"),
+                     ("X2", "X1(2,2N)"),
+                     ("Xpm2", "Xpm1(2,2N)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),
