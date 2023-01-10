@@ -1041,19 +1041,25 @@ class ModCurve_download(Downloader):
                 name = "Map"
             if m["domain_model_type"] == 0:
                 name += " from the canonical model"
+            elif m["domain_model_type"] == 8:
+                name += " from the embedded model"
+            elif m["domain_model_type"] == 5:
+                name += " from the Weierstrass model"
             elif m["domain_model_type"] == 2:
                 name += " from the plane model"
             if m["codomain_label"] != "1.1.0.a.1":
                 has_codomain_equation = True
                 if m["codomain_model_type"] == 0:
-                    name += " to canonical model of modular curve"
+                    name += " to the canonical model of modular curve"
                 elif m["codomain_model_type"] == 1:
                     has_codomain_equation = False
-                    name += " to modular curve isomorphic to P^1"
+                    name += " to a modular curve isomorphic to P^1"
                 elif m["codomain_model_type"] == 2:
-                    name += " to plane model of modular curve"
+                    name += " to the plane model of modular curve"
+                elif m["codomain_model_type"] == 5:
+                    name += " to the Weierstrass model of modular curve"
                 else:
-                    name += " to other model of modular curve"
+                    name += " to another model of modular curve"
                 name += " with label %s" % m["codomain_label"]
             s += "\n// %s\n" % name
             coord = m["coordinates"]
