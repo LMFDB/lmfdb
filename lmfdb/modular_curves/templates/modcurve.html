@@ -174,37 +174,48 @@
 <p> {{curve.rational_points_description | safe}} </p>
 
 {% if (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) and curve.db_rational_points %}
-<p> The following are the known rational points on this modular curve (one row per $j$-invariant).</p>
-
 <table class="ntdata">
   <thead>
+  {% if self.known_degree1_points %}
   <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Elliptic curve') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th>{{ curve.rational_point_coord_headers |safe}}</tr>
   </thead>
   <tbody>
   {% for label, url, cm, jinv, jfac, jheight, coords in curve.db_rational_points %}
   <tr><td>{% if url %}<a href="{{url}}">{{label}}</a>{% endif %}</td><td align="center">{{ cm | safe}}</td><td style="text-align:right;">{{jinv | safe}}</td><td>{{jfac | safe}}</td><td align="right">${{"%.3f"%jheight}}$</td>{{coords | safe}}</tr>
   {% endfor %}
+  {% else %}
+  <tr>{{ curve.rational_point_coord_headers |safe}}</tr>
+  </thead>
+  <tbody>
+  {% for label, url, cm, jinv, jfac, jheight, coords in curve.db_rational_points %}
+  <tr>{{coords | safe}}</tr>
+  {% endfor %}
+  {% endif %}
   </tbody>
 </table>
 {% endif %}
 
-{% if curve.genus == 0 %}
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
 
-<p> Since this modular curve has genus 0, there are no {{ KNOWL('ag.isolated_point', 'isolated points') }} of any degree{% if curve.known_low_degree_points > 0 %}, but there are {{curve.known_low_degree_points}} <a href="{{url_for('.low_degree_points', curve=curve.label, degree='2-', cusp='no')}}">stored points</a>{% else %}, and there are no stored points{% endif %} of degree at least 2. </p>
-
-{% elif curve.db_nf_points %}
-<h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
-
-<p> The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant).</p>
+<p> {{ curve.low_degree_points_description | safe }} </p>
+{% if (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) and curve.db_nf_points %}
 <table class="ntdata">
   <thead>
+  {% if curve.known_low_degree_points %}
     <tr><th>{{ KNOWL('modcurve.point_degree', 'Degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>
   </thead>
   <tbody>
     {% for ec_label, ec_url, cm, isolated, jinv, res_field, j_field, degree, j_height, coords in curve.db_nf_points %}
       <tr><td align="center">${{degree}}$</td><td>{{res_field | safe}}</td><td>{{jinv | safe}}</td><td>{{j_field | safe}}</td><td align="right">${{"%.3f"%j_height}}$</td><td align="center">{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
     {% endfor %}
+  {% else %}
+    <tr><th>{{ KNOWL('modcurve.point_degree', 'Degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th>{{curve.nf_point_coord_headers|safe}}</tr>
+  </thead>
+  <tbody>
+    {% for ec_label, ec_url, cm, isolated, jinv, res_field, j_field, degree, j_height, coords in curve.db_nf_points %}
+      <tr><td align="center">${{degree}}$</td><td>{{res_field | safe}}</td>{{coords | safe}}</tr>
+    {% endfor %}
+  {% endif %}
   </tbody>
 </table>
 {% endif %}

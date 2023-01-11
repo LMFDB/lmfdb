@@ -12,7 +12,7 @@ from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from string import ascii_lowercase
 
@@ -29,6 +29,12 @@ def showexp(c, wrap=True):
         return f"$^{{{c}}}$"
     else:
         return f"^{{{c}}}"
+
+def my_field_pretty(nflabel):
+    # We use Q(i) to make coordinates shorter
+    if nflabel == "2.0.4.1":
+        return r"\(\Q(i)\)"
+    return field_pretty(nflabel)
 
 def showj(j):
     if j is None:
@@ -666,6 +672,10 @@ class WebModCurve(WebObj):
         return db.modcurve_points_test.count({"curve_label": self.label, "degree": {"$gt": 1}, "cusp": False})
 
     @lazy_attribute
+    def low_degree_cusps(self):
+        return sum([n for (w,n) in self.cusp_orbits if 1 < w <= 6])
+
+    @lazy_attribute
     def db_points(self):
         return list(db.modcurve_points_test.search(
             {"curve_label": self.label},
@@ -696,9 +706,24 @@ class WebModCurve(WebObj):
             return ""
         def make_point(coord):
             if rec["degree"] != 1:
-                R = PolynomialRing(QQ, name="a")
-                coord = [latex(R([QQ(t) for t in c.split(",")])) for c in coord.split(":")]
+                R = PolynomialRing(QQ, name="w")
+                # Use w since \frac contains a
+                coord = [latex(R([QQ(t) for t in c.split(",")])) for c in coord.replace("a", "w").split(":")]
                 coord = ":".join(coord)
+                d, r, D, _ = rec["residue_field"].split(".")
+                D = int(D)
+                if r == "0":
+                    D = -D
+                if rec["residue_field"] == "2.0.4.1":
+                    coord = coord.replace("w", "i")
+                elif rec["residue_field"] in cycloinfo:
+                    coord = coord.replace("w", r"\zeta")
+                elif d == "2" and D % 4 != 1:
+                    if D % 4 == 0:
+                        D = D // 4
+                    coord = coord.replace("w", r"\sqrt{%s}" % D)
+                else:
+                    coord = coord.replace("w", "a")
             return f"$({coord})$"
         s = ""
         if rec["degree"] == 1:
@@ -709,8 +734,6 @@ class WebModCurve(WebObj):
             coords = rec["coordinates"][str(model_type)]
             coords = [make_point(coord) for coord in coords]
             s += f"<td>{', '.join(coords)}</td>"
-        #if rec["residue_field"] == "2.0.4.1":
-        #    s = s.replace("a", "i")
         return s
 
     @lazy_attribute
@@ -742,8 +765,8 @@ class WebModCurve(WebObj):
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
                  "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else ""),
                  r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
-                 nf_display_knowl(rec["residue_field"], field_pretty(rec["residue_field"])),
-                 nf_display_knowl(rec["j_field"], field_pretty(rec["j_field"])),
+                 nf_display_knowl(rec["residue_field"], my_field_pretty(rec["residue_field"])),
+                 nf_display_knowl(rec["j_field"], my_field_pretty(rec["j_field"])),
                  rec["degree"],
                  rec["j_height"],
                  coordstr))
@@ -775,59 +798,108 @@ class WebModCurve(WebObj):
         if curve.known_degree1_noncm_points or curve.pointless is False:
             if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
-                    return r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
-                    return 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
+                    desc = 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
-                    return r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    desc = r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
-                    return 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
+                    desc = 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational cusp"),
                         pluralize(len(curve.cm_discriminants), "rational CM point"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.rational_cusps and curve.cm_discriminants:
-                    return 'This modular curve has %s and %s, but no other known rational points.' % (
+                    desc = 'This modular curve has %s and %s, but no other known rational points.' % (
                         pluralize(curve.rational_cusps, "rational cusp"),
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
                 elif curve.rational_cusps and curve.known_degree1_noncm_points > 0:
-                    return 'This modular curve has rational points, including %s and <a href="%s">%s</a>.' % (
+                    desc = 'This modular curve has rational points, including %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational_cusp"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
-                    return 'This modular curve has rational points, including %s and <a href="%s">%s</a>, but no rational cusps.' % (
+                    desc = 'This modular curve has rational points, including %s and <a href="%s">%s</a>, but no rational cusps.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.rational_cusps:
-                    return 'This modular curve has %s but no known non-cuspidal rational points.' % (
+                    desc = 'This modular curve has %s but no known non-cuspidal rational points.' % (
                         pluralize(curve.rational_cusps, "rational cusp"))
                 elif curve.cm_discriminants:
-                    return 'This modular curve has %s but no rational cusps or other known rational points.' % (
+                    desc = 'This modular curve has %s but no rational cusps or other known rational points.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
                 elif curve.known_degree1_points > 0:
-                    return 'This modular curve has <a href="%s">%s</a> but no rational cusps or CM points.' % (
+                    desc = 'This modular curve has <a href="%s">%s</a> but no rational cusps or CM points.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
             if curve.obstructions == [0]:
-                return 'This modular curve has no real points, and therefore no rational points.'
+                desc = 'This modular curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
-                return fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+                desc = fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.obstructions:
-                return fr'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+                desc = fr'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.pointless is None:
                 if curve.genus <= 90:
                     pexp = "$p$ not dividing the level"
                 else:
                     pexp = "good $p < 8192$"
-                return fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
+                desc = fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
-                return "This modular curve has finitely many rational points, none of which are cusps."
+                desc = "This modular curve has finitely many rational points, none of which are cusps."
+        if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
+            if self.only_cuspidal():
+                desc += "  The following are the coordinates of the rational cusps on this modular curve."
+            else:
+                desc += "  The following are the known rational points on this modular curve (one row per $j$-invariant)."
+        return desc
+
+    def only_cuspidal(self, rational=True):
+        if rational:
+            return self.known_degree1_points == 0
+        else:
+            return self.known_low_degree_points == 0
+
+    @lazy_attribute
+    def low_degree_points_description(self):
+        cusps = self.low_degree_cusps
+        noncusp = self.known_low_degree_points
+        infinite = self.genus == 0 or (self.genus == 1 and self.rank > 0)
+        if infinite:
+            gdesc = "has genus 0" if self.genus == 0 else "is a positive rank elliptic curve"
+            desc = "Since this modular curve {gdesc}, there are no display_knowl('ag.isolated_point', 'isolated points') of any degree.  It has "
+        else:
+            desc = "This modular curve has "
+        if noncusp or cusps:
+            url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="no")
+            if not noncusp:
+                link = "no"
+            elif infinite:
+                link = f'<a href="{url}">{noncusp}</a>'
+            else:
+                link = str(noncusp)
+            desc += '%s stored non-cuspidal point%s of degree at least 2 ' % (link, "s" if (noncusp != 1) else "")
+            url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="yes")
+            desc += "and "
+            if not cusps:
+                link = "no"
+            elif infinite:
+                link = f'<a href="{url}">{cusps}</a>'
+            else:
+                link = str(cusps)
+            desc += '%s cuspidal point%s of degree between 2 and 6' % (link, "s" if (noncusp != 1) else "")
+        else:
+            desc += "no stored points of degree at least 2."
+        if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_nf_points:
+            if noncusp:
+                desc += "  The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant):"
+            elif cusps:
+                desc += "  The following are the cusps of degree between 2 and 6 on this modular curve (one row per residue field):"
+        return desc
 
     @lazy_attribute
     def nearby_lattice(self):
