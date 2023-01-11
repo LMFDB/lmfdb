@@ -429,8 +429,7 @@ class WebModCurve(WebObj):
         elif model_type == 5:
             return "Weierstrass model"
         elif model_type == 7:
-            # Should this be called something else?
-            return "hyperelliptic model"
+            return "Geometric hyperelliptic model"
         elif model_type == 8:
             # Not sure what to call this either
             return "embedded model"
@@ -441,7 +440,7 @@ class WebModCurve(WebObj):
             return display_knowl('ag.canonical_model', 'Canonical model')
         elif model_type in [2, -2]:
             return display_knowl('modcurve.plane_model', 'Plane model')
-        elif model_type == 5:
+        elif model_type in [5, 7]:
             if self.genus == 1:
                 return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
             else:
