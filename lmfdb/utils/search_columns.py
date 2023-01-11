@@ -129,7 +129,10 @@ class LinkCol(SearchCol):
         self.url_for = url_for
 
     def display(self, rec):
-        return f'<a href="{self.url_for(self.get(rec))}">{self.get(rec)}</a>'
+        link = self.get(rec)
+        if link is None:
+            return ""
+        return f'<a href="{self.url_for(link)}">{link}</a>'
 
 
 class ProcessedCol(SearchCol):
@@ -141,7 +144,7 @@ class ProcessedCol(SearchCol):
         self.mathmode = mathmode
 
     def display(self, rec):
-        s = self.func(self.get(rec))
+        s = str(self.func(self.get(rec)))
         if s and self.mathmode:
             s = f"${s}$"
         return s

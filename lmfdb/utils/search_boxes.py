@@ -1,6 +1,6 @@
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
-
+from .utilities import plural_form
 
 class TdElt():
     _wrap_type = 'td'
@@ -276,6 +276,7 @@ class SelectBox(SearchBox):
         short_label=None,
         advanced=False,
         example_col=False,
+        example_value=False,
         id=None,
         qfield=None,
         extra=[],
@@ -305,6 +306,7 @@ class SelectBox(SearchBox):
         if min_width is None:
             min_width = self._default_min_width
         self.min_width = min_width
+        self.example_value = example_value
 
     def _input(self, info):
         keys = self.extra + ['name="%s"' % self.name]
@@ -312,6 +314,8 @@ class SelectBox(SearchBox):
             keys.append('id="%s"' % self.id)
         if self.advanced:
             keys.append('class="advanced"')
+        if self.example_value and info is None:
+            info = {self.name:self.example}
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -666,7 +670,7 @@ class SearchArray(UniqueRepresentation):
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         if info is None:
-            return [("List", "List of %s" % self.plural_noun), ("Random", "Random %s" % self.noun)]
+            return [("List", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
         else:
             return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
 

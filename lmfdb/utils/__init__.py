@@ -27,7 +27,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of', 'parse_not_element_of',
            'parse_subset', 'parse_submultiset', 'parse_list',
            'parse_list_start', 'parse_string_start', 'parse_restricted', 'parse_regex_restricted',
-           'parse_noop', 'parse_equality_constraints', 'parse_gap_id',
+           'parse_noop', 'parse_equality_constraints', 'parse_gap_id', 'parse_interval',
            'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt', 'parse_nf_jinv',
            'parse_container', 'parse_hmf_weight', 'parse_count',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
@@ -39,9 +39,9 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
            'SneakyTextBox',
-           'Downloader',
+           'Downloader', 'WebObj',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
-           'Configuration',
+           'Configuration', 'plural_form', 'pluralize',
            'names_and_urls', 'name_and_object_from_url',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
            'TraceHash', 'TraceHashClass',
@@ -94,6 +94,9 @@ from .utilities import (
     str_to_CBF,
     timestamp_in_ms_to_datetime,
     to_dict,
+    WebObj,
+    plural_form,
+    pluralize,
 )
 
 from .web_display import (
@@ -135,7 +138,7 @@ from .search_parsing import (
     parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string,
     parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
-    parse_subfield,
+    parse_subfield, parse_interval,
     clean_input, prep_ranges, input_string_to_poly)
 
 from .search_wrapper import search_wrap, count_wrap

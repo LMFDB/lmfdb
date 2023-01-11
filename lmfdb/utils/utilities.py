@@ -968,3 +968,37 @@ def datetime_to_timestamp_in_ms(dt):
 
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
+
+class WebObj(object):
+    def __init__(self, label, data=None):
+        self.label = label
+        if data is None:
+            data = self._get_dbdata()
+        self._data = data
+        if isinstance(data, dict):
+            for key, val in self._data.items():
+                setattr(self, key, val)
+
+    @classmethod
+    def from_data(cls, data):
+        return cls(data["label"], data)
+
+    def _get_dbdata(self):
+        # self.table must be defined in subclasses
+        return self.table.lookup(self.label)
+
+    def is_null(self):
+        return self._data is None
+
+def plural_form(noun):
+    return noun + "s"
+
+def pluralize(n, noun, omit_n=False):
+    if n == 1:
+        if omit_n:
+            return noun
+        return f"1 {noun}"
+    elif omit_n:
+        return plural_form(noun)
+    else:
+        return f"{n} {plural_form(noun)}"

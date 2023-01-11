@@ -931,7 +931,6 @@ def g2c_code_download(**args):
 
 class G2CSearchArray(SearchArray):
     noun = "curve"
-    plural_noun = "curves"
 
     def __init__(self):
         geometric_invariants = SneakyTextBox(

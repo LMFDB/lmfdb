@@ -726,7 +726,7 @@ def format_coeffs(coeffs):
 
 
 def url_for_label(label):
-    return url_for(".by_label", label=label)
+    return url_for("number_fields.by_label", label=label)
 
 @nf_page.route("/<label>")
 def by_label(label):
@@ -1111,7 +1111,6 @@ def nf_code(**args):
 
 class NFSearchArray(SearchArray):
     noun = "field"
-    plural_noun = "fields"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
