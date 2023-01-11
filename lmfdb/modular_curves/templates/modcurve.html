@@ -127,7 +127,13 @@
     <td style="padding: 5px 0px;">$=$</td>
     <td> $ {{ lines[1] }}$</td>
   </tr>
-  {% if lines|length < 7 %}
+  {% if type == 7 %}
+  <tr>
+    <td> ${{ lines[2] }}$</td>
+    <td style="padding: 5px 0px;">$=$</td>
+    <td> ${{ lines[3] }}$</td>
+  </tr>
+  {% elif lines|length < 7 %}
   {% for line in lines[2:] %}
   <tr>
     <td> </td>
