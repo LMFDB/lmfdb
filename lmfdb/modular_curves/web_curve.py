@@ -172,6 +172,17 @@ def formatted_model(m):
                 F2.constant_coefficient(),
             ]
         ]
+    #elif m["model_type"] == 7:
+    #    assert m["number_variables"] == 4
+    #    if len(m["equation"]) == 2
+    #    R3 = PolynomialRing(QQ, 3, "x,y,z")
+    #    R4 = PolynomialRing(QQ, "w")
+    #    w = R4.gen()
+    #    C = R3(m["equation"][0])
+    #    F = R4(m["equation"][1])
+    #    if F.monomial_coefficient(w**2) != -1:
+    #        F *= -1
+    #    assert F.monomial_coefficient(w**2) == -1
     else:
         # lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
         lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]]
