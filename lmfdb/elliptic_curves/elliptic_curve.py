@@ -31,7 +31,7 @@ from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
 from lmfdb.sato_tate_groups.main import st_display_knowl
-from lmfdb.modcurve.main import modcurve_link
+from lmfdb.modular_curves.main import modcurve_link
 
 q = ZZ['x'].gen()
 the_ECstats = None
