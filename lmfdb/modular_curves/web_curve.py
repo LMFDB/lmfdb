@@ -520,12 +520,12 @@ class WebModCurve(WebObj):
         maps = [m for m in self.modelmaps_to_display if m["codomain_label"] == self.label]
         models = {rec["model_type"]: rec["equation"] for rec in self.models_to_display}
         maps = [formatted_map(m, codomain_name=self.name, codomain_equation=models[m["codomain_model_type"]]) for m in maps]
-        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equations"]) for m in maps]
+        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equation"]) for m in maps]
 
     @lazy_attribute
     def formatted_jmaps(self):
         maps = []
-        for domain_model_type in [0,8,1,-2]:
+        for domain_model_type in [0,8,1,5,-2]:
             if self.display_j(domain_model_type):
                 maps.append(self.formatted_jmap(domain_model_type))
             if self.display_E4E6(domain_model_type):
