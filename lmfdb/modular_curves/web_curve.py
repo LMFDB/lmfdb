@@ -152,11 +152,33 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model(m):
-    #lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
-    lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]]
-    #if len(lines)>2: #display as 0 = ...
-    #    lines = ["0"] + [l for l in lines if l != "0"]
-    return (lines, m["number_variables"], m["model_type"],  m["smooth"])
+    if m["model_type"] == 5:
+        assert m["number_variables"] == 3
+        R1 = PolynomialRing(QQ, "x")
+        R2 = PolynomialRing(R1, "y")
+        y = R2.gen()
+        R3 = PolynomialRing(R2, "z")
+
+        assert len(m["equation"]) == 1
+        F = R3(m["equation"][0])
+        F2 = R2(F.subs(z=1))
+        if F2.monomial_coefficient(y**2) != -1:
+            F2 *= -1
+        assert F2.monomial_coefficient(y**2) == -1
+        lines = [
+            latex(elt)
+            for elt in [
+                -sum(F2.monomial_coefficient(elt) * elt for elt in [y, y**2]),
+                F2.constant_coefficient(),
+            ]
+        ]
+    else:
+        # lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
+        lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]]
+        # if len(lines)>2: #display as 0 = ...
+        #    lines = ["0"] + [l for l in lines if l != "0"]
+    return (lines, m["number_variables"], m["model_type"], m["smooth"])
+
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
     f = {}
@@ -441,11 +463,13 @@ class WebModCurve(WebObj):
             return display_knowl('ag.canonical_model', 'Canonical model')
         elif model_type in [2, -2]:
             return display_knowl('modcurve.plane_model', 'Plane model')
-        elif model_type in [5, 7]:
+        elif model_type == 5:
             if self.genus == 1:
                 return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
             else:
                 return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
+        elif model_type == 7:
+            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
         elif model_type == 8:
             return display_knowl('modcurve.embedded_model', 'Embedded model')
         return ""
