@@ -893,7 +893,7 @@ class WebModCurve(WebObj):
                 link = f'<a href="{url}">{noncusp}</a>'
             else:
                 link = str(noncusp)
-            desc += '%s stored non-cuspidal point%s of degree at least 2 ' % (link, "s" if (noncusp != 1) else "")
+            desc += '%s stored non-cuspidal point%s of degree at least 2, ' % (link, "s" if (noncusp != 1) else "")
             url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="yes")
             desc += "and "
             if not cusps:
@@ -902,14 +902,14 @@ class WebModCurve(WebObj):
                 link = f'<a href="{url}">{cusps}</a>'
             else:
                 link = str(cusps)
-            desc += '%s cuspidal point%s of degree between 2 and 6' % (link, "s" if (noncusp != 1) else "")
+            desc += '%s cuspidal point%s of degree between 2 and 6.' % (link, "s" if (noncusp != 1) else "")
         else:
             desc += "no stored points of degree at least 2."
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_nf_points:
             if noncusp:
-                desc += "  The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant):"
+                desc += "</p><p>The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant):"
             elif cusps:
-                desc += "  The following are the cusps of degree between 2 and 6 on this modular curve (one row per residue field):"
+                desc += "</p><p>The following are the cusps of degree between 2 and 6 on this modular curve (one row per residue field):"
         return desc
 
     @lazy_attribute
