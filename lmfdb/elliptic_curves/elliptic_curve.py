@@ -401,6 +401,10 @@ class EC_download(Downloader):
         "gp": ["[ellinit(ai)|ai<-data];"],
     }
 
+def make_modcurve_link(label):
+    from lmfdb.modular_curves.main import modcurve_link
+    return modcurve_link(label)
+
 ec_columns = SearchColumns([
     LinkCol("lmfdb_label", "ec.q.lmfdb_label", "Label", lambda label: url_for(".by_ec_label", label=label),
              default=True, align="center", short_title="LMFDB curve label"),
@@ -453,7 +457,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
-    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: ", ".join(['.'.join(s.split('.')[:5]) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])),
+    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 

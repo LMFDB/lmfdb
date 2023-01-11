@@ -176,7 +176,7 @@
 {% if (curve.genus > 1 or curve.genus == 1 and curve.rank == 0) and curve.db_rational_points %}
 <table class="ntdata">
   <thead>
-  {% if self.known_degree1_points %}
+  {% if curve.known_degree1_points > 0 %}
   <tr><th>{{ KNOWL('ec.q.lmfdb_label', 'Elliptic curve') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th style="text-align:center;" colspan="2">{{ KNOWL('ec.q.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th>{{ curve.rational_point_coord_headers |safe}}</tr>
   </thead>
   <tbody>
