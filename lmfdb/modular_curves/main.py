@@ -116,14 +116,9 @@ def interesting():
         learnmore=learnmore_list(),
     )
 
-def url_for_label(label):
-    if label == "random":
-        return url_for("modcurve.random_curve")
-    return url_for("modcurve.by_label", label=label)
-
 def modcurve_link(label):
     if int(label.split(".")[0]) <= 70:
-        return '<a href=%s>%s</a>' % (url_for_label(label), label)
+        return '<a href=%s>%s</a>' % (url_for("modcurve.by_label", label=label), label)
     else:
         return label
 
