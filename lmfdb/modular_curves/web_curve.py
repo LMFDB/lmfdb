@@ -902,7 +902,7 @@ class WebModCurve(WebObj):
                 link = f'<a href="{url}">{cusps}</a>'
             else:
                 link = str(cusps)
-            desc += '%s cuspidal point%s of degree between 2 and 6.' % (link, "s" if (noncusp != 1) else "")
+            desc += '%s cuspidal point%s of degree between 2 and 6.' % (link, "s" if (cusps != 1) else "")
         else:
             desc += "no stored points of degree at least 2."
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_nf_points:
