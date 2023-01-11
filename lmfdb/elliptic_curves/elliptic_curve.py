@@ -31,6 +31,7 @@ from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.modcurve.main import modcurve_link
 
 q = ZZ['x'].gen()
 the_ECstats = None
@@ -453,7 +454,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
-    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: ", ".join(['.'.join(s.split('.')[:5]) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])),
+    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: ", ".join([modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])),
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 

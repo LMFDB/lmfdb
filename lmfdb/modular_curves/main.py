@@ -116,6 +116,17 @@ def interesting():
         learnmore=learnmore_list(),
     )
 
+def url_for_label(label):
+    if label == "random":
+        return url_for("modcurve.random_curve")
+    return url_for("modcurve.by_label", label=label)
+
+def modcurve_link(label):
+    if int(label.split(".")[0]) <= 70:
+        return '<a href=%s>%s</a>' % (url_for_label(label), label)
+    else:
+        return label
+
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if not LABEL_RE.fullmatch(label):
@@ -853,7 +864,8 @@ def labels_page():
 def modcurve_data(label):
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if LABEL_RE.fullmatch(label):
-        if FINE_LABEL_RE.fullmatch(label):
+        m = FINE_LABEL_RE.fullmatch(label)
+        if m:
             return datapage([label, m.group(1)], ["gps_gl2zhat_fine", "gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
         else:
             return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
