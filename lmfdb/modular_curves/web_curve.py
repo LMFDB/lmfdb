@@ -11,7 +11,8 @@ from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
-from lmfdb.number_fields.number_field import url_for_label as url_for_NF_label
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from string import ascii_lowercase
 
@@ -496,7 +497,7 @@ class WebModCurve(WebObj):
         maps = [m for m in self.modelmaps_to_display if m["codomain_label"] == self.label]
         models = {rec["model_type"]: rec["equation"] for rec in self.models_to_display}
         maps = [formatted_map(m, codomain_name=self.name, codomain_equation=models[m["codomain_model_type"]]) for m in maps]
-        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equation"]) for m in maps]
+        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equations"]) for m in maps]
 
     @lazy_attribute
     def formatted_jmaps(self):
@@ -684,6 +685,8 @@ class WebModCurve(WebObj):
             coords = rec["coordinates"][str(model_type)]
             coords = [make_point(coord) for coord in coords]
             s += f"<td>{', '.join(coords)}</td>"
+        #if rec["residue_field"] == "2.0.4.1":
+        #    s = s.replace("a", "i")
         return s
 
     @lazy_attribute
@@ -715,10 +718,8 @@ class WebModCurve(WebObj):
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
                  "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else ""),
                  r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
-                 rec["residue_field"],
-                 url_for_NF_label(rec["residue_field"]),
-                 rec["j_field"],
-                 url_for_NF_label(rec["j_field"]),
+                 nf_display_knowl(rec["residue_field"], field_pretty(rec["residue_field"])),
+                 nf_display_knowl(rec["j_field"], field_pretty(rec["j_field"])),
                  rec["degree"],
                  rec["j_height"],
                  coordstr))

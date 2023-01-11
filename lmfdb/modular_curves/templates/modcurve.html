@@ -202,8 +202,8 @@
     <tr><th>{{ KNOWL('modcurve.point_degree', 'Degree') }}</th><th>{{ KNOWL('modcurve.point_residue_field', 'Residue field') }}</th><th>{{ KNOWL('ec.j_invariant', '$j$-invariant') }}</th><th>{{ KNOWL('ec.j_invariant', '$\\Q(j)$') }}</th><th>{{ KNOWL('nf.weil_height', '$j$-height') }}</th><th align="center">{{ KNOWL('ec.complex_multiplication', 'CM') }}</th><th>{{ KNOWL('ag.isolated_point', 'Isolated') }}</th>{% if not curve.contains_negative_one %}<th>{{ KNOWL('ec.curve_label', 'Elliptic Curve') }}</th>{% endif %}{{curve.nf_point_coord_headers|safe}}</tr>
   </thead>
   <tbody>
-    {% for ec_label, ec_url, cm, isolated, jinv, res_field, res_field_url, j_field, j_field_url, degree, j_height, coords in curve.db_nf_points %}
-      <tr><td align="center">${{degree}}$</td><td><a href="{{res_field_url}}">{{res_field}}</a></td><td>{{jinv | safe}}</td><td><a href="{{j_field_url}}">{{j_field}}</a></td><td align="right">${{"%.3f"%j_height}}$</td><td align="center">{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
+    {% for ec_label, ec_url, cm, isolated, jinv, res_field, j_field, degree, j_height, coords in curve.db_nf_points %}
+      <tr><td align="center">${{degree}}$</td><td>{{res_field | safe}}</td><td>{{jinv | safe}}</td><td>{{j_field | safe}}</td><td align="right">${{"%.3f"%j_height}}$</td><td align="center">{{ cm | safe}}</td><td>{{isolated | safe}}</td>{% if not curve.contains_negative_one %}<td><a href="{{ec_url}}">{{ec_label}}</a></td>{% endif %}{{coords | safe}}</tr>
     {% endfor %}
   </tbody>
 </table>
