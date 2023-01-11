@@ -1,14 +1,93 @@
+import re
 from flask import url_for
 from urllib.parse import quote
+from markupsafe import Markup, escape
 from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
-                         web_latex_split_on, integer_squarefree_part)
-from lmfdb.number_fields.web_number_field import WebNumberField
+                         web_latex_split_on, integer_squarefree_part, nf_string_to_label)
+from lmfdb.number_fields.web_number_field import WebNumberField, field_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.elliptic_curves.web_ec import conductor_from_label, cremona_label_to_lmfdb_label
+
+# The conductor label seems to only have three parts for the trivial ideal (1.0.1)
+# field 3.1.23.1 uses upper case letters for isogeny class
+LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
+SHORT_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
+CLASS_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
+SHORT_CLASS_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
+FIELD_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
+
+def split_full_label(lab):
+    r""" Split a full curve label into 4 components
+    (field_label,conductor_label,isoclass_label,curve_number)
+    """
+    if not LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label." % escape(lab)))
+    data = lab.split("-")
+    field_label = data[0]
+    conductor_label = data[1]
+    isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
+    curve_number = re.search(r"\d+", data[2]).group()  # (a string)
+    return (field_label, conductor_label, isoclass_label, curve_number)
+
+
+def split_short_label(lab):
+    r""" Split a short curve label into 3 components
+    (conductor_label,isoclass_label,curve_number)
+    """
+    if not SHORT_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve label." % escape(lab)))
+    data = lab.split("-")
+    conductor_label = data[0]
+    isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
+    curve_number = re.search(r"\d+", data[1]).group()  # (a string)
+    return (conductor_label, isoclass_label, curve_number)
+
+
+def split_class_label(lab):
+    r""" Split a class label into 3 components
+    (field_label, conductor_label,isoclass_label)
+    """
+    if not CLASS_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve isogeny class label." % escape(lab)))
+    data = lab.split("-")
+    field_label = data[0]
+    conductor_label = data[1]
+    isoclass_label = data[2]
+    return (field_label, conductor_label, isoclass_label)
+
+
+def split_short_class_label(lab):
+    r""" Split a short class label into 2 components
+    (conductor_label,isoclass_label)
+    """
+    if not SHORT_CLASS_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve isogeny class label." % escape(lab)))
+    data = lab.split("-")
+    conductor_label = data[0]
+    isoclass_label = data[1]
+    return (conductor_label, isoclass_label)
+
+def conductor_label_norm(lab):
+    r""" extract norm from conductor label (as a string)"""
+    s = lab.replace(' ','')
+    if re.match(r'\d+.\d+',s):
+        return s.split('.')[0]
+    else:
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % escape(lab)))
+
+def get_nf_info(lab):
+    r""" extract number field label from string and pretty"""
+    try:
+        label = nf_string_to_label(lab)
+        pretty = field_pretty (label)
+    except ValueError as err:
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % (escape(lab),err)))
+    return label, pretty
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -604,7 +683,8 @@ class ECNF():
         self.properties += [('Base field', self.field.field_pretty())]
 
         self.properties += [
-            ('Conductor', self.cond),
+            # hide conductor in Properties box (can be very large)
+            # ('Conductor', self.cond),
             ('Conductor norm', self.cond_norm),
             # See issue #796 for why this is hidden (can be very large)
             # ('j-invariant', self.j),
@@ -612,12 +692,11 @@ class ECNF():
 
         if not self.base_change:
             self.base_change = []  # in case it was False or None instead of []
-        # (temporary) delete labels of curves over intermediate fields (not Q)
-        self.base_change = [lab for lab in self.base_change if '-' not in lab]
+        self.nbc = len(self.base_change)
+
+        # add base_change yes/no to Properties box
         if self.base_change:
-            # delete incomplete labels
-            self.base_change = [lab for lab in self.base_change if '?' not in lab]
-            self.properties += [('Base change', 'yes: %s' % ','.join(str(lab) for lab in self.base_change))]
+            self.properties += [('Base change', 'yes')]
         else:
             self.properties += [('Base change', 'no')]
         self.properties += [('Q-curve', self.qc)]
@@ -630,9 +709,37 @@ class ECNF():
             ('Rank', r),
         ]
 
-        for E0 in self.base_change:
-            self.friends += [(r'Base change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+        # add links to base curves if base-change - first separate
+        # labels over Q from others, and convert any Cremona labels to
+        # LMFDB labels:
+        self.base_change_Q = [cremona_label_to_lmfdb_label(lab) for lab in self.base_change if '-' not in lab]
 
+        # sort by conductor (so also unkown curves come last)
+        self.base_change_Q.sort(key=lambda lab:ZZ(conductor_from_label(lab)))
+        self.bcQtext = [] # for the Base change section of the home page
+        for lab in self.base_change_Q:
+            if '?' in lab:
+                cond = conductor_from_label(lab)
+                self.bcQtext.append('a curve of conductor {} (not in the database)'.format(cond))
+                # but omit from friends
+            else:
+                url = url_for("ec.by_ec_label", label=lab)
+                self.bcQtext.append('<a href="{}">{}</a>'.format(url,lab))
+                self.friends += [(r'Base change of {} /\(\Q\)'.format(lab), url)]
+
+        self.base_change_NF = [lab for lab in self.base_change if '-' in lab]
+        # we want to use split_full_label but that will fail if the class code + number are '?'
+        self.base_change_NFsplit = [(lab,)+split_full_label(lab.replace('?','a1')) for lab in self.base_change_NF]
+        self.bcNFtext = [] # for the Base change section of the home page
+        for (lab,nf,cond,cl,num) in self.base_change_NFsplit:
+            field_knowl = FIELD(nf).knowl()
+            if '?' in lab:
+                cond_norm = cond.split(".")[0]
+                self.bcNFtext.append(["{}".format(field_knowl), "a curve with conductor norm {} (not in the database)".format(cond_norm)])
+            else:
+                url = url_for(".show_ecnf", nf=nf, conductor_label=cond, class_label=cl, number=num)
+                self.bcNFtext.append(["{}".format(field_knowl), '<a href="{}">{}</a>'.format(url,lab)])
+                self.friends += [(r'Base change of %s' % lab, url)]
         self._code = None # will be set if needed by get_code()
 
         self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
