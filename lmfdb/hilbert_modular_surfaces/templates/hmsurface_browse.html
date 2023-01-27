@@ -1,0 +1,30 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Browse </h2>
+
+<!--
+<p>
+  By {{KNOWL('modcurve.level', 'level')}}:
+  <a href="?level_type=prime">prime</a>&nbsp;
+  <a href="?level_type=prime_power">prime power</a>&nbsp;
+  <a href="?level_type=squarefree">squarefree</a>&nbsp;
+  {% for rnge in info.level_list %}
+    <a href="?level={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+-->
+
+<h2> {{ KNOWL('intro.search', 'Search') }} </h2>
+
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+{% endblock %}
