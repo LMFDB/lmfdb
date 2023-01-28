@@ -55,7 +55,7 @@ from lmfdb.hilbert_modular_surfaces.web_hmsurface import (
 )
 from string import ascii_lowercase
 
-LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+-\d+\.\d+-[sl,gl]-[0,1,f]")
+LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+-\d+\.\d+-[sg]l-[01f]")
 #NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4)?\(\d+\)")
 
 def learnmore_list():
@@ -165,7 +165,7 @@ def hmsurface_search(info, query):
 class HMSurfaceSearchArray(SearchArray):
     noun = "surface"
     jump_example = "2.2.5.1-1.1-1.1-gl-0"
-    jump_egspan = "e.g. 2.2.5.1-1.1-1.1-gl-0",
+    jump_egspan = "e.g. 2.2.5.1-1.1-1.1-gl-0"
     jump_prompt = "Label"
     jump_knowl = "hmsurface.search_input"
 

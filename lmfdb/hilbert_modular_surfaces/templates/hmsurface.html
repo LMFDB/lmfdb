@@ -2,12 +2,27 @@
 {% block content %}
 
 
-<h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
+<h2> {{ KNOWL('hmsurface.invariants', 'Invariants') }} </h2>
 <table>
-<!--  <tr><td>{{ KNOWL("modcurve.level", "Level") }}:</td><td> ${{ curve.level }}$ </td><td style="width:20px;"></td><td>{{ KNOWL("modcurve.sl2level", "$\SL_2$-level") }}:</td><td>${{ curve.sl2level }}$</td><td style="width:60px;"></td><td>{{ KNOWL("modcurve.newform_level", "Newform level:") }}</td><td>${{ curve.newform_level }}$</td></tr> -->
+  <tr><td>{{ KNOWL("hmsurface.field", "Quadratic field") }}:</td>
+    <td> {{ surface.formatted_field | safe }} </td></tr>
+  <tr><td>{{ KNOWL("hmsurface.grouptype", "Congruence subgroup type") }}:</td>
+    <td> ${{ surface.formatted_subgroup_type }}$ </td>
+    <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.component", "Component") }}:</td>
+    <td>${{ surface.formatted_component }}$</td></tr>
+  <tr><td>{{ KNOWL("hmsurface.level", "Level") }}:</td>
+    <td> ${{ surface.formatted_level }}$ </td>
+    <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.levelnorm", "Level norm") }}:</td>
+    <td>${{ surface.level_norm }}$</td></tr>
+  <tr><td>{{ KNOWL("hmsurface.hodge", "Hodge numbers") }}:</td>
+    <td> $h^{2,0} = {{ surface.hodge_nbs[0] }},\ h^{1,1} = {{ surface.hodge_nbs[1] }}$ </td>
+    <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.chi", "Arithmetic genus") }}:</td>
+    <td>${{ surface.chi }}$</td>
+    <td style="width:60px;"></td><td>{{ KNOWL("hmsurface.K2", "$K^2$:") }}</td>
+    <td>${{ surface.K2 }}$</td></tr>  
 </table>
 
-<h2> {{ KNOWL('modcurve.cusps', 'Cusps') }} </h2>
+<h2> {{ KNOWL('hmsurface.cusps', 'Cusps') }} </h2>
 
 <!-- Make a table, etc. -->
 
