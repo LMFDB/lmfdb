@@ -9,7 +9,6 @@ import time
 from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, abort
-from markupsafe import Markup, escape
 from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
@@ -31,85 +30,15 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberFiel
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
-from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
+
+from lmfdb.ecnf.WebEllipticCurve import (ECNF, web_ainvs, LABEL_RE,
+                                         CLASS_LABEL_RE,
+                                         FIELD_RE, split_full_label,
+                                         split_class_label,
+                                         conductor_label_norm,
+                                         get_nf_info)
+
 from lmfdb.ecnf.isog_class import ECNF_isoclass
-
-# The conductor label seems to only have three parts for the trivial ideal (1.0.1)
-# field 3.1.23.1 uses upper case letters for isogeny class
-LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
-SHORT_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
-CLASS_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
-SHORT_CLASS_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
-FIELD_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
-
-def split_full_label(lab):
-    r""" Split a full curve label into 4 components
-    (field_label,conductor_label,isoclass_label,curve_number)
-    """
-    if not LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label." % escape(lab)))
-    data = lab.split("-")
-    field_label = data[0]
-    conductor_label = data[1]
-    isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
-    curve_number = re.search(r"\d+", data[2]).group()  # (a string)
-    return (field_label, conductor_label, isoclass_label, curve_number)
-
-
-def split_short_label(lab):
-    r""" Split a short curve label into 3 components
-    (conductor_label,isoclass_label,curve_number)
-    """
-    if not SHORT_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve label." % escape(lab)))
-    data = lab.split("-")
-    conductor_label = data[0]
-    isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
-    curve_number = re.search(r"\d+", data[1]).group()  # (a string)
-    return (conductor_label, isoclass_label, curve_number)
-
-
-def split_class_label(lab):
-    r""" Split a class label into 3 components
-    (field_label, conductor_label,isoclass_label)
-    """
-    if not CLASS_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve isogeny class label." % escape(lab)))
-    data = lab.split("-")
-    field_label = data[0]
-    conductor_label = data[1]
-    isoclass_label = data[2]
-    return (field_label, conductor_label, isoclass_label)
-
-
-def split_short_class_label(lab):
-    r""" Split a short class label into 2 components
-    (conductor_label,isoclass_label)
-    """
-    if not SHORT_CLASS_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve isogeny class label." % escape(lab)))
-    data = lab.split("-")
-    conductor_label = data[0]
-    isoclass_label = data[1]
-    return (conductor_label, isoclass_label)
-
-def conductor_label_norm(lab):
-    r""" extract norm from conductor label (as a string)"""
-    s = lab.replace(' ','')
-    if re.match(r'\d+.\d+',s):
-        return s.split('.')[0]
-    else:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % escape(lab)))
-
-def get_nf_info(lab):
-    r""" extract number field label from string and pretty"""
-    try:
-        label = nf_string_to_label(lab)
-        pretty = field_pretty (label)
-    except ValueError as err:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % (escape(lab),err)))
-    return label, pretty
-
 
 def get_bread(*breads):
     bc = [("Elliptic curves", url_for(".index"))]
@@ -191,7 +120,7 @@ def index():
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
-    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11, 19, 43, 67, 163, 23, 31]]
+    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 20, 24, 7, 40, 11, 52]] #, 56, 15, 68, 19, 84, 88, 23, 43, 67, 163]]
     info['fields'].append(['By <a href="{}">imaginary quadratic field</a>'.format(url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])

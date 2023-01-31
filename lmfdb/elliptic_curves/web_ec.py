@@ -7,6 +7,7 @@ from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
+from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
@@ -47,6 +48,11 @@ def split_lmfdb_label(lab):
 def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
+def conductor_from_label(lab):
+    if "?" in lab:
+        return lab.split(".")[0]
+    return split_lmfdb_label(lab)[0] if '.' in lab else split_cremona_label(lab)[0]
+
 def curve_lmfdb_label(conductor, iso_class, number):
     return "%s.%s%s" % (conductor, iso_class, number)
 
@@ -58,6 +64,9 @@ def class_lmfdb_label(conductor, iso_class):
 
 def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
+
+def cremona_label_to_lmfdb_label(clab):
+    return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
 
 logger = make_logger("ec")
 
@@ -313,7 +322,16 @@ class WebEC():
         # ell-adic Galois images:
 
         # remove adelic image record (prime set to 0) from ell-adic data if present
-        data['galois_data'] = [r for r in list(db.ec_galrep.search({'lmfdb_label': lmfdb_label})) if r["prime"] > 0]
+        galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
+        data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
+        adelic_data = [r for r in galois_data if r["prime"] == 0]
+        if adelic_data:
+            assert len(adelic_data) == 1
+            my_adelic_data = adelic_data[0]
+            data['adelic_data'] =  my_adelic_data
+            data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+        else:
+            data['adelic_data'] = {}
 
         # CM and Endo ring:
 
@@ -703,5 +721,13 @@ class WebEC():
             # Fill in placeholders for this specific curve:
             for lang in ['sage', 'pari', 'magma']:
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
+
+            # Fill in adelic image placeholders for this specific curve:
+            for lang in ['sage', 'magma']:
+                if self.data['adelic_data']:
+                    adelic_image_str = self.data['adelic_data']['adelic_image']
+                    adelic_gens = self.data['adelic_data']['adelic_gens']
+                    adelic_level_str = adelic_image_str.split(".")[0]
+                    self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
 
         return self._code

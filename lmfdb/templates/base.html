@@ -77,6 +77,7 @@ katexOpts = {
   "\\PGL": '{\\textrm{PGL}}',
   "\\ASL": '{\\textrm{ASL}}',
   "\\AGL": '{\\textrm{AGL}}',
+  "\\ASp": '{\\textrm{ASp}}',
   "\\Sp": '{\\textrm{Sp}}',
   "\\GSp": '{\\textrm{GSp}}',
   "\\PSp": '{\\textrm{PSp}}',
@@ -85,6 +86,39 @@ katexOpts = {
   "\\PGO": '{\\textrm{PGO}}',
   "\\SU": '{\\textrm{SU}}',
   "\\PSU": '{\\textrm{PSU}}',
+  "\\SOPlus": '{\\textrm{SO}^+}',
+  "\\SOMinus": '{\\textrm{SO}^-}',
+  "\\GO": '{\\textrm{O}}',
+  "\\GOPlus": '{\\textrm{O}^+}',
+  "\\GOMinus": '{\\textrm{O}^-}',
+  "\\GU": '{\\textrm{U}}',
+  "\\CSp": '{\\textrm{CSp}}',
+  "\\CSO": '{\\textrm{CSO}}',
+  "\\CSOPlus": '{\\textrm{CSO}^+}',
+  "\\CSOMinus": '{\\textrm{CSO}^-}',
+  "\\CSU": '{\\textrm{CSU}}',
+  "\\CO": '{\\textrm{CO}}',
+  "\\COPlus": '{\\textrm{CO}^+}',
+  "\\COMinus": '{\\textrm{CO}^-}',
+  "\\CU": '{\\textrm{CU}}',
+  "\\OmegaPlus": '{\\Omega^+}',
+  "\\OmegaMinus": '{\\Omega^-}',
+  "\\Spin": '{\\textrm{Spin}}',
+  "\\SpinPlus": '{\\textrm{Spin}^+}',
+  "\\SpinMinus": '{\\textrm{Spin}^-}',
+  "\\PSOPlus": '{\\textrm{PSO}^+}',
+  "\\PGOPlus": '{\\textrm{PGO}^+}',
+  "\\PSOMinus": '{\\textrm{PSO}^-}',
+  "\\PGOMinus": '{\\textrm{PGO}^-}',
+  "\\OmegaPlus": '{\\textrm{P}\\Omega^+}',
+  "\\OmegaMinus": '{\\textrm{P}\\Omega^-}',
+  "\\PGammaL": '{\\textrm{P}\\Gamma\\textrm{L}}',
+  "\\PSigmaL": '{\\textrm{P}\\Sigma\\textrm{L}}',
+  "\\PSigmaSp": '{\\textrm{P}\\Sigma\\textrm{Sp}}',
+  "\\PGammaU": '{\\textrm{P}\\Gamma\\textrm{U}}',
+  "\\AGammaL": '{\\textrm{A}\\Gamma\\textrm{L}}',
+  "\\ASigmaL": '{\\textrm{A}\\Sigma\\textrm{L}}',
+  "\\ASigmaSp": '{\\textrm{A}\\Sigma\\textrm{Sp}}',
   "\\SD": '{\\textrm{SD}}',
   "\\OD": '{\\textrm{OD}}',
   "\\He": '{\\textrm{He}}',
@@ -119,19 +153,14 @@ katexOpts = {
     {%- from "knowl-defs.html" import TEXT_DATA with context -%}
     {%- from "knowl-defs.html" import LINK_EXT with context -%}
 
-    <script type="text/javascript">
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-19138192-1']);
-_gaq.push(['_setDomainName', 'lmfdb.org']);
-_gaq.push(['_setAllowLinker', true]);
-_gaq.push(['_trackPageview']);
-_gaq.push(['_trackPageLoadTime']);
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YVBFDNX374"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-(function() {
-var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
+      gtag('config', 'G-YVBFDNX374');
     </script>
 
     {% if body_class == "checklist" -%}

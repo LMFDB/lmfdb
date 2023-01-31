@@ -88,7 +88,8 @@
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
     {% if not gp.live() %}
-    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
+    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.permutation_degree}}</td></tr>
+    <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
     {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
     {% endif %}
@@ -124,7 +125,7 @@
       </tr>
       <tr>
         <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes')}}</td>
-        {% for c in gp.cc_stats %}
+        {% for c in gp.cc_statistics %}
           <td>{{ c[1] }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
@@ -132,14 +133,14 @@
       {% if not gp.live() %}
       <tr>
         <td>{{KNOWL('group.division', 'Divisions')}}</td>
-        {% for c in gp.division_stats %}
+        {% for c in gp.div_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
         <td class="border-left">{{ gp.number_divisions }}</td>
       </tr>
       <tr style="border-bottom:none;">
         <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
-        {% for c in gp.autc_stats %}
+        {% for c in gp.aut_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
         <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
@@ -164,18 +165,18 @@
     <tbody>
       <tr>
         <td>{{KNOWL('group.representation.character', 'Irr. complex chars.')}}</td>
-        {% for n in gp.irrep_stats %}
+        {% for n in gp.irrep_statistics %}
           <td>{{ n }} </td>
         {% endfor %}
-        <td class="border-left">{{ gp.irrep_stats | sum }}</td>
+        <td class="border-left">{{ gp.irrep_statistics | sum }}</td>
       </tr>
       {% if not gp.live() %}
       <tr style="border-bottom:none;">
         <td>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
-        {% for n in gp.ratrep_stats %}
+        {% for n in gp.ratrep_statistics %}
           <td>{{ n }} </td>
         {% endfor %}
-        <td class="border-left">{{ gp.ratrep_stats | sum }}</td>
+        <td class="border-left">{{ gp.ratrep_statistics | sum }}</td>
       </tr>
       {% endif %}
     </tbody>
@@ -189,10 +190,7 @@
 <h2>Constructions</h2>
 
 <table class=nowrap>
-  <tr>
-    <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
-    <td colspan="5">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
-  </tr>
+  {{ gp.stored_representations | safe }}
   {% if not gp.live() %}
   {% if gp.direct_product %}
     <tr>

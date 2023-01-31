@@ -34,7 +34,7 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
-    factor_base_factorization_latex, formatfield)
+    factor_base_factorization_latex, fake_label, formatfield)
 
 assert nf_logger
 
@@ -509,6 +509,39 @@ def render_field_webpage(args):
     #ram_primes = ram_primes.replace('L', '')
     if not ram_primes:
         ram_primes = r'\textrm{None}'
+    if nf.is_cm_field():
+        # Reflex fields table
+        table = ""
+        reflex_fields = db.nf_fields_reflex.search({"nf_label" : label})
+        reflex_fields_list = []
+        field_labels_dict = dict()
+        for reflex_field in reflex_fields:
+            if len(reflex_field['rf_coeffs']) > 1:
+                reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])
+                field_labels_dict[tuple(reflex_field['rf_coeffs'])] = "N/A"
+        field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[1]} for a in reflex_fields_list]}, ["label", "coeffs"])
+        for field in field_labels:
+            field_labels_dict[tuple(field["coeffs"])] = field["label"]
+        for reflex_field in reflex_fields_list:
+            reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
+        total = 2 ** (nf.degree()//2 - 1)
+        reflex_fields_list.sort()
+        print(reflex_fields_list)
+        for reflex_field in reflex_fields_list:
+            if table != "":
+                table = table + ', '
+            if field_labels_dict[tuple(reflex_field[1])] == "N/A":
+                table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
+            else:
+                table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
+            if reflex_field[2] > 1:
+                table = table + '$^{' + str(reflex_field[2]) + '}$'
+            total = total - reflex_field[2]
+        if total > 0:
+            if table != "":
+                table = table + ', '
+            table = table + 'unavailable$^{' + str(total) + '}$'
+        data['reflex_fields'] = table
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()
     zk = [compress_poly_Q(x, 'a') for x in zkraw]

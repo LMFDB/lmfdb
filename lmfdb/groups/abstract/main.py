@@ -62,6 +62,7 @@ abstract_group_label_regex = re.compile(r"^(\d+)\.(([a-z]+)|(\d+))$")
 abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$"
 )
+gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 
@@ -556,7 +557,7 @@ def index():
         ("perfect=yes", "perfect"),
         ("rational=yes", "rational"),
     ]
-    info["maxgrp"] = db.gps_groups.max("order")
+    info["maxgrp"] = db.gps_groups_test.max("order")
 
     return render_template(
         "abstract-index.html",
@@ -595,7 +596,7 @@ def dynamic_statistics():
 
 @abstract_page.route("/random")
 def random_abstract_group():
-    label = db.gps_groups.random(projection="label")
+    label = db.gps_groups_test.random(projection="label")
     response = make_response(redirect(url_for(".by_label", label=label), 307))
     response.headers["Cache-Control"] = "no-cache, no-store"
     return response
@@ -605,7 +606,7 @@ def random_abstract_group():
 def interesting():
     return interesting_knowls(
         "group.abstract",
-        db.gps_groups,
+        db.gps_groups_test,
         url_for_label,
         title="Some interesting groups",
         bread=get_bread([("Interesting", " ")]),
@@ -658,7 +659,7 @@ def by_abelian_label(label):
     # Avoid database error on a hopeless search
     dblabel = None
     if not [z for z in primary if z>2**31-1]:
-        dblabel = db.gps_groups.lucky(
+        dblabel = db.gps_groups_test.lucky(
             {"abelian": True, "primary_abelian_invariants": primary}, "label"
         )
     if dblabel is None:
@@ -776,7 +777,7 @@ def group_jump(info):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
         return redirect(url_for(".by_abelian_label", label=".".join(invs)))
     # by name
-    labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
+    labs = db.gps_groups_test.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
         return redirect(url_for(".by_label", label=labs[0]))
     elif len(labs) == 2:
@@ -837,7 +838,7 @@ group_columns = SearchColumns([
 group_columns.dummy_download=True
 
 @search_wrap(
-    table=db.gps_groups,
+    table=db.gps_groups_test,
     title="Abstract group search results",
     err_title="Abstract groups search input error",
     columns=group_columns,
@@ -941,7 +942,7 @@ subgroup_columns = SearchColumns([
 subgroup_columns.dummy_download = True
 
 @search_wrap(
-    table=db.gps_subgroups,
+    table=db.gps_subgroups_test,
     title="Subgroup search results",
     err_title="Subgroup search input error",
     columns=subgroup_columns,
@@ -983,12 +984,15 @@ def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
 def diagram_js(gp, layers, display_opts, aut=False):
+    # Counts are not right for aut diagram if we know up to conj.
+    if aut and not gp.outer_equivalence:
+        autcounts = gp.aut_class_counts
     ll = [
         [
             grp.subgroup,
             grp.short_label,
             grp.subgroup_tex,
-            grp.count,
+            grp.count if (gp.outer_equivalence or not aut) else autcounts[grp.aut_label],
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
             grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
@@ -1092,7 +1096,10 @@ def render_abstract_group(label, data=None):
         ]
 
         # "external" friends
-        gap_ints = [int(y) for y in label.split(".")]
+        if gap_group_label_regex.fullmatch(label):
+            gap_ints = [int(y) for y in label.split(".")]
+        else:
+            gap_ints = [-1,-1]
         gap_str = str(gap_ints).replace(" ", "")
         if db.g2c_curves.count({"aut_grp_label": label}) > 0:
             g2c_url = f"/Genus2Curve/Q/?aut_grp_label={label}"
@@ -1315,7 +1322,7 @@ def sgp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_subgroup_label(label)), ("Data", " ")])
     title = f"Abstract subgroup data - {label}"
-    data = db.gps_subgroups.lookup(label, ["ambient", "subgroup", "quotient"])
+    data = db.gps_subgroups_test.lookup(label, ["ambient", "subgroup", "quotient"])
     if data is None:
         return abort(404)
     if data["quotient"] is None:
@@ -1331,7 +1338,7 @@ def download_group(**args):
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
-    gp_data = db.gps_groups.lucky({"label": label})
+    gp_data = db.gps_groups_test.lucky({"label": label})
 
     filename = "group" + label
     mydate = time.strftime("%d %B %Y")
@@ -1357,29 +1364,32 @@ def download_group(**args):
     s += "\n" + com2
     s += "\n"
 
-    if gp_data["solvable"]:
+    ### This all needs to change
+    reps = gp_data["representations"]
+    rep_type = gp_data["element_repr_type"]
+    if rep_type == "PC":
         s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-        s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
+        s += "encd:= " + str(reps["PC"]["code"]) + "; \n"
 
         if dltype == "magma":
             s += "G:=SmallGroupDecoding(encd,gpsize); \n"
         elif dltype == "gap":
             s += "G:=PcGroupCode(encd, gpsize); \n"
 
-        gen_index = gp_data["gens_used"]
+        gen_index = reps["PC"]["gens"]
         num_gens = len(gen_index)
         for i in range(num_gens):
             s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
 
-    # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
-    else:
-        d = -gp_data["elt_rep_type"]
+        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+    elif rep_type == "Perm":
+        d = reps["Perm"]["d"]
         s += "d:=" + str(d) + "; \n"
         s += "Sd:=SymmetricGroup(d); \n"
 
         # Turn Lehmer code into permutations
         list_gens = []
-        for perm in gp_data["perm_gens"]:
+        for perm in reps["Perm"]["gens"]:
             perm_decode = Permutations(d).unrank(perm)
             list_gens.append(perm_decode)
 
@@ -1845,7 +1855,7 @@ def abstract_group_namecache(labels, cache=None, reverse=None):
     # and serve as keys for the cache dictionary.
     if cache is None:
         cache = {}
-    for rec in db.gps_groups.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
+    for rec in db.gps_groups_test.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
         label = rec["label"]
         cache[label] = rec
         if reverse is not None:
@@ -1864,7 +1874,7 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
             if label in cache and "tex_name" in cache[label]:
                 name = cache[label]["tex_name"]
             else:
-                name = db.gps_groups.lookup(label, "tex_name")
+                name = db.gps_groups_test.lookup(label, "tex_name")
             if name is None:
                 name = f"Group {label}"
             else:
