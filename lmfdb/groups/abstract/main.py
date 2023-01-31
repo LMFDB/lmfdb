@@ -62,6 +62,7 @@ abstract_group_label_regex = re.compile(r"^(\d+)\.(([a-z]+)|(\d+))$")
 abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$"
 )
+gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 
@@ -1095,7 +1096,10 @@ def render_abstract_group(label, data=None):
         ]
 
         # "external" friends
-        gap_ints = [int(y) for y in label.split(".")]
+        if gap_group_label_regex.fullmatch(label):
+            gap_ints = [int(y) for y in label.split(".")]
+        else:
+            gap_ints = [-1,-1]
         gap_str = str(gap_ints).replace(" ", "")
         if db.g2c_curves.count({"aut_grp_label": label}) > 0:
             g2c_url = f"/Genus2Curve/Q/?aut_grp_label={label}"

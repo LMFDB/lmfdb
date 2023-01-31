@@ -1103,19 +1103,16 @@ class WebAbstractGroup(WebObj):
 
     # Figuring out the subgroup count for an autjugacy class might not be stored
     # directly.  We do them all at once.  If we only computed up to aut
-    # return {} since we don't need this
-    # output is a dictionary of aut_labels and counts
+    # return empty Counter since we don't need this.
+    # Output is a Counter of aut_labels and counts
     @lazy_attribute
     def aut_class_counts(self):
-        counts = {}
+        counts = Counter()
         if self.outer_equivalence:
             return counts
         subs = self.subgroups
         for s in subs.values():
-            if s.aut_label in counts:
-                counts[s.aut_label] += s.count
-            else:
-                counts[s.aut_label] = s.count
+            counts[s.aut_label] += s.count
         return counts
 
     @lazy_attribute
