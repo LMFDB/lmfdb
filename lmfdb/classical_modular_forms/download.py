@@ -526,7 +526,7 @@ class CMF_download(Downloader):
             'end function;',
             ]
 
-    def _magma_MakeNewformModSym(self, newform, hecke_nf ):
+    def _magma_MakeNewformModSym(self, newform, hecke_nf):
         """
         Given a WebNewform r from mf_newforms containing columns::
 
@@ -544,15 +544,16 @@ class CMF_download(Downloader):
         cutters = "[" + ",".join("<%d,R!%s" % (c[0], c[1]) + ">" for c in newform.hecke_cutters) + "]"
         explain = [ '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
                     '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
-                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.'
+                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.',
+                    '// The default sign is -1.  You can change this with the optional parameter "sign".'
         ]
         self.explain += explain
         return explain + [
-                "function MakeNewformModSym_%s()"  % (newform.label.replace(".","_"), ),
+                "function MakeNewformModSym_%s( : sign := -1)" % (newform.label.replace(".","_"), ),
                 "    R<x> := PolynomialRing(Rationals());",
                 "    chi := MakeCharacter_%d_%s();" % (N, o),
                 "    // SetVerbose(\"ModularSymbols\", true);",
-                "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,-1)));" % (k, ),
+                "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,sign)));" % (k, ),
                 "    Vf := Kernel(%s,Snew);" % (cutters,),
                 "    return Vf;",
                 "end function;",

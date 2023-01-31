@@ -62,6 +62,7 @@ abstract_group_label_regex = re.compile(r"^(\d+)\.(([a-z]+)|(\d+))$")
 abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$"
 )
+gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 
@@ -983,12 +984,15 @@ def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
 def diagram_js(gp, layers, display_opts, aut=False):
+    # Counts are not right for aut diagram if we know up to conj.
+    if aut and not gp.outer_equivalence:
+        autcounts = gp.aut_class_counts
     ll = [
         [
             grp.subgroup,
             grp.short_label,
             grp.subgroup_tex,
-            grp.count,
+            grp.count if (gp.outer_equivalence or not aut) else autcounts[grp.aut_label],
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
             grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
@@ -1092,7 +1096,10 @@ def render_abstract_group(label, data=None):
         ]
 
         # "external" friends
-        gap_ints = [int(y) for y in label.split(".")]
+        if gap_group_label_regex.fullmatch(label):
+            gap_ints = [int(y) for y in label.split(".")]
+        else:
+            gap_ints = [-1,-1]
         gap_str = str(gap_ints).replace(" ", "")
         if db.g2c_curves.count({"aut_grp_label": label}) > 0:
             g2c_url = f"/Genus2Curve/Q/?aut_grp_label={label}"
