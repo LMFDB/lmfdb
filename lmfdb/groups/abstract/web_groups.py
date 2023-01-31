@@ -1536,7 +1536,7 @@ class WebAbstractGroup(WebObj):
     def show_composition_factors(self):
         CF = Counter(self.composition_factors)
         display = {
-            rec["label"]: rec["tex_name"]
+            rec["label"]: '$'+rec["tex_name"]+'$'
             for rec in db.gps_groups_test.search(
                 {"label": {"$in": list(set(CF))}}, ["label", "tex_name"]
             )
@@ -1547,7 +1547,7 @@ class WebAbstractGroup(WebObj):
             return "" if n == 1 else f" ({n})"
 
         return ", ".join(
-            f'<a href="{url_for_label(label)}">${display[label]}$</a>{exp(e)}'
+            f'<a href="{url_for_label(label)}">{display.get(label,label)}</a>{exp(e)}'
             for (label, e) in CF.items()
         )
 
