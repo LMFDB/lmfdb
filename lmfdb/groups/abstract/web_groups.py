@@ -132,7 +132,6 @@ def abelian_get_elementary(snf):
     return possiblep[0]
 
 
-
 class WebObj():
     def __init__(self, label, data=None):
         self.label = label
@@ -1329,6 +1328,7 @@ class WebAbstractGroup(WebObj):
     def decode_as_matrix(self, code, rep_type, as_str=False):
         R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
+
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
@@ -1484,6 +1484,7 @@ class WebAbstractGroup(WebObj):
             if self.solvable:
                 return self.representation_line("PC")
             raise NotImplementedError
+
         def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
