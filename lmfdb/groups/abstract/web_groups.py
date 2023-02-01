@@ -82,6 +82,8 @@ def group_pretty_image(label):
     # we should not get here
 
 def primary_to_smith(invs):
+    if invs==[]:
+        return([])
     by_p = defaultdict(list)
     for q in invs:
         p, _ = q.is_prime_power(get_data=True)
@@ -512,12 +514,13 @@ class WebAbstractGroup(WebObj):
             subdata = self._subgroup_data
             poss = []
             to_try = [k for k in ["G'", "Z", r"\Phi"] if 1 < subdata[k].order < n]
-            if not to_try:
+            #if not to_try:
                 # this can only occur for perfect groups
-                if self.simple:
-                    to_try = [k for k in subdata if k.startswith("M")]
-                else:
-                    to_try = [k for k in subdata if k.startswith("m")]
+            #    if self.simple:
+                    #to_try = [k for k in subdata if k.startswith("M")]
+            #        pass
+            #    else:
+            #        to_try = [k for k in subdata if k.startswith("m")]
             for i, name in enumerate(to_try):
                 H = subdata[name]
                 m = H.order
@@ -1483,8 +1486,8 @@ class WebAbstractGroup(WebObj):
         if self.live():
             if self.solvable:
                 return self.representation_line("PC")
-            raise NotImplementedError
-
+            return "data not computed"
+            #raise NotImplementedError
         def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
