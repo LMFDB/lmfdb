@@ -741,6 +741,8 @@ class WebAbstractGroup(WebObj):
             if cent_order_factored:
                 props.extend([(r"$\card{Z(G)}$", 
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
+            else:
+                props.extend([(r"$\card{Z(G)}$", "not computed")])
             try:
                 props.extend([
                     (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order))),
