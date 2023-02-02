@@ -517,6 +517,7 @@ class WebAbstractGroup(WebObj):
             poss = []
             to_try = [k for k in ["G'", "Z", r"\Phi"] if 1 < subdata[k].order < n]
             #if not to_try:
+            # Put in latex code from sage here
                 # this can only occur for perfect groups
             #    if self.simple:
                     #to_try = [k for k in subdata if k.startswith("M")]
