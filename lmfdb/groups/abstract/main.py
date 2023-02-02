@@ -1131,7 +1131,9 @@ def render_abstract_group(label, data=None):
 
         if db.gps_st.count({"component_group": label}) > 0:
             st_url = (
-                "/SatoTateGroup/?hst=List&component_group=%5B"
+                "/SatoTateGroup/?hst=List&"
+                + 'include_irrational=yes&'
+                + 'component_group=%5B'
                 + str(gap_ints[0])
                 + "%2C"
                 + str(gap_ints[1])
