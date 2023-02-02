@@ -33,6 +33,8 @@ from lmfdb.utils import (
 )
 from .circles import find_packing
 
+nc = "not computed"
+
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 perm_re = re.compile(r"^\(\d+(,\d+)*\)(,?\(\d+(,\d+)*\))*$")
 
@@ -734,8 +736,11 @@ class WebAbstractGroup(WebObj):
                 props.extend([("Nilpotent", nilp_str),
                               ("Solvable", solv_str)])
             props.extend([
-                (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor())),
-                (r"$\card{Z(G)}$", web_latex(self.cent_order_factor()))])
+                (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor()))])
+            cent_order_factored = self.cent_order_factor()
+            if cent_order_factored:
+                props.extend([(r"$\card{Z(G)}$", 
+                    web_latex(cent_order_factored) if cent_order_factored else nc)])
             try:
                 props.extend([
                     (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order))),
@@ -1560,23 +1565,35 @@ class WebAbstractGroup(WebObj):
         return self.special_search("Z")
 
     def cent_label(self):
-        return self.subgroups[self.cent()].subgroup_tex
+        cent = self.cent()
+        if cent:
+            return self.subgroups[self.cent()].subgroup_tex
+        return None
 
     def central_quot(self):
-        return self.subgroups[self.cent()].quotient_tex
+        cent = self.cent()
+        if cent:
+            return self.subgroups[self.cent()].quotient_tex
+        return None
 
     def cent_order_factor(self):
         if self.live():
             ZGord = ZZ(self.G.Center().Order())
         else:
-            ZGord = self.order // ZZ(self.cent().split(".")[0])
+            cent = self.cent()
+            if not cent:
+                return None
+            ZGord = self.order // ZZ(cent.split(".")[0])
         return ZGord.factor()
 
     def comm(self):
         return self.special_search("D")
 
     def comm_label(self):
-        return self.subgroups[self.comm()].subgroup_tex
+        comm = self.comm()
+        if comm:
+            return self.subgroups[comm].subgroup_tex
+        return nc
 
     def abelian_quot(self):
         return abelian_gp_display(self.smith_abelian_invariants)
@@ -1598,10 +1615,16 @@ class WebAbstractGroup(WebObj):
         return self.special_search("Phi")
 
     def fratt_label(self):
-        return self.subgroups[self.fratt()].subgroup_tex
+        fratt = self.fratt()
+        if fratt:
+            return self.subgroups[fratt].subgroup_tex
+        return None
 
     def frattini_quot(self):
-        return self.subgroups[self.fratt()].quotient_tex
+        fratt = self.fratt()
+        if fratt:
+            return self.subgroups[self.fratt()].quotient_tex
+        return None
 
     def gen_noun(self):
         if self.rank == 1:
