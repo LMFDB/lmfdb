@@ -87,12 +87,8 @@
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
-    {% if not gp.live() %}
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
-    {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
-    {% endif %}
-    {% endif %}
   </table>
 </p>
 
@@ -143,6 +139,17 @@
           <td>{{ c[1] }}</td>
         {% endfor %}
         <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
+          <td  colspan="{{gp.order_stats|length}}">data not computed</td>
+          <td class="border-left"></td>
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+          <td colspan="{{gp.order_stats|length}}">data not computed</td>
+          <td class="border-left"></td>
       </tr>
       {% endif %}
     </tbody>
