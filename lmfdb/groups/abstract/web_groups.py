@@ -1449,7 +1449,6 @@ class WebAbstractGroup(WebObj):
         return latex(factor(self.outer_order))
 
     def live_composition_factors(self):
-        from .main import by_abelian_label
         from .main import url_for_label
         basiclist = []
         if isinstance(self.G, LiveAbelianGroup) or self.solvable:
