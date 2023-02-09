@@ -246,18 +246,40 @@
       {% endif %}
     </tr>
   {% endif %}
-  {% if not gp.live() or gp.pgroup > 1 %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
-    <td>${{gp.rank}}$</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %}
+      <td>not computed</td>
+    {% endif %}
   </tr>
-  {% endif %}
-  {% if not gp.live() and gp.order > 1 and gp.eulerian_function is defined %}
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+  {% if gp.eulerian_function is defined %}
     <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  
   </tr>
-  {% endif %}
+</table>
+
+{% else %}
+
+<h2>Constructions</h2>
+
+<table class=nowrap>
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+    {% if gp.eulerian_function %}
+      <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  </tr>
+  </tr>
 </table>
 
 {% endif %} {# not live and abelian #}

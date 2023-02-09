@@ -504,6 +504,9 @@ class WebAbstractGroup(WebObj):
     def rank(self):
         if self.pgroup > 1:
             return ZZ(self.G.RankPGroup())
+        if isinstance(self.G, LiveAbelianGroup):
+            return len(self.snf)
+        return None
 
     @lazy_attribute
     def primary_abelian_invariants(self):
@@ -769,15 +772,13 @@ class WebAbstractGroup(WebObj):
             props.extend([("Perm deg.", "not computed")])
         else:
             props.extend([("Perm deg.", f"${self.transitive_degree}$")])
-        if not self.live():
-            props.extend([
-                ("Rank", f"${self.rank}$")
                 # ("Faith. dim.", str(self.faithful_reps[0][0])),
-            ])
-        elif self.pgroup > 1:
-            props.append(("Rank", f"${self.rank}$"))
-        else:
-            props.extend([("Rank", "not computed")])
+        props.extend([
+            ("Rank", f"${self.rank}$" if self.rank else "not computed") ])
+        #elif self.pgroup > 1:
+        #    props.append(("Rank", f"${self.rank}$"))
+        #else:
+        #    props.extend([("Rank", "not computed")])
         return props
 
     @lazy_attribute
@@ -1553,6 +1554,8 @@ class WebAbstractGroup(WebObj):
             return "generating triples"
         elif self.rank == 4:
             return "generating quadruples"
+        elif not self.rank:
+            return "generating tuples"
         else:
             return f"generating {self.rank}-tuples"
 
