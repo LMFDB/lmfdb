@@ -18,6 +18,7 @@ from sage.all import (
     prod,
     lcm,
     is_prime,
+    euler_phi,
     cartesian_product_iterator,
 )
 from sage.libs.gap.libgap import libgap
@@ -1243,6 +1244,12 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def division_stats(self):
+        if isinstance(self.G, LiveAbelianGroup):
+            divcnts = [(z[0], z[1]/euler_phi(z[0])) for z in self.cc_stats]
+            self.number_divisions = sum([z[1] for z in divcnts])
+            return [(z[0], z[1]/euler_phi(z[0])) for z in self.cc_stats]
+        if self.live():
+            return None
         return sorted(
             Counter([div.order for div in self.conjugacy_class_divisions]).items()
         )

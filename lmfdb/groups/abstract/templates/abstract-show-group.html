@@ -143,8 +143,15 @@
       {% else %}
       <tr>
         <td>{{KNOWL('group.division', 'Divisions')}}</td>
-          <td  colspan="{{gp.order_stats|length}}">data not computed</td>
-          <td class="border-left"></td>
+          {% if gp.division_stats %}
+            {% for c in gp.division_stats %}
+              <td>{{ c[1] }}</td>
+            {% endfor %}
+        <td class="border-left">{{ gp.number_divisions }}</td>
+          {% else %}
+            <td  colspan="{{gp.order_stats|length}}">data not computed</td>
+            <td class="border-left"></td>
+          {% endif %}
       </tr>
       <tr style="border-bottom:none;">
         <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
