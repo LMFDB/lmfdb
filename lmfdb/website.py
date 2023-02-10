@@ -28,8 +28,6 @@ from . import bianchi_modular_forms
 assert bianchi_modular_forms
 from . import hilbert_modular_forms
 assert hilbert_modular_forms
-from . import hilbert_modular_surfaces
-assert hilbert_modular_surfaces
 from . import half_integral_weight_forms
 assert half_integral_weight_forms
 from . import siegel_modular_forms
@@ -102,6 +100,8 @@ from . import maass_forms
 assert maass_forms
 from . import modular_curves
 assert modular_curves
+from . import hilbert_modular_surfaces
+assert hilbert_modular_surfaces
 from .homepage import random
 assert random
 

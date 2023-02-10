@@ -98,6 +98,10 @@
       status: beta
       url_for: "modcurve.index"
       colspan: onecolumn
+    - title: Hilbert surfaces
+      status: beta
+      url_for: "hmsurface.index"
+      colspan: onecolumn
     - title: Higher genus families
       url_for:  "higher_genus_w_automorphisms.index"
       colspan: onecolumn

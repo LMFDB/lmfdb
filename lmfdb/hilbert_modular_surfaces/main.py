@@ -78,10 +78,10 @@ def index_Q():
     if len(info) > 1:
         return hmsurface_search(info)
     title = r"Hilbert modular surfaces"
-    #info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
-    #info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
-    #info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
-    #info["stats"] = HMSurface_stats()
+    info["discr_list"] = ["5", "8", "12", "13", "17-47", "53-97", "101-"]
+    info["level_norm_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
+    info["kodaira_list"] = ["-1", "0", "1", "2"]
+    info["stats"] = HMSurface_stats()
     return render_template(
         "hmsurface_browse.html",
         info=info,
@@ -130,37 +130,56 @@ def by_label(label):
 
 def url_for_hmsurface_label(label):
     return url_for(".by_label", label=label)
-
-def hmsurface_lmfdb_label(label):
-    #Recognize other labels/names as in modular curves?
-    label_type = "label"
-    lmfdb_label = label
-    return lmfdb_label, label_type
     
 def hmsurface_jump(info):
-    #No direct products here
     label = info["jump"]
     return redirect(url_for_hmsurface_label(label))
 
-#Add more search boxes later
 hmsurface_columns = SearchColumns([
     LinkCol("label", "hmsurface.label", "Label", url_for_hmsurface_label, default=True),
     MathCol("chi", "hmsurface.chi", "Arithmetic genus", default=True),
 ])
 
-#No family parsing
-
 @search_wrap(
     table=db.hmsurfaces_invs,
-    title="Modular surface search results",
-    err_title="Modular surfaces search input error",
+    title="Hilbert modular surface search results",
+    err_title="Hilbert modular surfaces search input error",
     shortcuts={"jump": hmsurface_jump},
     columns=hmsurface_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_hmsurface_label,
 )
 def hmsurface_search(info, query):
+    parse_ints(info, query, "discr")
+    if "group_type" in info:
+        if info["group_type"] == "gamma0-gl":
+            pass
+        elif info["group_type"] == "gamma0-sl":
+            pass
+    if "comp" in info:
+        if info["comp"] == "trivial":
+            pass
+        elif info["comp"] == "pp":
+            pass
+        elif info["comp"] == "other":
+            pass
+    parse_ints(info, query, "level_norm")
+    if info.get('level_norm_quantifier'):
+        if info['level_norm_quantifier'] == 'divides':
+            if not isinstance(query.get('level'), int):
+                err = "You must specify a single level norm"
+                flash_error(err)
+                raise ValueError(err)
+            else:
+                query['level_norm'] = {'$in': integer_divisors(ZZ(query['level_norm']))}
+    parse_ints(info, query, "h20")
+    parse_ints(info, query, "h11")
     parse_ints(info, query, "chi")
+    parse_ints(info, query, "K2")
+    parse_ints(info, query, "cusps")
+    parse_interval(info, query, "kodaira",
+                   quantifier_type = info.get("kodaira_quantifier", "exactly"))
+    parse_ints(info, query, "cusps")                   
 
 class HMSurfaceSearchArray(SearchArray):
     noun = "surface"
@@ -171,21 +190,115 @@ class HMSurfaceSearchArray(SearchArray):
 
     #See main.py in modular_curves for select boxes, etc.
     def __init__(self):
+        discr = TextBox(
+            name="discr",
+            knowl="hmsurface.todo",
+            label="Discriminant",
+            example="12",
+            example_span="12, 5-100"
+        )
+        group_type = SelectBox(
+            name="group_type",
+            options=[('',''),
+                     ('gamma0-gl', 'Gamma_0(N)_b'),
+                     ('gamma0-sl', 'Gamma_0^1(N)_b'),
+                     ],
+            knowl="hmsurface.todo",
+            label="Congruence subgroup type",
+            example=r"$\Gamma_0(\mathfrak{N})_{\mathfrak{b}}$"
+        )
+        comp = SelectBox(
+            name="comp",
+            options=[('',''),
+                     ('trivial', 'ideal (1)'),
+                     ('pp', 'inverse different'),
+                     ('other', 'other'),
+                     ],
+            knowl="hmsurface.todo",
+            label="Component ideal",
+            example=r"(1), inverse different"
+        )
+        level_norm_quantifier = SelectBox(
+            name="level_norm_quantifier",
+            options=[('',''),
+                     ('divides','divides')
+                     ],
+            min_width=85
+        )
+        level_norm = TextBoxWithSelect(
+            name="level_norm",
+            knowl="hmsurface.level",
+            label="Level norm",
+            example="1",
+            example_span="1, 10-20",
+            select_box=level_norm_quantifier
+        )
+        h20 = TextBox(
+            name="h20",
+            knowl="hmsurface.hodge",
+            label=r"Hodge number $h^{2,0}$",
+            example="0",
+            example_span="0, 3-6"
+        )
+        h11 = TextBox(
+            name="h11",
+            knowl="hmsurface.hodge",
+            label=r"Hodge number $h^{1,1}$",
+            example="13",
+            example_span="13, 20-30"
+        )        
         chi = TextBox(
             name="chi",
-            knowl="hmsurface.chi",
+            knowl="hmsurface.hodge",
             label="Arithmetic genus",
             example="1",
             example_span="1, 3-4",
         )
+        K2 = TextBox(
+            name="K2",
+            knowl="hmsurface.hodge",
+            label=r"Self-intersection $K^2$",
+            example="-3",
+            example_span="-3, 0-2"
+        )
+        cusps = TextBox(
+            name="cusps",
+            knowl="hmsurface.cusps",
+            label="Number of cusps",
+            example="1",
+            example_span="1, 1-10"
+        )
+        kodaira_quantifier = SelectBox(
+            name="kodaira_quantifier",
+            options=[('', 'exactly'),
+                     ('possibly', 'possibly'),
+                     ('atleast', 'at least'),
+                     ('atmost', 'at most'),
+                     ],
+            min_width = 85
+        )
+        kodaira = TextBoxWithSelect(
+            name = "kodaira",
+            knowl = "hmsurface.kodaira_dimension",
+            label = "Kodaira dimension",
+            example = "-1",
+            example_span = "-1, 1-2",
+            select_box = kodaira_quantifier,
+        )
         count = CountBox()
 
         self.browse_array = [
-            [chi],
+            [discr, group_type],
+            [level_norm, comp],
+            [h20, h11],
+            [chi, K2],
+            [cusps, kodaira]
         ]
 
         self.refine_array = [
-            [chi],
+            [discr, group_type, level_norm, comp],
+            [h20, h11, chi, K2],
+            [cusps, kodaira]
         ]
 
     sort_knowl = "hmsurface.sort_order"
