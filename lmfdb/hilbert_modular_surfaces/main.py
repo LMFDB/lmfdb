@@ -150,23 +150,27 @@ hmsurface_columns = SearchColumns([
     url_for_label=url_for_hmsurface_label,
 )
 def hmsurface_search(info, query):
-    parse_ints(info, query, "discr")
+    parse_ints(info, query, "field_discr")
     if "group_type" in info:
         if info["group_type"] == "gamma0-gl":
-            pass
+            query["group_type"] = "gl";
+            query["gamma_type"] = "0";
         elif info["group_type"] == "gamma0-sl":
-            pass
+            query["group_type"] = "sl";
+            query["gamma_type"] = "0";
     if "comp" in info:
         if info["comp"] == "trivial":
-            pass
+            query["component_label"] = "1.1";
         elif info["comp"] == "pp":
-            pass
+            query["is_pp"] = True;
         elif info["comp"] == "other":
-            pass
+            query["component_label"] = {'$not': '1.1'}
+            query["is_pp"] = False
+    parse_ints(info, query, "narrow_class_nb")
     parse_ints(info, query, "level_norm")
     if info.get('level_norm_quantifier'):
         if info['level_norm_quantifier'] == 'divides':
-            if not isinstance(query.get('level'), int):
+            if not isinstance(query.get('level_norm'), int):
                 err = "You must specify a single level norm"
                 flash_error(err)
                 raise ValueError(err)
@@ -176,10 +180,19 @@ def hmsurface_search(info, query):
     parse_ints(info, query, "h11")
     parse_ints(info, query, "chi")
     parse_ints(info, query, "K2")
-    parse_ints(info, query, "cusps")
-    parse_interval(info, query, "kodaira",
-                   quantifier_type = info.get("kodaira_quantifier", "exactly"))
-    parse_ints(info, query, "cusps")                   
+    if info.get('kodaira_quantifier'):
+        print(info["kposs"])
+        try:
+            ZZ(info["kposs"])
+        except:
+            err = "You must specify a single Kodaira dimension"
+            flash_error(err)
+            raise ValueError(err)            
+        if info['kodaira_quantifier'] == 'exactly':
+            query["kposs"] = [info["kposs"]]
+        elif info['kodaira_quantifier'] == 'possibly':
+            query["kposs"] = {'$contains': info["kposs"]}
+    parse_ints(info, query, "nb_cusps")                   
 
 class HMSurfaceSearchArray(SearchArray):
     noun = "surface"
@@ -190,12 +203,19 @@ class HMSurfaceSearchArray(SearchArray):
 
     #See main.py in modular_curves for select boxes, etc.
     def __init__(self):
-        discr = TextBox(
-            name="discr",
+        field_discr = TextBox(
+            name="field_discr",
             knowl="hmsurface.todo",
-            label="Discriminant",
+            label="Field discriminant",
             example="12",
             example_span="12, 5-100"
+        )
+        narrow_class_nb = TextBox(
+            name="narrow_class_nb",
+            knowl="hmsurface.todo",
+            label="Narrow class number",
+            example="1",
+            example_span="1, 2-4"
         )
         group_type = SelectBox(
             name="group_type",
@@ -261,8 +281,8 @@ class HMSurfaceSearchArray(SearchArray):
             example="-3",
             example_span="-3, 0-2"
         )
-        cusps = TextBox(
-            name="cusps",
+        nb_cusps = TextBox(
+            name="nb_cusps",
             knowl="hmsurface.cusps",
             label="Number of cusps",
             example="1",
@@ -270,15 +290,13 @@ class HMSurfaceSearchArray(SearchArray):
         )
         kodaira_quantifier = SelectBox(
             name="kodaira_quantifier",
-            options=[('', 'exactly'),
+            options=[('exactly', 'exactly'),
                      ('possibly', 'possibly'),
-                     ('atleast', 'at least'),
-                     ('atmost', 'at most'),
                      ],
             min_width = 85
         )
-        kodaira = TextBoxWithSelect(
-            name = "kodaira",
+        kposs = TextBoxWithSelect(
+            name = "kposs",
             knowl = "hmsurface.kodaira_dimension",
             label = "Kodaira dimension",
             example = "-1",
@@ -288,17 +306,18 @@ class HMSurfaceSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [discr, group_type],
-            [level_norm, comp],
+            [field_discr, narrow_class_nb],
+            [level_norm, group_type],
+            [comp],
             [h20, h11],
             [chi, K2],
-            [cusps, kodaira]
+            [nb_cusps, kposs]
         ]
 
         self.refine_array = [
-            [discr, group_type, level_norm, comp],
-            [h20, h11, chi, K2],
-            [cusps, kodaira]
+            [field_discr, group_type, level_norm, comp],
+            [narrow_class_nb, h20, h11, chi],
+            [K2, nb_cusps, kposs]
         ]
 
     sort_knowl = "hmsurface.sort_order"
