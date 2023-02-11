@@ -200,9 +200,10 @@ def url_for_lfunction(label):
         kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'),
 label.split('-')))
         kwargs['degree'] = int(kwargs['degree'])
+        url = url_for('.by_label', **kwargs)
     except Exception:
         return render_lfunction_exception("There is no L-function with label '%s'" % label)
-    return url_for('.by_label', **kwargs)
+    return url
 
 @l_function_page.route("/<label>")
 def by_full_label(label):
@@ -1187,6 +1188,7 @@ def render_single_Lfunction(Lclass, args, request):
 
 
 def render_lfunction_exception(err):
+    return abort(404,err) # the code below does not work, there is a problem rendering problem.html
     try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except Exception:

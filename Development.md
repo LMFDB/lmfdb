@@ -86,6 +86,15 @@ knowls. This allows nonexperts to find basic information without
 forcing experts to skim through documentation. The links to the knowls should
 be the words being defined. **Don't add extraneous words like "click here"**.
 
+For a given type of object, all of the home pages should have the same entries.
+If some piece of data is not known for an object, still list that entry and
+say "data not computed", or some similar phrase if that does not properly
+capture the situation.  The only exception is if some property only makes sense
+for certain objects in that class.  For example, number field pages only have
+a section for Reflection fields if the number field is a CM field.  But all
+number field pages have a place to show the regulator even though it has not
+been computed in all cases.
+
 When creating a new home page for an object, get feedback from both experts
 and nonexperts about the order in which the information appears on the
 home page, and the categories in which to group the material. If there is a

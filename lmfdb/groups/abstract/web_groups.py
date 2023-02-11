@@ -1119,6 +1119,23 @@ class WebAbstractGroup(WebObj):
             edges = [list(edge) for edge in edges]
         return [nodes, edges]
 
+    # Figuring out the subgroup count for an autjugacy class might not be stored
+    # directly.  We do them all at once.  If we only computed up to aut
+    # return {} since we don't need this
+    # output is a dictionary of aut_labels and counts
+    @lazy_attribute
+    def aut_class_counts(self):
+        counts = {}
+        if self.outer_equivalence:
+            return counts
+        subs = self.subgroups
+        for s in subs.values():
+            if s.aut_label in counts:
+                counts[s.aut_label] += s.count
+            else:
+                counts[s.aut_label] = s.count
+        return counts
+
     @lazy_attribute
     def tex_images(self):
         all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
