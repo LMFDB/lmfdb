@@ -983,12 +983,15 @@ def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
 def diagram_js(gp, layers, display_opts, aut=False):
+    # Counts are not right for aut diagram if we know up to conj.
+    if aut and not gp.outer_equivalence:
+        autcounts = gp.aut_class_counts
     ll = [
         [
             grp.subgroup,
             grp.short_label,
             grp.subgroup_tex,
-            grp.count,
+            grp.count if (gp.outer_equivalence or not aut) else autcounts[grp.aut_label],
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
             grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
@@ -1128,7 +1131,9 @@ def render_abstract_group(label, data=None):
 
         if db.gps_st.count({"component_group": label}) > 0:
             st_url = (
-                "/SatoTateGroup/?hst=List&component_group=%5B"
+                "/SatoTateGroup/?hst=List&"
+                + 'include_irrational=yes&'
+                + 'component_group=%5B'
                 + str(gap_ints[0])
                 + "%2C"
                 + str(gap_ints[1])
