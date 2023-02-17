@@ -992,7 +992,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                     ('L-function', url_for('lfunctions.by_label', label=Lfun_label))
                 )
             friendlist.append(
-                ('Sato-Tate group', url_for('st.by_label', label=f'0.1.self.order'))
+                ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}'))
             )
         if len(self.vflabel) > 0:
             friendlist.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
