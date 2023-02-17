@@ -180,8 +180,7 @@ def hmsurface_search(info, query):
     parse_ints(info, query, "h11")
     parse_ints(info, query, "chi")
     parse_ints(info, query, "K2")
-    if info.get('kodaira_quantifier'):
-        print(info["kposs"])
+    if info.get('kposs'):
         try:
             ZZ(info["kposs"])
         except:
@@ -300,7 +299,7 @@ class HMSurfaceSearchArray(SearchArray):
             knowl = "hmsurface.kodaira_dimension",
             label = "Kodaira dimension",
             example = "-1",
-            example_span = "-1, 1-2",
+            example_span = "-1, 2",
             select_box = kodaira_quantifier,
         )
         count = CountBox()

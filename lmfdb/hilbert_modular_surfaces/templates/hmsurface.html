@@ -1,12 +1,20 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<h2>  Real quadratic field   {{ surface.field.knowl()|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ surface.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{surface.field.poly()}}\); {{ KNOWL('nf.narrow_class_number', 'narrow class number')
+ }} \({{surface.narrow_class_nb}}\) and {{ KNOWL('nf.class_number', 'class number')
+ }} \({{surface.field.class_number()}}\).
+</p>
 
-<h2> {{ KNOWL('hmsurface.invariants', 'Invariants') }} </h2>
+<h2> {{KNOWL('hmsurface.group_types', 'Congruence subgroup')}} </h2>
+
 <table>
-  <tr><td>{{ KNOWL("hmsurface.field", "Quadratic field") }}:</td>
-    <td> {{ surface.formatted_field | safe }} </td></tr>
-  <tr><td>{{ KNOWL("hmsurface.grouptype", "Congruence subgroup type") }}:</td>
+  <tr><td>{{ KNOWL("hmsurface.grouptype", "Type") }}:</td>
     <td> ${{ surface.formatted_subgroup_type }}$ </td>
     <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.component", "Component") }}:</td>
     <td>${{ surface.formatted_component }}$</td></tr>
@@ -14,16 +22,53 @@
     <td> ${{ surface.formatted_level }}$ </td>
     <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.levelnorm", "Level norm") }}:</td>
     <td>${{ surface.level_norm }}$</td></tr>
+</table>
+
+
+<h2> {{ KNOWL('hmsurface.invariants', 'Invariants') }} </h2>
+<table>
   <tr><td>{{ KNOWL("hmsurface.hodge", "Hodge numbers") }}:</td>
-    <td> $h^{2,0} = {{ surface.h20 }},\ h^{1,1} = {{ surface.h11 }}$ </td>
-    <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.chi", "Arithmetic genus") }}:</td>
-    <td>${{ surface.chi }}$</td>
-    <td style="width:60px;"></td><td>{{ KNOWL("hmsurface.K2", "$K^2$:") }}</td>
+    <td> $h^{2,0} = {{ surface.h20 }},\quad h^{1,1} = {{ surface.h11 }}$ </td></tr>
+  <tr>
+    <td>{{ KNOWL("hmsurface.chi", "Arithmetic genus") }}:</td>
+    <td>${{ surface.chi }}$</td></tr>
+  <tr>
+    <td>{{ KNOWL("hmsurface.K2", "$K^2$:") }}</td>
     <td>${{ surface.K2 }}$</td></tr>  
 </table>
 
+<p>
+  The {{ KNOWL('ag.kodaira_dimension', 'Kodaira dimension') }} of this surface is 
+  {% if surface.kodaira_is_known %}
+  known to be {{ surface.kodaira_dims }}.
+  {% else %}
+  one of $\{ {{ surface.kodaira_dims }}\}$.
+  {% endif %}
+</p>
+
 <h2> {{ KNOWL('hmsurface.cusps', 'Cusps') }} </h2>
 
-<!-- Make a table, etc. -->
+<p>
+  This Hilbert modular surface has ${{ surface.nb_cusps }}$ cusps.
+</p>
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('hmsurface.cusp_M','Ideal $\mathfrak{M}$') }}</th>
+      <th>{{ KNOWL('hmsurface.cusps', 'Coordinates') }}</th>
+      <th>{{ KNOWL('hmsurface.cusp_resolution', 'Self-intersection numbers') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for label, a, c, seq, rep in surface.formatted_cusps %}
+  <tr>
+    <td align="center">${{ label }}$</td>
+    <td align="center">$({{ a }}: {{ c }})$</td>
+    <td align="center">${{ seq }} ^ {{ rep }}$</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
 
 {% endblock %}
