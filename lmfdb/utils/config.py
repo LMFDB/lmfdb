@@ -295,7 +295,7 @@ class Configuration(_Configuration):
                     username = getpass.getuser()
                     intusername = int(username, base=36)
                     self.flask_options["port"] = 10000 + (intusername % 55536)
-                while not check_socket(self.flask_options["host"], self.flask_options["port"]):
+                while check_socket(self.flask_options["host"], self.flask_options["port"]):
                     print(f'port {self.flask_options["port"]} not available, trying the next one')
                     self.flask_options["port"] += 1
                     if self.flask_options["port"] > 65536:
