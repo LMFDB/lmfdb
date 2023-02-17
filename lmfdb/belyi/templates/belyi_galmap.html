@@ -30,7 +30,7 @@ function show_eqns(eqnstyle) {
   </p>
 </h2>
 
-<!--<h2 style="display:inline">Curve</h2> &nbsp;-->
+{% if data["plane_model_latex"] %}
 <h2>Curve</h2>
 
 <table>
@@ -45,7 +45,6 @@ function show_eqns(eqnstyle) {
       {% endif %}
     </td>
     <td>
-      <!--(<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)-->
     </td>
   </tr>
   <tr class='plane_eqn'>
@@ -56,20 +55,15 @@ function show_eqns(eqnstyle) {
       {% endif %}
     </td>
     <td>
-      <!--(<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)-->
     </td>
   </tr>
 </table>
 
-<!--<div class='plane_eqn' style="display:inline">-->
-<!--<div class='plane_eqn' style="toggle">-->
 <div class="toggle">
   <span class='plane_eqn'>
     (<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)
   </span>
 </div>
-<!--<div class='std_eqn nodisplay' style="display:inline">-->
-<!--<div class='std_eqn nodisplay' style="toggle">-->
 <div class="toggle">
   <span class='std_eqn nodisplay'>
     (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
@@ -87,13 +81,32 @@ function show_eqns(eqnstyle) {
 </div>
 <div class='plane_eqn'>
   <p>
-    {% if data.plane_map_constant == '1' %}
+    {% if data.plane_constant == '1' %}
       \(\displaystyle \phi(t,x) = t\)
     {% else %}
       \(\displaystyle \phi(t,x) = {{data.plane_map_constant_factored}} \, t\)
     {% endif %}
   </p>
 </div>
+{% else %}
+<h2>Curve</h2>
+  <p>
+    \(\displaystyle {{data.curve}}\)
+    {% if data.g == 0 %}
+      , with affine coordinate $x$
+    {% endif %}
+    {% if data["curve_label"] %}
+      , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
+    {% endif %}
+  </p>
+
+<h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
+  {% if data.g == 0 %}
+    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+  {% else %}
+    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+  {% endif %}
+{% endif %}
 
 <h2>{{ KNOWL('nf.embedding', title="Embeddings") }}</h2>
   <p>

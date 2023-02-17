@@ -7,9 +7,10 @@ def bracket_me(m):
     return "^{%s}" % (m.group(0)).split("^")[1] 
 
 def fix_brackets(rec):
-    latex = rec['plane_model_latex']
-    latex = re.sub(RE_EXP, bracket_me,latex) 
-    rec['plane_model_latex'] = latex
+    if rec.get('plane_model_latex'):
+        latex = rec['plane_model_latex']
+        latex = re.sub(RE_EXP, bracket_me,latex) 
+        rec['plane_model_latex'] = latex
     return rec
 
 def plane_map_constant(rec):
