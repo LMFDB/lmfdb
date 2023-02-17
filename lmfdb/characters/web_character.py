@@ -989,7 +989,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             Lfun_label = '1-1-1.1-r0-0-0' if self.conductor == 1 else get_lfunction_by_url(url[1:])
             if Lfun_label:
                 friendlist.append(
-                    ('L-function', url_for('l_functions.by_label', label=Lfun_label))
+                    ('L-function', url_for('l_functions.by_full_label', label=Lfun_label))
                 )
             friendlist.append(
                 ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}'))
