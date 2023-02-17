@@ -39,7 +39,7 @@ sys.path[0] = working_dir
 
 
 
-def check_socket(host, port):
+def is_port_open(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(1)
         if sock.connect_ex((host, port)) == 0:
@@ -295,8 +295,8 @@ class Configuration(_Configuration):
                     username = getpass.getuser()
                     intusername = int(username, base=36)
                     self.flask_options["port"] = 10000 + (intusername % 55536)
-                while check_socket(self.flask_options["host"], self.flask_options["port"]):
-                    print(f'port {self.flask_options["port"]} not available, trying the next one')
+                while is_port_open(self.flask_options["host"], self.flask_options["port"]):
+                    print(f'port {self.flask_options["port"]} already in use, trying the next one')
                     self.flask_options["port"] += 1
                     if self.flask_options["port"] > 65536:
                         self.flask_options["port"] = 10000
