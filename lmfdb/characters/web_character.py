@@ -986,22 +986,22 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 modulus=self.modulus,
                 number=self.number
             )
-            if get_lfunction_by_url(url[1:]):
-                friendlist.append( ('L-function', '/L'+ url) )
-            else:
-                if self.conductor == 1:
-                    friendlist.append (('L-function', '/L/Riemann'))
+            Lfun_label = '1-1-1.1-r0-0-0' if self.conductor == 1 else get_lfunction_by_url(url[1:])
+            if Lfun_label:
+                friendlist.append(
+                    ('L-function', url_for('lfunctions.by_label', label=Lfun_label))
+                )
             friendlist.append(
-                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+                ('Sato-Tate group', url_for('st.by_label', label=f'0.1.self.order'))
             )
         if len(self.vflabel) > 0:
-            friendlist.append( ("Value field", '/NumberField/' + self.vflabel) )
+            friendlist.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         if self.symbol_numerator():
             if self.symbol_numerator() > 0:
                 assoclabel = '2.2.%d.1' % self.symbol_numerator()
             else:
                 assoclabel = '2.0.%d.1' % -self.symbol_numerator()
-            friendlist.append(("Associated quadratic field", '/NumberField/' + assoclabel))
+            friendlist.append(("Associated quadratic field", url_for("number_fields.by_label", label=assoclabel)))
 
         label = "%s.%s"%(self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
