@@ -38,7 +38,6 @@ from config import Configuration as _Configuration
 sys.path[0] = working_dir
 
 
-
 def is_port_open(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(1)
