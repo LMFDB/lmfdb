@@ -23,6 +23,8 @@ import random
 import string
 import __main__
 from requests import get
+import socket
+from contextlib import closing
 
 
 root_lmfdb_path = os.path.abspath(
@@ -34,6 +36,16 @@ working_dir = sys.path[0]
 sys.path[0] = os.path.join(root_lmfdb_path, 'lmfdb', 'backend')
 from config import Configuration as _Configuration
 sys.path[0] = working_dir
+
+
+
+def is_port_open(host, port):
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.settimeout(1)
+        if sock.connect_ex((host, port)) == 0:
+            return True
+        else:
+            return False
 
 def abs_path_lmfdb(filename):
     return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
@@ -283,6 +295,12 @@ class Configuration(_Configuration):
                     username = getpass.getuser()
                     intusername = int(username, base=36)
                     self.flask_options["port"] = 10000 + (intusername % 55536)
+                while is_port_open(self.flask_options["host"], self.flask_options["port"]):
+                    print(f'port {self.flask_options["port"]} already in use, trying the next one')
+                    self.flask_options["port"] += 1
+                    if self.flask_options["port"] > 65536:
+                        self.flask_options["port"] = 10000
+
             self.cocalc_options["root"] = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(self.flask_options['port'])
             self.cocalc_options["prefix"] = ("https://"
                                              + self.cocalc_options["host"]
