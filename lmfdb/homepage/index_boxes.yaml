@@ -1,17 +1,17 @@
 ---
 title: A database
 image: families
-content: <p>The LMFDB is an extensive database of mathematical objects arising in Number Theory.</p><p>Sample lists&#58; <a href="/L/?degree=2">L-functions,</a> <a href="/EllipticCurve/Q/?conductor=1-99">Elliptic curves,</a> <a href="/zeros">Tables of zeros,</a>  <a href="/NumberField/?degree=2">Number fields</a></p><p><b>Save the date</b>&#58; <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT 2023</a></p>
+content: <p>The LMFDB is an extensive database of mathematical objects arising in Number Theory.</p><p>Sample lists&#58; <a href="L/?degree=2">L-functions,</a> <a href="EllipticCurve/Q/?conductor=1-99">Elliptic curves,</a> <a href="zeros">Tables of zeros,</a>  <a href="NumberField/?degree=2">Number fields</a></p><p><b>Save the date</b>&#58; <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT 2023</a></p>
 control: 1
 links:
   - [ 0,0 ]
 ---
 title: Hall of fame
-content: <p><ul class="list"><li><a href="/L/Riemann/">Riemann zeta function</a></li>
-    <li><a href="/ModularForm/GL2/Q/holomorphic/1/12/a/a/">Ramanujan \(\Delta\) function</a> and <a href="/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/">its L-function </a></li>
-    <li><a href="/Genus2Curve/Q/277/a/277/1">C277</a> and <a href="/L/Genus2Curve/Q/277/a/">its L-function</a></li>
-    <li><a href="/EllipticCurve/Q/5077/a/1">Gauss elliptic curve</a> and <a href="/L/EllipticCurve/Q/5077.a/">its L-function </a></li>
-    <li><a href="/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer">Grand Canyon L-function</a></li>
+content: <p><ul class="list"><li><a href="L/Riemann/">Riemann zeta function</a></li>
+    <li><a href="ModularForm/GL2/Q/holomorphic/1/12/a/a/">Ramanujan \(\Delta\) function</a> and <a href="L/ModularForm/GL2/Q/holomorphic/1/12/a/a/">its L-function </a></li>
+    <li><a href="Genus2Curve/Q/277/a/277/1">C277</a> and <a href="L/Genus2Curve/Q/277/a/">its L-function</a></li>
+    <li><a href="EllipticCurve/Q/5077/a/1">Gauss elliptic curve</a> and <a href="L/EllipticCurve/Q/5077.a/">its L-function </a></li>
+    <li><a href="L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer">Grand Canyon L-function</a></li>
     </ul></p>
 image: plot
 control: 0
@@ -21,15 +21,15 @@ links:
 title: Search and browse
 image: search2
 content: <p>Search for objects with specific properties,
-    or browse categories.</p><p>Browse&#58; <a href="/L/">L-functions,</a> <a href="/ModularForm/GL2/Q/holomorphic/">Modular forms,</a> <a href="/EllipticCurve/Q/">Elliptic curves,</a>
-    <a href=" /NumberField/">Number fields</a><p><a href="/random">See a random object from the database</a></p>
+    or browse categories.</p><p>Browse&#58; <a href="L/">L-functions,</a> <a href="ModularForm/GL2/Q/holomorphic/">Modular forms,</a> <a href="EllipticCurve/Q/">Elliptic curves,</a>
+    <a href="NumberField/">Number fields</a><p><a href="random">See a random object from the database</a></p>
 control: 0
 links:
   - [ 0,0 ]
 ---
 title: Visualize data
 image: sp_image
-content: <p>Explore individual plots or view distributions of various objects.</p><p>Examples&#58; <a href="/L/degree4/MaassForm/">\(\GL(4)\) Level one Maass forms,</a> <a href="/EllipticCurve/Q/102/c/">Isogeny graph of elliptic curve 102.c</a></p>
+content: <p>Explore individual plots or view distributions of various objects.</p><p>Examples&#58; <a href="L/degree4/MaassForm/">\(\GL(4)\) Level one Maass forms,</a> <a href="EllipticCurve/Q/102/c/">Isogeny graph of elliptic curve 102.c</a></p>
 control: 1
 links:
   - [ 0,0 ]
@@ -37,7 +37,7 @@ links:
 title: Explore and learn
 image: smalluniverse
 content: <p>The LMFDB makes visible the connections predicted by the Langlands program.
-     Knowls offer background information when you need it.</p><p><a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="knowl" href="/knowledge/">Knowledge</a></p>
+     Knowls offer background information when you need it.</p><p><a href="universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="knowl" href="knowledge/">Knowledge</a></p>
 control: 0
 links:
   - [ 0,0 ]
