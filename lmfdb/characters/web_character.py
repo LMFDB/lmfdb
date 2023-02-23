@@ -531,15 +531,13 @@ class WebChar(WebCharObject):
             f.append( ('Number field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
-            if get_lfunction_by_url(url[1:]):
-                f.append( ('L-function', '/L'+ url) )
-            else:
-                if self.conductor == 1:
-                    f.append (('L-function', '/L/Riemann'))
+            lfun_label = get_lfunction_by_url(url[1:], 'label')
+            if lfun_label:
+                f.append(('L-function', url_for('by_full_label', lfun_label))
         if self.type == 'Dirichlet':
-            f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
+            f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}'))
         if len(self.vflabel)>0:
-            f.append( ("Value field", '/NumberField/' + self.vflabel) )
+            f.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         return f
 
 #############################################################################
