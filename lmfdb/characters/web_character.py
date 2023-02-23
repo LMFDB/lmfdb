@@ -531,7 +531,7 @@ class WebChar(WebCharObject):
             f.append( ('Number field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
-            lfun_label = get_lfunction_by_url(url[1:], 'label')
+            lfun_label = get_lfunction_by_url(url[1:], projection='label')
             if lfun_label:
                 f.append(('L-function', url_for('by_full_label', lfun_label)))
         if self.type == 'Dirichlet':
@@ -984,7 +984,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 modulus=self.modulus,
                 number=self.number
             )
-            Lfun_label = '1-1-1.1-r0-0-0' if self.conductor == 1 else get_lfunction_by_url(url[1:])
+            Lfun_label = '1-1-1.1-r0-0-0' if self.conductor == 1 else get_lfunction_by_url(url[1:], projection='label')
             if Lfun_label:
                 friendlist.append(
                     ('L-function', url_for('l_functions.by_full_label', label=Lfun_label))

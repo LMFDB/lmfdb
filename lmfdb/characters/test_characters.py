@@ -197,8 +197,8 @@ class DirichletCharactersTest(LmfdbTest):
         """ Check Sato-Tate group and L-function link for 6000/11  """
         W = self.tc.get('/Character/Dirichlet/6000/11')
         assert '/SatoTateGroup/0.1.100' in W.get_data(as_text=True)
-        assert 'L/1/6000/6000.11/r0/0/0' in W.get_data(as_text=True)
-        W = self.tc.get('L/1/6000/6000.11/r0/0/0', follow_redirects=True)
+        assert 'L/1-6000-6000.11-r0-0-0' in W.get_data(as_text=True)
+        W = self.tc.get('L/1-6000-6000.11-r0-0-0', follow_redirects=True)
         assert '1.076603021' in W.get_data(as_text=True)
 
     def test_dirichletchar9999lfunc(self):
