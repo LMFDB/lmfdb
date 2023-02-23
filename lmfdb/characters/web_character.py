@@ -535,7 +535,7 @@ class WebChar(WebCharObject):
             if lfun_label:
                 f.append(('L-function', url_for('by_full_label', lfun_label)))
         if self.type == 'Dirichlet':
-            f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}'))
+            f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}')))
         if len(self.vflabel)>0:
             f.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         return f
