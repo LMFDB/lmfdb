@@ -522,6 +522,15 @@ class Belyi_download(Downloader):
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
             s += "phi := %s;" % rec["map"]
+        if rec.get("plane_model"):
+            s += "// Plane model\n"
+            f = rec['plane_model']
+            f = f.replace("x","u") # don't overwrite x
+            s += "R<t,u> := PolynomialRing(K,2);\n"
+            s += "Xplane := Curve(Spec(R), %s);\n" % f
+            s += "KXplane<t,u> := FunctionField(Xplane);\n"
+            s += "a := %s;\n" % rec['plane_constant']
+            s += "phi_plane := (1/a)*t;\n"
         else:
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
