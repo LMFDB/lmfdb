@@ -665,6 +665,7 @@ def render_field_webpage(args):
         primes = 'prime'
     else:
         primes = 'primes'
+    ram_primes = ','.join([str(z).rstrip('L') for z in nf.ramified_primes()])
     if len(ram_primes) > 30:
         ram_primes = 'see page'
     else:
