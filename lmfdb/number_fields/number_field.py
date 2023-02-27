@@ -90,7 +90,7 @@ def fixed_prec(r, digs=3):
     head = int(n[:-digs])
     if head >= 10**4:
         head = comma(head, r'\,')
-    print(head)
+    #print(head)
     return str(head) + '.' + n[-digs:]
 
 @app.context_processor
@@ -526,7 +526,7 @@ def render_field_webpage(args):
             reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
         total = 2 ** (nf.degree()//2 - 1)
         reflex_fields_list.sort()
-        print(reflex_fields_list)
+        #print(reflex_fields_list)
         for reflex_field in reflex_fields_list:
             if table != "":
                 table = table + ', '
