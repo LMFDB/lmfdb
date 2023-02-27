@@ -90,12 +90,13 @@ def filter_sql_injection(clause, col, col_type, op, table):
                 raise SearchParsingError("%s: invalid characters %s (only +*-/^() allowed)" % (clause, piece))
     return SQL("{0} %s {1}" % op).format(col, SQL("").join(processed)), values
 
+
 def IdentifierWrapper(name, convert=True):
     """
     Returns a composable representing an SQL identifier.
 
     This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
-    and coverts them (if desired) from the Python format to SQL,
+    and converts them (if desired) from the Python format to SQL,
     as SQL starts at 1, and it is inclusive at the end
 
     EXAMPLES::

@@ -88,7 +88,8 @@ def list_zeros(N=None,
         # limit = 100000
         #
         bread = [("L-functions", url_for("l_functions.index")),(r"Zeros of $\zeta(s)$", url_for(".zetazeros"))]
-        return render_template('single.html', title="Too many zeros", bread=bread, kid = "dq.zeros.zeta.toomany")
+        return render_template('single.html', title="Too many zeros",
+                               bread=bread, kid="dq.zeros.zeta.toomany")
 
     if N is not None:
         zeros = zeros_starting_at_N(N, limit)

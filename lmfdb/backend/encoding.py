@@ -12,11 +12,9 @@ try:
     from sage.all import ceil
     try:
         # this fails in sage 9.3
-
-        from sage.rings.complex_mpfr import ComplexNumber
+        from sage.rings.complex_mpfr import ComplexNumber, ComplexField
     except ImportError:
-        from sage.rings.complex_number import ComplexNumber
-    from sage.rings.complex_field import ComplexField
+        from sage.rings.complex_number import ComplexNumber, ComplexField
     from sage.rings.complex_double import ComplexDoubleElement
     from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
     from sage.rings.integer import Integer
@@ -40,6 +38,7 @@ except ImportError:
     SAGE_MODE = False
 else:
     SAGE_MODE = True
+
     class LmfdbRealLiteral(RealLiteral):
         """
         A real number that prints using the string used to construct it.

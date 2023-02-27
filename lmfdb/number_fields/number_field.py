@@ -34,11 +34,11 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
-    factor_base_factorization_latex, formatfield)
+    factor_base_factorization_latex, fake_label, formatfield)
 
 assert nf_logger
 
-bread_prefix = lambda: [('Number fields', url_for(".number_field_render_webpage"))]
+def bread_prefix(): return [('Number fields', url_for(".number_field_render_webpage"))]
 
 Completename = 'Completeness of the data'
 dnc = 'data not computed'
@@ -149,7 +149,7 @@ def source():
     bread = bread_prefix() + [('Source', ' ')]
     return render_template("multi.html", kids=['rcs.source.nf',
                                                'rcs.ack.nf',
-                                               'rcs.ack.nf'],
+                                               'rcs.cite.nf'],
         title=t, bread=bread, learnmore=learnmore)
 
 
@@ -219,7 +219,7 @@ def render_class_group_data():
         if info['filenamebase'] in ['cl3mod8', 'cl7mod8', 'cl4mod16', 'cl8mod16']:
             filepath = "%s/%s/%s.%d.gz" % (class_group_data_directory,info['filenamebase'],info['filenamebase'],k)
             if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-                return send_file(filepath, as_attachment=True, add_etags=False)
+                return send_file(filepath, as_attachment=True)
             else:
                 info['message'] = 'File not found'
                 return class_group_request_error(info, bread)
@@ -455,7 +455,7 @@ def render_field_webpage(args):
     if D.abs().is_prime() or D == 1:
         data['discriminant'] = raw_typeset_int(D)
     else:
-        data['discriminant'] = raw_typeset_int(D, extra= r"\(\medspace = %s\)" % data['disc_factor'])
+        data['discriminant'] = raw_typeset_int(D, extra=r"\(\medspace = %s\)" % data['disc_factor'])
     if nf.frobs():
         data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
     else:  # fallback in case we haven't computed them in a case
@@ -514,6 +514,39 @@ def render_field_webpage(args):
     #ram_primes = ram_primes.replace('L', '')
     if not ram_primes:
         ram_primes = r'\textrm{None}'
+    if nf.is_cm_field():
+        # Reflex fields table
+        table = ""
+        reflex_fields = db.nf_fields_reflex.search({"nf_label" : label})
+        reflex_fields_list = []
+        field_labels_dict = dict()
+        for reflex_field in reflex_fields:
+            if len(reflex_field['rf_coeffs']) > 1:
+                reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])
+                field_labels_dict[tuple(reflex_field['rf_coeffs'])] = "N/A"
+        field_labels = db.nf_fields.search({"$or":[{"coeffs" : a[1]} for a in reflex_fields_list]}, ["label", "coeffs"])
+        for field in field_labels:
+            field_labels_dict[tuple(field["coeffs"])] = field["label"]
+        for reflex_field in reflex_fields_list:
+            reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
+        total = 2 ** (nf.degree()//2 - 1)
+        reflex_fields_list.sort()
+        print(reflex_fields_list)
+        for reflex_field in reflex_fields_list:
+            if table != "":
+                table = table + ', '
+            if field_labels_dict[tuple(reflex_field[1])] == "N/A":
+                table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
+            else:
+                table = table + formatfield(reflex_field[1], data={'label' : field_labels_dict[tuple(reflex_field[1])]})
+            if reflex_field[2] > 1:
+                table = table + '$^{' + str(reflex_field[2]) + '}$'
+            total = total - reflex_field[2]
+        if total > 0:
+            if table != "":
+                table = table + ', '
+            table = table + 'unavailable$^{' + str(total) + '}$'
+        data['reflex_fields'] = table
     data['phrase'] = group_phrase(n, t)
     zkraw = nf.zk()
     zk = [compress_poly_Q(x, 'a') for x in zkraw]
@@ -807,9 +840,8 @@ def download_search(info):
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
+                     download_name=filename,
+                     as_attachment=True)
 
 
 def number_field_jump(info):
@@ -1096,6 +1128,7 @@ def nf_code(**args):
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
 
+
 class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
@@ -1111,6 +1144,7 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, or polynomial"
+
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -1187,8 +1221,8 @@ class NFSearchArray(SearchArray):
             name="subfield",
             label="Intermediate field",
             knowl="nf.intermediate_fields",
-            example_span="2.2.5.1 or x^2-5 or a "+
-                display_knowl("nf.nickname", "field nickname"),
+            example_span="2.2.5.1 or x^2-5 or a "
+                + display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
         completion = TextBox(
             name="completions",
@@ -1212,7 +1246,7 @@ class NFSearchArray(SearchArray):
         inessentialprimes = TextBoxWithSelect(
             name="inessentialp",
             label="Inessential primes",
-            short_label= r'Ines. \(p\)',
+            short_label=r'Ines. \(p\)',
             knowl="nf.inessential_prime",
             select_box=inessential_quantifier,
             example="2,3")

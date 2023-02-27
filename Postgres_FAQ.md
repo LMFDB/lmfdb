@@ -171,7 +171,7 @@ Database Interface
    ```
 
    If you do this within lmfdb code (rather than just at the command line),
-   make sure you properly escpae literals and identifiers to prevent
+   make sure you properly escape literals and identifiers to prevent
    SQL injection attacks.  This means wrapping any table or column
    name that might have come from an untrusted source in `Identifier`,
    and using either the %s construction shown above or the `Literal`
@@ -221,38 +221,52 @@ Note that you need editor priviledges to add, delete or modify data.
 
 1. How do I create a new table?
 
-   If you want to add a new table to the lmfdb, see the `create_table`
+   If you want to add a new table to the lmfdb, use the `create_table`
    method.  You will need to provide a name (try to follow the naming
    conventions, where the first few characters indicate the general
    area of your table, separated by an underscore from the main name,
    which is often a single word).  You then give a dictionary whose
    keys are postgres types and values are lists of columns with that
-   type.  The next argument is the column which should be used in the
-   `lookup` method.  You should provide a default sort order if your
-   table will be the primary table behind a section of the website
-   (auxiliary tables may not need a sort order).  The `id_ordered`
-   argument specifies whether the `id` column should match your sort
-   order (which can make indexes smaller and simpler but updating data
-   more time-consuming).  You can give columns for an extra table (see
-   the question two prior), using the same format as the second
-   argument.  Finally, you can specify the order of columns, which
-   will be used in `copy_from` and `copy_to` by default.
+   type.  The next argument is the column that should be used in the
+   `lookup` method, typically the `label` column if there is one.
+   You should provide a default sort order if your table will be the
+   primary table behind a section of the website (auxiliary tables may
+   not need a sort order).  You also need to proved a short description
+   of the table, which will be shown in the banner when its contents are
+   viewed on the database section of the website, as well as short
+   descriptions of each of its columns which will be shown when users
+   view the schema for the table in the database section (these will
+   be used to populate knowls that can then be edited by you or anyone
+   with an LMFDB account can edit, they don't need to be perfect).
+   
+   You can also give columns for an extra table (see the question two prior),
+   using the same format as the second argument.  Finally, you can specify
+   the order of columns, which will be used by the `copy_from` and `copy_to`
+   functions by default.
 
    ```python
-   db.create_table(name='halfmf_forms',
-                   search_columns={'smallint': ['dim', 'weight', 'level', 'dimtheta'],
+   db.create_table(name='perfect_numbers',
+                   search_columns={'numeric': ['N','mersenne_n'],
+                                   'int': ['num_factors'],
+                                   'double': ['log_N'],
                                    'text': ['label'],
-                                   'jsonb': ['thetas', 'newpart'],
-                                   'numeric': ['character']},
+                                   'bool': ['odd'],
+                                   },
                    label_col='label',
-                   sort=['level', 'label'],
-                   id_ordered=False,
-                   search_order=['dim', 'weight', 'thetas', 'level', 'character',
-                                 'label', 'dimtheta', 'newpart'])
+                   sort=['label'],
+                   table_description='perfect numbers',
+                   col_description={'N': "Integer value of the perfect number",
+                                    'log_N': "Natural logarithm of $N$",
+                                    'num_factors': "The number of factors of the perfect number.",
+                                    'mersenne_n': "For odd perfect numbers, the positive integer n for which $N=2^{n-1}(2^n-1)$, where $2^n-1$ is prime.  Set to zero for even perfect numbers",
+                                    'label': "Label of the perfect number",
+                                    'odd': "True if $N$ is odd, false otherwise.",
+                                   },
+                   search_order=['label'])
    ```
 
    Once this table exists, you can access it via the object
-    `db.halfmf_forms`, which is of type `PostgresTable`.
+    `db.perfect_numers`, which is of type `PostgresTable`.
 
    Conversely, to remove a table from the LMFDB you can use `drop_table`.
 
@@ -545,7 +559,7 @@ Statistics
    Finally, statistics are used by the query planner when searching
    for rows.  These statistics are stored internally within postgres
    using postgres' `ANALYZE` and `CREATE STATISTICS` functions, and
-   are not easily accesssible to developers.
+   are not easily accessible to developers.
 
 1. How do I access statistics?
 
@@ -647,7 +661,7 @@ Statistics
    fairly easy.  Just add a view using the `dynamic_stats.html`
    template, and call the `dynamic_setup` method of your stats object
    with `info` as an argument.  See classical modular forms for an
-   examaple.
+   example.
 
 1. If I change the data in a table, how can I update the statistics on the table?
 
@@ -725,7 +739,7 @@ Data Validation
    SQL injection and should not be available when the website is
    running).  Then use, for example, `db.mf_newforms.verify()`.
 
-   You can specify a paricular speedtype to run
+   You can specify a particular speedtype to run
    (e.g. `speedtype="slow"` or `speedtype="overall"`), a specific
    check (e.g. `check="check_cmrm_discs"`), or a specific object (e.g.
    `label="24.37.h.c"`).  You can also run tests on multiple tables

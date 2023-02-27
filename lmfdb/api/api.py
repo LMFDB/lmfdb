@@ -161,7 +161,7 @@ def api_query_id(table, id):
 
 @api_page.route("/<table>")
 @api_page.route("/<table>/")
-def api_query(table, id = None):
+def api_query(table, id=None):
     #if censored_table(table):
     #    return abort(404)
 
@@ -200,7 +200,7 @@ def api_query(table, id = None):
         return apierror("table %s does not exist", [table], table=False)
     q = {}
 
-    # if id is set, just go and get it, ignore query parameeters
+    # if id is set, just go and get it, ignore query parameters
     if id is not None:
         if offset:
             return apierror("Cannot include offset with id")
@@ -289,7 +289,7 @@ def api_query(table, id = None):
     if 'bytea' in coll.col_type.values():
         for row in data:
             for key, val in row.items():
-                if type(val) == buffer:
+                if isinstance(val, buffer):
                     row[key] = "[binary data]"
         #data = [ dict([ (key, val if coll.col_type[key] != 'bytea' else "binary data") for key, val in row.items() ]) for row in data]
     data = Json.prep(data)
@@ -344,10 +344,11 @@ def api_query(table, id = None):
                                search_schema={table: search_schema},
                                extra_schema={table: extra_schema},
                                single_object=single_object,
-                               query_unquote = query_unquote,
-                               url_args = url_args,
+                               query_unquote=query_unquote,
+                               url_args=url_args,
                                bread=bc,
                                **data)
+
 
 # This function is used to show the data associated to a given homepage, which could possibly be from multiple tables.
 def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
@@ -365,11 +366,11 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     if not isinstance(tables, list):
         tables = [tables]
     if not isinstance(labels, list):
-        labels = [labels for table in tables]
+        labels = [labels for _ in tables]
     if label_cols is None:
-        label_cols = ["label" for table in tables]
+        label_cols = ["label" for _ in tables]
     if sorts is None:
-        sorts = [None for table in tables]
+        sorts = [None for _ in tables]
     assert len(labels) == len(tables) == len(label_cols)
 
     def apierror(msg, flash_extras=[], code=404, table=False):

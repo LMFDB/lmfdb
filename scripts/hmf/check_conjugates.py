@@ -106,7 +106,7 @@ def fldlabel2conjdata(label):
     return data
 
 def conjstringideal(F,stridl,g):
-    """Given a string representing an ideal of F and an automorpism g of F,
+    """Given a string representing an ideal of F and an automorphism g of F,
     return the string representing the conjugate ideal.
     """
     N,n,_,gen = str2ideal(F,stridl)
@@ -121,7 +121,7 @@ def conjform(f, h, g, ig, cideals, cprimes, F):
     """
     f is a 'short' newform from the forms collection;
     h is its hecke data from the hecke collection
-    g is an tuomorphism of the base field, ig it index in auts
+    g is an automorphism of the base field, ig it index in auts
     cideals, cprimes are the lists of conjugated ideals and primes
     """
     if 'is_base_change' in f and f['is_base_change'][0:3] == 'yes':

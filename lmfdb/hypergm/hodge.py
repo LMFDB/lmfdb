@@ -4,10 +4,10 @@ def mu_nu(hodge, signature):
     """
     # hodge = [int(a) for a in hodge.split(',')]
     motivic_weight = len(hodge) - 1
-    hodge_index = lambda p: hodge[p]
+    def hodge_index(p): return hodge[p]
     # The hodge number p,q
 
-    q = lambda p: motivic_weight - p
+    def q(p): return motivic_weight - p
 
     assert len(hodge) == motivic_weight + 1
 

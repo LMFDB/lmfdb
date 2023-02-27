@@ -35,7 +35,7 @@ def download_sample(name):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
+    return send_file(strIO, download_name=name + '.json', as_attachment=True)
 
 
 ###############################################################################
@@ -99,7 +99,7 @@ def Sp4Z_j_space(k,j):
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title = r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
                            info=info)
 
@@ -142,8 +142,8 @@ def Sp4Z_j():
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title=r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
-                           bread = bread,
-                           info = info
+                           bread=bread,
+                           info=info
                            )
 
 ##########################################################

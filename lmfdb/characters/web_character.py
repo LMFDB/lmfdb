@@ -265,7 +265,7 @@ class WebDirichlet(WebCharObject):
     def nextprimchar(m, n):
         if m < 3:
             return 3, 2
-        while 1:
+        while True:
             n += 1
             if n >= m:
                 m, n = m + 1, 2
@@ -531,15 +531,13 @@ class WebChar(WebCharObject):
             f.append( ('Number field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
-            if get_lfunction_by_url(url[1:]):
-                f.append( ('L-function', '/L'+ url) )
-            else:
-                if self.conductor == 1:
-                    f.append (('L-function', '/L/Riemann'))
+            lfun_label = get_lfunction_by_url(url[1:], projection='label')
+            if lfun_label:
+                f.append(('L-function', url_for('by_full_label', lfun_label)))
         if self.type == 'Dirichlet':
-            f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
+            f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}')))
         if len(self.vflabel)>0:
-            f.append( ("Value field", '/NumberField/' + self.vflabel) )
+            f.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         return f
 
 #############################################################################
@@ -721,8 +719,7 @@ class WebCharGroup(WebCharObject):
     def structure(self):
         inv = self.H.invariants()
         if inv:
-            inv_list = list(inv)
-            inv_list.sort()
+            inv_list = sorted(inv)
             return r"\(%s\)" % ("\\times ".join("C_{%s}" % d for d in inv_list))
         else:
             return r"\(C_1\)"
@@ -975,9 +972,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character group", cglink) )
-        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
-        friendlist.append( ("Character orbit", gal_orb_link) )
+        friendlist.append(("Character group", cglink))
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus,
+                                     orbit_label=self.orbit_label)
+        friendlist.append(("Character orbit", gal_orb_link))
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
@@ -986,22 +984,22 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 modulus=self.modulus,
                 number=self.number
             )
-            if get_lfunction_by_url(url[1:]):
-                friendlist.append( ('L-function', '/L'+ url) )
-            else:
-                if self.conductor == 1:
-                    friendlist.append (('L-function', '/L/Riemann'))
+            Lfun_label = '1-1-1.1-r0-0-0' if self.conductor == 1 else get_lfunction_by_url(url[1:], projection='label')
+            if Lfun_label:
+                friendlist.append(
+                    ('L-function', url_for('l_functions.by_full_label', label=Lfun_label))
+                )
             friendlist.append(
-                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+                ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}'))
             )
         if len(self.vflabel) > 0:
-            friendlist.append( ("Value field", '/NumberField/' + self.vflabel) )
+            friendlist.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         if self.symbol_numerator():
             if self.symbol_numerator() > 0:
                 assoclabel = '2.2.%d.1' % self.symbol_numerator()
             else:
                 assoclabel = '2.0.%d.1' % -self.symbol_numerator()
-            friendlist.append(("Associated quadratic field", '/NumberField/' + assoclabel))
+            friendlist.append(("Associated quadratic field", url_for("number_fields.by_label", label=assoclabel)))
 
         label = "%s.%s"%(self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
@@ -1155,7 +1153,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     def get_orbit_data(self, orbit_label):
         mod_and_label = "{}.{}".format(self.modulus, orbit_label)
-        orbit_data =  db.char_dir_orbits.lucky(
+        orbit_data = db.char_dir_orbits.lucky(
             {'modulus': self.modulus, 'label': mod_and_label}
         )
 

@@ -221,7 +221,7 @@ class PostgresBase():
         logging_options = db.config.options["logging"]
         self.slow_cutoff = logging_options["slowcutoff"]
         self.logger = l = logging.getLogger(loggername)
-        l.propogate = False
+        l.propagate = False
         l.setLevel(logging.INFO)
         fhandler = logging.FileHandler(logging_options["slowlogfile"])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
@@ -1029,7 +1029,7 @@ class PostgresBase():
                 tablename_new = table + target
                 self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
 
-                done = set({})  # done constraints/indexes
+                done = set()  # done constraints/indexes
                 # We threat pkey separately
                 pkey_old = table + source + "_pkey"
                 pkey_new = table + target + "_pkey"

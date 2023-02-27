@@ -27,8 +27,10 @@ def overrides(super_class):
 class LMFDBStatsTable(PostgresStatsTable):
     saving = True
 
+
 class LMFDBSearchTable(PostgresSearchTable):
     _stats_table_class_ = LMFDBStatsTable
+
     def __init__(self, *args, **kwds):
         PostgresSearchTable.__init__(self, *args, **kwds)
         self._verifier = None  # set when importing lmfdb.verify

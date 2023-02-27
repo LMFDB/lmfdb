@@ -464,7 +464,9 @@ class StatsDisplay(UniqueRepresentation):
     def stats(self):
         return self
 
-    def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, baseurl_func=None, url_extras=None, **kwds):
+    def display_data(self, cols, table=None, constraint=None, avg=None,
+                     buckets=None, totaler=None, proportioner=None,
+                     baseurl_func=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -631,7 +633,7 @@ class StatsDisplay(UniqueRepresentation):
             attr['row_title'] = self._short_display[cols[0]]
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
-            rows = [counts[i:i+10] for i in range(0,len(counts),10)]
+            rows = [counts[i:i+10] for i in range(0, len(counts), 10)]
             if len(rows) > max_rows:
                 short_rows = rows[:max_rows]
                 data['divs'] = [(short_rows, "short_table_" + hsh, "short"),
