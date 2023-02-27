@@ -28,6 +28,7 @@ simple_curve:
 gens:
   sage:  E.gens()
   magma: Generators(E);
+  pari: E.gen
 
 tors:
   sage:  E.torsion_subgroup().gens()
@@ -55,10 +56,13 @@ jinv:
 
 rank:
   sage:  E.rank()
+  pari: |
+    [lower,upper] = ellrank(E)
   magma: Rank(E);
 
 reg:
   sage:  E.regulator()
+  pari: matdet(ellheightmatrix(E,E.gen))
   magma: Regulator(E);
 
 real_period:
@@ -70,7 +74,6 @@ cp:
   sage:  E.tamagawa_numbers()
   pari:  gr=ellglobalred(E); [[gr[4][i,1],gr[5][i][4]] | i<-[1..#gr[4][,1]]]
   magma: TamagawaNumbers(E);
-
 
 ntors:
   sage:  E.torsion_order()
@@ -84,12 +87,19 @@ sha:
 qexp:
   sage:  E.q_eigenform(20)
   pari:  |
+    # actual modular form, fast if say N < 1000
+    [mf,F] = mffromell(E)
+    Ser(mfcoefs(mf,20),q)
+    # or (expansion is cheap)
+    Ser(ellan(E,20),q)*q
+    # or (slow but nice mathematical journey)
     xy = elltaniyama(E);
     x*deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
   magma: ModularForm(E);
 
 moddeg:
   sage:  E.modular_degree()
+  pari:  ellmoddegree(E)
   magma: ModularDegree(E);
 
 L1:
@@ -97,16 +107,13 @@ L1:
     r = E.rank();
     E.lseries().dokchitser().derivative(1,r)/r.factorial()
   pari:  |
-    ar = ellanalyticrank(E);
-    ar[2]/factorial(ar[1])
+    [r,L1r] = ellanalyticrank(E); L1r/r!
   magma: |
     Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
 
 localdata:
-  sage:
-    E.local_data()
-  pari:
-    ellglobalred(E)[5]
+  sage: E.local_data()
+  pari: ellglobalred(E)[5]
   magma: |
     [LocalInformation(E,p) : p in BadPrimes(E)];
 
@@ -128,4 +135,8 @@ adelicimage:
 padicreg:
   sage: |
     [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]
+  pari: |
+    [ellpadicregulator(E,p,10,E.gen) | p <- primes([5,20])]
 
+isogenies:
+  pari: ellisomat(E)
