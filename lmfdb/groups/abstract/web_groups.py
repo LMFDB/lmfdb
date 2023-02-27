@@ -774,12 +774,8 @@ class WebAbstractGroup(WebObj):
         else:
             props.extend([("Perm deg.", f"${self.transitive_degree}$")])
                 # ("Faith. dim.", str(self.faithful_reps[0][0])),
-        props.extend([
-            ("Rank", f"${self.rank}$" if self.rank else "not computed") ])
-        #elif self.pgroup > 1:
-        #    props.append(("Rank", f"${self.rank}$"))
-        #else:
-        #    props.extend([("Rank", "not computed")])
+        props.append(
+            ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
 
     @lazy_attribute
@@ -1247,7 +1243,7 @@ class WebAbstractGroup(WebObj):
         if isinstance(self.G, LiveAbelianGroup):
             divcnts = [(z[0], z[1]/euler_phi(z[0])) for z in self.cc_stats]
             self.number_divisions = sum([z[1] for z in divcnts])
-            return [(z[0], z[1]/euler_phi(z[0])) for z in self.cc_stats]
+            return divcnts
         if self.live():
             return None
         return sorted(
