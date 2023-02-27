@@ -1469,7 +1469,7 @@ class WebAbstractGroup(WebObj):
 
         # The only non-solvable option with order a multiple of 128
         # below 2000 is ...
-        if ZZ(self.G.Order()) == 1920:
+        elif ZZ(self.G.Order()) == 1920:
             basiclist = [
                 (url_for(".by_abelian_label", label=2), "C_2", "<span style='font-size: small'> x 5</span>"),
                 (url_for_label("60.5"), "A_5", "")]
