@@ -14,7 +14,7 @@ from flask import (
     url_for,
     abort,
 )
-from io import BytesIO
+#from six import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
@@ -775,7 +775,7 @@ def group_jump(info):
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
-        return redirect(url_for(".by_abelian_label", label=".".join(invs)))
+        return redirect(url_for(".by_abelian_label", label = ".".join(invs)))
     # by name
     labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
@@ -1400,31 +1400,36 @@ def download_group(**args):
             for i in range(num_gens):
                 s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
 
-    # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
-    else:
-        d = -gp_data["elt_rep_type"]
-        s += "d:=" + str(d) + "; \n"
-        s += "Sd:=SymmetricGroup(d); \n"
+        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+        else:
+            d = -gp_data["elt_rep_type"]
+            s += "d:=" + str(d) + "; \n"
+            s += "Sd:=SymmetricGroup(d); \n"
 
-        # Turn Lehmer code into permutations
-        list_gens = []
-        for perm in gp_data["perm_gens"]:
-            perm_decode = Permutations(d).unrank(perm)
-            list_gens.append(perm_decode)
+            # Turn Lehmer code into permutations
+            list_gens = []
+            for perm in gp_data["perm_gens"]:
+                perm_decode = Permutations(d).unrank(perm)
+                list_gens.append(perm_decode)
 
-        if dltype == "magma":
-            s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
-        elif dltype == "gap":
-            #          MAKE LIST2
-            s += "List_Gens:=" + str(list_gens) + "; \n \n"
-            s += "LGens:=[]; \n"
-            s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
-            s += "G:=Subgroup(Sd,LGens);"
+            if dltype == "magma":
+                s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
+            elif dltype == "gap":
+                #          MAKE LIST2
+                s += "List_Gens:=" + str(list_gens) + "; \n \n"
+                s += "LGens:=[]; \n"
+                s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
+                s += "G:=Subgroup(Sd,LGens);"
 
-    strIO = BytesIO()
-    strIO.write(s.encode("utf-8"))
-    strIO.seek(0)
-    return send_file(strIO, download_name=filename, as_attachment=True)
+    response = make_response(s)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+    #strIO = BytesIO()
+    #strIO.write(s.encode("utf-8"))
+    #strIO.seek(0)
+    #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
 
 def display_profile_line(data, ambient, aut):
     l = []
@@ -1751,7 +1756,6 @@ class GroupsSearchArray(SearchArray):
 
     sort_knowl = "group.sort_order"
 
-
 class SubgroupSearchArray(SearchArray):
     null_column_explanations = { # No need to display warnings for these
         "quotient": False,
@@ -1764,7 +1768,6 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient', 'quotient_order', 'subgroup']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient', 'subgroup']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient', 'subgroup'])]
-
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")
