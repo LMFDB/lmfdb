@@ -62,7 +62,9 @@ rank:
 
 reg:
   sage:  E.regulator()
-  pari: matdet(ellheightmatrix(E,E.gen))
+  pari: |
+    G = E.gen \\ if available
+    matdet(ellheightmatrix(E,G))
   magma: Regulator(E);
 
 real_period:
@@ -87,14 +89,11 @@ sha:
 qexp:
   sage:  E.q_eigenform(20)
   pari:  |
-    # actual modular form, fast if say N < 1000
+    \\ actual modular form, use for small N
     [mf,F] = mffromell(E)
     Ser(mfcoefs(mf,20),q)
-    # or (expansion is cheap)
+    \\ or
     Ser(ellan(E,20),q)*q
-    # or (slow but nice mathematical journey)
-    xy = elltaniyama(E);
-    x*deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
   magma: ModularForm(E);
 
 moddeg:
@@ -136,7 +135,8 @@ padicreg:
   sage: |
     [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]
   pari: |
-    [ellpadicregulator(E,p,10,E.gen) | p <- primes([5,20])]
+    G = E.gen \\ if available
+    [ellpadicregulator(E,p,10,G) | p <- primes([5,20])]
 
 isogenies:
   pari: ellisomat(E)
