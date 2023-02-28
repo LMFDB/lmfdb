@@ -500,6 +500,19 @@ function control_sort(S) {
   S.selectedIndex = -1;
 };
 
+function update_download_url(link) {
+  var show = $("input[name=showcol]");
+  var hide = $("input[name=hidecol]");
+  var i = link.href.indexOf("&showcol=");
+  console.log("pre", link.href);
+  if (i != -1) {
+    link.href = link.href.slice(0, i);
+  }
+  link.href = link.href + "&showcol=" + show.val() + "&hidecol=" + hide.val();
+  console.log("post", link.href);
+  return true;
+};
+
 function blur_sort(S) {
   S.size = 0;
   for (var i = 0; i < S.length; i++) {
