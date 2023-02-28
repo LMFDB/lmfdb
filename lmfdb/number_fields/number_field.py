@@ -1082,9 +1082,6 @@ sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'unit_rank', 'unit_torsion_gen',
                      'fundamental_units', 'regulator', 'class_number_formula',
                      'intermediate_fields', 'galois_group', 'prime_cycle_types']
-                     'fundamental_units', 'regulator',
-                     'class_number_formula', 'galois_group',
-                     'prime_cycle_types']
 
 code_names = {'field': 'Define the number field',
               'poly': 'Defining polynomial',
