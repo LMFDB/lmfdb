@@ -12,7 +12,7 @@ from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
@@ -429,6 +429,11 @@ class WebEC():
             data['optimality_known'] = False
             data['manin_known'] = False
             data['optimal_label'] = ''
+
+        if data.get('adelic_index'):
+            N = ZZ(data['adelic_level'])
+            P = N.prime_divisors()
+            data['adelic_image_size'] = euler_phi(N)*N*(N // prod(P))^2*prod([p^2-1 for p in P]) // data['adelic_index']
 
         # p-adic data:
 

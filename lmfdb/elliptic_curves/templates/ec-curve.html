@@ -470,8 +470,9 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
 
   {{ place_code('adelicimage') }}
 
-<p> The image of the {{KNOWL('ec.galois_rep', title='adelic Galois representation')}} has {{KNOWL('ec.galois_rep_adelic_image', title='level')}} ${{data.adelic_level}}$, {{KNOWL('ec.galois_rep_adelic_image', title='index')}} ${{data.adelic_index}}$, {{KNOWL('ec.galois_rep_adelic_image', title='genus')}} ${{data.adelic_genus}}$, and generators</p>
-<p>${{data.data.adelic_gens_latex}}$</p>
+<p> The image of the {{KNOWL('ec.galois_rep', title='adelic Galois representation')}} in $\GL_2(\widehat\Z)$ has {{KNOWL('ec.galois_rep_adelic_image', title='level')}} ${{data.adelic_level}}$, {{KNOWL('ec.galois_rep_adelic_image', title='index')}} ${{data.adelic_index}}$, and {{KNOWL('ec.galois_rep_adelic_image', title='genus')}} ${{data.adelic_genus}}$, is the inverse image of</p>
+<p>$H = \left\langle {{data.data.adelic_gens_latex}} \right\rangle\subseteq \GL_2(\Z/N\Z)$.</p>
+<p>The ${{data.data.adelic_level}}$-torsion field $K$ is a degree ${{data.data.adelic_image_size}}$ extension of $\Q$ with $\mathrm{Gal}(K/\Q)\simeq H$.
 {% endif %}
 
 <h2>$p$-adic regulators</h2>
