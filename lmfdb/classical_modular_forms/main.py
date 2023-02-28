@@ -53,6 +53,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
+            ('Picture description', url_for(".picture_page")),
             ('Classical modular form labels', url_for(".labels_page"))]
 
 
@@ -1207,6 +1208,18 @@ def reliability_page():
     return render_template("single.html", kid='rcs.rigor.cmf', title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
+
+
+@cmf.route("/Pictures")
+def picture_page():
+    t = "Pictures for classical modular forms"
+    return render_template(
+        "single.html",
+        kid='cmf.picture_description',
+        title=t,
+        bread=get_bread(other="Pictures"),
+        learnmore=learnmore_list_remove('Picture')
+    )
 
 
 def projective_image_sort_key(im_type):
