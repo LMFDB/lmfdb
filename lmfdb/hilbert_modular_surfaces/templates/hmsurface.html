@@ -49,7 +49,12 @@
 <h2> {{ KNOWL('hmsurface.cusps', 'Cusps') }} </h2>
 
 <p>
-  This Hilbert modular surface has ${{ surface.nb_cusps }}$ cusps.
+  This Hilbert modular surface has
+  {% if surface.nb_cusps == 1 %}
+  exactly one cusp.
+  {% else %}
+  ${{ surface.nb_cusps }}$ cusps.
+  {% endif %}
 </p>
 
 <table class="ntdata">
@@ -70,5 +75,37 @@
   {% endfor %}
   </tbody>
 </table>
+
+<h2> {{ KNOWL('hmsurface.cusps', 'Elliptic points') }} </h2>
+
+<p>
+  This Hilbert modular surface has
+  {% if surface.nb_elliptic_pts == 0 %}
+  no elliptic points.
+  {% elif surface.nb_elliptic_pts == 1 %}
+  exactly one elliptic point.
+  {% else %}
+  ${{ surface.nb_elliptic_pts }}$ elliptic points.
+  {% endif %}
+</p>
+
+{% if surface.nb_elliptic_pts > 0 %}
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('hmsurface.rotation_type','Rotation type') }}</th>
+      <th> Number </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for rot, nb in surface.formatted_elliptic_pts %}
+  <tr>
+    <td align="center">${{ rot }}$</td>
+    <td align="center">${{ nb }}$</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 
 {% endblock %}

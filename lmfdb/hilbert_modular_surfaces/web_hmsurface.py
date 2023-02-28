@@ -25,8 +25,11 @@ def hmsurface_format_cusp(cusp, w):
     a = latex(ZZ(xa) + ZZ(ya) * w)
     c = latex(ZZ(xc) + ZZ(yc) * w)
     res = (cusp['M_label'], a, c, cusp['self_intersections_minimal'], cusp['repetition'])
-    print(res)
     return res
+
+def hmsurface_format_elliptic_pt(pt):
+    [n, a, b] = pt['rotation_type']
+    return ("[{};{},{}]".format(n, a, b), pt['nb'])
 
 class WebHMSurface(WebObj):
     table = db.hmsurfaces_invs
@@ -106,6 +109,15 @@ class WebHMSurface(WebObj):
     def formatted_cusps(self):
         cusps = list(db.hmsurfaces_cusps.search({'label': self.label}, ['M_label', 'coordinates', 'self_intersections_minimal', 'repetition']))
         return [hmsurface_format_cusp(s, self.field.K().gen()) for s in cusps]
+
+    @lazy_attribute
+    def formatted_elliptic_pts(self):
+        ellpts = list(db.hmsurfaces_elliptic_pts.search({'label': self.label}, ['nb', 'rotation_type']))
+        return [hmsurface_format_elliptic_pt(pt) for pt in ellpts]
+
+    @lazy_attribute
+    def nb_elliptic_pts(self):
+        return sum([pt[1] for pt in self.formatted_elliptic_pts])
 
     @lazy_attribute
     def kodaira_dims(self):
