@@ -88,7 +88,7 @@ class SearchCol:
 
     def download(self, rec, language):
         ans = self._get(rec)
-        if type(ans) == string:
+        if isinstance(ans, str):
             return '"' + ans + '"'
         else:
             return str(ans)
