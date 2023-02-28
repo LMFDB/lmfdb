@@ -2,10 +2,11 @@
 import random
 import time
 from itertools import islice
+from collections import defaultdict
 
 from psycopg2.extensions import cursor as pg_cursor
 
-from psycopg2.sql import SQL, Identifier, Literal
+from psycopg2.sql import SQL, Identifier, Literal, Composed
 
 from .base import number_types
 from .table import PostgresTable
@@ -926,6 +927,149 @@ class PostgresSearchTable(PostgresTable):
             info["start"] = offset
             info["exact_count"] = exact_count
         return results
+
+    def join_search(
+        self,
+        query,
+        projection,
+        join,
+        limit=None,
+        offset=0,
+        sort=None,
+        silent=False,
+    ):
+        """
+        A version of search that can also include columns from other tables.
+
+        Currently only supports the simpler parameters from search.
+
+        INPUT:
+
+        - ``query`` -- either a dictionary (in which case all constraints are on this table) or a list of pairs ``(table, dictionary)``
+        - ``projection`` -- a list, with entries that are either strings (column names from this table),
+            or pairs ``(table, column)``
+        - ``join`` -- a list of quadruples (tbl1, col1, tbl2, col2).  tbl1 should have already appeared (or be self for the first entry), while tbl2 should be new
+        - ``sort`` -- if provided, can only contain columns from this table (for simplicity)
+
+        EXAMPLES::
+
+            sage: db.ec_nfcurves.join_search({"rank":1}, ["label", ("nf_fields", "r2")], [("ec_nfcurves", "field_label", "nf_fields", "label")], limit=3)
+            [{'label': '2.0.11.1-47.1-a1', ('nf_fields', 'r2'): 1},
+             {'label': '2.0.11.1-47.2-a1', ('nf_fields', 'r2'): 1},
+             {'label': '2.0.11.1-108.1-a1', ('nf_fields', 'r2'): 1}]
+        """
+        if offset < 0:
+            raise ValueError("Offset cannot be negative")
+        alltables = set()
+
+        # Determine the columns to project onto
+        orig_proj = projection
+        if isinstance(projection, str):
+            projection = [projection]
+        cols = []
+        for pair in projection:
+            if isinstance(pair, str):
+                table, col = self, pair
+            else:
+                table, col = pair
+                if isinstance(table, str):
+                    table = self._db[table]
+            if col in table.search_cols:
+                table = table.search_table
+            elif col in table.extra_cols:
+                table = table.extra_table
+            else:
+                raise ValueError("%s not column of %s" % (col, table.search_table))
+            alltables.add(table)
+            cols.append(Identifier(table) + SQL(".") + Identifier(col))
+        cols = SQL(", ").join(cols)
+
+        # Create the WHERE clause part of the query
+        orig_query = query
+        if isinstance(query, dict):
+            query = [(self, query)]
+        def qualify(qstr, tbl):
+            # Have to fully qualify the identifiers by adding table name
+            if isinstance(qstr, Composed):
+                return Composed([qualify(part, tbl) for part in qstr.seq])
+            elif isinstance(qstr, Identifier):
+                if qstr.string in tbl.search_cols:
+                    tbl = tbl.search_table
+                elif qstr.string in tbl.extra_cols:
+                    tbl = tbl.extra_table
+                else:
+                    raise ValueError("%s not column of %s" % (qstr.string, tbl.search_table))
+                alltables.add(tbl)
+                return Identifier(tbl) + SQL(".") + qstr
+            else:
+                return qstr
+        thisquery = {}
+        where, vals = [], []
+        for table, Q in query:
+            if isinstance(table, str):
+                table = self._db[table]
+            if table is self:
+                thisquery = Q
+            qstr, values = table._parse_dict(Q)
+            if qstr is not None:
+                qstr = qualify(qstr, table)
+                where.append(qstr)
+                vals += values
+        if where:
+            where = SQL(" WHERE {0}").format(SQL("AND").join(where))
+        else:
+            where = SQL("")
+
+        # Create the JOIN clause part of the query
+        if self.extra_table in alltables:
+            frm = SQL("{0} JOIN {1} ON {0}.{2} = {1}.{2}").format(Identifier(self.search_table), Identifier(self.extra_table), Identifier("id"))
+        else:
+            frm = Identifier(self.search_table)
+        for tbl1, col1, tbl2, col2 in join:
+            if isinstance(tbl1, str):
+                tbl1 = self._db[tbl1]
+            if isinstance(tbl2, str):
+                tbl2 = self._db[tbl2]
+            if tbl2.extra_table in alltables:
+                if tbl2.search_table in alltables:
+                    frm += SQL(" JOIN {0} ON {1} = {2} JOIN {3} ON {0}.{4} = {3}.{4}").format(
+                        Identifier(tb2.search_table),
+                        qualify(Identifier(col1), tbl1),
+                        qualify(Identifier(col2), tbl2),
+                        Identifier(tb2.extra_table),
+                        Identifier("id"))
+                else:
+                    frm += SQL(" JOIN {0} ON {1} = {2}").format(
+                        Identifier(tb2.extra_table),
+                        qualify(Identifier(col1), tbl1),
+                        qualify(Identifier(col2), tbl2))
+            else:
+                frm += SQL(" JOIN {0} ON {1} = {2}").format(
+                    Identifier(tbl2.search_table),
+                    qualify(Identifier(col1), tbl1),
+                    qualify(Identifier(col2), tbl2))
+
+        # Create the ORDER BY, LIMIT, OFFSET section of the query
+        sort, has_sort, raw_sort = self._process_sort(thisquery, limit, offset, sort)
+        if has_sort:
+            sort = qualify(sort, self)
+            olo = SQL(" ORDER BY {0}").format(sort)
+        else:
+            olo = SQL("")
+        if limit is not None:
+            olo = SQL("{0} LIMIT %s").format(olo)
+            vals.append(limit)
+            if offset != 0:
+                olo = SQL("{0} OFFSET %s").format(olo)
+                vals.append(offset)
+
+        selecter = SQL("SELECT {0} FROM {1}{2}{3}").format(cols, frm, where, olo)
+        cur = self._execute(selecter, vals, silent=silent, buffered=(limit is None))
+        # _search_iterator only cares about search_cols + extra_cols, so we use the original projection
+        if limit is None:
+            return self._search_iterator(cur, projection, [], orig_proj, query=orig_query)
+        results = cur.fetchmany(limit)
+        return list(self._search_iterator(results, projection, [], orig_proj, query=orig_query))
 
     def lookup(self, label, projection=2, label_col=None):
         """
