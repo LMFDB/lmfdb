@@ -870,7 +870,6 @@ def render_single_congruent_number(n):
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
-
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
 code_names = {'curve': 'Define the curve',
@@ -914,13 +913,16 @@ def ec_code(**args):
     lang = args['download_type']
     if not lang in Fullname:
         abort(404,"Invalid code language specified: " + lang)
-    code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
     if lang=='gp':
         lang = 'pari'
-    for k in sorted_code_names:
-        if lang in Ecode[k]:
-            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+    comment = Ecode.pop('comment').get(lang).strip()
+    code = "%s %s code for working with elliptic curve %s\n\n" % (comment,Fullname[lang],label)
+    for k in Ecode: # OrderedDict
+        if 'comment' not in Ecode[k] or lang not in Ecode[k]:
+            continue
+        code += "\n%s %s: \n" % (comment,Ecode[k]['comment'])
+        code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+
     return code
 
 

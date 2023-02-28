@@ -139,6 +139,10 @@ class_number_formula:
     hK = order(clK); wK = order(first(torsion_subgroup(UK)));
     2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 
+class_number_formula:
+  pari: |
+    [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
+
 galois_group:
   sage:  K.galois_group(type='pari')
   pari:  polgalois(K.pol)

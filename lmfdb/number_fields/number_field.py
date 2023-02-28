@@ -90,7 +90,7 @@ def fixed_prec(r, digs=3):
     head = int(n[:-digs])
     if head >= 10**4:
         head = comma(head, r'\,')
-    print(head)
+    #print(head)
     return str(head) + '.' + n[-digs:]
 
 
@@ -527,7 +527,7 @@ def render_field_webpage(args):
             reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
         total = 2 ** (nf.degree()//2 - 1)
         reflex_fields_list.sort()
-        print(reflex_fields_list)
+        #print(reflex_fields_list)
         for reflex_field in reflex_fields_list:
             if table != "":
                 table = table + ', '
@@ -666,6 +666,7 @@ def render_field_webpage(args):
         primes = 'prime'
     else:
         primes = 'primes'
+    ram_primes = ','.join([str(z).rstrip('L') for z in nf.ramified_primes()])
     if len(ram_primes) > 30:
         ram_primes = 'see page'
     else:
@@ -1081,6 +1082,9 @@ sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'unit_rank', 'unit_torsion_gen',
                      'fundamental_units', 'regulator', 'class_number_formula',
                      'intermediate_fields', 'galois_group', 'prime_cycle_types']
+                     'fundamental_units', 'regulator',
+                     'class_number_formula', 'galois_group',
+                     'prime_cycle_types']
 
 code_names = {'field': 'Define the number field',
               'poly': 'Defining polynomial',
