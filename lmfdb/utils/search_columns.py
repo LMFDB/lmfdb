@@ -5,7 +5,7 @@ def tf(val, language):
         return 'True' if val else 'False'
     elif language == 'magma':
         return 'true' if val else 'false'
-    elif language == 'pari':
+    elif language in ['pari', 'gp']:
         return '1' if val else '0'
     raise NotImplementedError('{language = } is not recognized')
 
@@ -88,9 +88,9 @@ class SearchCol:
             yield self
 
     def download(self, rec, language):
-        ans = self.get(rec)
+        ans = self._get(rec)
         if type(ans) == string:
-            return = '"' + ans + '"'
+            return '"' + ans + '"'
         else:
             return str(ans)
 
@@ -121,7 +121,7 @@ class FloatCol(MathCol):
         self.prec = prec
 
     def get(self, rec):
-        val = super().get(rec)
+        val = self._get(rec)
         # We mix string processing directives so that we can use variable precision
         return f"%.{self.prec}f" % val
 
@@ -177,6 +177,12 @@ class ProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
+    def display(self, rec):
+        s = self.func(self.get(rec))
+        if s and self.mathmode:
+            s = f"${s}$"
+        return s
+
 
 class ProcessedLinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_func, disp_func, default=False,
@@ -206,6 +212,9 @@ class MultiProcessedCol(SearchCol):
         if s != "" and self.mathmode:
             s = f"${s}$"
         return s
+
+    def download(self, rec, language):
+        return str([str(rec.get(col)) for col in self.orig])
 
 
 class ContingentCol(ProcessedCol):
@@ -252,6 +261,8 @@ class ColGroup(SearchCol):
             else:
                 yield from subcols
 
+    def download(self, rec, language):
+        return str([sub.download(rec, language) for sub in self.subcols])
 
 class SearchColumns:
     above_results = ""  # Can add text above the Results (1-50 of ...) if desired
