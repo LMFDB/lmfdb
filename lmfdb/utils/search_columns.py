@@ -1,7 +1,5 @@
 from .web_display import display_knowl
 
-<<<<<<< HEAD
-
 def tf(val, language):
     if language == 'sage':
         return 'True' if val else 'False'
@@ -11,8 +9,7 @@ def tf(val, language):
         return '1' if val else '0'
     raise NotImplementedError('{language = } is not recognized')
 
-=======
->>>>>>> 5001a045ec9583a52c70a0a7f4542a0312484046
+
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):
