@@ -227,6 +227,7 @@ class WebEC():
         logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         self.make_curve()
+        assert 'ainvs' in self.data
 
     @staticmethod
     def by_label(label):
@@ -716,18 +717,18 @@ class WebEC():
 
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-
-            # Fill in placeholders for this specific curve:
-            for lang in ['sage', 'pari', 'magma']:
-                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
-
-            # Fill in adelic image placeholders for this specific curve:
-            for lang in ['sage', 'magma']:
-                if self.data['adelic_data']:
-                    adelic_image_str = self.data['adelic_data']['adelic_image']
-                    adelic_gens = self.data['adelic_data']['adelic_gens']
-                    adelic_level_str = adelic_image_str.split(".")[0]
-                    self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
-
+            code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            # fill in curve data
+            if self.data['adelic_data']:
+                adelic_gens = self.data['adelic_data']['adelic_gens']
+                adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
+            else:
+                adelic_gens = adelic_level = ''
+            data = { 'ainvs': self.data['ainvs'],
+                     'level': adelic_level,
+                     'adelic_gens': adelic_gens }
+            for prop in code:
+                for lang in code[prop]:
+                    code[prop][lang] = code[prop][lang].format(**data)
+            self._code = code
         return self._code
