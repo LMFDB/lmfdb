@@ -92,6 +92,7 @@ def learnmore_list():
         ("Source and acknowledgements", url_for(".how_computed_page")),
         ("Completeness of the data", url_for(".completeness_page")),
         ("Reliability of the data", url_for(".reliability_page")),
+        ('Picture description', url_for(".picture_page")),
         ("Abstract  group labeling", url_for(".labels_page")),
     ]
 
@@ -1289,6 +1290,19 @@ def reliability_page():
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Reliability"),
+    )
+
+
+@abstract_page.route("/Pictures")
+def picture_page():
+    t = "Pictures for abstract groups"
+    bread = get_bread("Pictures")
+    return render_template(
+        "single.html",
+        kid="group.picture_description",
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list_remove("Picture")
     )
 
 
