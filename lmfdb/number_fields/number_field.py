@@ -1071,7 +1071,8 @@ sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'discriminant', 'ramified_primes',
                      'integral_basis', 'class_group', 'unit_group',
                      'unit_rank', 'unit_torsion_gen',
-                     'fundamental_units', 'regulator', 'galois_group',
+                     'fundamental_units', 'regulator',
+                     'class_number_formula', 'galois_group',
                      'prime_cycle_types']
 
 code_names = {'field': 'Define the number field',
@@ -1088,6 +1089,7 @@ code_names = {'field': 'Define the number field',
               'fundamental_units': 'Fundamental units',
               'regulator': 'Regulator',
               'galois_group': 'Galois group',
+              'class_number_formula' : 'Class number formula',
               'prime_cycle_types': 'Frobenius cycle types'}
 
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
