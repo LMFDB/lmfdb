@@ -67,6 +67,7 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
+            ('Picture description', url_for(".picture_page")),
             ('Congruent number curves', url_for(".render_congruent_number_data"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -831,6 +832,15 @@ def reliability_page():
     bread = get_bread('Reliability')
     return render_template("single.html", kid='rcs.rigor.ec.q',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
+@ec_page.route("/Pictures")
+def picture_page():
+    t = r'Pictures for elliptic curves over $\Q$'
+    bread = get_bread('Pictures')
+    return render_template(
+        "single.html", kid='ec.q.picture_description',
+        title=t, bread=bread, learnmore=learnmore_list_remove('Picture')
+    )
 
 @ec_page.route("/Labels")
 def labels_page():
