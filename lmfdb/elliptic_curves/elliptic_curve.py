@@ -874,27 +874,6 @@ def render_single_congruent_number(n):
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
 
-sorted_code_names = ['curve', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'qexp', 'moddeg', 'L1', 'localdata', 'galrep', 'padicreg']
-
-code_names = {'curve': 'Define the curve',
-                 'tors': 'Torsion subgroup',
-                 'intpts': 'Integral points',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'jinv': 'j-invariant',
-                 'rank': 'Rank',
-                 'reg': 'Regulator',
-                 'real_period': 'Real Period',
-                 'cp': 'Tamagawa numbers',
-                 'ntors': 'Torsion order',
-                 'sha': 'Order of Sha',
-                 'qexp': 'q-expansion of modular form',
-                 'moddeg': 'Modular degree',
-                 'L1': 'Special L-value',
-                 'localdata': 'Local data',
-                 'galrep': 'mod p Galois image',
-                 'padicreg': 'p-adic regulator'}
-
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
@@ -909,13 +888,16 @@ def ec_code(**args):
     lang = args['download_type']
     if not lang in Fullname:
         abort(404,"Invalid code language specified: " + lang)
-    code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
     if lang=='gp':
         lang = 'pari'
-    for k in sorted_code_names:
-        if lang in Ecode[k]:
-            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+    comment = Ecode.pop('comment').get(lang).strip()
+    code = "%s %s code for working with elliptic curve %s\n\n" % (comment,Fullname[lang],label)
+    for k in Ecode: # OrderedDict
+        if 'comment' not in Ecode[k] or lang not in Ecode[k]:
+            continue
+        code += "\n%s %s: \n" % (comment,Ecode[k]['comment'])
+        code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+
     return code
 
 
