@@ -330,10 +330,9 @@ class WebEC():
             my_adelic_data = adelic_data[0]
             data['adelic_data'] =  my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
-            print(my_adelic_data)
-            N = ZZ(my_adelic_data['adelic_level'])
-            P = N.prime_divisors()
-            data['adelic_image_size'] = euler_phi(N)*N*(N // prod(P))^2*prod([p^2-1 for p in P]) // my_adelic_data['adelic_index']
+            M = self.adelic_level
+            P = M.prime_divisors()
+            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))^2*prod([p^2-1 for p in P]) // self.adelic_index
         else:
             data['adelic_data'] = {}
 
