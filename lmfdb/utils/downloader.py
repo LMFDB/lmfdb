@@ -223,7 +223,7 @@ class Downloader():
         s += '\n\n'
         s += self.assign(lang, "data", res_list)
         for c in cols:
-            if not c.inline:
+            if not c.inline(lang):
                 s += c.define_cell_function(lang)
         if func_body:
             s += '\n\n'
