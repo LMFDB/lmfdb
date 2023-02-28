@@ -176,7 +176,6 @@ class Downloader():
         """
         lang = info.get(self.lang_key,'text').strip()
         filename = self.get('filename_base', self.table.search_table)
-        label_col = self.table._label_col
         title = self.get('title', self.table.search_table)
         short_name = self.get('short_name', title.split(' ')[-1].lower())
         var_name = self.get('var_name', short_name.replace('_',' '))
@@ -186,36 +185,18 @@ class Downloader():
         func_start = self.get('function_start',{}).get(lang,[])
         func_body = self.get('function_body',{}).get(lang,[])
         func_end = self.get('function_end',{}).get(lang,[])
-        if isinstance(self.columns, str):
-            proj = [self.columns]
-        elif isinstance(self.columns, list):
-            proj = self.columns
-        else:
-            proj = self.columns[lang]
-        onecol = (len(proj) == 1)
-        wo_label = proj
+        columns = info["columns"]
+        proj = columns.db_cols
+        cols = [c for c in columns.columns if c.default(info)]
         data_format = self.get('data_format', proj)
         if isinstance(data_format, dict):
             data_format = data_format[lang]
-        assert len(data_format) == len(proj)
-        if label_col:
-            proj = [label_col] + proj
-        # set up column wrappers
-        cw = self.get('column_wrappers', {})
-        def identity(x): return x
-        for col in wo_label:
-            if col not in cw:
-                cw[col] = identity
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
             data = list(self.table.search(query, projection=proj))
-            if label_col:
-                label_list = [res[label_col] for res in data]
-            if onecol:
-                res_list = [cw[wo_label[0]](res.get(wo_label[0])) for res in data]
-            else:
-                res_list = [[cw[col](res.get(col)) for col in wo_label] for res in data]
+            #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
+            res_list = [[c.download(rec, lang) for c in cols] for rec in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
         c = self.comment_prefix[lang]
@@ -225,10 +206,7 @@ class Downloader():
             s += c + ' Each entry in the data list has the form:\n'
         else:
             s += c + ' Each entry in the following data list has the form:\n'
-        if onecol:
-            s += c + '    ' + data_format[0] + '\n'
-        else:
-            s += c + '    [' + ', '.join(data_format) + ']\n'
+        s += c + '    [' + ', '.join(data_format) + ']\n'
         data_desc = self.get('data_description')
         if isinstance(data_desc, dict):
             data_desc = data_desc[lang]
@@ -244,6 +222,9 @@ class Downloader():
         s += self.assign(lang, "labels", label_list)
         s += '\n\n'
         s += self.assign(lang, "data", res_list)
+        for c in cols:
+            if not c.inline:
+                s += c.define_cell_function(lang)
         if func_body:
             s += '\n\n'
             s += '\n'.join(func_start) + '\n'

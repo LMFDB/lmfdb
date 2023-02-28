@@ -1,5 +1,6 @@
 from .web_display import display_knowl
 
+<<<<<<< HEAD
 
 def tf(val, language):
     if language == 'sage':
@@ -10,6 +11,8 @@ def tf(val, language):
         return '1' if val else '0'
     raise NotImplementedError('{language = } is not recognized')
 
+=======
+>>>>>>> 5001a045ec9583a52c70a0a7f4542a0312484046
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):
@@ -60,13 +63,19 @@ class SearchCol:
             assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")
             setattr(self, key, getattr(self, key) + val)
 
-    def get(self, rec):
+    def _get(self, rec):
         # We support dictionaries as well as classes like
         # AbvarFq_isoclass that are created in a postprocess step
         if isinstance(rec, dict):
             return rec.get(self.orig[0], "")
         val = getattr(rec, self.name)
         return val() if callable(val) else val
+
+    def get(self, rec):
+        # This function is used by the front-end display code, while the underlying _get method
+        # is used for downloading.  The difference shows up for Floats, where we want the full
+        # precision in the downloaded file
+        return self._get(rec)
 
     def display(self, rec):
         # default behavior is to just use the string representation of rec
