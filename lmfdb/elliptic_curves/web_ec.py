@@ -330,6 +330,9 @@ class WebEC():
             my_adelic_data = adelic_data[0]
             data['adelic_data'] =  my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+            N = ZZ(my_adelic_data['adelic_level'])
+            P = N.prime_divisors()
+            data['adelic_image_size'] = euler_phi(N)*N*(N // prod(P))^2*prod([p^2-1 for p in P]) // my_adelic_data['adelic_index']
         else:
             data['adelic_data'] = {}
 
@@ -429,11 +432,6 @@ class WebEC():
             data['optimality_known'] = False
             data['manin_known'] = False
             data['optimal_label'] = ''
-
-        if data.get('adelic_index'):
-            N = ZZ(data['adelic_level'])
-            P = N.prime_divisors()
-            data['adelic_image_size'] = euler_phi(N)*N*(N // prod(P))^2*prod([p^2-1 for p in P]) // data['adelic_index']
 
         # p-adic data:
 
