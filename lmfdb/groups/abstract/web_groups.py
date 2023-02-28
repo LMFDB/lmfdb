@@ -1462,7 +1462,7 @@ class WebAbstractGroup(WebObj):
             # is only done for one of them, and only if the user clicks
             # on the link
             basiclist = [(url_for(".by_abelian_label", label=z[0]),
-                "C_{%d}"%z[0], 
+                "C_{%d}"%z[0],
                 "" if z[1] == 1 else "<span style='font-size: small'> x %d</span>"% z[1]
                 )
                 for z in theorder]
