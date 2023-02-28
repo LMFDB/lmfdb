@@ -1,5 +1,14 @@
 from .web_display import display_knowl
 
+def tf(val, language):
+    if language == 'sage':
+        return 'True' if val else 'False'
+    elif language == 'magma':
+        return 'true' if val else 'false'
+    elif language == 'pari':
+        return '1' if val else '0'
+    raise NotImplementedError('{language = } is not recognized')
+
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):
@@ -77,6 +86,12 @@ class SearchCol:
         if (self.contingent is None or self.contingent(info)) and (rank is None or rank == 0):
             yield self
 
+    def download(self, rec, language):
+        ans = self.get(rec)
+        if type(ans) == string:
+            return = '"' + ans + '"'
+        else:
+            return str(ans)
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -117,6 +132,9 @@ class CheckCol(SearchCol):
     def display(self, rec):
         return "&#x2713;" if self.get(rec) else ""
 
+    def download(self, rec, language):
+        return tf(self.get(rec), language) 
+
 
 class CheckMaybeCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
@@ -126,6 +144,13 @@ class CheckMaybeCol(SearchCol):
         if self.get(rec) > 0:
             return "&#x2713;"
         return "" if self.get(rec) < 0 else "not computed"
+
+    def download(self, rec, language):
+        ans = self.get(rec)
+        if ans == 0:
+            return '"not computed"'
+        else:
+            return tf(ans > 0, language)
 
 
 class LinkCol(SearchCol):
