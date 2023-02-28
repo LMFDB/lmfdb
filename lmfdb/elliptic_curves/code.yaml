@@ -17,9 +17,9 @@ not-implemented:
     // (not yet implemented)
 
 curve:
-  sage:  E = EllipticCurve(%s)
-  pari:  E = ellinit(%s)
-  magma: E := EllipticCurve(%s);
+  sage:  E = EllipticCurve({ainvs})
+  pari:  E = ellinit({ainvs})
+  magma: E := EllipticCurve({ainvs});
 
 simple_curve:
   sage: E.short_weierstrass_model()
@@ -125,11 +125,11 @@ galrep:
 
 adelicimage:
   sage:   |
-    gens = %s
-    GL(2,Integers(%s)).subgroup(gens)
+    gens = {adelic_gens}
+    GL(2,Integers({level})).subgroup(gens)
   magma:   |
-    Gens := %s;
-    sub<GL(2,Integers(%s))|Gens>;
+    Gens := {adelic_gens};
+    sub<GL(2,Integers({level}))|Gens>;
 
 padicreg:
   sage: |
