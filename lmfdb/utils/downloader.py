@@ -224,7 +224,7 @@ class Downloader():
             query = literal_eval(info.get('query', '{}'))
             data = list(self.table.search(query, projection=proj))
             #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
-            res_list = [[c.download(rec) for c in cols] for rec in data]
+            res_list = [[c.download(rec, lang) for c in cols] for rec in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
         c = lang.comment_prefix
