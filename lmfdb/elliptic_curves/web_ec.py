@@ -332,7 +332,7 @@ class WebEC():
             data['adelic_data'] =  my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
             M = ZZ(self.adelic_level)
-            data['adelic_level_latex'] = web_latex_factored_integer(M)
+            data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
             P = M.prime_divisors()
             data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))^2*prod([p^2-1 for p in P]) // self.adelic_index
         else:
