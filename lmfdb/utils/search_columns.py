@@ -1,5 +1,37 @@
 from .web_display import display_knowl
 
+<<<<<<< HEAD
+=======
+template_sage = r'''
+def make_cell_{column}(rec):
+    return {constructor_function}
+'''
+
+template_magma = r'''
+define make_cell_{column}(rec) in Magma, and
+    return {constructor_function}
+'''
+
+template_gp = r'''
+define make_cell_{column}(rec) in gp, and
+    return {constructor_function}
+'''
+
+default_template = {'sage' : template_sage,\
+            'magma' : template_magma,\
+            'gp' : template_gp }
+
+def tf(val, language):
+    if language == 'sage':
+        return 'True' if val else 'False'
+    elif language == 'magma':
+        return 'true' if val else 'false'
+    elif language in ['pari', 'gp']:
+        return '1' if val else '0'
+    raise NotImplementedError('{language = } is not recognized')
+
+
+>>>>>>> 0af1c7083 (Added required functions for downloader)
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):
@@ -38,7 +70,11 @@ class SearchCol:
         self.orig = [name]
         self.height = 1
         self.contingent = contingent
-
+        fundict = {}
+        fundict['sage'] = lambda x : x
+        fundict['magma'] = lambda x : x
+        fundict['gp'] = lambda x : x
+        self.constructor_function = fundict
         self.th_class = self.td_class = f"col-{name}"
         if align == "left":
             self.th_style = self.td_style = ""
@@ -81,8 +117,13 @@ class SearchCol:
         if (self.contingent is None or self.contingent(info)) and (rank is None or rank == 0):
             yield self
 
-    def download(self, rec):
-        return self._get(rec)
+    def download(self, rec, language):
+        ans = self._get(rec)
+        return str(ans)
+
+    def define_cell_function(self, language):
+        fun = self.constructor_function[language]
+        return default_template[language].format(column = self.name, constructor_function = fun('rec'))
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
