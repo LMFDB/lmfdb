@@ -500,9 +500,9 @@ class WebEC():
         ]
 
         try:
-            self.plot = encode_plot(self.E.plot())
+            self.plot = encode_plot(self.E.plot(), transparent=True)
         except AttributeError:
-            self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
+            self.plot = encode_plot(EllipticCurve(data['ainvs']).plot(), transparent=True)
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label),
