@@ -21,7 +21,7 @@
   </head>
 <body>
 <div id="header">
-    <div id="logo"><a href="/">
+    <div id="logo"><a href="{{ url_for('index') }}">
 {% if BETA %}
     <img src="{{ url_for('static', filename='images/lmfdb-logo-beta.png') }}" />
 {% else %}
@@ -36,7 +36,7 @@
             &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
           {% endfor %}
          {% else %}
-          <a href="/">&#8962;</a>
+          <a href="{{ url_for('index') }}">&#8962;</a>
          {% endif %}
       </div>
       <div class="topright">

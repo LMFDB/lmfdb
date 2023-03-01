@@ -90,12 +90,8 @@ def fixed_prec(r, digs=3):
     head = int(n[:-digs])
     if head >= 10**4:
         head = comma(head, r'\,')
-    print(head)
+    #print(head)
     return str(head) + '.' + n[-digs:]
-
-@app.context_processor
-def ctx_raw_typeset():
-    return {'raw_typeset': raw_typeset}
 
 
 @app.context_processor
@@ -103,6 +99,11 @@ def ctx_galois_groups():
     return {'galois_group_data': galois_group_data,
             'group_cclasses_data': group_cclasses_data,
             'group_character_table_data': group_character_table_data}
+
+
+@app.context_processor
+def ctx_raw_typeset():
+    return {'raw_typeset': raw_typeset}
 
 
 @app.context_processor
@@ -526,7 +527,7 @@ def render_field_webpage(args):
             reflex_field[0] = fake_label(field_labels_dict[tuple(reflex_field[1])], reflex_field[1])
         total = 2 ** (nf.degree()//2 - 1)
         reflex_fields_list.sort()
-        print(reflex_fields_list)
+        #print(reflex_fields_list)
         for reflex_field in reflex_fields_list:
             if table != "":
                 table = table + ', '
@@ -665,6 +666,7 @@ def render_field_webpage(args):
         primes = 'prime'
     else:
         primes = 'primes'
+    ram_primes = ','.join([str(z).rstrip('L') for z in nf.ramified_primes()])
     if len(ram_primes) > 30:
         ram_primes = 'see page'
     else:
@@ -681,8 +683,8 @@ def render_field_webpage(args):
                   ('Galois group', group_pretty_and_nTj(data['degree'], t))]
     downloads = [('Stored data to gp',
                   url_for('.nf_download', nf=label, download_type='data'))]
-    for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
-        downloads.append(('Download {} code'.format(lang[0]),
+    for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"], ["Oscar", "oscar"]]:
+        downloads.append(('Code to {}'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
     downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
@@ -762,42 +764,57 @@ def interesting():
         learnmore=learnmore_list(),
     )
 
+download_format = {
+    'gp' : { 'com1': '/*', 'com2' : '*/', 'assign': '=', 'llist' : '[', 'rlist': ']', 'ltup': '[', 'rtup': ']' , 'ext': 'gp', 'eol': '\\', 'noc': True },
+    'magma' : { 'com1': '/*', 'com2': '*/', 'assign': ':=', 'llist': '[', 'rlist': ']', 'ltup': '<', 'rtup': '>', 'ext': 'm', 'noc': True },
+    'mathematica' : { 'com1' : '(*', 'com2' : '*)', 'assign': '=', 'llist': '{', 'rlist': '}', 'ltup': '{', 'rtup': '}', 'ext': 'ma' },
+    'oscar' : { 'com1': '#=', 'com2': '=#', 'assign': '=', 'llist': '[', 'rlist': ']', 'ltup': '(', 'rtup': ')', 'ext': 'jl' },
+    'sage' : { 'com': '#', 'com1': '', 'com2': '', 'assign': '=', 'llist': '[', 'rlist': ']', 'ltup': '(', 'rtup': ')', 'ext': 'sage' },
+}
+
+download_preamble = {
+    'gp' : '',
+    'magma' : 'R<x> := PolynomialRing(Rationals());',
+    'mathematica' : '',
+    'oscar' : 'Rx, x = PolynomialRing(QQ)',
+    'sage' : 'x = polygen(QQ)',
+}
+
+download_makedata = {
+    'gp' : '', # don't try to make fields in gp, even with nfinit it may take a very long time
+    'magma' : 'function make_data() return [NumberField(r[2]) : r in data]; end function;',
+    'mathematica' : '',
+    'oscar' : 'function make_data() return [NumberField(r[2]) for r in data] end',
+    'sage' : 'def make_data(): return [NumberField(r[1],"a") for r in data]',
+}
+download_makedata_comment = {
+    'magma': 'To create a list L of fields, type "L := make_data();"',
+    'sage': 'To create a list L of {short_name}, type "L = make_data()"',
+    'gp': '',
+    'mathematica': '',
+    'oscar': 'To create a list L of {short_name}, type "L = make_data()"',
+}
+
+
 def download_search(info):
     dltype = info.get('Submit')
-    delim = 'bracket'
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    filename = 'fields.gp'
+    dlformat = download_format[dltype]
+    filename = 'fields' + '.' + dlformat['ext']
     mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'fields.sage'
-    if dltype == 'mathematica':
-        com = ''
-        com1 = '(*'
-        com2 = '*)'
-        delim = 'brace'
-        filename = 'fields.ma'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'fields.m'
-    s = com1 + "\n"
+    com = dlformat.get('com','')
+    eol = dlformat.get('eol','')
+    s = dlformat['com1'] + "\n"
     s += com + ' Number fields downloaded from the LMFDB downloaded %s\n'% mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [label, polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
     s += com + ' If a class group was not computed, the entry is [-1]\n'
-    s += '\n' + com2
-    s += '\n'
-    if dltype == 'magma':
-        s += 'data := ['
-    else:
-        s += 'data = ['
-    s += '\\\n'
+    if download_makedata_comment.get(dltype):
+        s += com + download_makedata_comment[dltype] + '\n'
+    if dlformat['com1']:
+        s += dlformat['com2'] + '\n'
+    s += download_preamble[dltype] + '\n'
+    s += '\n' + 'data ' + dlformat['assign'] + ' ' + dlformat['llist'] + eol + '\n'
     Qx = PolynomialRing(QQ,'x')
     # reissue saved query here
     res = db.nf_fields.search(ast.literal_eval(info["query"]))
@@ -810,19 +827,12 @@ def download_search(info):
         else:
             cl = [-1]
         entry = ', '.join(['"'+str(f['label'])+'"', str(pol), str(D), str(gal_t), str(cl)])
-        s += '[' + entry + ']' + ',\\\n'
-    s = s[:-3]
-    if dltype == 'gp':
-        s += '];\n'
-    else:
-        s += ']\n'
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
+        s += dlformat['ltup'] + entry + dlformat['rtup'] + ',' + eol + '\n'
+    if dlformat.get('noc',''):
+        s = s[:-2-len(eol)] + eol + '\n'
+    s += dlformat['rlist'] +';\n'
+    if download_makedata.get(dltype):
+        s += download_makedata[dltype] + '\n'
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
@@ -1067,11 +1077,11 @@ def nf_data(**args):
 
 
 sorted_code_names = ['field', 'poly', 'degree', 'signature',
-                     'discriminant', 'ramified_primes',
+                     'discriminant', 'ramified_primes', 'automorphisms',
                      'integral_basis', 'class_group', 'unit_group',
                      'unit_rank', 'unit_torsion_gen',
-                     'fundamental_units', 'regulator', 'galois_group',
-                     'prime_cycle_types']
+                     'fundamental_units', 'regulator', 'class_number_formula',
+                     'intermediate_fields', 'galois_group', 'prime_cycle_types']
 
 code_names = {'field': 'Define the number field',
               'poly': 'Defining polynomial',
@@ -1079,6 +1089,7 @@ code_names = {'field': 'Define the number field',
               'signature': 'Signature',
               'discriminant': 'Discriminant',
               'ramified_primes': 'Ramified primes',
+              'automorphisms': 'Autmorphisms',
               'integral_basis': 'Integral basis',
               'class_group': 'Class group',
               'unit_group': 'Unit group',
@@ -1086,11 +1097,13 @@ code_names = {'field': 'Define the number field',
               'unit_torsion_gen': 'Generator for roots of unity',
               'fundamental_units': 'Fundamental units',
               'regulator': 'Regulator',
+              'class_number_formula': 'Analytic class number formula',
               'galois_group': 'Galois group',
+              'intermediate_fields': 'Intermediate fields',
               'prime_cycle_types': 'Frobenius cycle types'}
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
 
 
 def nf_code(**args):
@@ -1099,7 +1112,11 @@ def nf_code(**args):
     nf = WebNumberField(label)
     nf.make_code_snippets()
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
+    if lang == 'oscar':
+        code += '{} If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'.format(Comment[lang])
+        code += "{} Some of these functions may take a long time to compile (this depends on the state of your Julia REPL), and/or to execute (this depends on the field).\n".format(Comment[lang])
+    else:
+        code += "{} Some of these functions may take a long time to execute (this depends on the field).\n".format(Comment[lang])
     if lang == 'gp':
         lang = 'pari'
     for k in sorted_code_names:
@@ -1157,7 +1174,7 @@ class NFSearchArray(SearchArray):
             label="Galois group",
             knowl="nf.galois_search",
             example="C5",
-            example_span="[8,3], C5 or 7T2")
+            example_span="[8,3], 8.3, C5 or 7T2")
         is_galois = YesNoBox(
             name="is_galois",
             label="Is Galois",

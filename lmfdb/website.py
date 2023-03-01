@@ -8,7 +8,7 @@
 # version 2 of the License, or (at your option) any later version.
 """
 start this via $ sage -python website.py --port <portnumber>
-add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
+add --debug if you are developing (full stacktrace in browser, ...)
 """
 
 # Needs to be done first so that other modules and gunicorn can use logging
