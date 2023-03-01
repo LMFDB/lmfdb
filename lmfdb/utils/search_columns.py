@@ -1,5 +1,24 @@
 from .web_display import display_knowl
 
+template_sage = r'''
+def make_cell_{column}(rec):
+    return {constructor_function}
+'''
+
+template_magma = r'''
+define make_cell_{column}(rec) in Magma, and
+    return {constructor_function}
+'''
+
+template_gp = r'''
+define make_cell_{column}(rec) in gp, and
+    return {constructor_function}
+'''
+
+default_template = {'sage' : template_sage,\
+            'magma' : template_magma,\
+            'gp' : template_gp }
+
 def tf(val, language):
     if language == 'sage':
         return 'True' if val else 'False'
@@ -48,7 +67,11 @@ class SearchCol:
         self.orig = [name]
         self.height = 1
         self.contingent = contingent
-
+        fundict = {}
+        fundict['sage'] = lambda x : x
+        fundict['magma'] = lambda x : x
+        fundict['gp'] = lambda x : x
+        self.constructor_function = fundict
         self.th_class = self.td_class = f"col-{name}"
         if align == "left":
             self.th_style = self.td_style = ""
@@ -89,10 +112,11 @@ class SearchCol:
 
     def download(self, rec, language):
         ans = self._get(rec)
-        if isinstance(ans, str):
-            return '"' + ans + '"'
-        else:
-            return str(ans)
+        return str(ans)
+
+    def define_cell_function(self, language):
+        fun = self.constructor_function[language]
+        return default_template[language].format(column = self.name, constructor_function = fun('rec'))
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
