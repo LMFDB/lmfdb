@@ -1,15 +1,5 @@
 from .web_display import display_knowl
 
-def tf(val, language):
-    if language == 'sage':
-        return 'True' if val else 'False'
-    elif language == 'magma':
-        return 'true' if val else 'false'
-    elif language in ['pari', 'gp']:
-        return '1' if val else '0'
-    raise NotImplementedError('{language = } is not recognized')
-
-
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):
@@ -55,6 +45,10 @@ class SearchCol:
         else:
             self.th_style = self.td_style = f"text-align:{align};"
         self.th_content = self.td_content = ""
+        self.inline = kwds.pop("inline", True)
+        self.cell_function_name = kwds.pop("cell_function_name", None)
+        if not self.inline and self.cell_function_name is None:
+            self.cell_function_name = f"process_{name}"
 
         for key, val in kwds.items():
             assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")
@@ -87,12 +81,8 @@ class SearchCol:
         if (self.contingent is None or self.contingent(info)) and (rank is None or rank == 0):
             yield self
 
-    def download(self, rec, language):
-        ans = self._get(rec)
-        if isinstance(ans, str):
-            return '"' + ans + '"'
-        else:
-            return str(ans)
+    def download(self, rec):
+        return self._get(rec)
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -133,10 +123,6 @@ class CheckCol(SearchCol):
     def display(self, rec):
         return "&#x2713;" if self.get(rec) else ""
 
-    def download(self, rec, language):
-        return tf(self.get(rec), language) 
-
-
 class CheckMaybeCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
@@ -146,13 +132,12 @@ class CheckMaybeCol(SearchCol):
             return "&#x2713;"
         return "" if self.get(rec) < 0 else "not computed"
 
-    def download(self, rec, language):
+    def download(self, rec):
         ans = self.get(rec)
         if ans == 0:
-            return '"not computed"'
+            return "not computed"
         else:
-            return tf(ans > 0, language)
-
+            return (ans > 0)
 
 class LinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_for, default=False, align="left", **kwds):
@@ -213,9 +198,8 @@ class MultiProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
-    def download(self, rec, language):
-        return str([str(rec.get(col)) for col in self.orig])
-
+    def download(self, rec):
+        return [rec.get(col) for col in self.orig]
 
 class ContingentCol(ProcessedCol):
     def __init__(self, name, knowl, title, func, contingent=lambda info: True,
@@ -261,15 +245,14 @@ class ColGroup(SearchCol):
             else:
                 yield from subcols
 
-    def download(self, rec, language):
-        return str([sub.download(rec, language) for sub in self.subcols])
+    def download(self, rec):
+        return [sub.get(rec) for sub in self.subcols]
 
 class SearchColumns:
     above_results = ""  # Can add text above the Results (1-50 of ...) if desired
     above_table = ""  # Can add text above the results table if desired
     dummy_download = False  # change this to include dummy_download_search_results.html instead
     below_download = ""  # Can add text above the bottom download links
-    languages = None
 
     def __init__(self, columns, db_cols=None, tr_class=None):
         """
