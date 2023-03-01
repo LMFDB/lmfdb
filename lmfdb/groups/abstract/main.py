@@ -92,9 +92,12 @@ def learnmore_list():
         ("Source and acknowledgements", url_for(".how_computed_page")),
         ("Completeness of the data", url_for(".completeness_page")),
         ("Reliability of the data", url_for(".reliability_page")),
-        ('Picture description', url_for(".picture_page")),
         ("Abstract  group labeling", url_for(".labels_page")),
     ]
+
+
+def learnmore_list_with_picture_desc():
+    return learnmore_list() + [('Picture description', url_for(".picture_page"))]
 
 
 def learnmore_list_remove(matchstring):
@@ -1152,7 +1155,7 @@ def render_abstract_group(label, data=None):
         gp=gp,
         properties=gp.properties(),
         friends=friends,
-        learnmore=learnmore_list(),
+        learnmore=learnmore_list_with_picture_desc(),
         KNOWL_ID=f"group.abstract.{label}",
         downloads=downloads,
     )

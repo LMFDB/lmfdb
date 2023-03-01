@@ -53,8 +53,15 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Picture description', url_for(".picture_page")),
             ('Classical modular form labels', url_for(".labels_page"))]
+
+
+@cached_function
+def learnmore_list_with_picture_desc():
+    """
+    Return the learnmore list, including picture description.
+    """
+    return learnmore_list() + [('Picture description', url_for(".picture_page"))]
 
 
 def learnmore_list_remove(matchstring):
@@ -376,7 +383,7 @@ def render_newform_webpage(label):
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_with_picture_desc(),
                            title=newform.title,
                            friends=newform.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -408,7 +415,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_with_picture_desc(),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -427,7 +434,7 @@ def render_space_webpage(label):
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_with_picture_desc(),
                            title=space.title,
                            friends=space.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -445,7 +452,7 @@ def render_full_gamma1_space_webpage(label):
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_with_picture_desc(),
                            title=space.title,
                            friends=space.friends)
 

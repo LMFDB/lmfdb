@@ -67,8 +67,12 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
-            ('Picture description', url_for(".picture_page")),
             ('Congruent number curves', url_for(".render_congruent_number_data"))]
+
+
+def learnmore_list_with_picture_desc():
+    return learnmore_list() + [('Picture description', url_for(".picture_page"))]
+
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -724,7 +728,7 @@ def render_curve_webpage_by_label(label):
                         downloads=data.downloads,
                         KNOWL_ID="ec.q.%s"%lmfdb_label,
                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                        learnmore=learnmore_list())
+                        learnmore=learnmore_list_with_picture_desc())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
