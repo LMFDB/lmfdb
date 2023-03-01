@@ -391,13 +391,10 @@ class EC_download(Downloader):
     data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
     data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
     function_body = {
-        "magma": [
-            "return [EllipticCurve([a:a in ai]):ai in data];", # convert ai from list to sequence
-        ],
-        "sage": [
-            "return [EllipticCurve(ai) for ai in data]",
-        ],
+        "magma": ["return [EllipticCurve([a:a in ai]):ai in data];",],
+        "sage": ["return [EllipticCurve(ai) for ai in data]",],
         "gp": ["[ellinit(ai)|ai<-data];"],
+        "oscar": ["return [EllipticCurve(ai) for ai in data]",],
     }
 
 ec_columns = SearchColumns([
@@ -712,18 +709,18 @@ def render_curve_webpage_by_label(label):
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()
-    code['show'] = {'magma':'','pari':'','sage':''} # use default show names
-    T = render_template("ec-curve.html",
-                        properties=data.properties,
-                        data=data,
-                        # set default show names but actually code snippets are filled in only when needed
-                        code=code,
-                        bread=data.bread, title=data.title,
-                        friends=data.friends,
-                        downloads=data.downloads,
-                        KNOWL_ID="ec.q.%s"%lmfdb_label,
-                        BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                        learnmore=learnmore_list())
+    code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
+    T =  render_template("ec-curve.html",
+                         properties=data.properties,
+                         data=data,
+                         # set default show names but actually code snippets are filled in only when needed
+                         code=code,
+                         bread=data.bread, title=data.title,
+                         friends=data.friends,
+                         downloads=data.downloads,
+                         KNOWL_ID="ec.q.%s"%lmfdb_label,
+                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
+                         learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
@@ -873,9 +870,37 @@ def render_single_congruent_number(n):
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
+sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+code_names = {'curve': 'Define the curve',
+                 'simple_curve': 'Simplified equation',
+                 'mwgroup': 'Mordell-Weil group',
+                 'gens': 'Mordell-Weil generators',
+                 'tors': 'Torsion subgroup',
+                 'intpts': 'Integral points',
+                 'cond': 'Conductor',
+                 'disc': 'Discriminant',
+                 'jinv': 'j-invariant',
+                 'cm': 'Potential complex multiplication',
+                 'faltings': 'Faltings height',
+                 'stable_faltings': 'Stable Faltings height',
+                 'rank': 'Mordell-Weil rank',
+                 'analytic_rank': 'Analytic rank',
+                 'reg': 'Regulator',
+                 'real_period': 'Real Period',
+                 'cp': 'Tamagawa numbers',
+                 'ntors': 'Torsion order',
+                 'sha': 'Order of Sha',
+                 'L1': 'Special L-value',
+                 'bsd_formula': 'BSD formula',
+                 'qexp': 'q-expansion of modular form',
+                 'moddeg': 'Modular degree',
+                 'manin': 'Manin constant',
+                 'localdata': 'Local data',
+                 'galrep': 'mod p Galois image'}
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
 
 def ec_code(**args):
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
