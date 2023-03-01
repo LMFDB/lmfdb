@@ -113,7 +113,7 @@ class Configuration(_Configuration):
             "--restart",
             action="store_true",
             dest="core_restart",
-            help="enable restart mode",
+            help="enable restart mode. CAUTION: can cause segfaults on pages using PARI",
         )
 
         parser.add_argument(

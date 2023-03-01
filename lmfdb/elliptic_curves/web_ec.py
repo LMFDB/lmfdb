@@ -101,7 +101,7 @@ def gl2_subgroup_data(label):
         return f" (of which {r} are rational)"
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
+    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == data['label'] else "no")
     if label != data['label']:
         info += row_wrap('LMFDB label', data['label'])
     if data.get('CPlabel'):
