@@ -97,8 +97,8 @@ def learnmore_list():
     ]
 
 
-def learnmore_list_with_picture_desc():
-    return learnmore_list() + [('Picture description', url_for(".picture_page"))]
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
 
 
 def learnmore_list_remove(matchstring):
@@ -1156,6 +1156,7 @@ def render_abstract_group(label, data=None):
             friends += [("As the component group of a Sato-Tate group", st_url)]
 
     bread = get_bread([(label, "")])
+    learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
     return render_template(
         "abstract-show-group.html",
@@ -1165,7 +1166,7 @@ def render_abstract_group(label, data=None):
         gp=gp,
         properties=gp.properties(),
         friends=friends,
-        learnmore=learnmore_list_with_picture_desc(),
+        learnmore=learnmore_list_add(*learnmore_gp_picture),
         KNOWL_ID=f"group.abstract.{label}",
         downloads=downloads,
     )
@@ -1306,13 +1307,13 @@ def reliability_page():
     )
 
 
-@abstract_page.route("/Pictures")
+@abstract_page.route("/GroupPictures")
 def picture_page():
     t = "Pictures for abstract groups"
-    bread = get_bread("Pictures")
+    bread = get_bread("Group Pictures")
     return render_template(
         "single.html",
-        kid="group.picture_description",
+        kid="portrait.groups.abstract",
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Picture")

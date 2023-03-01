@@ -56,12 +56,8 @@ def learnmore_list():
             ('Classical modular form labels', url_for(".labels_page"))]
 
 
-@cached_function
-def learnmore_list_with_picture_desc():
-    """
-    Return the learnmore list, including picture description.
-    """
-    return learnmore_list() + [('Picture description', url_for(".picture_page"))]
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
 
 
 def learnmore_list_remove(matchstring):
@@ -377,13 +373,14 @@ def render_newform_webpage(label):
     newform.setup_cc_data(info)
     if errs:
         flash_error("%s", "<br>".join(errs))
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list_with_picture_desc(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.title,
                            friends=newform.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -409,13 +406,14 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     newform.setup_cc_data(info)
     if errs:
         flash_error("%s", "<br>".join(errs))
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list_with_picture_desc(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -428,13 +426,14 @@ def render_space_webpage(label):
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list_with_picture_desc(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -446,13 +445,14 @@ def render_full_gamma1_space_webpage(label):
         return abort(404, err.args)
     info={}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list_with_picture_desc(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends)
 
@@ -1217,15 +1217,15 @@ def reliability_page():
                            learnmore=learnmore_list_remove('Reliability'))
 
 
-@cmf.route("/Pictures")
+@cmf.route("/FormPictures")
 def picture_page():
     t = "Pictures for classical modular forms"
     return render_template(
         "single.html",
-        kid='cmf.picture_description',
+        kid='portrait.cmf',
         title=t,
-        bread=get_bread(other="Pictures"),
-        learnmore=learnmore_list_remove('Picture')
+        bread=get_bread(other="Form Pictures"),
+        learnmore=learnmore_list(),
     )
 
 
