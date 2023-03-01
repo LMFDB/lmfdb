@@ -6,6 +6,102 @@ from werkzeug.datastructures import Headers
 from ast import literal_eval
 from io import BytesIO
 
+class DownloadLanguage():
+    # We choose the most common values
+    comment_prefix = '#'
+    assignment_defn = ' = '
+    line_end = ''
+    delim_start = '['
+    delim_end = ']'
+    start_and_end = ['[',']']
+    make_data_comment = ''
+    none = 'NULL'
+    true = 'true'
+    false = 'false'
+    offset = 0 # 0-based by default
+
+    def to_lang(self, inp, level=1):
+        if inp is None:
+            return self.none
+        elif inp is True:
+            return self.true
+        elif inp is False:
+            return self.false
+        if isinstance(inp, str):
+            return '"{0}"'.format(str(inp))
+        if isinstance(inp, int):
+            return str(inp)
+        if level == 0:
+            start, end = self.start_and_end
+            sep = ',\n'
+        else:
+            start = self.delim_start
+            end = self.delim_end
+            sep = ', '
+        try:
+            if level == 0:
+                begin = start + '\\\n'
+            else:
+                begin = start
+            return begin + sep.join(self.to_lang(c, level=level + 1) for c in inp) + end
+        except TypeError:
+            # not an iterable object
+            return str(inp)
+
+    def assign(self, name, elt):
+        return name + ' ' + self.assignment_defn + ' ' + elt + self.line_end + '\n'
+
+    def func_start(self, fname, fargs):
+        return self.function_start.format(func_name=fname, func_args=fargs)
+
+class MagmaLanguage(DownloadLanguage):
+    name = 'magma'
+    comment_prefix = '//'
+    assignment_defn = ':='
+    line_end = ';'
+    delim_start = '[*'
+    delim_end = '*]'
+    start_end_end = ['[*','*]']
+    none = '[]'
+    offset = 1
+    make_data_comment = 'To create a list of {short_name}, type "{var_name}:= make_data();"'
+    file_suffix = '.m'
+    function_start = 'function {func_name}({func_args})\n'
+    function_end = 'end function;\n'
+    makedata = '    return [* make_row(row) : row in data *];\n'
+
+class SageLanguage(DownloadLanguage):
+    name = 'sage'
+    none = 'None'
+    true = 'True'
+    false = 'False'
+    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
+    file_suffix = '.sage'
+    function_start = 'def {func_name}({func_args}):\n'
+    function_end = ''
+    makedata = '    return [ make_row(row) for row in data ]\n'
+
+class GPLanguage(DownloadLanguage):
+    name = 'gp'
+    start_and_end = ['{[',']}']
+    comment_prefix = '\\\\'
+    assignment_defn = '='
+    none = 'null'
+    true = '1'
+    false = '0'
+    offset = 1
+    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
+    file_suffix = '.gp'
+    function_start = '{func_name}({func_args}) = \n{{\n' # Need double bracket since we're formatting these
+    function_end = '}\n'
+    makedata = '    [make_row(row)|row<-data]\n'
+
+class TextLanguage(DownloadLanguage):
+    name = 'text'
+    delim_start = ' ['
+    delim_end = ' ]'
+    make_data_comment = ''
+    file_suffix = '.txt'
 
 class Downloader():
     """
@@ -47,6 +143,7 @@ class Downloader():
     """
     # defaults, edit as desired in inherited class
     lang_key = 'Submit' # name of the HTML button/link starting the download
+<<<<<<< HEAD
     languages = ['magma', 'sage', 'gp', 'oscar', 'text']
     comment_prefix = {
             'magma':'//',
@@ -128,20 +225,29 @@ class Downloader():
     def assign(self, lang, name, elt, level=0, prepend=''):
         return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
 
+=======
+    languages = {
+        'magma': MagmaLanguage(),
+        'sage': SageLanguage(),
+        'gp': GPLanguage(),
+        'text': TextLanguage()
+    }
+
+>>>>>>> 324072cec (Change where language specific download code is placed)
     def get(self, name, default=None):
         if hasattr(self, name):
             return getattr(self, name)
         else:
             return default
 
-    def _wrap(self, result, filebase, lang='text', title=None):
+    def _wrap(self, result, filebase, lang, title=None):
         """
         Adds the time downloaded as a comment, make into a flask response.
         """
         if title is None:
             title = self.get('title', self.table.search_table)
-        filename = filebase + self.file_suffix[lang]
-        c = self.comment_prefix[lang]
+        filename = filebase + lang.file_suffix
+        c = lang.comment_prefix
         mydate = time.strftime("%d %B %Y")
         s = '\n'
         s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
@@ -183,60 +289,61 @@ class Downloader():
         Generate download file for a list of search results determined by the
         ``query`` field in ``info``.
         """
-        lang = info.get(self.lang_key,'text').strip()
+        lang = self.languages[info.get(self.lang_key, 'text')]
         filename = self.get('filename_base', self.table.search_table)
         title = self.get('title', self.table.search_table)
         short_name = self.get('short_name', title.split(' ')[-1].lower())
         var_name = self.get('var_name', short_name.replace('_',' '))
-        make_data_comment = self.get('make_data_comment',{}).get(lang)
+        make_data_comment = lang.make_data_comment
         if make_data_comment:
             make_data_comment = make_data_comment.format(short_name=short_name, var_name=var_name)
-        func_start = self.get('function_start',{}).get(lang,[])
-        func_body = self.get('function_body',{}).get(lang,[])
-        func_end = self.get('function_end',{}).get(lang,[])
         columns = info["columns"]
         proj = columns.db_cols
-        cols = [c for c in columns.columns if c.default(info)]
-        data_format = self.get('data_format', proj)
+        cols = [c for c in columns.columns_shown(info) if c.default(info)]
+        data_format = self.get('data_format', [c.title for c in cols])
         if isinstance(data_format, dict):
-            data_format = data_format[lang]
+            data_format = data_format[lang.name]
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
             data = list(self.table.search(query, projection=proj))
             #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
-            res_list = [[c.download(rec, lang) for c in cols] for rec in data]
+            res_list = [[c.download(rec) for c in cols] for rec in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
-        c = self.comment_prefix[lang]
+        c = lang.comment_prefix
         s = c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)
-        if label_col:
-            s += c + ' Below are two lists, one called labels, and one called data (in matching order).\n'
-            s += c + ' Each entry in the data list has the form:\n'
-        else:
-            s += c + ' Each entry in the following data list has the form:\n'
+        s += c + ' Each entry in the following data list has the form:\n'
         s += c + '    [' + ', '.join(data_format) + ']\n'
         data_desc = self.get('data_description')
         if isinstance(data_desc, dict):
-            data_desc = data_desc[lang]
+            data_desc = data_desc[lang.name]
         if data_desc is not None:
             if isinstance(data_desc, str):
                 data_desc = [data_desc]
             for line in data_desc:
                 s += c + ' %s\n' % line
-        if make_data_comment and func_body:
+        if make_data_comment:
             s += c + '\n'
             s += c + ' ' + make_data_comment  + '\n'
-        s += '\n'
-        s += self.assign(lang, "labels", label_list)
         s += '\n\n'
-        s += self.assign(lang, "data", res_list)
-        for c in cols:
-            if not c.inline(lang):
-                s += c.define_cell_function(lang)
-        if func_body:
-            s += '\n\n'
-            s += '\n'.join(func_start) + '\n'
-            s += '    ' + '\n    '.join(func_body) + '\n'
-            s += '\n'.join(func_end) + '\n'
+        s += lang.assign("data", lang.to_lang(res_list, level=0))
+        if make_data_comment:
+            for c in cols:
+                if not c.inline:
+                    func_body = "    " + c.cell_function_body(lang).replace("\n", "\n    ")
+                    s += lang.func_start(c.cell_function_name, "x")
+                    s += func_body + '\n'
+                    s += lang.function_end
+            rowline = "    " + lang.delim_start
+            for i, c in enumerate(cols):
+                if i:
+                    rowline += ","
+                if c.cell_function_name is None:
+                    rowline += f"row[{i + lang.offset}]"
+                else:
+                    rowline += f"{c.cell_function_name}(row[{i + lang.offset}])"
+            rowline += lang.delim_end + "\n"
+            s += lang.func_start("make_row", "row") + rowline + lang.function_end
+            s += lang.func_start("make_data", "") + lang.makedata + lang.function_end
         return self._wrap(s, filename, lang=lang)
