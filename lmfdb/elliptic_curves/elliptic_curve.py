@@ -388,7 +388,7 @@ class EC_download(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
     columns = "ainvs"
-    data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
+    #data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
     data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
     function_body = {
         "magma": [
