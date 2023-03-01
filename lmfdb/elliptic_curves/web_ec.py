@@ -12,7 +12,7 @@ from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
@@ -331,6 +331,9 @@ class WebEC():
             my_adelic_data = adelic_data[0]
             data['adelic_data'] =  my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+            M = ZZ(self.adelic_level)
+            P = M.prime_divisors()
+            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))^2*prod([p^2-1 for p in P]) // self.adelic_index
         else:
             data['adelic_data'] = {}
 
@@ -491,7 +494,8 @@ class WebEC():
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Pari/GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Oscar', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
                           ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
@@ -597,6 +601,10 @@ class WebEC():
             mwbsd['lder_name'] = "L'(E,1)"
         else:
             mwbsd['lder_name'] = "L(E,1)"
+
+        mwbsd['equal'] = r'=' if mwbsd['analytic_rank'] < 2 else r'\overset{?}{=}'
+        mwbsd['rhs'] = '?' if mwbsd['sha'] == '?' else mwbsd['sha'] * mwbsd['real_period'] * mwbsd['reg'] * mwbsd['tamagawa_product'] / mwbsd['torsion']**2
+        mwbsd['formula'] = r'%0.9f \approx %s %s \frac{\# &#1064;(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \approx %0.9f' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
 
     def display_modell_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
@@ -714,7 +722,6 @@ class WebEC():
 
     def code(self):
         if self._code is None:
-
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
             code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)

@@ -29,7 +29,7 @@ table.ntdata a {
        <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant|safe}}<td>{{ place_code('discriminant') }}
        <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
       <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>{{info.ram_primes|safe}}<td>{{ place_code('ramified_primes') }}
-      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
+      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>${{info.auts}}$<td>{{ place_code('automorphisms') }}
 {% if info.is_abelian %}
     <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
         <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
@@ -110,10 +110,12 @@ table.ntdata a {
         </p>
 
         <h2> {{ KNOWL('nf.class_number_formula', title='Class number formula') }}</h2>
+<p style="margin:10px 280px;">
+$\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) = \frac{2^{r_1}\cdot (2\pi)^{r_2}\cdot R\cdot  h}{w\cdot\sqrt{|D|}} {{ info.cnf|safe }} {{ info.grh_label|safe }}
+</p>
 <center>
-$\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_label|safe }}
+{{ place_code('class_number_formula') }}
 </center>
-<p>{{ place_code('class_number_formula')}}</p>
 
         <h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <p>
@@ -146,6 +148,7 @@ $\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_labe
         Fields in the database are given up to isomorphism.  Isomorphic 
         intermediate fields are shown with their multiplicities.
         {% endif %}
+        {{ place_code('intermediate_fields') }}
 
         {% if info.resinfo !=[] %}
            {% if info.degree == 6 %}
