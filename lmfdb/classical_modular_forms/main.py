@@ -378,6 +378,7 @@ def render_newform_webpage(label):
                            learnmore=learnmore_list(),
                            title=newform.title,
                            friends=newform.friends,
+                           code=newform.code(),
                            KNOWL_ID="cmf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
@@ -410,6 +411,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            learnmore=learnmore_list(),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
+                           code=newform.code(),
                            KNOWL_ID="cmf.%s" % label)
 
 def render_space_webpage(label):
