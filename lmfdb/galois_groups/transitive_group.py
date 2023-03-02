@@ -194,7 +194,7 @@ class WebGaloisGroup:
                 self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
             self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
         except:
-            pass
+            return {}
 
 ############  Misc Functions
 
