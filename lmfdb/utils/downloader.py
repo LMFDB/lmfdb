@@ -335,15 +335,16 @@ class Downloader():
                     s += lang.func_start(c.cell_function_name, "x")
                     s += func_body + '\n'
                     s += lang.function_end
-            rowline = "    " + lang.delim_start
-            for i, c in enumerate(cols):
-                if i:
-                    rowline += ","
-                if c.cell_function_name is None:
-                    rowline += f"row[{i + lang.offset}]"
-                else:
-                    rowline += f"{c.cell_function_name}(row[{i + lang.offset}])"
-            rowline += lang.delim_end + "\n"
-            s += lang.func_start("make_row", "row") + rowline + lang.function_end
-            s += lang.func_start("make_data", "") + lang.makedata + lang.function_end
+            if any(c.cell_function_name is not None for c in cols):
+                rowline = "    " + lang.delim_start
+                for i, c in enumerate(cols):
+                    if i:
+                        rowline += ","
+                    if c.cell_function_name is None:
+                        rowline += f"row[{i + lang.offset}]"
+                    else:
+                        rowline += f"{c.cell_function_name}(row[{i + lang.offset}])"
+                rowline += lang.delim_end + "\n"
+                s += lang.func_start("make_row", "row") + rowline + lang.function_end
+                s += lang.func_start("make_data", "") + lang.makedata + lang.function_end
         return self._wrap(s, filename, lang=lang)
