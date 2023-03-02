@@ -187,12 +187,14 @@ class WebGaloisGroup:
 
     def make_code_snippets(self):
         # read in code.yaml from galois_groups directory:
-        _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        # set code for initializing group
-        for lang in self.code['gg']:
-            self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
-        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        try:
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            for lang in self.code['gg']:
+                self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+            self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        except:
+            pass
 
 ############  Misc Functions
 
