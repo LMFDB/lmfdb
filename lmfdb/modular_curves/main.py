@@ -77,6 +77,11 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
+
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 @modcurve_page.route("/")
 def index():
     return redirect(url_for(".index_Q", **request.args))
@@ -132,6 +137,7 @@ def by_label(label):
         flash_error("There is no modular curve %s in the database", label)
         return redirect(url_for(".index"))
     dojs, display_opts = diagram_js_string(curve)
+    learnmore_mcurve_pic = ('Picture description', url_for(".mcurve_picture_page"))
     return render_template(
         "modcurve.html",
         curve=curve,
@@ -144,7 +150,7 @@ def by_label(label):
         title=curve.title,
         downloads=curve.downloads,
         KNOWL_ID=f"modcurve.{label}",
-        learnmore=learnmore_list(),
+        learnmore=learnmore_list_add(*learnmore_mcurve_pic)
     )
 
 @modcurve_page.route("/Q/diagram/<label>")
@@ -850,6 +856,18 @@ class ModCurve_stats(StatsDisplay):
 def statistics():
     title = 'Modular curves: Statistics'
     return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
+
+@modcurve_page.route("/ModularCurvePictures")
+def mcurve_picture_page():
+    t = r'Pictures for modular curves'
+    bread = get_bread("Modular Curve Picture")
+    return render_template(
+        "single.html",
+        kid='portrait.modcurve',
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list()
+    )
 
 @modcurve_page.route("/Source")
 def how_computed_page():
