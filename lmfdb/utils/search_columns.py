@@ -117,10 +117,6 @@ class SearchCol:
         ans = self._get(rec)
         return str(ans)
 
-    def define_cell_function(self, language):
-        fun = self.constructor_function[language]
-        return default_template[language].format(column = self.name, constructor_function = fun('rec'))
-
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
         super().__init__(name, None, None, **kwds)

@@ -248,7 +248,7 @@ class Downloader():
             for c in cols:
                 if not c.inline:
                     func_body = "    " + c.cell_function_body(lang).replace("\n", "\n    ")
-                    s += lang.func_start(c.cell_function_name, "x")
+                    s += lang.func_start(c.cell_function_name[lang], "x")
                     s += func_body + '\n'
                     s += lang.function_end
             rowline = "    " + lang.delim_start
@@ -258,7 +258,7 @@ class Downloader():
                 if c.cell_function_name is None:
                     rowline += f"row[{i + lang.offset}]"
                 else:
-                    rowline += f"{c.cell_function_name}(row[{i + lang.offset}])"
+                    rowline += f"{c.cell_function_name[lang]}(row[{i + lang.offset}])"
             rowline += lang.delim_end + "\n"
             s += lang.func_start("make_row", "row") + rowline + lang.function_end
             s += lang.func_start("make_data", "") + lang.makedata + lang.function_end
