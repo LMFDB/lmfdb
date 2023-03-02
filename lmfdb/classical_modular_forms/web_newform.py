@@ -401,6 +401,9 @@ class WebNewform():
         else:
             label = '%s.%s' % (self.label, self.embedding_label)
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
+        downloads.append(
+                ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+ 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
 
@@ -1408,9 +1411,9 @@ function switch_basis(btype) {
             code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
             data = { 'N': self.level,
                      'k': self.weight,
-                     'elt': None,
-                     'newform_number': None,
                      'conrey_index': self.conrey_indexes[0],
+                     'elt': None,
+                     'newform_number': 1,
                    }
             for prop in code:
                 if not isinstance(code[prop], dict):

@@ -67,6 +67,11 @@
     <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
     <td> {{ newform.field_display() | safe }}</td>
   </tr>
+        <tr>
+        <td colspan="2">
+          {{ place_code('defining-polynomial') }}
+        </td>
+	</tr>
   <tr>
   	<td> {{ KNOWL('cmf.defining_polynomial',title='Defining polynomial') }}: </td>
   	<td>{{ newform.field_poly_display | safe }}</td>

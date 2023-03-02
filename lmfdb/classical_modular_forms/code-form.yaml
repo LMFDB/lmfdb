@@ -73,6 +73,15 @@ newform:
   pari: |
     f = lf[{newform_number}] \\ Warning: the index may be different in pari-gp
 
+coefficient_field:
+  sage: |
+    K = f.hecke_eigenvalue_field() # note that sage often uses an isomorphic number field
+
+defining-polynomial:
+  comment: defining polynomial
+  pari: |
+    f.mod \\ as an extension of the character field
+
 qexp:
   comment: q-expansion
   sage: |
@@ -80,11 +89,10 @@ qexp:
   pari: |
     mfcoefs(f, 20)
 
-coefficient_field:
-  sage: |
-    K = f.hecke_eigenvalue_field() # note that sage often uses an isomorphic number field
+embeddings:
+  comment: embeddings in the coefficient field
   pari: |
-    f.mod \\ as an extension of the character field
+    mfembed(f)
 
 absolute_polynomial:
   sage: K.absolute_polynomial()
