@@ -219,7 +219,15 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
     if lead is None:
         lead = ["1"]*nb_coords
     else:
-        lead = [c.replace("*", r"\cdot") for c in lead]
+        # Need to fix exponents without curly braces
+        def fix_exp(x):
+            if x.count("^") == 1:
+                b, e = x.split("^")
+                if len(e) > 1:
+                    e = "{" + e + "}"
+                return f"{b}^{e}"
+            return x
+        lead = [r"\cdot".join(fix_exp(pp) for pp in c.split("*")) for c in lead]
     eqs = [teXify_pol(p).lower() for p in m["coordinates"]]
     if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.a.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
