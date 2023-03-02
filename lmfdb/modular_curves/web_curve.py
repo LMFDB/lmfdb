@@ -882,7 +882,7 @@ class WebModCurve(WebObj):
         infinite = self.genus == 0 or (self.genus == 1 and self.rank > 0)
         if infinite:
             gdesc = "has genus 0" if self.genus == 0 else "is a positive rank elliptic curve"
-            desc = "Since this modular curve {gdesc}, there are no display_knowl('ag.isolated_point', 'isolated points') of any degree.  It has "
+            desc = f"Since this modular curve {gdesc}, there are no {display_knowl('ag.isolated_point', 'isolated points')} of any degree.  It has "
         else:
             desc = "This modular curve has "
         if noncusp or cusps:
