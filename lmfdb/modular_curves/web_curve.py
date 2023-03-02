@@ -742,7 +742,9 @@ class WebModCurve(WebObj):
         else:
             coord_types = self.nf_point_coord_types
         for model_type in coord_types:
-            coords = rec["coordinates"][str(model_type)]
+            coords = rec["coordinates"].get(str(model_type))
+            if coords is None:
+                return ""
             coords = [make_point(coord) for coord in coords]
             s += f"<td>{', '.join(coords)}</td>"
         return s
