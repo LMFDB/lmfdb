@@ -1,4 +1,5 @@
 from .web_display import display_knowl
+from lmfdb.utils import pol_to_html, coeff_to_poly
 
 template_sage = r'''
 def make_cell_{column}(rec):
@@ -114,8 +115,7 @@ class SearchCol:
             yield self
 
     def download(self, rec, language):
-        ans = self._get(rec)
-        return str(ans)
+        return self._get(rec)
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -165,7 +165,7 @@ class CheckMaybeCol(SearchCol):
             return "&#x2713;"
         return "" if self.get(rec) < 0 else "not computed"
 
-    def download(self, rec):
+    def download(self, rec, language):
         ans = self.get(rec)
         if ans == 0:
             return "not computed"
@@ -194,13 +194,6 @@ class ProcessedCol(SearchCol):
         if s and self.mathmode:
             s = f"${s}$"
         return s
-
-    def display(self, rec):
-        s = self.func(self.get(rec))
-        if s and self.mathmode:
-            s = f"${s}$"
-        return s
-
 
 class ProcessedLinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_func, disp_func, default=False,
@@ -231,7 +224,7 @@ class MultiProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
-    def download(self, rec):
+    def download(self, rec, language):
         return [rec.get(col) for col in self.orig]
 
 class ContingentCol(ProcessedCol):
@@ -278,8 +271,34 @@ class ColGroup(SearchCol):
             else:
                 yield from subcols
 
-    def download(self, rec):
+    def download(self, rec, language):
         return [sub.get(rec) for sub in self.subcols]
+
+
+class PolynomialCol(SearchCol):
+    def __init__(self, name, knowl, title, default=False, orig=None,
+                 mathmode=False, align="left", **kwds):
+        super().__init__(name, knowl, title, default, align, **kwds)
+        self.cell_function_name = f'process_{name}'
+        self.orig = [orig if (orig is not None) else name]
+        self.mathmode = mathmode
+
+    def cell_function_body(self, lang):
+        if lang.name == 'sage':
+            return "return QQ['x'](x)"
+        elif lang.name == 'magma':
+            return "return ZZx![c : c in x];"
+        elif lang.name == 'gp':
+            return "Pol(Vecrev(x))"
+        else:
+            raise NotImplementedError('Language not supported yet')
+
+    def display(self, rec):
+        return pol_to_html(str(coeff_to_poly(self.get(rec))))
+
+    def download(self, rec, lang):
+        return self.get(rec)
+
 
 class SearchColumns:
     above_results = ""  # Can add text above the Results (1-50 of ...) if desired
