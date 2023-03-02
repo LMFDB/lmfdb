@@ -677,7 +677,7 @@ def render_isogeny_class(iso_class):
                            friends=class_data.friends,
                            KNOWL_ID="ec.q.%s"%iso_class,
                            downloads=class_data.downloads,
-                           learnmore=learnmore_list_add(*learnmore_isog_picture))
+                           learnmore=learnmore_list_add(*learnmore_isog_picture) if class_data.class_size > 1 else learnmore_list())
 
 @ec_page.route("/modular_form_display/<label>")
 @ec_page.route("/modular_form_display/<label>/<number>")
