@@ -69,6 +69,11 @@ def learnmore_list():
             ('Elliptic curve labels', url_for(".labels_page")),
             ('Congruent number curves', url_for(".render_congruent_number_data"))]
 
+
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -662,7 +667,7 @@ def render_isogeny_class(iso_class):
     if class_data == "Class not found":
         return elliptic_curve_jump_error(iso_class, {}, missing_class=True)
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
-
+    learnmore_isog_picture = ('Picture description', url_for(".isog_picture_page"))
     return render_template("ec-isoclass.html",
                            properties=class_data.properties,
                            info=class_data,
@@ -672,7 +677,7 @@ def render_isogeny_class(iso_class):
                            friends=class_data.friends,
                            KNOWL_ID="ec.q.%s"%iso_class,
                            downloads=class_data.downloads,
-                           learnmore=learnmore_list())
+                           learnmore=learnmore_list_add(*learnmore_isog_picture))
 
 @ec_page.route("/modular_form_display/<label>")
 @ec_page.route("/modular_form_display/<label>/<number>")
@@ -710,6 +715,7 @@ def render_curve_webpage_by_label(label):
 
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
+    learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
     T =  render_template("ec-curve.html",
                          properties=data.properties,
                          data=data,
@@ -720,7 +726,7 @@ def render_curve_webpage_by_label(label):
                          downloads=data.downloads,
                          KNOWL_ID="ec.q.%s"%lmfdb_label,
                          BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                         learnmore=learnmore_list())
+                         learnmore=learnmore_list_add(*learnmore_curve_picture))
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
@@ -828,6 +834,24 @@ def reliability_page():
     bread = get_bread('Reliability')
     return render_template("single.html", kid='rcs.rigor.ec.q',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
+@ec_page.route("/CurvePictures")
+def curve_picture_page():
+    t = r'Pictures for elliptic curves over $\Q$'
+    bread = get_bread('Curve Pictures')
+    return render_template(
+        "single.html", kid='portrait.ec.q',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
+
+@ec_page.route("/IsogenyPictures")
+def isog_picture_page():
+    t = r'Pictures of isogeny graphs of elliptic curves over $\Q$'
+    bread = get_bread('Isogeny Pictures')
+    return render_template(
+        "single.html", kid='ec.isogeny_graph',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
 
 @ec_page.route("/Labels")
 def labels_page():
