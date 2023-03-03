@@ -16,7 +16,7 @@
 {% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
-<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>{# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}{% endfor %}</div>
+<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{% if lines | length == 1 %}{{prompt}}:&nbsp;{% endif %}{{line}}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>{# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}{% endfor %}</div>
 {% endif %}
 {% endfor %}
 {% endif %}
@@ -225,9 +225,9 @@
         <div align="right" style="float: right; margin-top:2px;">
             Show commands:
             {% set slash = joiner("/ ") %}
-            {% for lang in code['show'] %}
+            {% for lang in code['show']|sort %}
             {# override show names for standard languages to ensure consistency #}
-            {% set show = 'Pari/GP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else code['show']['lang'] %}
+            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else code['show']['lang'] %}
             {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
             {% endfor %}
         </div>

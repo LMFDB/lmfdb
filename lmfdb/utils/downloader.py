@@ -47,49 +47,58 @@ class Downloader():
     """
     # defaults, edit as desired in inherited class
     lang_key = 'Submit' # name of the HTML button/link starting the download
-    languages = ['magma', 'sage', 'gp', 'text']
+    languages = ['magma', 'sage', 'gp', 'oscar', 'text']
     comment_prefix = {
             'magma':'//',
             'sage':'#',
             'gp':'\\\\',
+            'oscar':'#',
             'text':'#'
             }
     assignment_defn = {
             'magma':':=',
             'sage':' = ',
             'gp':' = ',
+            'oscar':' = ',
             'text':'='
             }
     line_end = {'magma':';',
             'sage':'',
             'gp':'',
+            'oscar':'',
             'text':''
             }
     delim_start = {'magma':'[*',
             'sage':'[',
             'gp':'[',
+            'oscar':'[',
             'text':' ['
             }
     delim_end = {'magma':'*]',
             'sage':']',
             'gp':']',
+            'oscar':']',
             'text':' ]'}
     start_and_end = {
             'magma':['[*','*]'],
             'sage':['[',']'],
             'gp':['{[',']}'],
+            'oscar':['[',']'],
             'text':['[',']']}
-    file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
+    file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','oscar':'.jl','text':'.txt'}
     function_start = {'magma':['function make_data()'],
                       'sage':['def make_data():'],
-                      'gp':['make_data() = ','{']}
+                      'gp':['make_data() = ','{'],
+                      'oscar':['function make_data()'],}
     function_end = {'magma':['end function;'],
-                    'gp':['}']}
-    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]'}
+                    'gp':['}'],
+                    'oscar':['end'],}
+    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]', 'oscar': 'nothing'}
     make_data_comment = {
-        'magma': 'To create a list of {short_name}, type "{var_name}:= make_data();"',
-        'sage':'To create a list of {short_name}, type "{var_name} = make_data()"',
-        'gp':'To create a list of {short_name}, type "{var_name} = make_data()"',
+        'magma': 'To create a list of {short_name} called {var_name}, type "{var_name}:= make_data();"',
+        'sage':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
+        'gp':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
+        'oscar':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
     }
 
     def to_lang(self, lang, inp, level=0, prepend=''):
@@ -108,7 +117,7 @@ class Downloader():
             sep = ', '
         try:
             if level == 0:
-                begin = start + '\\\n'
+                begin = start + '\n'
             else:
                 begin = start
             return begin + sep.join(self.to_lang(lang, c, level=level + 1) for c in inp) + end
@@ -248,5 +257,5 @@ class Downloader():
             s += '\n\n'
             s += '\n'.join(func_start) + '\n'
             s += '    ' + '\n    '.join(func_body) + '\n'
-            s += '\n'.join(func_end)
+            s += '\n'.join(func_end) + '\n'
         return self._wrap(s, filename, lang=lang)

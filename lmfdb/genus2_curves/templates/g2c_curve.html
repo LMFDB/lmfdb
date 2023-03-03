@@ -239,6 +239,9 @@ function show_eqns(invstyle) {
 <!-- Description of the splittings themselves. -->
 <p>{{data.split_statement|safe}}</p>
 
+<!-- Code snippet -->
+<p>{{place_code('decomp')}}</p>
+
 <h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2>
 
 <!-- Description over QQ: -->
@@ -257,5 +260,10 @@ function show_eqns(invstyle) {
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', 'endomorphism lattice') }} by field</h3>
 <p>{{data.end_lattice_statement|safe}}</p>
 {% endif %}
+
+<!-- Code snippet -->
+<p>{{place_code('endos0')}}</p>
+<p>{{place_code('endos1')}}</p>
+<p>{{place_code('endos2')}}</p>
 
 {% endblock %}
