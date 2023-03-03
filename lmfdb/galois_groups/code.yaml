@@ -26,7 +26,7 @@ auts:
     magma: Order(Centralizer(SymmetricGroup(n), G));
 
 gens:
-    magma: "u:=SetToSequence(Generators(G)); v:=<CycleDecomposition(uu) : uu in u>; vv:=<<[foo[s] : s in [1..#foo]] : foo in aa > : aa in v>; <<z : z in y | #z gt 1> : y in vv>;"
+    magma: Generators(G);
 
 ccs:
     magma: ConjugacyClasses(G);
