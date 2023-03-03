@@ -524,10 +524,18 @@ function cleanSubmit(id)
   var allInputs = myForm.getElementsByTagName('input');
   var allSelects = myForm.getElementsByTagName('select');
   var item, i, n = 0;
+  // We need to reload saved names from their data-name attributes, since pressing the back button would otherwise return us to a broken state.
+  for(i = 0; item = allInputs[i]; i++) {
+    if (typeof(item.dataset.name) != "undefined") {
+      item.setAttribute('name', item.dataset.name);
+    }
+  }
+
   for(i = 0; item = allInputs[i]; i++) {
     if (item.getAttribute('name') ) {
-        // Special case count so that we strip the default value
-        if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
+      // Special case count so that we strip the default value
+      if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
+        item.dataset.name = item.getAttribute('name');
         item.setAttribute('name', '');
       } else {
         n++;
@@ -537,6 +545,7 @@ function cleanSubmit(id)
   for(i = 0; item = allSelects[i]; i++) {
     if (item.getAttribute('name') ) {
       if (!item.value) {
+        item.dataset.name = item.getAttribute('name');
         item.setAttribute('name', '');
       } else {
         n++;
