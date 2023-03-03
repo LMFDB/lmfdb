@@ -930,24 +930,26 @@ class PostgresSearchTable(PostgresTable):
 
     def join_search(
         self,
-        query,
-        projection,
-        join,
+        query={},
+        projection=1,
+        join=[],
         limit=None,
         offset=0,
         sort=None,
+        info=None,
+        one_per=None,
         silent=False,
     ):
         """
         A version of search that can also include columns from other tables.
 
-        Currently only supports the simpler parameters from search.
+        Does not support the parameters raw, split_ors from search.
 
         INPUT:
 
         - ``query`` -- either a dictionary (in which case all constraints are on this table) or a list of pairs ``(table, dictionary)``
-        - ``projection`` -- a list, with entries that are either strings (column names from this table),
-            or pairs ``(table, column)``
+        - ``projection`` -- a list with entries that are either strings (column names from this table),
+            or pairs ``(table, column)``; or an integer (with meaning the same as for search())
         - ``join`` -- a list of quadruples (tbl1, col1, tbl2, col2).  tbl1 should have already appeared (or be self for the first entry), while tbl2 should be new
         - ``sort`` -- if provided, can only contain columns from this table (for simplicity)
 
@@ -966,6 +968,9 @@ class PostgresSearchTable(PostgresTable):
         orig_proj = projection
         if isinstance(projection, str):
             projection = [projection]
+        elif projection, in [0,1,2,3]:
+            search_cols, extra_cols = self._parse_projection(projection)
+            projection = search_cols + extra_cols
         cols = []
         for pair in projection:
             if isinstance(pair, str):
@@ -1003,6 +1008,14 @@ class PostgresSearchTable(PostgresTable):
                 return Identifier(tbl) + SQL(".") + qstr
             else:
                 return qstr
+        def qualify_col(col):
+            if isinstance(col, str):
+                tbl = self
+            else:
+                col, tbl = col
+                if isinstance(tbl, str):
+                    tbl = self._db[tbl]
+            return qualify(Identifier(col), tbl)
         thisquery = {}
         where, vals = [], []
         for table, Q in query:
@@ -1063,7 +1076,14 @@ class PostgresSearchTable(PostgresTable):
                 olo = SQL("{0} OFFSET %s").format(olo)
                 vals.append(offset)
 
+        if one_per:
+            op = SQL(", ").join(qualify_col(col) for col in one_per)
+            selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON ({1}) {2} FROM {3}{4}) temp {5}").format(cols, op, inner_cols, 
         selecter = SQL("SELECT {0} FROM {1}{2}{3}").format(cols, frm, where, olo)
+
+
+        nres = None if (one_per or limit is None or join) else self.stats.quick_count(query)
+
         cur = self._execute(selecter, vals, silent=silent, buffered=(limit is None))
         # _search_iterator only cares about search_cols + extra_cols, so we use the original projection
         if limit is None:
