@@ -521,7 +521,7 @@ class Belyi_download(Downloader):
             s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
-            s += "phi := %s;" % rec["map"]
+            s += "phi := %s;\n" % rec["map"]
         if rec.get("plane_model"):
             s += "// Plane model\n"
             f = rec['plane_model']
@@ -530,7 +530,7 @@ class Belyi_download(Downloader):
             s += "Xplane := Curve(Spec(R), %s);\n" % f
             s += "KXplane<t,u> := FunctionField(Xplane);\n"
             s += "a := %s;\n" % rec['plane_constant']
-            s += "phi_plane := (1/a)*t;\n"
+            s += "phi_plane := (1/a)*t;"
         else:
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
@@ -581,6 +581,16 @@ class Belyi_download(Downloader):
             s += "R.<y> = PolynomialRing(K0)\n"
             s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
+        if rec.get("plane_model"):
+            s += "// Plane model\n"
+            f = rec['plane_model']
+            f = f.replace("x","u") # don't overwrite x
+            s += "R.<t,u> = PolynomialRing(K,2)\n"
+            s += "Xplane = Curve(%s)\n" % f
+            s += "KXplane = Xplane.function_field()\n"
+            s += "t = KXplane.base_ring().gens()[0]\n"
+            s += "a = %s\n" % rec['plane_constant']
+            s += "phi_plane = (1/a)*t"
         else:
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
