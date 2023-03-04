@@ -334,8 +334,8 @@ $(function() {
 });
 
 function update_start_by_count_and_submit_form(sign) {
-  var startelem = $('input.re-search[name=start]');
-  var count = parseInt($('input.re-search[name=count]').val());
+  var startelem = $('form.re-search input[name=start]');
+  var count = parseInt($('form.re-search input[name=count]').val());
   var newstart = parseInt(startelem.val())+sign*count;
   if(newstart<0)
     newstart = 0;
@@ -703,7 +703,7 @@ $(document).ready(function () {
 			(name === 'count' && value == 50))
 			formData.delete(name);
       }
-    });
+    })
   )
 });
 
