@@ -523,12 +523,13 @@ class Belyi_download(Downloader):
             s += "KX<x,y> := FunctionField(X);\n"
             s += "phi := %s;\n" % rec["map"]
         if rec.get("plane_model"):
+            s += "\n"
             s += "// Plane model\n"
             f = rec['plane_model']
             f = f.replace("x","u") # don't overwrite x
             s += "R<t,u> := PolynomialRing(K,2);\n"
-            s += "Xplane := Curve(Spec(R), %s);\n" % f
-            s += "KXplane<t,u> := FunctionField(Xplane);\n"
+            s += "X_plane := Curve(Spec(R), %s);\n" % f
+            s += "KX_plane<t,u> := FunctionField(X_plane);\n"
             s += "a := %s;\n" % rec['plane_constant']
             s += "phi_plane := (1/a)*t;"
         else:
@@ -554,7 +555,7 @@ class Belyi_download(Downloader):
         if rec["g"] == 0:
             s += "X = ProjectiveSpace(1,K)\n"
             s += "# Define the map\n"
-            s += "K.<x> = FunctionField(K)\n"
+            s += "KX.<x> = FunctionField(K)\n"
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
@@ -582,13 +583,14 @@ class Belyi_download(Downloader):
             s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
         if rec.get("plane_model"):
-            s += "// Plane model\n"
+            s += "\n"
+            s += "# Plane model\n"
             f = rec['plane_model']
             f = f.replace("x","u") # don't overwrite x
             s += "R.<t,u> = PolynomialRing(K,2)\n"
-            s += "Xplane = Curve(%s)\n" % f
-            s += "KXplane = Xplane.function_field()\n"
-            s += "t = KXplane.base_ring().gens()[0]\n"
+            s += "X_plane = Curve(%s)\n" % f
+            s += "KX_plane = X_plane.function_field()\n"
+            s += "t = KX_plane.base_ring().gens()[0]\n"
             s += "a = %s\n" % rec['plane_constant']
             s += "phi_plane = (1/a)*t"
         else:
