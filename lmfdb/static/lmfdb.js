@@ -518,40 +518,6 @@ function resetStart()
   // this will be cleaned by the cleanSubmit
 }
 
-function cleanSubmit(id)
-{
-  var myForm = document.getElementById(id);
-  var allInputs = myForm.getElementsByTagName('input');
-  var allSelects = myForm.getElementsByTagName('select');
-  var item, i, n = 0;
-  for(i = 0; item = allInputs[i]; i++) {
-    if (item.getAttribute('name') ) {
-        // Special case count so that we strip the default value
-        if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
-        item.setAttribute('name', '');
-      } else {
-        n++;
-      }
-    }
-  }
-  for(i = 0; item = allSelects[i]; i++) {
-    if (item.getAttribute('name') ) {
-      if (!item.value) {
-        item.setAttribute('name', '');
-      } else {
-        n++;
-      }
-    }
-  }
-  if (!n) {
-    var all = document.createElement('input');
-    all.type='hidden';
-    all.name='all';
-    all.value='1';
-    myForm.appendChild(all);
-  }
-}
-
 
 /**
  * https://github.com/component/debounce
@@ -722,3 +688,31 @@ function hide_schema(tbl) {
   $("#"+tbl+"-schema-shower").show();
   return false;
 }
+
+
+/* add handler for search forms to clean their own
+   form data and remove keys for empty (default) values */
+$(document).ready(function () {
+  let forms = [document.getElementById('search'),
+               document.getElementById('re-search')];
+  for (let form of forms) {
+    if (!form) continue;
+    form.addEventListener('formdata', function(event) {
+      let formData = event.formData;
+      for (let [name, value] of Array.from(formData.entries())) {
+        if (value === '' ||
+			(name === 'count' && value == 50))
+			formData.delete(name);
+      }
+    });
+  }
+});
+
+/*
+  if (!n) {
+    var all = document.createElement('input');
+    all.type='hidden';
+    all.name='all';
+    all.value='1';
+    myForm.appendChild(all);
+  }*/
