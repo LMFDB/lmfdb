@@ -333,20 +333,21 @@ $(function() {
       function() { $(this).text("done"); clear(true, true); });
 });
 
-function decrease_start_by_count_and_submit_form(form_id) {
-  var startelem = $('input[name=start]');
-  var count = parseInt($('input[name=count]').val());
-  var newstart = parseInt(startelem.val())-count;
+function update_start_by_count_and_submit_form(sign) {
+  var startelem = $('input.re-search[name=start]');
+  var count = parseInt($('input.re-search[name=count]').val());
+  var newstart = parseInt(startelem.val())+sign*count;
   if(newstart<0)
     newstart = 0;
   startelem.val(newstart);
-  $('form[id='+form_id+']').submit()
+  $('form.re-search').submit()
 };
-function increase_start_by_count_and_submit_form(form_id) {
-  var startelem = $('input[name=start]');
-  var count = parseInt($('input[name=count]').val());
-  startelem.val(parseInt(startelem.val())+count);
-  $('form[id='+form_id+']').submit()
+
+function decrease_start_by_count_and_submit_form() {
+  update_start_by_count_and_submit_form(-1);
+};
+function increase_start_by_count_and_submit_form() {
+  update_start_by_count_and_submit_form(1);
 };
 
 function get_count_of_results(download_limit) {
@@ -693,8 +694,8 @@ function hide_schema(tbl) {
 /* add handler for search forms to clean their own
    form data and remove keys for empty (default) values */
 $(document).ready(function () {
-  let forms = [document.getElementById('search'),
-               document.getElementById('re-search')];
+  let forms = [document.getElementsByClassName('search'),
+               document.getElementsByClassName('re-search')];
   for (let form of forms) {
     if (!form) continue;
     form.addEventListener('formdata', function(event) {
