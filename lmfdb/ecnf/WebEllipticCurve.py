@@ -841,7 +841,7 @@ def make_code(label, lang=None):
     ainvs_string = {
         'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
         'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
-        'pari': "[" + ",".join("Pol(Vecrev({}))".format(ai) for ai in ainvs) + "], K",
+        'pari': "[" + ",".join("Polrev({})".format(ai) for ai in ainvs) + "], K",
         }
     if lang:
         Ecode['curve'] = Ecode['curve'] % ainvs_string[lang]
