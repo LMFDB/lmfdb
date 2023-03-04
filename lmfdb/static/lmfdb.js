@@ -694,11 +694,9 @@ function hide_schema(tbl) {
 /* add handler for search forms to clean their own
    form data and remove keys for empty (default) values */
 $(document).ready(function () {
-  let forms = [document.getElementsByClassName('search'),
-               document.getElementsByClassName('re-search')];
-  for (let form of forms) {
-    if (!form) continue;
-    form.addEventListener('formdata', function(event) {
+  document.querySelectorAll("form.search, form.re-search").forEach(
+    form => form.addEventListener('formdata',
+    function(event) {
       let formData = event.formData;
       for (let [name, value] of Array.from(formData.entries())) {
         if (value === '' ||
@@ -706,7 +704,7 @@ $(document).ready(function () {
 			formData.delete(name);
       }
     });
-  }
+  )
 });
 
 /*
