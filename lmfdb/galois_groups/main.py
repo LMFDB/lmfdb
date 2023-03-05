@@ -245,6 +245,7 @@ def render_group_webpage(args):
         data['wgg'] = wgg
         n = data['n']
         t = data['t']
+        wgg.make_code_snippets()
         data['yesno'] = yesno
         order = data['order']
         data['orderfac'] = latex(ZZ(order).factor())
@@ -332,6 +333,7 @@ def render_group_webpage(args):
             title=title,
             bread=bread,
             info=data,
+            code=wgg.code,
             properties=prop2,
             friends=friends,
             downloads=downloads,
