@@ -323,7 +323,7 @@ class CMF_download(Downloader):
             script += "\n%s %s: \n" % (comment,code[k]['comment'])
             script += code[k][lang] + ('\n' if '\n' not in code[k][lang] else '')
         return script
-    
+
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:

@@ -407,7 +407,7 @@ class WebNewform():
                 ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
                 ('Code to Sage', url_for(".cmf_code_download", label=self.label, download_type='sage')))
- 
+
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
 
