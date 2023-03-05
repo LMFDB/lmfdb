@@ -3,6 +3,8 @@
 from collections import defaultdict
 import bisect
 import re
+import os
+import yaml
 
 from flask import url_for
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -151,6 +153,7 @@ class WebNewform():
                 data[elt] = None
         self.__dict__.update(data)
         self._data = data
+        self._code = None
         self.embedding_label = embedding_label
         self.embedded_minimal_twist = None  # stub filled in below when embedding_label is set
 
@@ -398,6 +401,13 @@ class WebNewform():
         else:
             label = '%s.%s' % (self.label, self.embedding_label)
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
+        downloads.append(
+                ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
+        downloads.append(
+                ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+        downloads.append(
+                ('Code to Sage', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+ 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
 
@@ -1396,3 +1406,23 @@ function switch_basis(btype) {
             return ''
         alpha = self._get_alpha(m, p, i)
         return self._display_op(alpha.real(), alpha.imag(), prec)
+
+    def code(self):
+        if self._code is None:
+
+            # read in code.yaml from current directory:
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
+            data = { 'N': self.level,
+                     'k': self.weight,
+                     'conrey_index': self.conrey_indexes[0],
+                     'elt': None,
+                     'newform_number': 1,
+                   }
+            for prop in code:
+                if not isinstance(code[prop], dict):
+                    continue
+                for lang in code[prop]:
+                    code[prop][lang] = code[prop][lang].format(**data)
+            self._code = code
+        return self._code
