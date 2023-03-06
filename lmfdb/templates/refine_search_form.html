@@ -22,7 +22,7 @@ function set_buckets(col_selecter, bucket_id) {
   {% endif %}
 </h2>
 
-<form id='re-search' onsubmit="cleanSubmit(this.id)">
+<form class='re-search'>
   {{ info.search_array.html(info) | safe }}
   <input type="hidden" name="showcol" value="{{info.showcol}}" />
   <input type="hidden" name="hidecol" value="{{info.hidecol}}" />

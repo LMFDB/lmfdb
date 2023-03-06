@@ -4,7 +4,7 @@ import re
 import os
 import yaml
 
-from flask import render_template, url_for, redirect, abort, request
+from flask import render_template, url_for, redirect, abort, request, make_response
 from sage.all import (
     ZZ, next_prime, cartesian_product_iterator,
     cached_function, prime_range, prod, gcd, nth_prime)
@@ -65,6 +65,7 @@ def learnmore_list_remove(matchstring):
     Return the learnmore list with the matchstring entry removed
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 @cached_function
 def Nk2_bound(nontriv=None):
@@ -383,6 +384,7 @@ def render_newform_webpage(label):
                            learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.title,
                            friends=newform.friends,
+                           code=newform.code(),
                            KNOWL_ID="cmf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
@@ -416,6 +418,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
+                           code=newform.code(),
                            KNOWL_ID="cmf.%s" % label)
 
 def render_space_webpage(label):
@@ -650,6 +653,13 @@ def download_newspace(label):
 @cmf.route("/download_full_space/<label>")
 def download_full_space(label):
     return CMF_download().download_full_space(label)
+
+@cmf.route('/download_code_newform/<label>/<download_type>')
+def cmf_code_download(label,download_type):
+    response = make_response(CMF_download().download_code(label, download_type))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, prim=False):
