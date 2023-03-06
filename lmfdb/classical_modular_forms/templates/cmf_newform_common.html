@@ -1,11 +1,13 @@
 {% extends 'homepage.html' %}
 
-{% block content %}
 
+{% block content %}
 
 <!-- Hecke field and algebraic q-expansion data -->
 
 <h2> {{KNOWL('cmf.newspace',title='Newspace')}} parameters </h2>
+
+{{ place_code('initialize-newspace') }}
 
 <table>
   <tr>
@@ -29,6 +31,8 @@
 </table>
 
 <h2> Newform invariants </h2>
+
+{{ place_code('newform') }}
 
 <table>
   {% if newform.is_self_dual is not none %}
@@ -63,6 +67,11 @@
     <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
     <td> {{ newform.field_display() | safe }}</td>
   </tr>
+        <tr>
+        <td colspan="2">
+          {{ place_code('defining-polynomial') }}
+        </td>
+	</tr>
   <tr>
   	<td> {{ KNOWL('cmf.defining_polynomial',title='Defining polynomial') }}: </td>
   	<td>{{ newform.field_poly_display | safe }}</td>
@@ -186,6 +195,7 @@ function show_qexp(qstyle) {
 
 <h2 id="qexp-anchor"> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp-div">
+  {{ place_code('qexp') }}
   {% if newform.dim > 1  and not newform.embedding_label %}
     <p>
       {% if not newform.hecke_ring_cyclotomic_generator %}

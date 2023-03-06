@@ -30,7 +30,7 @@ poly:
   sage:  K.defining_polynomial()
   pari:  K.pol
   magma: DefiningPolynomial(K);
-  oscar: K.pol
+  oscar: defining_polynomial(K)
 
 degree:
   sage:  K.degree()
@@ -42,7 +42,7 @@ signature:
   sage:  K.signature()
   pari:  K.sign
   magma: Signature(K);
-  oscar: s = signature(K)
+  oscar: signature(K)
 
 discriminant:
   sage:  K.disc()
@@ -54,7 +54,7 @@ rd:
   sage: (K.disc().abs())^(1./K.degree())
   pari: abs(K.disc)^(1/poldegree(K.pol))
   magma: Abs(Discriminant(OK))^(1/Degree(K));
-  oscar: rD = exp(log(abs(DK)))/degree(K))
+  oscar: (1.0 * dK)^(1/degree(K))
 
 automorphisms:
   sage: K.automorphisms()
@@ -65,7 +65,7 @@ ramified_primes:
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~
   magma: PrimeDivisors(Discriminant(OK));
-  oscar: prime_divisors(DK)
+  oscar: prime_divisors(discriminant((OK)))
 
 integral_basis:
   sage:  K.integral_basis()
@@ -135,7 +135,7 @@ class_number_formula:
     OK = ring_of_integers(K); DK = discriminant(OK);
     UK, fUK = unit_group(OK); clK, fclK = class_group(OK);
     r1,r2 = signature(K); RK = regulator(K); RR = parent(RK);
-    hK = order(clK); wK = order(first(torsion_subgroup(UK)));
+    hK = order(clK); wK = torsion_units_order(K);
     2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 
 galois_group:

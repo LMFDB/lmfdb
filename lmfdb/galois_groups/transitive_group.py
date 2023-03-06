@@ -4,6 +4,8 @@ from collections import defaultdict
 from lmfdb import db
 
 from sage.all import ZZ, gap, cached_function
+import os
+import yaml
 
 from lmfdb.utils import list_to_latex_matrix, integer_divisors
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
@@ -183,6 +185,13 @@ class WebGaloisGroup:
     def quotient_bound(self):
         return self._data['bound_quotients']
 
+    def make_code_snippets(self):
+        # read in code.yaml from galois_groups directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        for lang in self.code['gg']:
+            self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
 
 ############  Misc Functions
 
