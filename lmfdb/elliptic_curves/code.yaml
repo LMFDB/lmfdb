@@ -17,6 +17,8 @@ comment:
     \\
   magma: |
     //
+  oscar: |
+    #
 
 not-implemented:
   sage: |

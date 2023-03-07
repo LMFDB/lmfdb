@@ -126,7 +126,7 @@ class ECisog_class():
 
         self.graph = make_graph(M, [c['short_label'] for c in self.curves])
         P = self.graph.plot(edge_labels=True, vertex_size=1000)
-        self.graph_img = encode_plot(P)
+        self.graph_img = encode_plot(P, transparent=True)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
         self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
