@@ -10,7 +10,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
-    parse_inertia,
+    parse_inertia, parse_newton_polygon,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners,
@@ -253,6 +253,8 @@ def local_field_search(info,query):
     parse_ints(info,query,'e',name='Ramification index e')
     parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp")
+    parse_newton_polygon(info,query,"visible", qfield="visible_tmp")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     info['search_array'] = LFSearchArray()
@@ -537,6 +539,18 @@ class LFSearchArray(SearchArray):
             knowl='lf.top_slope',
             example='4/3',
             example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
+        slopes = TextBox(
+            name='slopes',
+            label='Wild slopes',
+            knowl='lf.wild_slopes',
+            example='[2,2,3]',
+            example_span='[2,2,3] requires at least two slopes of 2')
+        visible = TextBox(
+            name='visible',
+            label='Visible slopes',
+            knowl='lf.visible_slopes',
+            example='[2,2,3]',
+            example_span='[2,2,3] requires at least two visible slopes of 2')
         gal = TextBoxNoEg(
             name='gal',
             label='Galois group',
@@ -583,11 +597,11 @@ class LFSearchArray(SearchArray):
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u],
+        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [slopes], [visible], [u],
             [t], [gal], [inertia], [wild], [results]]
         self.refine_array = [[degree, qp, gal, u],
             [e, c, inertia, t],
-            [f, topslope, wild]]
+            [f, topslope, slopes, visible, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
