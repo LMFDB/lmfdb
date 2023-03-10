@@ -124,11 +124,11 @@ def plot_polygon(verts, polys, inds):
     tshift = xmax / 48
     tick = xmax / 320
     nextq = p = ZZ(xmax).factor()[0][0]
+    L = Graphics()
     if ymax > 0:
         asp_ratio = (xmax + 2*tshift) / (2 * (ymax + 2*tshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
     else:
         asp_ratio = 1
-    L = Graphics()
     L += line([(0,0), (0, ymax)], color="grey")
     L += line([(0,0), (xmax, 0)], color="grey")
     for i in range(1, ymax + 1):
@@ -156,7 +156,7 @@ def plot_polygon(verts, polys, inds):
         if slope != 0:
             while nextq <= Q[0]:
                 i = (nextq - P[0]) / d
-                if i in ZZ:
+                if i in ZZ and poly[i]:
                     L += restag(poly[i], nextq, P[1] - (nextq - P[0]) * slope)
                 nextq *= p
             L += text(
