@@ -161,7 +161,7 @@ def plot_polygon(verts, polys, inds):
                 nextq *= p
             L += text(
                 f"${slope}$", (P[0] - tshift, (P[1] + Q[1]) / 2),
-                color="black")
+                color="blue")
             for x in range(P[0], Q[0] + 1):
                 L += line(
                     [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
