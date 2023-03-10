@@ -10,9 +10,9 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
-    parse_inertia, parse_newton_polygon,
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
+    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
@@ -219,12 +219,14 @@ lf_columns = SearchColumns([
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
     ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
-                    show_slopes2, mathmode=True),
+                    show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
-                      default=True, mathmode=True)],
-    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible"])
+                      default=True, mathmode=True),
+    MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
+    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
@@ -253,8 +255,10 @@ def local_field_search(info,query):
     parse_ints(info,query,'e',name='Ramification index e')
     parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
-    parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp")
-    parse_newton_polygon(info,query,"visible", qfield="visible_tmp")
+    parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
+    parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
+    parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
+    parse_bracketed_posints(info,query,"associated_inertia")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     info['search_array'] = LFSearchArray()
@@ -539,18 +543,45 @@ class LFSearchArray(SearchArray):
             knowl='lf.top_slope',
             example='4/3',
             example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
-        slopes = TextBox(
+        slopes_quantifier = SubsetBox(
+            name="slopes_quantifier",
+            min_width=115,
+        )
+        slopes = TextBoxWithSelect(
             name='slopes',
             label='Wild slopes',
             knowl='lf.wild_slopes',
+            select_box=slopes_quantifier,
             example='[2,2,3]',
             example_span='[2,2,3] requires at least two slopes of 2')
-        visible = TextBox(
+        visible_quantifier = SubsetBox(
+            name="visible_quantifier",
+            min_width=115,
+        )
+        visible = TextBoxWithSelect(
             name='visible',
             label='Visible slopes',
             knowl='lf.visible_slopes',
+            select_box=visible_quantifier,
             example='[2,2,3]',
             example_span='[2,2,3] requires at least two visible slopes of 2')
+        insep_quantifier = SubsetBox(
+            name="insep_quantifier",
+            min_width=115,
+        )
+        ind_insep = TextBoxWithSelect(
+            name='ind_of_insep',
+            label='Ind. of insep.',
+            knowl='lf.indices_of_inseparability',
+            select_box=insep_quantifier,
+            example='[1,1,0]',
+            example_span='specify indices in decreasing order with multiplicity')
+        associated_inertia = TextBox(
+            name='associated_inertia',
+            label='Assoc. Inertia',
+            knowl='lf.associated_inertia',
+            example='[1,2,1]',
+            example_span='specify associated inertia in order')
         gal = TextBoxNoEg(
             name='gal',
             label='Galois group',
@@ -597,10 +628,10 @@ class LFSearchArray(SearchArray):
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [slopes], [visible], [u],
-            [t], [gal], [inertia], [wild], [results]]
-        self.refine_array = [[degree, qp, gal, u],
-            [e, c, inertia, t],
+        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u],
+                             [t], [slopes], [visible], [ind_insep], [associated_inertia], [gal], [inertia], [wild], [results]]
+        self.refine_array = [[degree, qp, gal, u, associated_inertia],
+            [e, c, inertia, t, ind_insep],
             [f, topslope, slopes, visible, wild]]
 
 def ramdisp(p):
