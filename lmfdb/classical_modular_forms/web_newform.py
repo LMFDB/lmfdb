@@ -7,7 +7,7 @@ import os
 import yaml
 
 from flask import url_for
-from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.TinyConrey import get_sage_genvalues, ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -25,7 +25,6 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
-from lmfdb.characters.TinyConrey import get_sage_genvalues, ConreyCharacter
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
