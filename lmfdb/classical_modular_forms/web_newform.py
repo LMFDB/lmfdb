@@ -1415,8 +1415,14 @@ function switch_basis(btype) {
         code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
         conrey_chi = ConreyCharacter(self.level, self.conrey_indexes[0])
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
-        vals = self.char_values[3]
+        values_gens = db.char_dir_values.lookup(
+            "{}.{}".format(self.level, self.conrey_indexes[0]),
+            projection='values_gens'
+        )
+
+        vals = [int(v) for _, v in values_gens]
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
+
 
         data = { 'N': self.level,
                  'k': self.weight,
