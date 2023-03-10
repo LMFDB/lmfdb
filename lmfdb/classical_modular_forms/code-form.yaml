@@ -52,7 +52,7 @@ initialize-newspace:
   sage: |
     from sage.modular.dirichlet import DirichletCharacter
     H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
-    chi = DirichletCharacter(H, H._module([{sage_genvalues}]))
+    chi = DirichletCharacter(H, H._module({sage_genvalues}))
     N = Newforms(chi, {k}, names="a")
   magma: |
     //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
