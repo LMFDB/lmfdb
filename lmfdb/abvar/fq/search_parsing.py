@@ -1,5 +1,3 @@
-import re
-from sage.all import QQ
 from lmfdb.utils.search_parsing import (
     search_parser,
     nf_string_to_label,

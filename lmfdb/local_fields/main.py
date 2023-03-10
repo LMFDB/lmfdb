@@ -4,7 +4,8 @@
 
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, QQ, RR, latex, cached_function, Integers)
+    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers)
+from sage.plot.all import line, points, text, Graphics
 
 from lmfdb import db
 from lmfdb.app import app
@@ -13,7 +14,7 @@ from lmfdb.utils import (
     parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners,
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -112,6 +113,63 @@ def lf_display_knowl(label, name=None):
 
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
+
+
+def plot_polygon(verts, polys):
+    verts = [tuple(pt) for pt in verts]
+    # Extract the coefficients to be associated to x
+    ymax = verts[0][1]
+    xmax = verts[-1][0]
+    nextq = p = ZZ(xmax).factor()[0][0]
+    asp_ratio = xmax / (2 * ymax) # 2 comes from the fact that the actual image has width 500 and height 250.
+    L = Graphics()
+    L += line([(0,0), (0, ymax + 0.2)], color="grey")
+    L += line([(0,0), (xmax + 0.2, 0)], color="grey")
+    for i in range(1, ymax + 1):
+        L += line([(0, i), (0.06, i)], color="grey")
+    for i in range(1, xmax + 1):
+        L += line([(i, 0), (i, 0.06/asp_ratio)], color="grey")
+    for P in verts:
+        L += text(
+            f"${P[0]}$", (P[0], -0.5/asp_ratio),
+            color="black")
+        L += text(
+            f"${P[1]}$", (-0.5, P[1]),
+            color="black")
+    slopes = []
+    qheights = [ymax]
+    for i in range(len(verts) - 1):
+        P = verts[i]
+        Q = verts[i+1]
+        slope = (P[1] - Q[1]) // (Q[0] - P[0]) # actually the negative of the slope
+        while nextq <= Q[0]:
+            qheights.append(P[1] - (nextq - P[0]) * slope)
+            nextq *= p
+        slopes.append(slope)
+        L += text(
+            f"${slope}$", (P[0] - 0.5, (P[1] + Q[1]) / 2),
+            color="black")
+        for x in range(P[0], Q[0] + 1):
+            L += line(
+                [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
+                color="grey",
+            )
+        for y in range(Q[1], P[1]):
+            L += line(
+                [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
+                color="grey",
+            )
+    L += line(verts, thickness=2)
+    L += points(verts, size=3, color="black")
+    R = ZZ["t"]["z"]
+    polys = [R(poly) for poly in polys]
+    coeffs = sum([poly.coefficients(sparse=True)[:-1] for poly in polys], []) + [polys[-1].leading_coefficient()]
+    # Need to deal with case that some of the coefficients we're looking for are zero
+    for i, (qheight, c) in enumerate(zip(qheights, coeffs)):
+        L += text(f"${latex(c)}$", (p**i + 0.5, qheight + 0.5/asp_ratio), color="black")
+    L.axes(False)
+    L.set_aspect_ratio(asp_ratio)
+    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
 
 
 @app.context_processor
@@ -369,6 +427,9 @@ def render_field_webpage(args):
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
+                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials']),
+                    'residual_polynomials': ",".join(f"${poly}$" for poly in data['residual_polynomials']),
+                    'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
         friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
         if unramfriend != '':
