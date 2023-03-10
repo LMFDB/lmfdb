@@ -1421,6 +1421,7 @@ function switch_basis(btype) {
         )
 
         vals = [int(v) for _, v in values_gens]
+        # this needs the value_gens from db.char_dir_values
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
 
 
