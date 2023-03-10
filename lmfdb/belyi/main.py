@@ -589,8 +589,11 @@ class Belyi_download(Downloader):
             f = f.replace("x","u") # don't overwrite x
             s += "R.<t,u> = PolynomialRing(K,2)\n"
             s += "X_plane = Curve(%s)\n" % f
-            s += "KX_plane = X_plane.function_field()\n"
-            s += "t = KX_plane.base_ring().gens()[0]\n"
+            s += "K0_plane.<t> = FunctionField(K)\n"
+            s += "R.<u> = PolynomialRing(K0_plane)\n"
+            s += "KX_plane.<u> = K0_plane.extension(%s)\n" % f
+            #s += "KX_plane = X_plane.function_field()\n"
+            #s += "t = KX_plane.base_ring().gens()[0]\n"
             s += "a = %s\n" % rec['plane_constant']
             s += "phi_plane = (1/a)*t"
         else:
