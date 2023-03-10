@@ -70,7 +70,7 @@ relative_polynomial:
 
 newform:
   comment: select newform
-  sage: f = N[0] \# Warning: the index may be different
+  sage: "f = N[0] # Warning: the index may be different"
   pari: |
     f = lf[1] \\ Warning: the index may be different
 
