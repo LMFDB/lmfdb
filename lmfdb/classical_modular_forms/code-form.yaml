@@ -70,9 +70,9 @@ relative_polynomial:
 
 newform:
   comment: select newform
-  sage: f = N[{newform_number}] # Warning: the index may be different
+  sage: f = N[0] # Warning: the index may be different
   pari: |
-    f = lf[{newform_number + 1}] \\ Warning: the index may be different
+    f = lf[1] \\ Warning: the index may be different
 
 coefficient_field:
   sage: |

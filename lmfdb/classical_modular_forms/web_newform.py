@@ -1430,7 +1430,6 @@ function switch_basis(btype) {
                  'conrey_index': self.conrey_indexes[0],
                  'sage_zeta_order': sage_zeta_order,
                  'sage_genvalues': sage_genvalues,
-                 'newform_number': 0,
                }
         for prop in code:
             if not isinstance(code[prop], dict):
