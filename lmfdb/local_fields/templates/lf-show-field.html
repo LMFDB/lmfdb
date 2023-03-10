@@ -46,7 +46,6 @@
 <table>
   <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
   <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
-  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
 </table>
 
 {% if info.e > 1 %}
@@ -58,6 +57,7 @@
 <table>
   <tr><td>{{ KNOWL('lf.residual_polynomials', title='Residual polynomials') }}:</td><td>{{info.residual_polynomials}}</td></tr>
   <tr><td>{{ KNOWL('lf.associated_inertia', title='Associated inertia') }}:</td><td>{{info.associated_inertia}}</td></tr>
+  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
 </table>
 
 {% endif %}

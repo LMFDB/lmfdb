@@ -142,26 +142,26 @@ def plot_polygon(verts, polys, inds):
         L += text(
             f"${P[1]}$", (-tshift, P[1]),
             color="black")
-    slopes = []
     R = ZZ["t"]["z"]
     polys = [R(poly) for poly in polys]
-    coeffs = [polys[0][0]]
-    qheights = [ymax]
+    def restag(c, a, b):
+        return text(f"${latex(c)}$", (a + tshift, b + tshift/asp_ratio), color="black")
+    L += restag(polys[0][0], 1, ymax)
     for i in range(len(verts) - 1):
         P = verts[i]
         Q = verts[i+1]
         slope = ZZ(P[1] - Q[1]) / ZZ(Q[0] - P[0]) # actually the negative of the slope
         d = slope.denominator()
         poly = polys[i]
-        while nextq <= Q[0]:
-            qheights.append(P[1] - (nextq - P[0]) * slope)
-            coeffs.append(poly[(nextq - P[0]) // d])
-            nextq *= p
-        slopes.append(slope)
-        L += text(
-            f"${slope}$", (P[0] - tshift, (P[1] + Q[1]) / 2),
-            color="black")
         if slope != 0:
+            while nextq <= Q[0]:
+                i = (nextq - P[0]) / d
+                if i in ZZ:
+                    L += restag(poly[i], nextq, P[1] - (nextq - P[0]) * slope)
+                nextq *= p
+            L += text(
+                f"${slope}$", (P[0] - tshift, (P[1] + Q[1]) / 2),
+                color="black")
             for x in range(P[0], Q[0] + 1):
                 L += line(
                     [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
@@ -172,15 +172,16 @@ def plot_polygon(verts, polys, inds):
                     [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
                     color="grey",
                 )
+        else:
+            # For tame inertia, the coefficients can occur at locations other than powers of p
+            for i, c in enumerate(poly):
+                if i and c:
+                    L += restag(c, P[0] + i, P[1])
     L += line(verts, thickness=2)
-    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=20, color="red")
-    # Need to deal with case that some of the coefficients we're looking for are zero
-    for i, (qheight, c) in enumerate(zip(qheights, coeffs)):
-        if c != 0:
-            L += text(f"${latex(c)}$", (p**i + tshift, qheight + tshift/asp_ratio), color="black")
+    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
-    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
+    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
 
 
 @app.context_processor
