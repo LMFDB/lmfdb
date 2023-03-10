@@ -176,7 +176,8 @@ def plot_polygon(verts, polys):
     L += points(verts, size=12, color="black")
     # Need to deal with case that some of the coefficients we're looking for are zero
     for i, (qheight, c) in enumerate(zip(qheights, coeffs)):
-        L += text(f"${latex(c)}$", (p**i + tshift, qheight + tshift/asp_ratio), color="black")
+        if c != 0:
+            L += text(f"${latex(c)}$", (p**i + tshift, qheight + tshift/asp_ratio), color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
     return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
