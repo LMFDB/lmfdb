@@ -115,13 +115,13 @@ def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
 
 
-def plot_polygon(verts, polys):
+def plot_polygon(verts, polys, inds):
     verts = [tuple(pt) for pt in verts]
     # Extract the coefficients to be associated to x
     ymax = verts[0][1]
     xmax = verts[-1][0]
     # How far we need to shift text depends on the scale
-    tshift = xmax / 32
+    tshift = xmax / 48
     tick = xmax / 320
     nextq = p = ZZ(xmax).factor()[0][0]
     if ymax > 0:
@@ -173,7 +173,7 @@ def plot_polygon(verts, polys):
                     color="grey",
                 )
     L += line(verts, thickness=2)
-    L += points(verts, size=12, color="black")
+    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=20, color="red")
     # Need to deal with case that some of the coefficients we're looking for are zero
     for i, (qheight, c) in enumerate(zip(qheights, coeffs)):
         if c != 0:
@@ -438,7 +438,7 @@ def render_field_webpage(args):
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
-                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials']),
+                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep']),
                     'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
                     'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
