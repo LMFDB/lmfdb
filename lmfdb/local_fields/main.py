@@ -10,7 +10,7 @@ from sage.plot.all import line, points, text, Graphics
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
+    web_latex, coeff_to_poly, pol_to_html, teXify_pol, display_multiset, display_knowl,
     parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
@@ -120,53 +120,63 @@ def plot_polygon(verts, polys):
     # Extract the coefficients to be associated to x
     ymax = verts[0][1]
     xmax = verts[-1][0]
+    # How far we need to shift text depends on the scale
+    tshift = xmax / 32
+    tick = xmax / 320
     nextq = p = ZZ(xmax).factor()[0][0]
-    asp_ratio = xmax / (2 * ymax) # 2 comes from the fact that the actual image has width 500 and height 250.
+    if ymax > 0:
+        asp_ratio = (xmax + 2*tshift) / (2 * (ymax + 2*tshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
+    else:
+        asp_ratio = 1
     L = Graphics()
-    L += line([(0,0), (0, ymax + 0.2)], color="grey")
-    L += line([(0,0), (xmax + 0.2, 0)], color="grey")
+    L += line([(0,0), (0, ymax)], color="grey")
+    L += line([(0,0), (xmax, 0)], color="grey")
     for i in range(1, ymax + 1):
-        L += line([(0, i), (0.06, i)], color="grey")
+        L += line([(0, i), (tick, i)], color="grey")
     for i in range(1, xmax + 1):
-        L += line([(i, 0), (i, 0.06/asp_ratio)], color="grey")
+        L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
     for P in verts:
         L += text(
-            f"${P[0]}$", (P[0], -0.5/asp_ratio),
+            f"${P[0]}$", (P[0], -tshift/asp_ratio),
             color="black")
         L += text(
-            f"${P[1]}$", (-0.5, P[1]),
+            f"${P[1]}$", (-tshift, P[1]),
             color="black")
     slopes = []
+    R = ZZ["t"]["z"]
+    polys = [R(poly) for poly in polys]
+    coeffs = [polys[0][0]]
     qheights = [ymax]
     for i in range(len(verts) - 1):
         P = verts[i]
         Q = verts[i+1]
-        slope = (P[1] - Q[1]) // (Q[0] - P[0]) # actually the negative of the slope
+        slope = ZZ(P[1] - Q[1]) / ZZ(Q[0] - P[0]) # actually the negative of the slope
+        d = slope.denominator()
+        poly = polys[i]
         while nextq <= Q[0]:
             qheights.append(P[1] - (nextq - P[0]) * slope)
+            coeffs.append(poly[(nextq - P[0]) // d])
             nextq *= p
         slopes.append(slope)
         L += text(
-            f"${slope}$", (P[0] - 0.5, (P[1] + Q[1]) / 2),
+            f"${slope}$", (P[0] - tshift, (P[1] + Q[1]) / 2),
             color="black")
-        for x in range(P[0], Q[0] + 1):
-            L += line(
-                [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
-                color="grey",
-            )
-        for y in range(Q[1], P[1]):
-            L += line(
-                [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
-                color="grey",
-            )
+        if slope != 0:
+            for x in range(P[0], Q[0] + 1):
+                L += line(
+                    [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
+                    color="grey",
+                )
+            for y in range(Q[1], P[1]):
+                L += line(
+                    [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
+                    color="grey",
+                )
     L += line(verts, thickness=2)
-    L += points(verts, size=3, color="black")
-    R = ZZ["t"]["z"]
-    polys = [R(poly) for poly in polys]
-    coeffs = sum([poly.coefficients(sparse=True)[:-1] for poly in polys], []) + [polys[-1].leading_coefficient()]
+    L += points(verts, size=12, color="black")
     # Need to deal with case that some of the coefficients we're looking for are zero
     for i, (qheight, c) in enumerate(zip(qheights, coeffs)):
-        L += text(f"${latex(c)}$", (p**i + 0.5, qheight + 0.5/asp_ratio), color="black")
+        L += text(f"${latex(c)}$", (p**i + tshift, qheight + tshift/asp_ratio), color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
     return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
@@ -428,7 +438,7 @@ def render_field_webpage(args):
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials']),
-                    'residual_polynomials': ",".join(f"${poly}$" for poly in data['residual_polynomials']),
+                    'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
                     'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
         friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
