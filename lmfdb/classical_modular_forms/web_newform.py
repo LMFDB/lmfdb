@@ -25,6 +25,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.characters.TinyConrey import get_sage_genvalues, ConreyCharacter
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
@@ -1407,22 +1408,26 @@ function switch_basis(btype) {
         alpha = self._get_alpha(m, p, i)
         return self._display_op(alpha.real(), alpha.imag(), prec)
 
+    @lazy_attribute
     def code(self):
-        if self._code is None:
+        # read in code.yaml from current directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
+        conrey_chi = ConreyCharacter(self.level, self.conrey_indexes[0])
+        sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
+        vals = self.char_values[3]
+        sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
 
-            # read in code.yaml from current directory:
-            _curdir = os.path.dirname(os.path.abspath(__file__))
-            code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
-            data = { 'N': self.level,
-                     'k': self.weight,
-                     'conrey_index': self.conrey_indexes[0],
-                     'elt': None,
-                     'newform_number': 1,
-                   }
-            for prop in code:
-                if not isinstance(code[prop], dict):
-                    continue
-                for lang in code[prop]:
-                    code[prop][lang] = code[prop][lang].format(**data)
-            self._code = code
-        return self._code
+        data = { 'N': self.level,
+                 'k': self.weight,
+                 'conrey_index': self.conrey_indexes[0],
+                 'sage_zeta_order': sage_zeta_order,
+                 'sage_genvalues': sage_genvalues,
+                 'newform_number': 1,
+               }
+        for prop in code:
+            if not isinstance(code[prop], dict):
+                continue
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**data)
+        return code
