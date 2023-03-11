@@ -122,13 +122,15 @@ def plot_polygon(verts, polys, inds):
     xmax = verts[-1][0]
     # How far we need to shift text depends on the scale
     tshift = xmax / 48
-    tick = xmax / 320
+    tick = xmax / 160
     nextq = p = ZZ(xmax).factor()[0][0]
     L = Graphics()
     if ymax > 0:
         asp_ratio = (xmax + 2*tshift) / (2 * (ymax + 2*tshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
     else:
-        asp_ratio = 1
+        # Add in silly white dot
+        L += points([(0,1)], color="white")
+        asp_ratio = (xmax + 2*tshift) / (8 + 16*tshift)
     L += line([(0,0), (0, ymax)], color="grey")
     L += line([(0,0), (xmax, 0)], color="grey")
     for i in range(1, ymax + 1):

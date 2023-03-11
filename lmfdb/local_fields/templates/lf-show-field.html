@@ -52,7 +52,7 @@
 
 <h2>{{ KNOWL('lf.ramification_polygon', title='Ramification polygon') }}</h2>
 
-<img src="{{info.ram_polygon_plot}}" width="800" height="400">
+<img src="{{info.ram_polygon_plot}}" width="800" height="{{100 if (info.e % info.p) else 400}}">
 
 <table>
   <tr><td>{{ KNOWL('lf.residual_polynomials', title='Residual polynomials') }}:</td><td>{{info.residual_polynomials}}</td></tr>
