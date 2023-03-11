@@ -314,7 +314,7 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
-        code = form.code()
+        code = form.code
         comment = code.pop('comment').get(lang).strip()
         script = "%s %s code for working with modular form %s\n\n" % (comment,Fullname[lang],label)
         for k in code:

@@ -1292,7 +1292,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             projection='values_gens'
         )
 
-        vals = [int(v) for g, v in values_gens]
+        vals = [int(v) for _, v in values_gens]
         sage_zeta_order = self.exchi.sage_zeta_order(self.order)
         self._genvalues_for_code = get_sage_genvalues(self.modulus,
                                     self.order, vals, sage_zeta_order)
