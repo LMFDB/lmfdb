@@ -262,7 +262,7 @@ Note that you need editor priviledges to add, delete or modify data.
                                     'label': "Label of the perfect number",
                                     'odd': "True if $N$ is odd, false otherwise.",
                                    },
-                   search_order=['label'])
+                   search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
    ```
 
    Once this table exists, you can access it via the object
