@@ -26,6 +26,7 @@ class LocalFieldTest(LmfdbTest):
 
     def test_field_page(self):
         L = self.tc.get('/padicField/11.6.4.2')
+        assert L is not None
         #assert 'x^{2} - x + 7' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
         #assert 'x^{3} - 11 t' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
 
