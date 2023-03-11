@@ -121,33 +121,37 @@ def plot_polygon(verts, polys, inds):
     ymax = verts[0][1]
     xmax = verts[-1][0]
     # How far we need to shift text depends on the scale
-    tshift = xmax / 48
+    txshift = xmax / 60
+    tyshift = xmax / 48
     tick = xmax / 160
     nextq = p = ZZ(xmax).factor()[0][0]
     L = Graphics()
     if ymax > 0:
-        asp_ratio = (xmax + 2*tshift) / (2 * (ymax + 2*tshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
+        asp_ratio = (xmax + 2*txshift) / (2 * (ymax + 2*tyshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
     else:
         # Add in silly white dot
         L += points([(0,1)], color="white")
-        asp_ratio = (xmax + 2*tshift) / (8 + 16*tshift)
+        asp_ratio = (xmax + 2*txshift) / (8 + 16*tyshift)
     L += line([(0,0), (0, ymax)], color="grey")
     L += line([(0,0), (xmax, 0)], color="grey")
     for i in range(1, ymax + 1):
         L += line([(0, i), (tick, i)], color="grey")
-    for i in range(1, xmax + 1):
+    for i in range(0, xmax + 1):
         L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
     for P in verts:
         L += text(
-            f"${P[0]}$", (P[0], -tshift/asp_ratio),
+            f"${P[0]}$", (P[0], -tyshift/asp_ratio),
             color="black")
         L += text(
-            f"${P[1]}$", (-tshift, P[1]),
+            f"${P[1]}$", (-txshift, P[1]),
+            horizontal_alignment="right",
             color="black")
     R = ZZ["t"]["z"]
     polys = [R(poly) for poly in polys]
     def restag(c, a, b):
-        return text(f"${latex(c)}$", (a + tshift, b + tshift/asp_ratio), color="black")
+        return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
+                    horizontal_alignment="left",
+                    color="black")
     L += restag(polys[0][0], 1, ymax)
     for i in range(len(verts) - 1):
         P = verts[i]
@@ -162,7 +166,8 @@ def plot_polygon(verts, polys, inds):
                     L += restag(poly[i], nextq, P[1] - (nextq - P[0]) * slope)
                 nextq *= p
             L += text(
-                f"${slope}$", (P[0] - tshift, (P[1] + Q[1]) / 2),
+                f"${slope}$", (P[0] - txshift, (P[1] + Q[1]) / 2),
+                horizontal_alignment="right",
                 color="blue")
             for x in range(P[0], Q[0] + 1):
                 L += line(
