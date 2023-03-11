@@ -115,7 +115,7 @@ def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
 
 
-def plot_polygon(verts, polys, inds):
+def plot_polygon(verts, polys, inds, p):
     verts = [tuple(pt) for pt in verts]
     # Extract the coefficients to be associated to x
     ymax = verts[0][1]
@@ -124,7 +124,7 @@ def plot_polygon(verts, polys, inds):
     txshift = xmax / 60
     tyshift = xmax / 48
     tick = xmax / 160
-    nextq = p = ZZ(xmax).factor()[0][0]
+    nextq = p
     L = Graphics()
     if ymax > 0:
         asp_ratio = (xmax + 2*txshift) / (2 * (ymax + 2*tyshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
@@ -446,7 +446,7 @@ def render_field_webpage(args):
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
-                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep']),
+                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p),
                     'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
                     'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
