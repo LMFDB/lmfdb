@@ -50,13 +50,14 @@ initialize-newspace:
     mf = mfinit([N,k,chi],0)
     lf = mfeigenbasis(mf)
   sage: |
-    D = DirichletGroup({N})
-    c = D.Element(D,vector({elt}))
-    N = Newforms(c,{k},names="a")
+    from sage.modular.dirichlet import DirichletCharacter
+    H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
+    chi = DirichletCharacter(H, H._module({sage_genvalues}))
+    N = Newforms(chi, {k}, names="a")
   magma: |
-    D := FullDirichletGroup({N});
-    c := D!{elt};
-    S:= CuspForms(c,{k});
+    //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    chi := DirichletCharacter("{N}.{conrey_index}");
+    S:= CuspForms(chi, {k});
     N := Newforms(S);
 
 coeff-field:
@@ -69,9 +70,9 @@ relative_polynomial:
 
 newform:
   comment: select newform
-  sage: f = N[{newform_number}]
+  sage: "f = N[0] # Warning: the index may be different"
   pari: |
-    f = lf[{newform_number}] \\ Warning: the index may be different in pari-gp
+    f = lf[1] \\ Warning: the index may be different
 
 coefficient_field:
   sage: |
