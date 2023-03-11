@@ -1425,7 +1425,6 @@ function switch_basis(btype) {
         # this needs the value_gens from db.char_dir_values
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
 
-
         data = { 'N': self.level,
                  'k': self.weight,
                  'conrey_index': self.conrey_indexes[0],
