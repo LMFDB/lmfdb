@@ -622,7 +622,7 @@ class LFSearchArray(SearchArray):
             label='Top slope',
             knowl='lf.top_slope',
             example='4/3',
-            example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
+            example_span='4/3, or a range like 3..5')
         slopes_quantifier = SubsetBox(
             name="slopes_quantifier",
             min_width=115,
@@ -633,7 +633,7 @@ class LFSearchArray(SearchArray):
             knowl='lf.wild_slopes',
             select_box=slopes_quantifier,
             example='[2,2,3]',
-            example_span='[2,2,3] requires at least two slopes of 2')
+            example_span='[2,2,3] or [3,7/2,4]')
         visible_quantifier = SubsetBox(
             name="visible_quantifier",
             min_width=115,
@@ -644,7 +644,7 @@ class LFSearchArray(SearchArray):
             knowl='lf.visible_slopes',
             select_box=visible_quantifier,
             example='[2,2,3]',
-            example_span='[2,2,3] requires at least two visible slopes of 2')
+            example_span='[2,2,3] or [2,3,17/4]')
         insep_quantifier = SubsetBox(
             name="insep_quantifier",
             min_width=115,
@@ -655,23 +655,20 @@ class LFSearchArray(SearchArray):
             knowl='lf.indices_of_inseparability',
             select_box=insep_quantifier,
             example='[1,1,0]',
-            example_span='specify indices in decreasing order with multiplicity')
+            example_span='[1,1,0] or [18,10,4,0]')
         associated_inertia = TextBox(
             name='associated_inertia',
             label='Assoc. Inertia',
             knowl='lf.associated_inertia',
             example='[1,2,1]',
-            example_span='specify associated inertia in order')
+            example_span='[1,2,1] or [1,1,1,1]')
         gal = TextBoxNoEg(
             name='gal',
             label='Galois group',
             short_label='Galois group',
-            knowl='nf.galois_group',
+            knowl='nf.galois_search',
             example='5T3',
-            example_span='list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id's"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group labels')))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2')
         u = TextBox(
             name='u',
             label='Galois unramified degree',
@@ -691,25 +688,19 @@ class LFSearchArray(SearchArray):
             label='Inertia subgroup',
             knowl='lf.inertia_group_search',
             example='[3,1]',
-            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group label'))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2',
             )
         wild = TextBox(
             name='wild_gap',
             label='Wild inertia subgroup',
             knowl='lf.wild_inertia_group_search',
             example='[4,1]',
-            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group label'))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2',
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u],
-                             [t], [slopes], [visible], [ind_insep], [associated_inertia], [gal], [inertia], [wild], [results]]
+        self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
+                             [slopes, visible], [ind_insep, associated_inertia], [gal, inertia], [wild], [results]]
         self.refine_array = [[degree, qp, gal, u, associated_inertia],
             [e, c, inertia, t, ind_insep],
             [f, topslope, slopes, visible, wild]]
