@@ -248,7 +248,7 @@ Note that you need editor priviledges to add, delete or modify data.
    db.create_table(name='perfect_numbers',
                    search_columns={'numeric': ['N','mersenne_n'],
                                    'int': ['num_factors'],
-                                   'double': ['log_N'],
+                                   'double precision': ['log_N'],
                                    'text': ['label'],
                                    'bool': ['odd'],
                                    },
