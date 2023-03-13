@@ -256,7 +256,7 @@ def parse_n(info, newform, primes_only):
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    if info['CC_n']  and min(info['CC_n']) < 1:
+    if info['CC_n'] and min(info['CC_n']) < 1:
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
     if info['CC_n'] and max(info['CC_n']) > newform.an_cc_bound:
