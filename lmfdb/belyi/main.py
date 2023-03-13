@@ -521,7 +521,17 @@ class Belyi_download(Downloader):
             s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
-            s += "phi := %s;" % rec["map"]
+            s += "phi := %s;\n" % rec["map"]
+        if rec.get("plane_model"):
+            s += "\n"
+            s += "// Plane model\n"
+            f = rec['plane_model']
+            f = f.replace("x","u") # don't overwrite x
+            s += "R<t,u> := PolynomialRing(K,2);\n"
+            s += "X_plane := Curve(Spec(R), %s);\n" % f
+            s += "KX_plane<t,u> := FunctionField(X_plane);\n"
+            s += "a := %s;\n" % rec['plane_constant']
+            s += "phi_plane := (1/a)*t;"
         else:
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
@@ -545,7 +555,7 @@ class Belyi_download(Downloader):
         if rec["g"] == 0:
             s += "X = ProjectiveSpace(1,K)\n"
             s += "# Define the map\n"
-            s += "K.<x> = FunctionField(K)\n"
+            s += "KX.<x> = FunctionField(K)\n"
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
@@ -572,6 +582,20 @@ class Belyi_download(Downloader):
             s += "R.<y> = PolynomialRing(K0)\n"
             s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
+        if rec.get("plane_model"):
+            s += "\n"
+            s += "# Plane model\n"
+            f = rec['plane_model']
+            f = f.replace("x","u") # don't overwrite x
+            s += "R.<t,u> = PolynomialRing(K,2)\n"
+            s += "X_plane = Curve(%s)\n" % f
+            s += "K0_plane.<t> = FunctionField(K)\n"
+            s += "R.<u> = PolynomialRing(K0_plane)\n"
+            s += "KX_plane.<u> = K0_plane.extension(%s)\n" % f
+            #s += "KX_plane = X_plane.function_field()\n"
+            #s += "t = KX_plane.base_ring().gens()[0]\n"
+            s += "a = %s\n" % rec['plane_constant']
+            s += "phi_plane = (1/a)*t"
         else:
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
