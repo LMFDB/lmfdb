@@ -7,7 +7,7 @@ import os
 import yaml
 
 from flask import url_for
-from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.TinyConrey import get_sage_genvalues, ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -870,6 +870,8 @@ function switch_basis(btype) {
         # univariate polynomial rings don't support order,
         # we work around it by introducing a dummy variable
         """
+        if self.field_poly_root_of_unity == 4:
+            return PolynomialRing(QQ, 'i')
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
             return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order='negdeglex')
@@ -1407,22 +1409,31 @@ function switch_basis(btype) {
         alpha = self._get_alpha(m, p, i)
         return self._display_op(alpha.real(), alpha.imag(), prec)
 
+    @lazy_attribute
     def code(self):
-        if self._code is None:
+        # read in code.yaml from current directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
+        conrey_chi = ConreyCharacter(self.level, self.conrey_indexes[0])
+        sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
+        values_gens = db.char_dir_values.lookup(
+            "{}.{}".format(self.level, self.conrey_indexes[0]),
+            projection='values_gens'
+        )
 
-            # read in code.yaml from current directory:
-            _curdir = os.path.dirname(os.path.abspath(__file__))
-            code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
-            data = { 'N': self.level,
-                     'k': self.weight,
-                     'conrey_index': self.conrey_indexes[0],
-                     'elt': None,
-                     'newform_number': 1,
-                   }
-            for prop in code:
-                if not isinstance(code[prop], dict):
-                    continue
-                for lang in code[prop]:
-                    code[prop][lang] = code[prop][lang].format(**data)
-            self._code = code
-        return self._code
+        vals = [int(v) for _, v in values_gens]
+        # this needs the value_gens from db.char_dir_values
+        sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
+
+        data = { 'N': self.level,
+                 'k': self.weight,
+                 'conrey_index': self.conrey_indexes[0],
+                 'sage_zeta_order': sage_zeta_order,
+                 'sage_genvalues': sage_genvalues,
+               }
+        for prop in code:
+            if not isinstance(code[prop], dict):
+                continue
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**data)
+        return code
