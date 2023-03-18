@@ -300,18 +300,6 @@ def get_bread(breads=[]):
     return bc
 
 
-def searchbox(q="", clear=False):
-    """returns the searchbox"""
-    searchbox = u"""\
-    <form id='knowl-search' action="%s" method="GET">
-      <input name="search" value="%s" />"""
-    if clear:
-        searchbox += '<a href="%s">clear</a>' % url_for(".index")
-    searchbox += '<button type="submit">Go</button>'
-    searchbox += "</form>"
-    return searchbox % (url_for(".index"), q)
-
-
 @knowledge_page.route("/test")
 def test():
     """
