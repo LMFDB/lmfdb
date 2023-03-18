@@ -41,7 +41,14 @@ function show_eqns(eqnstyle) {
         , with affine coordinate $x$
       {% endif %}
       {% if data["curve_label"] %}
-        , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
+        , isomorphic to
+        {% if data.g == 1 %}
+          elliptic
+        {% endif %}
+        {% if data.g == 2 %}
+          genus 2 
+        {% endif %}
+        curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
       {% endif %}
     </td>
     <td>
@@ -51,7 +58,14 @@ function show_eqns(eqnstyle) {
     <td>
       \(\displaystyle {{ data.plane_model }} = 0\)
       {% if data["curve_label"] %}
-        , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
+        , isomorphic to
+        {% if data.g == 1 %}
+          elliptic
+        {% endif %}
+        {% if data.g == 2 %}
+          genus 2 
+        {% endif %}
+        curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
       {% endif %}
     </td>
     <td>

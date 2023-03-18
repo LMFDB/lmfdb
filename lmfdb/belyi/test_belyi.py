@@ -11,16 +11,19 @@ class BelyiTest(LmfdbTest):
         self.check_args("/Belyi/random", "Monodromy group")
 
     def test_by_galmap_label(self):
-        # self.check_args("/Belyi/6T15-[5,4,4]-51-42-42-g1-b", "A_6")
         self.check_args("/Belyi/6T15-5.1_4.2_4.2-b", "A_6")
 
     def test_passport_label(self):
-        # self.check_args("/Belyi/5T4-[5,3,3]-5-311-311-g0-a", "5T4-[5,3,3]-5-311-311-g0")
         self.check_args("/Belyi/5T4-5_3.1.1_3.1.1-a", "5T4-5_3.1.1_3.1.1")
 
     def test_passport(self):
-        # self.check_args("/Belyi/9T33-[10,15,2]-522-531-22221-g0-a", "3.1.14175.1")
         self.check_args("/Belyi/9T33-5.2.2_5.3.1_2.2.2.2.1-a", "3.1.14175.1")
+
+    def test_smooth_equation(self):
+        self.check_args("/Belyi/9T33-9_5.1.1.1.1_5.1.1.1.1-a", r"\phi(x) = 9075734485907514624 \frac{x^{9}}{4537867242953757312 x^{9} - 10520021716426424475 x^{8} + 12447550725170242500 x^{6} - 9941569340991356250 x^{4} + 4201111257707812500 x^{2} - 724916949326171875}\)")
+
+    def test_plane_equation(self):
+        self.check_args("/Belyi/9T33-9_5.1.1.1.1_5.1.1.1.1-a", r"x^{9} t + \left(-126 x^{4} + 420 x^{3} - 540 x^{2} + 315 x - 70\right) = 0")
 
     # web pages
 

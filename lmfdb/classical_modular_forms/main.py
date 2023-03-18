@@ -256,12 +256,13 @@ def parse_n(info, newform, primes_only):
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    if min(info['CC_n']) < 1:
+    if info['CC_n'] and min(info['CC_n']) < 1:
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
-    if max(info['CC_n']) > newform.an_cc_bound:
+    if info['CC_n'] and max(info['CC_n']) > newform.an_cc_bound:
         errs.append(r"Only \(a_n\) up to %s are available; limiting to \(n \le %d\)" % (newform.an_cc_bound, newform.an_cc_bound))
         info['CC_n'] = [n for n in info['CC_n'] if n <= newform.an_cc_bound]
+
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
@@ -373,7 +374,8 @@ def render_newform_webpage(label):
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
     learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_newform.html",
                            info=info,
@@ -407,7 +409,8 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
     learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_embedded_newform.html",
                            info=info,
