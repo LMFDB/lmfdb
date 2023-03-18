@@ -3,6 +3,7 @@
 import re
 from collections import Counter
 from lmfdb import db
+from ast import literal_eval
 
 from flask import render_template, url_for, request, redirect, abort
 
@@ -297,6 +298,24 @@ def modcurve_jump(info):
         else:
             return redirect(url_for_modcurve_label(label))
 
+class ModCurve_download(Downloader):
+    table = db.gps_gl2zhat_fine
+    title = "Modular curves with provisional labels (RSZB labels are stable, LMFDB labels will change!)"
+    columns = ['RSZBlabel','level','generators']
+    data_format = ["RSZB label", "N=level", "generators=[[a1,b1,c1,d1],[a2,b2,c2,d2],...]]"]
+    data_description = "defining the projection of H to GL(2,Z/NZ) as a list of quadruples that are coefficients of 2x2 matrices that generate H"
+    function_body = {
+        "magma": [
+            "return [r[2] eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(r[2]))|[[c:c in g]:g in r[3]]>:r in data];"
+        ],
+        "sage": [
+            "return [GL(2,Integers(r[1])).subgroup(r[2]) for r in data]"
+        ],
+        "gp": [
+            "return([[Mod(Mat([a[1],a[2];a[3],a[4]]),r[2])|a<-r[3]]|r<-data])"
+        ]
+    }
+
 def modcurve_postprocess(res, info, query):
     # Add in the number of models
     num_models = Counter()
@@ -364,7 +383,7 @@ def parse_family(inp, query, qfield):
     table=db.gps_gl2zhat_fine,
     title="Modular curve search results",
     err_title="Modular curves search input error",
-    shortcuts={"jump": modcurve_jump},
+    shortcuts={"jump": modcurve_jump, "download": ModCurve_download()},
     columns=modcurve_columns,
     postprocess=modcurve_postprocess,
     bread=lambda: get_bread("Search results"),
@@ -818,7 +837,7 @@ class ModCurve_stats(StatsDisplay):
     def short_summary(self):
         modcurve_knowl = display_knowl("modcurve", title="modular curves")
         return (
-            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E$ over $\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E$ over $\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a><br>This <b>alpha version</b> is only meant to be used for testing. <b>The LMFDB labels will change</b> prior to beta release (RSZB labels are stable).<br><br>'
         )
 
     @property
@@ -911,22 +930,6 @@ def modcurve_data(label):
             return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
     else:
         return abort(404)
-
-class ModCurve_download(Downloader):
-    table = db.gps_gl2zhat_fine
-    title = "Modular curves"
-    #columns = ['level', 'genus', 'plane_model']
-    #data_format = []
-    #data_description = []
-
-    function_body = {
-        "magma": [
-            #"return data[3];"
-        ],
-        "sage": [
-            #"return data[3]"
-        ],
-    }
 
 # cols currently unused in individual page download
     #'cusp_orbits',
