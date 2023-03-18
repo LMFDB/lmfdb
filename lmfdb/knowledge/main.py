@@ -300,7 +300,6 @@ def get_bread(breads=[]):
     return bc
 
 
-
 @knowledge_page.route("/test")
 def test():
     """
