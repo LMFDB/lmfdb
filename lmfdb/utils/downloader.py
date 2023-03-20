@@ -19,6 +19,10 @@ class DownloadLanguage():
     true = 'true'
     false = 'false'
     offset = 0 # 0-based by default
+    return_keyword = 'return '
+
+    def initialize(self, cols):
+        return ''
 
     def to_lang(self, inp, level=1):
         if inp is None:
@@ -69,6 +73,14 @@ class MagmaLanguage(DownloadLanguage):
     function_start = 'function {func_name}({func_args})\n'
     function_end = 'end function;\n'
     makedata = '    return [* make_row(row) : row in data *];\n'
+    makedata_basic = '    return data;\n'
+
+    def initialize(self, cols):
+        from lmfdb.number_fields.number_field import PolynomialCol
+        if any(isinstance(c, PolynomialCol) for c in cols):
+            return '\nZZx<x> := PolynomialRing(Integers());\n\n'
+        else:
+            return '\n'
 
 class SageLanguage(DownloadLanguage):
     name = 'sage'
@@ -80,6 +92,7 @@ class SageLanguage(DownloadLanguage):
     function_start = 'def {func_name}({func_args}):\n'
     function_end = ''
     makedata = '    return [ make_row(row) for row in data ]\n'
+    makedata_basic = '    return data\n'
 
 class GPLanguage(DownloadLanguage):
     name = 'gp'
@@ -90,11 +103,14 @@ class GPLanguage(DownloadLanguage):
     true = '1'
     false = '0'
     offset = 1
+    return_keyword = ''
     make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
     file_suffix = '.gp'
     function_start = '{func_name}({func_args}) = \n{{\n' # Need double bracket since we're formatting these
     function_end = '}\n'
     makedata = '    [make_row(row)|row<-data]\n'
+    makedata_basic = '    data\n'
+
 
 class TextLanguage(DownloadLanguage):
     name = 'text'
@@ -144,6 +160,14 @@ class Downloader():
     # defaults, edit as desired in inherited class
     lang_key = 'Submit' # name of the HTML button/link starting the download
 <<<<<<< HEAD
+    languages = {
+        'magma': MagmaLanguage(),
+        'sage': SageLanguage(),
+        'gp': GPLanguage(),
+        'text': TextLanguage()
+    }
+    postprocess = None
+=======
     languages = ['magma', 'sage', 'gp', 'oscar', 'text']
     comment_prefix = {
             'magma':'//',
@@ -225,15 +249,7 @@ class Downloader():
     def assign(self, lang, name, elt, level=0, prepend=''):
         return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
 
-=======
-    languages = {
-        'magma': MagmaLanguage(),
-        'sage': SageLanguage(),
-        'gp': GPLanguage(),
-        'text': TextLanguage()
-    }
-
->>>>>>> 324072cec (Change where language specific download code is placed)
+>>>>>>> 133ca3e1e41b19fb9fcdfb7e118a333bfbf2619d
     def get(self, name, default=None):
         if hasattr(self, name):
             return getattr(self, name)
@@ -307,6 +323,8 @@ class Downloader():
         try:
             query = literal_eval(info.get('query', '{}'))
             data = list(self.table.search(query, projection=proj))
+            if self.postprocess is not None:
+                data = self.postprocess(data, info, query)
             #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
             res_list = [[c.download(rec, lang) for c in cols] for rec in data]
         except Exception as err:
@@ -328,22 +346,27 @@ class Downloader():
             s += c + ' ' + make_data_comment  + '\n'
         s += '\n\n'
         s += lang.assign("data", lang.to_lang(res_list, level=0))
+        s += lang.initialize(cols)
         if make_data_comment:
             for c in cols:
                 if not c.inline:
                     func_body = "    " + c.cell_function_body(lang).replace("\n", "\n    ")
-                    s += lang.func_start(c.cell_function_name[lang], "x")
+                    s += lang.func_start(c.cell_function_name, "x")
                     s += func_body + '\n'
                     s += lang.function_end
-            rowline = "    " + lang.delim_start
-            for i, c in enumerate(cols):
-                if i:
-                    rowline += ","
-                if c.cell_function_name is None:
-                    rowline += f"row[{i + lang.offset}]"
-                else:
-                    rowline += f"{c.cell_function_name[lang]}(row[{i + lang.offset}])"
-            rowline += lang.delim_end + "\n"
-            s += lang.func_start("make_row", "row") + rowline + lang.function_end
-            s += lang.func_start("make_data", "") + lang.makedata + lang.function_end
+            if any(c.cell_function_name is not None for c in cols):
+                rowline = "    " + lang.return_keyword + lang.delim_start
+                for i, c in enumerate(cols):
+                    if i:
+                        rowline += ","
+                    if c.cell_function_name is None:
+                        rowline += f"row[{i + lang.offset}]"
+                    else:
+                        rowline += f"{c.cell_function_name}(row[{i + lang.offset}])"
+                rowline += lang.delim_end + lang.line_end + "\n"
+                s += '\n' + lang.func_start("make_row", "row") + rowline + lang.function_end
+                s += "\n\n" + lang.func_start("make_data", "") + lang.makedata + lang.function_end
+            else:
+                s += "\n\n" + lang.func_start("make_row", "data") + lang.makedata_basic + lang.function_end
+                s += "\n\n" + lang.func_start("make_data", "") + lang.makedata_basic + lang.function_end
         return self._wrap(s, filename, lang=lang)
