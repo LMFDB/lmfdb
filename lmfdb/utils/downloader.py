@@ -159,7 +159,6 @@ class Downloader():
     """
     # defaults, edit as desired in inherited class
     lang_key = 'Submit' # name of the HTML button/link starting the download
-<<<<<<< HEAD
     languages = {
         'magma': MagmaLanguage(),
         'sage': SageLanguage(),
@@ -167,89 +166,6 @@ class Downloader():
         'text': TextLanguage()
     }
     postprocess = None
-=======
-    languages = ['magma', 'sage', 'gp', 'oscar', 'text']
-    comment_prefix = {
-            'magma':'//',
-            'sage':'#',
-            'gp':'\\\\',
-            'oscar':'#',
-            'text':'#'
-            }
-    assignment_defn = {
-            'magma':':=',
-            'sage':' = ',
-            'gp':' = ',
-            'oscar':' = ',
-            'text':'='
-            }
-    line_end = {'magma':';',
-            'sage':'',
-            'gp':'',
-            'oscar':'',
-            'text':''
-            }
-    delim_start = {'magma':'[*',
-            'sage':'[',
-            'gp':'[',
-            'oscar':'[',
-            'text':' ['
-            }
-    delim_end = {'magma':'*]',
-            'sage':']',
-            'gp':']',
-            'oscar':']',
-            'text':' ]'}
-    start_and_end = {
-            'magma':['[*','*]'],
-            'sage':['[',']'],
-            'gp':['{[',']}'],
-            'oscar':['[',']'],
-            'text':['[',']']}
-    file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','oscar':'.jl','text':'.txt'}
-    function_start = {'magma':['function make_data()'],
-                      'sage':['def make_data():'],
-                      'gp':['make_data() = ','{'],
-                      'oscar':['function make_data()'],}
-    function_end = {'magma':['end function;'],
-                    'gp':['}'],
-                    'oscar':['end'],}
-    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]', 'oscar': 'nothing'}
-    make_data_comment = {
-        'magma': 'To create a list of {short_name} called {var_name}, type "{var_name}:= make_data();"',
-        'sage':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
-        'gp':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
-        'oscar':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
-    }
-
-    def to_lang(self, lang, inp, level=0, prepend=''):
-        if inp is None:
-            return self.none[lang]
-        if isinstance(inp, str):
-            return '"{0}"'.format(str(inp))
-        if isinstance(inp, int):
-            return str(inp)
-        if level == 0:
-            start, end = self.start_and_end[lang]
-            sep = ',\n' + prepend
-        else:
-            start = self.delim_start[lang]
-            end = self.delim_end[lang]
-            sep = ', '
-        try:
-            if level == 0:
-                begin = start + '\n'
-            else:
-                begin = start
-            return begin + sep.join(self.to_lang(lang, c, level=level + 1) for c in inp) + end
-        except TypeError:
-            # not an iterable object
-            return str(inp)
-
-    def assign(self, lang, name, elt, level=0, prepend=''):
-        return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
-
->>>>>>> 133ca3e1e41b19fb9fcdfb7e118a333bfbf2619d
     def get(self, name, default=None):
         if hasattr(self, name):
             return getattr(self, name)
