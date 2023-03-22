@@ -32,7 +32,7 @@ class DownloadLanguage():
         elif inp is False:
             return self.false
         if isinstance(inp, str):
-            return '"{0}"'.format(str(inp))
+            return inp # '"{0}"'.format(str(inp))
         if isinstance(inp, int):
             return str(inp)
         if level == 0:

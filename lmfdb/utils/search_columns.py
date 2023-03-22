@@ -79,6 +79,7 @@ class SearchCol:
             self.th_style = self.td_style = f"text-align:{align};"
         self.th_content = self.td_content = ""
         self.inline = kwds.pop("inline", True)
+        self.is_string =kwds.pop("is_string", True)
         self.cell_function_name = kwds.pop("cell_function_name", None)
         if not self.inline and self.cell_function_name is None:
             self.cell_function_name = f"process_{name}"
@@ -115,7 +116,11 @@ class SearchCol:
             yield self
 
     def download(self, rec, language):
-        return self._get(rec)
+        s = self._get(rec)
+        if self.is_string:
+            return '"{0}"'.format(s)
+        else:
+            return s
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -131,15 +136,23 @@ class SpacerCol(SearchCol):
 
 class MathCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", orig=None, **kwds):
+        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
         self.orig = [orig if (orig is not None) else name]
 
     def display(self, rec):
         return f"${self.get(rec)}$"
 
+    def download(self, rec, lang):
+        s = self.get(rec)
+        if self.is_string:
+            return '"{0}"'.format(s)
+        else:
+            return s
 
 class FloatCol(MathCol):
     def __init__(self, name, knowl, title, prec=3, default=False, align="center", **kwds):
+        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
         self.prec = prec
 
@@ -151,6 +164,7 @@ class FloatCol(MathCol):
 
 class CheckCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
+        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
@@ -158,6 +172,7 @@ class CheckCol(SearchCol):
 
 class CheckMaybeCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
+        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
@@ -194,6 +209,13 @@ class ProcessedCol(SearchCol):
         if s and self.mathmode:
             s = f"${s}$"
         return s
+
+    def download(self, rec, lang):
+        s = self.get(rec)
+        if self.is_string:
+            return '"{0}"'.format(s)
+        else:
+            return s
 
 class ProcessedLinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_func, disp_func, default=False,
