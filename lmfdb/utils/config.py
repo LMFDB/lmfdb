@@ -26,7 +26,7 @@ from requests import get
 import socket
 from contextlib import closing
 
-
+COCALC_port = 0
 root_lmfdb_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
@@ -289,17 +289,21 @@ class Configuration(_Configuration):
             external_ip = get('https://api.ipify.org').content.decode('utf8')
             if external_ip == "18.18.21.21": # chatelet
                 self.cocalc_options["host"] = "chatelet.mit.edu"
-                # randomify port, we have only container
-                if self.flask_options["port"] == 37777: # default
-                    username = getpass.getuser()
-                    intusername = int(username, base=36)
-                    self.flask_options["port"] = 10000 + (intusername % 55536)
-                while is_port_open(self.flask_options["host"], self.flask_options["port"]):
-                    print(f'port {self.flask_options["port"]} already in use, trying the next one')
-                    self.flask_options["port"] += 1
-                    if self.flask_options["port"] > 65536:
-                        self.flask_options["port"] = 10000
-
+                global COCALC_port
+                if COCALC_port:
+                    self.flask_options["port"] = COCALC_port
+                else:
+                    # randomify port, we have only container
+                    if self.flask_options["port"] == 37777: # default
+                        username = getpass.getuser()
+                        intusername = int(username, base=36)
+                        self.flask_options["port"] = 10000 + (intusername % 55536)
+                    while is_port_open(self.flask_options["host"], self.flask_options["port"]):
+                        print(f'port {self.flask_options["port"]} already in use, trying the next one')
+                        self.flask_options["port"] += 1
+                        if self.flask_options["port"] > 65536:
+                            self.flask_options["port"] = 10000
+                    COCALC_port = self.flask_options["port"]
             self.cocalc_options["root"] = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(self.flask_options['port'])
             self.cocalc_options["prefix"] = ("https://"
                                              + self.cocalc_options["host"]
