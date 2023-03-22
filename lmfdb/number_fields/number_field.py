@@ -839,51 +839,6 @@ download_makedata_comment = {
 }
 
 
-def download_search(info):
-    dltype = info.get('Submit')
-    dlformat = download_format[dltype]
-    filename = 'fields' + '.' + dlformat['ext']
-    mydate = time.strftime("%d %B %Y")
-    com = dlformat.get('com','')
-    eol = dlformat.get('eol','')
-    s = dlformat['com1'] + "\n"
-    s += com + ' Number fields downloaded from the LMFDB downloaded %s\n'% mydate
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [label, polynomial, discriminant, t-number, class group]\n'
-    s += com + ' Here the t-number is for the Galois group\n'
-    s += com + ' If a class group was not computed, the entry is [-1]\n'
-    if download_makedata_comment.get(dltype):
-        s += com + download_makedata_comment[dltype] + '\n'
-    if dlformat['com1']:
-        s += dlformat['com2'] + '\n'
-    s += download_preamble[dltype] + '\n'
-    s += '\n' + 'data ' + dlformat['assign'] + ' ' + dlformat['llist'] + eol + '\n'
-    Qx = PolynomialRing(QQ,'x')
-    # reissue saved query here
-    res = db.nf_fields.search(ast.literal_eval(info["query"]))
-    for f in res:
-        pol = Qx(f['coeffs'])
-        D = f['disc_abs'] * f['disc_sign']
-        gal_t = int(f['galois_label'].split('T')[1])
-        if 'class_group' in f:
-            cl = f['class_group']
-        else:
-            cl = [-1]
-        entry = ', '.join(['"'+str(f['label'])+'"', str(pol), str(D), str(gal_t), str(cl)])
-        s += dlformat['ltup'] + entry + dlformat['rtup'] + ',' + eol + '\n'
-    if dlformat.get('noc',''):
-        s = s[:-2-len(eol)] + eol + '\n'
-    s += dlformat['rlist'] +';\n'
-    if download_makedata.get(dltype):
-        s += download_makedata[dltype] + '\n'
-    strIO = BytesIO()
-    strIO.write(s.encode('utf-8'))
-    strIO.seek(0)
-    return send_file(strIO,
-                     download_name=filename,
-                     as_attachment=True)
-
-
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:

@@ -140,7 +140,11 @@ def ctx_proc_userdata():
     vars['BETA'] = is_beta()
 
     def modify_url(**replace):
-        urlparts = urlparse(request.url)
+        url = request.url
+        if url.startswith("https, "):
+            # Cocalc weirdness that lets them serve pages on https from within a project
+            url = url[7:]
+        urlparts = urlparse(url)
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
