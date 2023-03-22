@@ -25,12 +25,13 @@
     <span id="download-form" style="display:none;">
   {% endif %}
   Download to &nbsp;
-    {% for lang in languages %}
+  {% for lang in languages %}
     {% if info.search_type %}
     <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string))}}" onclick="return update_download_url(this);">{{lang_text[lang]}}</a>&nbsp;
     {% else %}
     <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string)+'&search_type='+info.search_type)}}" onclick="return update_download_url(this);">{{lang_text[lang]}}</a>&nbsp;
     {% endif %}
   {% endfor %}
+    <input type="checkbox" id="download_all_cols" name="download_all_cols"><label for="download_all_cols">all columns</label>
   </span>
 {% endif %}

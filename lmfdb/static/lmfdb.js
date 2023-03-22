@@ -420,58 +420,88 @@ function simult_change(event) {
     $(".simult_select").each(function (i) { this.selectedIndex = event.target.selectedIndex;});
 };
 
+function control_column(S, i) {
+  var show = $("input[name=showcol]");
+  var shown_cols = show.val().split(".").filter(o=>o); // remove empty strings
+  var hide = $("input[name=hidecol]");
+  var hidden_cols = hide.val().split(".").filter(o=>o);
+  var label = S.options[i].text;
+  var label = label.slice(2, label.length);
+  var value = S.options[i].value;
+  $('.col-'+value).toggle();
+  // For column groups, have to adjust the width of the top column
+  $('th.col-'+value).each(function(i, obj) {
+    // We need to adjust the column width for any colgroup header containing this column.
+    // there should only be one in the list, but doing this more than once won't hurt.
+    var classes = $(this).attr('class').split(' ');
+    for (i = 0; i < classes.length; i++) {
+      if (classes[i].startsWith("colgroup-")) {
+        var colspan = $('th.'+classes[i]+':visible').length;
+        var header = $('.col-' + classes[i].slice(9));
+        if (colspan == 0) {
+          header.hide();
+        } else {
+          header.show();
+          header.prop("colSpan", $('th.'+classes[i]+':visible').length);
+        }
+      }
+    }
+  });
+  if ($('.col-'+value+':visible').length > 0) {
+    S.options[i].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
+    var i = hidden_cols.indexOf(value);
+    if (i == -1) {
+      shown_cols.push(value);
+      show.val(shown_cols.join("."));
+    } else {
+      hidden_cols.splice(i, 1);
+      hide.val(hidden_cols.join("."));
+    }
+  } else {
+    S.options[i].text = '  ' + label; // the spaces are unicode: an em-dash and a thinspace
+    var i = shown_cols.indexOf(value);
+    if (i == -1) {
+      hidden_cols.push(value);
+      hide.val(hidden_cols.join("."));
+    } else {
+      shown_cols.splice(i, 1);
+      show.val(shown_cols.join("."));
+    }
+  }
+};
+
+function all_are_selected(S) {
+  for (i = 1; i < S.options.length - 1; i++) {
+    if (S.options[i].text[0] != '✓') {
+      return false;
+    }
+  }
+  return true;
+}
+
 function control_columns(S) {
   if (S.selectedIndex == 0) {
     S.blur();
   } else {
-    var show = $("input[name=showcol]");
-    var shown_cols = show.val().split(".").filter(o=>o); // remove empty strings
-    var hide = $("input[name=hidecol]");
-    var hidden_cols = hide.val().split(".").filter(o=>o);
-    var label = S.options[S.selectedIndex].text;
-    label = label.slice(2, label.length);
-    $('.col-'+S.value).toggle();
-    // For column groups, have to adjust the width of the top column
-    $('th.col-'+S.value).each(function(i, obj) {
-      // We need to adjust the column width for any colgroup header containing this column.
-      // there should only be one in the list, but doing this more than once won't hurt.
-      var classes = $(this).attr('class').split(' ');
-      for (i = 0; i < classes.length; i++) {
-        if (classes[i].startsWith("colgroup-")) {
-          var colspan = $('th.'+classes[i]+':visible').length;
-          var header = $('.col-' + classes[i].slice(9));
-          if (colspan == 0) {
-            header.hide();
-          } else {
-            header.show();
-            header.prop("colSpan", $('th.'+classes[i]+':visible').length);
-          }
+    var allselected = all_are_selected(S);
+    if (S.value == 'toggleall') {
+      for (i = 1; i < S.options.length - 1; i++) {
+        if (allselected || S.options[i].text[0] != '✓') {
+          control_column(S, i);
         }
       }
-    })
-    if ($('.col-'+S.value+':visible').length > 0) {
-      S.options[S.selectedIndex].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
-      var i = hidden_cols.indexOf(S.value);
-      if (i == -1) {
-        shown_cols.push(S.value);
-        show.val(shown_cols.join("."));
-      } else {
-        hidden_cols.splice(i, 1);
-        hide.val(hidden_cols.join("."));
-      }
+      S.value = '';
     } else {
-      S.options[S.selectedIndex].text = '  ' + label; // the spaces are unicode: an em-dash and a thinspace
-      var i = shown_cols.indexOf(S.value);
-      if (i == -1) {
-        hidden_cols.push(S.value);
-        hide.val(hidden_cols.join("."));
-      } else {
-        shown_cols.splice(i, 1);
-        show.val(shown_cols.join("."));
-      }
+      control_column(S, S.selectedIndex);
+      S.value = '';
+    }
+    var toggler = S.options[S.options.length - 1];
+    if (all_are_selected(S)) {
+      toggler.text = toggler.text.slice(0, 6) + "hide all";
+    } else {
+      toggler.text = toggler.text.slice(0, 6) + "show all";
     }
   }
-  S.value = '';
 };
 
 function control_sort(S) {
@@ -504,12 +534,12 @@ function update_download_url(link) {
   var show = $("input[name=showcol]");
   var hide = $("input[name=hidecol]");
   var i = link.href.indexOf("&showcol=");
-  console.log("pre", link.href);
+  //console.log("pre", link.href);
   if (i != -1) {
     link.href = link.href.slice(0, i);
   }
   link.href = link.href + "&showcol=" + show.val() + "&hidecol=" + hide.val();
-  console.log("post", link.href);
+  //console.log("post", link.href);
   return true;
 };
 

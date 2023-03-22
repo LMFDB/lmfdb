@@ -524,6 +524,7 @@ class ColumnController(SelectBox):
                 # A ColGroup with columns that should be shown/hidden individually
                 use_rank = 1
                 break
+        allshown = True
         for col in C.columns_shown(info, use_rank):
             if col.short_title is None: # probably a spacer column:
                 continue
@@ -532,7 +533,9 @@ class ColumnController(SelectBox):
                 disp = "✓ " + title # The space is a unicode space the size of an emdash
             else:
                 disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
+                allshown = False
             options.append((col.name, "", disp))
+        options.append(("toggleall", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;" + ("hide all" if allshown else "show all")))
         # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
         options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
         return "        <select %s>\n%s\n        </select>" % (
