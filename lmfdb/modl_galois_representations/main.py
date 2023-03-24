@@ -132,21 +132,24 @@ modlgal_columns = SearchColumns(
     [
         LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label, default=True),
         MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$", default=True),
-        MathCol("dimension", "modlgal.dimension", "Dim", short_title="Dimension", default=True),
+        MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension", default=True),
         ProcessedCol("conductor", "modlgal.conductor", "Conductor", lambda N: web_latex_factored_integer(N), default=True, align="center"),
         SearchCol("top_slope_rational", "modlgal.top_slope", "Top slope", align="center", default=lambda info: info.get("top_slope")),
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
                           lambda a,b,c,d,e,f: image_pretty(a,b,c,d,e,f), default=True, align="center"),
+        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index"),
+        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order"),
         CheckCol("is_surjective", "modlgal.is_surjective", "Surjective", default=True),
-        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred"),
+        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irred"),
         CheckCol("is_solvable", "modlgal.is_solvable", "Solvable"),
         SearchCol("determinant_label", "modlgal.determinant_label", "Determinant"),
         ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center"),
         ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield, default=True),
-        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective Kernel", formatfield),
+        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield),
     ],
-    db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label", "is_surjective",
-             "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial", "top_slope_rational", "generating_primes"]
+    db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
+             "is_surjective", "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial",
+             "image_index", "image_order", "top_slope_rational", "generating_primes"]
     )
 
 @search_wrap(
@@ -273,19 +276,33 @@ class ModLGalRepSearchArray(SearchArray):
             label="Absolutely irreducible",
             example_col=True,
         )
+        image_index = TextBox(
+            name="image_index",
+            knowl="modlgal.image_index",
+            label="Image index",
+            example="2",
+            example_span="12, 10-20")
+        image_order = TextBox(
+            name="image_order",
+            knowl="modlgal.image_order",
+            label="Image order",
+            example="2",
+            example_span="12, 10-20")
         count = CountBox()
 
         self.browse_array = [
             [conductor, codomain],
-            [dimension, surjective],
-            [conductor_primes, absolutely_irreducible],
+            [conductor_primes, surjective],
+            [dimension, absolutely_irreducible],
             [top_slope, solvable],
-            [count, base_ring_characteristic],
+            [base_ring_characteristic, image_index],
+            [count, image_order],
         ]
 
         self.refine_array = [
-            [conductor, dimension, conductor_primes, top_slope, base_ring_characteristic],
+            [conductor, conductor_primes, dimension, top_slope],
             [codomain, surjective, absolutely_irreducible, solvable],
+            [base_ring_characteristic, image_index, image_order]
         ]
 
     sort_knowl = "modlgal.sort_order"
