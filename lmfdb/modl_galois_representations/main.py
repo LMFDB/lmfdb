@@ -165,6 +165,8 @@ def modlgal_search(info, query):
     parse_ints(info, query, "base_ring_characteristic")
     parse_ints(info, query, "dimension")
     parse_ints(info, query, "conductor")
+    parse_ints(info, query, "image_index")
+    parse_ints(info, query, "image_order")
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['conductor_num_primes'] = 1
