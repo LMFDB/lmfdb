@@ -228,7 +228,7 @@ class ModLGalRepSearchArray(SearchArray):
             name="conductor_primes_quantifier")
         conductor_primes = TextBoxWithSelect(
             name="conductor_primes",
-            knowl="modlgal.conductor",
+            knowl="modlgal.ramified",
             label="Ramified",
             example="11",
             example_span="5,7",
