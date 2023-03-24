@@ -86,6 +86,7 @@ class WebModLGalRep(WebObj):
                 friends.append(("Modular form " + r[1], url_for_mf_label(r[1])))
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
+        friends.append(("Determinant", url_for_modlgal_label))
         return friends
 
     @lazy_attribute
