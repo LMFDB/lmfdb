@@ -24,7 +24,7 @@
     </span>
     <span id="download-form" style="display:none;">
   {% endif %}
-  Download to &nbsp;
+  Download displayed columns to &nbsp;
   {% for lang in languages %}
     {% if info.search_type %}
     <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string))}}" onclick="return update_download_url(this);">{{lang_text[lang]}}</a>&nbsp;
