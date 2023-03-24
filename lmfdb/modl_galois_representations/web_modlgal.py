@@ -145,7 +145,10 @@ class WebModLGalRep(WebObj):
             for i in range(len(ps)):
                 m = Matrix(F,n,frobs[i])
                 M = R(frobs[i])
-                L.append([ps[i],m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
+                if self.generating_primes and ps[i] in self.generating_primes:
+                    L.append([r"\mathbf{%s}"%(ps[i]),m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
+                else:
+                    L.append([ps[i],m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
         except:
             print(f"Bad frobenius_matrices for {self.label}")
             print(self.frobenius_matrices)

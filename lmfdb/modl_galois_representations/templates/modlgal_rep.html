@@ -53,6 +53,11 @@
 <h2> Frobenius data </h2>
 
 {% if rep.frobenius_matrices_pretty %}
+
+{% if rep.generating_primes %}
+<p>{{ KNOWL('modlgal.generating_primes', 'Generating primes') }} are shown in bold.</p>
+{% endif %}
+
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
 <tr><th>{{ KNOWL('modlgal.frobenius_prime','Prime') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_trace','Trace') }}</th>
@@ -61,7 +66,7 @@
     <th>{{ KNOWL('modlgal.frobenius_matrix','Matrix') }}</th>
 </tr>
 {% for r in rep.frobenius_matrices_pretty %}
-  <tr><td align="center">{{ r[0] }}</td><td align="center">{{ r[1] | safe }}</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
+  <tr><td align="center">${{ r[0] }}$</td><td align="center">${{ r[1] | safe }}$</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
 {% endfor %}
 </table>
 {% else %}
