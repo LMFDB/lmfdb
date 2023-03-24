@@ -131,8 +131,8 @@ def blankzeros(n):
 modlgal_columns = SearchColumns(
     [
         LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label, default=True),
-        MathCol("dimension", "modlgal.dimension", "Dim", short_title="Dimension", default=True),
         MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$", default=True),
+        MathCol("dimension", "modlgal.dimension", "Dim", short_title="Dimension", default=True),
         ProcessedCol("conductor", "modlgal.conductor", "Conductor", lambda N: web_latex_factored_integer(N), default=True, align="center"),
         SearchCol("top_slope_rational", "modlgal.top_slope", "Top slope", align="center", default=lambda info: info.get("top_slope")),
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
@@ -159,8 +159,9 @@ modlgal_columns = SearchColumns(
     url_for_label=url_for_modlgal_label,
 )
 def modlgal_search(info, query):
-    parse_ints(info, query, "conductor")
+    parse_ints(info, query, "base_ring_characteristic")
     parse_ints(info, query, "dimension")
+    parse_ints(info, query, "conductor")
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['conductor_num_primes'] = 1
@@ -218,6 +219,12 @@ class ModLGalRepSearchArray(SearchArray):
             example="11",
             example_span="11 or 100-200",
             select_box=conductor_quantifier)
+        base_ring_characteristic = TextBox(
+            name="base_ring_characteristic",
+            knowl="modlgal.base_ring_characteristic",
+            label="Characteristic",
+            example="2",
+            example_span="2, 3, or 5")
         dimension = TextBox(
             name="dimension",
             knowl="modlgal.dimension",
@@ -237,6 +244,7 @@ class ModLGalRepSearchArray(SearchArray):
         top_slope = TextBox(
             name="top_slope",
             label="Top slope",
+            knowl="modlgal.top_slope",
             example="2",
             example_span="2 or 4/3 or 1-1.5"
         )
@@ -272,11 +280,11 @@ class ModLGalRepSearchArray(SearchArray):
             [dimension, surjective],
             [conductor_primes, absolutely_irreducible],
             [top_slope, solvable],
-            [count],
+            [count, base_ring_characteristic],
         ]
 
         self.refine_array = [
-            [conductor, dimension, conductor_primes, top_slope],
+            [conductor, dimension, conductor_primes, top_slope, base_ring_characteristic],
             [codomain, surjective, absolutely_irreducible, solvable],
         ]
 
