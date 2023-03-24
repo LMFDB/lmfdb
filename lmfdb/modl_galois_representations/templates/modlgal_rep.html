@@ -31,9 +31,9 @@
 <h2>Associated number fields</h2>
 
 <table>
-  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling') }} of the fixed field of $\mathrm{ker}(\rho)$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.splitting_field','Splitting field') }} of $\rho$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
   {% if rep.base_ring_characteristic != 2 %}
-  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling') }} of the fixed field of $\mathrm{ker}(\mathbb{P}\rho)$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.splitting_field','Splitting field') }} of $\mathbb{P}\rho$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
   {% endif %}
 </table>
 

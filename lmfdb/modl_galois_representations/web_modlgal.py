@@ -74,6 +74,8 @@ class WebModLGalRep(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
+        if not hasattr(self, "related_objects"):
+            self.related_objects = []
         for r in self.related_objects:
             if r[0] == "Dirichlet":
                 c = r[1].split(".")
