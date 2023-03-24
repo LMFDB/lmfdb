@@ -625,33 +625,33 @@ class LFSearchArray(SearchArray):
             example_span='4/3, or a range like 3..5')
         slopes_quantifier = SubsetBox(
             name="slopes_quantifier",
-            min_width=115,
         )
         slopes = TextBoxWithSelect(
             name='slopes',
             label='Wild slopes',
+            short_label='Wild',
             knowl='lf.wild_slopes',
             select_box=slopes_quantifier,
             example='[2,2,3]',
             example_span='[2,2,3] or [3,7/2,4]')
         visible_quantifier = SubsetBox(
             name="visible_quantifier",
-            min_width=115,
         )
         visible = TextBoxWithSelect(
             name='visible',
             label='Visible slopes',
+            short_label='Visible',
             knowl='lf.visible_slopes',
             select_box=visible_quantifier,
             example='[2,2,3]',
             example_span='[2,2,3] or [2,3,17/4]')
         insep_quantifier = SubsetBox(
             name="insep_quantifier",
-            min_width=115,
         )
         ind_insep = TextBoxWithSelect(
             name='ind_of_insep',
             label='Ind. of insep.',
+            short_label='Indices',
             knowl='lf.indices_of_inseparability',
             select_box=insep_quantifier,
             example='[1,1,0]',
