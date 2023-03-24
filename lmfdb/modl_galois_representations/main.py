@@ -198,7 +198,7 @@ class ModLGalRepSearchArray(SearchArray):
     noun = "representation"
     plural_noun = "representations"
     jump_example = "2.2.11.1"
-    jump_egspan = "e.g. 2.2.11.1 or 4.2.173.1"
+    jump_egspan = "e.g. 2.3.11.1 or 2.4.173.1"
     jump_prompt = "Label"
     jump_knowl = "modlgal.search_input"
 
