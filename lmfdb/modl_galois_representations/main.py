@@ -268,7 +268,7 @@ class ModLGalRepSearchArray(SearchArray):
 
         self.browse_array = [
             [conductor, codomain],
-            [dimension, solvable],
+            [dimension, surjective],
             [conductor_primes, absolutely_irreducible],
             [top_slope, solvable],
             [count],
