@@ -30,6 +30,7 @@ from lmfdb.utils import (
     to_ordinal,
     web_latex,
     letters2num,
+    WebObj,
 )
 from .circles import find_packing
 
@@ -138,25 +139,6 @@ def abelian_get_elementary(snf):
     if len(possiblep) > 1:
         return 1
     return possiblep[0]
-
-
-class WebObj():
-    def __init__(self, label, data=None):
-        self.label = label
-        if data is None:
-            data = self._get_dbdata()
-        self._data = data
-        if isinstance(data, dict):
-            for key, val in self._data.items():
-                setattr(self, key, val)
-
-    @classmethod
-    def from_data(cls, data):
-        return cls(data["label"], data)
-
-    def _get_dbdata(self):
-        # self.table must be defined in subclasses
-        return self.table.lookup(self.label)
 
 
 class WebAbstractGroup(WebObj):
