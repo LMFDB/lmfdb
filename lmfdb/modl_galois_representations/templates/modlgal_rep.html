@@ -1,0 +1,61 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+<h2> {{ KNOWL('modlgal', title='Mod-&#x2113; Galois representation')}} </h2>
+<p>{{ rep.rep_pretty | safe}}</p>
+
+<h2>Invariants</h2>
+
+<table>
+  <tr><td>{{ KNOWL('modlgal.dimension', 'Dimension') }}:</td><td>${{ rep.dimension }}$</td></tr>
+  <tr><td>{{ KNOWL('modlgal.conductor', 'Conductor') }}:</td><td>${{rep.conductor}}$</td><td>=</td><td>{{ rep.factored_conductor }}</td></tr>
+  {% if not rep.is_surjective %}
+  <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
+  {% endif %}
+  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.image_index', 'Image index') }}:<td>{{ rep.image_index }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.image_order', 'Image order') }}:<td>{{ rep.image_order }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.absolutely_irreducible', 'Absolutely irreducible') }}:</td><td>{% if rep.is_absolutely_irreducible%}yes{% else %}no{% endif %}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.surjective', 'Surjective') }}:<td>{% if rep.is_surjective %}yes{% else %}no{% endif %}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.solvable', 'Solvable') }}:<td>{% if rep.is_solvable %}yes{% else %}no{% endif %}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.top_slope', 'Top slope') }}:</td><td>{{ rep.top_slope_rational }}</td></tr>
+</table>
+
+<h2>Associated number fields</h2>
+
+<table>
+  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling') }} of the fixed field of $\mathrm{ker}(\rho)$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
+  {% if rep.base_ring_characteristic != 2 %}
+  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling') }} of the fixed field of $\mathrm{ker}(\mathbb{P}\rho)$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
+  {% endif %}
+</table>
+
+{% if rep.dual_pair_of_algebras %}
+<h2> {{ KNOWL('modlgal.dual_pair_of_algebras', 'Dual pair of algebras')}} </h2>
+
+TBA
+{% endif %}
+
+
+<h2> Frobenius data </h2>
+
+{% if not rep.frobenius_data %}
+  <p>Error paring good_prime_list: {{ rep.good_prime_list }}</p>
+{% else %}
+
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><th>{{ KNOWL('modlgal.good_prime','Prime') }}</th>
+    <th>{{ KNOWL('modlgal.frobenius_trace','Trace') }}</th>
+    <th>{{ KNOWL('modlgal.frobenius_order','Order') }}</th>
+    <th>{{ KNOWL('modlgal.frobenius_charpoly','Char poly') }}</th>
+    <th>{{ KNOWL('modlgal.frobenius_matrix','Matrix') }}</th>
+</tr>
+{% for r in rep.frobenius_data %}
+  <tr><td align="center">${{ r[0] }}$</td><td align="center">${{ r[1] }}$</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
+{% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}
