@@ -11,7 +11,7 @@
 <table>
   <tr><td>{{ KNOWL('modlgal.dimension', 'Dimension') }}:</td><td>${{ rep.dimension }}$</td></tr>
   <tr><td>{{ KNOWL('modlgal.conductor', 'Conductor') }}:</td><td>{{ rep.factored_conductor }}</td></tr>
-  {% if rep.weight >= 0 %}
+  {% if rep.weight and rep.weight >= 0 %}
   {% endif %}
   {% if not rep.is_surjective %}
   <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
