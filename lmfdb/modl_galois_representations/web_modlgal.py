@@ -91,7 +91,7 @@ class WebModLGalRep(WebObj):
     @lazy_attribute
     def bread(self):
         tail = []
-        A = ["dimension", "base_ring_order", "conductor"]
+        A = ["base_ring_order", "dimension", "conductor"]
         D = {}
         for a in A:
             D[a] = getattr(self, a)
