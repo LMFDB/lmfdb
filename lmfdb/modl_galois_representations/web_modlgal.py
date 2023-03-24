@@ -87,7 +87,7 @@ class WebModLGalRep(WebObj):
                 friends.append(("Modular form " + r[1], url_for_mf_label(r[1])))
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
-        if hasattr(self, "determinant_label"):
+        if self.dimension > 1 and hasattr(self, "determinant_label"):
             friends.append(("Determinant " + self.determinant_label, url_for_modlgal_label(label=self.determinant_label)))
         return friends
 
