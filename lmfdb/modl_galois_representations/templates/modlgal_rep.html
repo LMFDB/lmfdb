@@ -11,6 +11,8 @@
 <table>
   <tr><td>{{ KNOWL('modlgal.dimension', 'Dimension') }}:</td><td>${{ rep.dimension }}$</td></tr>
   <tr><td>{{ KNOWL('modlgal.conductor', 'Conductor') }}:</td><td>{{ rep.factored_conductor }}</td></tr>
+  {% if rep.weight >= 0 %}
+  {% endif %}
   {% if not rep.is_surjective %}
   <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
   {% endif %}
@@ -40,8 +42,12 @@
 
 {% if rep.dual_algebra_pretty %}
 <table>
-  <tr><td>$A$</td><td>$=$</td><td>{{ rep.dual_algebra_pretty.A  | safe }}</td></tr>
-  <tr><td>$B$</td><td>$=$</td><td>{{ rep.dual_algebra_pretty.B | safe }}</td></tr>
+  {% if rep.dual_algebra_pretty.A == rep.dual_algebra_pretty.B %}
+    <tr><td>$A=B=$ {{ rep.dual_algebra_pretty.A  | safe }}</td></tr>
+  {% else %}
+    <tr><td>$A=$ {{ rep.dual_algebra_pretty.A  | safe }}</td></tr>
+    <tr><td>$B=$ {{ rep.dual_algebra_pretty.B | safe }}</td></tr>
+  {% endif %}
 </table>
   <p align="center">$\Phi={{ rep.dual_algebra_pretty.Phi }}$</p>
 {% else %}
