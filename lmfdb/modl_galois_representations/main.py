@@ -270,7 +270,7 @@ class ModLGalRepSearchArray(SearchArray):
         absolutely_irreducible = YesNoBox(
             name="is_absolutely_irreducible",
             knowl="modlgal.absolutely_irreducible",
-            label="Absolutely Irreducible",
+            label="Absolutely irreducible",
             example_col=True,
         )
         count = CountBox()
