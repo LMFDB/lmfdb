@@ -88,7 +88,7 @@ class WebModLGalRep(WebObj):
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
         if hasattr(self, "determinant_label"):
-            friends.append(("Determinant " + self.determinant_label, url_for_modlgal_label(label=self.determinant_label))
+            friends.append(("Determinant " + self.determinant_label, url_for_modlgal_label(label=self.determinant_label)))
         return friends
 
     @lazy_attribute
