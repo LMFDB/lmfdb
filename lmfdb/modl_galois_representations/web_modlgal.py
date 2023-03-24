@@ -2,7 +2,7 @@
 
 from flask import url_for
 
-from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix
+from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.utils import WebObj, teXify_pol, web_latex, display_knowl, web_latex_factored_integer
 from lmfdb import db
@@ -129,7 +129,7 @@ class WebModLGalRep(WebObj):
         return formatfield(self.projective_kernel_polynomial)
 
     @lazy_attribute
-    def frobenius_data(self):
+    def frobenius_pretty(self):
         L = []
         F = GF(self.base_ring_order) if self.base_ring_is_field else Integers(self.base_ring_order)
         R = GL(self.dimension,F) if self.algebraic_group == "GL" else Sp(self.dimension,F)
@@ -145,6 +145,18 @@ class WebModLGalRep(WebObj):
             print(self.good_prime_list)
             return []
         return L
+
+    @lazy_attribute
+    def dual_algebra_pretty(self):
+        A = self.dual_pair_of_algebras
+        if not A:
+            return None
+        n = sum([len(a)-1 for a in A[0]])
+        data = { "A": r" $\times$ ".join([formatfield(f) for f in A[0]]),
+                 "B": r" $\times$ ".join([formatfield(f) for f in A[1]]),
+                 "Phi": r"\frac{1}{%s} "%(str(A[2][0])) + web_latex(Matrix(QQ,n,A[2][1]),enclose=False)
+               }
+        return data
 
     @lazy_attribute
     def downloads(self):

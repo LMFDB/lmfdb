@@ -35,25 +35,34 @@
 {% if rep.dual_pair_of_algebras %}
 <h2> {{ KNOWL('modlgal.dual_pair_of_algebras', 'Dual pair of algebras')}} </h2>
 
-TBA
+{% if rep.dual_algebra_pretty %}
+<table>
+  <tr><td>$A$</td><td>$=$</td><td>{{ rep.dual_algebra_pretty.A  | safe }}</td></tr>
+  <tr><td>$B$</td><td>$=$</td><td>{{ rep.dual_algebra_pretty.B | safe }}</td></tr>
+</table>
+  <p align="center">$\Phi={{ rep.dual_algebra_pretty.Phi }}$</p>
+{% else %}
+  <p>Error parsing dual_pair_of_algebras: {{ rep.dual_pair_of_algebras }}</p>
+{% endif %}
+
 {% endif %}
 
 
 <h2> Frobenius data </h2>
 
-{% if not rep.frobenius_data %}
-  <p>Error paring good_prime_list: {{ rep.good_prime_list }}</p>
+{% if not rep.frobenius_pretty %}
+  <p>Error parsing good_prime_list: {{ rep.good_prime_list }}</p>
 {% else %}
 
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
-<tr><th>{{ KNOWL('modlgal.good_prime','Prime') }}</th>
+<tr><th>{{ KNOWL('modlgal.frobenius_prime','Prime') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_trace','Trace') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_order','Order') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_charpoly','Char poly') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_matrix','Matrix') }}</th>
 </tr>
-{% for r in rep.frobenius_data %}
-  <tr><td align="center">${{ r[0] }}$</td><td align="center">${{ r[1] }}$</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
+{% for r in rep.frobenius_pretty %}
+  <tr><td align="center">{{ r[0] }}</td><td align="center">{{ r[1] | safe }}</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
 {% endfor %}
 </table>
 {% endif %}
