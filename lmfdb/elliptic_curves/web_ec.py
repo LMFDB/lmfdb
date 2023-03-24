@@ -74,7 +74,8 @@ def gl2_subgroup_data(label):
     try:
         data = db.gps_gl2zhat.lookup(label)
         if data is None:
-            data = db.gps_gl2zhat.lucky({'Slabel':label})
+            level = int(re.match(r"\d+",label)[0])
+            data = db.gps_gl2zhat.lucky({'Slabel':label,'level':level})
             if data is None:
                 raise ValueError
     except ValueError:
