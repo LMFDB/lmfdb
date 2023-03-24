@@ -73,7 +73,7 @@ class WebModLGalRep(WebObj):
 
     @lazy_attribute
     def friends(self):
-        from lmfdb.modlgal.main import url_for_modlgal_label
+        from lmfdb.modl_galois_representations.main import url_for_modlgal_label
         friends = []
         if not hasattr(self, "related_objects"):
             self.related_objects = []
