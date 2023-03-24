@@ -2,7 +2,7 @@
 
 from flask import url_for
 
-from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ
+from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ, prime_range
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.utils import WebObj, teXify_pol, web_latex, display_knowl, web_latex_factored_integer
 from lmfdb import db
@@ -19,13 +19,12 @@ def _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
 def codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     return "$" + _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field) + "$"
 
-def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field):
+def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, codomain=True):
     s = _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field)
     if is_surjective:
         return "$" + s + "$"
-    if dimension == 2:
-        return display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) + r" $\subseteq " + s + "$"
-    return image_label + r" $\subseteq " + s + "$"
+    t = t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
+    return t + r" $\subseteq " + s + "$" if codomain else t
 
 def rep_pretty(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     return r"$\rho\colon\Gal_\Q\to" + _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field) + "$"
@@ -114,7 +113,7 @@ class WebModLGalRep(WebObj):
 
     @lazy_attribute
     def image_pretty(self):
-        return image_pretty(self.image_label, self.is_surjective, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field)
+        return image_pretty(self.image_label, self.is_surjective, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field, codomain=False)
 
     @lazy_attribute
     def rep_pretty(self):
@@ -129,20 +128,27 @@ class WebModLGalRep(WebObj):
         return formatfield(self.projective_kernel_polynomial)
 
     @lazy_attribute
-    def frobenius_pretty(self):
+    def frobenius_generators(self):
+        if not self.generating_primes:
+            return None
+        return ",".join([r"\mathrm{Frob}_{%s}"%(p) for p in self.generating_primes])
+
+    @lazy_attribute
+    def frobenius_matrices_pretty(self):
         L = []
         F = GF(self.base_ring_order) if self.base_ring_is_field else Integers(self.base_ring_order)
         R = GL(self.dimension,F) if self.algebraic_group == "GL" else Sp(self.dimension,F)
         n = self.dimension
+        ps = [p for p in prime_range(100) if (self.conductor*self.base_ring_characteristic) % p != 0]
+        frobs = self.frobenius_matrices
         try:
-            for r in self.good_prime_list:
-                p = r[0]
-                m = Matrix(F,n,r[1])
-                M = R(r[1])
-                L.append([p,m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
+            for i in range(len(ps)):
+                m = Matrix(F,n,frobs[i])
+                M = R(frobs[i])
+                L.append([ps[i],m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
         except:
-            print(f"Bad good_prime_list for {self.label}")
-            print(self.good_prime_list)
+            print(f"Bad frobenius_matrices for {self.label}")
+            print(self.frobenius_matrices)
             return []
         return L
 

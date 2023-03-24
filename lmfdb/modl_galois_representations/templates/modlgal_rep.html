@@ -10,11 +10,14 @@
 
 <table>
   <tr><td>{{ KNOWL('modlgal.dimension', 'Dimension') }}:</td><td>${{ rep.dimension }}$</td></tr>
-  <tr><td>{{ KNOWL('modlgal.conductor', 'Conductor') }}:</td><td>${{rep.conductor}}$</td><td>=</td><td>{{ rep.factored_conductor }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.conductor', 'Conductor') }}:</td><td>{{ rep.factored_conductor }}</td></tr>
   {% if not rep.is_surjective %}
   <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
   {% endif %}
-  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty | safe }}</td></tr>
+  {% if rep.frobenius_generators %}
+  <tr><td>{{ KNOWL('modlgal.generating_primes', 'Generators') }}:<td>${{ rep.frobenius_generators }}$</td></tr>
+  {% endif %}
   <tr><td>{{ KNOWL('modlgal.image_index', 'Image index') }}:<td>{{ rep.image_index }}</td></tr>
   <tr><td>{{ KNOWL('modlgal.image_order', 'Image order') }}:<td>{{ rep.image_order }}</td></tr>
   <tr><td>{{ KNOWL('modlgal.absolutely_irreducible', 'Absolutely irreducible') }}:</td><td>{% if rep.is_absolutely_irreducible%}yes{% else %}no{% endif %}</td></tr>
@@ -47,13 +50,9 @@
 
 {% endif %}
 
-
 <h2> Frobenius data </h2>
 
-{% if not rep.frobenius_pretty %}
-  <p>Error parsing good_prime_list: {{ rep.good_prime_list }}</p>
-{% else %}
-
+{% if rep.frobenius_matrices_pretty %}
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
 <tr><th>{{ KNOWL('modlgal.frobenius_prime','Prime') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_trace','Trace') }}</th>
@@ -61,10 +60,11 @@
     <th>{{ KNOWL('modlgal.frobenius_charpoly','Char poly') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_matrix','Matrix') }}</th>
 </tr>
-{% for r in rep.frobenius_pretty %}
+{% for r in rep.frobenius_matrices_pretty %}
   <tr><td align="center">{{ r[0] }}</td><td align="center">{{ r[1] | safe }}</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
 {% endfor %}
 </table>
+{% else %}
+  <p>Missing or invalid forbenius_matrices: {{ rep.frobenius_matrices }}</p>
 {% endif %}
-
 {% endblock %}

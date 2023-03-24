@@ -141,11 +141,12 @@ modlgal_columns = SearchColumns(
         CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs Irr"),
         CheckCol("is_solvable", "modlgal.is_solvable", "Solvable"),
         SearchCol("determinant_label", "modlgal.determinant_label", "Determinant"),
+        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center"),
         ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield, default=True),
         ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective Kernel", formatfield),
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label", "is_surjective",
-             "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial", "top_slope_rational"]
+             "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial", "top_slope_rational", "generating_primes"]
     )
 
 @search_wrap(
