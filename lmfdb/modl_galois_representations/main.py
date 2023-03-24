@@ -138,7 +138,7 @@ modlgal_columns = SearchColumns(
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
                           lambda a,b,c,d,e,f: image_pretty(a,b,c,d,e,f), default=True, align="center"),
         CheckCol("is_surjective", "modlgal.is_surjective", "Surjective", default=True),
-        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_label="Abs irreducible"),
+        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred"),
         CheckCol("is_solvable", "modlgal.is_solvable", "Solvable"),
         SearchCol("determinant_label", "modlgal.determinant_label", "Determinant"),
         ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center"),
