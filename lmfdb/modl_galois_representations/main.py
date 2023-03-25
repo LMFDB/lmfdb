@@ -133,7 +133,7 @@ modlgal_columns = SearchColumns(
         LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label, default=True),
         MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$", default=True),
         MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension", default=True),
-        ProcessedCol("conductor", "modlgal.conductor", "Conductor", lambda N: web_latex_factored_integer(N), default=True, align="center"),
+        ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, default=True, align="center"),
         SearchCol("top_slope_rational", "modlgal.top_slope", "Top slope", align="center", default=lambda info: info.get("top_slope")),
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
                           image_pretty, default=True, align="center"),

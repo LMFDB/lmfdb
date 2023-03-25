@@ -2,7 +2,7 @@
 
 from flask import url_for
 
-from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ, prime_range
+from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ, prime_range, factor
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.utils import WebObj, teXify_pol, web_latex, display_knowl, web_latex_factored_integer
 from lmfdb import db
@@ -151,9 +151,9 @@ class WebModLGalRep(WebObj):
                 m = Matrix(F,n,frobs[i])
                 M = R(frobs[i])
                 if self.generating_primes and ps[i] in self.generating_primes:
-                    L.append([r"\mathbf{%s}"%(ps[i]),m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
+                    L.append([r"\mathbf{%s}"%(ps[i]),m.trace(),M.order(),web_latex(factor(m.charpoly())),web_latex(m)])
                 else:
-                    L.append([ps[i],m.trace(),M.order(),teXify_pol(m.charpoly()),web_latex(m,enclose=False)])
+                    L.append([ps[i],m.trace(),M.order(),web_latex(factor(m.charpoly())),web_latex(m)])
         except:
             print(f"Bad frobenius_matrices for {self.label}")
             print(self.frobenius_matrices)

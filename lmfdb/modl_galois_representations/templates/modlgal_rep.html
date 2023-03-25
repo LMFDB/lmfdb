@@ -72,7 +72,7 @@
     <th>{{ KNOWL('modlgal.frobenius_matrix','Matrix') }}</th>
 </tr>
 {% for r in rep.frobenius_matrices_pretty %}
-  <tr><td align="center">${{ r[0] }}$</td><td align="center">${{ r[1] | safe }}$</td><td align="center">${{ r[2] }}$</td><td>${{ r[3] }}$</td><td>${{ r[4] }}$</td></tr>
+  <tr><td align="center">${{ r[0] }}$</td><td align="center">${{ r[1] }}$</td><td align="center">${{ r[2] }}$</td><td>{{ r[3] }}</td><td>{{ r[4] }}</td></tr>
 {% endfor %}
 </table>
 {% else %}
