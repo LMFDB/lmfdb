@@ -4,7 +4,7 @@ from flask import url_for
 
 from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ, prime_range, factor
 from lmfdb.number_fields.web_number_field import formatfield
-from lmfdb.utils import WebObj, teXify_pol, web_latex, display_knowl, web_latex_factored_integer
+from lmfdb.utils import WebObj, web_latex, display_knowl, web_latex_factored_integer
 from lmfdb import db
 from lmfdb.genus2_curves.main import url_for_curve_label as url_for_g2c_label
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
