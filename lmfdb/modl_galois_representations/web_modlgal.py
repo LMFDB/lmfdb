@@ -154,8 +154,8 @@ class WebModLGalRep(WebObj):
                     L.append([r"\mathbf{%s}"%(ps[i]),m.trace(),M.order(),web_latex(factor(m.charpoly())),web_latex(m)])
                 else:
                     L.append([ps[i],m.trace(),M.order(),web_latex(factor(m.charpoly())),web_latex(m)])
-        except:
-            print(f"Bad frobenius_matrices for {self.label}")
+        except ValueError:
+            print(f"Error {e} occurred while attempting to parse frobenius_matrices for {self.label}")
             print(self.frobenius_matrices)
             return []
         return L
