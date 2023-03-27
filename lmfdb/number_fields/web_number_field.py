@@ -340,7 +340,6 @@ def nf_knowl_guts(label):
     if wnf.is_galois():
         galstring = r'this field is Galois over $\Q$'
     else:
-        galord = db.gps_transitive.lookup('%dT%d'%(wnf.degree(), wnf.galois_t()), 'order')
         res = wnf.resolvents()
         if 'gal' in res:
             galstring = formatfield(string2list(res['gal'][0]))
