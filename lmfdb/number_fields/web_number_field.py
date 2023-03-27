@@ -341,14 +341,11 @@ def nf_knowl_guts(label):
         galstring = r'this field is Galois over $\Q$'
     else:
         galord = db.gps_transitive.lookup('%dT%d'%(wnf.degree(), wnf.galois_t()), 'order')
-        if galord > 47:
-            galstring = r'degree %d extension over $\Q$, which is too large for this database'%galord
+        res = wnf.resolvents()
+        if 'gal' in res:
+            galstring = formatfield(string2list(res['gal'][0]))
         else:
-            res = wnf.resolvents()
-            if 'gal' in res:
-                galstring = formatfield(string2list(res['gal'][0]))
-            else:
-                galstring = 'data not computed'
+            galstring = 'data not computed'
     out += '<br>Galois closure: ' + galstring
     out += '</div>'
     out += '<div align="right">'
