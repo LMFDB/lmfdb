@@ -82,8 +82,8 @@ from .abvar import fq
 assert fq
 from . import modlmf
 assert modlmf
-from . import rep_galois_modl
-assert rep_galois_modl
+from . import modl_galois_representations
+assert modl_galois_representations
 from . import hecke_algebras
 assert hecke_algebras
 from . import cluster_pictures
