@@ -337,6 +337,16 @@ def nf_knowl_guts(label):
     out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
+    if wnf.is_galois():
+        galstring = r'this field is Galois over $\Q$'
+    else:
+        res = wnf.resolvents()
+        if 'gal' in res:
+            galstring = formatfield(string2list(res['gal'][0]))
+        else:
+            galord = db.gps_transitive.lookup('%dT%d'%(wnf.degree(), wnf.galois_t()), 'order')
+            galstring = r'degree %d extension of $\Q$ is not in the database'%galord
+    out += '<br>Galois closure: ' + galstring
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
