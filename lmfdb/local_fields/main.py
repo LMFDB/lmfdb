@@ -117,6 +117,9 @@ def local_algebra_display_knowl(labels):
 
 def plot_polygon(verts, polys, inds, p):
     verts = [tuple(pt) for pt in verts]
+    if not verts:
+        # Unramified, so we won't be displaying the plot
+        return
     # Extract the coefficients to be associated to x
     ymax = verts[0][1]
     xmax = verts[-1][0]
