@@ -188,20 +188,23 @@ def raw_typeset_qexp(coeffs_dict,
         if (exps[0] > 1):
             rawq += f"q_{1}^{exps[0]}"
             tsetq += f"q_{{{1}}}^{{{exps[0]}}}"
-        else:
+        elif (exps[0] == 1):
             rawq += f"q_{1}"
             tsetq += f"q_{{{1}}}"
 
         if (exps[1] > 1):
             rawq += f"q_{2}^{exps[1]}"
             tsetq += f"q_{{{2}}}^{{{exps[1]}}}"
-        else:
+        elif (exps[1] == 1):
             rawq += f"q_{2}"
             tsetq += f"q_{{{2}}}"
             
         raw = str(poly)
         if poly in [1, -1]:
             rawq = rawq[3:]
+            if (rawq == ""):
+                rawq = "1"
+                tsetq = "1"
             if poly == -1:
                 return minus + rawq, minus + tsetq
             elif (not first):
