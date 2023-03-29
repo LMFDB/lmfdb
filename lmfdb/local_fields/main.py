@@ -151,6 +151,7 @@ def plot_polygon(verts, polys, inds, p):
             color="black")
     R = ZZ["t"]["z"]
     polys = [R(poly) for poly in polys]
+
     def restag(c, a, b):
         return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
                     horizontal_alignment="left",
