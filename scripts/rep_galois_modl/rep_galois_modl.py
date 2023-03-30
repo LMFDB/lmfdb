@@ -1,11 +1,6 @@
+#!/usr/local/bin/sage -python
 # -*- coding: utf-8 -*-
 r""" Import mod l modular forms.  
-
-Note: This code can be run on all files in any order. Even if you 
-rerun this code on previously entered files, it should have no affect.  
-This code checks if the entry exists, if so returns that and updates 
-with new information. If the entry does not exist then it creates it 
-and returns that.
 
 """
 
@@ -15,92 +10,66 @@ import json
 import os
 import sys
 import gzip
-from lmfdb.base import getDBConnection
 
-C= getDBConnection()
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['mod_l_galois'].authenticate('editor', password)
-reps = C['mod_l_galois'].reps
+HOME=os.path.expanduser("~")
+sys.path.append(os.path.join(HOME, 'lmfdb'))
 
+from lmfdb import db
 
-saving = True 
+#import yaml
 
-def sd(f):
-  for k in f.keys():
-    print('%s ---> %s'%(k, f[k]))
+reps = db.modlgal_reps
 
-def makels(li):
-  li2 = [str(x) for x in li]
-  return ','.join(li2)
-
-def string2list(s):
-  s = str(s)
-  if s=='': return []
-  return [int(a) for a in s.split(',')]
-
-
-def base_label(base_field, dim, field_order, conductor):
-    return ".".join([str(base_field), str(dim), str(field_order), str(conductor)])
 
 def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
 
-# The following create_index command checks if there is an index and updates it
-
-reps.create_index('base_field')
-reps.create_index('field')
-reps.create_index('dim')
-reps.create_index('conductor')
-reps.create_index('type')
-
-
-print("finished indices")
-
-
 ## Main importing function
 
 label_dict = {}
+outrecs = []
 
 def label_lookup(base_label):
-    if base_label in label_dict:
-        n = label_dict[base_label]+1
-        label_dict[base_label]=n
-        return n
-    label_dict[base_label]=1
-    return 1
-
+    global label_dict
+    n = label_dict.get(base_label, 0)+1
+    label_dict[base_label] = n
+    return n
 
 def do_import(ll):
-    base_field,dim,field,conductor,primes_conductor,weight,abs_irr,rep_type,image_type,image_label,image_at,image_order,degree_proj_field,projective_type,projective_label,bad_prime_list,good_prime_list,poly_ker,poly_proj_ker,related_objects = ll
-    mykeys=['base_field','dim','field','conductor','primes_conductor',
-'weight','abs_irr','rep_type','image_type','image_label','image_at',
-'image_order','degree_proj_field','projective_type','projective_label','bad_prime_list','good_prime_list','poly_ker','poly_proj_ker','related_objects']
+    global outrecs
+    mykeys = ['algebraic_group', 'bad_prime_list', 'base_ring_characteristic',
+        'base_ring_is_field', 'base_ring_order', 'conductor',
+        'conductor_primes', 'conductor_is_squarefree',
+        'conductor_num_primes',
+        'cyclotomic_exponent', 'determinant_label', 'dimension', 'good_prime_list',
+        'image_index', 'image_label', 'image_order', 'image_type', 'is_absolutely_irreducible',
+        'is_irreducible', 'is_solvable', 'is_surjective', 'kernel_polynomial',
+        'label', 'projective_is_surjective', 'projective_kernel_polynomial', 'projective_type',
+        'top_slope_rational', 'top_slope_real', 'generating_primes', 'frobenius_matrices']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
-    data['field_char']=data['field'][0]
-    data['field_deg']=data['field'][1]
-    data['field_order']=pow(data['field_char'], data['field_deg'])
-    blabel = base_label(data['base_field'],data['field_order'],data['dim'], data['conductor'])
-    data['base_label'] = blabel
-    data['index'] = label_lookup(blabel)
-    label= last_label(blabel, data['index'])
-    data['label'] = label
+    data['num'] = label_lookup(data['label'])
+    data['label'] = data['label']+"."+ str(data['num'])
+    data['related_objects'] = []
+    # dual_pair_of_algebras left as None
+    # convert booleans
+    for ky in ['base_ring_is_field', 'conductor_is_squarefree','is_absolutely_irreducible','is_irreducible', 'is_solvable', 'is_surjective', 'projective_is_surjective']:
+        data[ky] = (data[ky]>0)
 # we need still to organize this better with respect to tie breaks 
 
-    rep = reps.find_one({'label': label})
+#    rep = reps.lucky({'label': data['label']})
+    rep = None
 
     if rep is None:
-        print("new mod l Galois representation")
-        rep = data
+        #print("new mod l Galois representation")
+        outrecs.append(data)
     else:
         print("mod l Galois representation already in the database")
-        rep.update(data)
-    if saving:
-        reps.update({'label': label} , {"$set": rep}, upsert=True)
+        # maybe put this back in later
+        #rep.upsert({'label': label}, data)
+    #if saving:
+    #    reps.update({'label': label} , {"$set": rep}, upsert=True)
 
 
 
@@ -115,3 +84,6 @@ for path in sys.argv[1:]:
         if re.match(r'\S',line):
             l = json.loads(line)
             do_import(l)
+
+reps.insert_many(outrecs)
+
