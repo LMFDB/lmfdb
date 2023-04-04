@@ -125,16 +125,16 @@ class GaloisRepresentation( Lfunction):
         elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        elif (isinstance(thingy, list) and
-              len(thingy) == 2 and
-              isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform) and
-              isinstance(thingy[1],sage.rings.integer.Integer) ):
+        elif (isinstance(thingy, list)
+              and len(thingy) == 2
+              and isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform)
+              and isinstance(thingy[1],sage.rings.integer.Integer) ):
             self.init_elliptic_modular_form(thingy[0],thingy[1])
 
-        elif (isinstance(thingy, list) and
-              len(thingy) == 2 and
-              isinstance(thingy[0], GaloisRepresentation) and
-              isinstance(thingy[1], GaloisRepresentation) ):
+        elif (isinstance(thingy, list)
+              and len(thingy) == 2
+              and isinstance(thingy[0], GaloisRepresentation)
+              and isinstance(thingy[1], GaloisRepresentation) ):
             self.init_tensor_product(thingy[0], thingy[1])
 
         else:
@@ -344,7 +344,6 @@ class GaloisRepresentation( Lfunction):
         self.local_euler_factor = eu
         self.ld.gp().quit()
 
-
     def init_tensor_product(self, V, W):
         """
         We are given two Galois representations and we
@@ -377,8 +376,8 @@ class GaloisRepresentation( Lfunction):
             Vans = V.algebraic_coefficients(50)
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
-            if ((Vans[2] in ZZ and Wans[2] in ZZ and
-                    all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
+            if ((Vans[2] in ZZ and Wans[2] in ZZ
+                    and all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
                     all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
                 raise NotImplementedError("It seems you are asking to tensor a "
                                           "Galois representation with its dual "
@@ -475,8 +474,7 @@ class GaloisRepresentation( Lfunction):
         self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
         self.ld.gp().quit()
 
-
-## These are used when creating the classes with the above
+    # These are used when creating the classes with the above
 
     def set_dokchitser_Lfunction(self):
         """
@@ -485,12 +483,12 @@ class GaloisRepresentation( Lfunction):
         if hasattr(self, "sign"):
             # print type(self.sign)
             # type complex would yield an error here.
-            self.ld = Dokchitser(conductor = self.conductor,
-                                gammaV = self.gammaV,
-                                weight = self.motivic_weight,
-                                eps = self.sign,
-                                poles = [],
-                                residues = [])
+            self.ld = Dokchitser(conductor=self.conductor,
+                                gammaV=self.gammaV,
+                                weight=self.motivic_weight,
+                                eps=self.sign,
+                                poles=[],
+                                residues=[])
         else:
             # find the sign from the functional equation
             # this should be implemented later:
@@ -499,7 +497,6 @@ class GaloisRepresentation( Lfunction):
             # and it will return a linear polynomial in x
             # such that the root must be the sign
             raise NotImplementedError
-
 
     def set_number_of_coefficients(self):
         """
@@ -548,7 +545,6 @@ class GaloisRepresentation( Lfunction):
         else:
             raise ValueError("You asked for a type that we don't have")
 
-
     def renormalise_coefficients(self):
         """
         This turns a list of algebraically normalised coefficients
@@ -559,8 +555,7 @@ class GaloisRepresentation( Lfunction):
         for n in range(len(self.dirichlet_coefficients)):
             self.dirichlet_coefficients[n] /= sqrt(float(n+1)**self.motivic_weight)
 
-
-## The tensor product
+    # The tensor product
 
     def __mul__(self, other):
         """
@@ -569,15 +564,13 @@ class GaloisRepresentation( Lfunction):
         """
         return GaloisRepresentation([self,other])
 
-## various direct accessible functions
-
+    # various direct accessible functions
 
     def root_number(self):
         """
         Root number
         """
         return self.sign
-
 
     def dimension(self):
         """
@@ -591,8 +584,7 @@ class GaloisRepresentation( Lfunction):
         """
         return self.conductor
 
-
-## Now to the L-function itself
+    # Now to the L-function itself
 
     def lfunction(self):
         """
@@ -646,6 +638,7 @@ def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
     if d2==1:
         return tensor_get_an_deg1(L1,L2,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
     return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
+
 
 def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
     """
@@ -800,9 +793,10 @@ def list_to_euler_factor(L,d):
         K = L[0].parent()
     R = PowerSeriesRing(K, "T")
     # T = R.gens()[0]
-    f =  1/ R([1]+L)
+    f = 1 / R([1]+L)
     f = f.add_bigoh(d+1)
     return f
+
 
 def tensor_local_factors(f1, f2, d):
     """

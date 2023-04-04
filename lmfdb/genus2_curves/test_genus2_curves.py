@@ -349,8 +349,47 @@ class Genus2Test(LmfdbTest):
     def test_underlying_data(self):
         data = self.tc.get("/Genus2Curve/Q/data/576.a.576.1").get_data(as_text=True)
         assert ('g2c_curves' in data and 'bad_lfactors' in data and
-                'g2c_endomorphisms' in data and 'factorsQQ_base' in data and
-                'g2c_ratpts' in data and 'mw_gens_v' in data and
-                'g2c_galrep' in data and 'modell_image' in data and
-                'g2c_tamagawa' in data and 'tamagawa_number' in data and
-                'g2c_plots' in data and "data:image/png;base64" in data)
+                'g2c_endomorphisms' in data and 'factorsQQ_base' in data
+                and 'g2c_ratpts' in data and 'mw_gens_v' in data
+                and 'g2c_galrep' in data and 'modell_image' in data
+                and 'g2c_tamagawa' in data and 'tamagawa_number' in data
+                and 'g2c_plots' in data and "data:image/png;base64" in data)
+
+    def test_jump(self):
+        from sage.all import magma
+        try:
+            magma('1+1')
+            # Check that giving defining polynomials for f,h works
+            L = self.tc.get('/Genus2Curve/Q/?jump=x%5E5%2Bx%2B1%2Cx', follow_redirects=True)
+            assert "y^2 + xy = x^5 + x + 1" in L.get_data(as_text=True)
+
+            # Check that giving a Weierstrass equation works, even without explicit multiplication '*'
+            L = self.tc.get("/Genus2Curve/Q/?jump=b%5E2%3Da%5E5-2a%5E2%2B1", follow_redirects=True)
+            assert "$y^2 = x^5 - 2x^2 + 1$" in L.get_data(as_text=True)
+
+            # Check that variables are only single characters
+            L = self.tc.get("/Genus2Curve/Q/?jump=(banana)%5E2%3Dx%5E5%2B1", follow_redirects=True)
+            assert "is not in two variables" in L.get_data(as_text=True)
+
+            # Check that curves not of genus 2 fail
+            L = self.tc.get("/Genus2Curve/Q/?jump=y^2+%3D+x^10+-+1", follow_redirects=True)
+            assert "invalid genus 2 curve" in L.get_data(as_text=True)
+
+            # Check that there are only two variables present
+            L = self.tc.get("/Genus2Curve/Q/?jump=y%5E2+%3D+x+%2B+a", follow_redirects=True)
+            assert "is not in two variables" in L.get_data(as_text=True)
+        except (RuntimeError, TypeError) as the_error:
+            if str(the_error).startswith("unable to start magma"):
+                pass
+            else:
+                raise
+
+    def test_galrep(self):
+        # A generic example
+        L = self.tc.get("/Genus2Curve/Q/976/a/999424/1")
+        assert "2.6.1" in L.get_data(as_text=True)
+
+        # A nongeneric example
+        L = self.tc.get("/Genus2Curve/Q/961/a/961/1")
+        assert "3.72.2" in L.get_data(as_text=True)
+        assert "Galois representation data has not been computed for this curve" in L.get_data(as_text=True)

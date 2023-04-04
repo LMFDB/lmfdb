@@ -9,7 +9,7 @@ class Box():
         self.title = title
         self.content = None
         self.links = []
-        self.target = "/"
+        self.target = url_for('index')
         self.img = None
 
     def add_link(self, title, href):

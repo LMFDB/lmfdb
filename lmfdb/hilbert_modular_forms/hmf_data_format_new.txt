@@ -42,7 +42,7 @@ Short form: 4 space-separated fields per line, with no embedded spaces:
            @ level-label is norm.index (e.g. 31.1)
            @ level is a triple as in LEVELS
            @ label is a string of 1 or more lower case letters
-                      representing positive integsr in base 26
+                      representing positive integer in base 26
            @ aplist is a list of integers, one for each prime in the
                       PRIMES list (in that order, but not necessarily
                       as many primes).

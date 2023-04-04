@@ -150,7 +150,6 @@ class mf_gamma1(MfChecker):
         # TIME about 1s
         return self.check_crosstable_dotprod('mf_gamma1_subspaces', 'cusp_dim', 'label', ['sub_mult', 'sub_dim'])
 
-
     ### mf_gamma1_portraits ###
     @overall
     def check_portraits_count(self):

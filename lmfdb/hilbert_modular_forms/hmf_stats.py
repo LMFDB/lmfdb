@@ -63,7 +63,6 @@ class HMFstats(StatsDisplay):
     def counts(self):
         counts = {}
 
-
         counts['nforms']  = self.nforms
         counts['nforms_c']  = comma(self.nforms)
 

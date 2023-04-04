@@ -4,7 +4,7 @@
 
 import re
 
-from flask import abort, render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import ZZ, latex, gap
 
 from lmfdb import db
@@ -13,7 +13,7 @@ from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma, latex_comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
-    StatsDisplay, totaler, proportioners, prop_int_pretty,
+    StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
@@ -94,6 +94,19 @@ def index():
     info['degree_list'] = list(range(1, 48))
     return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, learnmore=learnmore_list())
 
+class GG_download(Downloader):
+    table = db.gps_transitive
+    title = "Transitive groups"
+    columns = "label"
+    column_wrappers = { "label" : lambda x : [int(a) for a in x.split("T")] }
+    data_format = ["[n,t]"]
+    data_description = "for the transitive group identifier nTt, where n is the degree and t is the T-number."
+    function_body = {
+        "magma": ['return [TransitiveGroup(r[1],r[2]) : r in data];',],
+        "sage": ['return [TransitiveGroup(r[0],r[1]) for r in data]',],
+        "oscar": ['return [transitive_group(r...) for r in data]',],
+    }
+
 # For the search order-parsing
 def make_order_key(order):
     order1 = int(ZZ(order).log(10))
@@ -117,7 +130,6 @@ gg_columns = SearchColumns([
                       default=True)
 ],
     db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
-gg_columns.dummy_download = True
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
@@ -141,6 +153,7 @@ def gg_postprocess(res, info, query):
              title='Galois group search results',
              err_title='Galois group search input error',
              columns=gg_columns,
+             shortcuts={"download": GG_download()},
              url_for_label=url_for_label,
              postprocess=gg_postprocess,
              learnmore=learnmore_list,
@@ -232,6 +245,7 @@ def render_group_webpage(args):
         data['wgg'] = wgg
         n = data['n']
         t = data['t']
+        wgg.make_code_snippets()
         data['yesno'] = yesno
         order = data['order']
         data['orderfac'] = latex(ZZ(order).factor())
@@ -309,19 +323,39 @@ def render_group_webpage(args):
         data['nilpotency'] = '$%s$' % data['nilpotency']
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] += ' (not nilpotent)'
-        downloads = [('Underlying data', url_for(".gg_data", label=label))]
-
+        downloads = []
+        for lang in [["Magma","magma"], ["SageMath","sage"], ["Oscar", "oscar"]]:
+            downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+        downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         bread = get_bread([(label, ' ')])
         return render_template(
             "gg-show-group.html",
             title=title,
             bread=bread,
             info=data,
+            code=wgg.code,
             properties=prop2,
             friends=friends,
             downloads=downloads,
             KNOWL_ID="gg.%s"%label,
             learnmore=learnmore_list())
+
+@galois_groups_page.route('/<label>/download/<download_type>')
+def gg_code(label,download_type):
+    if download_type == "magma":
+        s = "// Magma code for creating transitive group " + label + "\n\n"
+        s += "G := TransitiveGroup(%s,%s);\n" % tuple(label.split("T"))
+    elif download_type == "oscar":
+        s = "# Oscar code for creating transitive group " + label + "\n\n"
+        s += "G = transitive_group(%s,%s)\n" % tuple(label.split("T"))
+    elif download_type == "sage":
+        s = "# Sage code for creating transitive group " + label + "\n\n"
+        s += "G = TransitiveGroup(%s,%s)\n" % tuple(label.split("T"))
+    else:
+        return abort(404, f"Invalid download type {download_type}")
+    response = make_response(s)
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @galois_groups_page.route("/data/<label>")
 def gg_data(label):
@@ -388,6 +422,7 @@ def reliability():
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+
 class GalSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
@@ -399,6 +434,7 @@ class GalSearchArray(SearchArray):
     jump_egspan = "e.g. 8T14"
     jump_knowl = "gg.search_input"
     jump_prompt = "Label, name, or identifier"
+
     def __init__(self):
         parity = ParityBox(
             name="parity",
@@ -441,7 +477,7 @@ class GalSearchArray(SearchArray):
             knowl="group",
             example_span_colspan=8,
             example="[8,3]",
-            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+            example_span="list of %s, e.g. [8,3] or 8.3, group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
                 display_knowl("nf.galois_group.name", "list of group labels"),
                 display_knowl("gg.label", "transitive group labels")))

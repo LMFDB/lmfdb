@@ -121,6 +121,10 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/download_qexp/66.c3/100')
         assert '0,1,1,1,1,-4,1,-2,1,1,-4,1,1,4,-2,-4,1,-2,1,0,-4,-2,1,-6,1,11,4,1,-2,10,-4,-8,1,1,-2,8,1,-2,0,4,-4,2,-2,4,1,-4,-6,-2,1,-3,11,-2,4,4,1,-4,-2,0,10,0,-4,-8,-8,-2,1,-16,1,-12,-2,-6,8,2,1,-6,-2,11,0,-2,4,10,-4,1,2,4,-2,8,4,10,1,10,-4,-8,-6,-8,-2,0,1,-2,-3,1,11' in L.get_data(as_text=True)
 
+    def test_dl_code(self):
+        for lang in ["magma", "sage", "gp", "oscar"]:
+            self.check_args(f'/EllipticCurve/Q/5077/a/1/download/{lang}', '0, 0, 1, -7, 6')
+
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
         assert '[1, -1, 1, -3, 3]' in L.get_data(as_text=True)

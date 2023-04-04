@@ -95,8 +95,7 @@ class WebHyperGeometricFamily():
                 else:
                     ab[1 - wh][d] += 1
         gamma[1] = [-1 * z for z in gamma[1]]
-        gamma = gamma[1] + gamma[0]
-        gamma.sort()
+        gamma = sorted(gamma[1] + gamma[0])
         return gamma
 
     @lazy_attribute

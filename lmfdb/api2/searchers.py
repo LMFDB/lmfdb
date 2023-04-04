@@ -24,7 +24,7 @@ class searcher:
 
     def auto_search(self, request):
         info = self.get_info()
-        sd = utils.create_search_dict(self.auto, request = request)
+        sd = utils.create_search_dict(self.auto, request=request)
         cnames = utils.get_cname_list(info)
         for el in request.args:
             try:
@@ -35,7 +35,7 @@ class searcher:
                 utils.interpret(sd['query'], cnames[el], request.args[el], itt)
             else:
                 utils.interpret(sd['query'], el, request.args[el], itt)
-        proj = utils.default_projection(request,cnames=cnames)
+        proj = utils.default_projection(request, cnames=cnames)
         return self.get_search(sd, proj)
 
     def get_search(self, query, projection):
@@ -43,7 +43,7 @@ class searcher:
             return self._full_search(query, projection)
         return utils.simple_search(query, projection)
 
-    def __init__(self, human_name, desc, auto_search = None, full_info=None, full_inventory=None, full_search=None, inv=None ):
+    def __init__(self, human_name, desc, auto_search=None, full_info=None, full_inventory=None, full_search=None, inv=None):
         self.human_name = human_name
         self.desc = desc
         self.auto = auto_search
@@ -53,6 +53,7 @@ class searcher:
         self._full_info = full_info
         self._full_inventory = full_inventory
         self._full_search = full_search
+
 
 def register_search_function(name, human_name, description, auto_search=None, full_info=None, full_inventory=None, full_search=None, inv=None):
     """
@@ -73,9 +74,10 @@ def register_search_function(name, human_name, description, auto_search=None, fu
 
     """
     global searchers
-    searchers[name] = searcher(human_name, description, auto_search = auto_search, full_info = full_info, full_inventory = full_inventory, full_search = full_search, inv=inv)
+    searchers[name] = searcher(human_name, description, auto_search=auto_search, full_info=full_info, full_inventory=full_inventory, full_search=full_search, inv=inv)
 
-def register_singleton(url, table, key = None, simple_search = None, full_search = None):
+
+def register_singleton(url, table, key=None, simple_search=None, full_search=None):
     """
     Register an API singleton. This is a search that should find a single item
     from a label or similar key

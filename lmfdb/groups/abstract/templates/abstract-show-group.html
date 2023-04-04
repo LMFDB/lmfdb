@@ -82,17 +82,13 @@
 <h2> Group information</h2>
 <p>
   <table>
-    <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
-    {% if not gp.live() %}
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
-    {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
-    {% endif %}
-    {% endif %}
   </table>
 </p>
 
@@ -143,6 +139,24 @@
           <td>{{ c[1] }}</td>
         {% endfor %}
         <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
+          {% if gp.division_stats %}
+            {% for c in gp.division_stats %}
+              <td>{{ c[1] }}</td>
+            {% endfor %}
+        <td class="border-left">{{ gp.number_divisions }}</td>
+          {% else %}
+            <td  colspan="{{gp.order_stats|length}}">data not computed</td>
+            <td class="border-left"></td>
+          {% endif %}
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+          <td colspan="{{gp.order_stats|length}}">data not computed</td>
+          <td class="border-left"></td>
       </tr>
       {% endif %}
     </tbody>
@@ -239,18 +253,40 @@
       {% endif %}
     </tr>
   {% endif %}
-  {% if not gp.live() or gp.pgroup > 1 %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
-    <td>${{gp.rank}}$</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %}
+      <td>not computed</td>
+    {% endif %}
   </tr>
-  {% endif %}
-  {% if not gp.live() and gp.order > 1 and gp.eulerian_function is defined %}
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+  {% if gp.eulerian_function is defined %}
     <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  
   </tr>
-  {% endif %}
+</table>
+
+{% else %}
+
+<h2>Constructions</h2>
+
+<table class=nowrap>
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+    {% if gp.eulerian_function %}
+      <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  </tr>
+  </tr>
 </table>
 
 {% endif %} {# not live and abelian #}
@@ -489,7 +525,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
       {% if not loop.first %}
         ${{symb}}$</td><td>
       {% endif %}
-      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.label}}">${{sub.subgroup_tex}}$</span></td>
+      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.short_label}}">${{sub.subgroup_tex}}$</span></td>
     {% endfor %}
   </tr>
   {% endfor %}
