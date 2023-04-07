@@ -604,7 +604,6 @@ def render_field_webpage(args):
         # note that the first degree 4 number field missed the zero of the zeta function
         if abs(D**n) < 50000000:
             info['friends'].append(('L-function', url_for('l_functions.l_function_nf_page', label=label)))
-            #info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', url_for("galois_groups.by_label", label="%dT%d" % (n, t))))
     discrootfieldcoeffs = nf.discrootfieldcoeffs()[0]
     rf_label = db.nf_fields.lucky({'coeffs': discrootfieldcoeffs}, 'label')
