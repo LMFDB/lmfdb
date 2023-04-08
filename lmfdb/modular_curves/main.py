@@ -1163,11 +1163,6 @@ def labels_page():
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
-    if LABEL_RE.fullmatch(label):
-        m = FINE_LABEL_RE.fullmatch(label)
-        if m:
-            return datapage([label, m.group(1)], ["gps_gl2zhat_fine", "gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
-        else:
-            return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
-    else:
+    if not LABEL_RE.fullmatch(label):
         return abort(404)
+    return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
