@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.utils.utilities import key_for_numerically_sort
+from flask import url_for
 #######################################################################
 # Functions for interacting with web structure
 #######################################################################
@@ -146,6 +147,7 @@ def names_and_urls(instances, exclude={}):
     names = set()
     urls = set()
     exclude = set(exclude)
+    root = url_for('index')
 
     # remove duplicate urls
     for instance in instances:
@@ -159,7 +161,7 @@ def names_and_urls(instances, exclude={}):
         if not name:
             name = ''
         if obj_exists:
-            url = "/"+url
+            url = root + url
         else:
             # do not display unknown objects
             continue

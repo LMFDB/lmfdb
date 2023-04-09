@@ -304,6 +304,26 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
+    def download_code(self, label, lang):
+        Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
+        if not lang in Fullname:
+            abort(404,"Invalid code language specified: " + lang)
+        if lang=='gp':
+            lang = 'pari'
+        data = db.mf_newforms.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        form = WebNewform(data)
+        code = form.code
+        comment = code.pop('comment').get(lang).strip()
+        script = "%s %s code for working with modular form %s\n\n" % (comment,Fullname[lang],label)
+        for k in code:
+            if 'comment' not in code[k] or lang not in code[k]:
+                continue
+            script += "\n%s %s: \n" % (comment,code[k]['comment'])
+            script += code[k][lang] + ('\n' if '\n' not in code[k][lang] else '')
+        return script
+
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
