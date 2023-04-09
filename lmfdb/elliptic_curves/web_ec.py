@@ -6,13 +6,13 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
@@ -71,22 +71,40 @@ def cremona_label_to_lmfdb_label(clab):
 logger = make_logger("ec")
 
 def gl2_subgroup_data(label):
+    Slevel = 0
     try:
         data = db.gps_gl2zhat.lookup(label)
         if data is None:
-            data = db.gps_gl2zhat.lucky({'Slabel':label})
-            if data is None:
+            r = re.match(r"([1-9][0-9]*)([A-Z][a-z]*)",label)
+            if r is None:
                 raise ValueError
+            Slevel = int(r[1])
+            if r[2] == "G":
+                data = db.gps_gl2zhat.lucky({'level':1})
+                print(data)
+                data['level'] = Slevel
+                data['generators'] = [[m.matrix()[0,0],m.matrix()[0,1],m.matrix()[1,0],m.matrix()[0,1]] for m in GL(2,Integers(Slevel)).generators()]
+                data['isogeny_orbits'] = [[Slevel,Slevel+1,1]]
+                data['orbits'] = [[Slevel,Slevel*Slevel-1,1]]
+                data['Slabel'] = label
+            else:
+                data = db.gps_gl2zhat.lucky({'Slabel':label,'level':Slevel})
+                if data is None:
+                    raise ValueError
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
     def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
-    info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
+    if label != data['label']:
+        info += row_wrap('Subgroup <b>%s</b> (%s)' % (label,data['label']), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
+    else:
+        info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
+    info += row_wrap('Order', GL(2,Integers(data['level'])).cardinality() / data['index'])
     info += row_wrap('Genus', data['genus'])
 
     def ratcusps(c, r):
@@ -101,9 +119,7 @@ def gl2_subgroup_data(label):
         return f" (of which {r} are rational)"
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
-    if label != data['label']:
-        info += row_wrap('LMFDB label', data['label'])
+    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == data['label'] else "no")
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
@@ -227,6 +243,7 @@ class WebEC():
         logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         self.make_curve()
+        assert 'ainvs' in self.data
 
     @staticmethod
     def by_label(label):
@@ -330,6 +347,10 @@ class WebEC():
             my_adelic_data = adelic_data[0]
             data['adelic_data'] =  my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+            M = ZZ(self.adelic_level)
+            data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
+            P = M.prime_divisors()
+            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))^2*prod([p^2-1 for p in P]) // self.adelic_index
         else:
             data['adelic_data'] = {}
 
@@ -490,14 +511,15 @@ class WebEC():
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Pari/GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Oscar', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
                           ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
         try:
-            self.plot = encode_plot(self.E.plot())
+            self.plot = encode_plot(self.E.plot(), transparent=True)
         except AttributeError:
-            self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
+            self.plot = encode_plot(EllipticCurve(data['ainvs']).plot(), transparent=True)
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label),
@@ -596,6 +618,10 @@ class WebEC():
             mwbsd['lder_name'] = "L'(E,1)"
         else:
             mwbsd['lder_name'] = "L(E,1)"
+
+        mwbsd['equal'] = r'=' if mwbsd['analytic_rank'] < 2 else r'\overset{?}{=}'
+        mwbsd['rhs'] = '?' if mwbsd['sha'] == '?' else mwbsd['sha'] * mwbsd['real_period'] * mwbsd['reg'] * mwbsd['tamagawa_product'] / mwbsd['torsion']**2
+        mwbsd['formula'] = r'%0.9f \approx %s %s \frac{\# &#1064;(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \approx %0.9f' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
 
     def display_modell_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
@@ -713,21 +739,20 @@ class WebEC():
 
     def code(self):
         if self._code is None:
-
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-
-            # Fill in placeholders for this specific curve:
-            for lang in ['sage', 'pari', 'magma']:
-                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
-
-            # Fill in adelic image placeholders for this specific curve:
-            for lang in ['sage', 'magma']:
-                if self.data['adelic_data']:
-                    adelic_image_str = self.data['adelic_data']['adelic_image']
-                    adelic_gens = self.data['adelic_data']['adelic_gens']
-                    adelic_level_str = adelic_image_str.split(".")[0]
-                    self._code['adelicimage'][lang] = self._code['adelicimage'][lang] % (adelic_gens,adelic_level_str )
-
+            code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            # fill in curve data
+            if self.data['adelic_data']:
+                adelic_gens = self.data['adelic_data']['adelic_gens']
+                adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
+            else:
+                adelic_gens = adelic_level = ''
+            data = { 'ainvs': self.data['ainvs'],
+                     'level': adelic_level,
+                     'adelic_gens': adelic_gens }
+            for prop in code:
+                for lang in code[prop]:
+                    code[prop][lang] = code[prop][lang].format(**data)
+            self._code = code
         return self._code

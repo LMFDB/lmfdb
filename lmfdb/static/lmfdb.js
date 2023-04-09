@@ -333,20 +333,21 @@ $(function() {
       function() { $(this).text("done"); clear(true, true); });
 });
 
-function decrease_start_by_count_and_submit_form(form_id) {
-  var startelem = $('input[name=start]');
-  var count = parseInt($('input[name=count]').val());
-  var newstart = parseInt(startelem.val())-count;
+function update_start_by_count_and_submit_form(sign) {
+  var startelem = $('form.re-search input[name=start]');
+  var count = parseInt($('form.re-search input[name=count]').val());
+  var newstart = parseInt(startelem.val())+sign*count;
   if(newstart<0)
     newstart = 0;
   startelem.val(newstart);
-  $('form[id='+form_id+']').submit()
+  $('form.re-search').submit()
 };
-function increase_start_by_count_and_submit_form(form_id) {
-  var startelem = $('input[name=start]');
-  var count = parseInt($('input[name=count]').val());
-  startelem.val(parseInt(startelem.val())+count);
-  $('form[id='+form_id+']').submit()
+
+function decrease_start_by_count_and_submit_form() {
+  update_start_by_count_and_submit_form(-1);
+};
+function increase_start_by_count_and_submit_form() {
+  update_start_by_count_and_submit_form(1);
 };
 
 function get_count_of_results(download_limit) {
@@ -516,40 +517,6 @@ function resetStart()
   // resets start if not changing search_type
   $('input[name=start]').val('')
   // this will be cleaned by the cleanSubmit
-}
-
-function cleanSubmit(id)
-{
-  var myForm = document.getElementById(id);
-  var allInputs = myForm.getElementsByTagName('input');
-  var allSelects = myForm.getElementsByTagName('select');
-  var item, i, n = 0;
-  for(i = 0; item = allInputs[i]; i++) {
-    if (item.getAttribute('name') ) {
-        // Special case count so that we strip the default value
-        if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
-        item.setAttribute('name', '');
-      } else {
-        n++;
-      }
-    }
-  }
-  for(i = 0; item = allSelects[i]; i++) {
-    if (item.getAttribute('name') ) {
-      if (!item.value) {
-        item.setAttribute('name', '');
-      } else {
-        n++;
-      }
-    }
-  }
-  if (!n) {
-    var all = document.createElement('input');
-    all.type='hidden';
-    all.name='all';
-    all.value='1';
-    myForm.appendChild(all);
-  }
 }
 
 
@@ -722,3 +689,29 @@ function hide_schema(tbl) {
   $("#"+tbl+"-schema-shower").show();
   return false;
 }
+
+
+/* add handler for search forms to clean their own
+   form data and remove keys for empty (default) values */
+$(document).ready(function () {
+  document.querySelectorAll("form.search, form.re-search").forEach(
+    form => form.addEventListener('formdata',
+    function(event) {
+      let formData = event.formData;
+      for (let [name, value] of Array.from(formData.entries())) {
+        if (value === '' ||
+			(name === 'count' && value == 50))
+			formData.delete(name);
+      }
+    })
+  )
+});
+
+/*
+  if (!n) {
+    var all = document.createElement('input');
+    all.type='hidden';
+    all.name='all';
+    all.value='1';
+    myForm.appendChild(all);
+  }*/

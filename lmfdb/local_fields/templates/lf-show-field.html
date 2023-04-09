@@ -2,19 +2,15 @@
 
 {% block content %}
 
-<p><h2> {{ KNOWL('lf.defining_polynomial', title='Defining polynomial') }}</h2>
+<h2> {{ KNOWL('lf.defining_polynomial', title='Defining polynomial') }}</h2>
 
-<p>
-  <p>
-    <table>
-      <tr><td> {{ info.polynomial|safe }} </td></tr>
-    </table>
-</p>
+<table>
+  <tr><td> {{ info.polynomial|safe }} </td></tr>
+</table>
 
 <h2> {{ KNOWL('lf.invariants', title='Invariants') }}</h2>
-  <p>
-    <table>
-      <tr><td>Base field:</td> <td> {{info.base|safe}}
+<table>
+  <tr><td>Base field:</td> <td> {{info.base|safe}}
       <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$:</td> <td>${{info.n}}$</td></tr>
       <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification exponent') }} $e$:</td> <td>${{info.e}}$</td></tr>
       <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$:</td> <td>${{info.f}}$</td></tr>
@@ -24,48 +20,63 @@
       <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q_{ {{info.p}} }) }$:</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
       <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
-    </table>
-  </p>
+</table>
 
-        <p><h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>
-        <p>
-        {% if info.subfields=='' %}
-        <table>
-          <tr><td>
-            The extension is primitive: there are no intermediate fields 
-            between this field and $\Q_{ {{info.p}} }$.
-          </td></tr>
-        </table>
-        {% else %}
-        <table>
-          <tr><td>
-            {{ info.subfields | safe }}
-          </td></tr>
-        </table>
-        <p>
-        Fields in the database are given up to isomorphism.  Isomorphic 
-        intermediate fields are shown with their multiplicities.
-        {% endif %}
+<h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>
+{% if info.subfields=='' %}
+<table>
+  <tr><td>
+      The extension is primitive: there are no intermediate fields 
+      between this field and $\Q_{ {{info.p}} }$.
+  </td></tr>
+</table>
+{% else %}
+<table>
+  <tr><td>
+      {{ info.subfields | safe }}
+  </td></tr>
+</table>
+<p>
+  Fields in the database are given up to isomorphism.  Isomorphic 
+  intermediate fields are shown with their multiplicities.
+</p>
+{% endif %}
+
+<h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
+<table>
+  <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
+  <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
+</table>
+
+<h2>{{ KNOWL('lf.ramification_polygon_display', title='Ramification polygon') }}</h2>
+
+{% if info.e > 1 %}
+
+<img src="{{info.ram_polygon_plot}}" width="800" height="{{100 if (info.e % info.p) else 400}}">
+
+<table>
+  <tr><td>{{ KNOWL('lf.residual_polynomials', title='Residual polynomials') }}:</td><td>{{info.residual_polynomials}}</td></tr>
+  <tr><td>{{ KNOWL('lf.associated_inertia', title='Associated inertia') }}:</td><td>{{info.associated_inertia}}</td></tr>
+  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
+</table>
 
 
-  <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
-    <table>
-      <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
-      <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
-      <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
-    </table>
-  </p>
-  <p><h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
-    <table>
-      <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>{{info.gal|safe}}</td></tr>
-      <tr><td>{{ KNOWL('lf.inertia_group', title='Inertia group')}}:</td><td>{{info.inertia|safe}}</td></tr>
-      <tr><td>{{ KNOWL('lf.wild_inertia_group', title='Wild inertia group')}}:</td><td>{{info.wild_inertia|safe}}</td></tr>
-      <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>${{info.u}}$</td></tr>
-      <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>${{info.t}}$</td></tr>
-      <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>{{info.slopes}}</td></tr>
-      <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>${{info.gms}}$</td></tr>
-      <tr><td>{{KNOWL('lf.galois_splitting_model', title='Galois splitting model')}}:</td><td>{{info.gsm|safe}}</td></tr>
-    </table>
-  </p>
+{% else %}
+
+<p> The ramification polygon is trivial for unramified extensions. </p>
+
+{% endif %}
+
+<h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
+<table>
+  <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>{{info.gal|safe}}</td></tr>
+  <tr><td>{{ KNOWL('lf.inertia_group', title='Inertia group')}}:</td><td>{{info.inertia|safe}}</td></tr>
+  <tr><td>{{ KNOWL('lf.wild_inertia_group', title='Wild inertia group')}}:</td><td>{{info.wild_inertia|safe}}</td></tr>
+  <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>${{info.u}}$</td></tr>
+  <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>${{info.t}}$</td></tr>
+  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>{{info.slopes}}</td></tr>
+  <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>${{info.gms}}$</td></tr>
+  <tr><td>{{KNOWL('lf.galois_splitting_model', title='Galois splitting model')}}:</td><td>{{info.gsm|safe}}</td></tr>
+</table>
 
 {% endblock %}
