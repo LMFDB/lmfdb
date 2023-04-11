@@ -4,16 +4,17 @@
 
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, QQ, RR, latex, cached_function, Integers)
+    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers)
+from sage.plot.all import line, points, text, Graphics
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
-    parse_inertia,
+    web_latex, coeff_to_poly, pol_to_html, teXify_pol, display_multiset, display_knowl,
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners,
+    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -112,6 +113,86 @@ def lf_display_knowl(label, name=None):
 
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
+
+
+def plot_polygon(verts, polys, inds, p):
+    verts = [tuple(pt) for pt in verts]
+    if not verts:
+        # Unramified, so we won't be displaying the plot
+        return
+    # Extract the coefficients to be associated to x
+    ymax = verts[0][1]
+    xmax = verts[-1][0]
+    # How far we need to shift text depends on the scale
+    txshift = xmax / 60
+    tyshift = xmax / 48
+    tick = xmax / 160
+    nextq = p
+    L = Graphics()
+    if ymax > 0:
+        asp_ratio = (xmax + 2*txshift) / (2 * (ymax + 2*tyshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
+    else:
+        # Add in silly white dot
+        L += points([(0,1)], color="white")
+        asp_ratio = (xmax + 2*txshift) / (8 + 16*tyshift)
+    L += line([(0,0), (0, ymax)], color="grey")
+    L += line([(0,0), (xmax, 0)], color="grey")
+    for i in range(1, ymax + 1):
+        L += line([(0, i), (tick, i)], color="grey")
+    for i in range(0, xmax + 1):
+        L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
+    for P in verts:
+        L += text(
+            f"${P[0]}$", (P[0], -tyshift/asp_ratio),
+            color="black")
+        L += text(
+            f"${P[1]}$", (-txshift, P[1]),
+            horizontal_alignment="right",
+            color="black")
+    R = ZZ["t"]["z"]
+    polys = [R(poly) for poly in polys]
+
+    def restag(c, a, b):
+        return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
+                    horizontal_alignment="left",
+                    color="black")
+    L += restag(polys[0][0], 1, ymax)
+    for i in range(len(verts) - 1):
+        P = verts[i]
+        Q = verts[i+1]
+        slope = ZZ(P[1] - Q[1]) / ZZ(Q[0] - P[0]) # actually the negative of the slope
+        d = slope.denominator()
+        poly = polys[i]
+        if slope != 0:
+            while nextq <= Q[0]:
+                i = (nextq - P[0]) / d
+                if i in ZZ and poly[i]:
+                    L += restag(poly[i], nextq, P[1] - (nextq - P[0]) * slope)
+                nextq *= p
+            L += text(
+                f"${slope}$", (P[0] - txshift, (P[1] + Q[1]) / 2),
+                horizontal_alignment="right",
+                color="blue")
+            for x in range(P[0], Q[0] + 1):
+                L += line(
+                    [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
+                    color="grey",
+                )
+            for y in range(Q[1], P[1]):
+                L += line(
+                    [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
+                    color="grey",
+                )
+        else:
+            # For tame inertia, the coefficients can occur at locations other than powers of p
+            for i, c in enumerate(poly):
+                if i and c:
+                    L += restag(c, P[0] + i, P[1])
+    L += line(verts, thickness=2)
+    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+    L.axes(False)
+    L.set_aspect_ratio(asp_ratio)
+    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
 
 
 @app.context_processor
@@ -219,12 +300,14 @@ lf_columns = SearchColumns([
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
     ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
-                    show_slopes2, mathmode=True),
+                    show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
-                      default=True, mathmode=True)],
-    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible"])
+                      default=True, mathmode=True),
+    MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
+    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
@@ -253,6 +336,10 @@ def local_field_search(info,query):
     parse_ints(info,query,'e',name='Ramification index e')
     parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
+    parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
+    parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
+    parse_bracketed_posints(info,query,"associated_inertia")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     info['search_array'] = LFSearchArray()
@@ -363,6 +450,9 @@ def render_field_webpage(args):
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
+                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p),
+                    'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
+                    'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
         friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
         if unramfriend != '':
@@ -536,17 +626,53 @@ class LFSearchArray(SearchArray):
             label='Top slope',
             knowl='lf.top_slope',
             example='4/3',
-            example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
+            example_span='4/3, or a range like 3..5')
+        slopes_quantifier = SubsetBox(
+            name="slopes_quantifier",
+        )
+        slopes = TextBoxWithSelect(
+            name='slopes',
+            label='Wild slopes',
+            short_label='Wild',
+            knowl='lf.wild_slopes',
+            select_box=slopes_quantifier,
+            example='[2,2,3]',
+            example_span='[2,2,3] or [3,7/2,4]')
+        visible_quantifier = SubsetBox(
+            name="visible_quantifier",
+        )
+        visible = TextBoxWithSelect(
+            name='visible',
+            label='Visible slopes',
+            short_label='Visible',
+            knowl='lf.visible_slopes',
+            select_box=visible_quantifier,
+            example='[2,2,3]',
+            example_span='[2,2,3] or [2,3,17/4]')
+        insep_quantifier = SubsetBox(
+            name="insep_quantifier",
+        )
+        ind_insep = TextBoxWithSelect(
+            name='ind_of_insep',
+            label='Ind. of insep.',
+            short_label='Indices',
+            knowl='lf.indices_of_inseparability',
+            select_box=insep_quantifier,
+            example='[1,1,0]',
+            example_span='[1,1,0] or [18,10,4,0]')
+        associated_inertia = TextBox(
+            name='associated_inertia',
+            label='Assoc. Inertia',
+            knowl='lf.associated_inertia',
+            example='[1,2,1]',
+            example_span='[1,2,1] or [1,1,1,1]')
         gal = TextBoxNoEg(
             name='gal',
             label='Galois group',
             short_label='Galois group',
-            knowl='nf.galois_group',
+            knowl='nf.galois_search',
             example='5T3',
-            example_span='list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id's"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group labels')))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2')
         u = TextBox(
             name='u',
             label='Galois unramified degree',
@@ -566,28 +692,22 @@ class LFSearchArray(SearchArray):
             label='Inertia subgroup',
             knowl='lf.inertia_group_search',
             example='[3,1]',
-            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group label'))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2',
             )
         wild = TextBox(
             name='wild_gap',
             label='Wild inertia subgroup',
             knowl='lf.wild_inertia_group_search',
             example='[4,1]',
-            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group label'))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2',
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u],
-            [t], [gal], [inertia], [wild], [results]]
-        self.refine_array = [[degree, qp, gal, u],
-            [e, c, inertia, t],
-            [f, topslope, wild]]
+        self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
+                             [slopes, visible], [ind_insep, associated_inertia], [gal, inertia], [wild], [results]]
+        self.refine_array = [[degree, qp, gal, u, associated_inertia],
+            [e, c, inertia, t, ind_insep],
+            [f, topslope, slopes, visible, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
