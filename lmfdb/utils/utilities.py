@@ -933,7 +933,7 @@ def image_callback(G):
     return response
 
 
-def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes=False, transparent=False, axes_pad=None):
+def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, figsize=None, **kwds):
     """
     Convert a plot object to base64-encoded png format.
 
@@ -949,14 +949,14 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes=False
     from urllib.parse import quote
 
     virtual_file = IO()
-    fig = P.matplotlib(axes_pad=axes_pad)
+    fig = P.matplotlib(axes_pad=axes_pad, figsize=figsize)
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
         for a in fig.axes:
             a.axis('off')
     if pad is not None:
         fig.tight_layout(pad=pad)
-    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
+    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, **kwds)
     virtual_file.seek(0)
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
