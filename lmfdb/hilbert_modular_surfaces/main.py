@@ -335,28 +335,28 @@ class HMSurfaceSearchArray(SearchArray):
         )
         h20 = TextBox(
             name="h20",
-            knowl="hmsurface.hodge",
+            knowl="hmsurface.hodge_numbers",
             label=r"Hodge number $h^{2,0}$",
             example="0",
             example_span="0, 3-6"
         )
         h11 = TextBox(
             name="h11",
-            knowl="hmsurface.hodge",
+            knowl="hmsurface.hodge_numbers",
             label=r"Hodge number $h^{1,1}$",
             example="13",
             example_span="13, 20-30"
         )        
         chi = TextBox(
             name="chi",
-            knowl="hmsurface.hodge",
+            knowl="hmsurface.chi",
             label="Holomorphic Euler characteristic",
             example="1",
             example_span="1, 3-4",
         )
         K2 = TextBox(
             name="K2",
-            knowl="hmsurface.hodge",
+            knowl="hmsurface.k2",
             label=r"Self-intersection $K^2$",
             example="-3",
             example_span="-3, 0-2"
