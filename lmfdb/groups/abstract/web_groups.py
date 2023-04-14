@@ -18,6 +18,7 @@ from sage.all import (
     prod,
     lcm,
     is_prime,
+    euler_phi,
     cartesian_product_iterator,
 )
 from sage.libs.gap.libgap import libgap
@@ -317,6 +318,12 @@ class WebAbstractGroup(WebObj):
         return None
 
     @lazy_attribute
+    def transitive_degree(self):
+        if isinstance(self.G, LiveAbelianGroup):
+            return self.order
+        return "not computed"
+
+    @lazy_attribute
     def pgroup(self):
         if self.order == 1:
             return 1
@@ -480,6 +487,9 @@ class WebAbstractGroup(WebObj):
     def rank(self):
         if self.pgroup > 1:
             return ZZ(self.G.RankPGroup())
+        if isinstance(self.G, LiveAbelianGroup):
+            return len(self.snf)
+        return None
 
     @lazy_attribute
     def primary_abelian_invariants(self):
@@ -741,14 +751,13 @@ class WebAbstractGroup(WebObj):
                 ])
             except AssertionError:  # timed out
                 pass
-        if not self.live():
-            props.extend([
-                ("Rank", f"${self.rank}$"),
-                ("Perm deg.", f"${self.transitive_degree}$"),
+        if "not" in str(self.transitive_degree):
+            props.extend([("Perm deg.", "not computed")])
+        else:
+            props.extend([("Perm deg.", f"${self.transitive_degree}$")])
                 # ("Faith. dim.", str(self.faithful_reps[0][0])),
-            ])
-        elif self.pgroup > 1:
-            props.append(("Rank", f"${self.rank}$"))
+        props.append(
+            ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
 
     @lazy_attribute
@@ -1101,6 +1110,23 @@ class WebAbstractGroup(WebObj):
             edges = [list(edge) for edge in edges]
         return [nodes, edges]
 
+    # Figuring out the subgroup count for an autjugacy class might not be stored
+    # directly.  We do them all at once.  If we only computed up to aut
+    # return {} since we don't need this
+    # output is a dictionary of aut_labels and counts
+    @lazy_attribute
+    def aut_class_counts(self):
+        counts = {}
+        if self.outer_equivalence:
+            return counts
+        subs = self.subgroups
+        for s in subs.values():
+            if s.aut_label in counts:
+                counts[s.aut_label] += s.count
+            else:
+                counts[s.aut_label] = s.count
+        return counts
+
     @lazy_attribute
     def tex_images(self):
         all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
@@ -1191,11 +1217,17 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def cc_stats(self):
         if self.abelian:
-            return self.order_stats
+            return sorted(self.order_stats)
         return sorted(Counter([cc.order for cc in self.conjugacy_classes]).items())
 
     @lazy_attribute
     def division_stats(self):
+        if isinstance(self.G, LiveAbelianGroup):
+            divcnts = [(z[0], z[1]/euler_phi(z[0])) for z in self.cc_stats]
+            self.number_divisions = sum([z[1] for z in divcnts])
+            return divcnts
+        if self.live():
+            return None
         return sorted(
             Counter([div.order for div in self.conjugacy_class_divisions]).items()
         )
@@ -1402,7 +1434,36 @@ class WebAbstractGroup(WebObj):
     def out_order_factor(self):
         return latex(factor(self.outer_order))
 
+    def live_composition_factors(self):
+        from .main import url_for_label
+        basiclist = []
+        if isinstance(self.G, LiveAbelianGroup) or self.solvable:
+            theorder = ZZ(self.G.Order()).factor()
+            # We could work harder here to get small group labels for
+            # these cyclic groups, but why bother?  This way, the lookup
+            # is only done for one of them, and only if the user clicks
+            # on the link
+            basiclist = [(url_for(".by_abelian_label", label=z[0]),
+                "C_{%d}"%z[0],
+                "" if z[1] == 1 else "<span style='font-size: small'> x %d</span>"% z[1]
+                )
+                for z in theorder]
+
+        # The only non-solvable option with order a multiple of 128
+        # below 2000 is ...
+        elif ZZ(self.G.Order()) == 1920:
+            basiclist = [
+                (url_for(".by_abelian_label", label=2), "C_2", "<span style='font-size: small'> x 5</span>"),
+                (url_for_label("60.5"), "A_5", "")]
+        if not basiclist:
+            return "data not computed"
+        return ", ".join('<a href="%s">$%s$</a>%s' % z for z in basiclist)
+
     def show_composition_factors(self):
+        if self.live():
+            return self.live_composition_factors()
+        if self.order == 1:
+            return "none"
         CF = Counter(self.composition_factors)
         display = {
             rec["label"]: rec["tex_name"]
@@ -1413,7 +1474,8 @@ class WebAbstractGroup(WebObj):
         from .main import url_for_label
 
         def exp(n):
-            return "" if n == 1 else f" ({n})"
+            #return "" if n == 1 else f" ({n})"
+            return "" if n == 1 else f"<span style='font-size: small'> x {n}</span>"
 
         return ", ".join(
             f'<a href="{url_for_label(label)}">${display[label]}$</a>{exp(e)}'
@@ -1477,6 +1539,8 @@ class WebAbstractGroup(WebObj):
             return "generating triples"
         elif self.rank == 4:
             return "generating quadruples"
+        elif not self.rank:
+            return "generating tuples"
         else:
             return f"generating {self.rank}-tuples"
 
@@ -1630,6 +1694,9 @@ class LiveAbelianGroup():
 
     def Exponent(self):
         return self.snf[-1] if self.snf else 1
+
+    def CharacterDegrees(self):
+        return [(1,self.Order())]
 
     def Sylows(self):
         if not self.snf:

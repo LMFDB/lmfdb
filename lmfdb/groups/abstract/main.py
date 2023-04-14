@@ -10,11 +10,11 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
+#    send_file,
     url_for,
     abort,
 )
-from io import BytesIO
+#from six import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
@@ -41,6 +41,7 @@ from lmfdb.utils import (
     search_wrap,
     web_latex,
     pluralize,
+    Downloader,
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
@@ -95,6 +96,10 @@ def learnmore_list():
         ("Reliability of the data", url_for(".reliability_page")),
         ("Abstract  group labeling", url_for(".labels_page")),
     ]
+
+
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
 
 
 def learnmore_list_remove(matchstring):
@@ -794,16 +799,16 @@ def group_jump(info):
                 raise RuntimeError("The group %s has not yet been added to the database." % jump)
     raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
 
-def group_download(info):
-    t = "Stub"
-    bread = get_bread([("Jump", "")])
-    return render_template(
-        "single.html",
-        kid="rcs.groups.abstract.source",
-        title=t,
-        bread=bread,
-        learnmore=learnmore_list_remove("Source"),
-    )
+#def group_download(info):
+#    t = "Stub"
+#    bread = get_bread([("Jump", "")])
+#    return render_template(
+#        "single.html",
+#        kid="rcs.groups.abstract.source",
+#        title=t,
+#        bread=bread,
+#        learnmore=learnmore_list_remove("Source"),
+#    )
 
 def show_factor(n):
     return f"${latex(ZZ(n).factor())}$"
@@ -813,6 +818,19 @@ def get_url(label):
 
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
+
+class Group_download(Downloader):
+    table = db.gps_groups
+    title = "Abstract groups"
+    columns = "label"
+    column_wrappers = { "label" : lambda x : [int(a) for a in x.split(".")] }
+    data_format = ["[N,i]"]
+    data_description = "for the small group identifier N.i of the ith group of order N."
+    function_body = {
+        "magma": ['return [SmallGroup(r[1],r[2]) : r in data];',],
+        "sage": ['return [gap.SmallGroup(r) for r in data]',],
+        "oscar": ['return [small_group(r...) for r in data]',],
+    }
 
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url, default=True),
@@ -835,14 +853,13 @@ group_columns = SearchColumns([
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
                       default=True, align="center")])
-group_columns.dummy_download=True
 
 @search_wrap(
     table=db.gps_groups,
     title="Abstract group search results",
     err_title="Abstract groups search input error",
     columns=group_columns,
-    shortcuts={"jump": group_jump, "download": group_download},
+    shortcuts={"jump": group_jump, "download": Group_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
     #  credit=lambda:credit_string,
@@ -939,7 +956,6 @@ subgroup_columns = SearchColumns([
         CheckCol("minimal_normal", "group.maximal_quotient", "max", default=True, short_title="Quo. maximal")],
              default=True)],
     tr_class=["bottom-align", ""])
-subgroup_columns.dummy_download = True
 
 @search_wrap(
     table=db.gps_subgroups,
@@ -984,12 +1000,15 @@ def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
 def diagram_js(gp, layers, display_opts, aut=False):
+    # Counts are not right for aut diagram if we know up to conj.
+    if aut and not gp.outer_equivalence:
+        autcounts = gp.aut_class_counts
     ll = [
         [
             grp.subgroup,
             grp.short_label,
             grp.subgroup_tex,
-            grp.count,
+            grp.count if (gp.outer_equivalence or not aut) else autcounts[grp.aut_label],
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
             grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
@@ -1067,11 +1086,9 @@ def render_abstract_group(label, data=None):
         title = "Abstract group " + "$" + gp.tex_name + "$"
 
         downloads = [
-            (
-                "Code for Magma",
-                url_for(".download_group", label=label, download_type="magma"),
-            ),
-            ("Code for Gap", url_for(".download_group", label=label, download_type="gap")),
+            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
             ("Underlying data", url_for(".gp_data", label=label)),
         ]
 
@@ -1129,7 +1146,9 @@ def render_abstract_group(label, data=None):
 
         if db.gps_st.count({"component_group": label}) > 0:
             st_url = (
-                "/SatoTateGroup/?hst=List&component_group=%5B"
+                "/SatoTateGroup/?hst=List&"
+                + 'include_irrational=yes&'
+                + 'component_group=%5B'
                 + str(gap_ints[0])
                 + "%2C"
                 + str(gap_ints[1])
@@ -1138,6 +1157,7 @@ def render_abstract_group(label, data=None):
             friends += [("As the component group of a Sato-Tate group", st_url)]
 
     bread = get_bread([(label, "")])
+    learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
     return render_template(
         "abstract-show-group.html",
@@ -1147,7 +1167,7 @@ def render_abstract_group(label, data=None):
         gp=gp,
         properties=gp.properties(),
         friends=friends,
-        learnmore=learnmore_list(),
+        learnmore=learnmore_list_add(*learnmore_gp_picture),
         KNOWL_ID=f"group.abstract.{label}",
         downloads=downloads,
     )
@@ -1288,6 +1308,19 @@ def reliability_page():
     )
 
 
+@abstract_page.route("/GroupPictures")
+def picture_page():
+    t = "Pictures for abstract groups"
+    bread = get_bread("Group Pictures")
+    return render_template(
+        "single.html",
+        kid="portrait.groups.abstract",
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list_remove("Picture")
+    )
+
+
 @abstract_page.route("/Source")
 def how_computed_page():
     t = "Source of the abstract group data"
@@ -1338,65 +1371,83 @@ def download_group(**args):
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
         filename += ".g"
-    if dltype == "magma":
+    elif dltype == "magma":
         com = ""
         com1 = "/*"
         com2 = "*/"
         filename += ".m"
+    elif dltype == "oscar":
+        com = ""
+        com1 = "#="
+        com2 = "=#"
     s = com1 + "\n"
     s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
-    s += (
-        com
-        + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
-    )
-    s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
-    s += (
-        com
-        + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
-    )
-    s += com + " \n"
-    s += "\n" + com2
-    s += "\n"
-
-    if gp_data["solvable"]:
-        s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-        s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
-
-        if dltype == "magma":
-            s += "G:=SmallGroupDecoding(encd,gpsize); \n"
-        elif dltype == "gap":
-            s += "G:=PcGroupCode(encd, gpsize); \n"
-
-        gen_index = gp_data["gens_used"]
-        num_gens = len(gen_index)
-        for i in range(num_gens):
-            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
-
-    # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+    if dltype == "oscar":
+        if gp_data["solvable"]:
+            s += com + " The group will be created as a polycylic group (not necessarily matching the presentation in the LMFDB).\n"
+            s += com + ' You can turn it into a permuation group using "PermGroup(G)".\n'
+        else:
+            s += com + " The group will be created as a permuation group (not necessarily using the generators used in the LMFDB).\n"
+        s += com2 + "\n"
+        s += "\n"
+        s += "G = small_group(%s,%s)" % tuple(label.split("."))
     else:
-        d = -gp_data["elt_rep_type"]
-        s += "d:=" + str(d) + "; \n"
-        s += "Sd:=SymmetricGroup(d); \n"
+        s += (
+            com
+            + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
+        )
+        s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
+        s += (
+            com
+            + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
+        )
+        s += com + "\n"
+        s += com2 + "\n"
+        s += "\n"
 
-        # Turn Lehmer code into permutations
-        list_gens = []
-        for perm in gp_data["perm_gens"]:
-            perm_decode = Permutations(d).unrank(perm)
-            list_gens.append(perm_decode)
+        if gp_data["solvable"]:
+            s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
+            s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
 
-        if dltype == "magma":
-            s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
-        elif dltype == "gap":
-            #          MAKE LIST2
-            s += "List_Gens:=" + str(list_gens) + "; \n \n"
-            s += "LGens:=[]; \n"
-            s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
-            s += "G:=Subgroup(Sd,LGens);"
+            if dltype == "magma":
+                s += "G:=SmallGroupDecoding(encd,gpsize); \n"
+            elif dltype == "gap":
+                s += "G:=PcGroupCode(encd, gpsize); \n"
 
-    strIO = BytesIO()
-    strIO.write(s.encode("utf-8"))
-    strIO.seek(0)
-    return send_file(strIO, download_name=filename, as_attachment=True)
+            gen_index = gp_data["gens_used"]
+            num_gens = len(gen_index)
+            for i in range(num_gens):
+                s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
+
+        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
+        else:
+            d = -gp_data["elt_rep_type"]
+            s += "d:=" + str(d) + "; \n"
+            s += "Sd:=SymmetricGroup(d); \n"
+
+            # Turn Lehmer code into permutations
+            list_gens = []
+            for perm in gp_data["perm_gens"]:
+                perm_decode = Permutations(d).unrank(perm)
+                list_gens.append(perm_decode)
+
+            if dltype == "magma":
+                s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
+            elif dltype == "gap":
+                #          MAKE LIST2
+                s += "List_Gens:=" + str(list_gens) + "; \n \n"
+                s += "LGens:=[]; \n"
+                s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
+                s += "G:=Subgroup(Sd,LGens);"
+
+    response = make_response(s)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+    #strIO = BytesIO()
+    #strIO.write(s.encode("utf-8"))
+    #strIO.seek(0)
+    #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
 def display_profile_line(data, ambient, aut):
@@ -1462,6 +1513,7 @@ class GroupsSearchArray(SearchArray):
         aut_order = TextBox(
             name="aut_order",
             label="Automorphism group order",
+            short_label="Automorphisms",
             knowl="group.automorphism",
             example="3",
             example_span="4, or a range like 3..5",
@@ -1493,6 +1545,7 @@ class GroupsSearchArray(SearchArray):
         outer_order = TextBox(
             name="outer_order",
             label="Outer aut. group order",
+            short_label="Outer automorphisms",
             knowl="group.outer_aut",
             example="3",
             example_span="4, or a range like 3..5",
@@ -1721,7 +1774,6 @@ class GroupsSearchArray(SearchArray):
 
     sort_knowl = "group.sort_order"
 
-
 class SubgroupSearchArray(SearchArray):
     null_column_explanations = { # No need to display warnings for these
         "quotient": False,
@@ -1734,7 +1786,6 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient', 'quotient_order', 'subgroup']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient', 'subgroup']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient', 'subgroup'])]
-
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")

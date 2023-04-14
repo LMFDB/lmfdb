@@ -8,7 +8,7 @@
 # version 2 of the License, or (at your option) any later version.
 """
 start this via $ sage -python website.py --port <portnumber>
-add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
+add --debug if you are developing (full stacktrace in browser, ...)
 """
 
 # Needs to be done first so that other modules and gunicorn can use logging
@@ -82,8 +82,8 @@ from .abvar import fq
 assert fq
 from . import modlmf
 assert modlmf
-from . import rep_galois_modl
-assert rep_galois_modl
+from . import modl_galois_representations
+assert modl_galois_representations
 from . import hecke_algebras
 assert hecke_algebras
 from . import cluster_pictures

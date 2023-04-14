@@ -304,6 +304,26 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
+    def download_code(self, label, lang):
+        Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
+        if not lang in Fullname:
+            abort(404,"Invalid code language specified: " + lang)
+        if lang=='gp':
+            lang = 'pari'
+        data = db.mf_newforms.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        form = WebNewform(data)
+        code = form.code
+        comment = code.pop('comment').get(lang).strip()
+        script = "%s %s code for working with modular form %s\n\n" % (comment,Fullname[lang],label)
+        for k in code:
+            if 'comment' not in code[k] or lang not in code[k]:
+                continue
+            script += "\n%s %s: \n" % (comment,code[k]['comment'])
+            script += code[k][lang] + ('\n' if '\n' not in code[k][lang] else '')
+        return script
+
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
@@ -526,7 +546,7 @@ class CMF_download(Downloader):
             'end function;',
             ]
 
-    def _magma_MakeNewformModSym(self, newform, hecke_nf ):
+    def _magma_MakeNewformModSym(self, newform, hecke_nf):
         """
         Given a WebNewform r from mf_newforms containing columns::
 
@@ -544,15 +564,16 @@ class CMF_download(Downloader):
         cutters = "[" + ",".join("<%d,R!%s" % (c[0], c[1]) + ">" for c in newform.hecke_cutters) + "]"
         explain = [ '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
                     '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
-                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.'
+                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.',
+                    '// The default sign is -1.  You can change this with the optional parameter "sign".'
         ]
         self.explain += explain
         return explain + [
-                "function MakeNewformModSym_%s()"  % (newform.label.replace(".","_"), ),
+                "function MakeNewformModSym_%s( : sign := -1)" % (newform.label.replace(".","_"), ),
                 "    R<x> := PolynomialRing(Rationals());",
                 "    chi := MakeCharacter_%d_%s();" % (N, o),
                 "    // SetVerbose(\"ModularSymbols\", true);",
-                "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,-1)));" % (k, ),
+                "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,sign)));" % (k, ),
                 "    Vf := Kernel(%s,Snew);" % (cutters,),
                 "    return Vf;",
                 "end function;",

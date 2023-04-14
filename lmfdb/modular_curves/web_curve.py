@@ -178,17 +178,27 @@ def formatted_model(m):
                 F2.constant_coefficient(),
             ]
         ]
-    #elif m["model_type"] == 7:
-    #    assert m["number_variables"] == 4
-    #    if len(m["equation"]) == 2
-    #    R3 = PolynomialRing(QQ, 3, "x,y,z")
-    #    R4 = PolynomialRing(QQ, "w")
-    #    w = R4.gen()
-    #    C = R3(m["equation"][0])
-    #    F = R4(m["equation"][1])
-    #    if F.monomial_coefficient(w**2) != -1:
-    #        F *= -1
-    #    assert F.monomial_coefficient(w**2) == -1
+    elif m["model_type"] == 7:
+        assert m["number_variables"] == 4
+        assert len(m["equation"]) == 2
+        R3 = PolynomialRing(QQ, 3, "x,y,z")
+        R4 = PolynomialRing(R3, "w")
+        w = R4.gen()
+        if "w^2" not in m["equation"][1]:
+            m["equation"][1], m["equation"][0] = m["equation"]
+        C = R3(m["equation"][0])
+        F = R4(m["equation"][1])
+        if F.monomial_coefficient(w**2) != -1:
+            F *= -1
+        assert F.monomial_coefficient(w**2) == -1
+        lines = [
+            latex(elt)
+            for elt in [
+                -sum(F.monomial_coefficient(elt) * elt for elt in [w, w**2]),
+                F.constant_coefficient(),
+            ]
+        ]
+        lines += ["0", latex(C)]
     else:
         # lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
         lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]]

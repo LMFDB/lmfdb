@@ -16,7 +16,7 @@
 {% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
-<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>{# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}{% endfor %}</div>
+<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{% if lines | length == 1 %}{{prompt}}:&nbsp;{% endif %}{{line}}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>{# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}{% endfor %}</div>
 {% endif %}
 {% endfor %}
 {% endif %}
@@ -24,24 +24,28 @@
 
 {% block body -%}
 <div id="header">
-    <div id="logo"><a href="/">
+    <div id="logo"><a href="{{ url_for('index') }}">
+{% if ALPHA %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo-alpha.png') }}" />
+{% else %}
 {% if BETA %}
     <img src="{{ url_for('static', filename='images/lmfdb-logo-beta.png') }}" />
 {% else %}
     <img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" />
+{% endif %}
 {% endif %}
 </a></div>
     <div class="right">
       <div class="upper">
         <div class="bread">
           {% if bread %}
-            <a href="/">&#8962;</a>
+            <a href="{{ url_for('index') }}">&#8962;</a>
 {# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
             {% for b in bread -%}
               &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
             {% endfor %}
            {% else %}
-            <a href="/">&#8962;</a>
+            <a href="{{ url_for('index') }}">&#8962;</a>
            {% endif %}
         </div>
         <div class="topright">
@@ -205,7 +209,7 @@
         {%- endfor %}
       </div>
     {%- endwith %}
-    <div align="right" style="float: right; padding-left:10px;" id="rawtseticonspot"></div>
+    <div align="right" style="float: right; padding-left:10px;" id="rawtseticonspot" title="raw/typeset toggle"></div>
     {% if code %}
         <script>
         var cur_lang = null;
@@ -225,9 +229,9 @@
         <div align="right" style="float: right; margin-top:2px;">
             Show commands:
             {% set slash = joiner("/ ") %}
-            {% for lang in code['show'] %}
+            {% for lang in code['show']|sort %}
             {# override show names for standard languages to ensure consistency #}
-            {% set show = 'Pari/GP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else code['show']['lang'] %}
+            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else code['show']['lang'] %}
             {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
             {% endfor %}
         </div>

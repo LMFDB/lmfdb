@@ -69,6 +69,11 @@ def learnmore_list():
             ('Elliptic curve labels', url_for(".labels_page")),
             ('Congruent number curves', url_for(".render_congruent_number_data"))]
 
+
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -383,7 +388,7 @@ def url_for_label(label):
 
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
-modm_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)(-(\d+).(\d+))?')
+modm_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.([a-z]+|\?)(\.(\d+)-(\d+).(\d+))?')
 
 class EC_download(Downloader):
     table = db.ec_curvedata
@@ -392,13 +397,10 @@ class EC_download(Downloader):
     data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
     data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
     function_body = {
-        "magma": [
-            "return [EllipticCurve([a:a in ai]):ai in data];", # convert ai from list to sequence
-        ],
-        "sage": [
-            "return [EllipticCurve(ai) for ai in data]",
-        ],
+        "magma": ["return [EllipticCurve([a:a in ai]):ai in data];",],
+        "sage": ["return [EllipticCurve(ai) for ai in data]",],
         "gp": ["[ellinit(ai)|ai<-data];"],
+        "oscar": ["return [EllipticCurve(ai) for ai in data]",],
     }
 
 def make_modcurve_link(label):
@@ -681,7 +683,7 @@ def render_isogeny_class(iso_class):
     if class_data == "Class not found":
         return elliptic_curve_jump_error(iso_class, {}, missing_class=True)
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
-
+    learnmore_isog_picture = ('Picture description', url_for(".isog_picture_page"))
     return render_template("ec-isoclass.html",
                            properties=class_data.properties,
                            info=class_data,
@@ -691,7 +693,7 @@ def render_isogeny_class(iso_class):
                            friends=class_data.friends,
                            KNOWL_ID="ec.q.%s"%iso_class,
                            downloads=class_data.downloads,
-                           learnmore=learnmore_list())
+                           learnmore=learnmore_list_add(*learnmore_isog_picture) if class_data.class_size > 1 else learnmore_list())
 
 @ec_page.route("/modular_form_display/<label>")
 @ec_page.route("/modular_form_display/<label>/<number>")
@@ -728,18 +730,19 @@ def render_curve_webpage_by_label(label):
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()
-    code['show'] = {'magma':'','pari':'','sage':''} # use default show names
-    T = render_template("ec-curve.html",
-                        properties=data.properties,
-                        data=data,
-                        # set default show names but actually code snippets are filled in only when needed
-                        code=code,
-                        bread=data.bread, title=data.title,
-                        friends=data.friends,
-                        downloads=data.downloads,
-                        KNOWL_ID="ec.q.%s"%lmfdb_label,
-                        BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                        learnmore=learnmore_list())
+    code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
+    learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
+    T =  render_template("ec-curve.html",
+                         properties=data.properties,
+                         data=data,
+                         # set default show names but actually code snippets are filled in only when needed
+                         code=code,
+                         bread=data.bread, title=data.title,
+                         friends=data.friends,
+                         downloads=data.downloads,
+                         KNOWL_ID="ec.q.%s"%lmfdb_label,
+                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
+                         learnmore=learnmore_list_add(*learnmore_curve_picture))
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
@@ -848,6 +851,24 @@ def reliability_page():
     return render_template("single.html", kid='rcs.rigor.ec.q',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
+@ec_page.route("/CurvePictures")
+def curve_picture_page():
+    t = r'Pictures for elliptic curves over $\Q$'
+    bread = get_bread('Curve Pictures')
+    return render_template(
+        "single.html", kid='portrait.ec.q',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
+
+@ec_page.route("/IsogenyPictures")
+def isog_picture_page():
+    t = r'Pictures of isogeny graphs of elliptic curves over $\Q$'
+    bread = get_bread('Isogeny Pictures')
+    return render_template(
+        "single.html", kid='ec.isogeny_graph',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
+
 @ec_page.route("/Labels")
 def labels_page():
     t = r'Labels for elliptic curves over $\Q$'
@@ -889,30 +910,41 @@ def render_single_congruent_number(n):
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
-
-sorted_code_names = ['curve', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'qexp', 'moddeg', 'L1', 'localdata', 'galrep', 'padicreg']
+sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
 code_names = {'curve': 'Define the curve',
+                 'simple_curve': 'Simplified equation',
+                 'mwgroup': 'Mordell-Weil group',
+                 'gens': 'Mordell-Weil generators',
                  'tors': 'Torsion subgroup',
                  'intpts': 'Integral points',
                  'cond': 'Conductor',
                  'disc': 'Discriminant',
                  'jinv': 'j-invariant',
-                 'rank': 'Rank',
+                 'cm': 'Potential complex multiplication',
+                 'faltings': 'Faltings height',
+                 'stable_faltings': 'Stable Faltings height',
+                 'rank': 'Mordell-Weil rank',
+                 'analytic_rank': 'Analytic rank',
                  'reg': 'Regulator',
                  'real_period': 'Real Period',
                  'cp': 'Tamagawa numbers',
                  'ntors': 'Torsion order',
                  'sha': 'Order of Sha',
+                 'L1': 'Special L-value',
+                 'bsd_formula': 'BSD formula',
                  'qexp': 'q-expansion of modular form',
                  'moddeg': 'Modular degree',
-                 'L1': 'Special L-value',
+                 'manin': 'Manin constant',
                  'localdata': 'Local data',
-                 'galrep': 'mod p Galois image',
-                 'padicreg': 'p-adic regulator'}
+                 'galrep': 'mod p Galois image'}
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+Fullname = {
+    'magma': 'Magma',
+    'sage': 'SageMath',
+    'gp': 'Pari/GP',
+    'oscar': 'Oscar'
+}
 
 def ec_code(**args):
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
@@ -923,13 +955,19 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
     Ecode = E.code()
     lang = args['download_type']
-    code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
+    if not lang in Fullname:
+        abort(404,"Invalid code language specified: " + lang)
+    name = Fullname[lang]
     if lang=='gp':
         lang = 'pari'
-    for k in sorted_code_names:
-        if lang in Ecode[k]:
-            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+    comment = Ecode.pop('comment').get(lang).strip()
+    code = f"{comment} {name} code for working with elliptic curve {label}\n\n"
+    for k in Ecode: # OrderedDict
+        if 'comment' not in Ecode[k] or lang not in Ecode[k]:
+            continue
+        code += f"\n{comment} {Ecode[k]['comment']}: \n"
+        code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+
     return code
 
 
