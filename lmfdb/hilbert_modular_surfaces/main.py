@@ -150,7 +150,7 @@ hmsurface_columns = SearchColumns([
     url_for_label=url_for_hmsurface_label,
 )
 def hmsurface_search(info, query):
-    parse_ints(info, query, "field_discr")
+    parse_ints(info, query, "field_discr")    
     if "group_type" in info:
         if info["group_type"] == "gamma0-gl":
             query["group_type"] = "gl";
@@ -180,18 +180,29 @@ def hmsurface_search(info, query):
     parse_ints(info, query, "h11")
     parse_ints(info, query, "chi")
     parse_ints(info, query, "K2")
-    if info.get('kposs'):
+    if info.get('kodaira_dims'):
         try:
-            ZZ(info["kposs"])
+            ZZ(info["kodaira_dims"])
         except:
             err = "You must specify a single Kodaira dimension"
             flash_error(err)
             raise ValueError(err)            
         if info['kodaira_quantifier'] == 'exactly':
-            query["kposs"] = [info["kposs"]]
+            query["kodaira_dims"] = [info["kodaira_dims"]]
         elif info['kodaira_quantifier'] == 'possibly':
-            query["kposs"] = {'$contains': info["kposs"]}
-    parse_ints(info, query, "nb_cusps")                   
+            query["kodaira_dims"] = {'$contains': info["kodaira_dims"]}
+    parse_ints(info, query, "nb_cusps")
+    parse_ints(info, query, "nb_ell")
+    parse_ints(info, query, "nb_ell2")
+    parse_ints(info, query, "nb_ell3")
+    parse_ints(info, query, "nb_ell4")
+    parse_ints(info, query, "nb_ell5")
+    parse_ints(info, query, "nb_ell6")
+    parse_ints(info, query, "len_cusp_res")
+    parse_ints(info, query, "len_ell_res")
+    parse_ints(info, query, "len_res")
+    parse_ints(info, query, "euler_nb");
+    
 
 class HMSurfaceSearchArray(SearchArray):
     noun = "surface"
@@ -247,10 +258,80 @@ class HMSurfaceSearchArray(SearchArray):
         level_norm = TextBoxWithSelect(
             name="level_norm",
             knowl="hmsurface.level",
-            label="Level norm",
+            label="Norm of level ideal",
             example="1",
             example_span="1, 10-20",
             select_box=level_norm_quantifier
+        )
+        nb_cusps = TextBox(
+            name="nb_cusps",
+            knowl="hmsurface.cusps",
+            label="Cusps",
+            example="1",
+            example_span="1, 1-10"
+        )
+        nb_ell = TextBox(
+            name = "nb_ell",
+            knowl = "hmsurface.elliptic_point",
+            label = "Elliptic points",
+            example = "0",
+            example_span = "2-10"
+        )
+        nb_ell2 = TextBox(
+            name = "nb_ell2",
+            knowl = "hmsurface.elliptic_point",
+            label = "Elliptic points of order 2",
+            example = "2",
+            example_span = "1-5"
+        )
+        nb_ell3 = TextBox(
+            name = "nb_ell2",
+            knowl = "hmsurface.elliptic_point",
+            label = "Elliptic points of order 3",
+            example = "2",
+            example_span = "1-5"
+        )
+        nb_ell4 = TextBox(
+            name = "nb_ell2",
+            knowl = "hmsurface.elliptic_point",
+            label = "Elliptic points of order 4",
+            example = "2",
+            example_span = "1-5"
+        )
+        nb_ell5 = TextBox(
+            name = "nb_ell2",
+            knowl = "hmsurface.elliptic_point",
+            label = "Elliptic points of order 5",
+            example = "2",
+            example_span = "1-5"
+        )
+        nb_ell6 = TextBox(
+            name = "nb_ell2",
+            knowl = "hmsurface.elliptic_point",
+            label = "Elliptic points of order 6",
+            example = "2",
+            example_span = "1-5"
+        )
+        len_ell_res = TextBox(
+            name = "len_ell_res",
+            knowl = "hmsurface.elliptic_point_resolution",
+            label = "Length of elliptic point resolutions",
+            example = "2",
+            example_span = "1-5"
+        )
+        len_cusp_res = TextBox(
+            name = "len_cusp_res",
+            knowl = "hmsurface.cusp_resolution",
+            label = "Length of cusp resolutions",
+            example = "2",
+            example_span = "1-5"
+        )
+        len_res = TextBox(
+            name = "len_res",
+            knowl = "hmsurface.resolution",
+            label = "Length of all resolutions",
+            example = "2",
+            example_span = "1-5",
         )
         h20 = TextBox(
             name="h20",
@@ -269,7 +350,7 @@ class HMSurfaceSearchArray(SearchArray):
         chi = TextBox(
             name="chi",
             knowl="hmsurface.hodge",
-            label="Arithmetic genus",
+            label="Holomorphic Euler characteristic",
             example="1",
             example_span="1, 3-4",
         )
@@ -280,13 +361,13 @@ class HMSurfaceSearchArray(SearchArray):
             example="-3",
             example_span="-3, 0-2"
         )
-        nb_cusps = TextBox(
-            name="nb_cusps",
-            knowl="hmsurface.cusps",
-            label="Number of cusps",
-            example="1",
-            example_span="1, 1-10"
-        )
+        euler_nb = TextBox(
+            name = "euler_nb",
+            knowl = "hmsurface.euler_nb",
+            label = "Euler number",
+            example = "2",
+            example_span = "1-5"
+        )        
         kodaira_quantifier = SelectBox(
             name="kodaira_quantifier",
             options=[('exactly', 'exactly'),
@@ -294,29 +375,38 @@ class HMSurfaceSearchArray(SearchArray):
                      ],
             min_width = 85
         )
-        kposs = TextBoxWithSelect(
-            name = "kposs",
+        kodaira_dims = TextBoxWithSelect(
+            name = "kodaira_dims",
             knowl = "hmsurface.kodaira_dimension",
             label = "Kodaira dimension",
             example = "-1",
             example_span = "-1, 2",
             select_box = kodaira_quantifier,
         )
+            
         count = CountBox()
 
         self.browse_array = [
             [field_discr, narrow_class_nb],
             [level_norm, group_type],
             [comp],
+            [nb_cusps, nb_ell],
+            [nb_ell2, nb_ell3],
+            [nb_ell4, nb_ell5],
+            [nb_ell6, len_cusp_res],
+            [len_ell_res, len_res],            
             [h20, h11],
             [chi, K2],
-            [nb_cusps, kposs]
+            [euler_nb, kodaira_dims]
         ]
 
         self.refine_array = [
             [field_discr, group_type, level_norm, comp],
-            [narrow_class_nb, h20, h11, chi],
-            [K2, nb_cusps, kposs]
+            [narrow_class_nb, nb_cusps, nb_ell, nb_ell2],
+            [nb_ell3, nb_ell4, nb_ell5, nb_ell6],
+            [len_cusp_res, len_ell_res, len_res],
+            [h20, h11, chi, K2],
+            [euler_nb, kodaira_dims]
         ]
 
     sort_knowl = "hmsurface.sort_order"
