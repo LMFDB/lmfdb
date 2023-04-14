@@ -21,10 +21,10 @@ logger = make_logger("bmf")
 # Schembri.  At some point we will want to list these abelian surfaces
 # as friends when there is no curve.
 
-# TO (after adding 31 more for 2.0.43.1): make this list into a table,
-# OR add a column to the bmf_forms table to indicate whether or not a
-# curve exists (which could be because we have not foud one, but is
-# normally because there really is not curve).
+# TODO: make this list into a table, OR add a column to the bmf_forms
+# table to indicate whether or not a curve exists (which could be
+# because we have not found one, but is normally because there really
+# is no curve).
 
 bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.4.1-34225.7-a',
@@ -78,7 +78,22 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.43.1-10609.1-a',
                       '2.0.43.1-10609.3-a',
                       '2.0.43.1-11449.1-a',
-                      '2.0.43.1-11449.3-a']
+                      '2.0.43.1-11449.3-a',
+                      '2.0.56.1-127.1-a',
+                      '2.0.56.1-127.1-b',
+                      '2.0.56.1-127.2-a',
+                      '2.0.56.1-127.2-b',
+                      # '2.0.59.1-675.5-b',
+                      # '2.0.59.1-675.8-b',
+                      '2.0.68.1-901.1-a',
+                      '2.0.68.1-901.1-b',
+                      '2.0.68.1-901.2-a',
+                      '2.0.68.1-901.2-b',
+                      '2.0.91.1-784.1-a',
+                      '2.0.91.1-784.1-b',
+                      # '2.0.95.1-624.5-c',
+                      # '2.0.95.1-624.5-d',
+]
 
 def cremona_label_to_lmfdb_label(lab):
     if "." in lab:

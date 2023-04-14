@@ -82,7 +82,7 @@
 <h2> Group information</h2>
 <p>
   <table>
-    <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
@@ -414,16 +414,19 @@
     </div>
   {% else %} {# not wide #}
     <table>
-    <tr><td>
-      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
-        Sorry, your browser does not support the subgroup diagram.
-      </canvas>
-    <td valign="top">
-      <h4>Subgroup information</h4>
-        <div class="selectedsub">
-          Click on a subgroup in the diagram to see information about it.
-        </div>
-     </table>
+      <tr>
+        <td>
+          <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+            Sorry, your browser does not support the subgroup diagram.
+          </canvas>
+        <td valign="top">
+          <h4>Subgroup information</h4>
+          <div class="selectedsub">
+            Click on a subgroup in the diagram to see information about it.
+          </div>
+        </td>
+      </tr>
+    </table>
     {% if user_is_authenticated and BETA %}
       <button onclick="getpositions()">Get positions</button>
       <br>

@@ -2,7 +2,7 @@
 """
 This script is used to run verification jobs in parallel.
 For more options (such as verifying only a single check or a single object)
-see the verify method of PosgresTable in lmfdb/backend/database.py.
+see the verify method of PosgresTable in lmfdb/lmfdb_database.py.
 """
 
 import argparse

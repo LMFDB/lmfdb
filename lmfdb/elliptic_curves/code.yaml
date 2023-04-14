@@ -117,6 +117,14 @@ galrep:
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
+adelicimage:
+  sage:   |
+    gens = %s
+    GL(2,Integers(%s)).subgroup(gens)
+  magma:   |
+    Gens := %s;
+    sub<GL(2,Integers(%s))|Gens>;
+
 padicreg:
   sage: |
     [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]
