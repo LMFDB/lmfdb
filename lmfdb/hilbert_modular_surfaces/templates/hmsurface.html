@@ -53,7 +53,7 @@
   {% if surface.nb_cusps == 1 %}
   exactly one cusp.
   {% else %}
-  ${{ surface.nb_cusps }}$ cusps.
+  {{ surface.nb_cusps }} cusps.
   {% endif %}
 </p>
 
@@ -85,7 +85,7 @@
   {% elif surface.nb_elliptic_pts == 1 %}
   exactly one elliptic point.
   {% else %}
-  ${{ surface.nb_elliptic_pts }}$ elliptic points.
+  {{ surface.nb_elliptic_pts }} elliptic points.
   {% endif %}
 </p>
 
