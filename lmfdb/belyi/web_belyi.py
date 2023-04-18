@@ -405,7 +405,7 @@ class WebBelyiPassport():
         try:
             slabel = label.split("-")
             if len(slabel) == 2:
-                passport = db.belyi_passports_fixed.lucky({"plabel": label})
+                passport = db.belyi_passports.lucky({"plabel": label})
             else:
                 raise ValueError("Invalid Belyi passport label %s." % label)
         except AttributeError:
