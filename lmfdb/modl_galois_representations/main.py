@@ -41,7 +41,7 @@ from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
 from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty
 
-LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*")
+LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
