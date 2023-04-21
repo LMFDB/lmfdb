@@ -1,0 +1,67 @@
+Data/backend:
+
+- Add Gamma1(N) and Gamma(N) when the computations work
+- Increase range of surfaces?
+- Add cusps and elliptic points for the GL, Gamma0 surfaces
+- Add indexes to fix slow queries?
+
+HMSurfaces home page:
+
+- As for modular curves, add text "the database currently contains..."
+- Make statistics
+- Reliability: as for modular curves, write "this is an alpha version subject to change..."
+- Replace "Modular curve labels" by "Hilbert modular surface labels" and explain labels
+- Populate: source and acknowledgements, Completeness of data, Hilbert modular surface labels
+
+Browse section:
+
+- by family, by level, by holomorphic Euler characteristic, by Kodaira dimension
+- Interesting HMS (from VDG?)
+- Random Hilbert modular surface
+
+Knowls:
+
+- Field / discriminant
+- Class number
+- Norm / Level ideal
+- Subgroup type
+- Component ideal
+- Elliptic points
+- Cusp resolutions
+- Elliptic point resolutions
+- Hodge number
+- Holomorphic Euler char
+- Self-intersection K^2
+- Euler number: rename as topological Euler char?
+- Kodaira dimension
+
+Search:
+
+- Check that the suggested entries all make some kind of sense (e.g., have valid results)
+
+Displaying results:
+
+- Add more columns to display: Field, Level, Group type, number of cusps, number of elliptic points, Holomorphic euler char, Kodaira dimension
+- Actually add all columns; the above could just be a default selection
+- Add knowls
+
+HMS pages:
+
+- Knowls: type, component, Hodge numbers, rename Arithmetic genus to Holomorphic euler char, write "Self-intersection numbers in resolution cycles"; 
+- Display more data: generator of component and level ideals, total length of resolutions, order of elliptic points, topological Euler char, resolution cycles for elliptic points
+- Picture of Hodge diamond
+- Fix brackets for Kodaira dimension
+
+Properties on right hand side:
+
+- Quadratic field
+- Level norm
+- Group type
+- Holomorphic Euler characteristic
+- Kodaira dimension
+- Picture: Hodge diamond, other ideas
+- Related objects: Hilbert modular forms, RM field, Fq points, Genus 2 curves with RM (at least for HMS of trivial level)
+
+Downloads:
+
+- Figure out something to download
