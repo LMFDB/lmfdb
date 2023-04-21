@@ -222,7 +222,7 @@ class HMSurfaceSearchArray(SearchArray):
         )
         narrow_class_nb = TextBox(
             name="narrow_class_nb",
-            knowl="hmsurface.todo",
+            knowl="nf.narrow_class_number",
             label="Narrow class number",
             example="1",
             example_span="1, 2-4"
