@@ -712,12 +712,12 @@ def download_embedded_newform(label):
     # print("routed to download_embedded_newform")
     return SMF_download().download_embedding(label)
 
-<<<<<<< HEAD
+
 @smf.route("/download_newspace/<label>")
 def download_newspace(label):
     # print("routed to download_newspace")
     return SMF_download().download_newspace(label)
-=======
+
 @smf_page.route('/Sp4Z_j')
 @smf_page.route('/Sp4Z_j/')
 def Sp4Z_j():
@@ -742,7 +742,6 @@ def Sp4Z_j():
                            bread=bread,
                            info=info
                            )
->>>>>>> 14c387ae59260db7b4706ca496f6f39658790ad7
 
 @smf.route("/download_full_space/<label>")
 def download_full_space(label):
