@@ -4,7 +4,7 @@ import os
 from socket import gethostname
 import time
 from urllib.parse import urlparse, urlunparse
-
+from datetime import datetime
 from flask import (
     Flask,
     abort,
@@ -222,8 +222,7 @@ def link_to_current_source():
 
 @app.template_filter("fmtdatetime")
 def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
-    import datetime
-    if isinstance(value, datetime.datetime):
+    if isinstance(value, datetime):
         return value.strftime(format)
     else:
         return "-"
@@ -275,12 +274,31 @@ def netloc_redirect():
         return redirect(url, code=301)
     elif (
         urlparts.netloc == "www.lmfdb.org"
-        and
-        not white_listed(urlparts.path)
+
+        and not white_listed(urlparts.path)
         and valid_bread(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
+
+
+@cached_function
+def bad_bots_list():
+    return [
+        elt.lower()
+        for elt in [
+            "The Knowledge AI",
+            "Wolfram",
+        ]
+    ]
+
+
+@app.before_request
+def badbot():
+    ua = request.user_agent.string.lower()
+    for elt in bad_bots_list():
+        if elt in ua:
+            time.sleep(5)
 
 
 def timestamp():
@@ -415,8 +433,7 @@ def workshops():
 @app.route("/lucant")
 @app.route("/LuCaNT")
 def lucant():
-    bread = [("LuCaNT", '')]
-    return render_template("lucant.html", title="LMFDB, Computation, and Number Theory (LuCaNT)", contribs=contribs, bread=bread)
+    return redirect("https://lucant.org/")
 
 # google's CSE for www.lmfdb.org/* (and *only* those pages!)
 

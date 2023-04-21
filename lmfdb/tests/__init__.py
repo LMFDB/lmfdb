@@ -91,6 +91,7 @@ class LmfdbTest(unittest2.TestCase):
                 pass
             else:
                 raise
+
     def check_sage_compiles_and_extract_variables(self, sage_code):
         """
         Simulates a user downloading the sage code, and then loading it

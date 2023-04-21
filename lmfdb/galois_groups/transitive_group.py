@@ -4,6 +4,8 @@ from collections import defaultdict
 from lmfdb import db
 
 from sage.all import ZZ, gap, cached_function
+import os
+import yaml
 
 from lmfdb.utils import list_to_latex_matrix, integer_divisors
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
@@ -183,6 +185,13 @@ class WebGaloisGroup:
     def quotient_bound(self):
         return self._data['bound_quotients']
 
+    def make_code_snippets(self):
+        # read in code.yaml from galois_groups directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        for lang in self.code['gg']:
+            self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
 
 ############  Misc Functions
 
@@ -394,7 +403,6 @@ def galois_group_data(n, t):
     return inf + rest
 
 
-
 @cached_function
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
@@ -478,8 +486,7 @@ def subfield_display(n, subs):
 def otherrep_display(n, t, reps):
     reps = [(j[0], j[1]) for j in reps]
     me = (n, t)
-    difreps = list(set(reps))
-    difreps.sort()
+    difreps = sorted(set(reps))
     ans = ''
     for k in difreps:
         if ans != '':
@@ -536,8 +543,9 @@ def group_display_inertia(code):
         return group_pretty_and_nTj(code[1][0], code[1][1], useknowls=True)
     if code[1] == [1,1]:
         return "trivial"
-    ans = "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
-    return ans
+    if code[1][1] < 0:
+        return "intransitive group not computed"
+    return "Intransitive group isomorphic to "+abstract_group_display_knowl(f"{code[1][0]}.{code[1][1]}")
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
@@ -602,6 +610,9 @@ def complete_group_code(code):
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
+    # convert small group label to GAP code
+    if re.match(r'^\d+\.\d+',code):
+        code = "[%s,%s]"%tuple(code.split("."))
     # Try GAP code
     rematch = re.match(r'^\[\d+,\d+\]$', code)
     if rematch:

@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import subprocess
-import os
 import sys
 
 from lmfdb.backend.base import PostgresBase
@@ -17,6 +16,7 @@ from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
+from sage.all import cached_function
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -108,8 +108,10 @@ def extract_typ(kid):
             break
     return typ, url, name
 
+
 def extract_links(content):
     return sorted(set(x[2] for x in link_finder_re.findall(content) if x[2]))
+
 
 def normalize_define(term):
     m = define_fixer.search(term)
@@ -118,14 +120,17 @@ def normalize_define(term):
         term = define_fixer.sub(r'\%s'%n, term)
     return ' '.join(term.lower().replace('"', '').replace("'", "").split())
 
+
 def extract_defines(content):
     return sorted(set(x.strip() for x in defines_finder_re.findall(content)))
 
 # We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
 
+
 class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'timestamp', 'title', 'status', 'type', 'links', 'defines', 'source', 'source_name'] # doesn't include id, _keywords, reviewer or review_timestamp
+
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
@@ -382,7 +387,6 @@ class KnowlBackend(PostgresBase):
                     code_snippet_knowl(D, full=False)
                     for D in self.code_references(k)]
 
-
     def needs_review(self, days):
         now = datetime.utcnow()
         tdelta = timedelta(days=days)
@@ -437,7 +441,7 @@ class KnowlBackend(PostgresBase):
             if beta is None:
                 beta = is_beta()
             if not beta:
-                # Have to make sure we do display references where the the most recent positively reviewed knowl does reference this, but the most recent beta does not.
+                # Have to make sure we do display references where the most recent positively reviewed knowl does reference this, but the most recent beta does not.
                 selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
                 cur = self._execute(selecter, values)
                 good_ids = [rec[0] for rec in cur]
@@ -748,16 +752,12 @@ def knowl_title(kid):
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
 
+@cached_function
 def knowl_url_prefix():
     """
-    why is this function needed?
-    if you're running lmfdb in cocalc, front-end javascript (see: lmfdb.js) doesn't know your prefix isn't just a website domain.
+    if one is running lmfdb in cocalc, front-end javascript (see: lmfdb.js) doesn't know your prefix isn't just a website domain.
     """
-    flask_options = Configuration().get_flask()
-    if "COCALC_PROJECT_ID" in os.environ:
-        return 'https://cocalc.com/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(flask_options['port'])
-    else:
-        return ""
+    return Configuration().get_url_prefix()
 
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}

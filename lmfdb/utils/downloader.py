@@ -25,7 +25,7 @@ class Downloader():
       or a dictionary with keys language names and values the appropriate columns.
       In all cases, exclude the label column, which is prepended automatically.
     - a ``column_wrappers`` attribute, which is a dictionary with column names
-      as keys and unary functions f as values; data for for the named columns
+      as keys and unary functions f as values; data for the named columns
       be mapped through f when being added to the download data (column names
       that do not appear in columns will be ignored)
     - a ``data_format`` attribute, which is a list of strings
@@ -47,52 +47,61 @@ class Downloader():
     """
     # defaults, edit as desired in inherited class
     lang_key = 'Submit' # name of the HTML button/link starting the download
-    languages = ['magma', 'sage', 'gp', 'text']
+    languages = ['magma', 'sage', 'gp', 'oscar', 'text']
     comment_prefix = {
             'magma':'//',
             'sage':'#',
             'gp':'\\\\',
+            'oscar':'#',
             'text':'#'
             }
     assignment_defn = {
             'magma':':=',
             'sage':' = ',
             'gp':' = ',
+            'oscar':' = ',
             'text':'='
             }
     line_end = {'magma':';',
             'sage':'',
             'gp':'',
+            'oscar':'',
             'text':''
             }
     delim_start = {'magma':'[*',
             'sage':'[',
             'gp':'[',
+            'oscar':'[',
             'text':' ['
             }
     delim_end = {'magma':'*]',
             'sage':']',
             'gp':']',
+            'oscar':']',
             'text':' ]'}
     start_and_end = {
             'magma':['[*','*]'],
             'sage':['[',']'],
             'gp':['{[',']}'],
+            'oscar':['[',']'],
             'text':['[',']']}
-    file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
+    file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','oscar':'.jl','text':'.txt'}
     function_start = {'magma':['function make_data()'],
                       'sage':['def make_data():'],
-                      'gp':['make_data() = ','{']}
+                      'gp':['make_data() = ','{'],
+                      'oscar':['function make_data()'],}
     function_end = {'magma':['end function;'],
-                    'gp':['}']}
-    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]'}
+                    'gp':['}'],
+                    'oscar':['end'],}
+    none = {'gp': 'null', 'sage': 'None', 'text': 'NULL', 'magma': '[]', 'oscar': 'nothing'}
     make_data_comment = {
-        'magma': 'To create a list of {short_name}, type "{var_name}:= make_data();"',
-        'sage':'To create a list of {short_name}, type "{var_name} = make_data()"',
-        'gp':'To create a list of {short_name}, type "{var_name} = make_data()"',
+        'magma': 'To create a list of {short_name} called {var_name}, type "{var_name}:= make_data();"',
+        'sage':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
+        'gp':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
+        'oscar':'To create a list of {short_name} called {var_name}, type "{var_name} = make_data()"',
     }
 
-    def to_lang(self, lang, inp, level = 0, prepend = ''):
+    def to_lang(self, lang, inp, level=0, prepend=''):
         if inp is None:
             return self.none[lang]
         if isinstance(inp, str):
@@ -108,17 +117,16 @@ class Downloader():
             sep = ', '
         try:
             if level == 0:
-                begin = start + '\\\n'
+                begin = start + '\n'
             else:
                 begin = start
-            return begin + sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+            return begin + sep.join(self.to_lang(lang, c, level=level + 1) for c in inp) + end
         except TypeError:
             # not an iterable object
             return str(inp)
 
-    def assign(self, lang, name, elt, level = 0, prepend = ''):
+    def assign(self, lang, name, elt, level=0, prepend=''):
         return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
-
 
     def get(self, name, default=None):
         if hasattr(self, name):
@@ -203,7 +211,7 @@ class Downloader():
             proj = [label_col] + proj
         # set up column wrappers
         cw = self.get('column_wrappers', {})
-        identity = lambda x: x
+        def identity(x): return x
         for col in wo_label:
             if col not in cw:
                 cw[col] = identity
@@ -249,5 +257,5 @@ class Downloader():
             s += '\n\n'
             s += '\n'.join(func_start) + '\n'
             s += '    ' + '\n    '.join(func_body) + '\n'
-            s += '\n'.join(func_end)
+            s += '\n'.join(func_end) + '\n'
         return self._wrap(s, filename, lang=lang)

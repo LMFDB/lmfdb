@@ -1,0 +1,40 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+  {{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse </h2>
+
+<p>
+  By {{KNOWL('modlgal.codomain', 'codomain')}}:
+  {% for rnge in info.codomain_list %}
+  <a href="?codomain={{rnge[1]}}">{{rnge[0]}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{KNOWL('modlgal.conductor', 'conductor')}}:
+  {% for rnge in info.conductor_list %}
+    <a href="?conductor={{rnge}}&sort_order=conductor">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  Some <a href="{{url_for('.interesting')}}">interesting mod-$\ell$ Galois representations</a> or a <a href={{url_for('.random_rep')}}>random representation</a>
+</p>
+
+<h2> {{ KNOWL('intro.search', 'Search') }} </h2>
+
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+{% endblock %}
+

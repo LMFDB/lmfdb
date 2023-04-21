@@ -660,6 +660,32 @@ def jump_box(info):
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
+@smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
+@smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
+def Sp4Z_j_space(k,j):
+    bread = [("Modular forms", url_for('modular_forms')),
+             ('Siegel', url_for('.index')),
+             (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
+             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
+    if j%2:
+        # redirect to general page for Sp4Z_j which will display an error message
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
+    info = { 'args':{'k':str(k),'j':str(j)} }
+    try:
+        if j in [0,2]:
+            headers, table = dimensions._dimension_Sp4Z([k])
+            info['samples'] = find_samples('Sp4Z' if j==0 else 'Sp4Z_2', k)
+        else:
+            headers, table = dimensions._dimension_Gamma_2([k], j, group='Sp4(Z)')
+        info['headers'] = headers
+        info['subspace'] = table[k]
+    except NotImplementedError:
+        # redirect to general page for Sp4Z_j which will display an error message
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
+    return render_template('ModularForm_GSp4_Q_full_level_space.html',
+                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           bread=bread,
+                           info=info)
 
 @smf.route("/download_qexp/<label>")
 def download_qexp(label):
@@ -686,10 +712,37 @@ def download_embedded_newform(label):
     # print("routed to download_embedded_newform")
     return SMF_download().download_embedding(label)
 
+<<<<<<< HEAD
 @smf.route("/download_newspace/<label>")
 def download_newspace(label):
     # print("routed to download_newspace")
     return SMF_download().download_newspace(label)
+=======
+@smf_page.route('/Sp4Z_j')
+@smf_page.route('/Sp4Z_j/')
+def Sp4Z_j():
+    bread = [("Modular forms", url_for('modular_forms')),
+             ('Siegel', url_for('.index')),
+             (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
+    info={'args': request.args}
+    try:
+        dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
+    except ValueError:
+        # error message is flashed in parse_dim_args
+        info['error'] = True
+    if not info.get('error'):
+        info['dim_args'] = dim_args
+        try:
+            info['table'] = dimensions.dimension_table_Sp4Z_j(dim_args['k_range'], dim_args['j_range'])
+        except NotImplementedError as err:
+            flash_error(err)
+            info['error'] = True
+    return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
+                           title=r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
+                           bread=bread,
+                           info=info
+                           )
+>>>>>>> 14c387ae59260db7b4706ca496f6f39658790ad7
 
 @smf.route("/download_full_space/<label>")
 def download_full_space(label):

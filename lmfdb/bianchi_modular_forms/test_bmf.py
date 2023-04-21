@@ -41,7 +41,6 @@ class BMFTest(LmfdbTest):
         t = '2.0.4.1/100.2/a/'
         self.check_args(base_url+t,'Base change')
 
-    #
     # Jump to specific newform
     def test_jump(self):
         r"""
@@ -49,19 +48,15 @@ class BMFTest(LmfdbTest):
         """
         self.check_args(base_url+"?jump=2.0.4.1-65.2-a", 'Analytic rank')
 
-
-    #
     # Various search combinations
     def test_search(self):
         r"""
         Check that various search combinations work.
         """
         self.check_args(base_url+"?field_label=2.0.7.1&level_norm=322&count=10", 'Results (4 matches)')
-        self.check_args(base_url+"?start=0&include_base_change=off&include_cm=only&count=100", '/ModularForm/GL2/ImaginaryQuadratic/2.0.19.1/2025.1/a/')
+        self.check_args(base_url+"?start=0&include_base_change=off&include_cm=only&count=100", 'ModularForm/GL2/ImaginaryQuadratic/2.0.95.1/16.5/a/')
 
-    #
     # tests for newspace pages
-
     def test_newspace(self):
         r"""
         Check newspace pages

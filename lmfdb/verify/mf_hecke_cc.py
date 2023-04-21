@@ -129,7 +129,6 @@ class mf_hecke_cc(MfChecker):
                 return False
         return True
 
-
     @slow(ratio=0.001, projection=['label', 'an_normalized'])
     def check_ap2_slow(self, rec, verbose=False):
         """

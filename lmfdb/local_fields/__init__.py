@@ -17,7 +17,7 @@ assert main
 from urllib.parse import urlparse, urlunparse
 
 
-@local_fields_page.before_request
+@app.before_request
 def redirect_local():
     urlparts = urlparse(request.url)
     if 'LocalNumberField' in urlparts.path:

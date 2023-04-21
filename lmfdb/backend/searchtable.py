@@ -202,7 +202,11 @@ class PostgresSearchTable(PostgresTable):
                 joiner = " OR " if key == "$or" else " AND "
                 return SQL("({0})").format(SQL(joiner).join(strings)), values
             else:
-                return None, None
+                if key == "$or":
+                    # the empty or clause should be False
+                    return SQL("false"), []
+                else:
+                    return None, None
         elif key == "$not":
             negated, values = self._parse_dict(value, outer=col, outer_type=col_type)
             if negated is None:

@@ -45,6 +45,7 @@ class speed_decorator():
     disabled = False # set to True to skip this check
     max_failures = 1 # maximum number of failures to show
     ratio = 1 # ratio of rows to run this test on
+
     def __init__(self, f=None, **kwds):
         self._kwds = kwds
         if f is not None:
@@ -58,11 +59,13 @@ class speed_decorator():
                 self.f = timeout(self.timeout)(f)
         else:
             self.f = None
+
     def __call__(self, *args, **kwds):
         if self.f is None:
             assert len(args) == 1 and len(kwds) == 0
             return self.__class__(args[0], **self._kwds)
         return self.f(*args, **kwds)
+
 
 class per_row(speed_decorator):
     """
@@ -75,6 +78,7 @@ class per_row(speed_decorator):
     projection = 1 # default projection; override in order to not fetch large columns.  label_col is appended
     report_slow = 0.1
     max_slow = 100
+
 
 class one_query(speed_decorator):
     """
@@ -512,8 +516,8 @@ class TableChecker():
         return self.check_values({col: None for col in columns}, constraint)
 
     def check_iff(self, condition1, condition2):
-        return (self.check_values(condition1, condition2) +
-                self.check_values(condition2, condition1))
+        return (self.check_values(condition1, condition2)
+                + self.check_values(condition2, condition1))
 
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
@@ -522,7 +526,7 @@ class TableChecker():
         return self._run_query(SQL("array_length({0}, 1) < %s").format(Identifier(column)),
                                constraint, [limit])
 
-    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim = 1):
+    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim=1):
         """
         Length of array equal to constant
         """
@@ -533,7 +537,7 @@ class TableChecker():
             ),
             constraint)
 
-    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim = 1):
+    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim=1):
         """
         Length of array_column matches len_column
         """
@@ -566,7 +570,7 @@ class TableChecker():
             other_columns,
             constraint={},
             sep='.',
-            convert_to_base26 = {}):
+            convert_to_base26={}):
         """
         Check that the label_column is the concatenation of the other columns with the given separator
 
@@ -588,7 +592,7 @@ class TableChecker():
 
     def check_string_startswith(self, col, head, constraint={}):
         value = head.replace('_',r'\_').replace('%',r'\%') + '%'
-        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values = [value])
+        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values=[value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -657,20 +661,22 @@ class TableChecker():
             sort = SQL(" ORDER BY {0}").format(SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort))
         return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", extra=sort)
 
-    def check_letter_code(self, index_column, letter_code_column, constraint = {}):
+    def check_letter_code(self, index_column, letter_code_column, constraint={}):
         return self._run_query(SQL("{0} != to_base26({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
 
     label = None
     label_conversion = {}
+
     @overall
     def check_label(self):
         """
         check that label matches self.label
         """
         if self.label is not None:
-            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26 = self.label_conversion)
+            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26=self.label_conversion)
 
     uniqueness_constraints = []
+
     @overall
     def check_uniqueness_constraints(self):
         """

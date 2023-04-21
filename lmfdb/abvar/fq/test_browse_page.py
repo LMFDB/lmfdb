@@ -226,7 +226,7 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ab_f")
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ac_ab")
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ac_ab")
-        # not princ polariable only
+        # not princ polarizable only
         self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ac_ab")
         self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ac_ab")
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ab_f")
