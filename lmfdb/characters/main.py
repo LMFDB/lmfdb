@@ -193,23 +193,28 @@ def url_for_label(label):
         return redirect(url_for(".render_DirichletNavigation"))
     modulus, number = label.split(".")
     modulus = int(modulus)
-    number = label_to_number(modulus, number)
+    number = int(number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
-def display_galois_orbit(orbit, modulus):
-    trunc = (len(orbit) > 5)
-    if trunc:
-        orbit = [orbit[0], orbit[-1]]
-    disp = [r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, o) for o in orbit]
-    if trunc:
-        disp = r"$, \cdots ,$".join(disp)
+def display_galois_orbit(modulus, first_label, last_label, degree):
+
+    if degree == 1:
+        orbit = first_label.split(".")[1]
+        disp = r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, orbit)
+        return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
     else:
-        disp = "$,$&nbsp".join(disp)
-    return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
+        orbit = [lab.split(".")[1] for lab in [first_label, last_label]]
+        disp = [r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, o) for o in orbit]
+        if degree == 2:
+            disp = "$,$&nbsp".join(disp)
+            return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
+        else:
+            disp = r"$, \cdots ,$".join(disp)
+            return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
-    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["galois_orbit", "modulus"],
+    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
                       display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
@@ -220,7 +225,7 @@ character_columns = SearchColumns([
 character_columns.dummy_download = True
 
 @search_wrap(
-    table=db.char_dir_orbits,
+    table=db.char_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
@@ -231,42 +236,44 @@ character_columns.dummy_download = True
     bread=lambda: bread("Search results"),
 )
 def dirichlet_character_search(info, query):
+    print("i am searching")
     common_parse(info, query)
 
 
-def label_to_number(modulus, number, all=False):
-    """
-    Takes the second part of a character label and converts it to the second
-    part of a Conrey label.  This could be trivial (just casting to an int)
-    or could require converting from an orbit label to a number.
+# def label_to_number(modulus, number, all=False):
+#     """
+#     Takes the second part of a character label and converts it to the second
+#     part of a Conrey label. This could be trivial (just casting to an int)
+#     or could require converting from an orbit label to a number.
 
-    If the label is invalid, returns 0.
-    """
-    try:
-        number = int(number)
-    except ValueError:
-        # encoding Galois orbit
-        if modulus < 10000:
-            try:
-                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
-            except ValueError:
-                raise ValueError("Dirichlet Character of this label not found in database")
-            else:
-                number = db.char_dir_orbits.lucky({'orbit_label': orbit_label}, 'galois_orbit')
-                if number is None:
-                    raise ValueError("Dirichlet Character of this label not found in database")
-                if not all:
-                    number = number[0]
-        else:
-            raise ValueError("The modulus cannot be larger than 10,000")
-    else:
-        if number <= 0:
-            raise ValueError("The number after the '.' cannot be negative")
-        elif gcd(modulus, number) != 1:
-            raise ValueError("The two numbers either side of '.' must be coprime")
-        elif number > modulus:
-            raise ValueError("The number after the '.' must be less than the number before")
-    return number
+#     If the label is invalid, returns 0.
+#     """
+#     try:
+#         number = int(number)
+#     except ValueError:
+#         # encoding Galois orbit
+#         if modulus < 10000:
+#             try:
+#                 import pdb; pdb.set_trace()
+#                 orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
+#             except ValueError:
+#                 raise ValueError("Dirichlet Character of this label not found in database")
+#             else:
+#                 number = db.char_dir_orbits.lucky({'orbit_label': orbit_label}, 'galois_orbit')
+#                 if number is None:
+#                     raise ValueError("Dirichlet Character of this label not found in database")
+#                 if not all:
+#                     number = number[0]
+#         else:
+#             raise ValueError("The modulus cannot be larger than 10,000")
+#     else:
+#         if number <= 0:
+#             raise ValueError("The number after the '.' cannot be negative")
+#         elif gcd(modulus, number) != 1:
+#             raise ValueError("The two numbers either side of '.' must be coprime")
+#         elif number > modulus:
+#             raise ValueError("The number after the '.' must be less than the number before")
+#     return number
 
 
 @characters_page.route("/Dirichlet")
@@ -461,7 +468,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             return redirect(url_for(".render_DirichletNavigation"))
 
     try:
-        number = label_to_number(modulus, number)
+        number = int(number)
     except ValueError:
         flash_error(
             "the value %s is invalid. It should either be a positive integer "
@@ -516,13 +523,13 @@ def dirchar_data(label):
         title = f"Dirichlet character data - {modulus}.{number}"
         tail = [(f"{modulus}.{number}", url_for(".render_Dirichletwebpage", modulus=modulus, number=number)),
                 ("Data", " ")]
-        return datapage([f"{modulus}.{orbit_label}", f"{modulus}.{number}"], ["char_dir_orbits", "char_dir_values"], title=title, bread=bread(tail), label_cols=["label", "label"])
+        return datapage(f"{modulus}.{orbit_label}", "char_orbits", title=title, bread=bread(tail))
     elif label.count(".") == 1:
         modulus, orbit_label = label.split(".")
         title = f"Dirichlet character data - {modulus}.{orbit_label}"
         tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                 ("Data", " ")]
-        return datapage(label, "char_dir_orbits", title=title, bread=bread(tail))
+        return datapage(label, "char_orbits", title=title, bread=bread(tail))
     else:
         return abort(404, f"Invalid label {label}")
 
@@ -530,7 +537,7 @@ def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')
     modulus = int(modulus)
     try:
-        numbers = label_to_number(modulus, number, all=True)
+        numbers = int(number)
     except ValueError:
         return "Invalid label for Dirichlet character: %s" % label
     try:
@@ -703,7 +710,7 @@ def yesno(x):
 
 
 class DirichStats(StatsDisplay):
-    table = db.char_dir_orbits
+    table = db.char_orbits
     baseurl_func = ".render_DirichletNavigation"
     stat_list = [
         {"cols": ["conductor"]},
@@ -746,8 +753,8 @@ class DirichStats(StatsDisplay):
 
     def __init__(self):
         self.nchars = db.char_dir_values.count()
-        self.norbits = db.char_dir_orbits.count()
-        self.maxmod = db.char_dir_orbits.max("modulus")
+        self.norbits = db.char_orbits.count()
+        self.maxmod = db.char_orbits.max("modulus")
 
     @property
     def short_summary(self):

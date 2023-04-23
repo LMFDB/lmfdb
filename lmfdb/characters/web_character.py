@@ -311,6 +311,7 @@ class WebDirichlet(WebCharObject):
     def jacobi_sum(self, val):
 
         mod, num = self.modulus, self.number
+        chi = ConreyCharacter(mod, num)
 
         try:
             val = int(val)
@@ -323,18 +324,12 @@ class WebDirichlet(WebCharObject):
         if val < 0:
             raise Warning ("n must be positive")
 
-        chi_values_data = db.char_dir_values.lookup(
-            "{}.{}".format(mod, num)
-        )
-        chi_valuepairs = chi_values_data['values_gens']
+        chi_valuepairs = [[k, chi.conreyangle(k) * chi.order] for k in self.gens]
         chi_genvalues = [int(v) for g, v in chi_valuepairs]
         chi = self.chi.sage_character(self.order, chi_genvalues)
 
         psi = ConreyCharacter(self.modulus, val)
-        psi_values_data = db.char_dir_values.lookup(
-            "{}.{}".format(self.modulus, val)
-        )
-        psi_valuepairs = psi_values_data['values_gens']
+        psi_valuepairs = [[k, psi.conreyangle(k) * psi.order] for k in self.gens]
         psi_genvalues = [int(v) for g, v in psi_valuepairs]
         psi = psi.sage_character(self.order, psi_genvalues)
 
@@ -579,25 +574,26 @@ class WebDBDirichlet(WebDirichlet):
             "{}.{}".format(self.modulus, self.number)
         )
 
-        self.orbit_index = int(values_data['orbit_label'].partition('.')[-1])
-        # The -1 in the line below is because labels index at 1, while
-        # the Cremona letter code indexes at 0
-        self.orbit_label = cremona_letter_code(self.orbit_index - 1)
-        self.order = int(values_data['order'])
-        self.indlabel = int(values_data['prim_label'].partition('.')[-1])
+        gal_orbit = self.chi.galois_orbit
+        min_conrey_conj = gal_orbit[0]
+
+        orbit_data = db.char_orbits.lucky(
+            {'modulus': self.modulus, 'first_label': "{}.{}".format(self.modulus, min_conrey_conj)}
+        )
+
+        self.orbit_index = orbit_data['orbit_index']
+        self.orbit_label = orbit_data['label'].split(".")[1]
+        self.order = int(orbit_data['order'])
+        self.conductor = self.chi.conductor()  # this also sets indlabel
+        self.indlabel = self.chi.indlabel
         self._set_values_and_groupelts(values_data)
         self._set_generators_and_genvalues(values_data)
 
-        orbit_data = db.char_dir_orbits.lucky(
-            {'modulus': self.modulus, 'orbit_index': self.orbit_index}
-        )
-
-        self.conductor = int(orbit_data['conductor'])
         self._set_isprimitive(orbit_data)
         self._set_isminimal(orbit_data)
         self._set_parity(orbit_data)
         self._set_galoisorbit(orbit_data)
-        self._set_kernel_field_poly(orbit_data)
+        self._set_kernel_field_poly()
 
     def _set_generators_and_genvalues(self, values_data):
         """
@@ -683,17 +679,14 @@ class WebDBDirichlet(WebDirichlet):
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
         upper_limit = min(200, self.order + 1)
-        orbit = orbit_data['galois_orbit'][:upper_limit]
+        gal_orbit = self.chi.galois_orbit[:upper_limit]
         self.galoisorbit = list(
-            self._char_desc(num, prim=self.isprimitive) for num in orbit
+            self._char_desc(num, prim=self.isprimitive) for num in gal_orbit
         )
 
-    def _set_kernel_field_poly(self, orbit_data):
-        if 'kernel_field_poly' in orbit_data.keys():
-            self.kernel_field_poly = orbit_data['kernel_field_poly']
-        else:
-            self.kernel_field_poly = None
-
+    def _set_kernel_field_poly(self):
+        list_coeffs = self.chi.kernel_field_poly().list()
+        self.kernel_field_poly = [ZZ(x) for x in list_coeffs]
 
 class WebCharGroup(WebCharObject):
     """
@@ -1125,11 +1118,10 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.codelangs = ('pari', 'sage')
         self.orbit_label = kwargs.get('orbit_label', None)  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
-        self.orbit_data = self.get_orbit_data(self.orbit_label)  # this is the meat
         self.maxrows = 30
         self.rowtruncate = False
-        self._set_galoisorbit(self.orbit_data)
         self.maxcols = 10
+        self._populate_from_db()  # this is the meat
         self._contents = None
         self._set_groupelts()
 
@@ -1137,47 +1129,43 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def title(self):
         return "Dirichlet character orbit {}.{}".format(self.modulus, self.orbit_label)
 
-    def _set_galoisorbit(self, orbit_data):
-        if self.modulus == 1:
-            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
-            return
+    def _populate_from_db(self):
 
-        upper_limit = min(self.maxrows + 1, self.degree + 1)
-
-        if self.maxrows < self.degree + 1:
-            self.rowtruncate = True
-        self.galorbnums = orbit_data['galois_orbit'][:upper_limit]
-        self.galoisorbit = list(
-            self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
+        orbit_data = db.char_orbits.lucky(
+            {'modulus': self.modulus, 'label': self.label}
         )
-
-    def get_orbit_data(self, orbit_label):
-        mod_and_label = "{}.{}".format(self.modulus, orbit_label)
-        orbit_data = db.char_dir_orbits.lucky(
-            {'modulus': self.modulus, 'label': mod_and_label}
-        )
-
         if orbit_data is None:
             raise ValueError
 
-        # Since we've got this, might as well set a bunch of stuff
-
         self.conductor = orbit_data['conductor']
         self.order = orbit_data['order']
-        self.degree = orbit_data['char_degree']
+        self.degree = orbit_data['degree']
         self.isprimitive = bool_string(orbit_data['is_primitive'])
         self.isminimal = bool_string(orbit_data['is_minimal'])
         self.parity = parity_string(int(orbit_data['parity']))
         self._set_kernel_field_poly(orbit_data)
-        self.ind_orbit_label = cremona_letter_code(int(orbit_data['prim_orbit_index']) - 1)
-        self.inducing = "{}.{}".format(self.conductor, self.ind_orbit_label)
-        return orbit_data
+        self.inducing = orbit_data['primitive_label']
+        self.ind_orbit_label = self.inducing.split(".")[1]
+
+        # The rest of the function is setting the Galois orbit
+
+        if self.modulus == 1:
+            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]   
+        else:
+            upper_limit = min(self.maxrows + 1, self.degree + 1)
+            if self.maxrows < self.degree + 1:
+                self.rowtruncate = True
+            self.galorbnums = self.first_chi.galois_orbit[:upper_limit]
+            self.galoisorbit = list(
+                self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
+            )
 
     def _set_kernel_field_poly(self, orbit_data):
-        if 'kernel_field_poly' in orbit_data.keys():
-            self.kernel_field_poly = orbit_data['kernel_field_poly']
-        else:
-            self.kernel_field_poly = None
+        an_orbit_rep = int(orbit_data['first_label'].split(".")[1])
+        chi = ConreyCharacter(self.modulus, an_orbit_rep)
+        self.first_chi = chi
+        list_coeffs = chi.kernel_field_poly().list()
+        self.kernel_field_poly = [ZZ(x) for x in list_coeffs]
 
     @lazy_attribute
     def friends(self):
