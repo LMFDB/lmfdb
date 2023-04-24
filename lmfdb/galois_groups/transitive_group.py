@@ -611,7 +611,7 @@ def complete_group_code(code):
         t = int(rematch.group(2))
         return [(n, t)]
     # convert small group label to GAP code
-    if re.match(r'^\d+\.\d+',code):
+    if re.match(r'^\d+\.\d+$',code):
         code = "[%s,%s]"%tuple(code.split("."))
     # Try GAP code
     rematch = re.match(r'^\[\d+,\d+\]$', code)
