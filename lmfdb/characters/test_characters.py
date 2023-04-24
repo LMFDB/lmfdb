@@ -237,6 +237,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_underlying_data(self):
         W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
-        assert 'is_minimal' in W and 'values_gens' in W
+        assert 'is_minimal' in W and 'last_label' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W
