@@ -41,7 +41,7 @@ _cache_time = 120
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
-allowed_annotation_id = re.compile("^[a-zA-Z0-9._-~]+$")  # all unreserved URL characters
+allowed_annotation_id = re.compile(r"^[a-zA-Z0-9._\-~]+$")  # all unreserved URL characters
 
 
 def allowed_id(ID):
@@ -298,18 +298,6 @@ def get_bread(breads=[]):
     for b in breads:
         bc.append(b)
     return bc
-
-
-def searchbox(q="", clear=False):
-    """returns the searchbox"""
-    searchbox = u"""\
-    <form id='knowl-search' action="%s" method="GET">
-      <input name="search" value="%s" />"""
-    if clear:
-        searchbox += '<a href="%s">clear</a>' % url_for(".index")
-    searchbox += '<button type="submit">Go</button>'
-    searchbox += "</form>"
-    return searchbox % (url_for(".index"), q)
 
 
 @knowledge_page.route("/test")

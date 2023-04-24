@@ -4,7 +4,7 @@ import re
 import os
 import yaml
 
-from flask import render_template, url_for, redirect, abort, request
+from flask import render_template, url_for, redirect, abort, request, make_response
 from sage.all import (
     ZZ, next_prime, cartesian_product_iterator,
     cached_function, prime_range, prod, gcd, nth_prime)
@@ -56,11 +56,16 @@ def learnmore_list():
             ('Classical modular form labels', url_for(".labels_page"))]
 
 
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 @cached_function
 def Nk2_bound(nontriv=None):
@@ -251,12 +256,13 @@ def parse_n(info, newform, primes_only):
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    if min(info['CC_n']) < 1:
+    if info['CC_n'] and min(info['CC_n']) < 1:
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
-    if max(info['CC_n']) > newform.an_cc_bound:
+    if info['CC_n'] and max(info['CC_n']) > newform.an_cc_bound:
         errs.append(r"Only \(a_n\) up to %s are available; limiting to \(n \le %d\)" % (newform.an_cc_bound, newform.an_cc_bound))
         info['CC_n'] = [n for n in info['CC_n'] if n <= newform.an_cc_bound]
+
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
@@ -368,16 +374,19 @@ def render_newform_webpage(label):
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.title,
                            friends=newform.friends,
+                           code=newform.code,
                            KNOWL_ID="cmf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
@@ -400,16 +409,19 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
+                           code=newform.code,
                            KNOWL_ID="cmf.%s" % label)
 
 def render_space_webpage(label):
@@ -420,13 +432,14 @@ def render_space_webpage(label):
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -438,13 +451,14 @@ def render_full_gamma1_space_webpage(label):
         return abort(404, err.args)
     info={}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends)
 
@@ -642,6 +656,13 @@ def download_newspace(label):
 @cmf.route("/download_full_space/<label>")
 def download_full_space(label):
     return CMF_download().download_full_space(label)
+
+@cmf.route('/download_code_newform/<label>/<download_type>')
+def cmf_code_download(label,download_type):
+    response = make_response(CMF_download().download_code(label, download_type))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, prim=False):
@@ -1207,6 +1228,18 @@ def reliability_page():
     return render_template("single.html", kid='rcs.rigor.cmf', title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
+
+
+@cmf.route("/FormPictures")
+def picture_page():
+    t = "Pictures for classical modular forms"
+    return render_template(
+        "single.html",
+        kid='portrait.cmf',
+        title=t,
+        bread=get_bread(other="Form Pictures"),
+        learnmore=learnmore_list(),
+    )
 
 
 def projective_image_sort_key(im_type):

@@ -200,9 +200,10 @@ def url_for_lfunction(label):
         kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'),
 label.split('-')))
         kwargs['degree'] = int(kwargs['degree'])
+        url = url_for('.by_label', **kwargs)
     except Exception:
         return render_lfunction_exception("There is no L-function with label '%s'" % label)
-    return url_for('.by_label', **kwargs)
+    return url
 
 @l_function_page.route("/<label>")
 def by_full_label(label):
@@ -346,7 +347,7 @@ lfunc_columns = SearchColumns([
     MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", short_title="order of vanishing", default=True),
     MathCol("z1", "lfunction.zeros", "First zero", short_title="first zero", default=True),
     ProcessedCol("origins", "lfunction.underlying_object", "Origin",
-                 lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
+                 lambda origins: " ".join(f'<a href="{url_for("index")}{url.lstrip("/")}">{name}</a>' for name, url in origins),
                  default=True)],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
 lfunc_columns.dummy_download = True
@@ -1187,6 +1188,7 @@ def render_single_Lfunction(Lclass, args, request):
 
 
 def render_lfunction_exception(err):
+    return abort(404,err) # the code below does not work, there is a problem rendering problem.html
     try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except Exception:

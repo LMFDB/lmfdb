@@ -87,7 +87,7 @@ class ECNF_isoclass():
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
         P = self.graph.plot(edge_labels=True)
-        self.graph_img = encode_plot(P)
+        self.graph_img = encode_plot(P, transparent=True)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
         self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 

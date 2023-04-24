@@ -162,7 +162,7 @@ are blank for combinations of weight and degree which cannot occur.
 Some <a href="{{url_for('.interesting_families')}}">interesting families of hypergeometric motives</a>, a <a href={{url_for('.random_family')}}>random family</a> or a <a href={{url_for('.random_motive')}}>random hypergeometric motive</a>.
 </p>
 
-<form id="hgmsearch" onsubmit="cleanSubmit(this.id)">
+<form class="search">
   <h3> Search for families of HGMs</h3>
   <p>
     Enter values into one or more boxes to restrict the list of families returned.
@@ -179,7 +179,7 @@ Some <a href="{{url_for('.interesting_families')}}">interesting families of hype
 
 <h2>Find</h2>
 
-<form name="search" method = "get" action="{{search}}">
+<form>
   {{ info.search_array.jump_box(info) | safe }}
 </form>
 

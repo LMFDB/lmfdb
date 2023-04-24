@@ -1118,6 +1118,10 @@ class WebG2C():
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
         code['locally_solvable'] = {'magma':'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsEverywhereLocally(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'}
         code['torsion_subgroup'] = {'magma':'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'}
+        code['decomp'] = {'magma':'HeuristicDecompositionFactors(C);'}
+        code['endos0'] = {'magma':'//Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code'}
+        code['endos1'] = {'magma':'HeuristicIsGL2(C); HeuristicEndomorphismDescription(C); HeuristicEndomorphismFieldOfDefinition(C);'}
+        code['endos2'] = {'magma':'HeuristicIsGL2(C : Geometric := true); HeuristicEndomorphismDescription(C : Geometric := true); HeuristicEndomorphismLatticeDescription(C);'}
 
         self._code = None
 

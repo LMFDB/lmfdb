@@ -3,7 +3,7 @@
 from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
+from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing, NumberField, factor
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from flask import url_for
 
@@ -44,7 +44,6 @@ def make_curve_latex(crv_str, nu=None):
         rhs = S(new_rhs)
     eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
-
 
 def make_map_latex(map_str, nu=None):
     if "nu" not in map_str:
@@ -112,6 +111,37 @@ def make_map_latex(map_str, nu=None):
         phi_str = lc_str + "\\frac{%s}{%s}" % (num_str, den_str)
     return phi_str
 
+def make_plane_model_latex(crv_str, nu=None):
+    if "nu" not in crv_str:
+        R0 = QQ
+    else:
+        R0 = PolynomialRing(QQ, "nu")
+    R = PolynomialRing(R0, 2, "t,x")
+    f = R(crv_str)
+    #return teXify_pol(f)
+    return latex(f)+"=0"
+
+def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
+    R0 = PolynomialRing(QQ,"T")
+    K = NumberField(R0(numfld_cs), "nu") # sage factors out constants, ruining integrality
+    S0 = PolynomialRing(K,"x")
+    S = PolynomialRing(S0,"t")
+    t = S.gens()[0]
+    f = S(crv_str)
+    cs = f.coefficients()
+    cs.reverse()
+    mons = f.monomials()
+    L = len(cs)
+    f_str = ""
+    for i in range(0,L-1):
+        f_str += "%s%s" % (latex(factor(cs[i])), latex(t**(L-i-1)))
+        if i != L-2:
+            f_str += "+"
+    if mons[-1] == 1:
+        f_str += latex(factor(cs[-1]))
+    else:
+        f_str += latex(factor(cs[-1])) + latex(mons[-1])
+    return f_str
 
 ###############################################################################
 # Belyi map class definitions
@@ -147,10 +177,10 @@ class WebBelyiGalmap():
         """
         try:
             slabel = label.split("-")
-            if len(slabel) == 2:  # passport label length
-                galmap = db.belyi_galmaps_fixed.lucky({"plabel": label})
-            elif len(slabel) == 3:  # galmap label length
-                galmap = db.belyi_galmaps_fixed.lucky({"label": label})
+            if len(slabel) == 2: # passport label length
+                galmap = db.belyi_galmaps.lucky({"plabel": label})
+            elif len(slabel) == 3: # galmap label length
+                galmap = db.belyi_galmaps.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -187,13 +217,13 @@ class WebBelyiGalmap():
         F = belyi_base_field(galmap)
         if F._data is None:
             fld_coeffs = galmap["base_field"]
-            pol = PolynomialRing(QQ, "t")(fld_coeffs)
+            pol = PolynomialRing(QQ, "T")(fld_coeffs)
             data["base_field"] = latex(pol)
         else:
             data["in_LMFDB"] = True
             if F.poly().degree() == 1:
                 data["isQQ"] = True
-            F.latex_poly = web_latex(F.poly(var="t"))
+            F.latex_poly = web_latex(F.poly(var="T"))
             data["base_field"] = F
 
         data['embeddings'] = galmap['embeddings']
@@ -231,6 +261,11 @@ class WebBelyiGalmap():
 
         data["map"] = make_map_latex(galmap["map"], nu=self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
+        # plane model
+        if galmap.get("plane_model"):
+            data["plane_model"] = galmap["plane_model_latex"]
+        if galmap.get('plane_map_constant_factored'):
+            data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},
@@ -370,7 +405,7 @@ class WebBelyiPassport():
         try:
             slabel = label.split("-")
             if len(slabel) == 2:
-                passport = db.belyi_passports_fixed.lucky({"plabel": label})
+                passport = db.belyi_passports.lucky({"plabel": label})
             else:
                 raise ValueError("Invalid Belyi passport label %s." % label)
         except AttributeError:
@@ -397,7 +432,7 @@ class WebBelyiPassport():
         data["primitivization_url"] = url_for_belyi_passport_label(data['primitivization'])
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps_fixed.search(
+        galmaps_for_plabel = db.belyi_galmaps.search(
             {"plabel": passport["plabel"]}
         )  # , sort = ['label_index'])
         galmapdata = []
@@ -416,7 +451,7 @@ class WebBelyiPassport():
                 field["in_LMFDB"] = True
                 if F.poly().degree() == 1:
                     field["isQQ"] = True
-                F.latex_poly = web_latex(F.poly(var="t"))
+                F.latex_poly = web_latex(F.poly(var="T"))
                 field["base_field"] = F
 
             galmapdatum = [
