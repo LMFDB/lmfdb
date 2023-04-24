@@ -510,6 +510,7 @@ class WebAbstractGroup(WebObj):
             poss = []
             to_try = [k for k in ["G'", "Z", r"\Phi"] if 1 < subdata[k].order < n]
             #if not to_try:
+            # Put in latex code from sage here
                 # this can only occur for perfect groups
             #    if self.simple:
                     #to_try = [k for k in subdata if k.startswith("M")]
@@ -734,6 +735,8 @@ class WebAbstractGroup(WebObj):
             if cent_order_factored:
                 props.extend([(r"$\card{Z(G)}$", 
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
+            else:
+                props.extend([(r"$\card{Z(G)}$", "not computed")])
             try:
                 props.extend([
                     (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order))),
