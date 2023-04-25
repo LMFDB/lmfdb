@@ -5,7 +5,7 @@ import yaml
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
+    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt, prod,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -13,6 +13,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
+from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
@@ -517,6 +518,23 @@ class WebNumberField:
 
     def haskey(self, key):
         return self._data and self._data.get(key) is not None
+
+    def discrootfieldcoeffs(self):
+        factored= factor_base_factor(self.disc(),self.ramified_primes())
+        if self.disc() < 0:
+            factored += [[-1,1]]
+        factored=[[z[0], z[1] % 2] for z in factored]
+        newd = prod([z[0]**z[1] for z in factored])
+        if newd == 1:
+            return ([0,1], 1)
+        if (newd % 4) == 1:
+            return ([(1-newd)//4, -1, 1], newd)
+        else:
+            return ([-newd, 0, 1], newd)
+
+    def discrootfield(self):
+        (rfcoeffs, newd) = self.discrootfieldcoeffs()
+        return formatfield(rfcoeffs, missing_text=r'$\Q(\sqrt{%s}$)'% compress_int(newd, sides=5)[0])
 
     # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,
