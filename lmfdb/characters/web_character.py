@@ -7,9 +7,9 @@ Any character object is obtained as a double inheritance of
 
 2. an object type (list of groups, character group, character)
 
-For Dirichlet characters of modulus up to 10000, the database holds data for
-the character and several of its values. For these objects, there are the
-"DB" classes that replace on-the-fly computation with database lookups.
+For Dirichlet characters of modulus up to 100,000, the database holds data for
+character orbits in char_orbits. For these objects, there are the "DB" classes 
+that replace on-the-fly computation with database lookups.
 
 The code thus defines, from the generic top class WebCharObject
 
@@ -522,7 +522,7 @@ class WebChar(WebCharObject):
         f.append( ("Character group", cglink) )
         if self.nflabel:
             f.append( ('Number field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
+        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 100000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             lfun_label = get_lfunction_by_url(url[1:], projection='label')
             if lfun_label:
@@ -539,7 +539,7 @@ class WebChar(WebCharObject):
 class WebDBDirichlet(WebDirichlet):
     """
     A base class using data stored in the database. Currently this is all
-    Dirichlet characters with modulus up to 10000.
+    Dirichlet character orbits with modulus up to 100,000.
     """
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
@@ -831,7 +831,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     """
     A class using data stored in the database. Currently this is all Dirichlet
-    characters with modulus up to 10000.
+    character orbits with modulus up to 100,000.
     """
     headers = ['Character', 'Orbit', 'Order', 'Primitive']
 
@@ -912,7 +912,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
 class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
-    characters with modulus up to 10000.
+    character orbits with modulus up to 100,000.
     """
     _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
@@ -1065,7 +1065,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
 class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
-    characters with modulus up to 10000.
+    character orbits with modulus up to 100,000.
     """
 
     headers = ['Character']

@@ -25,6 +25,8 @@ from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
 from lmfdb import db
 
+ORBIT_MAX_MOD = 100000
+
 # make url_character available from templates
 
 
@@ -334,7 +336,7 @@ def make_webchar(args, get_bread=False):
     modulus = int(args['modulus'])
     number = int(args['number']) if 'number' in args else None
     orbit_label = args.get('orbit_label', None)
-    if modulus <= 10000:
+    if modulus <= ORBIT_MAX_MOD:
         if number is None:
             if get_bread:
                 bread_crumbs = bread(
@@ -395,7 +397,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     if number is None:
         if orbit_label is None:
 
-            if modulus <= 10000:
+            if modulus <= ORBIT_MAX_MOD:
                 info = WebDBDirichletGroup(**args).to_dict()
                 info['show_orbit_label'] = True
             else:
@@ -410,7 +412,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                 info['generators'] = ', '.join(r'<a href="%s">$\chi_{%s}(%s,\cdot)$' % (url_for(".render_Dirichletwebpage", modulus=modulus, number=g), modulus, g) for g in info['gens'])
             return render_template('CharGroup.html', **info)
         else:
-            if modulus <= 10000:
+            if modulus <= ORBIT_MAX_MOD:
                 try:
                     info = WebDBDirichletOrbit(**args).to_dict()
                 except ValueError:
@@ -443,7 +445,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         )
         return redirect(url_for(".render_DirichletNavigation"))
 
-    if modulus <= 10000:
+    if modulus <= ORBIT_MAX_MOD:
         chi = ConreyCharacter(modulus, number)
         db_orbit_label = db.char_orbits.lucky(
         {'modulus': modulus, 'first_label': "{}.{}".format(modulus, chi.min_conrey_conj)},
@@ -527,7 +529,7 @@ def _dir_knowl_data(label, orbit=False):
         args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
         webchar = make_webchar(args)
 
-        if orbit and modulus <= 10000:
+        if orbit and modulus <= ORBIT_MAX_MOD:
             inf = "Dirichlet character orbit %s.%s\n" % (modulus, webchar.orbit_label)
         else:
             inf = r"Dirichlet character \(\chi_{%s}(%s, \cdot)\)" % (modulus, number) + "\n"
@@ -542,7 +544,7 @@ def _dir_knowl_data(label, orbit=False):
         inf += row_wrap('Parity', webchar.parity)
         if numbers:
             inf += row_wrap('Characters', ",&nbsp;".join(numbers))
-        if modulus <= 10000:
+        if modulus <= ORBIT_MAX_MOD:
             if not orbit:
                 inf += row_wrap('Orbit label', '%s.%s' % (modulus, webchar.orbit_label))
             inf += row_wrap('Orbit Index', webchar.orbit_index)
