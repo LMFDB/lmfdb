@@ -213,7 +213,7 @@ class WebNewform():
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
             # compute values on generators for the Nebentypus
             self.char_conrey = self.embedding_label.split('.')[0]
-            chi = ConreyCharacter(self.level, self.char_conrey)
+            chi = ConreyCharacter(self.level, int(self.char_conrey))
             self.hecke_ring_character_values = chi.values_gens  # [[i,[[1, m]]] for i, m in char_values['values_gens']]
             self.hecke_ring_cyclotomic_generator = m = chi.order
             self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
