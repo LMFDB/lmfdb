@@ -66,6 +66,10 @@ def parity_string(n):
 def bool_string(b):
     return "yes" if b else "no"
 
+def compute_values(chi, groupelts):
+        "Helper function to compute values of several elements on the fly"
+        return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+
 #############################################################################
 ###
 ###    Class for Web objects
@@ -192,6 +196,7 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def groupelts(self):
+        print(f"self.Gelts = {self.Gelts()}")
         return [self.group2tex(x) for x in self.Gelts()]
 
     @cached_method
@@ -359,12 +364,7 @@ class WebDirichlet(WebCharObject):
             = 1 \)
             """ % (a, b, a, b)
 
-        chi_values_data = db.char_dir_values.lookup(
-            "{}.{}".format(modulus, number)
-        )
-        chi_valuepairs = chi_values_data['values_gens']
-        chi_genvalues = [int(v) for g, v in chi_valuepairs]
-        chi = self.chi.sage_character(self.order, chi_genvalues)
+        chi = self.chi.sage_character()
 
         k = chi.kloosterman_sum_numerical(100, a, b)
         k = complex2str(k, 10)
@@ -558,7 +558,8 @@ class WebDBDirichlet(WebDirichlet):
             self.H = PariConreyGroup(self.modulus)
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
-        self.maxcols = 30
+        if not self.maxcols:
+            self.maxcols = 30
         self.codelangs = ('pari', 'sage')
         self._compute()
 
@@ -570,9 +571,6 @@ class WebDBDirichlet(WebDirichlet):
         self._populate_from_db()
 
     def _populate_from_db(self):
-        values_data = db.char_dir_values.lookup(
-            "{}.{}".format(self.modulus, self.number)
-        )
 
         gal_orbit = self.chi.galois_orbit
         min_conrey_conj = gal_orbit[0]
@@ -586,45 +584,43 @@ class WebDBDirichlet(WebDirichlet):
         self.order = int(orbit_data['order'])
         self.conductor = self.chi.conductor()  # this also sets indlabel
         self.indlabel = self.chi.indlabel
-        self._set_values_and_groupelts(values_data)
-        self._set_generators_and_genvalues(values_data)
+        self._set_values_and_groupelts()
+        self._set_generators_and_genvalues()
 
         self._set_isprimitive(orbit_data)
         self._set_isminimal(orbit_data)
         self._set_parity(orbit_data)
-        self._set_galoisorbit(orbit_data)
+        self._set_galoisorbit(gal_orbit)  # truncates and TeX-wraps
         self._set_kernel_field_poly()
 
-    def _set_generators_and_genvalues(self, values_data):
+    def _set_generators_and_genvalues(self):
         """
-        The char_dir_values db collection contains `values_gens`, which
-        contains the generators for the unit group U(modulus) and the values
-        of the character on those generators.
+        This function sets the values on the generators, which are computed on the
+        fly in TinyConrey.py
         """
-        valuepairs = values_data['values_gens']
         if self.modulus == 1:
             self.generators = r"\(1\)"
             self.genvalues = r"\(1\)"
         else:
-            gens = [int(g) for g, v in valuepairs]
-            vals = [int(v) for g, v in valuepairs]
+            gens = self.chi.G_gens
+            vals = self.chi.genvalues
             self._genvalues_for_code = get_sage_genvalues(self.modulus, self.order, vals, self.chi.sage_zeta_order(self.order))
             self.generators = self.textuple([str(g) for g in gens])
             self.genvalues = self.textuple([self._tex_value(v) for v in vals])
 
-    def _set_values_and_groupelts(self, values_data):
+    def _set_values_and_groupelts(self):
         """
-        The char_dir_values db collection contains `values`, which contains
-        several group elements and the corresponding values.
+        The char_orbits db collection does not contain `values`, 
+        so these are computed on the fly.
         """
-        valuepairs = values_data['values']
         if self.modulus == 1:
             self.groupelts = [1]
             self.values = [r"\(1\)"]
         else:
-            self.groupelts = [int(g) for g, v in valuepairs]
-            self.groupelts[0] = -1
-            raw_values = [int(v) for g, v in valuepairs]
+            print("line 626")
+            self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
+            assert self.groupelts[0] == -1
+            raw_values = [int(self.chi.conreyangle(k) * self.order) for k in self.groupelts]
             self.values = [
                 self._tex_value(v, self.order, texify=True) for v in raw_values
             ]
@@ -674,12 +670,12 @@ class WebDBDirichlet(WebDirichlet):
     def _set_parity(self, orbit_data):
         self.parity = parity_string(int(orbit_data['parity']))
 
-    def _set_galoisorbit(self, orbit_data):
+    def _set_galoisorbit(self, gal_orbit):
         if self.modulus == 1:
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
         upper_limit = min(200, self.order + 1)
-        gal_orbit = self.chi.galois_orbit[:upper_limit]
+        gal_orbit = gal_orbit[:upper_limit]
         self.galoisorbit = list(
             self._char_desc(num, prim=self.isprimitive) for num in gal_orbit
         )
@@ -845,11 +841,12 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     def __init__(self, **kwargs):
         self._contents = None
         self.maxrows = 30
-        self.maxcols = 30
+        self.maxcols = 12
         self.rowtruncate = False
         self.coltruncate = False
+        # import pdb; pdb.set_trace()
         WebDBDirichlet.__init__(self, **kwargs)
-        self._set_groupelts()
+        self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
 
     def add_row(self, c):
         """
@@ -865,12 +862,12 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         """
         mod = self.modulus
         num = c
+        # import pdb; pdb.set_trace()
         prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
-        letter = cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
-        formatted_orbit_label = "{}.{}".format(mod, letter)
+        letter = orbit_label.split(".")[1]
         self._contents.append((
             self._char_desc(num, mod=mod, prim=prim),
-            (mod, letter, formatted_orbit_label),
+            (mod, letter, orbit_label),
             (order, bool_string(prim)),
             self._determine_values(valuepairs, order)
         ))
@@ -881,32 +878,29 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         inducing character is itself, according to the database. Also return
         the order of chi, the orbit_label of chi,  and the values within the
         database.
-        Using only char_dir_values saves one database lookup, and combining
-        these steps saves more database lookups.
         """
-        db_data = db.char_dir_values.lookup(
-            "{}.{}".format(mod, num)
+
+        chi = ConreyCharacter(mod, num)
+        is_prim = chi.is_primitive
+        order = chi.order
+        print("line 890")
+        # self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
+        valuepairs = compute_values(chi, self.groupelts)
+        
+        gal_orbit = chi.galois_orbit
+        min_conrey_conj = gal_orbit[0]
+
+        # This next db lookup takes ages, I don't know how to speed it up
+        orbit_label = db.char_orbits.lucky(
+            {'modulus': mod, 'first_label': "{}.{}".format(mod, min_conrey_conj)},
+            projection='label'
         )
-        is_prim = (db_data['label'] == db_data['prim_label'])
-        order = db_data['order']
-        valuepairs = db_data['values']
-        orbit_label = db_data['orbit_label']
+        
         return is_prim, order, orbit_label, valuepairs
 
     def _compute(self):
         WebDirichlet._compute(self)
         logger.debug("WebDBDirichletGroup Computed")
-
-    def _set_groupelts(self):
-        if self.modulus == 1:
-            self.groupelts = [1]
-        else:
-            db_data = db.char_dir_values.lookup(
-                "{}.{}".format(self.modulus, 1)
-            )
-            valuepairs = db_data['values']
-            self.groupelts = [int(g) for g, v in valuepairs]
-            self.groupelts[0] = -1
 
     def _char_desc(self, num, mod=None, prim=None):
         return (mod, num, self.char2tex(mod, num), prim)
@@ -1120,10 +1114,12 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.maxrows = 30
         self.rowtruncate = False
-        self.maxcols = 10
+        self.maxcols = 12
         self._populate_from_db()  # this is the meat
         self._contents = None
+        print(f"Line 1123")
         self._set_groupelts()
+        print(f"After {self.groupelts}")
 
     @lazy_attribute
     def title(self):
@@ -1216,10 +1212,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         """
         mod = self.modulus
         num = c
-        valuepairs = db.char_dir_values.lookup(
-            "{}.{}".format(mod, num),
-            projection='values'
-        )
+        chi = ConreyCharacter(mod, num)
+        print(f"self.groupelts = {self.groupelts}")
+        groupelts_tmp = self.groupelts.copy()
+        valuepairs = compute_values(chi, groupelts_tmp)
+        print(f"valuepairs = {valuepairs}")
         prim = self.isprimitive == bool_string(True)
         self._contents.append((
             self._char_desc(num, mod=mod, prim=prim),
@@ -1263,24 +1260,14 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         if self.modulus == 1:
             self.groupelts = [1]
         else:
-            db_data = db.char_dir_values.lookup(
-                "{}.{}".format(self.modulus, 1)
-            )
-            valuepairs = db_data['values']
-            self.groupelts = [int(g) for g, v in valuepairs]
-            self.groupelts[0] = -1
+            self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
 
     @lazy_attribute
     def codeinit(self):
         self.exnum = self.galorbnums[0]
         self.exchi = ConreyCharacter(self.modulus, self.exnum)
+        vals = self.exchi.genvalues
 
-        values_gens = db.char_dir_values.lookup(
-            "{}.{}".format(self.modulus, self.exnum),
-            projection='values_gens'
-        )
-
-        vals = [int(v) for _, v in values_gens]
         sage_zeta_order = self.exchi.sage_zeta_order(self.order)
         self._genvalues_for_code = get_sage_genvalues(self.modulus,
                                     self.order, vals, sage_zeta_order)

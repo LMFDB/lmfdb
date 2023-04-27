@@ -110,6 +110,7 @@ class ConreyCharacter():
             self.indlabel = int(pari("znconreyexp(%s,%s)"%(G_0,self.chi_0)))
             return int(B[0])
 
+    @property
     def is_primitive(self):
         return self.conductor() == self.modulus
 
@@ -146,6 +147,13 @@ class ConreyCharacter():
         # This assumes that the generators are ordered in the way
         # that Sage returns
         return [self.conreyangle(k) * self.order for k in self.G_gens]
+
+    @property
+    def values_gens(self):
+        # This may be considered the full version of genvalues; 
+        # that is, it returns both the generators as well as the values
+        # at those generators
+        return [[k, self.conreyangle(k) * self.order] for k in self.G_gens]
 
     @cached_method
     def kronecker_symbol(self):
@@ -202,4 +210,7 @@ class ConreyCharacter():
     def kernel_field_poly(self):
         k = pari("charker(%s,%s)"%(self.G, self.chi_pari))
         return pari("galoissubcyclo(%s,%s)"%(self.G, k))
-
+    
+    @property
+    def min_conrey_conj(self):
+        return self.galois_orbit[0]

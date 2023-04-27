@@ -12,6 +12,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.api import datapage
 from lmfdb.characters.web_character import (
     WebSmallDirichletCharacter,
@@ -236,44 +237,7 @@ character_columns.dummy_download = True
     bread=lambda: bread("Search results"),
 )
 def dirichlet_character_search(info, query):
-    print("i am searching")
     common_parse(info, query)
-
-
-# def label_to_number(modulus, number, all=False):
-#     """
-#     Takes the second part of a character label and converts it to the second
-#     part of a Conrey label. This could be trivial (just casting to an int)
-#     or could require converting from an orbit label to a number.
-
-#     If the label is invalid, returns 0.
-#     """
-#     try:
-#         number = int(number)
-#     except ValueError:
-#         # encoding Galois orbit
-#         if modulus < 10000:
-#             try:
-#                 import pdb; pdb.set_trace()
-#                 orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
-#             except ValueError:
-#                 raise ValueError("Dirichlet Character of this label not found in database")
-#             else:
-#                 number = db.char_dir_orbits.lucky({'orbit_label': orbit_label}, 'galois_orbit')
-#                 if number is None:
-#                     raise ValueError("Dirichlet Character of this label not found in database")
-#                 if not all:
-#                     number = number[0]
-#         else:
-#             raise ValueError("The modulus cannot be larger than 10,000")
-#     else:
-#         if number <= 0:
-#             raise ValueError("The number after the '.' cannot be negative")
-#         elif gcd(modulus, number) != 1:
-#             raise ValueError("The two numbers either side of '.' must be coprime")
-#         elif number > modulus:
-#             raise ValueError("The number after the '.' must be less than the number before")
-#     return number
 
 
 @characters_page.route("/Dirichlet")
@@ -380,9 +344,12 @@ def make_webchar(args, get_bread=False):
                 return WebDBDirichletOrbit(**args), bread_crumbs
             return WebDBDirichletOrbit(**args)
         if args.get('orbit_label') is None:
-            db_orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
-            orbit_label = cremona_letter_code(int(db_orbit_label.partition('.')[-1]) - 1)
-            args['orbit_label'] = orbit_label
+            chi = ConreyCharacter(modulus, number)
+            db_orbit_label = db.char_orbits.lucky(
+            {'modulus': modulus, 'first_label': "{}.{}".format(modulus, chi.min_conrey_conj)},
+            projection='label'
+            )
+            args['orbit_label'] = db_orbit_label.split('.')[-1]
         if get_bread:
             bread_crumbs = bread(
                 [('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
@@ -478,9 +445,13 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         return redirect(url_for(".render_DirichletNavigation"))
 
     if modulus <= 10000:
-        db_orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
-        # The -1 in the line below is because labels index at 1, not 0
-        real_orbit_label = cremona_letter_code(int(db_orbit_label.partition('.')[-1]) - 1)
+        chi = ConreyCharacter(modulus, number)
+        db_orbit_label = db.char_orbits.lucky(
+        {'modulus': modulus, 'first_label': "{}.{}".format(modulus, chi.min_conrey_conj)},
+        projection='label'
+        )
+        real_orbit_label = db_orbit_label.split('.')[-1]
+
         if orbit_label is not None:
             if orbit_label != real_orbit_label:
                 flash_warning(
@@ -613,7 +584,7 @@ def random_Dirichletwebpage():
 def interesting():
     return interesting_knowls(
         "character.dirichlet",
-        db.char_dir_values,
+        db.char_orbits,
         url_for_label=url_for_label,
         title="Some interesting Dirichlet characters",
         bread=bread("Interesting"),
@@ -752,27 +723,27 @@ class DirichStats(StatsDisplay):
                   "is_real": yesno}
 
     def __init__(self):
-        self.nchars = db.char_dir_values.count()
+        self.nchars = db.char_orbits.sum_column('degree')
         self.norbits = db.char_orbits.count()
         self.maxmod = db.char_orbits.max("modulus")
 
     @property
     def short_summary(self):
-        return 'The database currently contains %s %s of %s up to %s, lying in %s %s.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
-            comma(self.nchars),
+        return 'The database currently contains %s %s of %s of %s up to %s. This comprises %s Dirichlet characters.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
+            comma(self.norbits),
+            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
-            comma(self.norbits),
-            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
+            comma(self.nchars),
             url_for(".statistics"))
 
     @property
     def summary(self):
-        return "The database currently contains %s %s of %s up to %s, lying in %s %s.  The tables below show counts of Galois orbits." % (
-            comma(self.nchars),
+        return "The database currently contains %s %s of %s of %s up to %s. This comprises %s Dirichlet characters. The tables below show counts of Galois orbits." % (
+            comma(self.norbits),
+            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
-            comma(self.norbits),
-            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"))
+            comma(self.nchars))
