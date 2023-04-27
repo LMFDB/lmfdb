@@ -47,7 +47,6 @@ from flask import url_for
 from collections import defaultdict
 from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
                       euler_phi, latex)
-from sage.databases.cremona import cremona_letter_code
 from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb import db
 from lmfdb.utils import prop_int_pretty
@@ -196,7 +195,6 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def groupelts(self):
-        print(f"self.Gelts = {self.Gelts()}")
         return [self.group2tex(x) for x in self.Gelts()]
 
     @cached_method
@@ -617,7 +615,6 @@ class WebDBDirichlet(WebDirichlet):
             self.groupelts = [1]
             self.values = [r"\(1\)"]
         else:
-            print("line 626")
             self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
             assert self.groupelts[0] == -1
             raw_values = [int(self.chi.conreyangle(k) * self.order) for k in self.groupelts]
@@ -844,7 +841,6 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         self.maxcols = 12
         self.rowtruncate = False
         self.coltruncate = False
-        # import pdb; pdb.set_trace()
         WebDBDirichlet.__init__(self, **kwargs)
         self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
 
@@ -862,7 +858,6 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         """
         mod = self.modulus
         num = c
-        # import pdb; pdb.set_trace()
         prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
         letter = orbit_label.split(".")[1]
         self._contents.append((
@@ -883,8 +878,6 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         chi = ConreyCharacter(mod, num)
         is_prim = chi.is_primitive
         order = chi.order
-        print("line 890")
-        # self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
         valuepairs = compute_values(chi, self.groupelts)
         
         gal_orbit = chi.galois_orbit
@@ -1117,9 +1110,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.maxcols = 12
         self._populate_from_db()  # this is the meat
         self._contents = None
-        print(f"Line 1123")
         self._set_groupelts()
-        print(f"After {self.groupelts}")
 
     @lazy_attribute
     def title(self):
@@ -1213,10 +1204,8 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         mod = self.modulus
         num = c
         chi = ConreyCharacter(mod, num)
-        print(f"self.groupelts = {self.groupelts}")
         groupelts_tmp = self.groupelts.copy()
         valuepairs = compute_values(chi, groupelts_tmp)
-        print(f"valuepairs = {valuepairs}")
         prim = self.isprimitive == bool_string(True)
         self._contents.append((
             self._char_desc(num, mod=mod, prim=prim),

@@ -23,7 +23,6 @@ from lmfdb.characters.web_character import (
 )
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
-from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
 
 # make url_character available from templates
