@@ -876,7 +876,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         """
 
         chi = ConreyCharacter(mod, num)
-        is_prim = chi.is_primitive
+        is_prim = chi.is_primitive()
         order = chi.order
         valuepairs = compute_values(chi, self.groupelts)
         

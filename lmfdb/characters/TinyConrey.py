@@ -110,7 +110,7 @@ class ConreyCharacter():
             self.indlabel = int(pari("znconreyexp(%s,%s)"%(G_0,self.chi_0)))
             return int(B[0])
 
-    @property
+    @cached_method
     def is_primitive(self):
         return self.conductor() == self.modulus
 
