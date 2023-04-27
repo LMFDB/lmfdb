@@ -169,12 +169,18 @@ def common_parse(info, query):
 
 def validate_label(label):
 
-    if re.match(r'^\d+\.([\da-z]+)+$', label):
+    if re.match(r'^\d+\.[a-z]+$', label):  # label is an orbit
+        return True
+    elif re.match(r'^\d+\.\d+$', label):  # label is a character
+        return True
+    elif re.match(r'^\d+\.[a-z]+\.\d+$', label):  # label has both orbit and number
         return True
     else:
-        raise ValueError(("It must be of the form modulus.number, with modulus "
-                          "and number positive natural numbers"))
-
+        raise ValueError(("It must be of the form modulus.number, or "
+                          "modulus.letter, or modulus.letter.number, "
+                          "with modulus and number positive natural numbers "
+                          " and letter an alphabetic letter."
+                          ))
 
 def jump(info):
     jump_box = info["jump"].strip()  # only called when this present
@@ -193,10 +199,22 @@ def url_for_label(label):
     except ValueError as err:
         flash_error("%s is not a valid label: %s.", label, str(err))
         return redirect(url_for(".render_DirichletNavigation"))
-    modulus, number = label.split(".")
-    modulus = int(modulus)
-    number = int(number)
-    return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
+
+    parts_of_label = label.split(".")
+
+    if len(parts_of_label) == 2:
+        modulus = int(parts_of_label[0])
+        if str.isalpha(parts_of_label[1]):
+            orbit_label = parts_of_label[1]
+            return url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)
+        else:
+            number = int(parts_of_label[1])
+            return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
+    else: ## i.e. there are three parts
+        modulus = int(parts_of_label[0])
+        orbit_label = parts_of_label[1]
+        number = int(parts_of_label[2])
+        return url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number)
 
 def display_galois_orbit(modulus, first_label, last_label, degree):
 
@@ -432,7 +450,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                 return render_template('CharacterGaloisOrbit.html', **info)
             else:
                 flash_error(
-                    "Galois orbits have only been computed for modulus up to 10,000, but you entered %s", modulus)
+                    "Galois orbits have only been computed for modulus up to 100,000, but you entered %s", modulus)
             return redirect(url_for(".render_DirichletNavigation"))
 
     try:
