@@ -85,6 +85,8 @@ def raw_typeset_lfunc(coeffs_list,
     R = PolynomialRing(ZZ, rawvar)
 
     def rawtset_coeff(i, coeffs):
+        if (coeffs == 'NULL'):
+            return "?", "?"
         poly = R(coeffs)
         if poly == 0:
             return "", ""
