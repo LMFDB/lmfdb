@@ -85,13 +85,18 @@ def raw_typeset_lfunc(coeffs_list,
     R = PolynomialRing(ZZ, rawvar)
 
     def rawtset_coeff(i, coeffs):
+        rawq = " * " + str(i) + "^{-s}" if i > 1 else " "
+        tsetq = " \\cdot {{"  + str(i) +  "}}^{{-s}}" if i > 1 else " "
         if (coeffs == 'NULL'):
-            return "?", "?"
+            raw = " ? " + rawq
+            tset = " ? " + tsetq
+            if i > 1:
+                return plus + raw, plus + tset
+            else:
+                return rawq, tsetq
         poly = R(coeffs)
         if poly == 0:
             return "", ""
-        rawq = " * " + str(i) + "^{-s}" if i > 1 else " "
-        tsetq = " \\cdot {{"  + str(i) +  "}}^{{-s}}" if i > 1 else " "
         raw = str(poly)
         if poly in [1, -1]:
             rawq = "{" + str(i) + "}^{-s}" if i > 1 else "1"
