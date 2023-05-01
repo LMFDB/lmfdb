@@ -46,16 +46,21 @@ def raw_typeset_ev(coeffs,
                    final_rawvar='b',
                    superscript=False,
                    **kwargs):
-    
+
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
 
-    poly = R(coeffs)
-    raw = str(poly)
-    tset = compress_polynomial(
-        poly,
-        coeff_compress_threshold,
-        decreasing=True)
+    if (coeffs == r"NULL"):
+        raw = "?"
+        tset = "?"
+    else:
+        poly = R(coeffs)
+        raw = str(poly)      
+        tset = compress_polynomial(
+            poly,
+            coeff_compress_threshold,
+            decreasing=True)
+        
     if not superscript:
         raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
         tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
