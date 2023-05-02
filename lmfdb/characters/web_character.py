@@ -678,8 +678,11 @@ class WebDBDirichlet(WebDirichlet):
         )
 
     def _set_kernel_field_poly(self):
-        list_coeffs = self.chi.kernel_field_poly().list()
-        self.kernel_field_poly = [ZZ(x) for x in list_coeffs]
+        if self.order <= 100:
+            list_coeffs = self.chi.kernel_field_poly().list()
+            self.kernel_field_poly = [ZZ(x) for x in list_coeffs]
+        else:
+            self.kernel_field_poly = None
 
 class WebCharGroup(WebCharObject):
     """
@@ -1151,8 +1154,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         an_orbit_rep = int(orbit_data['first_label'].split(".")[1])
         chi = ConreyCharacter(self.modulus, an_orbit_rep)
         self.first_chi = chi
-        list_coeffs = chi.kernel_field_poly().list()
-        self.kernel_field_poly = [ZZ(x) for x in list_coeffs]
+        if self.order <= 100:
+            list_coeffs = chi.kernel_field_poly().list()
+            self.kernel_field_poly = [ZZ(x) for x in list_coeffs]
+        else:
+            self.kernel_field_poly = None
 
     @lazy_attribute
     def friends(self):
