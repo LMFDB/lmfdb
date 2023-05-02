@@ -534,14 +534,6 @@ class mf_newforms(MfChecker):
             print("Quotient failure", pid, qid)
         return success
 
-    #### char_dir_orbits ####
-
-    #@slow(disabled = True)
-    #def check_inner_twist_character(self, rec, verbose=False):
-    #    # TODO - use zipped table
-    #    # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
-    #    return True
-
     #### mf_hecke_traces ####
 
     @overall_long
