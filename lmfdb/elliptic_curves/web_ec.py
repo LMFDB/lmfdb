@@ -350,7 +350,8 @@ class WebEC():
             M = ZZ(self.adelic_level)
             data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
             P = M.prime_divisors()
-            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))^2*prod([p^2-1 for p in P]) // self.adelic_index
+            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))**2*prod([p**2-1 for p in P]) // self.adelic_index
+            print(data['adelic_image_size'])
         else:
             data['adelic_data'] = {}
 
