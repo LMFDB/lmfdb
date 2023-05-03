@@ -16,7 +16,7 @@
   {% if not rep.is_surjective %}
   <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
   {% endif %}
-  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty | safe }} {% if rep.image_abstract }}
+  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty | safe }} {% if rep.image_abstract %}
     $\cong$ {{ rep.image_abstract | safe }}
   {% endif %}
     </td></tr>
