@@ -10,6 +10,7 @@ from lmfdb.genus2_curves.main import url_for_curve_label as url_for_g2c_label
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 def _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     if base_ring_is_field:
@@ -146,6 +147,19 @@ class WebModLGalRep(WebObj):
     @lazy_attribute
     def projective_kernel_sibling(self):
         return formatfield(self.projective_kernel_polynomial)
+
+    @lazy_attribute
+    def image_abstract(self):
+        if self.image_abstract_group:
+            return abstract_group_display_knowl(self.image_abstract_group)
+        return ''
+
+    @lazy_attribute
+    def projective_image_abstract(self):
+        if self.image_abstract_group:
+            return abstract_group_display_knowl(self.projective_image_abstract_group)
+        return ''
+
 
     @lazy_attribute
     def frobenius_generators(self):
