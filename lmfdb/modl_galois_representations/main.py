@@ -227,7 +227,7 @@ class ModLGalRepSearchArray(SearchArray):
         base_ring_characteristic = TextBox(
             name="base_ring_characteristic",
             knowl="modlgal.base_ring_characteristic",
-            label="Characteristic",
+            label="Characteristic $\ell$",
             example="2",
             example_span="2, 3, or 5")
         dimension = TextBox(
@@ -293,18 +293,18 @@ class ModLGalRepSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [conductor, codomain],
-            [conductor_primes, surjective],
-            [dimension, absolutely_irreducible],
-            [top_slope, solvable],
-            [base_ring_characteristic, image_index],
+            [base_ring_characteristic, codomain],
+            [dimension, surjective],
+            [conductor, absolutely_irreducible],
+            [conductor_primes, solvable],
+            [top_slope, image_index],
             [count, image_order],
         ]
 
         self.refine_array = [
-            [conductor, conductor_primes, dimension, top_slope],
-            [codomain, surjective, absolutely_irreducible, solvable],
-            [base_ring_characteristic, image_index, image_order]
+            [base_ring_characteristic, dimension, conductor, conductor_primes],
+            [codomain, solvable, surjective, absolutely_irreducible],
+            [top_slope, image_index, image_order]
         ]
 
     sort_knowl = "modlgal.sort_order"
