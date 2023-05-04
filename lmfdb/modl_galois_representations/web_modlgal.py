@@ -98,7 +98,6 @@ class WebModLGalRep(WebObj):
         if kerfield and kerfield._data:
             friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
 
-
         if self.dimension > 1 and hasattr(self, "determinant_label"):
             friends.append(("Determinant " + self.determinant_label, url_for_modlgal_label(label=self.determinant_label)))
         if self.dimension == 1 and not has_dirichlet:
@@ -159,7 +158,6 @@ class WebModLGalRep(WebObj):
         if self.image_abstract_group:
             return abstract_group_display_knowl(self.projective_image_abstract_group)
         return ''
-
 
     @lazy_attribute
     def frobenius_generators(self):

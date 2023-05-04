@@ -227,7 +227,7 @@ class ModLGalRepSearchArray(SearchArray):
         base_ring_characteristic = TextBox(
             name="base_ring_characteristic",
             knowl="modlgal.base_ring_characteristic",
-            label="Characteristic $\ell$",
+            label=r"Characteristic $\ell$",
             example="2",
             example_span="2, 3, or 5")
         dimension = TextBox(
