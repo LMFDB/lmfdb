@@ -271,17 +271,12 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
     if isinstance(coef, str):
         coef = string2list(coef)
     if data is None:
-        from lmfdb.number_fields.number_field import poly_to_field_label
-        pol = coeff_to_poly(coef)
-        label = poly_to_field_label(pol)
-        thefield = WebNumberField(label)
+        thefield = WebNumberField.from_coeffs(coef)
     else:
-        label = data['label']
-        if label == "N/A":
+        if data['label'] == "N/A":
             thefield = None
         else:
-            thefield = WebNumberField(label, data=data)
-
+            thefield = WebNumberField(data['label'], data=data)
     if thefield is None or thefield._data is None:
         deg = len(coef) - 1
         mypolraw = coeff_to_poly(coef)
@@ -296,6 +291,10 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
+    if data is None:
+        label = thefield.get_label()
+    else:
+        label = data['label']
     return nf_display_knowl(label,thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity

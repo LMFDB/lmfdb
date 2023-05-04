@@ -209,7 +209,10 @@ class ConreyCharacter():
     @cached_method
     def kernel_field_poly(self):
         k = pari("charker(%s,%s)"%(self.G, self.chi_pari))
-        return pari("galoissubcyclo(%s,%s)"%(self.G, k))
+        pol = pari("galoissubcyclo(%s,%s)"%(self.G, k))
+        if self.order <= 12:
+            pol = pari("polredabs(%s)"%(pol))
+        return pol
     
     @property
     def min_conrey_conj(self):
