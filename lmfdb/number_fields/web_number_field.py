@@ -287,10 +287,7 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None, link=False)
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            if link:
-                mypol = '<a title = "Field with link to db" knowl="nf.field.link">dummy tex</a>'
-            else:
-                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
             if link:
                 jump_link = str(url_for("number_fields.number_field_render_webpage")+'?jump=%s' % mypol)
