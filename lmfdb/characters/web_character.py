@@ -494,7 +494,7 @@ class WebChar(WebCharObject):
     def kerfield(self):
         kerpoly = self.kernel_field_poly
         if kerpoly and self.order <= 100:
-            return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order)
+            return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order, link=True)
         else:
             return "Number field defined by a degree %d polynomial (not computed)" % self.order
 
