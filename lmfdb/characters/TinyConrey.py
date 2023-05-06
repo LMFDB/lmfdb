@@ -150,7 +150,7 @@ class ConreyCharacter():
 
     @property
     def values_gens(self):
-        # This may be considered the full version of genvalues; 
+        # This may be considered the full version of genvalues;
         # that is, it returns both the generators as well as the values
         # at those generators
         return [[k, self.conreyangle(k) * self.order] for k in self.G_gens]
@@ -190,7 +190,7 @@ class ConreyCharacter():
         M = H._module
         order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
         return DirichletCharacter(H,M(order_corrected_genvalues))
-    
+
     @property
     def galois_orbit(self):
         order = self.order
@@ -213,7 +213,7 @@ class ConreyCharacter():
         if self.order <= 12:
             pol = pari("polredabs(%s)"%(pol))
         return pol
-    
+
     @property
     def min_conrey_conj(self):
         return self.galois_orbit[0]
