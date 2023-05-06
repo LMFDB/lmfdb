@@ -258,7 +258,7 @@ def fake_label(label, coef):
     poly = coeff_to_poly(coef)
     return [poly.degree(), poly.degree()+1, poly.discriminant(), 0]
 
-def formatfield(coef, show_poly=False, missing_text=None, data=None):
+def formatfield(coef, show_poly=False, missing_text=None, data=None, link=False):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -290,7 +290,11 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
         if missing_text is None:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
+            if link:
+                jump_link = str(url_for("number_fields.number_field_render_webpage")+'?jump=%s' % mypol)
+                mypol = '<a title = "Field with link to db" knowl="nf.field.link" kwargs="poly=%s&link=%s">%s</a>' % (mypol,jump_link,missing_text)
+            else:
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
     if data is None:
         label = thefield.get_label()

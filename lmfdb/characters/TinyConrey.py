@@ -82,6 +82,7 @@ class ConreyCharacter():
         self.modulus = Integer(modulus)
         self.number = Integer(number)
         self.G = Pari("znstar({},1)".format(modulus))
+        self.G_gens = Integers(self.modulus).unit_gens()
         self.chi_pari = pari("znconreylog(%s,%d)"%(self.G,self.number))
         self.chi_0 = None
         self.indlabel = None
@@ -109,6 +110,7 @@ class ConreyCharacter():
             self.indlabel = int(pari("znconreyexp(%s,%s)"%(G_0,self.chi_0)))
             return int(B[0])
 
+    @cached_method
     def is_primitive(self):
         return self.conductor() == self.modulus
 
@@ -140,6 +142,19 @@ class ConreyCharacter():
     def order(self):
         return self.multiplicative_order()
 
+    @property
+    def genvalues(self):
+        # This assumes that the generators are ordered in the way
+        # that Sage returns
+        return [self.conreyangle(k) * self.order for k in self.G_gens]
+
+    @property
+    def values_gens(self):
+        # This may be considered the full version of genvalues;
+        # that is, it returns both the generators as well as the values
+        # at those generators
+        return [[k, self.conreyangle(k) * self.order] for k in self.G_gens]
+
     @cached_method
     def kronecker_symbol(self):
         c = self.conductor()
@@ -163,8 +178,42 @@ class ConreyCharacter():
     def sage_zeta_order(self, order):
         return 1 if self.modulus <= 2 else lcm(2,order)
 
-    def sage_character(self, order, genvalues):
+    def sage_character(self, order=None, genvalues=None):
+
+        if order is None:
+            order = self.order
+
+        if genvalues is None:
+            genvalues = self.genvalues
+
         H = DirichletGroup(self.modulus, base_ring=CyclotomicField(self.sage_zeta_order(order)))
         M = H._module
         order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
         return DirichletCharacter(H,M(order_corrected_genvalues))
+
+    @property
+    def galois_orbit(self):
+        order = self.order
+        if order == 1:
+            return [1]
+
+        output = []
+
+        for k in range(1,order):
+            if gcd(k,order) == 1:
+                an_orbit = pari("znconreyexp(%s,charpow(%s,%s,%d))"%(self.G,self.G,self.chi_pari,k))
+                output.append(Integer(an_orbit))
+        output.sort()
+        return output
+
+    @cached_method
+    def kernel_field_poly(self):
+        k = pari("charker(%s,%s)"%(self.G, self.chi_pari))
+        pol = pari("galoissubcyclo(%s,%s)"%(self.G, k))
+        if self.order <= 12:
+            pol = pari("polredabs(%s)"%(pol))
+        return pol
+
+    @property
+    def min_conrey_conj(self):
+        return self.galois_orbit[0]

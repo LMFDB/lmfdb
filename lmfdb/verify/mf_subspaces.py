@@ -33,22 +33,6 @@ class mf_subspaces(SubspacesChecker):
         return self.check_letter_code('sub_char_orbit_index', 'sub_char_orbit_label')
 
     @overall
-    def check_conrey_indexes(self):
-        """
-        check that conrey_indexes matches galois_orbit for char_orbit_label in char_dir_orbits
-        """
-        # TIME about 10s
-        return self.check_crosstable('char_dir_orbits', 'conrey_indexes', ['level', 'char_orbit_index'], 'galois_orbit', ['modulus', 'orbit_index'])
-
-    @overall
-    def check_sub_conrey_indexes(self):
-        """
-        check that sub_conrey_indexes matches galois_orbit for sub_char_orbit_label in char_dir_orbits
-        """
-        # TIME about 10s
-        return self.check_crosstable('char_dir_orbits', 'sub_conrey_indexes', ['sub_level', 'sub_char_orbit_index'], 'galois_orbit', ['modulus', 'orbit_index'])
-
-    @overall
     def check_sub_dim(self):
         """
         check that sub_dim = dim S_k^new(sub_level, sub_chi)
