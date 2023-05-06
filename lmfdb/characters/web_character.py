@@ -8,7 +8,7 @@ Any character object is obtained as a double inheritance of
 2. an object type (list of groups, character group, character)
 
 For Dirichlet characters of modulus up to 100,000, the database holds data for
-character orbits in char_orbits. For these objects, there are the "DB" classes 
+character orbits in char_orbits. For these objects, there are the "DB" classes
 that replace on-the-fly computation with database lookups.
 
 The code thus defines, from the generic top class WebCharObject
@@ -611,7 +611,7 @@ class WebDBDirichlet(WebDirichlet):
 
     def _set_values_and_groupelts(self):
         """
-        The char_orbits db collection does not contain `values`, 
+        The char_orbits db collection does not contain `values`,
         so these are computed on the fly.
         """
         if self.modulus == 1:
@@ -885,7 +885,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         is_prim = chi.is_primitive()
         order = chi.order
         valuepairs = compute_values(chi, self.groupelts)
-        
+
         gal_orbit = chi.galois_orbit
         min_conrey_conj = gal_orbit[0]
 
@@ -894,7 +894,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
             {'modulus': mod, 'first_label': "{}.{}".format(mod, min_conrey_conj)},
             projection='label'
         )
-        
+
         return is_prim, order, orbit_label, valuepairs
 
     def _compute(self):
@@ -1143,7 +1143,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         # The rest of the function is setting the Galois orbit
 
         if self.modulus == 1:
-            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]   
+            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
         else:
             upper_limit = min(self.maxrows + 1, self.degree + 1)
             if self.maxrows < self.degree + 1:
