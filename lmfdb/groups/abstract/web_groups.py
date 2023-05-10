@@ -195,7 +195,7 @@ class WebAbstractGroup(WebObj):
             lehmer.append(perm % j)
             perm = int(perm/j)
         lehmer.reverse()
-        return libgap.PermList(tuple(from_lehmer_code(lehmer)))
+        return libgap.PermList(from_lehmer_code(lehmer))
 
     @lazy_attribute
     def G(self):
