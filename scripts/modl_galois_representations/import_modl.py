@@ -63,12 +63,19 @@ for a in reps.search():
   lab = a['label']
   parts = lab.split('.')
   baselabel = '.'.join(parts[0:-1])
-  label_dict[baselabel] = label_dict.get(baselabel,0)+1
+  if not '-' in parts[-1]:
+      num = int(parts[-1])
+      newset = label_dict.get(baselabel,set([]))
+      label_dict[baselabel] = newset.union({num})
 
 def label_lookup(base_label):
     global label_dict
-    n = label_dict.get(base_label, 0)+1
-    label_dict[base_label] = n
+    n=1
+    s = label_dict.get(base_label, set([]))
+    while n in s:
+        n += 1
+    s.add(n)
+    label_dict[base_label] = s
     return n
 
 def do_import(ll):
@@ -81,7 +88,8 @@ def do_import(ll):
         'image_index', 'image_label', 'image_order', 'image_type', 'is_absolutely_irreducible',
         'is_irreducible', 'is_solvable', 'is_surjective', 'kernel_polynomial',
         'label', 'projective_is_surjective', 'projective_kernel_polynomial', 'projective_type',
-        'top_slope_rational', 'top_slope_real', 'generating_primes', 'frobenius_matrices']
+        'top_slope_rational', 'top_slope_real', 'generating_primes', 'frobenius_matrices',
+        'image_abstract_group', 'projective_image_abstract_group']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
