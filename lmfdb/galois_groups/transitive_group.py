@@ -849,6 +849,8 @@ aliases['PSL(3,3)'] = [(13,7)]
 aliases['PSL(2,13)'] = [(14,30)]
 aliases['PSP(4,3)'] = [(27,993)]
 aliases['PSU(3,3)'] = [(28,323)]
+aliases['SL(2,5)'] = [(24,201)]
+aliases['GL(2,5)'] = [(24,1353)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]

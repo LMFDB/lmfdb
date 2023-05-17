@@ -9,6 +9,8 @@ from lmfdb import db
 from lmfdb.genus2_curves.main import url_for_curve_label as url_for_g2c_label
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 def _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     if base_ring_is_field:
@@ -75,20 +77,33 @@ class WebModLGalRep(WebObj):
     def friends(self):
         from lmfdb.modl_galois_representations.main import url_for_modlgal_label
         friends = []
+        has_dirichlet = False
         if not hasattr(self, "related_objects"):
             self.related_objects = []
         for r in self.related_objects:
             if r[0] == "Dirichlet":
                 c = r[1].split(".")
                 friends.append(("Dirichlet character " + r[1], url_for("characters.render_Dirichletwebpage",modulus=c[0],number=c[1])))
+                has_dirichlet = True
             elif r[0] == "ECQ":
                 friends.append(("Elliptic curve " + r[1], url_for("ec.by_ec_label", label=r[1])))
             elif r[0] == "MF":
                 friends.append(("Modular form " + r[1], url_for_mf_label(r[1])))
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
+        kerfield = WebNumberField.from_coeffs(self.kernel_polynomial)
+        if kerfield and kerfield._data:
+            friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
+        kerfield = WebNumberField.from_coeffs(self.projective_kernel_polynomial)
+        if kerfield and kerfield._data:
+            friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
+
         if self.dimension > 1 and hasattr(self, "determinant_label"):
             friends.append(("Determinant " + self.determinant_label, url_for_modlgal_label(label=self.determinant_label)))
+        if self.dimension == 1 and not has_dirichlet:
+            dirlabel = self.label.split('.')[-1]
+            c = dirlabel.split('-')
+            friends.append(("Dirichlet character " + c[0]+'.'+c[1], url_for("character.render_Dirichletwebpage", modulus=c[0], number=c[1])))
         return friends
 
     @lazy_attribute
@@ -131,6 +146,18 @@ class WebModLGalRep(WebObj):
     @lazy_attribute
     def projective_kernel_sibling(self):
         return formatfield(self.projective_kernel_polynomial)
+
+    @lazy_attribute
+    def image_abstract(self):
+        if self.image_abstract_group:
+            return abstract_group_display_knowl(self.image_abstract_group)
+        return ''
+
+    @lazy_attribute
+    def projective_image_abstract(self):
+        if self.image_abstract_group:
+            return abstract_group_display_knowl(self.projective_image_abstract_group)
+        return ''
 
     @lazy_attribute
     def frobenius_generators(self):
