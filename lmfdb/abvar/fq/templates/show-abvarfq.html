@@ -221,12 +221,12 @@ function show_twists(number) {
 <table>
 
   <tr>
-    <td>Is Bass:</td>
+    <td>Bass:</td>
     <td colspan="3">{{ "yes" if cl.zfv_is_bass else "no" }} </td>
   </tr> 
 
   <tr>
-    <td>Is maximal:</td>
+    <td>Maximal:</td>
     <td colspan="3">{{ "yes" if cl.zfv_is_maximal else "no" }} </td>
   </tr> 
 
@@ -238,15 +238,15 @@ function show_twists(number) {
   </tr> 
   
   <tr>
-    <td>Index of real order:</td>
+    <td>Real index:</td>
     <td>${{ cl.zfv_plus_index }} $</td>
     <td>&nbsp;=&nbsp;</td>
     <td>${{ cl.zfv_plus_index_factorization_latex }} $</td>
   </tr> 
 
   <tr>
-    <td>Difference norm:</td>
-    <td colspan="3"><!--$|N_{K/\mathbb{Q}}(\pi-\overline\pi)|=$-->
+    <td>Relative disc. norm:</td>
+    <td colspan="3">
     ${{ cl.zfv_plus_norm }} $</td>
   </tr> 
 
