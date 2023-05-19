@@ -22,6 +22,7 @@ from sage.rings.all import Integer, QQ, RR, ZZ
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
+from sage.all import Factorization
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
@@ -76,6 +77,14 @@ class AbvarFq_isoclass():
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
+        if "zfv_index" not in dbdata:
+            dbdata["zfv_is_bass"] = None
+            dbdata["zfv_is_maximal"] = None
+            dbdata["zfv_index"] = None
+            dbdata["zfv_index_factorization"] = None
+            dbdata["zfv_plus_index"] = None
+            dbdata["zfv_plus_index_factorization"] = None
+            dbdata["zfv_plus_norm"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
         self.__dict__.update(dbdata)
@@ -100,6 +109,11 @@ class AbvarFq_isoclass():
             self.expanded_polynomial = ''
         else:
             self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
+        if self.zfv_index_factorization is not None:
+            self.zfv_index_factorization_latex = latex.latex(Factorization(self.zfv_index_factorization))
+        if self.zfv_plus_index_factorization is not None:
+            self.zfv_plus_index_factorization_latex = latex.latex(Factorization(self.zfv_plus_index_factorization))
+
 
     @property
     def p(self):
