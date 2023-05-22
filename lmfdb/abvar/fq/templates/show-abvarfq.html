@@ -221,31 +221,31 @@ function show_twists(number) {
 <table>
 
   <tr>
-    <td>Bass:</td>
+    <td>{{ KNOWL('av.fq.bass_zfv',title="Bass") }}:</td>
     <td colspan="3">{{ "yes" if cl.zfv_is_bass else "no" }} </td>
   </tr> 
 
   <tr>
-    <td>Maximal:</td>
+    <td>{{ KNOWL('av.fq.maximal_zfv',title="Maximal") }}:</td>
     <td colspan="3">{{ "yes" if cl.zfv_is_maximal else "no" }} </td>
   </tr> 
 
   <tr>
-    <td>Index:</td>
+    <td>{{ KNOWL('av.fq.zfv_index',title="Index") }}:</td>
     <td>${{ cl.zfv_index }} $</td>
     <td>&nbsp;=&nbsp;</td>
     <td>${{ cl.zfv_index_factorization_latex }} $</td>
   </tr> 
   
   <tr>
-    <td>Real index:</td>
+    <td>{{ KNOWL('av.fq.zfv_real_index',title="Real index") }}:</td>
     <td>${{ cl.zfv_plus_index }} $</td>
     <td>&nbsp;=&nbsp;</td>
     <td>${{ cl.zfv_plus_index_factorization_latex }} $</td>
   </tr> 
 
   <tr>
-    <td>Relative disc. norm:</td>
+    <td>{{ KNOWL('av.fq.zfv_rel_disc_norm',title="Relative disc. norm") }}:</td>
     <td colspan="3">
     ${{ cl.zfv_plus_norm }} $</td>
   </tr> 
