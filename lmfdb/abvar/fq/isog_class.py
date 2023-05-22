@@ -380,14 +380,14 @@ class AbvarFq_isoclass():
 
     def all_endo_info_display(self):
         do_describe = False
+        ans = "<p> All geometric endomorphisms are defined over ${0}$.</p> \n ".format(self.ext_field(self.geometric_extension_degree))
         base_endo_info, do_describe = self.display_endo_info(1)
-        ans = g2_table(self.field(), base_endo_info, True)
+        ans += g2_table(self.field(), base_endo_info, True)
         if self.geometric_extension_degree != 1:
             geometric_endo_info, do_describe = self.display_endo_info(self.geometric_extension_degree, do_describe)
             ans += g2_table(self.alg_clo_field(), geometric_endo_info, True)
-        ans += "All geometric endomorphisms are defined over ${0}$.\n".format(self.ext_field(self.geometric_extension_degree))
         if self.relevant_degs():
-            ans += "<br>\n<b>Remainder of endomorphism lattice by field</b>\n"
+            ans += "\n <b>Remainder of endomorphism lattice by field</b>\n"
             ans += "<ul>\n"
             for deg in self.relevant_degs():
                 ans += "<li>"
@@ -413,11 +413,11 @@ class AbvarFq_isoclass():
 
     def twist_display(self, show_all):
         if not self.twists:
-            return "This isogeny class has no twists."
+            return "<p>This isogeny class has no twists.</p>"
         if show_all:
-            ans = "Below is a list of all twists of this isogeny class."
+            ans = "<p> Below is a list of all twists of this isogeny class.</p>"
         else:
-            ans = "Below are some of the twists of this isogeny class."
+            ans = "<p> Below are some of the twists of this isogeny class.</p>"
         ans += '<table class = "ntdata">\n'
         ans += "<thead><tr><th>Twist</th><th>Extension degree</th><th>Common base change</th></tr></thead><tbody>\n"
         i = 0
@@ -495,7 +495,8 @@ def describe_end_algebra(p, extension_label):
         ans[1] += "</tr></table>\n"
         center_poly = db.nf_fields.lookup(center, 'coeffs')
         center_poly = latex.latex(ZZ["x"](center_poly))
-        ans[1] += r"where $\pi$ is a root of ${0}$.\n".format(center_poly)
+        ans[1] += r"where $\pi$ is a root of ${0}$.".format(center_poly)
+        ans[1] += "\n"
     return ans
 
 def primeideal_display(p, prime_ideal):
