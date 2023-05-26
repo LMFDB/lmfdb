@@ -145,6 +145,14 @@ def abelian_varieties_by_gqi(g, q, iso):
         KNOWL_ID='av.fq.%s'%label
     )
 
+isogeny_class_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
+
+def split_label(lab):
+    return isogeny_class_label_regex.match(lab).groups()
+
+def abvar_label(g, q, iso):
+    return "%s.%s.%s" % (g, q, iso)
+
 def url_for_label(label):
     label = label.replace(" ", "")
     try:
@@ -217,7 +225,7 @@ def download_search(info):
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):
-    if not lmfdb_label_regex.fullmatch(label):
+    if not isogeny_class_label_regex.fullmatch(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread((label, url_for_label(label)), ("Data", " "))
     extension_labels = list(db.av_fq_endalg_factors.search({"base_label": label}, "extension_label", sort=["extension_degree"]))
@@ -766,6 +774,76 @@ def abelian_variety_browse(info):
         learnmore=learnmore_list(),
     )
 
+@abvarfq_page.route("/endrings/<label>")
+def endring_diagram(label):
+    if not isogeny_class_label_regex.fullmatch(label):
+        flash_error("Invalid label %s", label)
+        return redirect(url_for(".abelian_varieties"))
+    try:
+        isoclass = AbvarFq_isoclass.by_label(label)
+    except ValueError:
+        flash_error("There is no isogeny class %s in the database", label)
+        return redirect(url_for(".abelian_varieties"))
+    dojs, display_opts = diagram_js_string(isoclass)
+    info = {"dojs": dojs}
+    info.update(display_opts)
+    return render_template(
+        "endring_diagram_page.html",
+        dojs=dojs,
+        info=info,
+        title="Diagram of endomorphism rings for %s" % label,
+        bread=get_bread(("Endomorphism ring diagram", " ")),
+        learnmore=learnmore_list(),
+    )
+
+def diagram_js(curve, layers, display_opts):
+    ll = [
+        [
+            node.label, # grp.subgroup
+            node.label, # grp.short_label
+            node.tex, # grp.subgroup_tex
+            1, # grp.count (never want conjugacy class counts)
+            node.rank, # grp.subgroup_order
+            node.img,
+            node.x, # grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1])
+            [node.x, node.x, node.x, node.x], # grp.diagram_aut_x if aut else grp.diagram_x
+        ]
+        for node in layers[0]
+    ]
+    if len(ll) == 0:
+        display_opts["w"] = display_opts["h"] = 0
+        return [], [], 0
+    ranks = [node[4] for node in ll]
+    rank_ctr = Counter(ranks)
+    ranks = sorted(rank_ctr)
+    # We would normally make rank_lookup a dictionary, but we're passing it to the horrible language known as javascript
+    # The format is for compatibility with subgroup lattices
+    rank_lookup = [[r, r, 0] for r in ranks]
+    max_width = max(rank_ctr.values())
+    display_opts["w"] = min(100 * max_width, 20000)
+    display_opts["h"] = 160 * len(ranks)
+
+    return [ll, layers[1]], rank_lookup, len(ranks)
+
+def diagram_js_string(isoclass):
+    display_opts = {}
+    graph, rank_lookup, num_layers = diagram_js(isoclass, isoclass.endring_poset, display_opts)
+    return f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{isoclass.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
+
+@modcurve_page.route("/Q/curveinfo/<label>")
+def curveinfo(label):
+    if not LABEL_RE.fullmatch(label):
+        return ""
+    level, index, genus = label.split(".")[:3]
+
+    ans = 'Information on the modular curve <a href="%s">%s</a><br>\n' % (url_for_modcurve_label(label), label)
+    ans += "<table>\n"
+    ans += f"<tr><td>{display_knowl('modcurve.level', 'Level')}</td><td>${level}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('modcurve.index', 'Index')}</td><td>${index}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('modcurve.genus', 'Genus')}</td><td>${genus}$</td></tr>\n"
+    ans += "</table>"
+    return ans
+
 def search_input_error(info=None, bread=None):
     if info is None:
         info = {"err": "", "query": {}}
@@ -876,11 +954,3 @@ def labels_page():
         bread=bread,
         learnmore=learnmore_list_remove("Labels"),
     )
-
-lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
-
-def split_label(lab):
-    return lmfdb_label_regex.match(lab).groups()
-
-def abvar_label(g, q, iso):
-    return "%s.%s.%s" % (g, q, iso)

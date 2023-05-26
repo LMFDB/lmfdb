@@ -23,6 +23,7 @@ from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
 from sage.all import Factorization
+from sage.misc.lazy_attribute import lazy_attribute
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
@@ -204,6 +205,58 @@ class AbvarFq_isoclass():
         P.axes(False)
         P.set_aspect_ratio(1)
         return encode_plot(P, pad=0, pad_inches=None, transparent=True, axes_pad=0.04)
+
+    @lazy_attribute
+    def weak_equivalence_classes(self):
+        return list(db.av_fq_weak_equivalences.search({"isog_label":self.label}))
+
+    @lazy_attribute
+    def endring_poset(self):
+        # The poset of endomorphism rings for abelian varieties in this isogeny class
+        # For ordinary isogeny classes, these are precisely the sub-orders of the maximal order that contain the Frobenius order
+        class LatNode:
+            def __init__(self, label):
+                self.label = label
+                self.index = ZZ(label.split(".")[0])
+                self.tex = tex[label]
+                self.img = texlabels[self.tex]
+                self.rank = sum(e for (p,e) in self.index.factor())
+                self.x = xcoords[label]
+        parents = {}
+        pic_size = {}
+        num_wes = Counter()
+        num_ind = Counter()
+        xcoord = {}
+        for rec in self.weak_equivalence_classes:
+            R = rec['multiplicator_ring']
+            N = ZZ(R.split(".")[0])
+            num_wes[R] += 1
+            num_ind[N] += 1
+            if rec['is_invertible']:
+                parents[R] = rec['minimal_overorders']
+                pic_size[R] = rec['pic_size']
+                xcoord[R] = rec['diagramx']
+        if not pic_size:
+            return [], [] # no weak equivalence class data for this isogeny class
+        tex = {}
+        texlabels = set()
+        for R, npic in pic_size.items():
+            N, i = R.split(".")
+            N = ZZ(N)
+            factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
+            istr = f"_{{{i}}}" if num_ind[N] > 1 else ""
+            we_pic = f"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
+            tex[R] = "[%s]^{%s}%s" % (factored_index, we_pic, istr)
+            texlabels.add(tex[R])
+        texlabels = {rec["label"]: rec["image"] for rec in db.av_fq_teximages.search({"label": {"$in": list(texlabels)}})}
+        nodes = [LatNode(lab) for lab in pic_size]
+        edges = []
+        if nodes:
+            maxrank = max(node.rank for node in nodes)
+            for node in nodes:
+                node.rank = maxrank - node.rank
+                edges.extend([[node.label, lab] for lab in parents[node.label]])
+        return nodes, edges
 
     def _make_jacpol_property(self):
         ans = []
