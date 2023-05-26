@@ -243,7 +243,10 @@ class AbvarFq_isoclass():
         for R, npic in pic_size.items():
             N, i = R.split(".")
             N = ZZ(N)
-            factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
+            if N == 1:
+                factored_index = "1"
+            else:
+                factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
             istr = f"_{{{i}}}" if num_ind[N] > 1 else ""
             we_pic = f"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
             tex[R] = "[%s]^{%s}%s" % (factored_index, we_pic, istr)
