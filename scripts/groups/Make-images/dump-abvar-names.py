@@ -27,7 +27,10 @@ with open("eqguts.tex", "w") as eqguts:
         for (mring, pic, we_cnt, include_i) in texdata:
             N, i = mring.split(".")
             N = ZZ(N)
-            factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
+            if N == 1:
+                factored_index = "1"
+            else:
+                factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
             istr = f"_{{{i}}}" if include_i else ""
             we_pic = f"{we_cnt}\cdot{pic}" if we_cnt > 1 else f"{pic}"
             pp = "[%s]^{%s}%s" % (factored_index, we_pic, istr)
