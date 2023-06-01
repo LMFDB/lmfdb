@@ -4,7 +4,7 @@
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import euler_phi, PolynomialRing, QQ
+from sage.all import euler_phi, PolynomialRing, QQ, gcd
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
@@ -395,6 +395,10 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     if number is None and orbit_label is None and re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
         modulus, number = modulus.split('.')
         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
+    if number is not None and number > modulus:
+        return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number%modulus), 301)
+    if modulus == 1 and number == 0:
+        return redirect(url_for(".render_Dirichletwebpage", modulus=1, number=1), 301)
 
     args = {}
     args['type'] = 'Dirichlet'
@@ -411,7 +415,8 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     if modulus > 10**20:
         flash_error("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_DirichletNavigation"))
-
+    if modulus == 1:
+        number = 1
     if number is None:
         if orbit_label is None:
 
@@ -451,6 +456,10 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             else:
                 flash_error(
                     "Galois orbits have only been computed for modulus up to 100,000, but you entered %s", modulus)
+            return redirect(url_for(".render_DirichletNavigation"))
+    else:
+        if gcd(modulus,number) != 1:
+            flash_error("%s is not a valid Conrey label (number must be coprime to modulus).", "%s.%s"%(args['modulus'],args['number']))
             return redirect(url_for(".render_DirichletNavigation"))
 
     try:
