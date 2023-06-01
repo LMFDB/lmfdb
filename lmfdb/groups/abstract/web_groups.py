@@ -190,7 +190,7 @@ class WebAbstractGroup(WebObj):
         return self._data is not None and not isinstance(self._data, dict)
 
     def decode(self, perm, n):
-        lehmer = [];
+        lehmer = []
         for j in range(1,n+1):
             lehmer.append(perm % j)
             perm = int(perm/j)
