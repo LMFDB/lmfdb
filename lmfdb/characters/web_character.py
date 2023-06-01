@@ -550,9 +550,12 @@ class WebDBDirichlet(WebDirichlet):
         if self.modulus:
             self.modulus = int(self.modulus)
         self.modlabel = self.modulus
-        self.number = kwargs.get('number', None)
-        if self.number:
-            self.number = int(self.number)
+        if self.modulus == 1:
+            self.number = 1
+        else:
+            self.number = kwargs.get('number', None)
+            if self.number:
+                self.number = int(self.number)
         self.numlabel = self.number
         if self.modulus:
             # Needed for Gauss sums, etc
