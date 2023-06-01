@@ -14,7 +14,7 @@ class Follower():
 
     - ``logdir`` -- the base directory for logging
     - ``tabletypes`` -- a list of strings giving the verifications to follow, in the form tablename.type
-        (e.g. "mf_newforms.long" or "char_dir_values.over")
+        (e.g. "mf_newforms.long")
     - ``suffixes`` -- which suffixes to print, a subset of ['log', 'progress', 'error'].
     - ``poll_interval`` -- the interval in seconds between checking on the status of the output.
     """

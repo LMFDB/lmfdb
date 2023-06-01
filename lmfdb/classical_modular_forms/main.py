@@ -36,6 +36,7 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.characters.main import ORBIT_MAX_MOD
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -699,10 +700,10 @@ def parse_character(inp, query, qfield, prim=False):
     if orbit.isalpha():
         orbit = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
         if prim:
-            if level > 10000:
+            if level > ORBIT_MAX_MOD:
                 raise ValueError("The level is too large.")
             # Check that this character is actually primitive
-            conductor = db.char_dir_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            conductor = db.char_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
             if conductor is None:
                 raise ValueError("No character orbit with this label exists.")
             if conductor != level:
