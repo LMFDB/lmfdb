@@ -62,7 +62,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Hilbert surface labels', url_for(".labels_page"))]
+            ('Hilbert modular surface labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -390,14 +390,16 @@ class HMSurfaceSearchArray(SearchArray):
             [field_discr, narrow_class_nb],
             [level_norm, group_type],
             [comp],
+            [], #Tried to add whitespace, but this doesn't work
+            [kodaira_dims, chi],
+            [h20, h11],
+            [euler_nb, K2],
+            [],
             [nb_cusps, nb_ell],
             [nb_ell2, nb_ell3],
             [nb_ell4, nb_ell5],
             [nb_ell6, len_cusp_res],
-            [len_ell_res, len_res],            
-            [h20, h11],
-            [chi, K2],
-            [euler_nb, kodaira_dims]
+            [len_ell_res, len_res],
         ]
 
         self.refine_array = [

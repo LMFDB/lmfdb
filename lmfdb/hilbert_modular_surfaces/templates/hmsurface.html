@@ -27,22 +27,36 @@
 
 <h2> {{ KNOWL('hmsurface.invariants', 'Invariants') }} </h2>
 <table>
-  <tr><td>{{ KNOWL("hmsurface.hodge", "Hodge numbers") }}:</td>
-    <td> $h^{2,0} = {{ surface.h20 }},\quad h^{1,1} = {{ surface.h11 }}$ </td></tr>
+  <tr><td>{{ KNOWL("hmsurface.hodge", "Hodge diamond") }}:</td>
+    <td><table> 
+        <tr> <td></td><td>
+          </td><td align="center"> $1$ </td><td></td><td></td></tr>
+        <tr> <td></td>
+            <td align="center"> $0$ </td><td></td><td align="center"> $0$ </td><td></td></tr>
+        <tr> <td align="center"> ${{surface.h20}}$ </td><td></td>
+            <td align="center"> ${{ surface.h11 }}$ </td>
+            <td></td><td align="center"> ${{surface.h20}}$ </td></tr>
+        <tr> <td></td>
+            <td align="center"> $0$ </td><td></td><td align="center"> $0$ </td><td></td></tr>
+        <tr> <td></td><td></td><td align="center"> $1$ </td><td></td><td></td></tr>
+    </table></td></tr>
   <tr>
-    <td>{{ KNOWL("hmsurface.chi", "Arithmetic genus") }}:</td>
+    <td>{{ KNOWL("hmsurface.chi", "Holomorphic Euler characteristic") }}:</td>
     <td>${{ surface.chi }}$</td></tr>
   <tr>
-    <td>{{ KNOWL("hmsurface.k2", "$K^2$") }}:</td>
-    <td>${{ surface.K2 }}$</td></tr>  
+    <td>{{ KNOWL("hmsurface.k2", "Self-intersection $K^2$") }}:</td>
+    <td>${{ surface.K2 }}$</td></tr>
+  <tr>
+    <td>{{ KNOWL("hmsurface.euler_nb", "Euler number") }}:</td>
+    <td>${{ surface.euler_nb }}$</td></tr>    
 </table>
 
 <p>
   The {{ KNOWL('ag.kodaira_dimension', 'Kodaira dimension') }} of this surface is 
   {% if surface.kodaira_is_known %}
-  known to be {{ surface.kodaira_dims }}.
+  known to be {{ surface.kodaira_dims[0] }}.
   {% else %}
-  one of $\{ {{ surface.kodaira_dims }}\}$.
+  unknown, the possibilities being ${{ surface.kodaira_dims }}$.
   {% endif %}
 </p>
 

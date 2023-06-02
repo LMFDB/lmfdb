@@ -121,11 +121,11 @@ class WebHMSurface(WebObj):
 
     @lazy_attribute
     def kodaira_dims(self):
-        return str(self.kposs).rstrip("]").lstrip("[")
+        return self.kodaira_dims
 
     @lazy_attribute
     def kodaira_is_known(self):
-        return len(self.kposs) == 1
+        return len(self.kodaira_dims) == 1
     
     @lazy_attribute
     def downloads(self):
