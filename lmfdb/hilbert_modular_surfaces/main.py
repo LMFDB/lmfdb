@@ -154,6 +154,76 @@ def hmsurface_jump(info):
     return redirect(url_for_hmsurface_label(label))
 
 
+class HMSurface_download(Downloader):
+    table = db.hmsurfaces_invs
+    title = "Hilbert modular surfaces"
+    columns = []
+    data_format = []
+    data_description = ""
+    #At present, return nothing except the label, which specifies the modular group uniquely
+    function_body = {
+        "magma": [
+            "return [];"
+        ],
+        "sage": [
+            "return []"
+        ],
+        "gp": [
+            "return([])"
+        ]
+    }
+
+    def download_hmsurface_magma_str(self, label):
+        s = ""
+        s += "// Magma code for Hilbert modular surface with label %s\n" % label
+        s += "// Uses the Magma package https://github.com/edgarcosta/hilbertmodularforms\n\n"
+        s += """AttachSpec("spec");\n\n"""
+        s += "// Create the Hilbert modular surface\n"
+        s += """Gamma = LMFDBCongruenceSubgroup("%s");\n\n""" % label
+        s += "// Access basic information about the Hilbert surface\n"
+        s += "LMFDBLabel(Gamma);\n"
+        s += "BaseField(Gamma);\n"
+        s += "Level(Gamma);\n"
+        s += "ComponentIdeal(Gamma);\n"
+        s += "\n// Compute some invariants of the Hilbert surface\n"
+        s += "// (see https://github.com/edgarcosta/hilbertmodularforms for more functionality)\n"
+        s += "K2(Gamma)\n";
+        s += "ArithmeticGenus(Gamma); // The holomorphic Euler characteristic\n"
+        s += "HodgeDiamond(Gamma);\n"
+        s += "EulerNumber(Gamma);\n"
+        s += "KodairaDimensionPossibilities(Gamma);\n"
+        s += "EllipticPointsData(Gamma);\n"
+        s += "CuspsWithResolution(Gamma);\n"
+        return s
+
+    def download_hmsurface_magma(self, label):
+        s = self.download_hmsurface_magma_str(label)
+        return self._wrap(s, label, lang="magma")
+
+    def download_hmsurface(self, label, lang):
+        if lang == "magma":
+            return self.download_hmsurface_magma(label)
+        elif lang == "sage":
+            return abort(404, "No Sage download available")
+        elif lang == "text":
+            return abort(404, "No text download available")
+
+
+@hmsurface_page.route("/download_to_magma/<label>")
+def hmsurface_magma_download(label):
+    return HMSurface_download().download_hmsurface(label, lang="magma")
+
+
+@hmsurface_page.route("/download_to_sage/<label>")
+def hmsurface_sage_download(label):
+    return HMSurface_download().download_hmsurface(label, lang="sage")
+
+
+@hmsurface_page.route("/download_to_text/<label>")
+def hmsurface_text_download(label):
+    return HMSurface_download().download_hmsurface(label, lang="text")
+
+
 # Fixme: hmsurface.blah should be a link to relevant knowl
 hmsurface_columns = SearchColumns(
     [
@@ -210,7 +280,7 @@ hmsurface_columns = SearchColumns(
     table=db.hmsurfaces_invs,
     title="Hilbert modular surface search results",
     err_title="Hilbert modular surfaces search input error",
-    shortcuts={"jump": hmsurface_jump},
+    shortcuts={"jump": hmsurface_jump, "download": HMSurface_download()},
     columns=hmsurface_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_hmsurface_label,
@@ -624,57 +694,3 @@ def hmsurface_data(label):
     else:
         return abort(404)
 
-
-class HMSurface_download(Downloader):
-    table = db.hmsurfaces_invs
-    title = "Hilbert modular surfaces"
-
-    def download_hmsurface_magma_str(self, label):
-        s = ""
-        s += "// Magma code for Hilbert modular surface with label %s\n" % label
-        s += "// Uses the Magma package https://github.com/edgarcosta/hilbertmodularforms\n\n"
-        s += """AttachSpec("spec");\n\n"""
-        s += "// Create the Hilbert modular surface\n"
-        s += """Gamma = LMFDBCongruenceSubgroup("%s");\n\n""" % label
-        s += "// Access basic information about the Hilbert surface\n"
-        s += "LMFDBLabel(Gamma);\n"
-        s += "BaseField(Gamma);\n"
-        s += "Level(Gamma);\n"
-        s += "ComponentIdeal(Gamma);\n"
-        s += "\n// Compute some invariants of the Hilbert surface\n"
-        s += "// (see https://github.com/edgarcosta/hilbertmodularforms for more functionality)\n"
-        s += "K2(Gamma)\n";
-        s += "ArithmeticGenus(Gamma); // The holomorphic Euler characteristic\n"
-        s += "HodgeDiamond(Gamma);\n"
-        s += "EulerNumber(Gamma);\n"
-        s += "KodairaDimensionPossibilities(Gamma);\n"
-        s += "EllipticPointsData(Gamma);\n"
-        s += "CuspsWithResolution(Gamma);\n"
-        return s
-
-    def download_hmsurface_magma(self, label):
-        s = self.download_hmsurface_magma_str(label)
-        return self._wrap(s, label, lang="magma")
-
-    def download_hmsurface(self, label, lang):
-        if lang == "magma":
-            return self.download_hmsurface_magma(label)
-        elif lang == "sage":
-            return abort(404, "No Sage download available")
-        elif lang == "text":
-            return abort(404, "No text download available")
-
-
-@hmsurface_page.route("/download_to_magma/<label>")
-def hmsurface_magma_download(label):
-    return HMSurface_download().download_hmsurface(label, lang="magma")
-
-
-@hmsurface_page.route("/download_to_sage/<label>")
-def hmsurface_sage_download(label):
-    return HMSurface_download().download_hmsurface(label, lang="sage")
-
-
-@hmsurface_page.route("/download_to_text/<label>")
-def hmsurface_text_download(label):
-    return HMSurface_download().download_hmsurface(label, lang="text")
