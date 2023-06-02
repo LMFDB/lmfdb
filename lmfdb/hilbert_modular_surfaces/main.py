@@ -352,7 +352,7 @@ class HMSurfaceSearchArray(SearchArray):
             advanced=True,
         )
         nb_ell3 = TextBox(
-            name="nb_ell2",
+            name="nb_ell3",
             knowl="hmsurface.elliptic_point",
             label="Elliptic points of order 3",
             example="2",
@@ -360,7 +360,7 @@ class HMSurfaceSearchArray(SearchArray):
             advanced=True,
         )
         nb_ell4 = TextBox(
-            name="nb_ell2",
+            name="nb_ell4",
             knowl="hmsurface.elliptic_point",
             label="Elliptic points of order 4",
             example="2",
@@ -368,7 +368,7 @@ class HMSurfaceSearchArray(SearchArray):
             advanced=True,
         )
         nb_ell5 = TextBox(
-            name="nb_ell2",
+            name="nb_ell5",
             knowl="hmsurface.elliptic_point",
             label="Elliptic points of order 5",
             example="2",
@@ -376,7 +376,7 @@ class HMSurfaceSearchArray(SearchArray):
             advanced=True,
         )
         nb_ell6 = TextBox(
-            name="nb_ell2",
+            name="nb_ell6",
             knowl="hmsurface.elliptic_point",
             label="Elliptic points of order 6",
             example="2",
