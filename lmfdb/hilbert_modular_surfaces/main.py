@@ -135,9 +135,19 @@ def hmsurface_jump(info):
     label = info["jump"]
     return redirect(url_for_hmsurface_label(label))
 
+#Fixme: hmsurface.blah should be a link to relevant knowl
 hmsurface_columns = SearchColumns([
     LinkCol("label", "hmsurface.label", "Label", url_for_hmsurface_label, default=True),
-    MathCol("chi", "hmsurface.chi", "Arithmetic genus", default=True),
+    ProcessedCol("field_discr", "hmsurface.field_discr", "Base field", lambda s: "$\mathbb{Q}(\sqrt{" + str(s) + "})$", align="center", default=True),
+    MathCol("level_norm", "hmsurface.level_norm", "Level norm", default = True, align="center"),
+    MathCol("narrow_class_nb", "hmsurface.narrow_class_nb", "Narrow class number", align="center"),
+    MathCol("kodaira_dims", "ag.kodaira_dimension", "Kodaira dimension", default=True, align="center"),
+    MathCol("chi", "hmsurface.chi", "Hol. Euler char.", default=True),
+    MathCol("h11", "ag.hodge_numbers", "$h^{1,1}$", align = "center"),
+    MathCol("h20", "ag.hodge_numbers", "$h^{2,0}$", align = "center"),
+    MathCol("K2", "hmsurface.K2", "$K^2$", align="center"),
+    MathCol("nb_cusps", "hmsurface.nb_cusps", "Cusps", default=True, align="center"),
+    MathCol("nb_ell", "hmsurface.elliptic_pts", "Elliptic points", default=True, align="center"),
 ])
 
 @search_wrap(
@@ -413,7 +423,9 @@ class HMSurfaceSearchArray(SearchArray):
 
     sort_knowl = "hmsurface.sort_order"
     sorts = [
-        #No sort yet
+        ("", "field discriminant", ["field_discr", "level_norm", "chi", "label"]),
+        ("level norm", "level norm ", ["level_norm", "field_discr", "chi", "label"]),
+        ("hol. euler char.", "hol. euler char.", ["chi", "field_discr", "level_norm", "label"]),
     ]
 
 class HMSurface_stats(StatsDisplay):
