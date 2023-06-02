@@ -620,34 +620,39 @@ class HMSurface_download(Downloader):
     title = "Hilbert modular surfaces"
 
     def download_hmsurface_magma_str(self, label):
-        # No download yet
-        pass
+        s = ""
+        s += "// Magma code for Hilbert modular surface with label %s\n" % label
+        s += "// Uses the Magma package https://github.com/edgarcosta/hilbertmodularforms\n\n"
+        s += """AttachSpec("spec");\n\n"""
+        s += "// Create the Hilbert modular surface\n"
+        s += """Gamma = LMFDBCongruenceSubgroup("%s");\n\n""" % label
+        s += "// Access basic information about the Hilbert surface\n"
+        s += "LMFDBLabel(Gamma);\n"
+        s += "BaseField(Gamma);\n"
+        s += "Level(Gamma);\n"
+        s += "ComponentIdeal(Gamma);\n"
+        s += "\n// Compute some invariants of the Hilbert surface\n"
+        s += "// (see https://github.com/edgarcosta/hilbertmodularforms for more functionality)\n"
+        s += "K2(Gamma)\n";
+        s += "ArithmeticGenus(Gamma); // The holomorphic Euler characteristic\n"
+        s += "HodgeDiamond(Gamma);\n"
+        s += "EulerNumber(Gamma);\n"
+        s += "KodairaDimensionPossibilities(Gamma);\n"
+        s += "EllipticPointsData(Gamma);\n"
+        s += "CuspsWithResolution(Gamma);\n"
+        return s
 
     def download_hmsurface_magma(self, label):
         s = self.download_hmsurface_magma_str(label)
         return self._wrap(s, label, lang="magma")
 
-    def download_hmsurface_sage(self, label):
-        s = self.download_hmsurface_magma_str(label)
-        s = s.replace(":=", "=")
-        s = s.replace(";", "")
-        s = s.replace("//", "#")
-        return self._wrap(s, label, lang="sage")
-
     def download_hmsurface(self, label, lang):
         if lang == "magma":
             return self.download_hmsurface_magma(label)
         elif lang == "sage":
-            return self.download_hmsurface_sage(label)
+            return abort(404, "No Sage download available")
         elif lang == "text":
-            data = db.hmsurfaces_invs.lookup(label)
-            if data is None:
-                return abort(404, "Label not found: %s" % label)
-            return self._wrap(
-                Json.dumps(data),
-                label,
-                title="Data for modular surface with label %s," % label,
-            )
+            return abort(404, "No text download available")
 
 
 @hmsurface_page.route("/download_to_magma/<label>")
