@@ -62,7 +62,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Modular curve labels', url_for(".labels_page"))]
+            ('Hilbert surface labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -79,7 +79,7 @@ def index_Q():
         return hmsurface_search(info)
     title = r"Hilbert modular surfaces"
     info["discr_list"] = ["5", "8", "12", "13", "17-47", "53-97", "101-"]
-    info["level_norm_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
+    info["level_norm_list"] = ["1", "2-4", "5-8", "9-12", "13-16", "17-23", "24-"]
     info["kodaira_list"] = ["-1", "0", "1", "2"]
     info["stats"] = HMSurface_stats()
     return render_template(
@@ -423,7 +423,7 @@ class HMSurface_stats(StatsDisplay):
     def short_summary(self):
         hmsurface_knowl = display_knowl("hmsurface", title="Hilbert modular surfaces")
         return (
-            fr'The database currently contains {self.nsurfaces} {hmsurface_knowl}. You can <a>href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.nsurfaces} {hmsurface_knowl}. You can <a>href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
         )
 
     @property
