@@ -292,49 +292,56 @@ class HMSurfaceSearchArray(SearchArray):
             knowl = "hmsurface.elliptic_point",
             label = "Elliptic points of order 2",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         nb_ell3 = TextBox(
             name = "nb_ell2",
             knowl = "hmsurface.elliptic_point",
             label = "Elliptic points of order 3",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         nb_ell4 = TextBox(
             name = "nb_ell2",
             knowl = "hmsurface.elliptic_point",
             label = "Elliptic points of order 4",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         nb_ell5 = TextBox(
             name = "nb_ell2",
             knowl = "hmsurface.elliptic_point",
             label = "Elliptic points of order 5",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         nb_ell6 = TextBox(
             name = "nb_ell2",
             knowl = "hmsurface.elliptic_point",
             label = "Elliptic points of order 6",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         len_ell_res = TextBox(
             name = "len_ell_res",
             knowl = "hmsurface.elliptic_point_resolution",
             label = "Length of elliptic point resolutions",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         len_cusp_res = TextBox(
             name = "len_cusp_res",
             knowl = "hmsurface.cusp_resolution",
             label = "Length of cusp resolutions",
             example = "2",
-            example_span = "1-5"
+            example_span = "1-5",
+            advanced = True
         )
         len_res = TextBox(
             name = "len_res",
@@ -342,6 +349,7 @@ class HMSurfaceSearchArray(SearchArray):
             label = "Length of all resolutions",
             example = "2",
             example_span = "1-5",
+            advanced = True
         )
         h20 = TextBox(
             name="h20",
