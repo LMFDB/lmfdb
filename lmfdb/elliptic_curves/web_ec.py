@@ -526,8 +526,12 @@ class WebEC():
 
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
-            (f'Minimal quadratic twist {data["minq_info"]} {data["minq_label"]}', data['minq_url']),
-            ('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant']))]
+            (f'Minimal quadratic twist {data["minq_label"]}', data['minq_url'])]
+        if self.cm == -3:
+            self.friends.append((f'Minimal sextic twist {data["min_sextic_twist_label"]}', data['min_sextic_twist_url']))
+        if self.cm == -4:
+            self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
+        self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
