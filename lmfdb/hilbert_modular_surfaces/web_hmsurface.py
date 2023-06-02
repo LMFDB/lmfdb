@@ -149,7 +149,9 @@ class WebHMSurface(WebObj):
     @lazy_attribute
     def formatted_elliptic_pts(self):
         ellpts = list(db.hmsurfaces_elliptic_pts.search({'label': self.label}, ['nb', 'rotation_type']))
-        return [hmsurface_format_elliptic_pt(pt) for pt in ellpts]
+        ptlist = [hmsurface_format_elliptic_pt(pt) for pt in ellpts]
+        ptlist.sort()
+        return ptlist
 
     @lazy_attribute
     def nb_elliptic_pts(self):
