@@ -465,16 +465,15 @@ class HMSurfaceSearchArray(SearchArray):
             [field_discr, narrow_class_nb],
             [level_norm, group_type],
             [comp],
-            [],  # Tried to add whitespace, but this doesn't work
             [kodaira_dims, chi],
             [h20, h11],
             [euler_nb, K2],
-            [],
             [nb_cusps, nb_ell],
             [nb_ell2, nb_ell3],
             [nb_ell4, nb_ell5],
-            [nb_ell6, len_cusp_res],
-            [len_ell_res, len_res],
+            [nb_ell6],
+            [len_cusp_res, len_ell_res],
+            [len_res],
         ]
 
         self.refine_array = [
