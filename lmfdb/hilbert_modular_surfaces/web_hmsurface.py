@@ -68,6 +68,18 @@ class WebHMSurface(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
+        # Other components
+        if self.narrow_class_nb > 1:
+            F = self.field
+            for r in self.table.search({'field_label':self.field_label, 'level_label':self.level_label, 'gamma_type': self.gamma_type, 'group_type': self.group_type},['label']):
+                if r['label'] != self.label:
+                    friends.append(("Other component " + r['label'] ,url_for("hmsurface.by_label", label=r['label'])))
+        # Level one
+        friendlabel = self.field_label + "-1.1-" + self.component_label + "-" + self.group_type + "-" + self.gamma_type
+        friends.append(("Level one surface " + friendlabel, url_for("hmsurface.by_label", label=friendlabel)))
+        # SL/GL
+        friendlabel = self.field_label + "-" + self.level_label + "-" + self.component_label + "-" + ("gl" if self.group_type == "sl" else "sl") + "-" + self.gamma_type
+        friends.append(("Hilbert surface " + friendlabel, url_for("hmsurface.by_label", label=friendlabel)))
         return friends
 
     @lazy_attribute
