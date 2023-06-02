@@ -244,7 +244,7 @@ class HMSurfaceSearchArray(SearchArray):
                      ('pp', 'inverse different'),
                      ('other', 'other'),
                      ],
-            knowl="hmsurface.todo",
+            knowl="hmsurface.component_ideal",
             label="Component ideal",
             example=r"(1), inverse different"
         )
@@ -425,7 +425,7 @@ class HMSurface_stats(StatsDisplay):
     def short_summary(self):
         hmsurface_knowl = display_knowl("hmsurface", title="Hilbert modular surfaces")
         return (
-            fr'The database currently contains {self.nsurfaces} {hmsurface_knowl}. You can <a>href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
+            fr'The database currently contains {self.nsurfaces} {hmsurface_knowl}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
         )
 
     @property
@@ -434,12 +434,31 @@ class HMSurface_stats(StatsDisplay):
         return (
             fr'The database currently contains {self.nsurfaces} {hmsurface_knowl}.'
         )
-    
+
     table = db.hmsurfaces_invs
     baseurl_func = ".index"
-    #No buckets
-    #No knowls
-    #No stat_list
+    buckets = {
+    }
+
+    knowls = {
+        'nb_cusps' : 'hmsurface.cusps',
+        'nb_ell': 'hmsurface.elliptic_point',
+    }
+
+    top_titles = {
+        'nb_cusps': 'number of cusps',
+        'nb_ell': 'number of elliptic points',
+    }
+
+    short_display = {
+        'nb_cusps': 'number of cusps',
+        'nb_ell': 'number of elliptic points',
+    }
+
+    stat_list = [
+        {"cols": "nb_cusps", 'totaler':{'avg':True}},
+        {"cols": "nb_ell", 'totaler':{'avg':True}}
+    ]
 
 @hmsurface_page.route("/Q/stats")
 def statistics():
