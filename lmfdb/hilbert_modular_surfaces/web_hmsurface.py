@@ -27,6 +27,14 @@ def hmsurface_format_cusp(cusp, w):
     res = (cusp['M_label'], a, c, cusp['self_intersections_minimal'], cusp['repetition'])
     return res
 
+def hmsurface_format_ideal_generators(gens, w):
+    L = []
+    for g in gens:
+        [x, y] = g
+        a = latex(ZZ(x) + ZZ(y)*w)
+        L.append(a)
+    return "(" + ", ".join(L) + ")"
+
 def hmsurface_format_elliptic_pt(pt):
     [n, a, b] = pt['rotation_type']
     return ("[{};{},{}]".format(n, a, b), pt['nb'])
@@ -127,11 +135,11 @@ class WebHMSurface(WebObj):
 
     @lazy_attribute
     def formatted_level(self):
-        return self.level_label
+        return self.level_label + " = " + hmsurface_format_ideal_generators(self.level_gens, self.field.K().gen())
 
     @lazy_attribute
     def formatted_component(self):
-        return self.component_label
+        return self.component_label + " = " + hmsurface_format_ideal_generators(self.comp_gens, self.field.K().gen())
 
     @lazy_attribute
     def level_norm(self):
