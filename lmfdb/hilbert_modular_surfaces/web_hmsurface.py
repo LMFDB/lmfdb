@@ -38,8 +38,32 @@ class WebHMSurface(WebObj):
     def properties(self):
         props = [
             ("Label", self.label),
+            ("Field discriminant", str(self.field_discr)),
+            ("Level norm", str(self.level_norm)),
+            ("Group type", '${{' + str(self.formatted_subgroup_type) + '}}$'),
         ]
+        if self.image is not None:
+            props.append((None, self.image))
+        if self.kodaira_is_known:
+            props.append(("Kodaira dimension", str(self.kodaira_dims[0])))
+        props.append(("Cusps", str(self.nb_cusps)))
+        props.append(("Elliptic points", str(self.nb_elliptic_pts)))
         return props
+
+    @lazy_attribute
+    def image(self):
+        return f"""<table> 
+        <tr> <td></td><td>
+          </td><td align="center"> $1$ </td><td></td><td></td></tr>
+        <tr> <td></td>
+            <td align="center"> $0$ </td><td></td><td align="center"> $0$ </td><td></td></tr>
+        <tr> <td align="center"> $""" + str(self.h20) + f"""$ </td><td></td>
+            <td align="center"> $""" + str(self.h11) + f"""$ </td>
+            <td></td><td align="center"> $""" + str(self.h20) + f"""$ </td></tr>
+        <tr> <td></td>
+            <td align="center"> $0$ </td><td></td><td align="center"> $0$ </td><td></td></tr>
+        <tr> <td></td><td></td><td align="center"> $1$ </td><td></td><td></td></tr>
+    </table>"""
 
     @lazy_attribute
     def friends(self):
