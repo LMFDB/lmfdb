@@ -164,7 +164,7 @@ hmsurface_columns = SearchColumns(
             "field_discr",
             "hmsurface.field_discr",
             "Base field",
-            lambda s: "$\mathbb{Q}(\sqrt{" + str(s) + "})$",
+            lambda s: r"$\mathbb{Q}(\sqrt{%s})$" % s,
             align="center",
             default=True,
         ),
@@ -514,7 +514,11 @@ class HMSurface_stats(StatsDisplay):
 
     table = db.hmsurfaces_invs
     baseurl_func = ".index"
-    buckets = {}
+    buckets = {
+        # TODO: improve buckets for level_norm  vsfield_discr 
+        'level_norm': ['1','2','3','4','5','6-10','11-20','21-100','101-500'],
+        'field_discr': ['5','6-10','11-20','21-100', '101-110','111-140', '141-185', '185-284', '285-3000']
+    }
 
     knowls = {
         "nb_cusps": "hmsurface.cusps",
@@ -534,6 +538,12 @@ class HMSurface_stats(StatsDisplay):
     stat_list = [
         {"cols": "nb_cusps", "totaler": {"avg": True}},
         {"cols": "nb_ell", "totaler": {"avg": True}},
+        {"cols": "kodaira_dims", "totaler": {}},
+        # if we want K2 vs chi we need buckets
+        # K2  in [-24, 4000], chi in [1..523]
+        # {"cols": ["K2", "chi"], "totaler": totaler()},
+        {"cols": ["field_discr", "level_norm"], "totaler": totaler()},
+        # {"cols": ["h20", "h11"], "totaler": totaler()},
     ]
 
 
