@@ -423,7 +423,9 @@ class HMSurfaceSearchArray(SearchArray):
 
     sort_knowl = "hmsurface.sort_order"
     sorts = [
-        #No sort yet
+        ("", "field discriminant", ["field_discr", "level_norm", "chi", "label"]),
+        ("level norm", "level norm ", ["level_norm", "field_discr", "chi", "label"]),
+        ("hol. euler char.", "hol. euler char.", ["chi", "field_discr", "level_norm", "label"]),
     ]
 
 class HMSurface_stats(StatsDisplay):
