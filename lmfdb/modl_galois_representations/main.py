@@ -40,6 +40,7 @@ from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
 from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
 
@@ -227,7 +228,7 @@ class ModLGalRepSearchArray(SearchArray):
         base_ring_characteristic = TextBox(
             name="base_ring_characteristic",
             knowl="modlgal.base_ring_characteristic",
-            label="Characteristic",
+            label=r"Characteristic $\ell$",
             example="2",
             example_span="2, 3, or 5")
         dimension = TextBox(
@@ -293,18 +294,18 @@ class ModLGalRepSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [conductor, codomain],
-            [conductor_primes, surjective],
-            [dimension, absolutely_irreducible],
-            [top_slope, solvable],
-            [base_ring_characteristic, image_index],
+            [base_ring_characteristic, codomain],
+            [dimension, surjective],
+            [conductor, absolutely_irreducible],
+            [conductor_primes, solvable],
+            [top_slope, image_index],
             [count, image_order],
         ]
 
         self.refine_array = [
-            [conductor, conductor_primes, dimension, top_slope],
-            [codomain, surjective, absolutely_irreducible, solvable],
-            [base_ring_characteristic, image_index, image_order]
+            [base_ring_characteristic, dimension, conductor, conductor_primes],
+            [codomain, solvable, surjective, absolutely_irreducible],
+            [top_slope, image_index, image_order]
         ]
 
     sort_knowl = "modlgal.sort_order"
@@ -314,6 +315,13 @@ class ModLGalRepSearchArray(SearchArray):
         ("characteristic", "characteristic", ["base_ring_characteristic", "dimension", "base_ring_order", "conductor", "num"]),
         ("image_index", "image index", ["image_index", "dimension", "base_ring_order", "conductor", "num"]),
     ]
+
+def groupdata(group):
+    parts = group.split('.')
+    return [int(z) for z in parts]
+
+def groupformatter(group):
+  return abstract_group_display_knowl(group)
 
 class ModLGalRep_stats(StatsDisplay):
     def __init__(self):
@@ -338,16 +346,34 @@ class ModLGalRep_stats(StatsDisplay):
 
     table = db.modlgal_reps
     baseurl_func = ".index"
+    sort_keys = {'image_abstract_group': groupdata}
     buckets = {'conductor': ['1-100', '101-500', '501-1000', '1001-5000', '5001-10000', '10001-'],
                'dimension': ['1', '2', '4'],
                }
     knowls = {'conductor': 'modlgal.conductor',
-              'dimension': 'modgal.dim',
+              'dimension': 'modlgal.dimension',
+              'image_abstract_group': 'modlgal.image'
               }
+    short_display = {'image_abstract_group': 'image'}
+    formatters = {'image_abstract_group': groupformatter}
     stat_list = [
         {'cols': ['conductor', 'dimension'],
          'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':2},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),('for $\ell=2$',None)]},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':3},
+         'buckets': {'dimension': ['1', '2']},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),('for $\ell=3$',None)]},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':5},
+         'buckets': {'dimension': ['1', '2']},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),('for $\ell=5$',None)]},
     ]
 
 @modlgal_page.route("/Q/stats")

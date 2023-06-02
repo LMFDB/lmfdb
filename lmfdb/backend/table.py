@@ -2551,3 +2551,8 @@ class PostgresTable(PostgresBase):
         """
         updater = SQL("UPDATE meta_tables SET important = %s WHERE name = %s")
         self._execute(updater, [importance, self.search_table])
+
+    def sum_column(self, col):
+        summer = SQL("SELECT SUM({0}) FROM {1}")
+        summer = summer.format(Identifier(col), Identifier(self.search_table))
+        return self._execute(summer).fetchone()[0]

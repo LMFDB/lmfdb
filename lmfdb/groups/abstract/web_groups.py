@@ -23,6 +23,7 @@ from sage.all import (
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
+from sage.combinat.permutation import from_lehmer_code
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -188,6 +189,14 @@ class WebAbstractGroup(WebObj):
     def live(self):
         return self._data is not None and not isinstance(self._data, dict)
 
+    def decode(self, perm, n):
+        lehmer = []
+        for j in range(1,n+1):
+            lehmer.append(perm % j)
+            perm = int(perm/j)
+        lehmer.reverse()
+        return libgap.PermList(from_lehmer_code(lehmer))
+
     @lazy_attribute
     def G(self):
         if self.live():
@@ -216,7 +225,8 @@ class WebAbstractGroup(WebObj):
         elif self.elt_rep_type == 0:  # PcGroup
             return libgap.PcGroupCode(self.pc_code, self.order)
         elif self.elt_rep_type < 0:  # Permutation group
-            gens = [self.decode(g) for g in self.perm_gens]
+            n = self.transitive_degree
+            gens = [self.decode(g,n) for g in self.perm_gens]
             return libgap.Group(gens)
         else:
             # TODO: Matrix groups

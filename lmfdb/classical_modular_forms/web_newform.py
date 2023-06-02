@@ -211,13 +211,11 @@ class WebNewform():
                 for attr in hecke_cols:
                     setattr(self, attr, hecke_data.get(attr))
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-            # get data from char_dir_values
+            # compute values on generators for the Nebentypus
             self.char_conrey = self.embedding_label.split('.')[0]
-            char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, self.char_conrey)}, ['order', 'values_gens'])
-            if char_values is None:
-                raise ValueError("Invalid Conrey label")
-            self.hecke_ring_character_values = char_values['values_gens']  # [[i,[[1, m]]] for i, m in char_values['values_gens']]
-            self.hecke_ring_cyclotomic_generator = m = char_values['order']
+            chi = ConreyCharacter(self.level, int(self.char_conrey))
+            self.hecke_ring_character_values = chi.values_gens  # [[i,[[1, m]]] for i, m in char_values['values_gens']]
+            self.hecke_ring_cyclotomic_generator = m = chi.order
             self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         # sort by the generators
         if self.hecke_ring_character_values:
@@ -1416,13 +1414,7 @@ function switch_basis(btype) {
         code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
         conrey_chi = ConreyCharacter(self.level, self.conrey_indexes[0])
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
-        values_gens = db.char_dir_values.lookup(
-            "{}.{}".format(self.level, self.conrey_indexes[0]),
-            projection='values_gens'
-        )
-
-        vals = [int(v) for _, v in values_gens]
-        # this needs the value_gens from db.char_dir_values
+        vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
 
         data = { 'N': self.level,
