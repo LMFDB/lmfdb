@@ -55,6 +55,17 @@
   The {{ KNOWL('ag.kodaira_dimension', 'Kodaira dimension') }} of this surface is 
   {% if surface.kodaira_is_known %}
   known to be {{ surface.kodaira_dims[0] }}.
+  {% if surface.kodaira_dims[0] == 2 %}
+  This surface is of general type.
+  {% elif surface.kodaira_dims[0] == -1 %}
+  This surface is rational.
+  {% elif surface.kodaira_dims[0] == 0 %}
+  {% if surface.chi == 2 %}
+  This surface is a K3.
+  {% else %}
+  This surface is an Enriques surface.
+  {% endif %}
+  {% endif %}
   {% else %}
   unknown, the possibilities being ${{ surface.kodaira_dims }}$.
   {% endif %}
