@@ -3,7 +3,6 @@
 import re
 from collections import Counter
 from lmfdb import db
-from ast import literal_eval
 
 from flask import render_template, url_for, request, redirect, abort
 
