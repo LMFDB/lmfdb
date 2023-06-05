@@ -12,9 +12,6 @@ from lmfdb.utils import (
     TextBox,
     TextBoxWithSelect,
     SelectBox,
-    SneakyTextBox,
-    YesNoBox,
-    YesNoMaybeBox,
     CountBox,
     redirect_no_cache,
     display_knowl,
@@ -22,37 +19,21 @@ from lmfdb.utils import (
     search_wrap,
     to_dict,
     parse_ints,
-    parse_noop,
-    parse_bool,
-    parse_floats,
-    parse_interval,
-    parse_element_of,
-    parse_bool_unknown,
-    parse_nf_string,
-    parse_nf_jinv,
     integer_divisors,
     StatsDisplay,
     Downloader,
     comma,
-    proportioners,
     totaler,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
     SearchColumns,
     MathCol,
-    FloatCol,
-    CheckCol,
     LinkCol,
     ProcessedCol,
-    MultiProcessedCol,
 )
-from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
-from lmfdb.backend.encoding import Json
 
-from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.hilbert_modular_surfaces import hmsurface_page
 from lmfdb.hilbert_modular_surfaces.web_hmsurface import (
     WebHMSurface,
@@ -60,7 +41,6 @@ from lmfdb.hilbert_modular_surfaces.web_hmsurface import (
     # canonicalize_name, name_to_latex, factored_conductor,
     # formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf,
 )
-from string import ascii_lowercase
 
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+-\d+\.\d+-[sg]l-[01f]")
 # NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4)?\(\d+\)")
@@ -544,6 +524,7 @@ class HMSurfaceSearchArray(SearchArray):
             [nb_ell6],
             [len_cusp_res, len_ell_res],
             [len_res],
+            [count],
         ]
 
         self.refine_array = [
