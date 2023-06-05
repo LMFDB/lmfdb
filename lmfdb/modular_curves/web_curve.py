@@ -4,17 +4,14 @@ from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
-from sage.databases.cremona import class_to_int
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
-from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
-from string import ascii_lowercase
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -204,7 +201,7 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
     nb_coords = len(m["coordinates"])
     f["codomain_name"] = codomain_name
     varhigh = "XYZWTUVRSABCDEFGHIKLMNOPQJ"
-    ce = f["codomain_equation"] = ["0"] + [teXify_pol(l).upper() for l in codomain_equation]
+    # ce = f["codomain_equation"] = ["0"] + [teXify_pol(l).upper() for l in codomain_equation]
     lead = m["leading_coefficients"]
     if lead is None:
         lead = ["1"]*nb_coords
