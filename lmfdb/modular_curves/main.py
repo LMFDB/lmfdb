@@ -29,7 +29,7 @@ from lmfdb.utils import (
     parse_floats,
     parse_interval,
     parse_element_of,
-    parse_bool_unknown,
+ #   parse_bool_unknown,
     parse_nf_string,
     parse_nf_jinv,
     integer_divisors,
@@ -41,7 +41,14 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, FloatCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
+    SearchColumns,
+    MathCol,
+    FloatCol,
+    CheckCol,
+#    SearchCol,
+    LinkCol,
+    ProcessedCol,
+    MultiProcessedCol,
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
@@ -51,10 +58,19 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
-    WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
-    formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
+    WebModCurve,
+    get_bread,
+    canonicalize_name,
+    name_to_latex,
+    factored_conductor,
+    formatted_dims,
+    url_for_EC_label,
+    url_for_ECNF_label,
+    showj_nf,
+    combined_data,
 )
-from string import ascii_lowercase
+
+
 
 coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
 fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
