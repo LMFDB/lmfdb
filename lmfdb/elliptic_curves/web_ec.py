@@ -231,7 +231,7 @@ def latex_equations(ainvs):
     return [latex_equation(ainvs),homogeneous_latex_equation(ainvs),short_latex_equation(ainvs)]
 
 def sextic_twist_discriminant(ainvs):
-    r""" 
+    r"""
     Return D such that this is the sextic twist by D of 27.a4 (whose c6=-216) -- only for j=0
     """
     a1,a2,a3,a4,a6 = ainvs
@@ -242,9 +242,9 @@ def sextic_twist_discriminant(ainvs):
     # D, not the other way round.
 
     return D.sign() * prod(p ** ((-e)%6) for p,e in D.factor())
-    
+
 def quartic_twist_discriminant(ainvs):
-    r""" 
+    r"""
     Return D such that this is the quartic twist by D of 32.a3 (whose c4=48) -- only for j=1728
     """
     a1,a2,a3,a4,a6 = ainvs
@@ -356,10 +356,10 @@ class WebEC():
             data['min_sextic_twist_label'] = '27.a4'
             data['min_sextic_twist_url'] = url_for(".by_ec_label", label='27.a4')
         if self.cm == -4:
-            data['min_quartic_twist_disc'] = quartic_twist_discriminant(self.ainvs) 
+            data['min_quartic_twist_disc'] = quartic_twist_discriminant(self.ainvs)
             data['min_quartic_twist_label'] = '32.a3'
             data['min_quartic_twist_url'] = url_for(".by_ec_label", label='32.a3')
-        
+
         # modular degree:
 
         try:
