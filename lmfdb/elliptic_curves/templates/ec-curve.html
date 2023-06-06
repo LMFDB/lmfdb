@@ -488,9 +488,9 @@ This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_u
 <h2>{{ KNOWL('ec.twists', title='Twists') }} </h2>
 <p>
   {% if data.data.minq_D==1 %}
-  This elliptic curve is its own {{ KNOWL('ec.q.minimal_quadratic_twist', title='minimal quadratic twist') }}.
+  This elliptic curve is its own {{ KNOWL('ec.q.minimal_twist', title='minimal quadratic twist') }}.
   {% else %}
-  The {{ KNOWL('ec.q.minimal_quadratic_twist', title='minimal quadratic twist') }} of this elliptic curve is
+  The {{ KNOWL('ec.q.minimal_twist', title='minimal quadratic twist') }} of this elliptic curve is
   <a href={{data.data.minq_url}}>{{data.data.minq_label}}</a>, its twist by ${{data.data.minq_D}}$.
   {% endif %}
   
