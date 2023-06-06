@@ -109,7 +109,7 @@ def stype_qformatter(stype):
 
 class GroupStats(StatsDisplay):
     extent_knowl = "rcs.cande.groups.abstract"
-    table = db.gps_groups
+    table = db.gps_groups_test
     baseurl_func = ".index"
     buckets = {
         "aut_order": ["1-7", "8-32", "33-128", "129-512", "513-2048", "2049-8192", "8193-65536","65537-"],
@@ -177,8 +177,8 @@ class GroupStats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} of {display_knowl("group.order", "order")} $n\leq {db.gps_groups.max("order")}$ together with {comma(db.gps_subgroups.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'# or <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
+        return fr'The database currently contains {comma(db.gps_groups_test.count())} {display_knowl("group", "groups")} of {display_knowl("group.order", "order")} $n\leq {db.gps_groups_test.max("order")}$ together with {comma(db.gps_subgroups_test.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char_test.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'# or <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
 
     @lazy_attribute
     def summary(self):
-        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} of {display_knowl("group.order", "order")} $n\leq {db.gps_groups.max("order")}$ together with {comma(db.gps_subgroups.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.' #  In addition to the statistics below, you can also <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
+        return fr'The database currently contains {comma(db.gps_groups_test.count())} {display_knowl("group", "groups")} of {display_knowl("group.order", "order")} $n\leq {db.gps_groups_test.max("order")}$ together with {comma(db.gps_subgroups_test.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char_test.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.' #  In addition to the statistics below, you can also <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
