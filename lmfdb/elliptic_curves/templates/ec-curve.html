@@ -465,34 +465,114 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
 <p>The torsion field $K:=\Q(E[{{data.adelic_level}}])$ is a degree-${{data.data.adelic_image_size}}$ Galois extension of $\Q$ with $\Gal(K/\Q)$ isomorphic to the projection of $H$ to $\GL_2(\Z/{{data.adelic_level}}\Z)$.
 {% endif %}
 
-<h2>$p$-adic regulators</h2>
 
+<h2>{{ KNOWL('ec.isogeny', title='Isogenies') }} </h2>
+{% if data.data.isogeny_degrees != "unknown" %}
+    {{ place_code('isogenies') }}
 <p>
-{% if data.rank==0 %}
-All $p$-adic regulators are identically $1$ since the rank is $0$.
+{% if data.data.isogeny_degrees %}
+This curve has non-trivial cyclic isogenies of degree $d$ for $d=$
+{{ data.data.isogeny_degrees}}.
+<br>
+Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
+consists of {{data.class_size}} curves linked by isogenies of
+{% if data.one_deg %}degree{% else %}degrees dividing{% endif %}
+ {{data.class_deg}}.
 {% else %}
-{% if data.data.p_adic_data_exists %}
-</p><p>
-Note: $p$-adic regulator data only exists for primes $p\ge 5$ of good ordinary
-reduction.
+This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
+    consists of this curve only.
 </p>
-  <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p=0)}}'+this.value, function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
-  <option value=''>Choose a prime...</option>
-  {% for p in data.data.p_adic_primes %}
-  <option value="{{ p }}">{{ p }}</option>
-  {% endfor %}
-  </select>
-  <div id='padic'></div>
-{% elif data.data.Gamma0optimal %}
-No $p$-adic data exists for this curve.
-{% else %}
-$p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-optimal.
 {% endif %}
 {% endif %}
-    </p>
 
-{% if data.iw %}
+<h2>{{ KNOWL('ec.twists', title='Twists') }} </h2>
+<p>
+  {% if data.data.minq_D==1 %}
+  This elliptic curve is its own {{ KNOWL('ec.q.minimal_twist', title='minimal quadratic twist') }}.
+  {% else %}
+  The {{ KNOWL('ec.q.minimal_twist', title='minimal quadratic twist') }} of this elliptic curve is
+  <a href={{data.data.minq_url}}>{{data.data.minq_label}}</a>, its twist by ${{data.data.minq_D}}$.
+  {% endif %}
+  
+  {% if data.data.CMD==-3 %}
+<p>
+  {% if data.data.min_sextic_twist_disc==1 %}
+  This elliptic curve is its own {{ KNOWL('ec.q.minimal_twist', title='minimal sextic twist') }}.
+  {% else %}
+  The {{ KNOWL('ec.q.minimal_twist', title='minimal sextic twist') }} of this elliptic curve is
+  <a href={{data.data.min_sextic_twist_url}}>{{data.data.min_sextic_twist_label}}</a>,
+  its sextic twist by ${{data.data.min_sextic_twist_disc}}$.
+  {% endif %}
+</p>
+{% endif %}
+{% if data.data.CMD==-4 %}
+<p>
+  {% if data.data.min_quartic_twist_disc==1 %}
+  This elliptic curve is its own {{ KNOWL('ec.q.minimal_twist', title='minimal quartic twist') }}.
+  {% else %}
+  The {{ KNOWL('ec.q.minimal_twist', title='minimal quartic twist') }} of this elliptic curve is
+  <a href={{data.data.min_quartic_twist_url}}>{{data.data.min_quartic_twist_label}}</a>,
+  its quartic twist by ${{data.data.min_quartic_twist_disc}}$.
+  {% endif %}
+  </p>
+{% endif %}
+
+{% if data.torsion_growth_data_exists %}
+
+<h2>{{KNOWL('ec.q.torsion_growth', title='Growth of torsion')}} in number fields</h2>
+<p>
+{% if data.tg==1 %}
+The only number field $K$ of degree less than {{data.tg.maxd}} such that
+$E(K)_{\rm tors}$ is strictly larger than $E(\Q)_{\rm tors}$
+{% if data.mwbsd.tor_order==1 %} (which is trivial)
+{% else %}
+$\cong {{data.mwbsd.tor_struct}}$
+{% endif %}
+is the following:
+{% else %}
+The number fields $K$ of degree less than {{data.tg.maxd}} such that
+$E(K)_{\rm tors}$ is strictly larger than $E(\Q)_{\rm tors}$
+{% if data.mwbsd.torsion==1 %} (which is trivial)
+{% else %}
+$\cong {{data.mwbsd.tor_struct}}$
+{% endif %}
+are as follows:
+{% endif %}
+</p>
+<p>
+<table class="ntdata"><thead>
+<tr>
+<th>$[K:\Q]$</th>
+<td align=center>$K$</td>
+<th>$E(K)_{\rm tors}$</th>
+<th>Base change curve</th>
+</tr>
+</thead><tbody>
+{% for tgd in data.tg.data %}
+<tr>
+<td align=center>${{tgd.d}}$</td>
+<td align=center>{{tgd.f | safe}}</td>
+<td align=center>{{tgd.t}}</td>
+<td align=center>
+{% if tgd.bc_label == 'Not in database' %}Not in database
+{% else %}<a href={{tgd.bc_url}}>{{tgd.bc_label}}</a>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</p>
+<p>
+We only show fields where the torsion growth is {{KNOWL('ec.q.torsion_growth', title='primitive')}}.
+{% if data.tg.fields_missing %}
+For fields not in the database, click on the degree shown to reveal the defining polynomial.
+{% endif %}
+</p>
+{% endif %}
+
 <h2>{{ KNOWL('ec.iwasawa_invariants', title='Iwasawa invariants') }} </h2>
+{% if data.iw %}
 <p>
 <table border=1 style="margin-left:5%">
 <tr style="border-bottom: 1px solid #000;">
@@ -556,79 +636,33 @@ No Iwasawa invariant data is available for this curve.
 </p>
 {% endif %}
 
+<h2>$p$-adic regulators</h2>
 
-<h2>{{ KNOWL('ec.isogeny', title='Isogenies') }} </h2>
-{% if data.data.isogeny_degrees != "unknown" %}
-    {{ place_code('isogenies') }}
 <p>
-{% if data.data.isogeny_degrees %}
-This curve has non-trivial cyclic isogenies of degree $d$ for $d=$
-{{ data.data.isogeny_degrees}}.
-<br>
-Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
-consists of {{data.class_size}} curves linked by isogenies of
-{% if data.one_deg %}degree{% else %}degrees dividing{% endif %}
- {{data.class_deg}}.
+{% if data.rank==0 %}
+All $p$-adic regulators are identically $1$ since the rank is $0$.
 {% else %}
-This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
-    consists of this curve only.
+{% if data.data.p_adic_data_exists %}
+</p><p>
+Note: $p$-adic regulator data only exists for primes $p\ge 5$ of good ordinary
+reduction.
 </p>
+  <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p=0)}}'+this.value, function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
+  <option value=''>Choose a prime...</option>
+  {% for p in data.data.p_adic_primes %}
+  <option value="{{ p }}">{{ p }}</option>
+  {% endfor %}
+  </select>
+  <div id='padic'></div>
+{% elif data.data.Gamma0optimal %}
+No $p$-adic data exists for this curve.
+{% else %}
+$p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-optimal.
 {% endif %}
 {% endif %}
+    </p>
 
-{% if data.torsion_growth_data_exists %}
 
-<h2>{{KNOWL('ec.q.torsion_growth', title='Growth of torsion')}} in number fields</h2>
-<p>
-{% if data.tg==1 %}
-The only number field $K$ of degree less than {{data.tg.maxd}} such that
-$E(K)_{\rm tors}$ is strictly larger than $E(\Q)_{\rm tors}$
-{% if data.mwbsd.tor_order==1 %} (which is trivial)
-{% else %}
-$\cong {{data.mwbsd.tor_struct}}$
-{% endif %}
-is the following:
-{% else %}
-The number fields $K$ of degree less than {{data.tg.maxd}} such that
-$E(K)_{\rm tors}$ is strictly larger than $E(\Q)_{\rm tors}$
-{% if data.mwbsd.torsion==1 %} (which is trivial)
-{% else %}
-$\cong {{data.mwbsd.tor_struct}}$
-{% endif %}
-are as follows:
-{% endif %}
-</p>
-<p>
-<table class="ntdata"><thead>
-<tr>
-<th>$[K:\Q]$</th>
-<td align=center>$K$</td>
-<th>$E(K)_{\rm tors}$</th>
-<th>Base change curve</th>
-</tr>
-</thead><tbody>
-{% for tgd in data.tg.data %}
-<tr>
-<td align=center>${{tgd.d}}$</td>
-<td align=center>{{tgd.f | safe}}</td>
-<td align=center>{{tgd.t}}</td>
-<td align=center>
-{% if tgd.bc_label == 'Not in database' %}Not in database
-{% else %}<a href={{tgd.bc_url}}>{{tgd.bc_label}}</a>
-{% endif %}
-</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</p>
-<p>
-We only show fields where the torsion growth is {{KNOWL('ec.q.torsion_growth', title='primitive')}}.
-{% if data.tg.fields_missing %}
-For fields not in the database, click on the degree shown to reveal the defining polynomial.
-{% endif %}
-</p>
-{% endif %}
 
 {#
     <h2> Plot of real points</h2>

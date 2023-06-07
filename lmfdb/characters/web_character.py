@@ -1140,6 +1140,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.isminimal = bool_string(orbit_data['is_minimal'])
         self.parity = parity_string(int(orbit_data['parity']))
         self._set_kernel_field_poly(orbit_data)
+        self.orbit_index = orbit_data['orbit_index']
         self.inducing = orbit_data['primitive_label']
         self.ind_orbit_label = self.inducing.split(".")[1]
 
