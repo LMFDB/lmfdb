@@ -388,7 +388,11 @@ def url_for_label(label):
 
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
-modm_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.([a-z]+|\?)(\.(\d+)-(\d+).(\d+))?')
+
+modm_full = r'(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)'
+modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
+modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
+modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
 class EC_download(Downloader):
     table = db.ec_curvedata

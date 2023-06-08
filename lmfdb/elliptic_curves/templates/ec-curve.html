@@ -460,8 +460,18 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
 
   {{ place_code('adelicimage') }}
 
-<p> The image $H:=\rho_E(\Gal(\overline{\Q}/\Q))$ of the {{KNOWL('ec.galois_rep', title='adelic Galois representation')}} has {{KNOWL('ec.galois_rep_adelic_image', title='level')}} {{data.data.adelic_level_latex}}, {{KNOWL('ec.galois_rep_adelic_image', title='index')}} ${{data.adelic_index}}$, {{KNOWL('ec.galois_rep_adelic_image', title='genus')}} ${{data.adelic_genus}}$, and generators</p>
+<p> The image $H:=\rho_E(\Gal(\overline{\Q}/\Q))$ of the {{KNOWL('ec.galois_rep', title='adelic Galois representation')}} has
+  {% if data.modcurve_url %}
+  {{KNOWL('modcurve.label', title='label')}} <a href={{ data.modcurve_url }}>{{data.modm_images[-1]}}</a>,
+  {% endif %}
+  {{KNOWL('ec.galois_rep_adelic_image', title='level')}} {{data.data.adelic_level_latex}}, {{KNOWL('ec.galois_rep_adelic_image', title='index')}} ${{data.adelic_index}}$, {{KNOWL('ec.galois_rep_adelic_image', title='genus')}} ${{data.adelic_genus}}$, and generators</p>
 <p>${{data.data.adelic_gens_latex}}$.</p>
+<!-- <p>
+  Mod-$m$ reductions of $H$:
+  <table>
+    
+</table>
+</p> -->
 <p>The torsion field $K:=\Q(E[{{data.adelic_level}}])$ is a degree-${{data.data.adelic_image_size}}$ Galois extension of $\Q$ with $\Gal(K/\Q)$ isomorphic to the projection of $H$ to $\GL_2(\Z/{{data.adelic_level}}\Z)$.
 {% endif %}
 
