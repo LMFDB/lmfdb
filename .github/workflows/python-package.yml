@@ -18,7 +18,7 @@ jobs:
 
       - name: Conditional Build Matrix
         id: set-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@1.0.1
+        uses: JoshuaTheMiller/conditional-build-matrix@main
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
