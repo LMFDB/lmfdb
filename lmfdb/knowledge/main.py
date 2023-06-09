@@ -374,7 +374,7 @@ def show(ID):
     timestamp = request.args.get('timestamp')
     try:
         timestamp = int(timestamp)
-    except ValueError:
+    except (TypeError, ValueError):
         timestamp = None
     if timestamp is not None:
         timestamp = timestamp_in_ms_to_datetime(timestamp)
