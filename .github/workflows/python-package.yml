@@ -45,7 +45,7 @@ jobs:
         use-only-tar-bz2: true
 
     - name: Cache conda
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
@@ -71,7 +71,7 @@ jobs:
         conda list
 
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
