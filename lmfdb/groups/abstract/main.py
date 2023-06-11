@@ -16,7 +16,7 @@ from flask import (
 )
 #from six import BytesIO
 from string import ascii_lowercase
-from sage.all import ZZ, latex, factor, prod, Permutations
+from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
 from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
@@ -1237,6 +1237,10 @@ def shortsubinfo(ambient, short_label):
     )
     ans += f"<p>{create_boolean_subgroup_string(wsg, type='knowl')}</p>"
     ans += "<table>"
+    ans += f"<tr><td>{display_knowl('group.order', 'Order')}</td><td>${wsg.subgroup_order}"
+    if wsg.subgroup_order > 1 and not is_prime(wsg.subgroup_order):
+        ans += "="+latex(factor(wsg.subgroup_order))
+    ans += "$</td></tr>"
     if wsg.normal:
         ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>${wsg.quotient_tex}$</td></tr>"
     else:
