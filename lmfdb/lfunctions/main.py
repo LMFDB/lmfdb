@@ -38,6 +38,7 @@ from .Lfunctionutilities import (
     getConductorIsogenyFromLabel)
 
 from lmfdb.characters.web_character import WebDirichlet
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey

@@ -1181,7 +1181,7 @@ space_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
     MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
-                      lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, indexes[0]),
+                      lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension", default=True),
