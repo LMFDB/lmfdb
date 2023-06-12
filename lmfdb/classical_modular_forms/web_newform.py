@@ -171,7 +171,7 @@ class WebNewform():
         self.texp = [0] + self.traces
         self.texp_prec = len(self.texp)
 
-        # self.char_conrey = self.conrey_indexes[0]
+        # self.char_conrey = self.conrey_index
         # self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = r"\(" + str(self.level) + r"\)." + self.char_orbit_label
 
@@ -309,6 +309,10 @@ class WebNewform():
         self.qexp_converted = True
         return ret
 
+    @property
+    def conrey_orbit(self):
+        return ConreyCharacter(self.level,self.conrey_index).galois_orbit
+
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
@@ -317,8 +321,8 @@ class WebNewform():
             label = base_label + [str(character), str(j + 1)]
             return '.'.join(label)
         if self.embedding_label is None:
-            return [make_label(character, j)
-                    for character in self.conrey_indexes
+            return [make_label(n, j)
+                    for n in self.conrey_orbit
                     for j in range(self.dim // self.char_degree)]
         else:
             character, j = map(int, self.embedding_label.split('.'))
@@ -371,10 +375,10 @@ class WebNewform():
         if self.weight <= 200:
             if (self.dim == 1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
-            if self.embedding_label is None and len(self.conrey_indexes) * self.rel_dim > 50:
+            if self.embedding_label is None and len(self.conrey_orbit) * self.rel_dim > 50:
                 res = [list(map(str, elt)) for elt in res]
-                # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
-                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' % (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
+                # properties_lfun(initialFriends, label, nf_url, conrey_orbit, rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' % (res, str(self.label), str(nf_url), self.conrey_orbit, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.embedding_labels:
                     lfun_url = '/L' + cmf_base + lfun_label.replace('.', '/')
@@ -504,7 +508,7 @@ class WebNewform():
                 self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
-                chars = [ConreyCharacter(self.level, char) for char in self.conrey_indexes]
+                chars = [ConreyCharacter(self.level, char) for char in self.conrey_orbit]
                 for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
@@ -1239,7 +1243,7 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:
             raise ValueError("Invalid embedding")
-        return str(self.rel_dim * self.conrey_indexes.index(c) + e)
+        return str(self.rel_dim * self.conrey_orbit.index(c) + e)
 
     def embedded_title(self, m):
         return "Embedded newform %s.%s"%(self.label, self.conrey_from_embedding(m))
@@ -1412,14 +1416,14 @@ function switch_basis(btype) {
         # read in code.yaml from current directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
-        conrey_chi = ConreyCharacter(self.level, self.conrey_indexes[0])
+        conrey_chi = ConreyCharacter(self.level, self.conrey_index)
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
         vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
 
         data = { 'N': self.level,
                  'k': self.weight,
-                 'conrey_index': self.conrey_indexes[0],
+                 'conrey_index': self.conrey_index,
                  'sage_zeta_order': sage_zeta_order,
                  'sage_genvalues': sage_genvalues,
                }

@@ -308,7 +308,7 @@ class mf_newspaces(MfChecker):
         # TIME about 70s
         return self._test_equality(rec['sturm_bound'], sturm_bound0(rec['level'], rec['weight']), verbose, "Sturm bound failure: {0} != {1}")
 
-    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes', 'char_order'])
+    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_index', 'char_order'])
     def check_Skchi_dim_formula(self, rec, verbose=False):
         """
         for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
@@ -318,10 +318,10 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = get_dirchar(rec['level'], rec['conrey_indexes'][0])
+            dirchar = get_dirchar(rec['level'], rec['conrey_index'])
         return self._test_equality(rec['relative_dim'], dimension_new_cusp_forms(dirchar, rec['weight']), verbose)
 
-    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'char_order', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
+    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'char_order', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_index'])
     def check_dims(self, rec, verbose=False):
         """
         for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
@@ -330,7 +330,7 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = get_dirchar(rec['level'], rec['conrey_indexes'][0])
+            dirchar = get_dirchar(rec['level'], rec['conrey_index'])
         k = rec['weight']
         m = rec['char_degree']
         for func, key in [(dimension_eis, 'eis_dim'), (dimension_cusp_forms, 'cusp_dim'), (dimension_modular_forms, 'mf_dim')]:
