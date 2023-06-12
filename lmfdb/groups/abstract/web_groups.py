@@ -24,6 +24,7 @@ from sage.all import (
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.combinat.permutation import from_lehmer_code
+from sage.misc.cachefunc import cached_function
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -85,6 +86,28 @@ def group_pretty_image(label):
     if img:
         return str(img)
     # we should not get here
+
+@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
+def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
+    # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
+    if not name:
+        if pretty:
+            if label in cache and "tex_name" in cache[label]:
+                name = cache[label]["tex_name"]
+            else:
+                name = db.gps_groups.lookup(label, "tex_name")
+            if name is None:
+                name = f"Group {label}"
+            else:
+                name = f"${name}$"
+        else:
+            name = f"Group {label}"
+    if ambient is None:
+        args = label
+    else:
+        args = f"{label}%7C{ambient}%7C{aut}"
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
+
 
 
 def primary_to_smith(invs):
@@ -1500,7 +1523,7 @@ class WebAbstractGroup(WebObj):
         return self.subgroups[self.cent()].subgroup_tex
 
     def central_quot(self):
-        return self.subgroups[self.cent()].quotient_tex
+        return abstract_group_display_knowl(self.subgroups[self.cent()].quotient)
 
     def cent_order_factor(self):
         if self.live():
@@ -1538,7 +1561,7 @@ class WebAbstractGroup(WebObj):
         return self.subgroups[self.fratt()].subgroup_tex
 
     def frattini_quot(self):
-        return self.subgroups[self.fratt()].quotient_tex
+        return abstract_group_display_knowl(self.subgroups[self.fratt()].quotient)
 
     def gen_noun(self):
         if self.rank == 1:

@@ -17,7 +17,6 @@ from flask import (
 #from six import BytesIO
 from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
-from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
 from lmfdb.app import app
@@ -54,7 +53,8 @@ from .web_groups import (
     WebAbstractRationalCharacter,
     WebAbstractSubgroup,
     group_names_pretty,
-    primary_to_smith
+    primary_to_smith,
+    abstract_group_display_knowl
 )
 from .stats import GroupStats
 
@@ -1155,6 +1155,7 @@ def render_abstract_group(label, data=None):
             )
             friends += [("As the component group of a Sato-Tate group", st_url)]
 
+    info['display_group_knowl'] = abstract_group_display_knowl
     bread = get_bread([(label, "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
@@ -1910,27 +1911,6 @@ def abstract_group_namecache(labels, cache=None, reverse=None):
                     continue
                 cache[nTj]["pretty"] = f"${tex_name}$" if tex_name else ""
     return cache
-
-@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
-def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
-    # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
-    if not name:
-        if pretty:
-            if label in cache and "tex_name" in cache[label]:
-                name = cache[label]["tex_name"]
-            else:
-                name = db.gps_groups.lookup(label, "tex_name")
-            if name is None:
-                name = f"Group {label}"
-            else:
-                name = f"${name}$"
-        else:
-            name = f"Group {label}"
-    if ambient is None:
-        args = label
-    else:
-        args = f"{label}%7C{ambient}%7C{aut}"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 
 def sub_display_knowl(label, name=None):
