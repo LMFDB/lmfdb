@@ -167,9 +167,9 @@ def abelian_get_elementary(snf):
 
 class WebAbstractGroup(WebObj):
     table = db.gps_groups
-    source = "db" # can be overridden below by either GAP or LiveAbelian
 
     def __init__(self, label, data=None):
+        self.source = "db" # can be overridden below by either GAP or LiveAbelian
         if isinstance(data, WebAbstractGroup):
             # This happens if we're using the _minmax_data in tex_name
             self.G = data.G
@@ -186,11 +186,11 @@ class WebAbstractGroup(WebObj):
                 if dbdata is not None:
                     data = dbdata
                 else:
-                    source = "GAP"
+                    self.source = "GAP"
         elif isinstance(data, LiveAbelianGroup):
             self._data = data.snf
             data = data.snf
-            source = "LiveAbelian"
+            self.source = "LiveAbelian"
         WebObj.__init__(self, label, data)
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
@@ -203,7 +203,7 @@ class WebAbstractGroup(WebObj):
                     i = ZZ(m.group(4))
                     if i <= maxi:
                         self._data = (n, i)
-                        source = "GAP"
+                        self.source = "GAP"
         if isinstance(self._data, list):  # live abelian group
             self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
             self.G = LiveAbelianGroup(self.snf)
