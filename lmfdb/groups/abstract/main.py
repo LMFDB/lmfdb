@@ -1155,7 +1155,6 @@ def render_abstract_group(label, data=None):
             )
             friends += [("As the component group of a Sato-Tate group", st_url)]
 
-    info['display_group_knowl'] = abstract_group_display_knowl
     bread = get_bread([(label, "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
@@ -1243,7 +1242,7 @@ def shortsubinfo(ambient, short_label):
         ans += "="+latex(factor(wsg.subgroup_order))
     ans += "$</td></tr>"
     if wsg.normal:
-        ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>${wsg.quotient_tex}$</td></tr>"
+        ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>{wsg.display_quotient()}</td></tr>"
     else:
         ans += f"<tr><td>Number of conjugates</td><td>{wsg.count}</td></tr>"
     ans += subinfo_getsub("Normalizer", "group.subgroup.normalizer", wsg.normalizer)

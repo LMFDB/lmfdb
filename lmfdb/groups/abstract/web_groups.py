@@ -167,6 +167,7 @@ def abelian_get_elementary(snf):
 
 class WebAbstractGroup(WebObj):
     table = db.gps_groups
+    source = "db" # can be overridden below by either GAP or LiveAbelian
 
     def __init__(self, label, data=None):
         if isinstance(data, WebAbstractGroup):
@@ -184,9 +185,12 @@ class WebAbstractGroup(WebObj):
                 dbdata = self.table.lookup(label)
                 if dbdata is not None:
                     data = dbdata
+                else:
+                    source = "GAP"
         elif isinstance(data, LiveAbelianGroup):
             self._data = data.snf
             data = data.snf
+            source = "LiveAbelian"
         WebObj.__init__(self, label, data)
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
@@ -199,6 +203,7 @@ class WebAbstractGroup(WebObj):
                     i = ZZ(m.group(4))
                     if i <= maxi:
                         self._data = (n, i)
+                        source = "GAP"
         if isinstance(self._data, list):  # live abelian group
             self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
             self.G = LiveAbelianGroup(self.snf)
@@ -207,9 +212,11 @@ class WebAbstractGroup(WebObj):
             self.hyperelementary = self.elementary
             self.Zgroup = len(self.snf) == 1
             self.Agroup = True
+            self.source = "LiveAbelian"
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
+        #return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
 
     def decode(self, perm, n):
@@ -531,6 +538,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def smith_abelian_invariants(self):
+        if self.source == "LiveAbelian":
+            return primary_to_smith(self.G.AbelianInvariants())
         return primary_to_smith(self.primary_abelian_invariants)
 
     @lazy_attribute
@@ -684,7 +693,9 @@ class WebAbstractGroup(WebObj):
             if H.order == self.order:
                 disp = self.label if self.tex_name == " " else f'${self.tex_name}$'
             elif H.order == 1:
+                url = url_for(".by_label", label="1.1")
                 disp = '$C_1$'
+                disp = f'<a href="{url}">{disp}</a>'
             elif H.label:
                 url = url_for(".by_label", label=H.label)
                 disp = H.label if H.tex_name == " " else f'${H.tex_name}$'
@@ -1522,9 +1533,6 @@ class WebAbstractGroup(WebObj):
     def cent_label(self):
         return self.subgroups[self.cent()].subgroup_tex
 
-    def central_quot(self):
-        return abstract_group_display_knowl(self.subgroups[self.cent()].quotient)
-
     def cent_order_factor(self):
         if self.live():
             ZGord = ZZ(self.G.Center().Order())
@@ -1559,9 +1567,6 @@ class WebAbstractGroup(WebObj):
 
     def fratt_label(self):
         return self.subgroups[self.fratt()].subgroup_tex
-
-    def frattini_quot(self):
-        return abstract_group_display_knowl(self.subgroups[self.fratt()].quotient)
 
     def gen_noun(self):
         if self.rank == 1:
@@ -1927,6 +1932,14 @@ class WebAbstractSubgroup(WebObj):
     def proj_img(self):
         if self.projective_image is not None:
             return self._lookup(self.projective_image, self._full, WebAbstractGroup)
+
+    def display_quotient(self, ab_invs=None):
+        q = self.quotient
+        if q:
+            return abstract_group_display_knowl(q)
+        if ab_invs:
+            return abelian_gp_display(ab_invs)
+        return '${self.quotient_tex}$'
 
     @lazy_attribute
     def _others(self):
