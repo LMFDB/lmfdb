@@ -220,9 +220,9 @@ class ArtinRepresentation():
         return self._data["GaloisConjugates"]
 
     def projective_group(self):
-        gapid = self._data['Proj_GAP']
-        if gapid[0]:
-            label = f"{gapid[0]}.{gapid[1]}"
+        groupid = self._data['Proj_GAP']
+        if groupid[0]:
+            label = f"{groupid[0]}.{groupid[1]}"
             if self._knowl_cache is None:
                 name = db.gps_groups.lookup(label, "tex_name")
             else:
@@ -232,8 +232,8 @@ class ArtinRepresentation():
         ntj = self._data['Proj_nTj']
         if ntj[1]:
             return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}", cache=self._knowl_cache)
-        if gapid:
-            return f'Group({gapid[0]}.{gapid[1]})'
+        if groupid:
+            return f'Group({groupid[0]}.{groupid[1]})'
         return 'data not computed'
 
     def projective_field(self):
