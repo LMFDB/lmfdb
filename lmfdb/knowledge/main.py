@@ -372,6 +372,10 @@ def edit(ID):
 @knowledge_page.route("/show/<ID>")
 def show(ID):
     timestamp = request.args.get('timestamp')
+    try:
+        timestamp = int(timestamp)
+    except (TypeError, ValueError):
+        timestamp = None
     if timestamp is not None:
         timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp, showing=True)
