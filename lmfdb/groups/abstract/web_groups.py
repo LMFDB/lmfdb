@@ -24,6 +24,7 @@ from sage.all import (
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
+from sage.combinat.permutation import from_lehmer_code
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -184,6 +185,14 @@ class WebAbstractGroup(WebObj):
     # We support some basic information for groups not in the database using GAP
     def live(self):
         return self._data is not None and not isinstance(self._data, dict)
+
+    def decode(self, perm, n):
+        lehmer = []
+        for j in range(1,n+1):
+            lehmer.append(perm % j)
+            perm = int(perm/j)
+        lehmer.reverse()
+        return libgap.PermList(from_lehmer_code(lehmer))
 
     @lazy_attribute
     def G(self):

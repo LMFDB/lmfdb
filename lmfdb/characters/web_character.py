@@ -494,7 +494,7 @@ class WebChar(WebCharObject):
     def kerfield(self):
         kerpoly = self.kernel_field_poly
         if kerpoly and self.order <= 100:
-            if self.order <= 47:
+            if 13 <= self.order <= 47:
                 return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order, link=True)
             else:
                 return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order)
@@ -550,9 +550,12 @@ class WebDBDirichlet(WebDirichlet):
         if self.modulus:
             self.modulus = int(self.modulus)
         self.modlabel = self.modulus
-        self.number = kwargs.get('number', None)
-        if self.number:
-            self.number = int(self.number)
+        if self.modulus == 1:
+            self.number = 1
+        else:
+            self.number = kwargs.get('number', None)
+            if self.number:
+                self.number = int(self.number)
         self.numlabel = self.number
         if self.modulus:
             # Needed for Gauss sums, etc
@@ -1137,6 +1140,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.isminimal = bool_string(orbit_data['is_minimal'])
         self.parity = parity_string(int(orbit_data['parity']))
         self._set_kernel_field_poly(orbit_data)
+        self.orbit_index = orbit_data['orbit_index']
         self.inducing = orbit_data['primitive_label']
         self.ind_orbit_label = self.inducing.split(".")[1]
 
