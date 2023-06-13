@@ -10,12 +10,13 @@ from flask import (
     redirect,
     render_template,
     request,
-#    send_file,
+    send_file,
     url_for,
     abort,
 )
 #from six import BytesIO
 from string import ascii_lowercase
+from io import BytesIO
 from sage.all import ZZ, latex, factor, prod, Permutations
 from sage.misc.cachefunc import cached_function
 
@@ -811,6 +812,8 @@ def group_jump(info):
 #    )
 
 def show_factor(n):
+    if n is None:
+        return ""
     return f"${latex(ZZ(n).factor())}$"
 
 def get_url(label):
@@ -1323,6 +1326,22 @@ def picture_page():
         learnmore=learnmore_list_remove("Picture")
     )
 
+@abstract_page.route("picture/<label>")
+def picture(label):
+    if label_is_valid(label):
+        label = clean_input(label)
+        gp = WebAbstractGroup(label)
+        if gp.is_null():
+            flash_error("No group with label %s was found in the database.", label)
+            return redirect(url_for(".index"))
+        # The user specifically requested the image, so we don't impose a limit on the number of conjugacy classes
+        svg_io = BytesIO()
+        svg_io.write(gp.image().encode("utf-8"))
+        svg_io.seek(0)
+        return send_file(svg_io, mimetype='image/svg+xml')
+    else:
+        flash_error("The label %s is invalid.", label)
+        return redirect(url_for(".index"))
 
 @abstract_page.route("/Source")
 def how_computed_page():

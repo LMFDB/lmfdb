@@ -1860,10 +1860,18 @@ class WebAbstractSubgroup(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         s = self.subgroup_tex
-        self.subgroup_tex_parened = s if self._is_atomic(s) else "(%s)" % s
+        if s is None:
+            self.subgroup_tex = "?"
+            self.subgroup_tex_parened = "(?)"
+        else:
+            self.subgroup_tex_parened = s if self._is_atomic(s) else "(%s)" % s
         if self._data.get("quotient"):
             q = self.quotient_tex
-            self.quotient_tex_parened = q if self._is_atomic(q) else "(%s)" % q
+            if q is None:
+                self.quotient_tex = "?"
+                self.quotient_tex_parened = "(?)"
+            else:
+                self.quotient_tex_parened = q if self._is_atomic(q) else "(%s)" % q
 
     def spanclass(self):
         s = "subgp"
