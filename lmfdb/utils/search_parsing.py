@@ -1099,7 +1099,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
         # For wild inertia, qfield=('wild_gap', 'wild_gap')
 
         # Need to convert it to GAP id
-        from lmfdb.galois_groups.transitive_group import nt2gap
+        from lmfdb.galois_groups.transitive_group import nt2abstract
 
         iner_gap, iner = qfield
         # Check for nTj
@@ -1110,8 +1110,8 @@ def parse_inertia(inp, query, qfield, err_msg=None):
             if iner != iner_gap:
                 query[iner] = ["t", [n, t]]
             else:
-                gapid = nt2gap(n, t)
-                query[iner] = gapid
+                abstractid = nt2abstract(n, t)
+                query[iner] = abstractid
         else:
             # Check for an alias, like D4
             from lmfdb.galois_groups.transitive_group import aliases
@@ -1119,7 +1119,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
             inp2 = inp.upper()
             if inp2 in aliases:
                 nt = aliases[inp2][0]
-                query[iner_gap] = nt2gap(nt[0], nt[1])
+                query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
                 # Check for Gap code
                 rematch = re.match(r"^\[(\d+),(\d+)\]$", inp)

@@ -65,6 +65,7 @@ abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$"
 )
 gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
+abstract_group_label_regex = re.compile(r"^(\d+)\.((\d+)|[a-z]+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 
@@ -1152,14 +1153,8 @@ def render_abstract_group(label, data=None):
             )
             friends += [("As the automorphism of a curve", auto_url)]
 
-        if db.gps_transitive.count({"gapidfull": gap_str}) > 0:
-            gal_gp_url = (
-                "/GaloisGroup/?gal=%5B"
-                + str(gap_ints[0])
-                + "%2C"
-                + str(gap_ints[1])
-                + "%5D"
-            )
+        if abstract_group_label_regex.fullmatch(label) and db.gps_transitive.count({"abstract_label": label}) > 0:
+            gal_gp_url =  "/GaloisGroup/?gal="+label
             friends += [("As a transitive group", gal_gp_url)]
 
         if db.gps_st.count({"component_group": label}) > 0:
@@ -1177,6 +1172,9 @@ def render_abstract_group(label, data=None):
     bread = get_bread([(label, "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
+    #mygd = group_data(label)
+    #print("Hi Ho Ho Ho Ho Ho Ho Ho Ho Ho Ho Ho")
+    #print(mygd)
     return render_template(
         "abstract-show-group.html",
         title=title,
@@ -2131,12 +2129,17 @@ def group_data(label, ambient=None, aut=False):
     else:
         data = None
         url = url_for("abstract.by_label", label=label)
+    print("*********************")
     gp = WebAbstractGroup(label, data=data)
+    print("Got WAG")
     ans = f"Group ${gp.tex_name}$: "
+    print("tex name")
     ans += create_boolean_string(gp, type="knowl")
+    print("Got boolean")
     ans += f"<br />Label: {gp.label}<br />"
     ans += f"Order: {gp.order}<br />"
     ans += f"Exponent: {gp.exponent}<br />"
+    print("Got Exp")
 
     if not gp.live():
         if ambient is None:
