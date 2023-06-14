@@ -760,11 +760,15 @@ def aut_diagram(label):
 def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
     if ab:
+        if len(smith) == 1:
+            return 'Cyclic'
         return f'Abelian - {len(smith)}'
     elif nil:
         return f'Nilpotent - {nilcls}'
     elif solv:
         return f'Solvable - {dlen}'
+    elif clen == 1:
+        return 'Simple'
     else:
         return f'Non-Solvable - {clen}'
 
@@ -1002,10 +1006,18 @@ def subgroup_search(info, query={}):
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
-def diagram_js(gp, layers, display_opts, aut=False):
+def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     # Counts are not right for aut diagram if we know up to conj.
     if aut and not gp.outer_equivalence:
         autcounts = gp.aut_class_counts
+    ilayer = 2
+    iorder = 0
+    if normal:
+        ilayer += 1
+        iorder += 1
+    if aut and not gp.outer_equivalence:
+        ilayer += 4
+        iorder += 1
     ll = [
         [
             grp.subgroup,
@@ -1014,8 +1026,8 @@ def diagram_js(gp, layers, display_opts, aut=False):
             grp.count if (gp.outer_equivalence or not aut) else autcounts[grp.aut_label],
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1]),
-            grp.diagram_aut_x if aut else grp.diagram_x
+            grp.diagramx[ilayer],
+            grp.diagramx[iorder]
         ]
         for grp in layers[0]
     ]

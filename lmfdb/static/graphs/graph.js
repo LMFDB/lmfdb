@@ -867,7 +867,7 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
     glist[jj] = new Graph(ambient);
     //glist[jj].setOrderBorder(100, -100);
     if(gdatalist[j].length>0) {
-      // x-coord for by # primes is in 7
+      // x-coord for by order is in 7
       glist[jj].addNodes(nodes, simpleorder, 7);
       for(var k=0, edge; edge=edges[k]; k++) {
         glist[jj].addEdge(edge[0],edge[1]);
