@@ -5,7 +5,7 @@ import re
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex, Jacobian
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex, Jacobian, factor, prod, CRT, primitive_root, Mod, gcd
 from sage.databases.cremona import parse_cremona_label, class_to_int
 from sage.schemes.elliptic_curves.constructor import EllipticCurve_from_Weierstrass_polynomial
 
@@ -992,6 +992,73 @@ def tor_struct_search_Q(prefill="any"):
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
     return "\n".join(["<select name='torsion_structure', style='width: 155px'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+def gl1_gen(M):
+    a = factor(M)
+    a.sort()
+    q = [p[0]**p[1] for p in a]
+    gens = []
+    if a[0][0] == 2:
+        if a[0][1] > 1:
+            gens.append(CRT([-1, 1], [q[0], M/q[0]]))
+        if a[0][1] > 2:
+            gens.append(CRT([5, 1], [q[0], M/q[0]]))
+        q.pop(0)
+    for p in q:
+        gens.append(CRT([primitive_root(p), 1], [p, M/p]))
+    return gens
+
+# Returns a list of generators for kernel of gl1 mod M projecting to mod N
+def gl1_ker(N, M):
+    gens = gl1_gen(M)
+    gens = [Mod(g, M)**(Mod(g, N).multiplicative_order()) for g in gens]
+    return [int(g) for g in gens if g != 1]
+
+# Returns a function that lift elements of gl2 mod N to gl2 mod M.
+# Requires N | M, positive integers.
+def gl2_element_lifter(N, M):
+    a = factor(M)
+    m = prod([p[0]**p[1] for p in a if (N % p[0]) == 0])
+    # `mat` is an element of gl2 mod N written as a list
+    mat_id = [1, 0, 0, 1]
+    def lifter(mat):
+        return [CRT([mat[i], mat_id[i]], [m, M/m]) for i in range(4)]
+    return lifter
+
+# Input: generators of a subgroup of gl2 mod N, integers N and M
+# Returns the lift to mod M where N | M, positive integers
+def gl2_lift_divisible(subgroup_gen, N, M):
+    if N == M:
+        return subgroup_gen.copy()
+    lifter = gl2_element_lifter(N, M)
+    result = [lifter(x) for x in subgroup_gen if lifter(x) != [1, 0, 0, 1]]
+    result += [[1, N, 0, 1], [1, 0, N, 1], [1+N, N, M-N, 1+M-N]]
+    result += [[g, 0, 0, 1] for g in gl1_ker(N, M)]
+    return result
+
+# Input: generators of a subgroup of gl2 (implicitly mod N divisible by M)
+# Returns the projection to mod M (removes duplicates)
+def gl2_project(subgroup_gen, M):
+    def project(x):
+        return int(Mod(x, M))
+    gens = []
+    unique = set()
+    for g in subgroup_gen:
+        reduced = (project(x) for x in g)
+        if reduced in unique:
+            continue
+        unique.add(reduced)
+        gens.append(list(reduced))
+    return gens
+
+# Input: generators of a subgroup of gl2 mod N, and some positive integer M
+# Returns the projection and/or lift to mod M
+def gl2_lift(subgroup_gen, N, M):
+    if M == 1:
+        return [[1, 0, 0, 1]]
+    n = gcd(N, M)
+    gens = gl2_project(subgroup_gen, n)
+    return gl2_lift_divisible(gens, n, M)
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
