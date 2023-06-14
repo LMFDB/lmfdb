@@ -192,11 +192,11 @@ class WebAbstractGroup(WebObj):
             # Check if the label is for an order supported by GAP's SmallGroup
             from .main import abstract_group_label_regex
             m = abstract_group_label_regex.fullmatch(label)
-            if m is not None and m.group(4) is not None:
+            if m is not None and m.group(2) is not None:
                 n = ZZ(m.group(1))
                 if libgap.SmallGroupsAvailable(n):
                     maxi = libgap.NrSmallGroups(n)
-                    i = ZZ(m.group(4))
+                    i = ZZ(m.group(2))
                     if i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
@@ -773,7 +773,10 @@ class WebAbstractGroup(WebObj):
                               ("Solvable", solv_str)])
             props.extend([
                 (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor()))])
-            cent_order_factored = self.cent_order_factor()
+            if self.has_subgroups:
+                cent_order_factored = self.cent_order_factor()
+            else:
+                cent_order_factored = 0 
             if cent_order_factored:
                 props.extend([(r"$\card{Z(G)}$", 
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
@@ -795,8 +798,16 @@ class WebAbstractGroup(WebObj):
             ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
 
+    @lazy_attribute 
+    def has_subgroups(self):
+        if self.all_subgroups_known == None:
+            return False
+        return True
+   
     @lazy_attribute
     def subgroups(self):
+        if self.all_subgroups_known == None:
+            return None
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
             for subdata in db.gps_subgroups_test.search({"ambient": self.label})
@@ -884,6 +895,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroup_profile(self):
+        if not self.has_subgroups:
+            return None
         by_order = defaultdict(Counter)
         for s in self.subgroups.values():
             by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += s.conjugacy_class_count

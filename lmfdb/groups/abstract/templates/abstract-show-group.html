@@ -330,6 +330,10 @@
 
 {% else %}
 
+
+{% if gp.has_subgroups %}
+
+
 <p>There are {% if gp.number_normal_subgroups < gp.number_subgroups %}{{gp.number_subgroups}} subgroups in <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroup_classes}} conjugacy classes</a>, <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, normal='yes')}}">{{ gp.number_normal_subgroups }} normal</a>{% else %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroups}} subgroups</a>, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, characteristic='yes')}}">{{ gp.number_characteristic_subgroups }} characteristic</a>{% else %}all characteristic{% endif %}).
 </p>
 
@@ -537,6 +541,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 {% endif %}
 
 
+ 
 <h3>Series</h3>
 <table>
   {% for kwl, name, subs, spandata, symb in gp.series() %}
@@ -608,7 +613,14 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 </table>
 {% endif %}
 #}
+
+{% else %}
+
+  <p> SUBGROUPS NOT KNOWN!!! </p>
 {% endif %}
+
+  {% endif %}
+
 
 <h2> Character theory </h2>
 <p>
