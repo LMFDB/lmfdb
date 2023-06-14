@@ -338,7 +338,7 @@
     <td>{{KNOWL('group.center',title='Center')}}:</td>
     {% if gp.cent() %}
     <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
-    <td>$G/Z \simeq {{gp.central_quot()}}$</td>
+    <td>{{gp.subgroups[gp.cent()].display_quotient("Z")|safe}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -346,18 +346,17 @@
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
     {% if gp.comm() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span>
- </td>
+    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span></td> {# match single quote for code highlighting purposes: ' #}
+    <td>{{gp.subgroups[gp.comm()].display_quotient("G'", ab_invs=gp.smith_abelian_invariants)|safe}}</td>
     {% else %}
-    <td>$G'$ not computed</td>
+    <td>not computed</td>
     {% endif %}
-    <td> $G/G' \simeq {{gp.abelian_quot()}}$ </td>
   </tr>
-    <tr>
+  <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
     {% if gp.fratt() %}
     <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
-    <td>$G/\Phi \simeq {{gp.frattini_quot()}}$ </td>
+    <td>{{gp.subgroups[gp.fratt()].display_quotient("\\Phi")|safe}} </td>
     {% else %}
     <td> not computed</td>
     {% endif %}
@@ -366,7 +365,7 @@
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
     {% if gp.fitting %}
     <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
-    <td>$G/\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
+    <td>{{gp.subgroups[gp.fitting].display_quotient("\\operatorname{Fit}")|safe}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}
@@ -375,7 +374,7 @@
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
     {% if gp.radical %}
     <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
-    <td>$G/R \simeq {{gp.subgroups[gp.radical].quotient_tex}}$</td>
+    <td>{{gp.subgroups[gp.radical].display_quotient("R")|safe}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -384,7 +383,7 @@
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
     {% if gp.socle %}
     <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
-    <td>$G/\operatorname{soc} \simeq {{gp.subgroups[gp.socle].quotient_tex}}$</td>
+    <td>{{gp.subgroups[gp.socle].display_quotient("\\operatorname{soc}")|safe}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}

@@ -25,6 +25,7 @@ from sage.all import (
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.combinat.permutation import from_lehmer_code
+from sage.misc.cachefunc import cached_function
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -86,6 +87,27 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
+def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
+    # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
+    if not name:
+        if pretty:
+            if label in cache and "tex_name" in cache[label]:
+                name = cache[label]["tex_name"]
+            else:
+                name = db.gps_groups_test.lookup(label, "tex_name")
+            if name is None:
+                name = f"Group {label}"
+            else:
+                name = f"${name}$"
+        else:
+            name = f"Group {label}"
+    if ambient is None:
+        args = label
+    else:
+        args = f"{label}%7C{ambient}%7C{aut}"
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
+
 def primary_to_smith(invs):
     if invs==[]:
         return([])
@@ -143,6 +165,7 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups_test
 
     def __init__(self, label, data=None):
+        self.source = "db" # can be overridden below by either GAP or LiveAbelian
         if isinstance(data, WebAbstractGroup):
             # This happens if we're using the _minmax_data in tex_name
             self.G = data.G
@@ -158,9 +181,12 @@ class WebAbstractGroup(WebObj):
                 dbdata = self.table.lookup(label)
                 if dbdata is not None:
                     data = dbdata
+                else:
+                    self.source = "GAP"
         elif isinstance(data, LiveAbelianGroup):
             self._data = data.snf
             data = data.snf
+            self.source = "LiveAbelian"
         WebObj.__init__(self, label, data)
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
@@ -173,6 +199,7 @@ class WebAbstractGroup(WebObj):
                     i = ZZ(m.group(4))
                     if i <= maxi:
                         self._data = (n, i)
+                        self.source = "GAP"
         if isinstance(self._data, list):  # live abelian group
             self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
             self.G = LiveAbelianGroup(self.snf)
@@ -181,9 +208,11 @@ class WebAbstractGroup(WebObj):
             self.hyperelementary = self.elementary
             self.Zgroup = len(self.snf) == 1
             self.Agroup = True
+            self.source = "LiveAbelian"
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
+        #return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
 
     def decode(self, perm, n):
@@ -493,6 +522,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def smith_abelian_invariants(self):
+        if self.source == "LiveAbelian":
+            return primary_to_smith(self.G.AbelianInvariants())
         return primary_to_smith(self.primary_abelian_invariants)
 
     @lazy_attribute
@@ -648,7 +679,9 @@ class WebAbstractGroup(WebObj):
             if H.order == self.order:
                 disp = self.label if self.tex_name == " " else f'${self.tex_name}$'
             elif H.order == 1:
+                url = url_for(".by_label", label="1.1")
                 disp = '$C_1$'
+                disp = f'<a href="{url}">{disp}</a>'
             elif H.label:
                 url = url_for(".by_label", label=H.label)
                 disp = H.label if H.tex_name == " " else f'${H.tex_name}$'
@@ -1604,12 +1637,6 @@ class WebAbstractGroup(WebObj):
             return self.subgroups[self.cent()].subgroup_tex
         return None
 
-    def central_quot(self):
-        cent = self.cent()
-        if cent:
-            return self.subgroups[self.cent()].quotient_tex
-        return None
-
     def cent_order_factor(self):
         if self.live():
             ZGord = ZZ(self.G.Center().Order())
@@ -1652,12 +1679,6 @@ class WebAbstractGroup(WebObj):
         fratt = self.fratt()
         if fratt:
             return self.subgroups[fratt].subgroup_tex
-        return None
-
-    def frattini_quot(self):
-        fratt = self.fratt()
-        if fratt:
-            return self.subgroups[self.fratt()].quotient_tex
         return None
 
     def gen_noun(self):
@@ -2029,6 +2050,22 @@ class WebAbstractSubgroup(WebObj):
     def proj_img(self):
         if self.projective_image is not None:
             return self._lookup(self.projective_image, self._full, WebAbstractGroup)
+
+    def display_quotient(self, subname=None, ab_invs=None):
+        if subname is None:
+            prefix = quoname = ""
+        else:
+            quoname = f"$G/{subname}$ "
+            prefix = fr"$G/{subname} \simeq$ "
+        q = self.quotient
+        if q:
+            return prefix + abstract_group_display_knowl(q)
+        if ab_invs:
+            return prefix + abelian_gp_display(ab_invs)
+        if self.quotient_tex is None:
+            return quoname + "not computed"
+        else:
+            return prefix + '${self.quotient_tex}$'
 
     @lazy_attribute
     def _others(self):
