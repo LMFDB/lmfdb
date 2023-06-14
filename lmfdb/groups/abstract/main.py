@@ -926,12 +926,19 @@ def group_parse(info, query):
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
 
+def display_url(label, tex):
+    if label is None:
+        if tex is None:
+            return ''
+        return f'${tex}$'
+    return f'<a href="{get_url(label)}">${tex}$</a>'
+
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
     ColGroup("subgroup_cols", None, "Subgroup", [
         MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
-                          lambda sub, tex: '<a href="%s">$%s$</a>' % (get_url(sub), tex),
+                          display_url,
                           default=True, short_title="Sub. name"),
         ProcessedCol("subgroup_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Sub. order"),
         CheckCol("normal", "group.subgroup.normal", "norm", default=True, short_title="Sub. normal"),
@@ -947,7 +954,7 @@ subgroup_columns = SearchColumns([
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
                           ["ambient", "ambient_tex"],
-                          lambda amb, tex: '<a href="%s">$%s$</a>' % (get_url(amb), tex),
+                          display_url,
                           default=True, short_title="Ambient name"),
         ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Ambient order")],
              default=True),
@@ -955,7 +962,7 @@ subgroup_columns = SearchColumns([
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
-                          lambda quo, tex: '<a href="%s">$%s$</a>' % (get_url(quo), tex) if quo else "",
+                          display_url,
                           default=True, short_title="Quo. name"),
         ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", default=True, align="center", short_title="Quo. order"),
         CheckCol("quotient_cyclic", "group.cyclic", "cyc", default=True, short_title="Quo. cyclic"),
