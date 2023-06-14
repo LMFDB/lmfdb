@@ -18,7 +18,6 @@ from flask import (
 from string import ascii_lowercase
 from io import BytesIO
 from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
-from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
 from lmfdb.app import app
@@ -55,7 +54,8 @@ from .web_groups import (
     WebAbstractRationalCharacter,
     WebAbstractSubgroup,
     group_names_pretty,
-    primary_to_smith
+    primary_to_smith,
+    abstract_group_display_knowl
 )
 from .stats import GroupStats
 
@@ -926,12 +926,19 @@ def group_parse(info, query):
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
 
+def display_url(label, tex):
+    if label is None:
+        if tex is None:
+            return ''
+        return f'${tex}$'
+    return f'<a href="{get_url(label)}">${tex}$</a>'
+
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
     ColGroup("subgroup_cols", None, "Subgroup", [
         MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
-                          lambda sub, tex: '<a href="%s">$%s$</a>' % (get_url(sub), tex),
+                          display_url,
                           default=True, short_title="Sub. name"),
         ProcessedCol("subgroup_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Sub. order"),
         CheckCol("normal", "group.subgroup.normal", "norm", default=True, short_title="Sub. normal"),
@@ -947,7 +954,7 @@ subgroup_columns = SearchColumns([
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
                           ["ambient", "ambient_tex"],
-                          lambda amb, tex: '<a href="%s">$%s$</a>' % (get_url(amb), tex),
+                          display_url,
                           default=True, short_title="Ambient name"),
         ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Ambient order")],
              default=True),
@@ -955,7 +962,7 @@ subgroup_columns = SearchColumns([
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
-                          lambda quo, tex: '<a href="%s">$%s$</a>' % (get_url(quo), tex) if quo else "",
+                          display_url,
                           default=True, short_title="Quo. name"),
         ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", default=True, align="center", short_title="Quo. order"),
         CheckCol("quotient_cyclic", "group.cyclic", "cyc", default=True, short_title="Quo. cyclic"),
@@ -1262,7 +1269,7 @@ def shortsubinfo(ambient, short_label):
         ans += "="+latex(factor(wsg.subgroup_order))
     ans += "$</td></tr>"
     if wsg.normal:
-        ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>${wsg.quotient_tex}$</td></tr>"
+        ans += f"<tr><td>{display_knowl('group.quotient', 'Quotient')}</td><td>{wsg.display_quotient()}</td></tr>"
     else:
         ans += f"<tr><td>Number of conjugates</td><td>{wsg.count}</td></tr>"
     ans += subinfo_getsub("Normalizer", "group.subgroup.normalizer", wsg.normalizer)
@@ -1954,28 +1961,6 @@ def abstract_group_namecache(labels, cache=None, reverse=None):
                     continue
                 cache[nTj]["pretty"] = f"${tex_name}$" if tex_name else ""
     return cache
-
-@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
-def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
-    # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
-    if not name:
-        if pretty:
-            if label in cache and "tex_name" in cache[label]:
-                name = cache[label]["tex_name"]
-            else:
-                name = db.gps_groups_test.lookup(label, "tex_name")
-            if name is None:
-                name = f"Group {label}"
-            else:
-                name = f"${name}$"
-        else:
-            name = f"Group {label}"
-    if ambient is None:
-        args = label
-    else:
-        args = f"{label}%7C{ambient}%7C{aut}"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
-
 
 def sub_display_knowl(label, name=None):
     if not name:
