@@ -604,19 +604,19 @@ def complete_group_code(code):
     if code1 in aliases:
         return aliases[code1]
     # Try nTj notation
-    rematch = re.match(r"^(\d+)T(\d+)$", code)
+    rematch = re.match(r"^(\d+)[Tt](\d+)$", code)
     if rematch:
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
-    # convert small group label to GAP code
-    if re.match(r'^\d+\.\d+$',code):
-        code = "[%s,%s]"%tuple(code.split("."))
-    # Try GAP code
+    # covert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
-        abstract_code = r'%s.%s'%(rematch.group(1), rematch.group(2))
-        nts = list(db.gps_transitive.search({'abstract_label':abstract_code}, projection=['n','t']))
+        code = "%s.%s" % (rematch.group(1), rematch.group(2))
+    # Try abstract group label
+    rematch = re.match(r'^(\d+)\.([0-9a-zA-Z]+)$', code)
+    if rematch:
+        nts = list(db.gps_transitive.search({'abstract_label':code.lower()}, projection=['n','t']))
         nts = [(z['n'], z['t']) for z in nts]
         return nts
     else:

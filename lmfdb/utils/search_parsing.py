@@ -1060,7 +1060,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         else:
             from lmfdb.galois_groups.transitive_group import complete_group_code
 
-            gcs = complete_group_code(inp.upper())
+            gcs = complete_group_code(inp)
 
         galfield, nfield = qfield
         if nfield and nfield not in query:
@@ -1081,7 +1081,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
-            raise SearchParsingError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
+            raise SearchParsingError("It needs to be a list made up of abstract group labels or GAP ids, such as 4.1, 2430.h, [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 # The queries for inertia (and wild inertia) subgroups are different
 # than the ones for Galois groups.
@@ -1103,7 +1103,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
 
         iner_gap, iner = qfield
         # Check for nTj
-        rematch = re.match(r"^(\d+)T(\d+)$", inp)
+        rematch = re.match(r"^(\d+)[Tt](\d+)$", inp)
         if rematch:
             n = int(rematch.group(1))
             t = int(rematch.group(2))
