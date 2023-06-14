@@ -1082,23 +1082,26 @@ def render_abstract_group(label, data=None):
         friends = []
         downloads = []
     else:
-        prof = list(gp.subgroup_profile.items())
-        prof.sort(key=lambda z: -z[0])  # largest to smallest
-        info["subgroup_profile"] = [
-            (z[0], display_profile_line(z[1], ambient=label, aut=False)) for z in prof
-        ]
-        autprof = list(gp.subgroup_autprofile.items())
-        autprof.sort(key=lambda z: -z[0])  # largest to smallest
-        info["subgroup_autprofile"] = [
-            (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
-        ]
+        if gp.has_subgroups:
+            prof = list(gp.subgroup_profile.items())
+            prof.sort(key=lambda z: -z[0])  # largest to smallest
+            info["subgroup_profile"] = [
+                (z[0], display_profile_line(z[1], ambient=label, aut=False)) for z in prof
+            ]
+            autprof = list(gp.subgroup_autprofile.items())
+            autprof.sort(key=lambda z: -z[0])  # largest to smallest
+            info["subgroup_autprofile"] = [
+                (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
+            ]            
 
-        info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True)
-        info["wide"] = display_opts["w"] > 1600 # boolean
+            info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True)
+            info["wide"] = display_opts["w"] > 1600 # boolean
 
-        info["max_sub_cnt"] = gp.max_sub_cnt
-        info["max_quo_cnt"] = gp.max_quo_cnt
+        
+            info["max_sub_cnt"] = gp.max_sub_cnt
+            info["max_quo_cnt"] = gp.max_quo_cnt
 
+            
         title = "Abstract group " + "$" + gp.tex_name + "$"
 
         downloads = [
