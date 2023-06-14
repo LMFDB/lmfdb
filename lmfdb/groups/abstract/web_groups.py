@@ -166,11 +166,11 @@ class WebAbstractGroup(WebObj):
             # Check if the label is for an order supported by GAP's SmallGroup
             from .main import abstract_group_label_regex
             m = abstract_group_label_regex.fullmatch(label)
-            if m is not None and m.group(4) is not None:
+            if m is not None and m.group(2) is not None:
                 n = ZZ(m.group(1))
                 if libgap.SmallGroupsAvailable(n):
                     maxi = libgap.NrSmallGroups(n)
-                    i = ZZ(m.group(4))
+                    i = ZZ(m.group(2))
                     if i <= maxi:
                         self._data = (n, i)
         if isinstance(self._data, list):  # live abelian group
