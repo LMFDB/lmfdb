@@ -770,7 +770,6 @@ class WebAbstractGroup(WebObj):
         if self.all_subgroups_known == None:
             return False
         return True
-               #JP
    
     @lazy_attribute
     def subgroups(self):

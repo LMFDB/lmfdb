@@ -1101,7 +1101,6 @@ def render_abstract_group(label, data=None):
             info["max_sub_cnt"] = gp.max_sub_cnt
             info["max_quo_cnt"] = gp.max_quo_cnt
 
-#JP ELSE????
             
         title = "Abstract group " + "$" + gp.tex_name + "$"
 
