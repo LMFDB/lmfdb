@@ -121,6 +121,8 @@ def primary_to_smith(invs):
     return [prod(qs) for qs in zip(*by_p.values())]
 
 def abelian_gp_display(invs):
+    if len(invs) == 0:
+        return "C_1"
     return r" \times ".join(
         ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
         for (q, e) in Counter(invs).items()

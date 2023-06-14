@@ -175,6 +175,11 @@ class SearchWrapper(Wrapper):
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
+        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
+        # These virtual columns won't be present in the database, so we just strip them out
+        # We have to do this here since we didn't have access to the table in __init__
+        if isinstance(proj, list):
+            proj = [col for col in proj if col in table.search_cols]
         if "result_count" in info:
             if one_per:
                 nres = table.count_distinct(one_per, query)

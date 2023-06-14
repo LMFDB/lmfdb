@@ -55,6 +55,7 @@ from .web_groups import (
     WebAbstractSubgroup,
     group_names_pretty,
     primary_to_smith,
+    abelian_gp_display,
     abstract_group_display_knowl
 )
 from .stats import GroupStats
@@ -761,6 +762,8 @@ def aut_diagram(label):
 def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
     if ab:
+        if len(smith) == 0:
+            return 'Trivial'
         if len(smith) == 1:
             return 'Cyclic'
         return f'Abelian - {len(smith)}'
@@ -824,6 +827,21 @@ def show_factor(n):
 def get_url(label):
     return url_for(".by_label", label=label)
 
+def display_url(label, tex):
+    if label is None:
+        if tex is None:
+            return ''
+        return f'${tex}$'
+    return f'<a href="{get_url(label)}">${tex}$</a>'
+
+def display_url_invs(label, ab_invs):
+    tex = abelian_gp_display(ab_invs)
+    return display_url(label, tex)
+
+def display_url_cache(label, cache):
+    tex = cache.get(label)
+    return display_url(label, tex)
+
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
@@ -840,6 +858,19 @@ class Group_download(Downloader):
         "oscar": ['return [small_group(r...) for r in data]',],
     }
 
+def group_postprocess(res, info, query):
+    # We want to get latex for all of the centers, central quotients, commutators and abelianizations in one query
+    labels = set()
+    for rec in res:
+        for col in ["center_label", "central_quotient", "commutator_label", "abelian_quotient"]:
+            label = rec.get(col)
+            if label is not None:
+                labels.add(label)
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups_test.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    for rec in res:
+        rec["tex_cache"] = tex_cache
+    return res
+
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url, default=True),
     MathCol("tex_name", "group.name", "Name", default=True),
@@ -851,10 +882,19 @@ group_columns = SearchColumns([
     MathCol("rank", "group.rank", "Rank"),
     MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", default=True, short_title="conjugacy classes"),
     MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes"),
-    SearchCol("center_label", "group.center", "Center", default=True, align="center"),
-    SearchCol("central_quotient", "group.central_quotient_isolabel", "Central quotient", align="center"),
-    SearchCol("commutator_label", "group.commutator_isolabel", "Commutator", align="center"),
-    SearchCol("abelian_quotient", "group.abelianization_isolabel", "Abelianization", align="center"),
+    MultiProcessedCol("center_label", "group.center", "Center",
+                      ["center_label", "tex_cache"],
+                      display_url_cache,
+                      default=True),
+    MultiProcessedCol("central_quotient", "group.central_quotient_isolabel", "Central quotient",
+                      ["central_quotient", "tex_cache"],
+                      display_url_cache),
+    MultiProcessedCol("commutator_label", "group.commutator_isolabel", "Commutator",
+                      ["commutator_label", "tex_cache"],
+                      display_url_cache),
+    MultiProcessedCol("abelian_quotient", "group.abelianization_isolabel", "Abelianization",
+                      ["center_label", "smith_abelian_invariants"],
+                      display_url_invs),
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
     ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms"),
     MultiProcessedCol("type", "group.type", "Type - length",
@@ -872,6 +912,7 @@ group_columns = SearchColumns([
     learnmore=learnmore_list,
     #  credit=lambda:credit_string,
     url_for_label=url_for_label,
+    postprocess=group_postprocess,
 )
 def group_search(info, query={}):
     group_parse(info, query)
@@ -925,13 +966,6 @@ def group_parse(info, query):
     )
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
-
-def display_url(label, tex):
-    if label is None:
-        if tex is None:
-            return ''
-        return f'${tex}$'
-    return f'<a href="{get_url(label)}">${tex}$</a>'
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
