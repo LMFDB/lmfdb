@@ -60,7 +60,7 @@ from .web_groups import (
 from .stats import GroupStats
 
 
-abstract_group_label_regex = re.compile(r"^(\d+)\.(([a-z]+)|(\d+))$")
+abstract_group_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)$")
 abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?$"
 )
