@@ -2044,11 +2044,14 @@ def cc_data(gp, label, typ="complex"):
         ans = "<h3>Conjugacy class {}</h3>".format(label)
         ans += "<br>Size of class: {}".format(wacc.size)
     ans += "<br>Order of elements: {}".format(wacc.order)
-    centralizer = f"{wacc.group}.{wacc.centralizer}"
-    wcent = WebAbstractSubgroup(centralizer)
-    ans += "<br>Centralizer: {}".format(
-        sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
-    )
+    if wacc.centralizer == None:
+        ans +="<br>Centralizer: not computed"
+    else:    
+        centralizer = f"{wacc.group}.{wacc.centralizer}"
+        wcent = WebAbstractSubgroup(centralizer)
+        ans += "<br>Centralizer: {}".format(
+            sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
+        )
     return Markup(ans)
 
 
@@ -2085,10 +2088,13 @@ def cchar_data(label):
     if mychar.faithful:
         ans += "<br>Faithful character"
     else:
-        ker = WebAbstractSubgroup(f"{mychar.group}.{mychar.kernel}")
-        ans += "<br>Not faithful with kernel {}".format(
-            sub_display_knowl(ker.label, "$" + ker.subgroup_tex + "$")
-        )
+        if mychar.kernel == None:
+            ans += "<br>Not faithful but kernel not computed."
+        else:    
+            ker = WebAbstractSubgroup(f"{mychar.group}.{mychar.kernel}")
+            ans += "<br>Not faithful with kernel {}".format(
+                sub_display_knowl(ker.label, "$" + ker.subgroup_tex + "$")
+            )
     nt = mychar.nt
     ans += "<br>Frobenius-Schur indicator: {}".format(mychar.indicator)
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
