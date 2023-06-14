@@ -109,7 +109,6 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 
-
 def primary_to_smith(invs):
     by_p = defaultdict(list)
     for q in invs:
