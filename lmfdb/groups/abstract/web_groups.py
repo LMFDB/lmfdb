@@ -900,9 +900,12 @@ class WebAbstractGroup(WebObj):
         if not self.has_subgroups:
             return None
         by_order = defaultdict(Counter)
-        for s in self.subgroups.values():
-            by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += s.conjugacy_class_count
-        return by_order
+        try:
+            for s in self.subgroups.values():
+                by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += s.conjugacy_class_count
+            return by_order
+        except AttributeError:
+            return None
 
     @lazy_attribute
     def subgroup_autprofile(self):
@@ -2072,15 +2075,14 @@ class WebAbstractSubgroup(WebObj):
         else:
             quoname = f"$G/{subname}$ "
             prefix = fr"$G/{subname} \simeq$ "
-        q = self.quotient
-        if q:
-            return prefix + abstract_group_display_knowl(q)
+        if hasattr(self, 'quotient'):
+            return prefix + abstract_group_display_knowl(self.quotient)
         if ab_invs:
-            return prefix + abelian_gp_display(ab_invs)
+            return prefix + '$' + abelian_gp_display(ab_invs) + '$'
         if self.quotient_tex is None:
             return quoname + "not computed"
         else:
-            return prefix + '${self.quotient_tex}$'
+            return prefix + f'${self.quotient_tex}$'
 
     @lazy_attribute
     def _others(self):

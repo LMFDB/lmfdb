@@ -516,16 +516,24 @@
 
 <div class="subgroup_profile" style="display: none">
   <h4>Classes of subgroups up to conjugation</h4>
-{% for ordline in info.subgroup_profile %}
-Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
-{% endfor %}
+{% if info.subgroup_profile %}
+    {% for ordline in info.subgroup_profile %}
+        Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+    {% endfor %}
+{% else %}
+not computed
+{% endif %}
 </div>
 
 <div class="subgroup_autprofile" style="display: none">
   <h4>Classes of subgroups up to automorphism</h4>
+{% if info.subgroup_autprofile %}
   {% for ordline in info.subgroup_autprofile %}
     Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
   {% endfor %}
+{% else %}
+not computed
+{% endif %}
 </div>
 
 {% if gp.diagram_ok and not gp.outer_equivalence%}

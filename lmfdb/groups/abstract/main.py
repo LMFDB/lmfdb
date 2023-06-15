@@ -1123,7 +1123,7 @@ def render_abstract_group(label, data=None):
         friends = []
         downloads = []
     else:
-        if gp.has_subgroups:
+        if gp.subgroup_profile:
             prof = list(gp.subgroup_profile.items())
             prof.sort(key=lambda z: -z[0])  # largest to smallest
             info["subgroup_profile"] = [
@@ -1216,9 +1216,6 @@ def render_abstract_group(label, data=None):
     bread = get_bread([(label, "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
-    #mygd = group_data(label)
-    #print("Hi Ho Ho Ho Ho Ho Ho Ho Ho Ho Ho Ho")
-    #print(mygd)
     return render_template(
         "abstract-show-group.html",
         title=title,
