@@ -778,9 +778,9 @@ class WebAbstractGroup(WebObj):
             if self.has_subgroups:
                 cent_order_factored = self.cent_order_factor()
             else:
-                cent_order_factored = 0 
+                cent_order_factored = 0
             if cent_order_factored:
-                props.extend([(r"$\card{Z(G)}$", 
+                props.extend([(r"$\card{Z(G)}$",
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
@@ -800,15 +800,15 @@ class WebAbstractGroup(WebObj):
             ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
 
-    @lazy_attribute 
+    @lazy_attribute
     def has_subgroups(self):
-        if self.all_subgroups_known == None:
+        if self.all_subgroups_known is None:
             return False
         return True
-   
+
     @lazy_attribute
     def subgroups(self):
-        if self.all_subgroups_known == None:
+        if not self.has_subgroups:
             return None
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)

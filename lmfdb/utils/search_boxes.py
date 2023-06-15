@@ -379,6 +379,9 @@ class SneakyBox(SearchBox):
 class SneakyTextBox(TextBox, SneakyBox):
     pass
 
+class SneakySelectBox(SelectBox, SneakyBox):
+    pass
+
 class SkipBox(TextBox):
     def _input(self, info=None):
         return ""

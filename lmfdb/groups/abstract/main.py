@@ -28,6 +28,7 @@ from lmfdb.utils import (
     SearchArray,
     TextBox,
     SneakyTextBox,
+    SneakySelectBox,
     CountBox,
     YesNoBox,
     parse_ints,
@@ -966,6 +967,7 @@ def group_parse(info, query):
     )
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
+    parse_ints(info, query, "order_factorization_type")
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
@@ -1814,6 +1816,26 @@ class GroupsSearchArray(SearchArray):
             label="Name",
             knowl="group.find_input",
             example="C16.D4",
+        )
+        name = SneakySelectBox(
+            name="order_factorization_type",
+            label="Order",
+            knowl="group.order_factorization_type",
+            options=([("", ""),
+                      ("0", "1"),
+                      ("1", "p"),
+                      ("2", "p^2"),
+                      ("3", "p^{3-6}"),
+                      ("7", "p^{7+}"),
+                      ("11", "squarefree"),
+                      ("22", "p^2q,p^2q^2"),
+                      ("31", "p^3q,p^4q"),
+                      ("51", "p^{5+}q"),
+                      ("32", "p^{3+}q^2"),
+                      ("33", "p^{3+}q^{3+}"),
+                      ("222", "p^{1,2}q^{1,2}r^{1,2}..."),
+                      ("311", "p^{3+}qr..."),
+                      ("321", "other")]),
         )
         count = CountBox()
 

@@ -76,6 +76,23 @@ stype_qlookup = {
     17: "solvable=yes&metabelian=no&monomial=unknown",
 }
 
+ftype_lookup = {
+    0: "$1$",
+    1: "$p$",
+    2: "$p^2$",
+    3: "$p^{3-6}$",
+    7: "$p^{7+}$",
+    11: r"$pq,pqr,\ldots$", # squarefree, not trivial or prime order
+    22: "$p^2q,p^2q^2$",
+    31: "$p^3q,p^4q$",
+    32: "$p^{3+}q^2$",
+    33: "$p^{3+}q^{3+}$",
+    51: "$p^{5+}q$",
+    222: r"$p^{1,2}q^{1,2}r^{1,2}\cdots$", # at least three distinct prime divisors each with valuation at most 2, not squarefree
+    311: r"$p^{3+}qr\cdots$", # at least three distinct prime divisors, exactly one of which has valuation at least 3
+    321: "other", # at least three distinct prime divisors, not one of the previous two patterns
+}
+
 group_knowls = {
     "exponents_of_order": "group.order",
     "cyclic": "group.cyclic",
@@ -111,6 +128,16 @@ def stype_qformatter(stype):
                 return stype_qlookup[k]
     return stype_qlookup[stype]
 
+def ftype_formatter(ftype):
+    return ftype_lookup[ftype]
+def ftype_qformatter(ftype):
+    if isinstance(ftype, str) and not ftype.isdigit():
+        for k, v in ftype_lookup.items():
+            if v == ftype:
+                ftype = k
+                break
+    return f"order_factorization_type={ftype}"
+
 class GroupStats(StatsDisplay):
     extent_knowl = "rcs.cande.groups.abstract"
     table = db.gps_groups_test
@@ -125,6 +152,7 @@ class GroupStats(StatsDisplay):
     }
     formatters = {
         "exponents_of_order": elist_formatter,
+        "order_factorization_type": ftype_formatter,
         "abelian": formatters.yesno,
         "solvable": formatters.yesno,
         "supersolvable": formatters.yesno,
@@ -135,6 +163,7 @@ class GroupStats(StatsDisplay):
     }
     query_formatters = {
         "exponents_of_order": elist_qformatter,
+        "order_factorization_type": ftype_qformatter,
         "nilpotency_class": nilp_qformatter,
         "solvability_type": stype_qformatter,
     }
@@ -142,29 +171,29 @@ class GroupStats(StatsDisplay):
         "exponents_of_order": lambda elist: [sum(elist)] + [-e for e in elist],
     }
     stat_list = [
-        {"cols": ["solvability_type", "exponents_of_order"],
+        {"cols": ["solvability_type", "order_factorization_type"],
          "top_title": f"Solvability as a function of {display_knowl('group.order', 'order')}",
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["nilpotency_class", "exponents_of_order"],
+        {"cols": ["nilpotency_class", "order_factorization_type"],
          "top_title": f"{display_knowl('group.nilpotent', 'nilpotency class')} as a function of {display_knowl('group.order', 'order')}",
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["rank", "exponents_of_order"],
+        {"cols": ["rank", "order_factorization_type"],
          "top_title": f"{display_knowl('group.rank', 'rank')} as a function of {display_knowl('group.order', 'order')}",
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["derived_length", "exponents_of_order"],
+        {"cols": ["derived_length", "order_factorization_type"],
          "top_title": f"{display_knowl('group.derived_series', 'derived length')} among {display_knowl('group.solvable', 'solvable')} groups as a function of {display_knowl('group.order', 'order')}",
          "constraint": {"solvable": True},
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["aut_order", "exponents_of_order"],
+        {"cols": ["aut_order", "order_factorization_type"],
          "top_title": f"{display_knowl('group.automorphism', 'automorphism group order')} as a function of {display_knowl('group.order', 'order')} for {display_knowl('group.abelian', 'nonabelian')} groups",
          "constraint": {"abelian": False},
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["outer_order", "exponents_of_order"],
+        {"cols": ["outer_order", "order_factorization_type"],
          "top_title": f"{display_knowl('group.outer_aut', 'outer aut. group order')} as a function of {display_knowl('group.order', 'order')} for {display_knowl('group.abelian', 'nonabelian')} groups",
          "constraint": {"abelian": False},
          "proportioner": proportioners.per_col_total,
@@ -177,7 +206,7 @@ class GroupStats(StatsDisplay):
         group_parse(info, query)
 
     dynamic_parent_page = "abstract-search.html"
-    dynamic_cols = ["order", "exponents_of_order", "abelian"]
+    dynamic_cols = ["order", "order_factorization_type", "abelian"]
 
     @lazy_attribute
     def short_summary(self):
