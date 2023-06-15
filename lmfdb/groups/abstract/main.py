@@ -2176,17 +2176,12 @@ def group_data(label, ambient=None, aut=False):
     else:
         data = None
         url = url_for("abstract.by_label", label=label)
-    print("*********************")
     gp = WebAbstractGroup(label, data=data)
-    print("Got WAG")
     ans = f"Group ${gp.tex_name}$: "
-    print("tex name")
     ans += create_boolean_string(gp, type="knowl")
-    print("Got boolean")
     ans += f"<br />Label: {gp.label}<br />"
     ans += f"Order: {gp.order}<br />"
     ans += f"Exponent: {gp.exponent}<br />"
-    print("Got Exp")
 
     if not gp.live():
         if ambient is None:
