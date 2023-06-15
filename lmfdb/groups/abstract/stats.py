@@ -52,7 +52,9 @@ stype_lookup = {
     10: "supersolvable, not nilpotent or metabelian",
     11: "monomial, not supersolvable or metabelian",
     12: "solvable, not monomial or metabelian",
-    13: "not solvable"
+    13: "not solvable",
+    16: "metabelian, not supersolvable, unknown if monomial",
+    17: "solvable, not metabelian, unknown if monomial",
 }
 
 stype_qlookup = {
@@ -69,7 +71,9 @@ stype_qlookup = {
     10: "nilpotent=no&metabelian=no&supersolvable=yes",
     11: "metabelian=no&supersolvable=no&monomial=yes",
     12: "metabelian=no&monomial=no&solvable=yes",
-    13: "solvable=no"
+    13: "solvable=no",
+    16: "metabelian=yes&supersolvable=no&monomial=unknown",
+    17: "solvable=yes&metabelian=no&monomial=unknown",
 }
 
 group_knowls = {

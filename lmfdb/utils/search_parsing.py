@@ -1443,6 +1443,8 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
         query[qfield] = process(True)
     elif inp in ["False", "no", "-1", "0", "odd"]:
         query[qfield] = process(False)
+    elif inp == "unknown":
+        query[qfield] = None
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
         pass
