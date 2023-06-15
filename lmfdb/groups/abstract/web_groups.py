@@ -2078,7 +2078,9 @@ class WebAbstractSubgroup(WebObj):
         if hasattr(self, 'quotient'):
             return prefix + abstract_group_display_knowl(self.quotient)
         if ab_invs:
-            return prefix + '$' + abelian_gp_display(ab_invs) + '$'
+            ablabel = '.'.join([str(z) for z in ab_invs])
+            url = url_for(".by_abelian_label", label=ablabel)
+            return prefix + f'<a href="{url}">$' + abelian_gp_display(ab_invs) + '$</a>'
         if self.quotient_tex is None:
             return quoname + "not computed"
         else:
