@@ -79,7 +79,7 @@ class SearchCol:
             self.th_style = self.td_style = f"text-align:{align};"
         self.th_content = self.td_content = ""
         self.inline = kwds.pop("inline", True)
-        self.is_string =kwds.pop("is_string", True)
+        self.is_string = kwds.pop("is_string", True)
         self.cell_function_name = kwds.pop("cell_function_name", None)
         if not self.inline and self.cell_function_name is None:
             self.cell_function_name = f"process_{name}"

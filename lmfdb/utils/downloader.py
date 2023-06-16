@@ -163,7 +163,7 @@ class Downloader():
         'magma': MagmaLanguage(),
         'sage': SageLanguage(),
         'gp': GPLanguage(),
-        'text': TextLanguage()
+        'text': TextLanguage(),
     }
     postprocess = None
     def get(self, name, default=None):
