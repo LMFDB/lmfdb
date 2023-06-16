@@ -910,6 +910,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def diagram_ok(self):
+        if self.number_subgroup_classes == None:
+            return False
         return self.number_subgroup_classes < 100
 
     @lazy_attribute
@@ -1325,9 +1327,12 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def aut_statistics(self):
-        D = Counter()
-        for (o, s, k, m) in self.aut_stats:
-            D[o] += m
+        if self.aut_stats == None:
+            return None
+        else:
+           D = Counter()
+           for (o, s, k, m) in self.aut_stats:
+               D[o] += m
         return sorted(D.items())
 
     @lazy_attribute
@@ -1583,7 +1588,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.aut_group is None:
                 if self.aut_order is None:
-                    return r"$\textrm{Not computed}$"
+                    return r"$\textrm{not computed}$"
                 else:
                     return f"Group of order ${self.aut_order_factor()}$"
             else:
@@ -1601,7 +1606,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.outer_group is None:
                 if self.outer_order is None:
-                    return r"$\textrm{Not computed}$"
+                    return r"$\textrm{not computed}$"
                 else:
                     return f"Group of order ${self.out_order_factor()}$"
             else:
@@ -1614,6 +1619,19 @@ class WebAbstractGroup(WebObj):
     def out_order_factor(self):
         return latex(factor(self.outer_order))
 
+    def perm_degree(self):
+        if self.permutation_degree is None:
+            return r"$\textrm{not computed}$"
+        else:
+            return self.permutation_degree
+
+    def trans_degree(self):
+        if self.transitive_degree is None:
+            return r"$\textrm{not computed}$"
+        else:
+            return self.transitive_degree
+
+        
     def live_composition_factors(self):
         from .main import url_for_label
         basiclist = []
