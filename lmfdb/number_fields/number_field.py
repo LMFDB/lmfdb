@@ -547,7 +547,7 @@ def render_field_webpage(args):
         loc_alg += '</tbody></table>\n'
 
     ram_primes_raw = str(ram_primes).replace('L', '')[1:-1]
-    ram_primes = [rf'\({compress_int(z,cutoff=30)[0]}\)' for z in ram_primes]
+    ram_primes = [rf'\({compress_int(z,cutoff=30,sides=5)[0]}\)' for z in ram_primes]
     ram_primes = (', ').join(ram_primes)
     # Get rid of python L for big numbers
     #ram_primes = ram_primes.replace('L', '')
@@ -646,8 +646,12 @@ def render_field_webpage(args):
         # hide ones that take a long time to compute on the fly
         # note that the first degree 4 number field missed the zero of the zeta function
         if abs(D**n) < 50000000:
-            info['friends'].append(('L-function', "/L/NumberField/%s" % label))
-    info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
+            info['friends'].append(('L-function', url_for('l_functions.l_function_nf_page', label=label)))
+    info['friends'].append(('Galois group', url_for("galois_groups.by_label", label="%dT%d" % (n, t))))
+    discrootfieldcoeffs = nf.discrootfieldcoeffs()[0]
+    rf_label = db.nf_fields.lucky({'coeffs': discrootfieldcoeffs}, 'label')
+    if rf_label:
+        info['friends'].append(('Discriminant root field', url_for("number_fields.by_label", label=rf_label)))
     if 'dirichlet_group' in info:
         info['friends'].append(('Dirichlet character group',
                                 url_for("characters.dirichlet_group_table",

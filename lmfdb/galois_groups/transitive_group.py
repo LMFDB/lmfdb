@@ -611,7 +611,7 @@ def complete_group_code(code):
         t = int(rematch.group(2))
         return [(n, t)]
     # convert small group label to GAP code
-    if re.match(r'^\d+\.\d+',code):
+    if re.match(r'^\d+\.\d+$',code):
         code = "[%s,%s]"%tuple(code.split("."))
     # Try GAP code
     rematch = re.match(r'^\[\d+,\d+\]$', code)
@@ -849,6 +849,8 @@ aliases['PSL(3,3)'] = [(13,7)]
 aliases['PSL(2,13)'] = [(14,30)]
 aliases['PSP(4,3)'] = [(27,993)]
 aliases['PSU(3,3)'] = [(28,323)]
+aliases['SL(2,5)'] = [(24,201)]
+aliases['GL(2,5)'] = [(24,1353)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]
