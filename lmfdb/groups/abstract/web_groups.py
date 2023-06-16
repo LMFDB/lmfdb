@@ -805,10 +805,13 @@ class WebAbstractGroup(WebObj):
                 except AssertionError:  # timed out
                     pass
 
-        if  self.permutation_degree == None:
-            props.extend([("Perm deg.", "not computed")])
-        else:
-            props.extend([("Perm deg.", f"${self.permutation_degree}$")])
+        if not self.live():        
+            if self.permutation_degree == None:
+                props.extend([("Perm deg.", "not computed")])
+            else:
+                props.extend([("Perm deg.", f"${self.permutation_degree}$")])
+
+                
         if  self.transitive_degree == None:
             props.extend([("Trans deg.", "not computed")])
         else:
