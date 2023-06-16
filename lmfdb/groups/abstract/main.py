@@ -896,8 +896,10 @@ group_columns = SearchColumns([
     MultiProcessedCol("abelian_quotient", "group.abelianization_isolabel", "Abelianization",
                       ["center_label", "smith_abelian_invariants"],
                       display_url_invs),
-    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
     ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms"),
+    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
+    MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree"),
+    MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
@@ -929,6 +931,8 @@ def group_parse(info, query):
     parse_ints(info, query, "derived_length", "derived_length")
     parse_ints(info, query, "rank", "rank")
     parse_ints(info, query, "commutator_count", "commutator length")
+    parse_ints(info, query, "permutation_degree", "permutation_degree")
+    parse_ints(info, query, "transitive_degree", "transitive_degree")
     parse_multiset(info, query, "order_stats", "order_stats")
     parse_bool(info, query, "abelian", "is abelian")
     parse_bool(info, query, "cyclic", "is cyclic")
@@ -1551,19 +1555,23 @@ def display_profile_line(data, ambient, aut):
 class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
-    sorts = [("", "order", ["order", "counter"]),
-             ("exponent", "exponent", ["exponent", "order", "counter"]),
-             ("nilpotency_class", "nilpotency class", ["nilpotency_class", "order", "counter"]),
-             ("derived_length", "derived length", ["derived_length", "order", "counter"]),
-             ("composition_length", "composition length", ["composition_length", "order", "counter"]),
-             ("rank", "rank", ["rank", "eulerian_function", "order", "counter"]),
-             #("center_label", "center", ["center_label", "order", "counter"]),
-             #("commutator_label", "commutator", ["commutator_label", "order", "counter"]),
-             #("central_quotient", "central quotient", ["central_quotient", "order", "counter"]),
-             #("abelian_quotient", "abelianization", ["abelian_quotient", "order", "counter"]),
-             ("aut_order", "automorphism group", ["aut_order", "aut_group", "order", "counter"]),
-             ("number_conjugacy_classes", "conjugacy classes", ["number_conjugacy_classes", "order", "counter"]),
-             ("number_subgroup_classes", "subgroup classes", ["number_subgroup_classes", "order", "counter"])]
+    sorts = [
+            ("", "order", ["order", "counter"]),
+            ("exponent", "exponent", ["exponent", "order", "counter"]),
+            ("nilpotency_class", "nilpotency class", ["nilpotency_class", "order", "counter"]),
+            ("derived_length", "derived length", ["derived_length", "order", "counter"]),
+            ("composition_length", "composition length", ["composition_length", "order", "counter"]),
+            ("rank", "rank", ["rank", "eulerian_function", "order", "counter"]),
+            #("center_label", "center", ["center_label", "order", "counter"]),
+            #("commutator_label", "commutator", ["commutator_label", "order", "counter"]),
+            #("central_quotient", "central quotient", ["central_quotient", "order", "counter"]),
+            #("abelian_quotient", "abelianization", ["abelian_quotient", "order", "counter"]),
+            ("aut_order", "automorphism group", ["aut_order", "aut_group", "order", "counter"]),
+            ("number_conjugacy_classes", "conjugacy classes", ["number_conjugacy_classes", "order", "counter"]),
+            ("number_subgroup_classes", "subgroup classes", ["number_subgroup_classes", "order", "counter"]),
+            ("transitive_degree", "transitive degree", ["transitive_degree", "counter"]),
+            ("permutation_degree", "permutation degree", ["permutation_degree", "counter"])
+            ]
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
     jump_prompt = "Label or name"
@@ -1727,6 +1735,20 @@ class GroupsSearchArray(SearchArray):
             knowl="group.semidirect_product",
             example_col=True,
         )
+        permutation_degree = TextBox(
+            name="permutation_degree",
+            label="Permutation degree",
+            knowl="group.permutation_degree",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
+        transitive_degree = TextBox(
+            name="transitive_degree",
+            label="Transitive degree",
+            knowl="group.transitive_degree",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
         Agroup = YesNoBox(
             name="Agroup",
             label="A-group",
@@ -1849,6 +1871,7 @@ class GroupsSearchArray(SearchArray):
             [cyclic, semidirect_product],
             [nilpotent, perfect],
             [simple, solvable],
+            [transitive_degree, permutation_degree],
             [
                 almost_simple,
                 derived_length,
@@ -1871,12 +1894,13 @@ class GroupsSearchArray(SearchArray):
             [order, exponent, nilpclass, nilpotent],
             [center_label, commutator_label, central_quotient, abelian_quotient],
             [abelian, cyclic, solvable, simple],
-            [perfect, direct_product, semidirect_product],
-            [aut_group, aut_order, outer_group, outer_order],
-            [metabelian, metacyclic, almost_simple, quasisimple],
-            [Agroup, Zgroup, derived_length, frattini_label],
-            [supersolvable, monomial, rational, rank],
-            [order_stats, exponents_of_order, commutator_count, wreath_product],
+            [perfect, direct_product, semidirect_product, wreath_product],
+            [aut_group, aut_order, transitive_degree, permutation_degree],
+            [outer_group, outer_order, metabelian, metacyclic],
+            [almost_simple, quasisimple, Agroup, Zgroup],
+            [frattini_label, derived_length, rank],
+            [supersolvable, monomial, rational],
+            [order_stats, exponents_of_order, commutator_count],
             [name],
         ]
 
