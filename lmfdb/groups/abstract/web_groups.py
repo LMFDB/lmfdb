@@ -757,7 +757,7 @@ class WebAbstractGroup(WebObj):
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
-        if self.number_conjugacy_classes <= 2000:
+        if self.number_conjugacy_classes != None and self.number_conjugacy_classes <= 2000:
             props.append((None, self.image()))
         if self.abelian:
             props.append(("Abelian", "yes"))
@@ -784,18 +784,35 @@ class WebAbstractGroup(WebObj):
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
-            try:
-                props.extend([
-                    (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order))),
-                    (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order))),
-                ])
-            except AssertionError:  # timed out
-                pass
-        if "not" in str(self.transitive_degree):
+
+            if self.aut_order == None:
+                  props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
+            else:      
+                try:
+                    props.extend([
+                        (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order)))
+                    ])
+                except AssertionError:  # timed out
+                    pass
+
+            if self.outer_order == None:
+                  props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
+            else:
+                try:
+                    props.extend([
+                        (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order)))
+                    ])
+                except AssertionError:  # timed out
+                    pass
+
+        if  self.permutation_degree == None:
             props.extend([("Perm deg.", "not computed")])
         else:
-            props.extend([("Perm deg.", f"${self.transitive_degree}$")])
-                # ("Faith. dim.", str(self.faithful_reps[0][0])),
+            props.extend([("Perm deg.", f"${self.permutation_degree}$")])
+        if  self.transitive_degree == None:
+            props.extend([("Trans deg.", "not computed")])
+        else:
+            props.extend([("Trans deg.", f"${self.transitive_degree}$")])
         props.append(
             ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
