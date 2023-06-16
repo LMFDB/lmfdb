@@ -87,8 +87,8 @@
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
-    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.permutation_degree}}</td></tr>
-    <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
+    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
   </table>
 </p>
@@ -136,6 +136,7 @@
         {% endfor %}
         <td class="border-left">{{ gp.number_divisions }}</td>
       </tr>
+      {% if gp.aut_statistics != None %}
       <tr style="border-bottom:none;">
         <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
         {% for c in gp.aut_statistics %}
@@ -143,6 +144,7 @@
         {% endfor %}
         <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
       </tr>
+      {% endif %}
       {% else %}
       <tr>
         <td>{{KNOWL('group.division', 'Divisions')}}</td>
@@ -264,7 +266,7 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
-  {% if gp.eulerian_function is defined %}
+  {% if gp.eulerian_function != None %}
     <td>${{gp.eulerian_function}}$</td>
     {% else %} <td>not computed</td> {% endif %}
   
@@ -311,7 +313,10 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
-    <td>${{gp.commutator_count}}$</td>
+
+     {% if gp.commutator_length %}
+      <td>${{gp.commutator_count}}$</td>                                                            
+    {% else %} <td>not computed</td> {% endif %} 
   </tr>
   {% endif %}
 </table>
@@ -672,14 +677,16 @@ not computed
 
       {% endif %}
 
+{% endif %}
+
       {% if gp.number_divisions == gp.number_conjugacy_classes %}
 
         <p>
            Every character has rational values, so the {{KNOWL('group.rational_character_table','rational character table')}} is the same as the complex character table.
         </p>
 
-      {% endif %}
-   {% endif %}
+
+   {% else %}
   
 
 
@@ -700,7 +707,7 @@ not computed
   <p>
     See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>.
   </p>
-
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %} {# gp.live() #}
