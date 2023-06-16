@@ -32,7 +32,7 @@ class DownloadLanguage():
         elif inp is False:
             return self.false
         if isinstance(inp, str):
-            return inp # '"{0}"'.format(str(inp))
+            return '"{0}"'.format(str(inp))
         if isinstance(inp, int):
             return str(inp)
         if level == 0:
@@ -65,7 +65,6 @@ class MagmaLanguage(DownloadLanguage):
     line_end = ';'
     delim_start = '[*'
     delim_end = '*]'
-    start_end_end = ['[*','*]']
     none = '[]'
     offset = 1
     make_data_comment = 'To create a list of {short_name}, type "{var_name}:= make_data();"'
