@@ -1566,7 +1566,7 @@ class GroupsSearchArray(SearchArray):
             #("commutator_label", "commutator", ["commutator_label", "order", "counter"]),
             #("central_quotient", "central quotient", ["central_quotient", "order", "counter"]),
             #("abelian_quotient", "abelianization", ["abelian_quotient", "order", "counter"]),
-            ("aut_order", "automorphism group", ["aut_order", "aut_group", "order", "counter"]),
+            ("aut_order", "automorphisms", ["aut_order", "aut_group", "order", "counter"]),
             ("number_conjugacy_classes", "conjugacy classes", ["number_conjugacy_classes", "order", "counter"]),
             ("number_subgroup_classes", "subgroup classes", ["number_subgroup_classes", "order", "counter"]),
             ("transitive_degree", "transitive degree", ["transitive_degree", "counter"]),
