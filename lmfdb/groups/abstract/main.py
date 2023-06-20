@@ -918,7 +918,9 @@ group_columns = SearchColumns([
     MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length"),
     MathCol("rank", "group.rank", "Rank"),
     MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", default=True, short_title="conjugacy classes"),
+    MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups"),
     MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes"),
+    MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups"),
     MultiProcessedCol("center_label", "group.center", "Center",
                       ["center_label", "tex_cache"],
                       display_url_cache,
@@ -932,10 +934,16 @@ group_columns = SearchColumns([
     MultiProcessedCol("abelian_quotient", "group.abelianization_isolabel", "Abelianization",
                       ["center_label", "smith_abelian_invariants"],
                       display_url_invs),
+    # TODO
+    #MultiProcessedCol("schur_multiplier", "group.schur_multiplier", "Schur multiplier",
+    #                  ["center_label", "smith_abelian_invariants"],
+    #                  display_url_invs),
     ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms"),
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree"),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree"),
+    MathCol("irrC_degree", "group.irrC_degree", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
+    MathCol("irrQ_degree", "group.irrQ_degree", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
@@ -961,7 +969,6 @@ def group_parse(info, query):
     parse_ints(info, query, "order", "order")
     parse_ints(info, query, "exponent", "exponent")
     parse_ints(info, query, "nilpotency_class", "nilpotency class")
-    parse_ints(info, query, "number_conjugacy_classes", "number of conjugacy classes")
     parse_ints(info, query, "aut_order", "aut_order")
     parse_ints(info, query, "outer_order", "outer_order")
     parse_ints(info, query, "derived_length", "derived_length")
@@ -969,6 +976,15 @@ def group_parse(info, query):
     parse_ints(info, query, "commutator_count", "commutator length")
     parse_ints(info, query, "permutation_degree", "permutation_degree")
     parse_ints(info, query, "transitive_degree", "transitive_degree")
+    parse_ints(info, query, "irrC_degree", "irrC_degree")
+    parse_ints(info, query, "irrQ_degree", "irrQ_degree")
+    parse_ints(info, query, "number_autjugacy_classes", "number_autjugacy_classes")
+    parse_ints(info, query, "number_conjugacy_classes", "number_conjugacy_classes")
+    parse_ints(info, query, "number_characteristic_subgroups", "number_characteristic_subgroups")
+    parse_ints(info, query, "number_divisions", "number_divisions")
+    parse_ints(info, query, "number_normal_subgroups", "number_normal_subgroups")
+    parse_ints(info, query, "number_subgroups", "number_subgroups")
+    parse_bracketed_posints(info, query, "schur_multiplier", "schur_multiplier")
     parse_multiset(info, query, "order_stats", "order_stats")
     parse_bool(info, query, "abelian", "is abelian")
     parse_bool(info, query, "cyclic", "is cyclic")
@@ -1002,6 +1018,9 @@ def group_parse(info, query):
     parse_regex_restricted(
         info, query, "abelian_quotient", regex=abstract_group_label_regex
     )
+    #parse_regex_restricted(
+    #    info, query, "schur_multiplier", regex=abstract_group_label_regex
+    #)
     parse_regex_restricted(
         info, query, "frattini_label", regex=abstract_group_label_regex
     )
@@ -1603,10 +1622,16 @@ class GroupsSearchArray(SearchArray):
             #("central_quotient", "central quotient", ["central_quotient", "order", "counter"]),
             #("abelian_quotient", "abelianization", ["abelian_quotient", "order", "counter"]),
             ("aut_order", "automorphisms", ["aut_order", "aut_group", "order", "counter"]),
-            ("number_conjugacy_classes", "conjugacy classes", ["number_conjugacy_classes", "order", "counter"]),
+            ("number_subgroups", "subgroups", ["number_subgroups", "order", "counter"]),
             ("number_subgroup_classes", "subgroup classes", ["number_subgroup_classes", "order", "counter"]),
+            ("number_normal_subgroups", "normal subgroups", ["number_normal_subgroups", "order", "counter"]),
+            ("number_conjugacy_classes", "conjugacy classes", ["number_conjugacy_classes", "order", "counter"]),
+            ("number_autjugacy_classes", "autjugacy classes", ["number_autjugacy_classes", "order", "counter"]),
+            ("number_divisions", "divisions", ["number_divisions", "order", "counter"]),
             ("transitive_degree", "transitive degree", ["transitive_degree", "counter"]),
-            ("permutation_degree", "permutation degree", ["permutation_degree", "counter"])
+            ("permutation_degree", "permutation degree", ["permutation_degree", "counter"]),
+            ("irrC_degree", r"$\C$-irrep degree", ["irrC_degree", "counter"]),
+            ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
             ]
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
@@ -1785,6 +1810,28 @@ class GroupsSearchArray(SearchArray):
             example="3",
             example_span="4, or a range like 3..5",
         )
+        irrC_degree = TextBox(
+            name="irrC_degree",
+            label=r"$\C$-irrep degree",
+            knowl="group.irrC_degree",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
+        irrQ_degree = TextBox(
+            name="irrQ_degree",
+            label=r"$\Q$-irrep degree",
+            knowl="group.irrQ_degree",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
+        schur_multiplier = TextBox(
+            name="schur_multiplier",
+            label="Schur multiplier",
+            knowl="group.schur_multiplier",
+            example="[2,4,12]",
+            example_span="[2,4,12]",
+            advanced=True,
+        )
         Agroup = YesNoBox(
             name="Agroup",
             label="A-group",
@@ -1895,6 +1942,53 @@ class GroupsSearchArray(SearchArray):
                       ("311", "p^{3+}qr..."),
                       ("321", "other")]),
         )
+        # Numbers of things boxes
+        number_subgroups= TextBox(
+            name="number_subgroups",
+            label="Number of subgroups",
+            knowl="group.subgroup",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
+        number_normal_subgroups= TextBox(
+            name="number_normal_subgroups",
+            label="Number of normal subgroups",
+            knowl="group.subgroup.normal",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
+        number_conjugacy_classes = TextBox(
+            name="number_conjugacy_classes",
+            label="Number of conjugacy classes",
+            knowl="group.conjugacy_class",
+            example="3",
+            example_span="4, or a range like 3..5",
+        )
+        number_autjugacy_classes = TextBox(
+            name="number_autjugacy_classes ",
+            label="Number of autjugacy classes",
+            knowl="group.autjugacy_class",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True
+        )
+        number_characteristic_subgroups = TextBox(
+            name="number_characteristic_subgroups ",
+            label="Number of characteristic subgroups",
+            knowl="group.characteristic_subgroup",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True
+        )
+        number_divisions = TextBox(
+            name="number_divisions ",
+            label="Number of divisions",
+            knowl="group.division",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True
+        )
+
         count = CountBox()
 
         self.browse_array = [
@@ -1908,6 +2002,7 @@ class GroupsSearchArray(SearchArray):
             [nilpotent, perfect],
             [simple, solvable],
             [transitive_degree, permutation_degree],
+            [irrC_degree, irrQ_degree],
             [
                 almost_simple,
                 derived_length,
@@ -1920,7 +2015,10 @@ class GroupsSearchArray(SearchArray):
             [outer_order, metacyclic],
             [Agroup, monomial],
             [Zgroup, rational],
-            [wreath_product],
+            [schur_multiplier, wreath_product],
+            [number_subgroups, number_normal_subgroups],
+            [number_characteristic_subgroups, number_divisions],
+            [number_conjugacy_classes, number_autjugacy_classes],
             [order_stats, rank],
             [exponents_of_order, commutator_count],
             [count],
@@ -1932,10 +2030,15 @@ class GroupsSearchArray(SearchArray):
             [abelian, cyclic, solvable, simple],
             [perfect, direct_product, semidirect_product, wreath_product],
             [aut_group, aut_order, transitive_degree, permutation_degree],
+            [irrC_degree, irrQ_degree],
             [outer_group, outer_order, metabelian, metacyclic],
             [almost_simple, quasisimple, Agroup, Zgroup],
-            [frattini_label, derived_length, rank],
+            [frattini_label, derived_length, rank, schur_multiplier],
             [supersolvable, monomial, rational],
+
+            [number_subgroups, number_normal_subgroups, number_conjugacy_classes],
+            [number_characteristic_subgroups, number_autjugacy_classes, number_divisions],
+
             [order_stats, exponents_of_order, commutator_count],
             [name],
         ]
