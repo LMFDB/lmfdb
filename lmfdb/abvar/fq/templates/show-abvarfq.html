@@ -253,6 +253,12 @@ function show_twists(number) {
  </table>
 
 {% endif %}
+{% if cl.polarized_abelian_varieties %}
+<table class="ntdata">
+  {{ cl.header_polarized_varieties() }}
+  {{ cl.display_polarized_varieties() }}
+</table>
+{% endif %}
 
 
 {% endblock %}
