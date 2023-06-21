@@ -830,7 +830,7 @@ def diagram_js_string(isoclass):
     graph, rank_lookup, num_layers = diagram_js(isoclass, isoclass.endring_poset, display_opts)
     return f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{isoclass.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
 
-@modcurve_page.route("/Q/curveinfo/<label>")
+@abvarfq_page.route("/Q/curveinfo/<label>")
 def curveinfo(label):
     if not LABEL_RE.fullmatch(label):
         return ""
