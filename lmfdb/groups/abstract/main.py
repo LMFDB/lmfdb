@@ -55,6 +55,7 @@ from .web_groups import (
     WebAbstractRationalCharacter,
     WebAbstractSubgroup,
     group_names_pretty,
+    label_sortkey,
     primary_to_smith,
     abelian_gp_display,
     abstract_group_display_knowl
@@ -722,43 +723,44 @@ def Qchar_table(label):
         learnmore=learnmore_list(),
     )
 
+def _subgroup_diagram(label, typ, title, **kwds):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    dojs, display_opts = diagram_js_string(gp, **kwds)
+    info = {"dojs": dojs, "type": typ}
+    info.update(display_opts)
+    return render_template(
+        "diagram_page.html",
+        info=info,
+        title=title,
+        bread=get_bread([("Subgroup diagram", " ")]),
+        learnmore=learnmore_list(),
+    )
 
 @abstract_page.route("/diagram/<label>")
-def sub_diagram(label):
-    label = clean_input(label)
-    gp = WebAbstractGroup(label)
-    if gp.is_null():
-        flash_error("No group with label %s was found in the database.", label)
-        return redirect(url_for(".index"))
-    dojs, display_opts = diagram_js_string(gp, conj=True, aut=False)
-    info = {"dojs": dojs, "type": "conj"}
-    info.update(display_opts)
-    return render_template(
-        "diagram_page.html",
-        info=info,
-        title="Diagram of subgroups up to conjugation for group %s" % label,
-        bread=get_bread([("Subgroup diagram", " ")]),
-        learnmore=learnmore_list(),
-    )
+def subgroup_diagram(label):
+    title = f"Diagram of subgroups up to conjugation for group {label}"
+    return _subgroup_diagram(label, "conj", title, conj=True, aut=False)
 
 @abstract_page.route("/autdiagram/<label>")
-def aut_diagram(label):
-    label = clean_input(label)
-    gp = WebAbstractGroup(label)
-    if gp.is_null():
-        flash_error("No group with label %s was found in the database.", label)
-        return redirect(url_for(".index"))
-    dojs, display_opts = diagram_js_string(gp, conj=False, aut=True)
-    info = {"dojs": dojs, "type": "aut"}
-    info.update(display_opts)
-    return render_template(
-        "diagram_page.html",
-        info=info,
-        title="Diagram of subgroups up to automorphism for group %s" % label,
-        bread=get_bread([("Subgroup diagram", " ")]),
-        learnmore=learnmore_list(),
-    )
+def subgroup_autdiagram(label):
+    title = f"Diagram of subgroups up to automorphism for group {label}"
+    return _subgroup_diagram("aut", title, conj=False, aut=True)
 
+@abstract_page.route("/normal_diagram/<label>")
+def normal_diagram(label):
+    title = f"Diagram of normal subgroups up to conjugation for group {label}"
+    # TODO : FIXME
+    return _subgroup_diagram(label, "conj", title, conj=True, aut=False)
+
+@abstract_page.route("/normal_autdiagram/<label>")
+def normal_autdiagram(label):
+    title = f"Diagram of normal subgroups up to automorphism for group {label}"
+    # TODO : FIXME
+    return _subgroup_diagram(label, "aut", title, conj=False, aut=True)
 
 def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
@@ -1092,8 +1094,8 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
 
     return [ll, layers[1]], order_lookup, len(by_Omega)
 
-def diagram_js_string(gp, conj, aut):
-    glist = [[],[]]
+def diagram_js_string(gp, conj, aut, normal):
+    glist = [[],[],[],[]]
     display_opts = {}
     if aut:
         glist[1], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice_aut, display_opts, aut=True)
@@ -1125,27 +1127,15 @@ def render_abstract_group(label, data=None):
         friends = []
         downloads = []
     else:
-        if gp.subgroup_profile:
-            prof = list(gp.subgroup_profile.items())
-            prof.sort(key=lambda z: -z[0])  # largest to smallest
-            info["subgroup_profile"] = [
-                (z[0], display_profile_line(z[1], ambient=label, aut=False)) for z in prof
-            ]
-            autprof = list(gp.subgroup_autprofile.items())
-            autprof.sort(key=lambda z: -z[0])  # largest to smallest
-            info["subgroup_autprofile"] = [
-                (z[0], display_profile_line(z[1], ambient=label, aut=True)) for z in autprof
-            ]            
+        if gp.has_subgroups:
+            if gp.subgroup_inclusions_known:
+                info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True, normal=True)
+                info["wide"] = display_opts["w"] > 1600 # boolean
 
-            info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True)
-            info["wide"] = display_opts["w"] > 1600 # boolean
-
-        
             info["max_sub_cnt"] = gp.max_sub_cnt
             info["max_quo_cnt"] = gp.max_quo_cnt
 
-            
-        title = "Abstract group " + "$" + gp.tex_name + "$"
+        title = f"Abstract group ${gp.tex_name}$"
 
         downloads = [
             ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
@@ -1535,17 +1525,6 @@ def download_group(**args):
     #strIO.write(s.encode("utf-8"))
     #strIO.seek(0)
     #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
-
-def display_profile_line(data, ambient, aut):
-    l = []
-    for label, tex in sorted(data, key=data.get, reverse=True):
-        cnt = data[label, tex]
-        l.append(
-            abstract_group_display_knowl(label, name=f"${tex}$", ambient=ambient, aut=aut)
-            + (" x " + str(cnt) if cnt > 1 else "")
-        )
-    return ", ".join(l)
 
 
 class GroupsSearchArray(SearchArray):
@@ -2169,19 +2148,82 @@ def sub_data(label):
     return Markup(shortsubinfo(".".join(label[:2]), ".".join(label[2:])))
 
 
-def group_data(label, ambient=None, aut=False):
-    if label.startswith("ab/"):
-        data = canonify_abelian_label(label[3:])
-        url = url_for("abstract.by_abelian_label", label=label[3:])
+def group_data(label, ambient=None, aut=False, profiledata=None):
+    if profiledata is None:
+        quotient_label = "None"
     else:
-        data = None
-        url = url_for("abstract.by_label", label=label)
-    gp = WebAbstractGroup(label, data=data)
-    ans = f"Group ${gp.tex_name}$: "
-    ans += create_boolean_string(gp, type="knowl")
-    ans += f"<br />Label: {gp.label}<br />"
-    ans += f"Order: {gp.order}<br />"
-    ans += f"Exponent: {gp.exponent}<br />"
+        profiledata = profiledata.split("$")
+        for i, c in enumerate(profiledata):
+            if c in ["None", "?"]:
+                profiledata[i] = None
+        if len(profiledata) == 6 and profiledata[3] is not None:
+            quotient_label = profiledata[3]
+        else:
+            quotient_label = "None"
+        quotient_tex = profiledata[5]
+    if label == "None":
+        if profiledata is None:
+            return Markup("Error in group_data function: No label or profiledata")
+        if len(profiledata) < 3:
+            return Markup("Error in group_data function: Not enough profiledata")
+        order = int(profiledata[0].split(".")[0])
+        # Now restore profiledata[0] to be None, used in sub_matches below
+        profiledata[0] = None
+        tex_name = profiledata[2]
+        if tex_name is None:
+            ans = "Unknown group<br />"
+        else:
+            ans = f"Group ${tex_name}$<br />"
+        ans += "Order: {order}<br />"
+        if profiledata[1] is None:
+            ans += "Isomorphism class unknown<br />"
+        else:
+            # TODO: add hash knowl and search link to groups with this order and hash
+            ans += f"Hash: {profiledata[1]}<br />"
+        isomorphism_label = "Subgroups with this data:"
+    else:
+        if label.startswith("ab/"):
+            data = canonify_abelian_label(label[3:])
+            url = url_for("abstract.by_abelian_label", label=label[3:])
+        else:
+            data = None
+            url = url_for("abstract.by_label", label=label)
+        gp = WebAbstractGroup(label, data=data)
+        ans = f"Group ${gp.tex_name}$: "
+        ans += create_boolean_string(gp, type="knowl")
+        ans += f"<br />Label: {gp.label}<br />"
+        order = gp.order
+        ans += f"Order: {order}<br />"
+        ans += f"Exponent: {gp.exponent}<br />"
+        if quotient_label == "None":
+            isomorphism_label = "Subgroups with this isomorphism type: "
+        else:
+            isomorphism_label = "Subgroups with this isomorphism type and quotient: "
+    if quotient_label != "None":
+        if quotient_label.startswith("ab/"):
+            data = canonify_abelian_label(quotient_label[3:])
+            quotient_url = url_for("abstract.by_abelian_label", label=quotient_label[3:])
+        else:
+            data = None
+            quotient_url = url_for("abstract.by_label", label=quotient_label)
+        qgp = WebAbstractGroup(quotient_label, data=data)
+        ans += f"Quotient ${quotient_tex}$: "
+        ans += create_boolean_string(qgp, type="knowl")
+        ans += f"<br />Quotient label: {qgp.label}<br />"
+        ans += f"Quotient order: {qgp.order}<br />"
+        ans += f"Quotient exponent: {qgp.exponent}<br />"
+    elif profiledata is not None and len(profiledata) == 6:
+        if quotient_tex in [None, "?"]:
+            ans += "Unknown quotient<br />"
+        else:
+            ans += f"Quotient ${quotient_tex}$<br />"
+        ambient_order = int(ambient.split(".")[0])
+        ans += f"Quotient order: {ambient_order // order}<br />"
+        if profiledata[4] is None:
+            ans += "Quotient isomorphism class unknown<br />"
+        else:
+            # TODO: add hash knowl and search link to groups with this order and hash
+            ans += f"Quotient hash: {profiledata[4]}<br />"
 
     if not gp.live():
         if ambient is None:
@@ -2199,20 +2241,31 @@ def group_data(label, ambient=None, aut=False):
             ans += " characteristic.<br />"
         else:
             ambient = WebAbstractGroup(ambient)
-            subs = [H for H in ambient.subgroups.values() if H.subgroup == label]
+            def sub_matches(H):
+                if profiledata is None:
+                    return H.subgroup == label
+                if len(profiledata) == 3 and label != "None":
+                    return H.subgroup == label
+                if len(profiledata) == 6 and label != "None" and quotient_label != "None":
+                    return H.subgroup == label and H.quotient == quotient_label
+                return all(a == b for (a, b) in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
+
+            subs = [H for H in ambient.subgroups.values() if sub_matches(H)]
             if aut and not ambient.outer_equivalence:
+                # TODO: need to deal with non-canonical labels
                 subs = [H for H in subs if H.label.split(".")[-1] == "a1"]
-            subs.sort(
-                key=lambda H: H.label
-            )  # It would be better to split the label apart and sort numerically, but that's too much work
+            subs.sort(key=lambda H: label_sortkey(H.label))
             ans += '<div align="right">'
-            ans += "Subgroups with this isomorphism type: "
+            ans += isomorphism_label
             for H in subs:
                 ans += '<a href="{}">{}</a>&nbsp;'.format(
                     url_for("abstract.by_subgroup_label", label=H.label), H.label
                 )
             ans += "</div><br />"
-    ans += f'<div align="right"><a href="{url}">{label} home page</a></div>'
+    if label != "None":
+        ans += f'<div align="right"><a href="{url}">{label} home page</a></div>'
+    if quotient_label != "None":
+        ans += f'<div align="right"><a href="{quotient_url}">{quotient_label} home page</a></div>'
     return Markup(ans)
 
 def semidirect_data(label):

@@ -3,6 +3,7 @@ import re
 
 from lmfdb import db
 from flask import url_for
+from urllib.parse import quote_plus
 
 from sage.all import (
     Permutations,
@@ -87,8 +88,8 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
-@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
-def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
+@cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
+def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
     if not name:
         if pretty:
@@ -105,7 +106,10 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
     if ambient is None:
         args = label
     else:
-        args = f"{label}%7C{ambient}%7C{aut}"
+        if profiledata is not None:
+            # We use $ as a separator since it won't be in latex strings
+            profiledata = '%24'.join(quote_plus(str(c)) for c in profiledata)
+        args = f"{label}%7C{ambient}%7C{aut}%7C{profiledata}"
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 def primary_to_smith(invs):
@@ -802,9 +806,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def has_subgroups(self):
-        if self.all_subgroups_known is None:
-            return False
-        return True
+        return self.all_subgroups_known is not None
 
     @lazy_attribute
     def subgroups(self):
@@ -814,7 +816,8 @@ class WebAbstractGroup(WebObj):
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
             for subdata in db.gps_subgroups_test.search({"ambient": self.label})
         }
-        self.add_layers(subs)
+        if self.subgroup_inclusions_known:
+            self.add_layers(subs)
         return subs
 
     def add_layers(self, subs):
@@ -893,29 +896,130 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def diagram_ok(self):
-        return self.number_subgroup_classes < 100
+        return self.number_subgroup_classes is not None and self.number_subgroup_classes < 100
+
+    @staticmethod
+    def _finalize_profile(by_order):
+        def sort_key(x):
+            # Python 3 won't compare None with strings
+            return sum(([c is None, c] for c in x), [])
+        for order, subs in by_order.items():
+            by_order[order] = sorted(((cnt,) + k for (k, cnt) in subs.items()), key=sort_key, reverse=True)
+        return sorted(by_order.items(), key=lambda z: -z[0]) # largest order first
 
     @lazy_attribute
     def subgroup_profile(self):
-        if not self.has_subgroups:
-            return None
-        by_order = defaultdict(Counter)
-        try:
+        if self.has_subgroups:
+            by_order = defaultdict(Counter)
             for s in self.subgroups.values():
-                by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += s.conjugacy_class_count
-            return by_order
-        except AttributeError:
-            return None
+                by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex] += s.conjugacy_class_count
+            return self._finalize_profile(by_order)
 
     @lazy_attribute
     def subgroup_autprofile(self):
-        seen = set()
-        by_order = defaultdict(Counter)
-        for s in self.subgroups.values():
-            if s.aut_label not in seen:
-                by_order[s.subgroup_order][s.subgroup, s.subgroup_tex] += 1
-                seen.add(s.aut_label)
-        return by_order
+        if self.has_subgroups:
+            seen = set()
+            by_order = defaultdict(Counter)
+            for s in self.subgroups.values():
+                if s.aut_label not in seen:
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex] += 1
+                    seen.add(s.aut_label)
+            return self._finalize_profile(by_order)
+
+    @lazy_attribute
+    def normal_profile(self):
+        if self.has_subgroups:
+            by_order = defaultdict(Counter)
+            for s in self.subgroups.values():
+                if s.normal:
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += s.conjugacy_class_count
+            if self.normal_counts is not None:
+                for d, cnt in zip(self.order.divisors(), self.normal_counts):
+                    if cnt and cnt > sum(by_order[d].values()):
+                        by_order[d][None, None, None, None, None, None] = cnt - sum(by_order[d].values())
+            return self._finalize_profile(by_order)
+
+    @lazy_attribute
+    def normal_autprofile(self):
+        if self.has_subgroups:
+            seen = set()
+            by_order = defaultdict(Counter)
+            for s in self.subgroups.values():
+                if s.normal and s.aut_label not in seen:
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += 1
+                    seen.add(s.aut_label)
+            return self._finalize_profile(by_order)
+
+    def _display_profile(self, profile, aut):
+        def display_profile_line(order, subs):
+            l = []
+            sep = ", "
+            for tup in subs:
+                cnt, label, tex = tup[0], tup[1], tup[3]
+                tup = list(tup[1:])
+                if len(tup) == 6:
+                    sep = ", &nbsp;&nbsp;"
+                if label is None:
+                    tup[0] = f"{order}.?"
+                # TODO: In the normal case, should we display the quotient somehow?
+                # TODO: Deal with the orders where all we know is a count from normal_counts
+                l.append(
+                    abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
+                    + ("" if len(tup) == 3 else " ( $%s$ )" % (tup[5]))
+                    + (" x " + str(cnt) if cnt > 1 else "")
+                )
+            return sep.join(l)
+
+        if profile is not None:
+            return [(order, display_profile_line(order, subs)) for (order, subs) in profile]
+
+    def get_profile(self, sub_all, sub_aut):
+        if sub_all == "subgroup":
+            if sub_aut:
+                profile = self.subgroup_autprofile
+                desc = "Classes of subgroups up to automorphism"
+            else:
+                profile = self.subgroup_profile
+                desc = "Classes of subgroups up to conjugation"
+        else:
+            if sub_aut:
+                profile = self.normal_autprofile
+                desc = "Normal subgroups up to automorphism (quotient in parentheses)"
+            else:
+                profile = self.normal_profile
+                desc = "Normal subgroups (quotient in parentheses)"
+        return self._display_profile(profile), desc
+
+    # The following layout elements go in different places depending on whether
+    # the subgroup diagram is wide or not, so they are abstracted here
+
+    def fullpage_links(self, getpositions=False):
+        s = ""
+        if getpositions:
+            s += '<button onclick="getpositions()">Get positions</button><br>\n'
+            s += '<p><div id="positions"></div></p>\n'
+        s += '<div>\nEach subgroup order has its own level?\n'
+        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
+        for sub_all in ["subgroup", "normal"]:
+            for sub_aut in ["", "aut"]:
+                cls = f'{sub_all}_{sub_aut}diagram'
+                s += f'<div class="{cls}">\n'
+                url = url_for(f'.{cls}', label=self.label)
+                s += f'<a href="{url}">See a full page version of the diagram</a>\n</div>\n'
+        return s
+
+    def sub_info_area(self):
+        s = '<h4>Subgroup information</h4>\n'
+        s += '<div class="selectedsub">\n'
+        s += 'Click on a subgroup in the diagram to see information about it.\n'
+        s += '</div>\n'
+        return s
+
+    def canvas(self, width, height):
+        s = f'<canvas id="subdiagram" width="{width}" height="{height}">\n'
+        s += 'Sorry, your browser does not support the subgroup diagram.\n'
+        s += '</canvas>\n'
+        return s
 
     @lazy_attribute
     def conjugacy_classes(self):
