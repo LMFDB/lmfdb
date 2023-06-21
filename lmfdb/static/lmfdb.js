@@ -350,6 +350,8 @@ function increase_start_by_count_and_submit_form() {
   update_start_by_count_and_submit_form(1);
 };
 
+
+// callbacks for the search page to get exact count. Used in matches.html
 function get_count_of_results(download_limit) {
     var address = window.location.href;
     $("#result-count").html("computing...");
@@ -373,6 +375,24 @@ function get_count_callback(res, download_limit) {
         $("#download-form").show();
     }
 };
+
+/**
+ * Fetches the elliptic curve with `label` and calls the reduction function.
+ * Uses route /adelic_image_modm_reduce in ec_page, calls modm_reduce in elliptic_curve.py.
+ * Modifies the html element in ec_curve.html.
+ * 
+ * @param label of elliptic curve
+ * @param m integer to reduce the adelic image by
+ */
+function modm_reduction(label, m) {
+  address = "/EllipticCurve/Q/adelic_image_modm_reduce?label=" + label + "&m=" + m;
+  $('#modm_reduction').html("<em>Computing...</em>");
+  $.ajax({url: address, success: modm_reduction_callback});
+}
+
+function modm_reduction_callback(res) {
+  $('#modm_reduction').html(katex.renderToString(res));
+}
 
 function js_review_knowl(kid) {
     var address = window.location.href;
