@@ -5,6 +5,7 @@
 from lmfdb import db
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
     display_knowl, web_latex, coeff_to_power_series,
     web_latex_factored_integer, prop_int_pretty)
@@ -153,13 +154,11 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
 
 def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
-    Returns the label for the space using the orbit index
-    eg::
-
-        N.k.c --> N.k.i
+    Returns the label for a space specified using a Conrey index
+    e.g. 23.2.22 -> 23.2.b (because 23.b is the character orbit label of the Conrey character 23.22)
     """
-    N, k, chi = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
+    N, k, n = map(int, spacelabel_conrey.split('.'))
+    return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
 
 
 def trace_expansion_generic(space, prec_max=10):
@@ -232,11 +231,11 @@ class WebNewformSpace():
         self.num_forms = data.get('num_forms')
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
-        self.char_conrey = self.conrey_indexes[0]
+        self.char_conrey = self.conrey_index
         self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
+        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_index', 'sub_mult'])
+        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
 
@@ -271,7 +270,7 @@ class WebNewformSpace():
             ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
-        if self.conrey_indexes[0] == 1:
+        if self.conrey_index == 1:
             self.trivial_character = True
             character_str = "trivial character"
             if self.dim == 0:
@@ -282,7 +281,6 @@ class WebNewformSpace():
         else:
             self.trivial_character = False
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
-            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of modular forms of level %s, weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
@@ -316,7 +314,7 @@ class WebNewformSpace():
         return self.char_orbit_link + ord_deg
 
     def _vec(self):
-        return [self.level, self.weight, self.conrey_indexes[0]]
+        return [self.level, self.weight, self.conrey_index]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -346,7 +344,7 @@ class WebNewformSpace():
         return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
 
     def subspace_latex(self, new=False):
-        return common_latex("M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)
+        return common_latex("M", self.weight, self.conrey_index, "S", 0, "new" if new else "", symbolic_chi=True)
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
@@ -505,10 +503,10 @@ class WebGamma1Space():
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
             rowtype = "oddrow" if i%2 else "evenrow"
-            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_indexes'][0])
+            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_index'])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
-                                             number=space['conrey_indexes'][0])
+                                             orbit_label=space['char_orbit_label'])
             chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
