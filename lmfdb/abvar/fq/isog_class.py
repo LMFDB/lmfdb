@@ -221,7 +221,7 @@ class AbvarFq_isoclass():
                 self.tex = tex[label]
                 self.img = texlabels[self.tex]
                 self.rank = sum(e for (p,e) in self.index.factor())
-                self.x = xcoords[label]
+                self.x = xcoord[label]
         parents = {}
         pic_size = {}
         num_wes = Counter()

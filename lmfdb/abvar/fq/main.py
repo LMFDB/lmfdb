@@ -8,6 +8,7 @@ import time
 from flask import abort, render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
 from sage.databases.cremona import cremona_letter_code
+from collections import Counter
 
 from lmfdb import db
 from lmfdb.logger import make_logger
@@ -828,7 +829,7 @@ def diagram_js(curve, layers, display_opts):
 def diagram_js_string(isoclass):
     display_opts = {}
     graph, rank_lookup, num_layers = diagram_js(isoclass, isoclass.endring_poset, display_opts)
-    return f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{isoclass.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
+    return f'var [sdiagram,graph] = make_sdiagram("endring_diagram", "{isoclass.label}", [{graph}], {rank_lookup}, {num_layers});', display_opts
 
 @abvarfq_page.route("/Q/curveinfo/<label>")
 def curveinfo(label):
