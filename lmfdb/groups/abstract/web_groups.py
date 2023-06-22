@@ -1025,7 +1025,7 @@ class WebAbstractGroup(WebObj):
             summary = self._normal_summary()
         if profile is None:
             summary = "not computed"
-        return self._display_profile(profile), desc, summary
+        return self._display_profile(profile, bool(sub_aut)), desc, summary
 
     @cached_method
     def diagram_count(self, sub_all, sub_aut):
