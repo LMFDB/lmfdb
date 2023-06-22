@@ -447,6 +447,9 @@ class WebNewform():
             # !! TODO : change it to a field containing the entire fourier expansion !!
  
             if eigenvals:
+                if (not eigenvals.get('lambda_p_square_0')):
+                    # We don't want to display empty rows in the table
+                    self.hecke_types = ['lambda_p', 'lambda_p_square']
                 if eigenvals.get('qexp'):
                     self.has_exact_qexp = True
                     self.qexp = {eval(k) : eigenvals['qexp'][k] for k in eigenvals['qexp'].keys()}
