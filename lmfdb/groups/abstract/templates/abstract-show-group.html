@@ -28,6 +28,27 @@
       }
     }
   }
+  var mode_pairs = [['subgroup', 'normal'], ['', 'aut'], ['diagram', 'profile']];
+  function select_subgroup_mode(mode) {
+    cls = "";
+    for (var i = 0; i < mode_pairs.length; i++) {
+      for (var j = 0; j < 2; j++) {
+        thismode = mode_pairs[i][j];
+        if (thismode == mode) {
+          opposite_mode = mode_pairs[i][1-j];
+          piece = mode;
+          break;
+        }
+        if ($("button.sub_" + thismode).hasClass("sub_active")){
+          piece = thismode;
+        }
+      }
+      cls += piece;
+      if (i == 0) {
+        cls += "_";
+      }
+    }
+  }
 
   var heightstyle='div'; // alternative is 'order'
   function show_info(style) {
@@ -156,7 +177,7 @@
   </table>
 </p>
 
-{% if gp.live() or gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that don't have rational character tables #}
+{% if gp.live() or gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that do not have rational character tables #}
 
 <p>
   <table class="ntdata" style="margin-left:0;">
@@ -409,55 +430,42 @@
       <button class='sub_profile sub_inactive' onclick="select_subgroup_mode('profile'); return false">profile</button>
     </div>
     <div class="sub_divider">
-      <button class='sub_subgroups sub_active' onclick="select_subgroup_mode('subgroups'); return false">all subgroups</button>
+      <button class='sub_subgroup sub_active' onclick="select_subgroup_mode('subgroup'); return false">all subgroups</button>
       <button class='sub_normal sub_inactive' onclick="select_subgroup_mode('normal'); return false">normal subgroups</button>
     </div>
     <div class="sub_divider">
-      <button class='sub_conj sub_active' onclick="select_subgroup_mode('conj'); return false">up to conjugacy</button>
+      <button class='sub_ sub_active' onclick="select_subgroup_mode(''); return false">up to conjugacy</button>
       <button class='sub_aut sub_inactive' onclick="select_subgroup_mode('aut'); return false">up to automorphism</button>
     </div>
 </div>
 
-<p>
-
 {# Just header information for the diagrams #}
 
-<div class="subgroup_autdiagram" style="display: none">
-  <h4>Classes of subgroups up to automorphism</h4>
-</div>
-
-<div class="subgroup_diagram" style="display: block">
-  <h4>Classes of subgroups up to conjugation</h4>
-  {% if not gp.diagram_ok %}
-  <p>
-    {% if gp.outer_equivalence %}
-      No diagram available: subgroups only stored up to automorphism.
-    {% else %}
-      There are too many subgroups to show.
-      <a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
-    {% endif %}
-  {% endif %}
-</div>
+{% for sub_all in ["subgroup", "normal"] %}
+  {% for sub_aut in ["", "aut"] %}
+    {% set sub_summary, sub_desc, sub_cnt = gp.get_diagram_info(sub_all, sub_aut) %}
+    <div class="{{sub_all}}_{{sub_aut}}diagram" style="display:none">
+      <h4>{{sub_desc}}</h4>
+      {{ sub_summary | safe }}
+    </div>
+  {% endfor %}
+{% endfor %}
 
 {# now the canvas #}
 
-{% if gp.diagram_ok and not gp.outer_equivalence%}
-<div class="subgroup_diagram subgroup_autdiagram">
-{% else %}
-<div class="subgroup_autdiagram">
-{% endif %}
+<div class="{{gp.diagram_classes()}}">
 
-{% if info.wide %}
-  {{ gp.canvas(1000, 300) | safe}}
-  {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
-  {{ gp.sub_info_area() | safe }}
-{% else %} {# not wide #}
-  <table><tr>
-    <td>{{gp.canvas(500, 300) | safe}}</td>
-    <td valign="top">{{gp.sub_info_area() | safe}}</td>
-  </tr></table>
-  {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
-{% endif %}
+  {% if info.wide %}
+    {{ gp.canvas(1000, 300) | safe}}
+    {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
+    {{ gp.sub_info_area() | safe }}
+  {% else %} {# not wide #}
+    <table><tr>
+      <td>{{gp.canvas(500, 300) | safe}}</td>
+      <td valign="top">{{gp.sub_info_area() | safe}}</td>
+    </tr></table>
+    {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
+  {% endif %}
 </div>
 
 </div>
@@ -469,15 +477,14 @@
 
 {% for sub_all in ["subgroup", "normal"] %}
   {% for sub_aut in ["", "aut"] %}
-    {% set sub_profile, sub_desc = gp.get_profile(sub_all, sub_aut) %}
+    {% set sub_profile, sub_desc, sub_summary = gp.get_profile(sub_all, sub_aut) %}
     <div class="{{sub_all}}_{{sub_aut}}profile" style="display: none">
       <h4>{{sub_desc}}</h4>
+      {{ sub_summary | safe }}
       {% if sub_profile %}
         {% for ordline in sub_profile %}
           Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
         {% endfor %}
-      {% else %}
-        not computed
       {% endif %}
     </div>
   {% endfor %}

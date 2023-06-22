@@ -26,7 +26,7 @@ from sage.all import (
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.combinat.permutation import from_lehmer_code
-from sage.misc.cachefunc import cached_function
+from sage.misc.cachefunc import cached_function, cached_method
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -973,6 +973,19 @@ class WebAbstractGroup(WebObj):
         if profile is not None:
             return [(order, display_profile_line(order, subs)) for (order, subs) in profile]
 
+    @cached_method
+    def _normal_summary(self):
+        if self.normal_index_bound != 0:
+            return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown."
+        return ""
+
+    @cached_method
+    def _subgroup_summary(self, in_profile):
+        if self.subgroup_index_bound != 0:
+            return f"All subgroup of index up to {self.subgroup_index_bound} are shown."
+            # Todo: add more verbiage here about Sylow subgroups, maximal subgroups and normal subgroups
+        return ""
+
     def get_profile(self, sub_all, sub_aut):
         if sub_all == "subgroup":
             if sub_aut:
@@ -981,6 +994,7 @@ class WebAbstractGroup(WebObj):
             else:
                 profile = self.subgroup_profile
                 desc = "Classes of subgroups up to conjugation"
+            summary = self._subgroup_summary(in_profile=True)
         else:
             if sub_aut:
                 profile = self.normal_autprofile
@@ -988,7 +1002,67 @@ class WebAbstractGroup(WebObj):
             else:
                 profile = self.normal_profile
                 desc = "Normal subgroups (quotient in parentheses)"
-        return self._display_profile(profile), desc
+            summary = self._normal_summary()
+        if profile is None:
+            summary = "not computed"
+        return self._display_profile(profile), desc, summary
+
+    @cached_method
+    def diagram_count(self, sub_all, sub_aut):
+        # The number of subgroups shown in the diagram of this type; sub_all can be "subgroup" or "normal" and sub_aut can be "aut" or ""
+        if sub_all == "subgroup":
+            if sub_aut:
+                if self.subgroup_index_bound == 0:
+                    return self.number_subgroup_autclasses
+                subs = [H.aut_label for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
+                return len(set(subs))
+            else:
+                if self.subgroup_index_bound == 0:
+                    return self.number_subgroup_classes
+                subs = [H for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
+                return len(subs)
+        else:
+            subs = [H for H in self.subgroups.values() if H.normal]
+            if sub_aut:
+                return len(set(H.aut_label for H in subs))
+            else:
+                return len(subs)
+
+    def get_diagram_info(self, sub_all, sub_aut, override_count=False):
+        summary = ""
+        if sub_all == "subgroup":
+            if sub_aut:
+                desc = "Classes of subgroups up to automorphism"
+            else:
+                desc = "Classes of subgroups up to conjugation"
+            summary = self._subgroup_summary(in_profile=False)
+        else:
+            if sub_aut:
+                desc = "Normal subgroups up to automorphism"
+            else:
+                desc = "Normal subgroups"
+            # I don't think the following can be nonempty in the current data, since we stopped computing inclusions before we cut the middle of the normal lattice out, but it's included for completeness
+            summary = self._normal_summary()
+        count = 0
+        if not self.subgroup_inclusions_known:
+            summary = "No diagram available: inclusions not computed"
+        elif self.outer_equivalence and not sub_aut:
+            summary = "No diagram available: subgroups only stored up to automorphism"
+        else:
+            count = self.diagram_count(sub_all, sub_aut)
+            if not override_count and count >= 100:
+                url = url_for(f".{sub_all}_{sub_aut}diagram", label=self.label)
+                summary = f'There are too many subgroups to show.\n<a href="{url}">See a full page version of the diagram</a>.\n'
+        return desc, summary, count
+
+    def diagram_classes(self):
+        # Which combinations of subgroup/normal and conj/aut have a diagram
+        classes = []
+        for sub_all in ["subgroup", "normal"]:
+            for sub_aut in ["", "aut"]:
+                if self.diagram_count(sub_all, sub_aut) > 0:
+                    classes.append(f"{sub_all}_{sub_aut}diagram")
+        return " ".join(classes)
 
     # The following layout elements go in different places depending on whether
     # the subgroup diagram is wide or not, so they are abstracted here
