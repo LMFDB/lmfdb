@@ -30,12 +30,16 @@
   }
   var mode_pairs = [['subgroup', 'normal'], ['', 'aut'], ['diagram', 'profile']];
   function select_subgroup_mode(mode) {
+    var cls, thismode, opposite_mode, piece;
     cls = "";
     for (var i = 0; i < mode_pairs.length; i++) {
       for (var j = 0; j < 2; j++) {
         thismode = mode_pairs[i][j];
         if (thismode == mode) {
           opposite_mode = mode_pairs[i][1-j];
+          if ($("button.sub_" + mode).hasClass("sub_active")) {
+            return; // already active
+          }
           piece = mode;
           break;
         }
@@ -48,6 +52,11 @@
         cls += "_";
       }
     }
+    $("button.sub_" + mode).removeClass("sub_inactive");
+    $("button.sub_" + mode).addClass("sub_active");
+    $("button.sub_" + opposite_mode).removeClass("sub_active");
+    $("button.sub_" + opposite_mode).addClass("sub_inactive");
+    show_info(cls);
   }
 
   var heightstyle='div'; // alternative is 'order'
