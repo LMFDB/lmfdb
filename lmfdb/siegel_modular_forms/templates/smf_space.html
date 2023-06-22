@@ -61,7 +61,7 @@
     </tr>
   </thead>
   <tbody>
-    {% for X in ['M', 'S', 'E'] %}
+    {% for X in space.dim_grid.disp_keys() %}
     <tr>
       <th rowspan={{info.subspace_num[X]+1}} class="left"> {{info.space_type[X]}} </td>
       <td></td>

@@ -234,6 +234,16 @@ class DimGrid():
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    def has_eis_dim(self):
+        if any([self._grid['E'][typ] == '?' for typ in ['all', 'new', 'old']]):
+            return False
+        return True
+
+    def disp_keys(self):
+        if self.has_eis_dim():
+            return ['M', 'S', 'E']
+        return ['S']
+
     @staticmethod
     def from_db(data):
         prefix = {'all' : '',
