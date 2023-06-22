@@ -761,7 +761,7 @@ class WebAbstractGroup(WebObj):
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
-        if self.number_conjugacy_classes <= 2000:
+        if self.number_conjugacy_classes != None and self.number_conjugacy_classes <= 2000:
             props.append((None, self.image()))
         if self.abelian:
             props.append(("Abelian", "yes"))
@@ -788,18 +788,38 @@ class WebAbstractGroup(WebObj):
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
-            try:
-                props.extend([
-                    (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order))),
-                    (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order))),
-                ])
-            except AssertionError:  # timed out
-                pass
-        if "not" in str(self.transitive_degree):
-            props.extend([("Perm deg.", "not computed")])
+
+            if self.aut_order == None:
+                  props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
+            else:      
+                try:
+                    props.extend([
+                        (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order)))
+                    ])
+                except AssertionError:  # timed out
+                    pass
+
+            if self.outer_order == None:
+                  props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
+            else:
+                try:
+                    props.extend([
+                        (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order)))
+                    ])
+                except AssertionError:  # timed out
+                    pass
+
+        if not self.live():        
+            if self.permutation_degree == None:
+                props.extend([("Perm deg.", "not computed")])
+            else:
+                props.extend([("Perm deg.", f"${self.permutation_degree}$")])
+
+                
+        if  self.transitive_degree == None:
+            props.extend([("Trans deg.", "not computed")])
         else:
-            props.extend([("Perm deg.", f"${self.transitive_degree}$")])
-                # ("Faith. dim.", str(self.faithful_reps[0][0])),
+            props.extend([("Trans deg.", f"${self.transitive_degree}$")])
         props.append(
             ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
@@ -1486,9 +1506,12 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def aut_statistics(self):
-        D = Counter()
-        for (o, s, k, m) in self.aut_stats:
-            D[o] += m
+        if self.aut_stats == None:
+            return None
+        else:
+           D = Counter()
+           for (o, s, k, m) in self.aut_stats:
+               D[o] += m
         return sorted(D.items())
 
     @lazy_attribute
@@ -1744,7 +1767,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.aut_group is None:
                 if self.aut_order is None:
-                    return r"$\textrm{Not computed}$"
+                    return r"$\textrm{not computed}$"
                 else:
                     return f"Group of order ${self.aut_order_factor()}$"
             else:
@@ -1762,7 +1785,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.outer_group is None:
                 if self.outer_order is None:
-                    return r"$\textrm{Not computed}$"
+                    return r"$\textrm{not computed}$"
                 else:
                     return f"Group of order ${self.out_order_factor()}$"
             else:
@@ -1775,6 +1798,19 @@ class WebAbstractGroup(WebObj):
     def out_order_factor(self):
         return latex(factor(self.outer_order))
 
+    def perm_degree(self):
+        if self.permutation_degree is None:
+            return r"$\textrm{not computed}$"
+        else:
+            return self.permutation_degree
+
+    def trans_degree(self):
+        if self.transitive_degree is None:
+            return r"$\textrm{not computed}$"
+        else:
+            return self.transitive_degree
+
+        
     def live_composition_factors(self):
         from .main import url_for_label
         basiclist = []

@@ -97,8 +97,10 @@
     {% endif %}
     {% if seq.weyl_group is not none %}
       <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order ${{seq.weyl.order_factor()}}$</td></tr>
-    {% else %}
+    {% elif seq.normalizer is not none and seq.centralizer is not none %}
     <tr><td>$\card{W}$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
+    {% else %}
+    <tr><td>$\card{W}$</td><td> not computed</td></tr>
     {% endif %}
   </table>
 </p>
@@ -107,11 +109,27 @@
 
 <p>
   <table>
+    {% if seq.centralizer is not none %}
     <tr><td>{{KNOWL('group.centralizer', 'Centralizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.centralizer_.label)}}">${{seq.centralizer_.subgroup_tex}}$</a></td></tr>
+    {% else %}
+     <tr><td>{{KNOWL('group.centralizer', 'Centralizer:')}}</td><td> not computed </td></tr>
+     {% endif %}
+     {% if seq.normalizer is not none %}
     <tr><td>{{KNOWL('group.subgroup.normalizer', 'Normalizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normalizer_.label)}}">${{seq.normalizer_.subgroup_tex}}$</a></td></tr>
-    {% if not seq.normal %}
+    {% else %}
+   <tr><td>{{KNOWL('group.subgroup.normalizer', 'Normalizer:')}}</td><td> not computed </td></tr>
+    {% endif %}
+   {% if not seq.normal %}
+   {% if seq.normal_closure is not none %}
     <tr><td>{{KNOWL('group.subgroup.normal_closure', 'Normal closure:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normal_closure_.label)}}">${{seq.normal_closure_.subgroup_tex}}$</a></td></tr>
+    {% else %}
+ <tr><td>{{KNOWL('group.subgroup.normal_closure', 'Normal closure:')}}</td><td> not computed </td></tr>
+ {% endif %}
+    {% if seq.core is not none %}
     <tr><td>{{KNOWL('group.core', 'Core:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.core_.label)}}">${{seq.core_.subgroup_tex}}$</a></td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.core', 'Core:')}}</td><td> not computed </td></tr>
+    {% endif %}
     {% endif %}
     {% if seq.split and seq.complements %}
     <tr><td>{{KNOWL('group.subgroup.complement', 'Complements:')}}</td><td>{% for comp in seq.complements_ %}<a href="{{url_for('.by_subgroup_label', label=comp.label)}}">${{comp.subgroup_tex}}$</a> {% endfor %}</td></tr>
