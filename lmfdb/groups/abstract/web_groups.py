@@ -1234,6 +1234,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def display_direct_product(self):
+        # assuming this only is called when direct_product is True (else statement with if is false)
         # Need to pick an ordering
         # return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
         if self.direct_factorization == None:
