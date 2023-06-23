@@ -876,13 +876,14 @@ class WebAbstractGroup(WebObj):
             new_layer = []
             added_something = False
             for H in layer:
-                for new in H.contains:
-                    if new not in seen:
-                        seen.add(new)
-                        added_something = True
-                        K = subs[new]
-                        new_layer.append(K)
-                        K.layer = H.layer + 1
+                if H.contains is not None:
+                    for new in H.contains:
+                        if new not in seen:
+                            seen.add(new)
+                            added_something = True
+                            K = subs[new]
+                            new_layer.append(K)
+                            K.layer = H.layer + 1
             layer = new_layer
 
     # special subgroups
@@ -1020,7 +1021,7 @@ class WebAbstractGroup(WebObj):
 
     @cached_method
     def _normal_summary(self):
-        if self.normal_index_bound != 0:
+        if self.normal_index_bound is not None and self.normal_index_bound != 0:
             return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown."
         return ""
 
@@ -1055,6 +1056,8 @@ class WebAbstractGroup(WebObj):
     @cached_method
     def diagram_count(self, sub_all, sub_aut):
         # The number of subgroups shown in the diagram of this type; sub_all can be "subgroup" or "normal" and sub_aut can be "aut" or ""
+        if not self.subgroup_inclusions_known:
+            return 0
         if sub_all == "subgroup":
             if sub_aut:
                 if self.subgroup_index_bound == 0:
@@ -1108,6 +1111,59 @@ class WebAbstractGroup(WebObj):
                 if self.diagram_count(sub_all, sub_aut) > 0:
                     classes.append(f"{sub_all}_{sub_aut}diagram")
         return " ".join(classes)
+
+    @cached_method
+    def subgroup_lattice(self, sub_all, sub_aut):
+        if not self.subgroup_inclusions_known:
+            raise RuntimeError("Subgroup inclusions not known")
+        if self.outer_equivalence and not sub_aut:
+            raise RuntimeError("Subgroups not known up to conjugacy")
+        subs = self.subgroups
+        sib = self.subgroup_index_bound
+        by_aut = defaultdict(set)
+        if sub_all == "subgroup":
+            def test(H):
+                if sib == 0 or H.quotient_order <= sib:
+                    by_aut[H.aut_label].add(H.short_label)
+                    return True
+            def contains(G):
+                return [h for h in G.contains if test(subs[h])]
+        else:
+            def test(H):
+                if H.normal:
+                    by_aut[H.aut_label].add(H.short_label)
+                    return True
+            def contains(G):
+                return [h for h in G.normal_contains if test(subs[h])]
+        nodes = [H for H in subs.values() if test(H)]
+        if self.outer_equivalence or not sub_aut:
+            edges = []
+            for G in nodes:
+                for h in contains(G):
+                    edges.append([h, G.short_label])
+        else:
+            # Subgroups are stored up to conjugacy but we want them up to automorphism.
+            # We pick a rep from each autjugacy class
+            aut_rep = {}
+            for aut_label, short_labels in by_aut.items():
+                # In the standard labeling, there will be exactly one ending in .a1
+                short_labels = list(short_labels)
+                for short_label in short_labels:
+                    if short_label.endswith(".a1"):
+                        aut_rep[aut_label] = short_label
+                        break
+                else:
+                    # We just pick the first one; I don't think this case should happen
+                    aut_rep[aut_label] = short_labels[0]
+            edges = set() # avoid multiedges; this may not be the desired behavior
+            for G in nodes:
+                glabel = aut_rep[G.aut_label]
+                for h in contains(G):
+                    hlabel = aut_rep[subs[h].aut_label]
+                    edges.add((hlabel, glabel))
+            nodes = [subs[short_label] for short_label in aut_rep.values()]
+            edges = [list(edge) for edge in edges]
+        return [nodes, edges]
 
     # The following layout elements go in different places depending on whether
     # the subgroup diagram is wide or not, so they are abstracted here
@@ -1322,73 +1378,6 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def as_aut_gp(self):
         return [(rec['label'], fr"\Aut({rec['tex_name']})") for rec in db.gps_groups_test.search({"aut_group": self.label}, ["label", "tex_name"]) if rec['label'] != self.label]
-
-    # Subgroups up to conjugacy -- this one is no longer used
-    @lazy_attribute
-    def subgroup_layers(self):
-        # Need to update to account for possibility of not having all inclusions
-        subs = self.subgroups
-        topord = max(sub.subgroup_order for sub in subs.values())
-        top = [z.short_label for z in subs.values() if z.subgroup_order == topord][0]
-        layers = [[subs[top]]]
-        seen = set([top])
-        added_something = True  # prevent data error from causing infinite loop
-        # print "starting while"
-        while len(seen) < len(subs) and added_something:
-            layers.append([])
-            added_something = False
-            for H in layers[-2]:
-                # print H.counter
-                # print "contains", H.contains
-                for new in H.contains:
-                    if new not in seen:
-                        seen.add(new)
-                        added_something = True
-                        layers[-1].append(subs[new])
-        edges = []
-        for g in subs:
-            for h in subs[g].contains:
-                edges.append([h, g])
-        return [layers, edges]
-
-    # Subgroups up to conjugacy
-    @lazy_attribute
-    def subgroup_lattice(self):
-        # Need to update to account for possibility of not having all inclusions
-        if self.outer_equivalence:
-            raise RuntimeError("Subgroups not known up to conjugacy")
-        subs = self.subgroups
-        nodes = list(subs.values())
-        edges = []
-        for g in subs:
-            for h in subs[g].contains:
-                edges.append([h, g])
-        return [nodes, edges]
-
-    # Subgroups up to autjugacy
-    @lazy_attribute
-    def subgroup_lattice_aut(self):
-        # Need to update to account for possibility of not having all inclusions
-        # It would be better to add pages for subgroups up to automorphism with links to the conjugacy classes within
-        subs = self.subgroups
-        if self.outer_equivalence:
-            nodes = list(subs.values())
-            edges = []
-            for g in subs:
-                for h in subs[g].contains:
-                    edges.append([h, g])
-        else:
-            nodes = []
-            edges = set()  # avoid multiedges; this may not be the desired behavior
-            for g in subs.values():
-                if g.short_label.endswith(".a1"):
-                    nodes.append(g)
-                glabel = g.aut_label + ".a1"
-                for h in g.contains:
-                    hlabel = ".".join(h.split(".")[:-1]) + ".a1"
-                    edges.add((hlabel, glabel))
-            edges = [list(edge) for edge in edges]
-        return [nodes, edges]
 
     # Figuring out the subgroup count for an autjugacy class might not be stored
     # directly.  We do them all at once.  If we only computed up to aut

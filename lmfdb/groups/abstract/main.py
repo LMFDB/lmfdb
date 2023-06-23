@@ -148,7 +148,7 @@ def subgroup_label_is_valid(lab):
     elif abstract_subgroup_CFlabel_regex.fullmatch(lab):
         return abstract_subgroup_CFlabel_regex.fullmatch(lab)
     else:
-        return None 
+        return None
 
 
 def label_is_valid(lab):
@@ -759,13 +759,13 @@ def Qchar_table(label):
         learnmore=learnmore_list(),
     )
 
-def _subgroup_diagram(label, typ, title, **kwds):
+def _subgroup_diagram(label, typ, title, only):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    dojs, display_opts = diagram_js_string(gp, **kwds)
+    dojs, display_opts = diagram_js_string(gp, only=only)
     info = {"dojs": dojs, "type": typ}
     info.update(display_opts)
     return render_template(
@@ -779,24 +779,22 @@ def _subgroup_diagram(label, typ, title, **kwds):
 @abstract_page.route("/diagram/<label>")
 def subgroup_diagram(label):
     title = f"Diagram of subgroups up to conjugation for group {label}"
-    return _subgroup_diagram(label, "conj", title, conj=True, aut=False)
+    return _subgroup_diagram(label, "conj", only=("subgroup", ""))
 
 @abstract_page.route("/autdiagram/<label>")
 def subgroup_autdiagram(label):
     title = f"Diagram of subgroups up to automorphism for group {label}"
-    return _subgroup_diagram("aut", title, conj=False, aut=True)
+    return _subgroup_diagram(label, "aut", title, only=("subgroup", "aut"))
 
 @abstract_page.route("/normal_diagram/<label>")
 def normal_diagram(label):
     title = f"Diagram of normal subgroups up to conjugation for group {label}"
-    # TODO : FIXME
-    return _subgroup_diagram(label, "conj", title, conj=True, aut=False)
+    return _subgroup_diagram(label, "conj", title, only=("normal", ""))
 
 @abstract_page.route("/normal_autdiagram/<label>")
 def normal_autdiagram(label):
     title = f"Diagram of normal subgroups up to automorphism for group {label}"
-    # TODO : FIXME
-    return _subgroup_diagram(label, "aut", title, conj=False, aut=True)
+    return _subgroup_diagram(label, "aut", title, only=("normal", "aut"))
 
 def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
@@ -1122,7 +1120,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
         iorder += 1
     if aut and not gp.outer_equivalence:
         ilayer += 4
-        iorder += 1
+        iorder += 4
     ll = [
         [
             grp.subgroup,
@@ -1148,23 +1146,25 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     # We would normally make order_lookup a dictionary, but we're passing it to the horrible language known as javascript
     order_lookup = [[n, Omega[n], by_Omega[Omega[n]].index(n)] for n in orders]
     max_width = max(sum(order_ctr[n] for n in by_Omega[W]) for W in by_Omega)
-    display_opts["w"] = min(100 * max_width, 20000)
-    display_opts["h"] = 160 * len(by_Omega)
+    display_opts["w"] = max(display_opts["w"], min(100 * max_width, 20000))
+    display_opts["h"] = max(display_opts["h"], len(by_Omega))
 
-    return [ll, layers[1]], order_lookup, len(by_Omega)
+    return [ll, layers[1]], order_lookup
 
-def diagram_js_string(gp, conj, aut, normal):
-    glist = [[],[],[],[]]
-    display_opts = {}
-    if aut:
-        glist[1], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice_aut, display_opts, aut=True)
-    # We call conj second so that it overrides w and h, since it will be bigger
-    if conj and not gp.outer_equivalence:
-        glist[0], order_lookup, num_layers = diagram_js(gp, gp.subgroup_lattice, display_opts)
-    if not glist[0] and not glist[1]:
-        order_lookup = []
-        num_layers = 0
-    return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {num_layers});', display_opts
+def diagram_js_string(gp, only=None):
+    glist = [[], [], [], []]
+    order_lookup = [[], [], [], []]
+    display_opts = defaultdict(int)
+    orders = set()
+    for i, pair in enumerate([("subgroup", ""), ("subgroup", "aut"), ("normal", ""), ("normal", "aut")]):
+        sub_all, sub_aut = pair
+        if (only is None or only == pair) and gp.diagram_count(sub_all, sub_aut):
+            glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all=="normal"))
+
+    if any(glist):
+        return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {display_opts["h"]});', display_opts
+    else:
+        return "", display_opts
 
 # Writes individual pages
 def render_abstract_group(label, data=None):
@@ -1188,7 +1188,7 @@ def render_abstract_group(label, data=None):
     else:
         if gp.has_subgroups:
             if gp.subgroup_inclusions_known:
-                info["dojs"], display_opts = diagram_js_string(gp, conj=gp.diagram_ok, aut=True, normal=True)
+                info["dojs"], display_opts = diagram_js_string(gp)
                 info["wide"] = display_opts["w"] > 1600 # boolean
 
             info["max_sub_cnt"] = gp.max_sub_cnt
@@ -1611,7 +1611,7 @@ class GroupsSearchArray(SearchArray):
             ("permutation_degree", "permutation degree", ["permutation_degree", "counter"]),
             ("irrC_degree", r"$\C$-irrep degree", ["irrC_degree", "counter"]),
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
-            ]
+    ]
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
     jump_prompt = "Label or name"

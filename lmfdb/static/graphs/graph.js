@@ -246,23 +246,6 @@ class Renderer {
     for (var i = 0; i < this.graph.edges.length; i++) {
       this.drawEdge(this.graph.edges[i]);
     }
-    if(whoisshowing > 1) { // heights are by order
-      var orderlist = this.options.orderlist;
-      for (var i = 0; i<orderlist.length; i++) {
-        var coords = this.translate([this.graph.layoutMinX+150, -10*(i-1)-6.5]);
-        coords[0] -= this.graph.order_border_x;
-        //this.drawOrder(orderlist[i], coords);
-      }
-    }
-  }
-
-  drawOrder(ord, posn) {
-    this.ctx.moveTo(0,0);
-    this.ctx.strokeStyle = 'black';
-    this.ctx.fillStyle = 'black';
-    this.ctx.font = "16px Arial";
-    var textwidth = this.ctx.measureText(ord).width;
-    this.ctx.fillText(ord, posn[0]-textwidth, posn[1]);
   }
 
   drawNode(node) {
@@ -838,18 +821,18 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   // gdatalist is a list of [nodes, edges, orders]
   // Now make a list of graphs
   var glist = Array(2 * gdatalist.length);
-  var order_lookup = new Map();
-  var simpleorder = new Map();
-  for (var k=0; k < orderdata.length; k++) {
-    var trip = orderdata[k];
-    order_lookup.set(trip[0], [trip[1], trip[2]]);
-    simpleorder.set(trip[0], [k,0]);
-  }
-  var order_list = orderdata.map(function(z) {return (z[0]);});
+
   // The following is to make two graphs for each entry in gdatalist
   // which have two sets of coordinates
   // console.log(gdatalist[0]);
   for(var j=0; j<gdatalist.length; j++) {
+    var order_lookup = new Map();
+    var simpleorder = new Map();
+    for (var k=0; k < orderdata[j].length; k++) {
+      var trip = orderdata[j][k];
+      order_lookup.set(trip[0], [trip[1], trip[2]]);
+      simpleorder.set(trip[0], [k,0]);
+    }
     var nodes, edges;
     [nodes, edges] = gdatalist[j];
     glist[j] = new Graph(ambient);
@@ -879,7 +862,7 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   ourg = glist[glist.length-1];
   ambientlabel=ambient;
 
-  renderer = new Renderer(document.getElementById(canv),ourg, {'orderlist': order_list});
+  renderer = new Renderer(document.getElementById(canv),ourg, {});
 
   // Need to call Event.Handler here
   new EventHandler(renderer, {
@@ -899,11 +882,11 @@ function redraw() {
 
 function mytoggleheights(use_order_for_height) {
   var who_old = whoisshowing;
-  if (use_order_for_height && (whoisshowing < 2)) {
-    whoisshowing += 2;
+  if (use_order_for_height && (whoisshowing < 4)) {
+    whoisshowing += 4;
   } 
-  if ((! use_order_for_height) && whoisshowing > 1) {
-    whoisshowing -= 2;
+  if ((! use_order_for_height) && whoisshowing > 3) {
+    whoisshowing -= 4;
   }
   if(who_old != whoisshowing) {
     glist[whoisshowing].highlit = null;
