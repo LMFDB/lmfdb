@@ -66,16 +66,15 @@
     }
     $('div.'+style).show();
     if (style.endsWith("diagram")) {
+      whoisshowing = 0;
       if (style.endsWith("autdiagram")) {
-        whoisshowing = 1;
-      } else {
-        whoisshowing = 0;
+        whoisshowing += 1;
       }
       if (heightstyle=='order') {
-        whoisshowing += 2;
+        whoisshowing += 4;
       }
       if (style.startsWith("normal")) {
-        whoisshowing += 4;
+        whoisshowing += 2;
       }
       sdiagram.newgraph(glist[whoisshowing]);
       sdiagram.setSize();
@@ -84,8 +83,6 @@
     for (var i = 0; i < styles.length; i++) {
       $('button.' + styles[i]).show();
     }
-    button_on(style);
-    other_buttons_off(style);
   }
   function toggleheight()
   {
