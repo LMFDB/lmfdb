@@ -96,11 +96,8 @@ def ALdim_table(al_dims, level, weight):
     for i, dim in enumerate(al_dims):
         if dim == 0:
             continue
-        print(i)
         b = list(reversed(ZZ(i).bits()))
-        print(b)
         b = [0 for j in range(num_primes-len(b))] + b
-        print(b)
         row = list(map(lambda x:r'<td>\(%s\)</td>'%sign_char(x),b))
         sign = sum(b) % 2
         if num_primes > 1:
