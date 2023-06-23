@@ -1066,31 +1066,30 @@ class WebAbstractGroup(WebObj):
             return n
         if sub_all == "subgroup":
             if sub_aut:
-                if self.subgroup_index_bound == 0:
-                    return impose_limit(self.number_subgroup_autclasses)
-                subs = [H.aut_label for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
-                if any(aut_label is None for aut_label in subs):
-                    # We don't know subgroups up to automorphism
+                subs = [H for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
+                if any(H.aut_label is None or H.diagramx is None for H in subs):
+                    # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
                 return impose_limit(len(set(subs)))
             else:
                 if self.outer_equivalence:
                     # We don't know subgroups up to conjugacy
                     return 0
-                if self.subgroup_index_bound == 0:
-                    return impose_limit(self.number_subgroup_classes)
                 subs = [H for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
+                if any(H.diagramx is None for H in subs):
+                    # No layout computed
+                    return 0
                 return impose_limit(len(subs))
         else:
             subs = [H for H in self.subgroups.values() if H.normal]
             if sub_aut:
-                if any(H.aut_label is None for H in subs):
-                    # We don't know subgroups up to automorphism
+                if any(H.aut_label is None or H.diagramx is None for H in subs):
+                    # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
                 return impose_limit(len(set(H.aut_label for H in subs)))
             else:
-                if self.outer_equivalence:
-                    # We don't know subgroups up to conjugacy
+                if self.outer_equivalence or any(H.diagramx is None for H in subs):
+                    # We don't know subgroups up to conjugacy or can't lay out subgroups
                     return 0
                 return impose_limit(len(subs))
 
