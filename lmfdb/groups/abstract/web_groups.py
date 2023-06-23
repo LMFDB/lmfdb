@@ -850,7 +850,7 @@ class WebAbstractGroup(WebObj):
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
             ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ "> """ + str(self.number_characteristic_subgroups) + """ characteristic</a>). """
         else:    
-            ret_str = ret_str + " all characteristic. "
+            ret_str = ret_str + ", all characteristic. "
         return ret_str
     
     @lazy_attribute
