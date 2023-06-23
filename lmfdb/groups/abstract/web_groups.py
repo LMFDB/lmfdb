@@ -1126,6 +1126,7 @@ class WebAbstractGroup(WebObj):
 
     def diagram_classes(self):
         # Which combinations of subgroup/normal and conj/aut have a diagram
+        # Note that it's possible that the only diagrams "shown" will be for cases where there's a link to a fullpage version.
         classes = []
         for sub_all in ["subgroup", "normal"]:
             for sub_aut in ["", "aut"]:

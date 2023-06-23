@@ -471,20 +471,22 @@
 
 {# now the canvas #}
 
-<div class="{{gp.diagram_classes()}}">
+{% if gp.diagram_classes() %}
+  <div class="{{gp.diagram_classes()}}">
 
-  {% if info.wide %}
-    {{ gp.canvas(1000, 300) | safe}}
-    {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
-    {{ gp.sub_info_area() | safe }}
-  {% else %} {# not wide #}
-    <table><tr>
-      <td>{{gp.canvas(500, 300) | safe}}</td>
-      <td valign="top">{{gp.sub_info_area() | safe}}</td>
-    </tr></table>
-    {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
-  {% endif %}
-</div>
+    {% if info.wide %}
+      {{ gp.canvas(1000, 300) | safe}}
+      {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
+      {{ gp.sub_info_area() | safe }}
+    {% else %} {# not wide #}
+      <table><tr>
+        <td>{{gp.canvas(500, 300) | safe}}</td>
+        <td valign="top">{{gp.sub_info_area() | safe}}</td>
+      </tr></table>
+      {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
+    {% endif %}
+  </div>
+{% endif %}
 
 </div>
 
