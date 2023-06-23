@@ -1004,7 +1004,7 @@ class WebAbstractGroup(WebObj):
     def _subgroup_summary(self, in_profile):
         if self.subgroup_index_bound != 0:
             return f"All subgroup of index up to {self.subgroup_index_bound} are shown."
-            # Todo: add more verbiage here about Sylow subgroups, maximal subgroups and normal subgroups
+            # TODO: add more verbiage here about Sylow subgroups, maximal subgroups and normal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
         return ""
 
     def get_profile(self, sub_all, sub_aut):
@@ -1029,29 +1029,47 @@ class WebAbstractGroup(WebObj):
         return self._display_profile(profile, bool(sub_aut)), desc, summary
 
     @cached_method
-    def diagram_count(self, sub_all, sub_aut):
+    def diagram_count(self, sub_all, sub_aut, limit=0):
         # The number of subgroups shown in the diagram of this type; sub_all can be "subgroup" or "normal" and sub_aut can be "aut" or ""
+        # If limit is nonzero, then a count of 0 is returned (indicating that the diagram should not be shown) when there would be more nodes than the limit.
         if not self.subgroup_inclusions_known:
             return 0
+        def impose_limit(n):
+            print(f"Imposing limit {limit} on {n} for {sub_all}_{sub_aut}")
+            if limit != 0 and n > limit:
+                return 0
+            return n
         if sub_all == "subgroup":
             if sub_aut:
                 if self.subgroup_index_bound == 0:
-                    return self.number_subgroup_autclasses
+                    return impose_limit(self.number_subgroup_autclasses)
                 subs = [H.aut_label for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
-                return len(set(subs))
+                if any(aut_label is None for aut_label in subs):
+                    # We don't know subgroups up to automorphism
+                    return 0
+                return impose_limit(len(set(subs)))
             else:
+                if self.outer_equivalence:
+                    # We don't know subgroups up to conjugacy
+                    return 0
                 if self.subgroup_index_bound == 0:
-                    return self.number_subgroup_classes
+                    return impose_limit(self.number_subgroup_classes)
                 subs = [H for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
-                return len(subs)
+                return impose_limit(len(subs))
         else:
             subs = [H for H in self.subgroups.values() if H.normal]
             if sub_aut:
-                return len(set(H.aut_label for H in subs))
+                if any(H.aut_label is None for H in subs):
+                    # We don't know subgroups up to automorphism
+                    return 0
+                return impose_limit(len(set(H.aut_label for H in subs)))
             else:
-                return len(subs)
+                if self.outer_equivalence:
+                    # We don't know subgroups up to conjugacy
+                    return 0
+                return impose_limit(len(subs))
 
-    def get_diagram_info(self, sub_all, sub_aut, override_count=False):
+    def get_diagram_info(self, sub_all, sub_aut, limit=0):
         summary = ""
         if sub_all == "subgroup":
             if sub_aut:
@@ -1072,10 +1090,13 @@ class WebAbstractGroup(WebObj):
         elif self.outer_equivalence and not sub_aut:
             summary = "No diagram available: subgroups only stored up to automorphism"
         else:
-            count = self.diagram_count(sub_all, sub_aut)
-            if not override_count and count >= 100:
-                url = url_for(f".{sub_all}_{sub_aut}diagram", label=self.label)
-                summary = f'There are too many subgroups to show.\n<a href="{url}">See a full page version of the diagram</a>.\n'
+            count = self.diagram_count(sub_all, sub_aut, limit=limit)
+            if count == 0:
+                if self.diagram_count(sub_all, sub_aut, limit=0) > 0:
+                    url = url_for(f".{sub_all}_{sub_aut}diagram", label=self.label)
+                    summary = f'There are too many subgroups to show.\n<a href="{url}">See a full page version of the diagram</a>.\n'
+                else:
+                    summary = "No diagram available"
         return desc, summary, count
 
     def diagram_classes(self):

@@ -1156,9 +1156,11 @@ def diagram_js_string(gp, only=None):
     order_lookup = [[], [], [], []]
     display_opts = defaultdict(int)
     orders = set()
+    limit = (100 if only is None else 0)
     for i, pair in enumerate([("subgroup", ""), ("subgroup", "aut"), ("normal", ""), ("normal", "aut")]):
         sub_all, sub_aut = pair
-        if (only is None or only == pair) and gp.diagram_count(sub_all, sub_aut):
+        if (only is None or only == pair) and gp.diagram_count(sub_all, sub_aut, limit=limit):
+            print("diagram_js_string", limit)
             glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all=="normal"))
 
     if any(glist):

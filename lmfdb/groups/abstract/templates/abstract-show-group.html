@@ -338,8 +338,8 @@
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
 
      {% if gp.commutator_length %}
-      <td>${{gp.commutator_count}}$</td>                                                            
-    {% else %} <td>not computed</td> {% endif %} 
+      <td>${{gp.commutator_count}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
   </tr>
   {% endif %}
 </table>
@@ -461,7 +461,7 @@
 
 {% for sub_all in ["subgroup", "normal"] %}
   {% for sub_aut in ["", "aut"] %}
-    {% set sub_summary, sub_desc, sub_cnt = gp.get_diagram_info(sub_all, sub_aut) %}
+    {% set sub_desc, sub_summary, sub_cnt = gp.get_diagram_info(sub_all, sub_aut, limit=100) %}
     <div class="{{sub_all}}_{{sub_aut}}diagram" style="display:none">
       <h4>{{sub_desc}}</h4>
       {{ sub_summary | safe }}
