@@ -31,7 +31,7 @@ from lmfdb.siegel_modular_forms.web_newform import (
     quad_field_knowl, cyc_display, field_display_gen)
 from lmfdb.siegel_modular_forms import smf
 from lmfdb.siegel_modular_forms.web_space import (
-    family_str_to_char, family_char_to_str,
+    aut_rep_type_sort_key, family_str_to_char, family_char_to_str,
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
@@ -401,6 +401,7 @@ def render_space_webpage(label):
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
     set_info_funcs(info)
+    print("space.newforms=", space.newforms)
     return render_template("smf_space.html",
                            info=info,
                            space=space,
@@ -978,12 +979,14 @@ newform_columns = SearchColumns([
     ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
                  lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
 #    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
-   MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
-                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
-                      default=True)],
-#    ],
+      ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Aut. Type", lambda x : fr'${x}$' , align="center", default=True),
+    ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Cusp", lambda x : x not in ['F', 'K'], align="center", default=True),
+    MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
+                     lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
+                      default=True)
+],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization'],
+    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization', 'aut_rep_type'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -998,9 +1001,12 @@ newform_columns = SearchColumns([
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list)
+
 def newform_search(info, query):
+    query['__sort__'] = ['aut_rep_type']
     newform_parse(info, query)
     set_info_funcs(info)
+    print("info=",info)
 
 def trace_postprocess(res, info, query, spaces=False):
     if res:
@@ -1436,7 +1442,7 @@ def projective_image_sort_key(im_type):
         return 10000
     else:
         return int(im_type[1:])
-
+    
 def self_twist_type_formatter(x):
     if x == 0:
         return 'neither'
@@ -1518,7 +1524,7 @@ class SMF_stats(StatsDisplay):
     #    reverses = {'cm_discs': True}
     reverses = {}
     # sort_keys = {'projective_image': projective_image_sort_key}
-    sort_keys = {}
+    sort_keys = { 'aut_rep_type' : aut_rep_type_sort_key }
     knowls = {'level': 'mf.siegel.level',
               'weight': 'mf.siegel.weight_k_j',
               'degree' : 'mf.siegel.degree',
@@ -1631,6 +1637,7 @@ class SMFSearchArray(SearchArray):
     sort_knowl = 'smf.sort_order'
     _sort = [
 #        ('', 'analytic conductor', ['analytic_conductor', 'level']),
+        ('aut_rep_type', 'aut_rep_type', ['aut_rep_type', 'degree']),
         ('degree', 'degree', ['degree', 'family']),
         ('family', 'family', ['family', 'level']),
         ('level', 'level', ['level', 'weight']),

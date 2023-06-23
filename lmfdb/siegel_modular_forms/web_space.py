@@ -9,7 +9,9 @@ from lmfdb.utils import (
     display_knowl, web_latex, coeff_to_power_series,
     web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
+
 import re
+
 NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
@@ -28,6 +30,20 @@ FAMILY_DICT_STR = {
     'S' : 'Siegel',
     'P' : 'principal'
 }
+
+def aut_rep_type_sort_key(rep_type):
+    if rep_type == 'G':
+        return -4
+    elif rep_type == 'Y':
+        return -3
+    elif rep_type == 'P':
+        return -2
+    elif rep_type == 'K':
+        return -1
+    elif rep_type == 'F':
+        return 0
+    else:
+        return int(rep_type[1:])
 
 def family_str_to_char(str):
     return FAMILY_DICT[str]
@@ -269,6 +285,7 @@ class WebNewformSpace():
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
+
         self.factored_level = web_latex_factored_integer(self.level, equals=True)
 #        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
@@ -278,6 +295,7 @@ class WebNewformSpace():
 #        self.char_conrey = self.conrey_indexes[0]
 #        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.smf_newforms.search({'space_label':self.label}, projection=2))
+        self.newforms = sorted(self.newforms, key=lambda f : aut_rep_type_sort_key(f['aut_rep_type']))
 #        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
 #        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
@@ -437,6 +455,7 @@ class WebGamma1Space():
         if data is None:
             raise ValueError("Space not in database")
         self.__dict__.update(data)
+
         self.weight_parity = -1 if (self.weight % 2) == 1 else 1
         self.factored_level = web_latex_factored_integer(self.level, equals=True)
         self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
