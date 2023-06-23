@@ -828,6 +828,31 @@ class WebAbstractGroup(WebObj):
     def has_subgroups(self):
         return self.all_subgroups_known is not None
 
+
+    @lazy_attribute
+    def subgp_paragraph(self):
+        if self.number_subgroups == None:
+            if self.number_normal_subgroups == None:
+                return " "
+            elif self.number_characteristic_subgroups == None:
+                return  """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
+            else:
+                ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
+                if self.number_characteristic_subgroups < self.number_normal_subgroups:
+                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>)."
+                else:
+                    ret_str=ret_str+ " all characteristic. "
+                return ret_str
+        elif self.number_normal_subgroups < self.number_subgroups:        
+            ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a> """
+        else:
+            ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal""" 
+        if self.number_characteristic_subgroups < self.number_normal_subgroups:
+            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ "> """ + str(self.number_characteristic_subgroups) + """ characteristic</a>). """
+        else:    
+            ret_str = ret_str + ", all characteristic. "
+        return ret_str
+    
     @lazy_attribute
     def subgroups(self):
         if not self.has_subgroups:
@@ -1003,7 +1028,7 @@ class WebAbstractGroup(WebObj):
     @cached_method
     def _subgroup_summary(self, in_profile):
         if self.subgroup_index_bound != 0:
-            return f"All subgroup of index up to {self.subgroup_index_bound} are shown."
+            return f"All subgroup of index up to {self.subgroup_index_bound} are shown. <br>"
             # Todo: add more verbiage here about Sylow subgroups, maximal subgroups and normal subgroups
         return ""
 
