@@ -1288,30 +1288,34 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def display_direct_product(self):
+        # assuming this only is called when direct_product is True (else statement with if is false)
         # Need to pick an ordering
         # return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
-        C = dict(self.direct_factorization)
-        # We can use the list of subgroups to get the latex
-        latex_lookup = {}
-        sort_key = {}
-        for sub in self.subgroups.values():
-            slab = sub.subgroup
-            if slab in C:
-                latex_lookup[slab] = sub.subgroup_tex_parened
-                sort_key[slab] = (
-                    not sub.abelian,
-                    sub.subgroup_order.is_prime_power(get_data=True)[0]
-                    if sub.abelian
-                    else sub.subgroup_order,
-                    sub.subgroup_order,
-                )
-                if len(latex_lookup) == len(C):
-                    break
-        df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
-        s = r" \times ".join(
-            "%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "")
-            for (label, e) in df
-        )
+        if self.direct_factorization == None:
+            s="\\text{The group is a direct product of some of its subgroups but those subgroups have not been computed.}"
+        else:    
+            C = dict(self.direct_factorization)
+            # We can use the list of subgroups to get the latex
+            latex_lookup = {}
+            sort_key = {}
+            for sub in self.subgroups.values():
+                slab = sub.subgroup
+                if slab in C:
+                    latex_lookup[slab] = sub.subgroup_tex_parened
+                    sort_key[slab] = (
+                        not sub.abelian,
+                        sub.subgroup_order.is_prime_power(get_data=True)[0]
+                        if sub.abelian
+                        else sub.subgroup_order,
+                        sub.subgroup_order,
+                    )
+                    if len(latex_lookup) == len(C):
+                        break
+            df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
+            s = r" \times ".join(
+                "%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "")
+                for (label, e) in df
+            )
         return s
 
     @lazy_attribute

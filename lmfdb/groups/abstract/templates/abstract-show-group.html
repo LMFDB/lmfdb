@@ -362,7 +362,7 @@
 {% else %}
 
 
-{% if gp.has_subgroups %}
+{% if gp.has_subgroups and gp.number_subgroups != None %}
 
 
 <p>There are {% if gp.number_normal_subgroups < gp.number_subgroups %}{{gp.number_subgroups}} subgroups in <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroup_classes}} conjugacy classes</a>, <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, normal='yes')}}">{{ gp.number_normal_subgroups }} normal</a>{% else %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroups}} subgroups</a>, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, characteristic='yes')}}">{{ gp.number_characteristic_subgroups }} characteristic</a>{% else %}all characteristic{% endif %}).
@@ -593,7 +593,7 @@
 
 {% endif %}
 {% else %}
-  <p> Subgroup data has not been computed </p>
+  <p> Subgroup data has not been computed. </p>
   {% endif %}
 
 <h2> Character theory </h2>
