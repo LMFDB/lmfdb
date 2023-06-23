@@ -6,7 +6,7 @@
 <h2> Subgroup ($H$) information</h2>
 <p>
   <table>
-    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td></tr>
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.label)}}">${{seq.subgroup_tex}}$</a></td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.subgroup_order)}} </td></tr>
     <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.sub.exponent)}} </td></tr>
@@ -158,10 +158,16 @@
     {% endif %}
     {% if seq.outer_equivalence %}
       <tr><td>Number of conjugacy classes in this autjugacy class</td><td>${{seq.conjugacy_class_count}}$</td></tr>
-    {% endif %}
+      {% endif %}
+      {% if seq.mobius_sub != None %}
     <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td>${{seq.mobius_sub}}$</td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td> not computed </td></tr>
+    {% endif %}
     {% if seq.projective_image is not none %}
     <tr><td>{{KNOWL('group.subgroup.projective_image', 'Projective image')}}</td><td><a href="{{url_for('.by_label', label=seq.projective_image)}}">${{seq.proj_img.tex_name}}$</a></td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.subgroup.projective_image', 'Projective image')}}</td><td> not computed</td></tr>
     {% endif %}
   </table>
 </p>
