@@ -1031,6 +1031,8 @@ class WebAbstractGroup(WebObj):
     @cached_method
     def diagram_count(self, sub_all, sub_aut):
         # The number of subgroups shown in the diagram of this type; sub_all can be "subgroup" or "normal" and sub_aut can be "aut" or ""
+        if not self.subgroup_inclusions_known:
+            return 0
         if sub_all == "subgroup":
             if sub_aut:
                 if self.subgroup_index_bound == 0:
