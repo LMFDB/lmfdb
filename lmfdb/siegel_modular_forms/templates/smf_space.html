@@ -43,9 +43,14 @@
 
 <p> There are no modular forms of weight \( (k,j) = {{ space.weight }} \) and character {{ space.char_orbit_link | safe }} since \( j \) is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
 
-{% else %}
+{% elif space.dim_grid.has_eis_dim() %}
 
 <p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
+
+{% else %}
+
+<p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.cusp_latex()}}\).</p>
+
 
 <table class="dimgrid">
   <thead>
