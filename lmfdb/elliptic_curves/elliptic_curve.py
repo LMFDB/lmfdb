@@ -1001,10 +1001,14 @@ def modm_reduce():
     data = db.ec_curvedata.lookup(label, ["adelic_level", "modm_images"])
     galois_image = db.ec_galrep.lucky({"lmfdb_label":label, "prime":0}, "adelic_gens")
     galois_level = data['adelic_level']
+
+    if data == None or galois_image == None:
+        return "\\text{Invalid curve or adelic image not computed}"
     try:
         new_mod = int(request.args.get('m'))
     except ValueError:
         return "\\text{Invalid input. Please enter a positive integer}"
+    
     ans = gl2_lift(galois_image, galois_level, new_mod)
     if ans == []:
         return "\\text{trivial group}"

@@ -402,12 +402,23 @@ function modm_reduction_callback(res) {
   $('#modm_reduction').html(katex.renderToString(latex_gens));
   // gens = {{data.data['adelic_data']['adelic_gens']}}<br><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
   // GL(2,Integers({{data.data['adelic_data']['adelic_image'].split('.',1)[0]}})).subgroup(gens)<br><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
-  var line_break = "<br><div style=\"margin: 0; padding: 0; height: 0;\">&nbsp;</div>";
+  var line_break = '<br><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>';
 
   var sage_code = `gens = ${gens}${line_break}GL(2,Integers(${level})).subgroup(gens)${line_break}`;
   $('#sage_modm_image').html(sage_code);
-  var magma_code = `Gens := ${gens};${line_break}sub&ltGL(2,Integers(${level}))|Gens&gt&semi${line_break}`;
+  var sage_modm = $('#sage_modm_image')[0];
+  sage_modm.style.display = '';
+  if (! sage_modm.classList.contains("sage")){
+    ["sage", "nodisplay", "code", "codebox"].forEach(item => sage_modm.classList(item));
+  }
+
+  var magma_code = `Gens := ${gens};${line_break}sub&ltGL(2,Integers(${level}))|Gens&gt&semi;${line_break}`;
   $('#magma_modm_image').html(magma_code);
+  var magma_modm = $('#sage_modm_image')[0];
+  magma_modm.style.display = '';
+  if (! magma_modm.classList.contains("magma")){
+    ["magma", "nodisplay", "code", "codebox"].forEach(item => magma_modm.classList(item));
+  }
 }
 
 function js_review_knowl(kid) {
