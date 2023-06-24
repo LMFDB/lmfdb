@@ -1066,7 +1066,7 @@ class WebAbstractGroup(WebObj):
             return n
         if sub_all == "subgroup":
             if sub_aut:
-                subs = [H for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
+                subs = [H for H in self.subgroups.values() if (H.quotient_order <= self.subgroup_index_bound) or (self.subgroup_index_bound==0)]
                 if any(H.aut_label is None or H.diagramx is None for H in subs):
                     # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
@@ -1075,7 +1075,7 @@ class WebAbstractGroup(WebObj):
                 if self.outer_equivalence:
                     # We don't know subgroups up to conjugacy
                     return 0
-                subs = [H for H in self.subgroups.values() if H.quotient_order <= self.subgroup_index_bound]
+                subs = [H for H in self.subgroups.values() if (H.quotient_order <= self.subgroup_index_bound) or (self.subgroup_index_bound==0)]
                 if any(H.diagramx is None for H in subs):
                     # No layout computed
                     return 0
