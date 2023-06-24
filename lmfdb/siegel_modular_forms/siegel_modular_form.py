@@ -1689,6 +1689,7 @@ class SMFSearchArray(SearchArray):
         family = SelectBox(
             name='family',
             label='Family',
+            knowl='mf.siegel.family',
             options=[('paramodular', 'paramodular'),
                      ('Siegel', 'Siegel'),
                      ('principal', 'principal')],
