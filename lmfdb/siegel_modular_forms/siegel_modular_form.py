@@ -967,7 +967,7 @@ newform_columns = SearchColumns([
 #    MathCol("inner_twist_count", "smf.inner_twist_count", "Inner twists"),
 #    MathCol("analytic_rank", "smf.analytic_rank", "Rank*"),
     ColGroup("traces", "mf.siegel.trace_form", "Traces",
-             [_trace_col(i) for i in range(4)],
+             [_trace_col(i) for i in range(6)],
              default=True),
 #    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
 #    ColGroup("atkin_lehner", "smf.atkin-lehner", "A-L signs",

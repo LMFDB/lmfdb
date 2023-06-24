@@ -16,7 +16,7 @@ class SMF_download(Downloader):
 
     def _get_hecke_nf(self, label):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
-        data = db.mf_hecke_nf.lucky({'label':label}, proj)
+        data = db.smf_hecke_nf.lucky({'label':label}, proj)
         if not data:
             return None
         # Make up for db_backend currently deleting Nones
@@ -27,12 +27,12 @@ class SMF_download(Downloader):
         return data
 
     def _get_traces(self, label):
-        if label.count('.') == 1:
-            traces = db.mf_gamma1.lookup(label, projection=['traces'])
-        elif label.count('.') == 2:
-            traces = db.mf_newspaces.lookup(label, projection=['traces'])
-        elif label.count('.') == 3:
-            traces = db.smf_samples.lookup(label, projection=['traces'])
+        if label.count('.') == 4:
+            traces = db.smf_gamma1.lookup(label, projection=['traces'])
+        elif label.count('.') == 5:
+            traces = db.smf_newspaces.lookup(label, projection=['traces'])
+        elif label.count('.') == 6:
+            traces = db.smf_newforms.lookup(label, projection=['traces'])
         else:
             return abort(404, "Invalid label: %s"%label)
         if traces is None:
@@ -214,17 +214,17 @@ class SMF_download(Downloader):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
         if spaces:
-            count = db.mf_newspaces.count(query)
+            count = db.smf_newspaces.count(query)
         else:
-            count = db.smf_samples.count(query)
+            count = db.smf_newforms.count(query)
         limit = 1000
         if count > limit:
             flash_error("We limit downloads of traces to %s forms", limit)
             return redirect(url_for('.index'))
         if spaces:
-            res = list(db.mf_newspaces.search(query, projection=['label', 'traces']))
+            res = list(db.smf_newspaces.search(query, projection=['label', 'traces']))
         else:
-            res = list(db.smf_samples.search(query, projection=['label', 'traces']))
+            res = list(db.smf_newforms.search(query, projection=['label', 'traces']))
         s = ""
         c = self.comment_prefix[lang]
         s += c + ' Query "%s" returned %d %s.\n\n' % (str(info.get('query')), len(res), 'spaces' if spaces else 'forms')
@@ -236,7 +236,7 @@ class SMF_download(Downloader):
         s += 'traces ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
         s += ',\n'.join('[' + ', '.join(str(t) for t in rec['traces']) for rec in res)
         s += self.start_and_end[lang][1]
-        return self._wrap(s, 'smf_samples_traces', lang=lang)
+        return self._wrap(s, 'smf_newforms_traces', lang=lang)
 
     def download_multiple_space_traces(self, info):
         return self.download_multiple_traces(info, spaces=True)
@@ -279,7 +279,7 @@ class SMF_download(Downloader):
 #        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
     def download_embedding(self, label, lang='text'):
-        data = db.mf_hecke_cc.lucky({'label':label},
+        data = db.smf_hecke_cc.lucky({'label':label},
                                     ['label',
                                      'embedding_root_real',
                                      'embedding_root_imag',
@@ -297,7 +297,7 @@ class SMF_download(Downloader):
                           title='Coefficient data for embedded newform %s,'%label)
 
     def download_newform(self, label, lang='text'):
-        data = db.smf_samples.lookup(label)
+        data = db.smf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
@@ -310,7 +310,7 @@ class SMF_download(Downloader):
                           title='Stored data for newform %s,'%(label))
 
     def download_newspace(self, label, lang='text'):
-        data = db.mf_newspaces.lookup(label)
+        data = db.smf_newspaces.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
         space = WebNewformSpace(data)
@@ -343,7 +343,7 @@ class SMF_download(Downloader):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
         proj = ['label', 'analytic_conductor', 'conrey_indexes', 'char_order']
-        spaces = list(db.mf_newspaces.search(query, projection=proj))
+        spaces = list(db.smf_newspaces.search(query, projection=proj))
         s = ""
         c = self.comment_prefix[lang]
         s += c + ' Query "%s" returned %d spaces.\n\n' % (str(info.get('query')), len(spaces))
@@ -353,7 +353,7 @@ class SMF_download(Downloader):
         s += 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
         s += ',\n'.join('[' + ', '.join(str(spc[col]) for col in proj) + ']' for spc in spaces)
         s += self.start_and_end[lang][1]
-        return self._wrap(s, 'mf_newspaces', lang=lang)
+        return self._wrap(s, 'smf_newspaces', lang=lang)
 
 
 
@@ -422,7 +422,7 @@ class SMF_download(Downloader):
 
     def _magma_MakeCharacters(self, newform, hecke_nf):
         """
-            Given a WebNewform r from smf_samples containing columns
+            Given a WebNewform r from smf_newforms containing columns
             level,weight,char_orbit_label,char_values
             returns a string containing magma code to create the character
             for r in magma using the default generators.
@@ -536,7 +536,7 @@ class SMF_download(Downloader):
 
     def _magma_MakeNewformModSym(self, newform, hecke_nf ):
         """
-        Given a WebNewform r from smf_samples containing columns::
+        Given a WebNewform r from smf_newforms containing columns::
 
             label,level,weight,char_orbit_label,char_values,cutters
 
@@ -568,16 +568,16 @@ class SMF_download(Downloader):
 
     def _magma_MakeNewformModFrm(self, newform, hecke_nf):
         """
-        Given a WebNewform r from smf_samples containing columns::
+        Given a WebNewform r from smf_newforms containing columns::
 
             label,level,weight,char_orbit_label,char_values
 
-        and h a row from mf_hecke_nf containing columns::
+        and h a row from smf_hecke_nf containing columns::
 
             hecke_ring_numerators,hecke_ring_denominators,
             hecke_ring_cyclotomic_generator
 
-        and v a list whose nth entry is the entry an from the table mf_hecke_nf
+        and v a list whose nth entry is the entry an from the table smf_hecke_nf
         (consisting of a list of integers giving the Hecke eigenvalue
         as a linear combination of the basis specified in the orbit table)
         so in particular v[0] = 0 and v[1] = 1,
@@ -621,7 +621,7 @@ class SMF_download(Downloader):
 
 
     def download_newform_to_magma(self, label, lang='magma'):
-        data = db.smf_samples.lookup(label)
+        data = db.smf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
         newform = WebNewform(data)
@@ -645,7 +645,7 @@ class SMF_download(Downloader):
 
 
             # The Sturm bound is not enough precision; see Github issue 4354
-            # prec = db.mf_newspaces.lucky({'label': newform.space_label}, 'sturm_bound')
+            # prec = db.smf_newspaces.lucky({'label': newform.space_label}, 'sturm_bound')
             out += self._magma_MakeNewformModFrm(newform, hecke_nf) + newlines
         if newform.hecke_cutters is not None and newform.weight > 1:
             out += self._magma_MakeNewformModSym(newform, hecke_nf)

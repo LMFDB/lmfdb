@@ -356,8 +356,10 @@ class WebNewformSpace():
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
 #            self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of Siegel modular forms of level %s and weight %s"%(self.level, tuple(self.weight))
-        gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d.%d' % (self.level, self.weight[0], self.weight[1])
-        self.friends = [('Newspace %d.%d.%d' % (self.level, self.weight[0], self.weight[1]), gamma1_link)]
+        # For now, we do not yet have spaces with character
+#        gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d.%d' % (self.level, self.weight[0], self.weight[1])
+#        self.friends = [('Newspace %d.%d.%d' % (self.level, self.weight[0], self.weight[1]), gamma1_link)]
+        self.friends = []
 
     @staticmethod
     def by_label(label):
