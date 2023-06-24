@@ -137,10 +137,10 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Error: No Galois orbit of Dirichlet characters with' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
-        assert r'labels have not been computed for this modulus' in W.get_data(as_text=True)
+        assert r'10001.i' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
-        assert 'Error: Galois orbits have only been computed for modulus up to 10,000' in W.get_data(as_text=True)
+        assert 'Error: Galois orbits have only been computed for modulus up to 100,000' in W.get_data(as_text=True)
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
@@ -237,6 +237,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_underlying_data(self):
         W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
-        assert 'is_minimal' in W and 'values_gens' in W
+        assert 'is_minimal' in W and 'last_label' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W

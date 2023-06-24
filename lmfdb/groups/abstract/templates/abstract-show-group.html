@@ -339,33 +339,33 @@
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
-    <td>$G/Z \simeq {{gp.central_quot()}}$</td>
+    <td>$G/Z \simeq$ {{gp.subgroups[gp.cent()].display_quotient()|safe}}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span>
  </td>
-    <td> $G/G' \simeq {{gp.abelian_quot()}}$ </td>
+    <td> $G/G' \simeq$ {{gp.subgroups[gp.comm()].display_quotient(ab_invs=gp.smith_abelian_invariants)|safe}}</td>
   </tr>
     <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
-    <td>$G/\Phi \simeq {{gp.frattini_quot()}}$ </td>
+    <td>$G/\Phi \simeq$ {{gp.subgroups[gp.fratt()].display_quotient()|safe}} </td>
   </tr>
  <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
-    <td>$G/\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
+    <td>$G/\operatorname{Fit} \simeq$ {{gp.subgroups[gp.fitting].display_quotient()|safe}}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
-    <td>$G/R \simeq {{gp.subgroups[gp.radical].quotient_tex}}$</td>
+    <td>$G/R \simeq$ {{gp.subgroups[gp.radical].display_quotient()|safe}}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
-    <td>$G/\operatorname{soc} \simeq {{gp.subgroups[gp.socle].quotient_tex}}$</td>
+    <td>$G/\operatorname{soc} \simeq$ {{gp.subgroups[gp.socle].display_quotient()|safe}}</td>
   </tr>
   {% if gp.pgroup == 0 %}
     {% for p, subgp in gp.sylow_subgroups() %}

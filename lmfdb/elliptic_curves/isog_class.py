@@ -171,8 +171,8 @@ class ECisog_class():
         if ncurves>1:
             self.properties += [('Graph', ''),(None, self.graph_link)]
 
-        self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.iso_label, limit=1000)),
-                         ('All stored data to text', url_for(".download_EC_all", label=self.iso_label))]
+        self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
+                         ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                       (r'$\Q$', url_for(".rational_elliptic_curves")),
