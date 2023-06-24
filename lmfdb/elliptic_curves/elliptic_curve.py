@@ -998,16 +998,28 @@ def tor_struct_search_Q(prefill="any"):
 @ec_page.route("/adelic_image_modm_reduce")
 def modm_reduce():
     label = request.args.get('label')
-    data = WebEC.by_label(label)
-    # currently no error handling
-    galois_image = data.data['adelic_data']['adelic_gens']
-    galois_level = data.adelic_level
-    new_mod = int(request.args.get('m'))
+    data = db.ec_curvedata.lookup(label, ["adelic_level", "modm_images"])
+    galois_image = db.ec_galrep.lucky({"lmfdb_label":label, "prime":0}, "adelic_gens")
+    cur_lang = request.args.get('cur_lang')
+
+    if data == None or galois_image == None:
+        return "\\text{Invalid curve or adelic image not computed}"
+    try:
+        new_mod = int(request.args.get('m'))
+        if new_mod <= 0:
+            raise ValueError
+    except ValueError:
+        return "\\text{Invalid input, please enter a positive integer}"
+
+    galois_level = data['adelic_level']
+
     ans = gl2_lift(galois_image, galois_level, new_mod)
     if ans == []:
-        return "\\text{trivial group}"
+        result = "\\text{trivial group}"
     else:
-        return ",".join([str(latex(dispZmat_from_list(z,2))) for z in ans]) + '.'
+        result = ",".join([str(latex(dispZmat_from_list(z,2))) for z in ans])
+    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang
+    return result
 
 def gl1_gen(M):
     # Returns a list of generators of gl1 mod M
