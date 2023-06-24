@@ -90,7 +90,16 @@
 {% endif %}
 
 {% if space.is_display_decomp %}
+
+{% if space.dim_grid.has_eis_dim() %}
+
 <h2> {{ KNOWL('mf.siegel.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('mf.siegel.newform_subspace',title='newform subspaces') }}</h2>
+
+{% else %}
+
+<h2> {{ KNOWL('mf.siegel.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.cusp_new_latex() }}\) into {{ KNOWL('mf.siegel.newform_subspace',title='newform subspaces') }}</h2>
+
+{% endif %}
 
 {% include 'search_results_table.html' %}
 
