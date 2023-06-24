@@ -130,12 +130,12 @@ class mf_newspaces(MfChecker):
         return self._run_query(SQL("hecke_orbit_dims IS NOT NULL AND hecke_orbit_dims = ARRAY(SELECT DISTINCT UNNEST(hecke_orbit_dims) ORDER BY 1) AND num_forms > 1 AND trace_bound != 1"))
 
     @overall
-    def check_AL_dims_plus_dim(self):
+    def check_ALdims_plus_dim(self):
         """
-        check that AL_dims and plus_dim is set whenever char_orbit_index=1 and dim > 0
+        check that ALdims and plus_dim is set whenever char_orbit_index=1 and dim > 0
         """
         # TIME about 20s
-        return self.check_non_null(['AL_dims', 'plus_dim'], {'char_orbit_index':1, 'dim':{'$gt':0}})
+        return self.check_non_null(['ALdims', 'plus_dim'], {'char_orbit_index':1, 'dim':{'$gt':0}})
 
     @overall
     def check_dim0_num_forms(self):
@@ -194,12 +194,12 @@ class mf_newspaces(MfChecker):
         return self.check_array_sum('hecke_orbit_dims', 'dim', {'hecke_orbit_dims':{'$exists':True}})
 
     @overall
-    def check_sum_AL_dims(self):
+    def check_sum_ALdims(self):
         """
         If AL_dims is set, check that AL_dims sum to dim
         """
         # TIME 0.3 s
-        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim !=( SELECT  SUM(s.d) FROM (SELECT ((jsonb_array_elements("AL_dims"))->>1)::int d FROM mf_newspaces t2 WHERE t2.label = t1.label) s ) AND  "AL_dims" is not NULL')
+        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim != (SELECT SUM(s) FROM UNNEST(t1."ALdims") s) AND  "ALdims" is not NULL')
         return self._run_query(query=query)
 
     @overall
