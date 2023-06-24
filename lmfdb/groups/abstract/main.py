@@ -1495,7 +1495,9 @@ def download_group(**args):
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
-    gp_data = db.gps_groups_test.lucky({"label": label})
+    #gp_data = db.gps_groups_test.lucky({"label": label})
+    wag = WebAbstractGroup(label)
+    gp_data = wag._data
 
     filename = "group" + label
     mydate = time.strftime("%d %B %Y")
@@ -1566,7 +1568,7 @@ def download_group(**args):
                 list_gens.append(perm_decode)
             if gp_data["solvable"]:
                 s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-                s += "encd:= " + str(gp_data["pc_code"]) + "; \n"
+                s += "encd:= " + str(wag.pc_code) + "; \n"
 
 
             if dltype == "magma":
