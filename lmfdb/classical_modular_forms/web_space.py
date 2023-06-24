@@ -83,8 +83,8 @@ def cyc_display(m, d, real_sub):
         return name
 
 def ALdim_table(al_dims, level, weight):
-    sign_char = lambda x: "-" if x else "+"
-    url_sign_char = lambda x: "-" if x else "%2B"
+    def sign_char(x): return "-" if x else "+"
+    def url_sign_char(x): return "-" if x else "%2B"
     primes = ZZ(level).prime_divisors()
     num_primes = len(primes)
     header = [r'<th>\(%s\)</th>'%p for p in primes]
