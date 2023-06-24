@@ -1400,9 +1400,9 @@ def space_search(info, query):
 def how_computed_page():
     # print("routed to how_computed_page")
     t = 'Source of Siegel modular form data'
-    return render_template("multi.html", kids=['rcs.source.smf',
-                           'rcs.ack.smf',
-                           'rcs.cite.smf'], title=t,
+    return render_template("multi.html", kids=['rcs.source.mf.siegel',
+                           'rcs.ack.mf.siegel',
+                           'rcs.cite.mf.siegel'], title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 
@@ -1410,7 +1410,7 @@ def how_computed_page():
 def completeness_page():
     # print("routed to completeness_page")
     t = 'Completeness of Siegel modular form data'
-    return render_template("single.html", kid='rcs.cande.smf', title=t,
+    return render_template("single.html", kid='rcs.cande.mf.siegel', title=t,
                            bread=get_bread(other='Completeness'),
                            learnmore=learnmore_list_remove('Completeness'))
 
@@ -1426,7 +1426,7 @@ def labels_page():
 def reliability_page():
     # print("routed to reliability_page")
     t = 'Reliability of Siegel modular form data'
-    return render_template("single.html", kid='rcs.rigor.smf', title=t,
+    return render_template("single.html", kid='rcs.rigor.mf.siegel', title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
