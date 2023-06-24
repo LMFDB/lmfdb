@@ -329,7 +329,7 @@ class CmfTest(LmfdbTest):
         assert 'A-L signs' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&search_type=Spaces', follow_redirects=True)
         assert 'AL-dims.' in page.get_data(as_text=True)
-        assert r'\(0\)+\(1\)+\(0\)+\(0\)' in page.get_data(as_text=True)
+        assert r'$0$+$1$+$0$+$0$' in page.get_data(as_text=True)
 
     def test_Fricke_signs_search(self):
         r"""
