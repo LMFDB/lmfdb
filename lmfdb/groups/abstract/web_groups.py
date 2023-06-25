@@ -1347,7 +1347,7 @@ class WebAbstractGroup(WebObj):
             latex_lookup = {}
             sort_key = {}
             for sub in self.subgroups.values():
-                slab = sub.subgroup
+                slab = sub.subgroup # Might be None
                 if slab in C:
                     latex_lookup[slab] = sub.subgroup_tex_parened
                     sort_key[slab] = (
@@ -1359,6 +1359,7 @@ class WebAbstractGroup(WebObj):
                     )
                     if len(latex_lookup) == len(C):
                         break
+            # What if the subgroup doesn't have information?
             df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
             s = r" \times ".join(
                 "%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "")
