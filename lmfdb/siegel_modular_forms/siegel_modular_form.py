@@ -1514,110 +1514,61 @@ class SMF_stats(StatsDisplay):
     # we stick to what we have
     buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
                'degree':['2', '3-%d'%degree_bound()],
-               'weight':['2','3','4','5-8','9-16','17-%d'%weight_bound()[0] ],
-               'vector_weight' : ['(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1])],
+               'weight' : ['(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1])],
                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
-#               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
                 'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
                'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']
     }
-    #    reverses = {'cm_discs': True}
     reverses = {}
-    # sort_keys = {'projective_image': projective_image_sort_key}
     sort_keys = { 'aut_rep_type' : aut_rep_type_sort_key }
     knowls = {'level': 'mf.siegel.level',
               'weight': 'mf.siegel.weight_k_j',
               'degree' : 'mf.siegel.degree',
               'dim' : 'mf.siegel.dimension',
-#              'relative_dim': 'mf.siegel.dimension',
+
               'char_order': 'character.dirichlet.order',
               'char_degree': 'character.dirichlet.degree',
-#              'analytic_rank': 'mf.siegel.analytic_rank',
-#              'projective_image': 'mf.siegel.projective_image',
-#              'num_forms': 'mf.siegel.galois_orbit',
-#              'inner_twist_count': 'mf.siegel.inner_twist',
-#              'self_twist_type': 'mf.siegel.self_twist',
-#              'cm_discs': 'mf.siegel.cm_form',
-#              'rm_discs': 'mf.siegel.rm_form'}
-        }
-    #    top_titles = {'dim': 'absolute dimension',
+              'num_forms': 'mf.siegel.galois_orbit' }
+    
     top_titles = {
-#                  'relative_dim': 'relative dimension',
-#                  'inner_twist_count': 'inner twists',
-#                  'cm_discs': 'complex multiplication',
-#                  'rm_discs': 'real multiplication'}
         'dim' : 'absolute dimension'
-        }
+    }
     short_display = {'char_order': 'character order',
                      'char_degree': 'character degree',
 #                     'num_forms': 'newforms',
-#                     'inner_twist_count': 'inner twists',
-#                     'cm_discs': 'CM disc',
-#                     'rm_discs': 'RM disc',
-#                     'dim': 'abs. dimension',
-#                     'relative_dim': 'rel. dimension'}
-        'dim' : 'abs. dimension'
-        }
-    #    formatters = {'projective_image': (lambda t: 'Unknown' if t is None else r'\(%s_{%s}\)' % (t[0], t[1:])),
+                     'dim' : 'abs. dimension'
+    }
+
     formatters = {
-#                  'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
-#                  'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
- #                 'self_twist_type': self_twist_type_formatter}
+#                  'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even')
         }
-    # query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
+
     query_formatters = {
-#                        'self_twist_type': self_twist_type_query_formatter,
-#                        'inner_twist_count': (lambda x: 'inner_twist_count={0}'.format(x if x != 'Unknown' else '-1')),
-#                        'relative_dim': rel_dim_formatter,
-#                        'level_primes': level_primes_formatter,
-#                        'level_radical': level_radical_formatter,
-#                        'cm_discs': (lambda t: r'self_twist_discs=%d' % (t,)),
-#                        'rm_discs': (lambda t: r'self_twist_discs=%d' % (t,)),
-                        }
-    #    split_lists = {'cm_discs': True,
+        'level_primes': level_primes_formatter,
+        'level_radical': level_radical_formatter
+    }
+
     split_lists = {}
-#                   'rm_discs': True}
 
     stat_list = [
-#        {'cols': ['level', 'weight'],
-        {'cols': ['degree', 'weight'],
-         'proportioner': proportioners.per_col_total,
-         'totaler': totaler()},
-#        {'cols': ['level', 'dim'],
-        {'cols': ['degree', 'dim'],
+
+        {'cols': ['level', 'dim'],
          'proportioner': proportioners.per_row_total,
-         'totaler': totaler()},
-        {'cols': ['char_order'],
-#        {'cols': ['char_order', 'relative_dim'],
-         'proportioner': proportioners.per_row_total,
-         'totaler': totaler()},
-#        {'cols':'analytic_rank',
-#         'totaler':{'avg':True}},
-#        {'cols':'projective_image',
-#         'top_title':[('projective images', 'mf.siegel.projective_image'),
-#                      ('for weight 1 forms', None)],
-#         'constraint':{'weight': 1}},
+         'totaler': totaler()}
+        
+# For some reason we do not have stats for num_forms. Maybe we don't have num_forms for all of them?
 #        {'cols':'num_forms',
 #         'table':db.smf_newspaces,
-#         'top_title': [('number of newforms', 'mf.siegel.galois_orbit'), (r'in \(S_k(N, \chi)\)', None)],
+#         'top_title': [('number of newforms', 'mf.siegel.galois_orbit'), (r'in \(S_{k,j}^{\text{new}}(K(N))\)', None)],
 #        'url_extras': 'search_type=Spaces&'},
-#       {'cols':'inner_twist_count'},
-#        {'cols':['self_twist_type', 'weight'],
-#         'title_joiner': ' by ',
-#         'proportioner': proportioners.per_col_total,
-#         'totaler': totaler(col_counts=False, corner_count=False)},
-#        {'cols': 'cm_discs',
-#         'totaler':{}},
-#        {'cols': 'rm_discs',
-#         'totaler':{}},
+
     ]
     # Used for dynamic stats
     dynamic_parse = staticmethod(newform_parse)
     dynamic_parent_page = "smf_refine_search.html"
     # right now we don't have all these columns in our database.
     # we stick to what we have
-    # dynamic_cols = ['level', 'weight', 'dim', 'relative_dim', 'analytic_conductor', 'char_order', 'char_degree', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
-    dynamic_cols = ['degree', 'weight', 'dim', 'char_order', 'char_degree']
+    dynamic_cols = ['level', 'weight', 'dim']
 
 @smf.route("/stats")
 def statistics():
