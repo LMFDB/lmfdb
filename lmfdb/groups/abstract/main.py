@@ -2325,9 +2325,9 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                 profiledata[i] = None
         if len(profiledata) == 6 and profiledata[3] is not None:
             quotient_label = profiledata[3]
+            quotient_tex = profiledata[5]
         else:
             quotient_label = "None"
-        quotient_tex = profiledata[5]
     if label == "None":
         if profiledata is None:
             return Markup("Error in group_data function: No label or profiledata")
