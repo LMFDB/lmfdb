@@ -794,7 +794,7 @@ class WebAbstractGroup(WebObj):
             else:      
                 try:
                     props.extend([
-                        (r"$\card{\mathrm{Out}(G)}$", web_latex(factor(self.outer_order)))
+                        (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order)))
                     ])
                 except AssertionError:  # timed out
                     pass
