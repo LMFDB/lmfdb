@@ -1003,7 +1003,7 @@ newform_columns = SearchColumns([
              learnmore=learnmore_list)
 
 def newform_search(info, query):
-    query['__sort__'] = ['aut_rep_type']
+    # query['__sort__'] = ['aut_rep_type']
     newform_parse(info, query)
     set_info_funcs(info)
     print("info=",info)
@@ -1525,7 +1525,6 @@ class SMF_stats(StatsDisplay):
               'weight': 'mf.siegel.weight_k_j',
               'degree' : 'mf.siegel.degree',
               'dim' : 'mf.siegel.dimension',
-
               'char_order': 'character.dirichlet.order',
               'char_degree': 'character.dirichlet.degree',
               'num_forms': 'mf.siegel.galois_orbit' }
@@ -1535,7 +1534,7 @@ class SMF_stats(StatsDisplay):
     }
     short_display = {'char_order': 'character order',
                      'char_degree': 'character degree',
-#                     'num_forms': 'newforms',
+                     'num_forms': 'newforms',
                      'dim' : 'abs. dimension'
     }
 
@@ -1559,7 +1558,7 @@ class SMF_stats(StatsDisplay):
 # For some reason we do not have stats for num_forms. Maybe we don't have num_forms for all of them?
 #        {'cols':'num_forms',
 #         'table':db.smf_newspaces,
-#         'top_title': [('number of newforms', 'mf.siegel.galois_orbit'), (r'in \(S_{k,j}^{\text{new}}(K(N))\)', None)],
+#         'top_title': [('number of newforms', 'mf.siegel.galois_orbit'), (r'in \(S_{k,j}^{\text{new}}(K(N))\)',# None)],
 #        'url_extras': 'search_type=Spaces&'},
 
     ]
@@ -1587,8 +1586,6 @@ def dynamic_statistics():
 class SMFSearchArray(SearchArray):
     sort_knowl = 'smf.sort_order'
     _sort = [
-#        ('', 'analytic conductor', ['analytic_conductor', 'level']),
-        ('aut_rep_type', 'aut_rep_type', ['aut_rep_type', 'degree']),
         ('degree', 'degree', ['degree', 'family']),
         ('family', 'family', ['family', 'level']),
         ('level', 'level', ['level', 'weight']),
@@ -1694,7 +1691,7 @@ class SMFSearchArray(SearchArray):
             min_width=110)
         level_primes = TextBoxWithSelect(
             name='level_primes',
-            knowl='mf.siegel.bad_prime',
+            knowl='mf.bad_prime',
             label=r'Bad \(p\)',
             example='2,3',
             example_span='2,3',
@@ -1806,43 +1803,16 @@ class SMFSearchArray(SearchArray):
             example='20',
             example_span='7, 1-10')
 
- #       analytic_rank= TextBox(
- #           name='analytic_rank',
- #           label='Analytic rank',
- #           knowl='mf.siegel.analytic_rank',
- #           example='1',
- #           example_span='1, 2-4')
-
- #       projective_image = TextBoxNoEg(
- #           name='projective_image',
- #           label='Projective image',
- #           knowl='mf.siegel.projective_image',
- #           example='D15',
- #           example_span='wt. 1 only')
-
- #       projective_image_type = SelectBoxNoEg(
- #           name='projective_image_type',
- #           knowl='mf.siegel.projective_image',
- #           label='Projective image type',
- #           options=[('', ''),
- #                    ('Dn', 'Dn'),
- #                    ('A4', 'A4'),
- #                    ('S4', 'S4'),
- #                    ('A5','A5')],
- #           example_span='wt. 1 only')
-
- #       num_newforms = TextBox(
- #           name='num_forms',
- #           label='Num. ' + display_knowl("mf.siegel.newform", "newforms"),
- #           width=160,
- #           example='3')
- #       hnum_newforms = HiddenBox(
- #           name='num_forms',
- #           label='')
+        num_newforms = TextBox(
+            name='num_forms',
+            label='Num. ' + display_knowl("mf.siegel.newform", "newforms"),
+            width=160,
+            example='3')
+        hnum_newforms = HiddenBox(
+            name='num_forms',
+            label='')
 
         results = CountBox()
-
- #       wt1only = BasicSpacer("Only for weight 1:")
 
         trace_coldisplay = TextBox(
             name='n',
