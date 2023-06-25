@@ -1338,7 +1338,7 @@ class WebAbstractGroup(WebObj):
         # Need to pick an ordering
         # return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
         if self.direct_factorization == None:
-            s="\\text{The group is a direct product of some of its subgroups but those subgroups have not been computed.}"
+            return False
         else:    
             C = dict(self.direct_factorization)
             # We can use the list of subgroups to get the latex
