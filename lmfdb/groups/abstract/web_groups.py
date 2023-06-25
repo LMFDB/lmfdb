@@ -55,6 +55,12 @@ def label_sortkey(label):
                 L.append(x)
     return L
 
+def is_atomic(s):
+    return not any(sym in s for sym in [".", ":", r"\times", r"\rtimes", r"\wr"])
+
+def sub_paren(s):
+    return s if is_atomic(s) else "(%s)" % s
+
 def group_names_pretty(label):
     # Avoid using this function if you have the tex_name available without a database lookup
     if isinstance(label, str):
@@ -592,18 +598,10 @@ class WebAbstractGroup(WebObj):
             B = WebAbstractGroup('?', data=B)
             if A.tex_name == " " or B.tex_name == " ":
                 return " "
-            A = A.tex_name if A._is_atomic else f"({A.tex_name})"
-            B = B.tex_name if B._is_atomic else f"({B.tex_name})"
+            A = A.tex_name if is_atomic(A.tex_name) else f"({A.tex_name})"
+            B = B.tex_name if is_atomic(B.tex_name) else f"({B.tex_name})"
             return f"{A} {symb} {B}"
         return " "
-
-    @lazy_attribute
-    def _is_atomic(self):
-        t = self.tex_name
-        for ch in [".", ":", r"\times", r"\rtimes"]:
-            if ch in t:
-                return False
-        return True
 
     @lazy_attribute
     def _subgroup_data(self):
@@ -1360,6 +1358,17 @@ class WebAbstractGroup(WebObj):
                     if len(latex_lookup) == len(C):
                         break
             # What if the subgroup doesn't have information?
+            for c in C:
+                if not c in sort_key:
+                    cgroup = WebAbstractGroup(c)
+                    sort_key[c] = (
+                        not cgroup.abelian,
+                        cgroup.order.is_prime_power(get_data=True)[0]
+                        if cgroup.abelian
+                        else cgroup.order,
+                        cgroup.order,
+                    )
+                    latex_lookup[c] = sub_paren(cgroup.tex_name)
             df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
             s = r" \times ".join(
                 "%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "")
@@ -2166,14 +2175,14 @@ class WebAbstractSubgroup(WebObj):
             self.subgroup_tex = "?"
             self.subgroup_tex_parened = "(?)"
         else:
-            self.subgroup_tex_parened = s if self._is_atomic(s) else "(%s)" % s
+            self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
         if self._data.get("quotient"):
             q = self.quotient_tex
             if q is None:
                 self.quotient_tex = "?"
                 self.quotient_tex_parened = "(?)"
             else:
-                self.quotient_tex_parened = q if self._is_atomic(q) else "(%s)" % q
+                self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
 
     def spanclass(self):
         s = "subgp"
@@ -2187,10 +2196,6 @@ class WebAbstractSubgroup(WebObj):
         return '<span class="{}" data-sgid="{}">${}$</span>'.format(
             self.spanclass(), self.label, self.subgroup_tex
         )
-
-    @staticmethod
-    def _is_atomic(s):
-        return not any(sym in s for sym in [".", ":", r"\times", r"\rtimes", r"\wr"])
 
     def show_special_labels(self):
         raw = [x.split(".")[-1] for x in self.special_labels]
