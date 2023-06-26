@@ -234,16 +234,22 @@
 </table>
 <table class=nowrap>
   {% if not gp.live() %}
+  <tr>
   {% if gp.direct_product %}
-    <tr>
       <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
       {% if gp.display_direct_product %}
           <td>${{ gp.display_direct_product }}$</td>
       {% else %}
           <td colspan="8">The group is a direct product of some of its subgroups but those subgroups have not been computed.</td>
       {% endif %}
-    </tr>
+  {% elif gp.direct_product == False %}
+      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
+      <td> not isomorphic to a non-trivial direct product</td>
+  {% else %}
+      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
+      <td> not computed</td>
   {% endif %}
+  </tr>
   {% if gp.semidirect_products %}
     <tr>
       <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
