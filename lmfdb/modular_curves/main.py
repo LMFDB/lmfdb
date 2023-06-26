@@ -306,6 +306,8 @@ def modcurve_postprocess(res, info, query):
         num_models[modcurve] += 1
     for rec in res:
         rec["models"] = num_models[rec["label"]]
+        if rec["genus"] == 0 and not rec["pointless"]: # P^1
+            rec["models"] += 1
     return res
 
 def blankzeros(n):
@@ -334,8 +336,10 @@ modcurve_columns = SearchColumns(
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
         ProcessedCol("models", "modcurve.models", "Models", lambda x: blankzeros(x)),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "Points"),
+        CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
-    db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults"])
+    db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -657,6 +661,23 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
+    parse_ints(info, query, "points", qfield="num_known_degree1_points")
+    if "obstructions" in info:
+        if info["obstructions"] == "nolocal":
+            query["obstructions"] = {"$ne": []}
+        elif info["obstructions"] == "noglobal":
+            query["obstructions"] = []
+            if "num_known_degree1_points" in query:
+                # It would be better to simplify this, but it's not clear how to easily determine whether 0 is allowed by the expression entered
+                query["num_known_degree1_points"] = {"$and": [0, query["num_known_degree1_points"]]}
+            else:
+                query["num_known_degree1_points"] = 0
+        elif info["obstructions"] == "global":
+            if "num_known_degree1_points" in query:
+                # It would be better to simplify this, but it's not clear how to easily determine whether 0 is allowed by the expression entered
+                query["num_known_degree1_points"] = {"$and": [{"$gt": 0}, query["num_known_degree1_points"]]}
+            else:
+                query["num_known_degree1_points"] = {"$gt": 0}
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
     parse_bool(info, query, "contains_negative_one")
@@ -842,6 +863,20 @@ class ModCurveSearchArray(SearchArray):
             example_col=True,
             example_span="",
         )
+        points = TextBox(
+            name="points",
+            knowl="modcurve.known_points",
+            label="Rational points",
+            example="0, 3-5",
+        )
+        obstructions = SelectBox(
+            name="obstructions",
+            options=[("", ""),
+                     ("nolocal", "Local obstruction"),
+                     ("noglobal", "No obstruction or points"),
+                     ("global", "Rational points")],
+            knowl="modcurve.local_obstruction",
+            label="Obstructions")
         family = SelectBox(
             name="family",
             options=[("", ""),
@@ -878,6 +913,7 @@ class ModCurveSearchArray(SearchArray):
             [cm_discriminants, factor],
             [covers, covered_by],
             [contains_negative_one, family],
+            [points, obstructions],
             [count],
         ]
 
@@ -885,7 +921,8 @@ class ModCurveSearchArray(SearchArray):
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, nu2, nu3],
             [simple, squarefree, cm_discriminants, factor, covers],
-            [covered_by, contains_negative_one, family, CPlabel],
+            [covered_by, contains_negative_one, points, obstructions, family],
+            [CPlabel],
         ]
 
     sort_knowl = "modcurve.sort_order"
@@ -1162,7 +1199,13 @@ def labels_page():
 
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
+    coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-    return datapage([label], ["gps_gl2zhat_fine"], title=f"Modular curve data - {label}", bread=bread)
+    if label == coarse_label:
+        labels = [label]
+    else:
+        labels = [label, coarse_label]
+    tables = ["gps_gl2zhat_fine" for lab in labels]
+    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread)

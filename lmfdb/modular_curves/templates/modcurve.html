@@ -201,6 +201,9 @@
 </table>
 {% endif %}
 
+{#
+We are removing this section until we have more sources of non-rational points.  You can still search for them 
+
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
 
 <p> {{ curve.low_degree_points_description | safe }} </p>
@@ -225,6 +228,7 @@
   </tbody>
 </table>
 {% endif %}
+#}
 
 {% set modelisos = curve.formatted_modelisos %}
 {% if modelisos %}
