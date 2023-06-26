@@ -558,7 +558,7 @@ def create_boolean_string(gp, type="normal"):
     if type == "ambient":
         return f"The ambient group is {display_props(props)}."
     elif type == "quotient":
-        return f"The quotient is {display_props(props)}"
+        return f"The quotient is {display_props(props)}."
     elif type == "knowl":
         return f"{display_props(props)}."
     else:
