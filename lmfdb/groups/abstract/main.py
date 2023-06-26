@@ -2316,6 +2316,8 @@ def sub_data(label):
 
 
 def group_data(label, ambient=None, aut=False, profiledata=None):
+    gp = None
+    quotient_tex = None
     if profiledata is None:
         quotient_label = "None"
     else:
@@ -2341,7 +2343,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             ans = "Unknown group<br />"
         else:
             ans = f"Group ${tex_name}$<br />"
-        ans += "Order: {order}<br />"
+        ans += f"Order: {order}<br />"
         if profiledata[1] is None:
             ans += "Isomorphism class unknown<br />"
         else:
@@ -2374,12 +2376,16 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             quotient_url = url_for("abstract.by_label", label=quotient_label)
         qgp = WebAbstractGroup(quotient_label, data=data)
+        if not quotient_tex:
+            quotient_tex = qgp.tex_name
         ans += f"Quotient ${quotient_tex}$: "
         ans += create_boolean_string(qgp, type="knowl")
         ans += f"<br />Quotient label: {qgp.label}<br />"
         ans += f"Quotient order: {qgp.order}<br />"
         ans += f"Quotient exponent: {qgp.exponent}<br />"
     elif profiledata is not None and len(profiledata) == 6:
+        if quotient_tex in [None, "?"]:
+            quotient_tex = profiledata[5]
         if quotient_tex in [None, "?"]:
             ans += "Unknown quotient<br />"
         else:
@@ -2392,7 +2398,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             # TODO: add hash knowl and search link to groups with this order and hash
             ans += f"Quotient hash: {profiledata[4]}<br />"
 
-    if not gp.live():
+    if gp and not gp.live():
         if ambient is None:
             ans += "It has {} subgroups".format(gp.number_subgroups)
             if gp.number_normal_subgroups < gp.number_subgroups:

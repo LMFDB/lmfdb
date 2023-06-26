@@ -2334,8 +2334,10 @@ class WebAbstractSubgroup(WebObj):
         else:
             quoname = f"$G/{subname}$ "
             prefix = fr"$G/{subname} \simeq$ "
-        if hasattr(self, 'quotient'):
+        if hasattr(self, 'quotient') and self.quotient:
             return prefix + abstract_group_display_knowl(self.quotient)
+        elif hasattr(self, 'quotient_tex') and self.quotient_tex:
+            return prefix + '$'+self.quotient_tex+'$'
         if ab_invs:
             ablabel = '.'.join([str(z) for z in ab_invs])
             url = url_for(".by_abelian_label", label=ablabel)
