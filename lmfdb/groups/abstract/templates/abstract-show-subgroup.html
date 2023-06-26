@@ -98,7 +98,7 @@
     {% if seq.weyl_group is not none %}
       <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order ${{seq.weyl.order_factor()}}$</td></tr>
     {% elif seq.normalizer is not none and seq.centralizer is not none %}
-    <tr><td>$\card{W}$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
+    <tr><td>$\card{W}$</td><td>{{seq.normalizer_.subgroup_order / seq.centralizer_.subgroup_order}}</td></tr>
     {% else %}
     <tr><td>$\card{W}$</td><td> not computed</td></tr>
     {% endif %}
