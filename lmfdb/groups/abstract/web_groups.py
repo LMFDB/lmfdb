@@ -35,6 +35,7 @@ from lmfdb.utils import (
     web_latex,
     letters2num,
     WebObj,
+    pos_int_and_factor,
 )
 from .circles import find_packing
 
@@ -824,8 +825,9 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def has_subgroups(self):
+        if self.live():
+            return False
         return self.all_subgroups_known is not None
-
 
     @lazy_attribute
     def subgp_paragraph(self):
@@ -1818,10 +1820,10 @@ class WebAbstractGroup(WebObj):
                 if self.aut_order is None:
                     return r"$\textrm{not computed}$"
                 else:
-                    return f"Group of order ${self.aut_order_factor()}$"
+                    return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
                 url = url_for(".by_label", label=self.aut_group)
-                return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order ${self.aut_order_factor()}$'
+                return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
         except AssertionError:  # timed out
             return r"$\textrm{Computation timed out}$"
 
@@ -1836,10 +1838,10 @@ class WebAbstractGroup(WebObj):
                 if self.outer_order is None:
                     return r"$\textrm{not computed}$"
                 else:
-                    return f"Group of order ${self.out_order_factor()}$"
+                    return f"Group of order {pos_int_and_factor(self.outer_order)}"
             else:
                 url = url_for(".by_label", label=self.outer_group)
-                return f'<a href="{url}">${group_names_pretty(self.outer_group)}$</a>, of order ${self.out_order_factor()}$'
+                return f'<a href="{url}">${group_names_pretty(self.outer_group)}$</a>, of order {pos_int_and_factor(self.outer_order)}'
         except AssertionError:  # timed out
             return r"$\textrm{Computation timed out}$"
 
