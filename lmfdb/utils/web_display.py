@@ -203,6 +203,22 @@ def factor_base_factorization_latex(fbf, cutoff=0):
     ans = ans[6:]
     return '- ' + ans if sign == -1 else ans
 
+def pos_int_and_factor(n):
+    """
+    Display a positive integer in both decimal and factored for (just
+    decimal if n=1 or n is prime).
+    Also accounts for the possibility that n needs a bigint knowl
+    """
+    n = ZZ(n)
+    factors = n.factor()
+    if n == 1:
+        return "1"
+    if len(factors) == 1 and factors[0][1] == 1:
+        return bigint_knowl(n, sides=3)
+    else:
+        return bigint_knowl(n, sides=3) + r"\(\medspace = " + latex(factors) + r"\)"
+
+
 def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
     quo = "x^{%s}" % (len(f) - 1)
     i = len(f) - 2

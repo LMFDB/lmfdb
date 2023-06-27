@@ -42,6 +42,7 @@ from lmfdb.utils import (
     search_wrap,
     web_latex,
     Downloader,
+    pos_int_and_factor,
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
@@ -1182,6 +1183,7 @@ def render_abstract_group(label, data=None):
     # check if it fails to be a potential label even
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
+    info['pos_int_and_factor'] = pos_int_and_factor
 
     if gp.live():
         title = f"Abstract group {label}"
@@ -1290,7 +1292,7 @@ def render_abstract_subgroup(label):
 
     info["create_boolean_string"] = create_boolean_string
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
-    info["factor_latex"] = factor_latex
+    info["pos_int_and_factor"] = pos_int_and_factor
 
     if seq.normal:
         title = r"Normal subgroup $%s \trianglelefteq %s$"
