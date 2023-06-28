@@ -235,33 +235,49 @@
 <table class=nowrap>
   {% if not gp.live() %}
   <tr>
+    <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
   {% if gp.direct_product %}
-      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
       {% if gp.display_direct_product %}
           <td>${{ gp.display_direct_product }}$</td>
       {% else %}
           <td colspan="8">The group is a direct product of some of its subgroups but those subgroups have not been computed.</td>
       {% endif %}
   {% elif gp.direct_product == False %}
-      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
-      <td> not isomorphic to a non-trivial direct product</td>
+      <td colspan="8"> not isomorphic to a non-trivial direct product</td>
   {% else %}
-      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
       <td> not computed</td>
   {% endif %}
   </tr>
-  {% if gp.semidirect_products %}
-    <tr>
-      <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
-      {% for sub, count, labels in gp.semidirect_products[:4] %}
-        <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
-      {% endfor %}
-      {% for i in range(4 - (gp.semidirect_products|length)) %}
-      <td></td>
-      {% endfor %}
-      <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
-    </tr>
+  <tr>
+    <td >{{KNOWL('group.semidirect_product', 'Semidirect product')}}:</td>
+    {% if gp.semidirect_product %}
+      {% if gp.semidirect_products %}
+        {% for sub, count, labels in gp.semidirect_products[:4] %}
+          <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+        {% endfor %}
+        {% for i in range(4 - (gp.semidirect_products|length)) %}
+        <td></td>
+        {% endfor %}
+        <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
+      {% endif %}
+  {% elif gp.semidirect_product == False %}
+      <td colspan="8"> not isomorphic to a non-trivial semidirect product</td>
+  {% else %}
+      <td> not computed</td>
   {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.wreath_product', 'Wreath product:')}}</td>
+  {% if gp.wreath_product %}
+    <td colspan="8">{{ gp.display_wreath_product | safe }}</td>
+  {% elif gp.wreath_product == False %}
+      <td colspan="8"> not isomorphic to a non-trivial wreath product</td>
+  {% else %}
+      <td> not computed</td>
+  {% endif %}
+  </tr>
+  <tr>
+
   {% if gp.nonsplit_products %}
     <tr>
       <td>{{KNOWL('group.nonsplit_product', 'Non-split product')}}:</td>

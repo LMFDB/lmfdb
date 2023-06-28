@@ -1379,6 +1379,24 @@ class WebAbstractGroup(WebObj):
         return s
 
     @lazy_attribute
+    def display_wreath_product(self):
+        # assuming this only is called when wreath_product is True (else statement with if is false)
+        wpd = self.wreath_data
+        if len(wpd)==3:
+            [A, B, nt] = wpd
+            A = sub_paren(A)
+            B = sub_paren(B)
+        else:
+            [A, B, C, nt] = wpd
+            allsubs = self.subgroups.values()
+            A = [z for z in allsubs if z.short_label == A][0]
+            A = A.subgroup_tex_parened
+            B = [z for z in allsubs if z.short_label == B][0]
+            B = B.subgroup_tex_parened
+        from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
+        return rf"${A}\wr {B}$ with action given by " + transitive_group_display_knowl(nt, name=nt)
+
+    @lazy_attribute
     def semidirect_products(self):
         semis = []
         subs = defaultdict(list)
