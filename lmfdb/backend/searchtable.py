@@ -260,7 +260,7 @@ class PostgresSearchTable(PostgresTable):
                     # jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("NOT ({0} <@ %s)")
                 else:
-                    cmd = SQL("NOT ({0} = ANY(%s)")
+                    cmd = SQL("NOT ({0} = ANY(%s))")
             elif key == "$contains":
                 cmd = SQL("{0} @> %s")
                 if col_type != "jsonb":
