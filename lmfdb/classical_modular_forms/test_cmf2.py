@@ -65,7 +65,7 @@ class CmfTest(LmfdbTest):
         assert r"""["20.5.b.a", "20.5.d.a", "20.5.d.b", "20.5.d.c", "20.5.f.a"]""" in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newspace/244.4.w')
-        assert "[7, 31, 35, 43, 51, 55, 59, 63, 67, 71, 79, 87, 91, 115, 139, 227]" in page.get_data(as_text=True)
+        assert "[1456, -16, 0, -14, -28, 64, 0, -16, -3156, 168, 0, 36, -108" in page.get_data(as_text=True)
         assert "244.4.w" in page.get_data(as_text=True)
 
     def test_download_magma(self):
@@ -329,7 +329,7 @@ class CmfTest(LmfdbTest):
         assert 'A-L signs' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&search_type=Spaces', follow_redirects=True)
         assert 'AL-dims.' in page.get_data(as_text=True)
-        assert r'\(0\)+\(1\)+\(0\)+\(0\)' in page.get_data(as_text=True)
+        assert r'$0$+$1$+$0$+$0$' in page.get_data(as_text=True)
 
     def test_Fricke_signs_search(self):
         r"""

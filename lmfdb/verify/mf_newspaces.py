@@ -130,12 +130,12 @@ class mf_newspaces(MfChecker):
         return self._run_query(SQL("hecke_orbit_dims IS NOT NULL AND hecke_orbit_dims = ARRAY(SELECT DISTINCT UNNEST(hecke_orbit_dims) ORDER BY 1) AND num_forms > 1 AND trace_bound != 1"))
 
     @overall
-    def check_AL_dims_plus_dim(self):
+    def check_ALdims_plus_dim(self):
         """
-        check that AL_dims and plus_dim is set whenever char_orbit_index=1 and dim > 0
+        check that ALdims and plus_dim is set whenever char_orbit_index=1 and dim > 0
         """
         # TIME about 20s
-        return self.check_non_null(['AL_dims', 'plus_dim'], {'char_orbit_index':1, 'dim':{'$gt':0}})
+        return self.check_non_null(['ALdims', 'plus_dim'], {'char_orbit_index':1, 'dim':{'$gt':0}})
 
     @overall
     def check_dim0_num_forms(self):
@@ -194,12 +194,12 @@ class mf_newspaces(MfChecker):
         return self.check_array_sum('hecke_orbit_dims', 'dim', {'hecke_orbit_dims':{'$exists':True}})
 
     @overall
-    def check_sum_AL_dims(self):
+    def check_sum_ALdims(self):
         """
         If AL_dims is set, check that AL_dims sum to dim
         """
         # TIME 0.3 s
-        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim !=( SELECT  SUM(s.d) FROM (SELECT ((jsonb_array_elements("AL_dims"))->>1)::int d FROM mf_newspaces t2 WHERE t2.label = t1.label) s ) AND  "AL_dims" is not NULL')
+        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim != (SELECT SUM(s) FROM UNNEST(t1."ALdims") s) AND  "ALdims" is not NULL')
         return self._run_query(query=query)
 
     @overall
@@ -308,7 +308,7 @@ class mf_newspaces(MfChecker):
         # TIME about 70s
         return self._test_equality(rec['sturm_bound'], sturm_bound0(rec['level'], rec['weight']), verbose, "Sturm bound failure: {0} != {1}")
 
-    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes', 'char_order'])
+    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_index', 'char_order'])
     def check_Skchi_dim_formula(self, rec, verbose=False):
         """
         for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
@@ -318,10 +318,10 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = get_dirchar(rec['level'], rec['conrey_indexes'][0])
+            dirchar = get_dirchar(rec['level'], rec['conrey_index'])
         return self._test_equality(rec['relative_dim'], dimension_new_cusp_forms(dirchar, rec['weight']), verbose)
 
-    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'char_order', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
+    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'char_order', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_index'])
     def check_dims(self, rec, verbose=False):
         """
         for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
@@ -330,7 +330,7 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = get_dirchar(rec['level'], rec['conrey_indexes'][0])
+            dirchar = get_dirchar(rec['level'], rec['conrey_index'])
         k = rec['weight']
         m = rec['char_degree']
         for func, key in [(dimension_eis, 'eis_dim'), (dimension_cusp_forms, 'cusp_dim'), (dimension_modular_forms, 'mf_dim')]:

@@ -70,7 +70,7 @@ class mf_newforms(MfChecker):
         bad_labels = []
         labels = self.check_crosstable_count('mf_newspaces', 1, 'space_label', 'label')
         bad_labels.extend([label + " (count)" for label in labels])
-        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_indexes', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'weight', 'weight_parity']:
+        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_index', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'weight', 'weight_parity']:
             labels = self.check_crosstable('mf_newspaces', col, 'space_label', col, 'label')
             bad_labels.extend([label + " (%s)"%col for label in labels])
         return bad_labels

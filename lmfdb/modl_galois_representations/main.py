@@ -40,6 +40,7 @@ from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
 from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
 
@@ -47,7 +48,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Mod-$\ell$ Galois representation labels', url_for(".labels_page"))]
+            (r'Mod-$\ell$ Galois representation labels', url_for(".labels_page"))]
 
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -315,6 +316,13 @@ class ModLGalRepSearchArray(SearchArray):
         ("image_index", "image index", ["image_index", "dimension", "base_ring_order", "conductor", "num"]),
     ]
 
+def groupdata(group):
+    parts = group.split('.')
+    return [int(z) for z in parts]
+
+def groupformatter(group):
+  return abstract_group_display_knowl(group)
+
 class ModLGalRep_stats(StatsDisplay):
     def __init__(self):
         self.nreps = comma(db.modlgal_reps.count())
@@ -338,16 +346,34 @@ class ModLGalRep_stats(StatsDisplay):
 
     table = db.modlgal_reps
     baseurl_func = ".index"
+    sort_keys = {'image_abstract_group': groupdata}
     buckets = {'conductor': ['1-100', '101-500', '501-1000', '1001-5000', '5001-10000', '10001-'],
                'dimension': ['1', '2', '4'],
                }
     knowls = {'conductor': 'modlgal.conductor',
-              'dimension': 'modgal.dim',
+              'dimension': 'modlgal.dimension',
+              'image_abstract_group': 'modlgal.image'
               }
+    short_display = {'image_abstract_group': 'image'}
+    formatters = {'image_abstract_group': groupformatter}
     stat_list = [
         {'cols': ['conductor', 'dimension'],
          'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':2},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=2$',None)]},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':3},
+         'buckets': {'dimension': ['1', '2']},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=3$',None)]},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':5},
+         'buckets': {'dimension': ['1', '2']},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=5$',None)]},
     ]
 
 @modlgal_page.route("/Q/stats")
