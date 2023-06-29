@@ -166,7 +166,7 @@ class ArtinRepresentation():
         return self.central_character_as_artin_rep().label()
 
     def conductor_equation(self):
-        return pos_int_and_factor(self.conductor())
+        return pos_int_and_factor(self.conductor(), factor_base=self.bad_primes())
 
     def factored_conductor(self):
         return [(p, valuation(Integer(self.conductor()), p)) for p in self.bad_primes()]
