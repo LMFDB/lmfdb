@@ -35,6 +35,7 @@ from lmfdb.utils import (
     web_latex,
     letters2num,
     WebObj,
+    pos_int_and_factor,
 )
 from .circles import find_packing
 
@@ -824,8 +825,9 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def has_subgroups(self):
+        if self.live():
+            return False
         return self.all_subgroups_known is not None
-
 
     @lazy_attribute
     def subgp_paragraph(self):
@@ -1377,6 +1379,24 @@ class WebAbstractGroup(WebObj):
         return s
 
     @lazy_attribute
+    def display_wreath_product(self):
+        # assuming this only is called when wreath_product is True (else statement with if is false)
+        wpd = self.wreath_data
+        if len(wpd)==3:
+            [A, B, nt] = wpd
+            A = sub_paren(A)
+            B = sub_paren(B)
+        else:
+            [A, B, C, nt] = wpd
+            allsubs = self.subgroups.values()
+            A = [z for z in allsubs if z.short_label == A][0]
+            A = A.subgroup_tex_parened
+            B = [z for z in allsubs if z.short_label == B][0]
+            B = B.subgroup_tex_parened
+        from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
+        return rf"${A}\wr {B}$ with action given by " + transitive_group_display_knowl(nt, name=nt)
+
+    @lazy_attribute
     def semidirect_products(self):
         semis = []
         subs = defaultdict(list)
@@ -1818,10 +1838,10 @@ class WebAbstractGroup(WebObj):
                 if self.aut_order is None:
                     return r"$\textrm{not computed}$"
                 else:
-                    return f"Group of order ${self.aut_order_factor()}$"
+                    return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
                 url = url_for(".by_label", label=self.aut_group)
-                return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order ${self.aut_order_factor()}$'
+                return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
         except AssertionError:  # timed out
             return r"$\textrm{Computation timed out}$"
 
@@ -1836,10 +1856,10 @@ class WebAbstractGroup(WebObj):
                 if self.outer_order is None:
                     return r"$\textrm{not computed}$"
                 else:
-                    return f"Group of order ${self.out_order_factor()}$"
+                    return f"Group of order {pos_int_and_factor(self.outer_order)}"
             else:
                 url = url_for(".by_label", label=self.outer_group)
-                return f'<a href="{url}">${group_names_pretty(self.outer_group)}$</a>, of order ${self.out_order_factor()}$'
+                return f'<a href="{url}">${group_names_pretty(self.outer_group)}$</a>, of order {pos_int_and_factor(self.outer_order)}'
         except AssertionError:  # timed out
             return r"$\textrm{Computation timed out}$"
 
@@ -2334,8 +2354,10 @@ class WebAbstractSubgroup(WebObj):
         else:
             quoname = f"$G/{subname}$ "
             prefix = fr"$G/{subname} \simeq$ "
-        if hasattr(self, 'quotient'):
+        if hasattr(self, 'quotient') and self.quotient:
             return prefix + abstract_group_display_knowl(self.quotient)
+        elif hasattr(self, 'quotient_tex') and self.quotient_tex:
+            return prefix + '$'+self.quotient_tex+'$'
         if ab_invs:
             ablabel = '.'.join([str(z) for z in ab_invs])
             url = url_for(".by_abelian_label", label=ablabel)

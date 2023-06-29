@@ -6,10 +6,14 @@
 <h2> Subgroup ($H$) information</h2>
 <p>
   <table>
-    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.label)}}">${{seq.subgroup_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.subgroup_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.sub.exponent)}} </td></tr>
+    {% if seq.subgroup is not none %}
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>not computed</td></tr>
+    {% endif %}
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.subgroup_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.pos_int_and_factor(seq.quotient_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(seq.sub.exponent)}} </td></tr>
 {# Bug in generator Magma code, so hiding for now
     <tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td> ${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>
 #}
@@ -35,8 +39,8 @@
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td>
     <td><a href="{{url_for('.by_label', label=seq.ambient)}}">${{seq.ambient_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.ambient_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.amb.exponent)}} </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.ambient_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(seq.amb.exponent)}} </td></tr>
 {# Bug in generator Magma code, so hiding for now
     <tr>
       <td>{% if seq.amb.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
@@ -57,8 +61,8 @@
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td>
       <td><a href="{{url_for('.by_label', label=seq.quotient)}}">${{seq.quotient_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.quo.exponent)}} </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.quotient_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(seq.quo.exponent)}} </td></tr>
     <tr><td>Automorphism Group:</td><td>{{seq.quo.show_aut_group()|safe}}</td></tr>
     <tr><td>Outer Automorphisms:</td><td>{{seq.quo.show_outer_group()|safe}}</td></tr>
   </table>
@@ -88,17 +92,17 @@
     <tr><td>$\operatorname{Aut}(G)$</td><td>{{seq.amb.show_aut_group()|safe}}</td></tr>
     <tr><td>$\operatorname{Aut}(H)$</td><td>{{seq.sub.show_aut_group()|safe}}</td></tr>
     {% if seq.aut_weyl_group is not none %}
-      <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order ${{seq.aut_weyl.order_factor()}}$</td></tr>
+      <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.aut_weyl.order)}}</td></tr>
     {% elif seq.aut_weyl_index is not none %}
-    <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{seq.sub.aut_order / seq.aut_weyl_index}}</td></tr>
+    <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{info.pos_int_and_factor(seq.sub.aut_order / seq.aut_weyl_index)}}</td></tr>
     {% endif %}
     {% if seq.aut_centralizer_order is not none %}
-    <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>${{seq.aut_centralizer_order}}$</td></tr>
+    <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>{{info.pos_int_and_factor(seq.aut_centralizer_order)}}</td></tr>
     {% endif %}
     {% if seq.weyl_group is not none %}
-      <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order ${{seq.weyl.order_factor()}}$</td></tr>
+      <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.weyl.order)}}</td></tr>
     {% elif seq.normalizer is not none and seq.centralizer is not none %}
-    <tr><td>$\card{W}$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
+    <tr><td>$\card{W}$</td><td>{{info.pos_int_and_factor(seq.normalizer_.subgroup_order / seq.centralizer_.subgroup_order)}}</td></tr>
     {% else %}
     <tr><td>$\card{W}$</td><td> not computed</td></tr>
     {% endif %}
