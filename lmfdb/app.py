@@ -138,6 +138,7 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
+    vars['ALPHA'] = True # hardwired for alpha branch
 
     def modify_url(**replace):
         urlparts = urlparse(request.url)
@@ -145,6 +146,8 @@ def ctx_proc_userdata():
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
     vars['zip'] = zip
+    from lmfdb.utils import pluralize
+    vars['pluralize'] = pluralize
 
     return vars
 

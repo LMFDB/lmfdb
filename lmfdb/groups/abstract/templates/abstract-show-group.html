@@ -450,16 +450,19 @@
     </div>
   {% else %} {# not wide #}
     <table>
-    <tr><td>
-      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
-        Sorry, your browser does not support the subgroup diagram.
-      </canvas>
-    <td valign="top">
-      <h4>Subgroup information</h4>
-        <div class="selectedsub">
-          Click on a subgroup in the diagram to see information about it.
-        </div>
-     </table>
+      <tr>
+        <td>
+          <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+            Sorry, your browser does not support the subgroup diagram.
+          </canvas>
+        <td valign="top">
+          <h4>Subgroup information</h4>
+          <div class="selectedsub">
+            Click on a subgroup in the diagram to see information about it.
+          </div>
+        </td>
+      </tr>
+    </table>
     {% if user_is_authenticated and BETA %}
       <button onclick="getpositions()">Get positions</button>
       <br>
