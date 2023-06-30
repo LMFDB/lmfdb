@@ -6,7 +6,7 @@ from io import BytesIO
 import time
 
 from flask import abort, render_template, url_for, request, redirect, send_file
-from sage.rings.all import PolynomialRing, ZZ
+from sage.all import PolynomialRing, ZZ, latex
 from sage.databases.cremona import cremona_letter_code
 from collections import Counter
 
@@ -147,6 +147,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     )
 
 isogeny_class_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
+mring_regex = re.compile(r"(\d+)\.(\d+)")
 
 def split_label(lab):
     return isogeny_class_label_regex.match(lab).groups()
@@ -829,20 +830,76 @@ def diagram_js(curve, layers, display_opts):
 def diagram_js_string(isoclass):
     display_opts = {}
     graph, rank_lookup, num_layers = diagram_js(isoclass, isoclass.endring_poset, display_opts)
-    return f'var [sdiagram,graph] = make_sdiagram("endring_diagram", "{isoclass.label}", [{graph}], {rank_lookup}, {num_layers});', display_opts
+    return f'var [sdiagram,graph] = make_sdiagram("endring_diagram", "{isoclass.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
 
-@abvarfq_page.route("/Q/curveinfo/<label>")
-def curveinfo(label):
-    if not LABEL_RE.fullmatch(label):
+@abvarfq_page.route("/endringinfo/<label>/<endring>")
+def endringinfo(label, endring):
+    if not (isogeny_class_label_regex.fullmatch(label) and mring_regex.fullmatch(endring)):
         return ""
-    level, index, genus = label.split(".")[:3]
+    data = list(db.av_fq_weak_equivalences.search({"isog_label":label, "multiplicator_ring":endring}, ["is_invertible", "generator_over_ZFV", "is_Zconductor_sum", "is_ZFVconductor_sum", "conductor", "conductor_is_Sprime", "conductor_is_Oprime", "is_conjugate_stable", "is_product", "cohen_macaulay_type", "pic_size", "pic_invs", "rational_invariants"]))
+    num_we = len(data)
+    rec = [rec for rec in data if rec["is_invertible"]][0]
 
-    ans = 'Information on the modular curve <a href="%s">%s</a><br>\n' % (url_for_modcurve_label(label), label)
+    names = ["R"]
+    if rec["is_Zconductor_sum"]:
+        names.append(r"\mathbb{Z} + \mathfrak{f}_R")
+    elif rec["is_ZFVconductor_sum"]:
+        names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
+    gen = rec["generator_over_ZFV"]
+    if gen:
+        d, num = gen
+        g = len(num) // 2
+        pows = [f"V^{i}" for i in reversed(range(2,g))] + (["V", "", "F"] if g > 1 else ["", "F"]) + [f"F^{i}" for i in range(2, g+1)]
+        s = ""
+        for c, xpow in zip(num, pows):
+            if c == 0:
+                continue
+            elif c == 1:
+                if xpow:
+                    s += "+" + xpow
+                else:
+                    x += "+1"
+            elif c == -1:
+                if xpow:
+                    s += "-" + xpow
+                else:
+                    s += "-1"
+            elif c < 0:
+                s += fr"-{-c}{xpow}"
+            else:
+                s += fr"+{c}{xpow}"
+        if s and s[0] == "+":
+            s = s[1:]
+        if d != 1:
+            s = r"\frac{1}{%s}(%s)" % (d, s)
+        names.append(fr"\mathbb{{Z}}[F, V, {s}]")
+    names = "=".join(names)
+    index = endring.split(".")[0]
+    M, d, alpha = rec["conductor"]
+    conductor = latex(PolynomialRing(ZZ, "F")(alpha))
+    if d != 1:
+        conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+    conductor = fr"\langle{M},{conductor}\rangle"
+    if rec["pic_invs"] == []:
+        pic_url = url_for("abstract.by_label", label="1.1")
+        pic = "C_1"
+    else:
+        pic_url = url_for("abstract.by_abelian_label", label="ab/" + "_".join(str(c) for c in rec["pic_invs"]))
+        pic = r"\times ".join(f"C_{{{c}}}" for c in rec["pic_invs"])
+    if rec["cohen_macaulay_type"] == 1:
+        cm_type = "$1$ (%s)" % display_knowl('ag.gorenstein', 'Gorenstein')
+    else:
+        cm_type = "$%s$" % rec["cohen_macaulay_type"]
+
+    ans = f'Information on the endomorphism ring ${names}$<br>\n'
     ans += "<table>\n"
-    ans += f"<tr><td>{display_knowl('modcurve.level', 'Level')}</td><td>${level}$</td></tr>\n"
-    ans += f"<tr><td>{display_knowl('modcurve.index', 'Index')}</td><td>${index}$</td></tr>\n"
-    ans += f"<tr><td>{display_knowl('modcurve.genus', 'Genus')}</td><td>${genus}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')}:</td><td>${index}$</td></tr>\n"
+    ans += fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}</td><td><a href='{pic_url}'>${pic}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}</td><td>{cm_type}</td></tr>\n"
+    ans += f"<tr><td>Num. {display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}</td><td>${num_we}$</td></tr>\n"
     ans += "</table>"
+    # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
     return ans
 
 def search_input_error(info=None, bread=None):

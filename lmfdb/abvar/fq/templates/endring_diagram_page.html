@@ -45,6 +45,7 @@
 </script>
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='abvar.js') }}"></script>
 
 <h3>{{title|safe}}<h3>
 
@@ -54,8 +55,8 @@
 </canvas>
 
 <script type="text/javascript">
-{{ info.dojs|safe }}
-  sdiagram.newgraph(graph[0]);
+  {{ info.dojs|safe }}
+  sdiagram.newgraph(graph);
   sdiagram.setSize();
   sdiagram.draw();
 </script>
