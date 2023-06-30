@@ -18,14 +18,21 @@ from lmfdb.logger import make_logger
 from lmfdb import db
 from lmfdb.app import app
 
-from sage.rings.all import Integer, QQ, RR, ZZ
-from sage.plot.all import line, points, circle, Graphics
+from sage.all import Factorization
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
-from sage.all import Factorization
 from sage.misc.lazy_attribute import lazy_attribute
+from sage.plot.all import line, points, circle, Graphics
+from sage.rings.all import Integer, QQ, RR, ZZ
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.utils import (
+    coeff_to_poly,
+    display_knowl,
+    integer_divisors,
+    list_to_factored_poly_otherorder,
+    web_latex,
+)
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
@@ -521,6 +528,51 @@ class AbvarFq_isoclass():
             return s
         else:
             return ""
+
+
+    
+
+
+    header_polarized_varieties = [
+        ('label', 'av.fq.lmfdb_label', 'Label'),
+        ('degree', 'av.polarization_degree', 'Degree'),
+        ('aut_group', 'av.aut_group', 'Automorphism Group'),
+        ('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
+        ('endomorphism_ring', 'av.endomorphism_ring', 'Endomorphism ring'),
+        ('kernel', 'av.polarization_kernel', 'Kernel'),
+    ]
+
+    @lazy_attribute
+    def polarized_abelian_varieties(self):
+        cols = [elt for elt, _ ,_ in self.header_polarized_varieties]
+        return list(db.av_fq_pol.search({"isog_label": self.label}, cols))
+
+    def display_header_polarized_varieties(self):
+        ths = "\n".join(
+            f'<th class="sticky-head dark">{display_knowl(kwl, title=title)}</th>' for _, kwl, title in self.header_polarized_varieties)
+
+        return f'<thead><tr>\n{ths}\n</tr></thead>'
+
+
+    def display_polarized_varieties(self):#, query={}):
+        polarized_columns_display = {
+        'aut_group': lambda x : abstract_group_display_knowl(x['aut_group']),
+        'degree': lambda x : web_latex(x['degree']),
+        'endomorphism_ring': lambda x : x['endomorphism_ring'],
+        'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
+        'isom_label' : lambda x : x['isom_label'],
+        'kernel' : lambda x : x['kernel'],
+        'label' : lambda x : x['label'],
+        }
+        res = ""
+        #FIXME filter by query
+        for i,elt in enumerate(self.polarized_abelian_varieties):
+            shade = 'dark' if i%2 == 0 else 'light'
+            res += f'<tr class="{shade}">\n' + "\n".join([f"<td>{polarized_columns_display[col](elt)}</td>" for col, _, _ in self.header_polarized_varieties]) + "</tr>\n"
+        return f'<tbody>\n{res}</tbody>'
+
+
+
 
 @app.context_processor
 def ctx_decomposition():
