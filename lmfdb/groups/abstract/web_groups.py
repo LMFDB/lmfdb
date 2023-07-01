@@ -827,7 +827,9 @@ class WebAbstractGroup(WebObj):
     def has_subgroups(self):
         if self.live():
             return False
-        return self.all_subgroups_known is not None
+        if self.all_subgroups_known: # Not None and equals True
+            return True
+        return False
 
     @lazy_attribute
     def subgp_paragraph(self):
@@ -1382,10 +1384,23 @@ class WebAbstractGroup(WebObj):
     def display_wreath_product(self):
         # assuming this only is called when wreath_product is True (else statement with if is false)
         wpd = self.wreath_data
+        from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
         if len(wpd)==3:
             [A, B, nt] = wpd
-            A = sub_paren(A)
+            # try to guess actual group for A from the latex
+            cn_re = re.compile(r'^C_\{?(\d+)\}?$')
+            cn_match= cn_re.match(A)
+            if cn_match:
+                order = cn_match.group(1)
+                Agroup = db.gps_groups_test.lucky({'order':int(order), 'cyclic':True})
+                A = Agroup['label']
+                A = abstract_group_display_knowl(Agroup['label'])
+                print("******************************** ", A)
+            else:
+                A = sub_paren(A)
             B = sub_paren(B)
+            B = transitive_group_display_knowl(nt, rf'${B}$')
+            return A+r"$\ \wr\ $"+ B
         else:
             [A, B, C, nt] = wpd
             allsubs = self.subgroups.values()
@@ -1393,8 +1408,8 @@ class WebAbstractGroup(WebObj):
             A = A.subgroup_tex_parened
             B = [z for z in allsubs if z.short_label == B][0]
             B = B.subgroup_tex_parened
-        from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-        return rf"${A}\wr {B}$ with action given by " + transitive_group_display_knowl(nt, name=nt)
+            B = transitive_group_display_knowl(nt, B)
+            return r"$"+A+r"\ \wr\ $"+ B
 
     @lazy_attribute
     def semidirect_products(self):
