@@ -1397,7 +1397,7 @@ class WebAbstractGroup(WebObj):
                 A = abstract_group_display_knowl(Agroup['label'])
                 print("******************************** ", A)
             else:
-                A = sub_paren(A)
+                A = rf'${sub_paren(A)}$ '
             B = sub_paren(B)
             B = transitive_group_display_knowl(nt, rf'${B}$')
             return A+r"$\ \wr\ $"+ B
