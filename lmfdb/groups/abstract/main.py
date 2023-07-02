@@ -720,6 +720,22 @@ def by_abelian_label(label):
         return redirect(url_for(".by_label", label=dblabel))
 
 
+@abstract_page.route("/auto_gens/<label>")
+def auto_gens(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    return render_template(
+        "auto_gens_page.html",
+        gp=gp,
+        title="Generators of automorphism group for %s" % label,
+        bread=get_bread([("Automoorphism group generators", " ")]),
+        learnmore=learnmore_list(),
+    )
+
+    
 @abstract_page.route("/sub/<label>")
 def by_subgroup_label(label):
     if subgroup_label_is_valid(label):
