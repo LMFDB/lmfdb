@@ -208,6 +208,8 @@ def pos_int_and_factor(n, factor_base=None):
     Display a positive integer in both decimal and factored for (just
     decimal if n=1 or n is prime).
     Also accounts for the possibility that n needs a bigint knowl
+    factor_base is a list of primes containing all primes dividing n
+    (but need not equal that list of primes exactly)
     """
     if n == 1:
         return "$1$"
