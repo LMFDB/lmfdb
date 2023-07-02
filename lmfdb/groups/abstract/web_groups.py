@@ -827,9 +827,12 @@ class WebAbstractGroup(WebObj):
     def has_subgroups(self):
         if self.live():
             return False
-        if self.all_subgroups_known: # Not None and equals True
-            return True
-        return False
+        return self.all_subgroups_known is not None
+
+# below fails to show subgroups when there are some    
+#       if self.all_subgroups_known: # Not None and equals True
+#            return True
+#        return False
 
     @lazy_attribute
     def subgp_paragraph(self):
