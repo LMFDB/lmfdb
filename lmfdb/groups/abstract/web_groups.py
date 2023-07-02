@@ -827,9 +827,12 @@ class WebAbstractGroup(WebObj):
     def has_subgroups(self):
         if self.live():
             return False
-        if self.all_subgroups_known: # Not None and equals True
-            return True
-        return False
+        return self.all_subgroups_known is not None
+
+# below fails to show subgroups when there are some    
+#       if self.all_subgroups_known: # Not None and equals True
+#            return True
+#        return False
 
     @lazy_attribute
     def subgp_paragraph(self):
@@ -1791,6 +1794,13 @@ class WebAbstractGroup(WebObj):
     def representations(self):
         # For live groups
         return {}
+
+
+    #JP working on to show automorphism generators
+    def auto_gens_list(self):
+        gens = self.aut_gens
+        pr_gens = [ [ self.decode(gen) for gen in gens[i]] for i in range(len(gens))]
+        return pr_gens
 
     def representation_line(self, rep_type):
         # TODO: Add links to searches for other representations when available
