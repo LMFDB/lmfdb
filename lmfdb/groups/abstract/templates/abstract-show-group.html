@@ -237,17 +237,24 @@
   </table>
 </p>
 
-{% if gp.irrC_degree != None or gp.irrQ_degree != None %}
+
 <p>
   Minimum dimension of a faithful...
   <table>
     {% if gp.linC_degree != None %} <tr><td> ... {{KNOWL('group.linC_degree', 'complex matrix presentation')}}:</td><td>{{gp.linC_degree}}</td></tr> {% endif %}
-    {% if gp.irrC_degree != None %}    <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
+    {% if gp.irrC_degree == None %} <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
+    <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
      {% if gp.linQ_degree != None %} <tr><td> ... {{KNOWL('group.linQ_degree', 'rational matrix presentation')}}:</td><td>{{gp.linQ_degree}}</td></tr> {% endif %}
-    {% if gp.irrQ_degree != None %}    <tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+    {% if gp.irrQ_degree == None %}
+<tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>not computed</td></tr>
+    {% elif gp.irrQ_degree == -1 %}
+<tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>no faithful irreducible rational representations</td></tr>
+    {% else %}
+
+    <tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
   </table>
 </p>
-{% endif %}
+
 
 {% endif %}
 
