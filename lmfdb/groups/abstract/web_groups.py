@@ -760,7 +760,7 @@ class WebAbstractGroup(WebObj):
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
-        if self.number_conjugacy_classes != None and self.number_conjugacy_classes <= 2000:
+        if self.number_conjugacy_classes is not None and self.number_conjugacy_classes <= 2000:
             props.append((None, f'<a href="{url_for("abstract.picture", label=self.label)}">{self.image()}</a>'))
         if self.abelian:
             props.append(("Abelian", "yes"))
@@ -2039,8 +2039,11 @@ class WebAbstractGroup(WebObj):
         return sparse_cyclotomic_to_latex(n, dat)
 
     def image(self):
-        if self.number_conjugacy_classes <= 2000:
-            circles, R = find_packing([(c.size, c.order) for c in self.conjugacy_classes])
+        if self.cc_stats is not None and self.number_conjugacy_classes <= 2000:
+            circles = []
+            for order, size, num_classes in self.cc_stats:
+                circles.extend([(size, order)] * num_classes)
+            circles, R = find_packing(circles)
             R = R.ceiling()
             circles = "\n".join(
                 f'<circle cx="{x}" cy="{y}" r="{rad}" fill="rgb({r},{g},{b})" />'
