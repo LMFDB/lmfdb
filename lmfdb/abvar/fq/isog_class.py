@@ -537,7 +537,7 @@ class AbvarFq_isoclass():
         ('label', 'av.fq.lmfdb_label', 'Label'),
         ('degree', 'av.polarization_degree', 'Degree'),
         ('aut_group', 'av.aut_group', 'Automorphism Group'),
-        ('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
+        #('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
         ('endomorphism_ring', 'av.endomorphism_ring', 'Endomorphism ring'),
         ('kernel', 'av.polarization_kernel', 'Kernel'),
     ]
@@ -559,7 +559,7 @@ class AbvarFq_isoclass():
         'aut_group': lambda x : abstract_group_display_knowl(x['aut_group']),
         'degree': lambda x : web_latex(x['degree']),
         'endomorphism_ring': lambda x : x['endomorphism_ring'],
-        'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
+        # 'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
         'isom_label' : lambda x : x['isom_label'],
         'kernel' : lambda x : x['kernel'],
         'label' : lambda x : x['label'],
