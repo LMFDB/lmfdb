@@ -788,7 +788,7 @@ class WebAbstractGroup(WebObj):
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
-            if self.aut_order == None:
+            if self.aut_order is None:
                   props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
             else:      
                 try:
@@ -798,7 +798,7 @@ class WebAbstractGroup(WebObj):
                 except AssertionError:  # timed out
                     pass
 
-            if self.outer_order == None:
+            if self.outer_order is None:
                   props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
             else:
                 try:
@@ -809,13 +809,13 @@ class WebAbstractGroup(WebObj):
                     pass
 
         if not self.live():        
-            if self.permutation_degree == None:
+            if self.permutation_degree is None:
                 props.extend([("Perm deg.", "not computed")])
             else:
                 props.extend([("Perm deg.", f"${self.permutation_degree}$")])
 
                 
-        if  self.transitive_degree == None:
+        if  self.transitive_degree is None:
             props.extend([("Trans deg.", "not computed")])
         else:
             props.extend([("Trans deg.", f"${self.transitive_degree}$")])
@@ -827,16 +827,19 @@ class WebAbstractGroup(WebObj):
     def has_subgroups(self):
         if self.live():
             return False
-        if self.all_subgroups_known: # Not None and equals True
-            return True
-        return False
+        return self.all_subgroups_known is not None
+
+# below fails to show subgroups when there are some    
+#       if self.all_subgroups_known: # Not None and equals True
+#            return True
+#        return False
 
     @lazy_attribute
     def subgp_paragraph(self):
-        if self.number_subgroups == None:
-            if self.number_normal_subgroups == None:
+        if self.number_subgroups is None:
+            if self.number_normal_subgroups is None:
                 return " "
-            elif self.number_characteristic_subgroups == None:
+            elif self.number_characteristic_subgroups is None:
                 return  """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
             else:
                 ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
@@ -1341,7 +1344,7 @@ class WebAbstractGroup(WebObj):
         # assuming this only is called when direct_product is True (else statement with if is false)
         # Need to pick an ordering
         # return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
-        if self.direct_factorization == None:
+        if self.direct_factorization is None:
             return False  # signal that it is a direct product, but we don't have the data
         else:    
             C = dict(self.direct_factorization)
@@ -1416,7 +1419,7 @@ class WebAbstractGroup(WebObj):
         semis = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
-            if sub.normal and sub.split and not sub.direct:
+            if sub.normal and sub.split and not sub.direct and sub.subgroup is not None and sub.quotient is not None and sub.subgroup_order != 1 and sub.quotient_order != 1:
                 pair = (sub.subgroup, sub.quotient)
                 if pair not in subs:
                     semis.append(sub)
@@ -1590,7 +1593,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def aut_statistics(self):
-        if self.aut_stats == None:
+        if self.aut_stats is None:
             return None
         else:
            D = Counter()
@@ -1791,6 +1794,13 @@ class WebAbstractGroup(WebObj):
     def representations(self):
         # For live groups
         return {}
+
+
+    #JP working on to show automorphism generators
+    def auto_gens_list(self):
+        gens = self.aut_gens
+        pr_gens = [ [ self.decode(gen) for gen in gens[i]] for i in range(len(gens))]
+        return pr_gens
 
     def representation_line(self, rep_type):
         # TODO: Add links to searches for other representations when available
