@@ -120,8 +120,9 @@ function show_twists(number) {
 
 {% endif %}
 
+{% if cl.polarized_abelian_varieties %}
 <h2>{{ KNOWL('av.polarization',title="Polarizations") }} </h2>
 {{ cl.display_polarizations() | safe }}
-
+{% endif %}
 
 {% endblock %}
