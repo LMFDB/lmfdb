@@ -44,7 +44,7 @@ def get_bread(*breads):
     bc = [("Elliptic curves", url_for(".index"))]
     for x in breads:
         if not isinstance(x, tuple):
-            x = [(x, " ")]
+            x = (x, " ")
         bc.append(x)
     return bc
 
