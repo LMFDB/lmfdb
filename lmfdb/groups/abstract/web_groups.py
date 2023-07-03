@@ -1795,12 +1795,9 @@ class WebAbstractGroup(WebObj):
         # For live groups
         return {}
 
-
-    #JP working on to show automorphism generators
     def auto_gens_list(self):
         gens = self.aut_gens
-        pr_gens = [ [ self.decode(gen) for gen in gens[i]] for i in range(len(gens))]
-        return pr_gens
+        return [ [ self.decode(gen) for gen in gens[i]] for i in range(len(gens))]
 
     def representation_line(self, rep_type):
         # TODO: Add links to searches for other representations when available

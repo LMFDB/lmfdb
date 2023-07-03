@@ -796,7 +796,7 @@ def _subgroup_diagram(label, typ, title, only):
 @abstract_page.route("/diagram/<label>")
 def subgroup_diagram(label):
     title = f"Diagram of subgroups up to conjugation for group {label}"
-    return _subgroup_diagram(label, "conj", only=("subgroup", ""))
+    return _subgroup_diagram(label, "conj", title, only=("subgroup", ""))
 
 @abstract_page.route("/autdiagram/<label>")
 def subgroup_autdiagram(label):
@@ -1309,7 +1309,7 @@ def render_abstract_subgroup(label):
     info["create_boolean_string"] = create_boolean_string
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
     info["pos_int_and_factor"] = pos_int_and_factor
-
+    
     if seq.normal:
         title = r"Normal subgroup $%s \trianglelefteq %s$"
     else:
