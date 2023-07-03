@@ -761,7 +761,7 @@ class WebAbstractGroup(WebObj):
             ("Exponent", web_latex(factor(self.exponent))),
         ]
         if self.number_conjugacy_classes != None and self.number_conjugacy_classes <= 2000:
-            props.append((None, self.image()))
+            props.append((None, f'<a href="{url_for("abstract.picture", label=self.label)}">{self.image()}</a>'))
         if self.abelian:
             props.append(("Abelian", "yes"))
             if self.simple:
