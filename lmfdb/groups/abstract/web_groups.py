@@ -1419,7 +1419,7 @@ class WebAbstractGroup(WebObj):
         semis = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
-            if sub.normal and sub.split and not sub.direct nad sub.subgroup is not None and sub.quotient is not None and sub.subgroup_order != 1 and sub.quotient_order != 1:
+            if sub.normal and sub.split and not sub.direct and sub.subgroup is not None and sub.quotient is not None and sub.subgroup_order != 1 and sub.quotient_order != 1:
                 pair = (sub.subgroup, sub.quotient)
                 if pair not in subs:
                     semis.append(sub)
