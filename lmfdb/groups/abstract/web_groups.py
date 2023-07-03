@@ -1398,21 +1398,21 @@ class WebAbstractGroup(WebObj):
                 Agroup = db.gps_groups_test.lucky({'order':int(order), 'cyclic':True})
                 A = Agroup['label']
                 A = abstract_group_display_knowl(Agroup['label'])
-                print("******************************** ", A)
+            elif A=='S_3':
+                A = abstract_group_display_knowl('6.1')
             else:
                 A = rf'${sub_paren(A)}$ '
             B = sub_paren(B)
             B = transitive_group_display_knowl(nt, rf'${B}$')
-            return A+r"$\ \wr\ $"+ B
         else:
             [A, B, C, nt] = wpd
             allsubs = self.subgroups.values()
             A = [z for z in allsubs if z.short_label == A][0]
-            A = A.subgroup_tex_parened
+            A = abstract_group_display_knowl(A.subgroup, name='$'+A.subgroup_tex_parened+'$')
             B = [z for z in allsubs if z.short_label == B][0]
             B = B.subgroup_tex_parened
-            B = transitive_group_display_knowl(nt, B)
-            return r"$"+A+r"\ \wr\ $"+ B
+            B = transitive_group_display_knowl(nt, rf'${B}$')
+        return A+r"$\ \wr\ $"+ B
 
     @lazy_attribute
     def semidirect_products(self):
