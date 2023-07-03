@@ -1797,7 +1797,7 @@ class WebAbstractGroup(WebObj):
 
     def auto_gens_list(self):
         gens = self.aut_gens
-        return [ [ self.decode(gen) for gen in gens[i]] for i in range(len(gens))]
+        return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
     def representation_line(self, rep_type):
         # TODO: Add links to searches for other representations when available
