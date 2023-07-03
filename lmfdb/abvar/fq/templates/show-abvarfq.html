@@ -120,6 +120,56 @@ function show_twists(number) {
 
 {% endif %}
 
+
+{% if false %}
+{% if cl.weak_equivalence_classes %}
+{# An invisible span to get the select color in the diagram into the DOM #}
+<div>
+<span id="group-diagram-selected" style="display:none;">Hi</span>
+</div>
+
+{% if wide %}
+<canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+  Sorry, your browser does not support the subgroup diagram.
+</canvas>
+
+<div class="subgroup_diagram">
+  <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+</div>
+
+<h4>Endomorphism ring information</h4>
+<div class="selectedsub">
+  Click on an endomorphism ring in the diagram to see information about it.
+</div>
+{% else %} {# not wide #}
+<table>
+  <tr>
+    <td>
+      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+        Sorry, your browser does not support the nearby lattice.
+      </canvas>
+    <td valign="top">
+      <h4>Endomorphism ring information</h4>
+      <div class="selectedsub">
+        Click on an endomorphism ring in the diagram to see information about it.
+      </div>
+    </td>
+  </tr>
+</table>
+<div class="subgroup_diagram">
+  <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+</div>
+{% endif %} {# wide #}
+
+<script type="text/javascript">
+  {{ dojs|safe }}
+  sdiagram.setSize();
+  sdiagram.draw();
+</script>
+{% endif %} {# weak_equivalence_classes #}
+{% endif %}
+
+
 {% if cl.polarized_abelian_varieties %}
 <h2>{{ KNOWL('av.polarization',title="Polarizations") }} </h2>
 {{ cl.display_polarizations() | safe }}
