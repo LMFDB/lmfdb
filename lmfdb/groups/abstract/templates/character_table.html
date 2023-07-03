@@ -11,7 +11,7 @@
   {% for p in gp.factors_of_order %}
     {% set ploop = loop %}
     <tr>
-      <td></td><td class="right">{{p}}P</td>
+      <td></td><td class="right">{{KNOWL('group.conjugacy_class.power_classes',"{} P".format(p))}}</td>
       {% for c in ccs %}
         <td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
       {% endfor %}
