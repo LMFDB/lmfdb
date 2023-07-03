@@ -2250,16 +2250,16 @@ def rchar_data(label):
     ans += "<br>Schur index: {}".format(mychar.schur_index)
     nt = mychar.nt
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
-    if mychar._data.get("image"):
-        txt = "Image"
-        imageknowl = (
-            '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(mychar.image)
-        )
-        if mychar.schur_index > 1:
-            txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
-        ans += "<br>{}: {}".format(txt, imageknowl)
-    else:
-        ans += "<br>Image: not computed"
+    #if mychar._data.get("image"):
+    #    txt = "Image"
+    #    imageknowl = (
+    #        '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(mychar.image)
+    #    )
+    #    if mychar.schur_index > 1:
+    #        txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
+    #    ans += "<br>{}: {}".format(txt, imageknowl)
+    #else:
+    #    ans += "<br>Image: not computed"
     return Markup(ans)
 
 
@@ -2282,14 +2282,14 @@ def cchar_data(label):
     ans += "<br>Frobenius-Schur indicator: {}".format(mychar.indicator)
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
     ans += "<br>Field of character values: {}".format(formatfield(mychar.field))
-    if mychar._data.get("image"):
-        imageknowl = (
-            '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
-            % (mychar.image, mychar.image, mychar.image)
-        )
-        ans += "<br>Image: {}".format(imageknowl)
-    else:
-        ans += "<br>Image: not computed"
+    #if mychar._data.get("image"):
+    #    imageknowl = (
+    #        '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
+    #        % (mychar.image, mychar.image, mychar.image)
+    #    )
+    #    ans += "<br>Image: {}".format(imageknowl)
+    #else:
+    #    ans += "<br>Image: not computed"
     return Markup(ans)
 
 
