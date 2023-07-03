@@ -731,7 +731,7 @@ def auto_gens(label):
         "auto_gens_page.html",
         gp=gp,
         title="Generators of automorphism group for %s" % label,
-        bread=get_bread([("Automoorphism group generators", " ")]),
+        bread=get_bread([("Automorphism group generators", " ")]),
         learnmore=learnmore_list(),
     )
 
