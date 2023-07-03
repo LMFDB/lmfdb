@@ -1354,7 +1354,7 @@ class WebAbstractGroup(WebObj):
             for sub in self.subgroups.values():
                 slab = sub.subgroup # Might be None
                 if slab in C:
-                    latex_lookup[slab] = sub.subgroup_tex_parened
+                    latex_lookup[slab] = abstract_group_display_knowl(slab, name='$'+sub.subgroup_tex_parened+'$')
                     sort_key[slab] = (
                         not sub.abelian,
                         sub.subgroup_order.is_prime_power(get_data=True)[0]
@@ -1375,10 +1375,10 @@ class WebAbstractGroup(WebObj):
                         else cgroup.order,
                         cgroup.order,
                     )
-                    latex_lookup[c] = sub_paren(cgroup.tex_name)
+                    latex_lookup[c] = abstract_group_display_knowl(slab, name='$'+sub_paren(cgroup.tex_name)+'$')
             df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
-            s = r" \times ".join(
-                "%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "")
+            s = r" $\, \times\, $ ".join(
+                "%s%s" % (latex_lookup[label], r" ${}^%s$ " % e if e > 1 else "")
                 for (label, e) in df
             )
         return s
