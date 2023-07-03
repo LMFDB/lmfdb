@@ -82,6 +82,7 @@ class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
     """
+    name = "isogeny"
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
@@ -530,7 +531,6 @@ class AbvarFq_isoclass():
             return ""
 
 
-    
 
 
     header_polarized_varieties = [
@@ -547,14 +547,14 @@ class AbvarFq_isoclass():
         cols = [elt for elt, _ ,_ in self.header_polarized_varieties]
         return list(db.av_fq_pol.search({"isog_label": self.label}, cols))
 
-    def display_header_polarized_varieties(self):
+    def display_header_polarizations(self):
         ths = "\n".join(
             f'<th class="sticky-head dark">{display_knowl(kwl, title=title)}</th>' for _, kwl, title in self.header_polarized_varieties)
 
         return f'<thead><tr>\n{ths}\n</tr></thead>'
 
 
-    def display_polarized_varieties(self):#, query={}):
+    def display_rows_polarizations(self, query=None):
         polarized_columns_display = {
         'aut_group': lambda x : abstract_group_display_knowl(x['aut_group']),
         'degree': lambda x : web_latex(x['degree']),
@@ -570,6 +570,14 @@ class AbvarFq_isoclass():
             shade = 'dark' if i%2 == 0 else 'light'
             res += f'<tr class="{shade}">\n' + "\n".join([f"<td>{polarized_columns_display[col](elt)}</td>" for col, _, _ in self.header_polarized_varieties]) + "</tr>\n"
         return f'<tbody>\n{res}</tbody>'
+
+    def display_polarizations(self, query=None):
+        return rf"""
+        <table class="ntdata">
+          {self.display_header_polarizations()}
+          {self.display_rows_polarizations()}
+        </table>
+"""
 
 
 
