@@ -340,7 +340,7 @@ class AbvarFq_isoclass():
             d, num = gen
             num = to_R(num)
             gens = ["F", "V"]
-            if num not in ZZ:
+            if num != 0:
                 s = latex(num)
                 if d != 1:
                     s = r"\frac{1}{%s}(%s)" % (d, s)
