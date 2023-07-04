@@ -2486,7 +2486,7 @@ def nonsplit_data(label):
     ans = f"Nonsplit product expressions for ${gp.tex_name}$:<br />\n"
     ans += "<table>\n"
     for sub, cnt, labels in gp.nonsplit_products:
-        ans += f"<tr><td>${sub.subgroup_tex_parened}~.~{sub.quotient_tex_parened}$</td><td>"
+        ans += fr"<tr><td>{sub.knowl(paren=True)} $\,.\,$ {sub.quotient_knowl(paren=True)}</td><td>"
         if cnt > 1:
             ans += f" in {cnt} ways"
         ans += ' via </td>'

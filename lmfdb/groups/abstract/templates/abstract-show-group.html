@@ -298,12 +298,16 @@
         {% endfor %}
         <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
       {% else %}
-        <td> not computed</td>
+        {% if gp.abelian %}
+          <td colspan="8"> not isomorphic to a non-trivial semidirect product</td>
+        {% else %}
+          <td> not computed </td>
+        {% endif %}
       {% endif %}
   {% elif gp.semidirect_product == False %}
       <td colspan="8"> not isomorphic to a non-trivial semidirect product</td>
   {% else %}
-      <td> not computed</td>
+      <td> not computed </td>
   {% endif %}
   </tr>
   <tr>
@@ -322,7 +326,7 @@
     <tr>
       <td>{{KNOWL('group.nonsplit_product', 'Non-split product')}}:</td>
       {% for sub, count, labels in gp.nonsplit_products[:4] %}
-        <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+        <td>{{sub.knowl(paren=True)|safe}}&nbsp;.&nbsp;{{sub.quotient_knowl(paren=True)|safe}} {% if count > 1 %} ({{count}}){% endif %}</td>
       {% endfor %}
       {% for i in range(4 - (gp.nonsplit_products|length)) %}
       <td></td>
