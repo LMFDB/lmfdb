@@ -959,8 +959,8 @@ group_columns = SearchColumns([
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree"),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree"),
-    MathCol("irrC_degree", "group.irrC_degree", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
-    MathCol("irrQ_degree", "group.irrQ_degree", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree"),
+    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
+    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
@@ -1821,17 +1821,19 @@ class GroupsSearchArray(SearchArray):
         )
         irrC_degree = TextBox(
             name="irrC_degree",
-            label=r"$\C$-irrep degree",
-            knowl="group.irrC_degree",
+            label=r"Minimal degree of $\C$-irrep",
+            knowl="group.min_complex_irrep_deg",
             example="3",
             example_span="4, or a range like 3..5",
+            advanced=True,
         )
         irrQ_degree = TextBox(
             name="irrQ_degree",
-            label=r"$\Q$-irrep degree",
-            knowl="group.irrQ_degree",
+            label=r"Minimal degree of $\Q$-irrep",
+            knowl="group.min_rational_irrep_deg",
             example="3",
             example_span="4, or a range like 3..5",
+            advanced=True,
         )
         schur_multiplier = TextBox(
             name="schur_multiplier",
@@ -2258,16 +2260,16 @@ def rchar_data(label):
     ans += "<br>Schur index: {}".format(mychar.schur_index)
     nt = mychar.nt
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
-    if mychar._data.get("image"):
-        txt = "Image"
-        imageknowl = (
-            '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(mychar.image)
-        )
-        if mychar.schur_index > 1:
-            txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
-        ans += "<br>{}: {}".format(txt, imageknowl)
-    else:
-        ans += "<br>Image: not computed"
+    #if mychar._data.get("image"):
+    #    txt = "Image"
+    #    imageknowl = (
+    #        '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(mychar.image)
+    #    )
+    #    if mychar.schur_index > 1:
+    #        txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
+    #    ans += "<br>{}: {}".format(txt, imageknowl)
+    #else:
+    #    ans += "<br>Image: not computed"
     return Markup(ans)
 
 
@@ -2290,14 +2292,14 @@ def cchar_data(label):
     ans += "<br>Frobenius-Schur indicator: {}".format(mychar.indicator)
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
     ans += "<br>Field of character values: {}".format(formatfield(mychar.field))
-    if mychar._data.get("image"):
-        imageknowl = (
-            '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
-            % (mychar.image, mychar.image, mychar.image)
-        )
-        ans += "<br>Image: {}".format(imageknowl)
-    else:
-        ans += "<br>Image: not computed"
+    #if mychar._data.get("image"):
+    #    imageknowl = (
+    #        '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
+    #        % (mychar.image, mychar.image, mychar.image)
+    #    )
+    #    ans += "<br>Image: {}".format(imageknowl)
+    #else:
+    #    ans += "<br>Image: not computed"
     return Markup(ans)
 
 

@@ -234,14 +234,15 @@
   <table>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.irrC_degree','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
-    <tr><td>  {{KNOWL('group.irrC_degree','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.irrC_degree','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
+<<<<<<< HEAD
+    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
+    <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
     {% if gp.irrQ_degree == None %}
-<tr><td>  {{KNOWL('group.irrQ_degree','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
+<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
     {% elif gp.irrQ_degree == -1 %}
-<tr><td>  {{KNOWL('group.irrQ_degree','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
+<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
-    <tr><td>  {{KNOWL('group.irrQ_degree','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     {% if gp.rank %}
@@ -255,9 +256,9 @@
   {% if gp.eulerian_function != None %}
     <td>${{gp.eulerian_function}}$</td>
     {% else %} <td>not computed</td> {% endif %}
-
   </tr>
 </table>
+
 </p>
 
 
@@ -276,7 +277,7 @@
     <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
   {% if gp.direct_product %}
       {% if gp.display_direct_product %}
-          <td>${{ gp.display_direct_product }}$</td>
+          <td>{{ gp.display_direct_product|safe }}</td>
       {% else %}
           <td colspan="8">The group is a direct product of some of its subgroups but those subgroups have not been computed.</td>
       {% endif %}
