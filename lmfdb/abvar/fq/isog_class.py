@@ -355,7 +355,7 @@ class AbvarFq_isoclass():
             conductor = latex(num)
             if d != 1:
                 conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-            conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_\mathbb{{Q}}(F)}}"
+            conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_{{\mathbb{{Q}}(F)}}}}"
         else:
             conductor = "\mathcal{O}_{\mathbb{Q}(F)}"
             if M != 1:
