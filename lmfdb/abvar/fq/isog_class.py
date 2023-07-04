@@ -349,18 +349,15 @@ class AbvarFq_isoclass():
         names = "=".join(names)
 
         # conductor
-        if index == 1:
-            conductor = r"\mathbb{Z}[F, V]"
+        M, d, num = rec["conductor"]
+        num = to_R(num)
+        if num != 0:
+            conductor = latex(num)
+            if d != 1:
+                conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+            conductor = fr"\langle {M},{conductor}\rangle"
         else:
-            M, d, num = rec["conductor"]
-            num = to_R(num)
-            if num != 0:
-                conductor = latex(num)
-                if d != 1:
-                    conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-                conductor = fr"\langle {M},{conductor}\rangle"
-            else:
-                conductor = f"{M}"
+            conductor = f"{M}"
         if rec["pic_invs"] == []:
             pic_url = url_for("abstract.by_label", label="1.1")
             pic = "C_1"
