@@ -785,6 +785,8 @@ class WebAbstractGroup(WebObj):
             if cent_order_factored:
                 props.extend([(r"$\card{Z(G)}$",
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
+            elif self.center_label:
+                 props.extend([(r"$\card{Z(G)}$", self.center_label.split(".")[0])])                
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
@@ -2416,12 +2418,16 @@ class WebAbstractSubgroup(WebObj):
                 labels.extend([make_full(label) for label in llist])
         return list(db.gps_subgroups_test.search({"label": {"$in": labels}}))
 
+    
     def autjugate_subgroups(self):
-        return [
+        if self.amb.outer_equivalence == False and self.amb.complements_known == False and self.amb.subgroup_inclusions_known == False:
+            return None  #trying to say subgroups not computed up to autjugacy
+        else:
+            return [
             H
             for H in self.amb.subgroups.values()
             if H.aut_label == self.aut_label and H.label != self.label
-        ]
+            ]
 
     @lazy_attribute
     def centralizer_(self):

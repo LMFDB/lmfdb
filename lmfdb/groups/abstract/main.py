@@ -1309,12 +1309,20 @@ def render_abstract_subgroup(label):
     info["create_boolean_string"] = create_boolean_string
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
     info["pos_int_and_factor"] = pos_int_and_factor
-    
-    if seq.normal:
-        title = r"Normal subgroup $%s \trianglelefteq %s$"
+
+
+    if seq.subgroup_tex != "?":
+        if seq.normal:
+            title = r"Normal subgroup $%s \trianglelefteq %s$"
+        else:
+            title = r"Non-normal subgroup $%s \subseteq %s$"
+        title = title % (seq.subgroup_tex, seq.ambient_tex)
     else:
-        title = r"Non-normal subgroup $%s \subseteq %s$"
-    title = title % (seq.subgroup_tex, seq.ambient_tex)
+        if seq.normal:
+            title = r"Normal subgroup of $%s$"
+        else:
+            title = r"Non-normal subgroup of $%s$"
+        title = title % (seq.ambient_tex)
 
     properties = [
         ("Label", label),
