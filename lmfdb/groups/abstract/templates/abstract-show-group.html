@@ -291,12 +291,14 @@
     {% if gp.semidirect_product %}
       {% if gp.semidirect_products %}
         {% for sub, count, labels in gp.semidirect_products[:4] %}
-          <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+          <td>{{sub.knowl(paren=True)|safe}} $\,\rtimes\,$ {{sub.quotient_knowl(paren=True)|safe}} {% if count > 1 %} ({{count}}){% endif %}</td>
         {% endfor %}
         {% for i in range(4 - (gp.semidirect_products|length)) %}
         <td></td>
         {% endfor %}
         <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
+      {% else %}
+        <td> not computed</td>
       {% endif %}
   {% elif gp.semidirect_product == False %}
       <td colspan="8"> not isomorphic to a non-trivial semidirect product</td>

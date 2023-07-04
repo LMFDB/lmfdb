@@ -2473,7 +2473,7 @@ def semidirect_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Semidirect product expressions for ${gp.tex_name}$:<br />\n"
     for sub, cnt, labels in gp.semidirect_products:
-        ans += fr"${sub.subgroup_tex_parened}~\rtimes~{sub.quotient_tex_parened}$"
+        ans += fr"{sub.knowl(paren=True)} $\,\rtimes\,$ {sub.quotient_knowl(paren=True)}"
         if cnt > 1:
             ans += f" in {cnt} ways"
         ans += ' via '

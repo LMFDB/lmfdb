@@ -2375,6 +2375,16 @@ class WebAbstractSubgroup(WebObj):
         if self.projective_image is not None:
             return self._lookup(self.projective_image, self._full, WebAbstractGroup)
 
+    def knowl(self, paren=False):
+        from lmfdb.groups.abstract.main import sub_display_knowl
+        knowlname = self.subgroup_tex_parened if paren else self.subgroup_tex
+        return sub_display_knowl(self.label, name=rf'${knowlname}$')
+
+    def quotient_knowl(self, paren=False):
+        # assumes there is a quotient group
+        knowlname = self.quotient_tex_parened if paren else self.quotient_tex
+        return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
+
     def display_quotient(self, subname=None, ab_invs=None):
         if subname is None:
             prefix = quoname = ""
