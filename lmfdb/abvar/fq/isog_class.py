@@ -331,14 +331,12 @@ class AbvarFq_isoclass():
 
         # Ring display
         names = ["R"]
-        if index == 1:
-            names.append(r"\mathbb{Z}[F, V]")
         if rec["is_Zconductor_sum"]:
             names.append(r"\mathbb{Z} + \mathfrak{f}_R")
         elif rec["is_ZFVconductor_sum"]:
             names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
         gen = rec["generator_over_ZFV"]
-        if gen and gen[1] != [0]*4:
+        if gen:
             d, num = gen
             num = to_R(num)
             gens = ["F", "V"]
@@ -362,7 +360,7 @@ class AbvarFq_isoclass():
                     conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
                 conductor = fr"\langle {M},{conductor}\rangle"
             else:
-                conductor = fr"{M} \mathbb{{Z}}"
+                conductor = f"{M}"
         if rec["pic_invs"] == []:
             pic_url = url_for("abstract.by_label", label="1.1")
             pic = "C_1"
