@@ -7,6 +7,11 @@
     {% for c in ccs %}
       <td class="right">{{ c.display_knowl() | safe }}</td>
     {% endfor %}
+    <tr>
+    <td></td><td>Size</td>
+    {% for c in ccs %}
+      <td class="right">{{ c.size }}</td>
+    {% endfor %}
   </tr>
   {% for p in gp.factors_of_order %}
     {% set ploop = loop %}

@@ -6,6 +6,12 @@
       <td>{{ c.display_knowl() | safe }}</td>
     {% endfor %}
   </tr>
+    <tr>
+    <td></td><td>Size</td>
+    {% for c in gp.conjugacy_class_divisions %}
+      <td class="right">{{ c.size() }}</td>
+    {% endfor %}
+  </tr>
   {% for p in gp.factors_of_order %}
     {% set ploop = loop %}
     <tr>

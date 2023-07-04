@@ -2522,6 +2522,9 @@ class WebAbstractDivision():
         self.classes = classes
         self.order = classes[0].order
 
+    def size(self):
+        return sum([z.size for z in self.classes])
+
     def display_knowl(self, name=None):
         if not name:
             name = self.label
