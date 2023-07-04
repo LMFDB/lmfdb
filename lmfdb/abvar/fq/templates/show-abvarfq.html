@@ -2,6 +2,8 @@
 
 {% block subcontent %}
 
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='abvar.js') }}"></script>
 <script type="text/javascript">
   function show_more_curves() {
     $("#more_curves").show();
@@ -122,13 +124,14 @@ function show_twists(number) {
 
 
 {% if cl.weak_equivalence_classes %}
+<h2>{{ KNOWL('ag.endomorphism_ring',title="Endomorphism rings") }}</h2>
 {# An invisible span to get the select color in the diagram into the DOM #}
 <div>
 <span id="group-diagram-selected" style="display:none;">Hi</span>
 </div>
 
-{% if wide %}
-<canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+{% if cl.diagram_js.display_opts.w > 1600 %}
+<canvas id="endring_diagram" width="1000" height="300" style="border: 0px solid black">
   Sorry, your browser does not support the subgroup diagram.
 </canvas>
 
@@ -144,7 +147,7 @@ function show_twists(number) {
 <table>
   <tr>
     <td>
-      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+      <canvas id="endring_diagram" width="500" height="300" style="border: 0px solid black">
         Sorry, your browser does not support the nearby lattice.
       </canvas>
     <td valign="top">
@@ -161,7 +164,7 @@ function show_twists(number) {
 {% endif %} {# wide #}
 
 <script type="text/javascript">
-  {{ dojs|safe }}
+  {{ cl.diagram_js.string |safe }}
   sdiagram.setSize();
   sdiagram.draw();
 </script>

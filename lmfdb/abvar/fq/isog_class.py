@@ -18,7 +18,7 @@ from lmfdb.logger import make_logger
 from lmfdb import db
 from lmfdb.app import app
 
-from sage.all import Factorization
+from sage.all import Factorization, FreeAlgebra
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
@@ -77,6 +77,36 @@ def validate_label(label):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with g=%s components" % (g))
     if not all(c.isalpha() and c == c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
+
+
+def diagram_js(layers, display_opts):
+    ll = [
+        [
+            node.label, # grp.subgroup
+            node.label, # grp.short_label
+            node.tex, # grp.subgroup_tex
+            1, # grp.count (never want conjugacy class counts)
+            node.rank, # grp.subgroup_order
+            node.img,
+            node.x, # grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1])
+            [node.x, node.x, node.x, node.x], # grp.diagram_aut_x if aut else grp.diagram_x
+        ]
+        for node in layers[0]
+    ]
+    if len(ll) == 0:
+        display_opts["w"] = display_opts["h"] = 0
+        return [], [], 0
+    ranks = [node[4] for node in ll]
+    rank_ctr = Counter(ranks)
+    ranks = sorted(rank_ctr)
+    # We would normally make rank_lookup a dictionary, but we're passing it to the horrible language known as javascript
+    # The format is for compatibility with subgroup lattices
+    rank_lookup = [[r, r, 0] for r in ranks]
+    max_width = max(rank_ctr.values())
+    display_opts["w"] = min(100 * max_width, 20000)
+    display_opts["h"] = 160 * len(ranks)
+
+    return [ll, layers[1]], rank_lookup, len(ranks)
 
 class AbvarFq_isoclass():
     """
@@ -216,7 +246,7 @@ class AbvarFq_isoclass():
 
     @lazy_attribute
     def weak_equivalence_classes(self):
-        return list(db.av_fq_weak_equivalences.search({"isog_label":self.label}))
+        return list(db.av_fq_weak_equivalences.search({"isog_label": self.label}))
 
     @lazy_attribute
     def endring_poset(self):
@@ -268,6 +298,90 @@ class AbvarFq_isoclass():
                 node.rank = maxrank - node.rank
                 edges.extend([[node.label, lab] for lab in parents[node.label]])
         return nodes, edges
+
+
+    @lazy_attribute
+    def diagram_js(self):
+        display_opts = {}
+        graph, rank_lookup, num_layers = diagram_js(self.endring_poset, display_opts)
+        return {
+            'string': f'var [sdiagram,graph] = make_sdiagram("endring_diagram", "{self.label}", {graph}, {rank_lookup}, {num_layers});',
+            'display_opts': display_opts
+        }
+
+
+
+    def endringinfo(self, endring):
+        for elt in self.weak_equivalence_classes:
+            if elt['multiplicator_ring'] == endring and elt['is_invertible']:
+                rec = elt
+                break
+        else:
+            assert false
+
+        num_we = sum(1 for elt in self.weak_equivalence_classes if elt['multiplicator_ring'] == endring)
+
+        R = FreeAlgebra(ZZ, ["F", "V"])
+        F, V = R.gens()
+        index = int(endring.split(".")[0])
+        pows = [V**i for i in reversed(range(0, self.g))] + [F**i for i in range(1, self.g + 1)]
+        def to_R(num):
+            assert len(num) == len(pows)
+            return sum(c*p for c, p in zip(num, pows))
+
+        # Ring display
+        names = ["R"]
+        if index == 1:
+            names.append(r"\mathbb{Z}[F, V]")
+        if rec["is_Zconductor_sum"]:
+            names.append(r"\mathbb{Z} + \mathfrak{f}_R")
+        elif rec["is_ZFVconductor_sum"]:
+            names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
+        gen = rec["generator_over_ZFV"]
+        if gen and gen[1] != [0]*4:
+            d, num = gen
+            num = to_R(num)
+            gens = ["F", "V"]
+            if num not in ZZ:
+                s = latex(num)
+                if d != 1:
+                    s = r"\frac{1}{%s}(%s)" % (d, s)
+                gens.append(s)
+            names.append(fr"\mathbb{{Z}}{','.join(gens)}]")
+        names = "=".join(names)
+
+        # conductor
+        if index == 1:
+            conductor = r"\mathbb{Z}[F, V]"
+        else:
+            M, d, num = rec["conductor"]
+            conductor = latex(to_R(num))
+            if d != 1:
+                conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+            conductor = fr"\langle {M},{conductor}\rangle"
+        if rec["pic_invs"] == []:
+            pic_url = url_for("abstract.by_label", label="1.1")
+            pic = "C_1"
+        else:
+            pic_url = url_for("abstract.by_abelian_label", label="ab/" + "_".join(str(c) for c in rec["pic_invs"]))
+            pic = r"\times ".join(f"C_{{{c}}}" for c in rec["pic_invs"])
+        if rec["cohen_macaulay_type"] == 1:
+            cm_type = "$1$ (%s)" % display_knowl('ag.gorenstein', 'Gorenstein')
+        else:
+            cm_type = "$%s$" % rec["cohen_macaulay_type"]
+
+        ans = "\n".join([
+            f'Information on the endomorphism ring ${names}$<br>',
+            "<table>",
+            f"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')}:</td><td>${index}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}</td><td><a href='{pic_url}'>${pic}$</td></tr>",
+            f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}</td><td>{cm_type}</td></tr>",
+            f"<tr><td>Num. {display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}</td><td>${num_we}$</td></tr>",
+            "</table>"
+        ])
+        # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
+        return ans
 
     def _make_jacpol_property(self):
         ans = []

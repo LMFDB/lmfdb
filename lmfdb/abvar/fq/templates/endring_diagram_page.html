@@ -50,12 +50,12 @@
 <h3>{{title|safe}}<h3>
 
 
-<canvas id="endring_diagram" width="{{ info.w }}" height="{{ info.h }}">
+<canvas id="endring_diagram" width="{{ cl.diagram_js.display_opts.w }}" height="{{ cl.diagram_js.display_opts.h }}">
   Sorry, your browser does not support the subgroup diagram.
 </canvas>
 
 <script type="text/javascript">
-  {{ info.dojs|safe }}
+  {{ cl.diagram_js.string |safe }}
   sdiagram.newgraph(graph);
   sdiagram.setSize();
   sdiagram.draw();

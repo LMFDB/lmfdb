@@ -6,7 +6,7 @@ from io import BytesIO
 import time
 
 from flask import abort, render_template, url_for, request, redirect, send_file
-from sage.all import PolynomialRing, ZZ, latex, FreeAlgebra
+from sage.all import PolynomialRing, ZZ
 from sage.databases.cremona import cremona_letter_code
 from collections import Counter
 
@@ -786,123 +786,29 @@ def endring_diagram(label):
     except ValueError:
         flash_error("There is no isogeny class %s in the database", label)
         return redirect(url_for(".abelian_varieties"))
-    dojs, display_opts = diagram_js_string(isoclass)
-    info = {"dojs": dojs}
-    info.update(display_opts)
     return render_template(
         "endring_diagram_page.html",
-        dojs=dojs,
-        info=info,
+        cl=isoclass,
         title="Diagram of endomorphism rings for %s" % label,
         bread=get_bread(("Endomorphism ring diagram", " ")),
         learnmore=learnmore_list(),
     )
 
-def diagram_js(curve, layers, display_opts):
-    ll = [
-        [
-            node.label, # grp.subgroup
-            node.label, # grp.short_label
-            node.tex, # grp.subgroup_tex
-            1, # grp.count (never want conjugacy class counts)
-            node.rank, # grp.subgroup_order
-            node.img,
-            node.x, # grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1])
-            [node.x, node.x, node.x, node.x], # grp.diagram_aut_x if aut else grp.diagram_x
-        ]
-        for node in layers[0]
-    ]
-    if len(ll) == 0:
-        display_opts["w"] = display_opts["h"] = 0
-        return [], [], 0
-    ranks = [node[4] for node in ll]
-    rank_ctr = Counter(ranks)
-    ranks = sorted(rank_ctr)
-    # We would normally make rank_lookup a dictionary, but we're passing it to the horrible language known as javascript
-    # The format is for compatibility with subgroup lattices
-    rank_lookup = [[r, r, 0] for r in ranks]
-    max_width = max(rank_ctr.values())
-    display_opts["w"] = min(100 * max_width, 20000)
-    display_opts["h"] = 160 * len(ranks)
 
-    return [ll, layers[1]], rank_lookup, len(ranks)
 
-def diagram_js_string(isoclass):
-    display_opts = {}
-    graph, rank_lookup, num_layers = diagram_js(isoclass, isoclass.endring_poset, display_opts)
-    return f'var [sdiagram,graph] = make_sdiagram("endring_diagram", "{isoclass.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
+
 
 @abvarfq_page.route("/endringinfo/<label>/<endring>")
 def endringinfo(label, endring):
     if not (isogeny_class_label_regex.fullmatch(label) and mring_regex.fullmatch(endring)):
         return ""
-    data = list(db.av_fq_weak_equivalences.search({"isog_label":label, "multiplicator_ring":endring}, ["is_invertible", "generator_over_ZFV", "is_Zconductor_sum", "is_ZFVconductor_sum", "conductor", "conductor_is_Sprime", "conductor_is_Oprime", "is_conjugate_stable", "is_product", "cohen_macaulay_type", "pic_size", "pic_invs", "rational_invariants"]))
-    num_we = len(data)
-    rec = [rec for rec in data if rec["is_invertible"]][0]
+    try:
+        isoclass = AbvarFq_isoclass.by_label(label)
+    except ValueError:
+        return ""
+    return isoclass.endringinfo(endring)
 
-    R = FreeAlgebra(ZZ, ["F", "V"])
-    F, V = R.gens()
-    index = int(endring.split(".")[0])
-    g = int(label.split(".", 1)[0])
-    pows = [V**i for i in reversed(range(0,g))] + [F**i for i in range(1, g + 1)]
-    def to_R(num):
-        assert len(num) == len(pows)
-        return sum(c*p for c, p in zip(num, pows))
 
-    # Ring display
-    names = ["R"]
-    if index == 1:
-        names.append(r"\mathbb{Z}[F, V]")
-    if rec["is_Zconductor_sum"]:
-        names.append(r"\mathbb{Z} + \mathfrak{f}_R")
-    elif rec["is_ZFVconductor_sum"]:
-        names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
-    gen = rec["generator_over_ZFV"]
-    if gen and gen[1] != [0]*4:
-        d, num = gen
-        num = to_R(num)
-        gens = ["F", "V"]
-        if num not in ZZ:
-            s = latex(num)
-            if d != 1:
-                s = r"\frac{1}{%s}(%s)" % (d, s)
-            gens.append(s)
-        names.append(fr"\mathbb{{Z}}{','.join(gens)}]")
-    names = "=".join(names)
-
-    # conductor
-    if index == 1:
-        conductor = r"\mathbb{Z}[F, V]"
-    else:
-        M, d, num = rec["conductor"]
-        conductor = latex(to_R(num))
-        if d != 1:
-            conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-        conductor = fr"\langle {M},{conductor}\rangle"
-    if rec["pic_invs"] == []:
-        pic_url = url_for("abstract.by_label", label="1.1")
-        pic = "C_1"
-    else:
-        pic_url = url_for("abstract.by_abelian_label", label="ab/" + "_".join(str(c) for c in rec["pic_invs"]))
-        pic = r"\times ".join(f"C_{{{c}}}" for c in rec["pic_invs"])
-    if rec["cohen_macaulay_type"] == 1:
-        cm_type = "$1$ (%s)" % display_knowl('ag.gorenstein', 'Gorenstein')
-    else:
-        cm_type = "$%s$" % rec["cohen_macaulay_type"]
-
-    ans = "\n".join([
-        f'Information on the endomorphism ring ${names}$<br>',
-        "<table>",
-        f"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')}:</td><td>${index}$</td></tr>",
-        fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-        f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}</td><td><a href='{pic_url}'>${pic}$</td></tr>",
-        f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}</td><td>{cm_type}</td></tr>",
-        f"<tr><td>Num. {display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}</td><td>${num_we}$</td></tr>",
-        "</table>"
-    ])
-    print(repr(ans))
-    # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
-    return ans
 
 def search_input_error(info=None, bread=None):
     if info is None:
