@@ -1813,17 +1813,19 @@ class GroupsSearchArray(SearchArray):
         )
         irrC_degree = TextBox(
             name="irrC_degree",
-            label=r"$\C$-irrep degree",
-            knowl="group.irrC_degree",
+            label=r"Minimal degree of $\C$-irrep",
+            knowl="group.min_complex_irrep_deg",
             example="3",
             example_span="4, or a range like 3..5",
+            advanced=True,
         )
         irrQ_degree = TextBox(
             name="irrQ_degree",
-            label=r"$\Q$-irrep degree",
-            knowl="group.irrQ_degree",
+            label=r"Minimal degree of $\Q$-irrep",
+            knowl="group.min_rational_irrep_deg",
             example="3",
             example_span="4, or a range like 3..5",
+            advanced=True,
         )
         schur_multiplier = TextBox(
             name="schur_multiplier",
