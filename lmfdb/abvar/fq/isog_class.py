@@ -372,7 +372,7 @@ class AbvarFq_isoclass():
             cm_type = "$%s$" % rec["cohen_macaulay_type"]
 
         ans = "\n".join([
-            f'Information on the endomorphism ring ${names}$<br>',
+            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
             "<table>",
             f"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')}:</td><td>${index}$</td></tr>",
             fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
