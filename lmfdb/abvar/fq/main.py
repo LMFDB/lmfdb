@@ -6,7 +6,7 @@ from io import BytesIO
 import time
 
 from flask import abort, render_template, url_for, request, redirect, send_file
-from sage.all import PolynomialRing, ZZ, latex
+from sage.all import PolynomialRing, ZZ, latex, FreeAlgebra
 from sage.databases.cremona import cremona_letter_code
 from collections import Counter
 
@@ -840,46 +840,45 @@ def endringinfo(label, endring):
     num_we = len(data)
     rec = [rec for rec in data if rec["is_invertible"]][0]
 
+    R = FreeAlgebra(ZZ, ["F", "V"])
+    F, V = R.gens()
+    index = int(endring.split(".")[0])
+    g = int(label.split(".", 1)[0])
+    pows = [V**i for i in reversed(range(0,g))] + [F**i for i in range(1, g + 1)]
+    def to_R(num):
+        assert len(num) == len(pows)
+        return sum(c*p for c, p in zip(num, pows))
+
+    # Ring display
     names = ["R"]
+    if index == 1:
+        names.append(r"\mathbb{Z}[F, V]")
     if rec["is_Zconductor_sum"]:
         names.append(r"\mathbb{Z} + \mathfrak{f}_R")
     elif rec["is_ZFVconductor_sum"]:
         names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
     gen = rec["generator_over_ZFV"]
-    if gen:
+    if gen and gen[1] != [0]*4:
         d, num = gen
-        g = len(num) // 2
-        pows = [f"V^{i}" for i in reversed(range(2,g))] + (["V", "", "F"] if g > 1 else ["", "F"]) + [f"F^{i}" for i in range(2, g+1)]
-        s = ""
-        for c, xpow in zip(num, pows):
-            if c == 0:
-                continue
-            elif c == 1:
-                if xpow:
-                    s += "+" + xpow
-                else:
-                    x += "+1"
-            elif c == -1:
-                if xpow:
-                    s += "-" + xpow
-                else:
-                    s += "-1"
-            elif c < 0:
-                s += fr"-{-c}{xpow}"
-            else:
-                s += fr"+{c}{xpow}"
-        if s and s[0] == "+":
-            s = s[1:]
-        if d != 1:
-            s = r"\frac{1}{%s}(%s)" % (d, s)
-        names.append(fr"\mathbb{{Z}}[F, V, {s}]")
+        num = to_R(num)
+        gens = ["F", "V"]
+        if num not in ZZ:
+            s = latex(num)
+            if d != 1:
+                s = r"\frac{1}{%s}(%s)" % (d, s)
+            gens.append(s)
+        names.append(fr"\mathbb{{Z}}{','.join(gens)}]")
     names = "=".join(names)
-    index = endring.split(".")[0]
-    M, d, alpha = rec["conductor"]
-    conductor = latex(PolynomialRing(ZZ, "F")(alpha))
-    if d != 1:
-        conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-    conductor = fr"\langle{M},{conductor}\rangle"
+
+    # conductor
+    if index == 1:
+        conductor = r"\mathbb{Z}[F, V]"
+    else:
+        M, d, num = rec["conductor"]
+        conductor = latex(to_R(num))
+        if d != 1:
+            conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+        conductor = fr"\langle {M},{conductor}\rangle"
     if rec["pic_invs"] == []:
         pic_url = url_for("abstract.by_label", label="1.1")
         pic = "C_1"
@@ -891,14 +890,17 @@ def endringinfo(label, endring):
     else:
         cm_type = "$%s$" % rec["cohen_macaulay_type"]
 
-    ans = f'Information on the endomorphism ring ${names}$<br>\n'
-    ans += "<table>\n"
-    ans += f"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')}:</td><td>${index}$</td></tr>\n"
-    ans += fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>\n"
-    ans += f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}</td><td><a href='{pic_url}'>${pic}$</td></tr>\n"
-    ans += f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}</td><td>{cm_type}</td></tr>\n"
-    ans += f"<tr><td>Num. {display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}</td><td>${num_we}$</td></tr>\n"
-    ans += "</table>"
+    ans = "\n".join([
+        f'Information on the endomorphism ring ${names}$<br>',
+        "<table>",
+        f"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')}:</td><td>${index}$</td></tr>",
+        fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
+        f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}</td><td><a href='{pic_url}'>${pic}$</td></tr>",
+        f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}</td><td>{cm_type}</td></tr>",
+        f"<tr><td>Num. {display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}</td><td>${num_we}$</td></tr>",
+        "</table>"
+    ])
+    print(repr(ans))
     # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
     return ans
 
