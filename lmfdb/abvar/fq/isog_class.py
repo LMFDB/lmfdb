@@ -19,7 +19,7 @@ from lmfdb import db
 from lmfdb.app import app
 
 from sage.all import Factorization, FreeAlgebra
-from sage.misc import latex
+from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.plot.all import line, points, circle, Graphics
@@ -147,11 +147,11 @@ class AbvarFq_isoclass():
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
             self.expanded_polynomial = ''
         else:
-            self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
+            self.expanded_polynomial = latex(QQ[['x']](self.polynomial))
         if self.zfv_index_factorization is not None:
-            self.zfv_index_factorization_latex = latex.latex(Factorization(self.zfv_index_factorization))
+            self.zfv_index_factorization_latex = latex(Factorization(self.zfv_index_factorization))
         if self.zfv_plus_index_factorization is not None:
-            self.zfv_plus_index_factorization_latex = latex.latex(Factorization(self.zfv_plus_index_factorization))
+            self.zfv_plus_index_factorization_latex = latex(Factorization(self.zfv_plus_index_factorization))
 
 
     @property
