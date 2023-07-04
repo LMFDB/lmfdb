@@ -347,7 +347,7 @@ class AbvarFq_isoclass():
                 if d != 1:
                     s = r"\frac{1}{%s}(%s)" % (d, s)
                 gens.append(s)
-            names.append(fr"\mathbb{{Z}}{','.join(gens)}]")
+            names.append(fr"\mathbb{{Z}}[{','.join(gens)}]")
         names = "=".join(names)
 
         # conductor
