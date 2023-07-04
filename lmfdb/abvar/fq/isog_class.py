@@ -355,9 +355,11 @@ class AbvarFq_isoclass():
             conductor = latex(num)
             if d != 1:
                 conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-            conductor = fr"\langle {M},{conductor}\rangle"
+            conductor = fr"\langle {M},{conductor}\rangle_{{\mathbb{{Q}}(F)}}"
         else:
-            conductor = f"{M}"
+            conductor = "\mathbb{{Q}}(F)"
+            if M != 1:
+                conductor = f"{M} {conductor}"
         if rec["pic_invs"] == []:
             pic_url = url_for("abstract.by_label", label="1.1")
             pic = "C_1"
