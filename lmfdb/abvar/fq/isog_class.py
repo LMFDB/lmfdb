@@ -660,7 +660,7 @@ class AbvarFq_isoclass():
     @lazy_attribute
     def polarized_abelian_varieties(self):
         cols = [elt for elt, _ ,_ in self.header_polarized_varieties]
-        return list(db.av_fq_pol.search({"isog_label": self.label}, cols))
+        return list(db.av_fq_pol.search({"isog_label": self.label}, cols, sort=['degree']))
 
     def display_header_polarizations(self):
         ths = "\n".join(
