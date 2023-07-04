@@ -234,25 +234,30 @@
   <table>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-  </table>
-</p>
-
-
-<p>
-  Minimum dimension of a faithful...
-  <table>
-    {% if gp.linC_degree != None %} <tr><td> ... {{KNOWL('group.linC_degree', 'complex matrix presentation')}}:</td><td>{{gp.linC_degree}}</td></tr> {% endif %}
-    {% if gp.irrC_degree == None %} <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
-    <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
-     {% if gp.linQ_degree != None %} <tr><td> ... {{KNOWL('group.linQ_degree', 'rational matrix presentation')}}:</td><td>{{gp.linQ_degree}}</td></tr> {% endif %}
+    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.irrC_degree','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
+    <tr><td>  {{KNOWL('group.irrC_degree','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.irrC_degree','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
     {% if gp.irrQ_degree == None %}
-<tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>not computed</td></tr>
+<tr><td>  {{KNOWL('group.irrQ_degree','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
     {% elif gp.irrQ_degree == -1 %}
-<tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>no faithful irreducible rational representations</td></tr>
+<tr><td>  {{KNOWL('group.irrQ_degree','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
+    <tr><td>  {{KNOWL('group.irrQ_degree','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %}
+      <td>not computed</td>
+    {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+  {% if gp.eulerian_function != None %}
+    <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
 
-    <tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
-  </table>
+  </tr>
+</table>
 </p>
 
 
@@ -338,21 +343,6 @@
       {% endif %}
     </tr>
   {% endif %}
-  <tr>
-    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
-    {% if gp.rank %}
-      <td>${{gp.rank}}$</td>
-    {% else %}
-      <td>not computed</td>
-    {% endif %}
-  </tr>
-  <tr>
-    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
-  {% if gp.eulerian_function != None %}
-    <td>${{gp.eulerian_function}}$</td>
-    {% else %} <td>not computed</td> {% endif %}
-  
-  </tr>
 </table>
 
 {% else %}
@@ -433,6 +423,8 @@
     {% if gp.cent() %}
     <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
     <td>{{gp.subgroups[gp.cent()].display_quotient("Z")|safe}}</td>
+    {% elif gp.center_label %}
+    <td>A subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">{{gp.center_label}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -442,6 +434,8 @@
     {% if gp.comm() %}
     <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span></td> {# match single quote for code highlighting purposes: ' #}
     <td>{{gp.subgroups[gp.comm()].display_quotient("G'", ab_invs=gp.smith_abelian_invariants)|safe}}</td>
+     {% elif gp.commutator_label %}
+    <td>A subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.comutator_label)}}">{{gp.commutator_label}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -451,6 +445,8 @@
     {% if gp.fratt() %}
     <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
     <td>{{gp.subgroups[gp.fratt()].display_quotient("\\Phi")|safe}} </td>
+     {% elif gp.frattini_label %}
+    <td>A subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">{{gp.frattini_label}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}

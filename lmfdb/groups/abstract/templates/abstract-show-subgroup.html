@@ -143,9 +143,11 @@
     <tr><td>{{KNOWL('group.under_subgroup', 'Maximal under-subgroups:')}}</td>{% for H in seq.contains_ %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a></td>{% endfor %}</tr>
     {% endif %}
     {% if not seq.outer_equivalence %}
-      {% set others = seq.autjugate_subgroups() %}
-      {% if others %}
-        <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}</td>{% for H in others %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">{{H.label}}</a></td>{% endfor %}</tr>
+    {% set others = seq.autjugate_subgroups() %}
+    {% if others == None %}
+     <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td> <td>Subgroups are not computed up to autjugacy.</td></tr>
+      {% elif others %}
+    <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td>{% for H in others %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">{{H.label}}</a></td>{% endfor %}</tr>
       {% endif %}
     {% endif %}
   </table>
