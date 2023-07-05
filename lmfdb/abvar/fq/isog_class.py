@@ -313,10 +313,11 @@ class AbvarFq_isoclass():
 
     @lazy_attribute
     def endring_select_line(self):
-        notation = r'notation $[[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]]_{{i}}^{{\# \mathrm{weak} \cdot \# \mathrm{{Pic}}}}$'
+        notation = r'notation'
         return rf"""
             Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')} R,
-            with the {display_knowl('av.fq.endomorphism_ring_notation', notation) },
+            with the {display_knowl('av.fq.endomorphism_ring_notation', notation) }
+            $[[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
             in the diagram to see information about it.
 """
 
