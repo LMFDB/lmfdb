@@ -376,9 +376,9 @@ class AbvarFq_isoclass():
             "<table>",
             fr"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
             fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}</td><td><a href='{pic_url}'>${pic}$</td></tr>",
-            f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}</td><td>{cm_type}</td></tr>",
-            f"<tr><td>Num. {display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}</td><td>${num_we}$</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td><a href='{pic_url}'>${pic}$</td></tr>",
+            f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
+            fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
         # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
