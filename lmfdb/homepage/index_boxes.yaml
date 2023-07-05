@@ -9,7 +9,7 @@ links:
 ---
 title: Announcements
 content: <p>The first <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT</a> conference will take place July 10-14, 2023 at <a href="https://icerm.brown.edu">ICERM</a>.</p>
-  <p>Other annoucements TBA.</p>
+  <!-- <p>Check out the new section on <a href="/Groups/Abstract/">abstract groups</a> [beta].</p>
 image: announcements
 control: 0
 links:
