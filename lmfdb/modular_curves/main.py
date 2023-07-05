@@ -226,9 +226,6 @@ def curveinfo(label):
 def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
-def url_for_RSZB_label(label):
-    return "https://blue.lmfdb.xyz/ModularCurve/Q/" + label
-
 def url_for_RZB_label(label):
     return "http://users.wfu.edu/rouseja/2adic/" + label + ".html"
 
@@ -316,7 +313,7 @@ def blankzeros(n):
 modcurve_columns = SearchColumns(
     [
         LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-        LinkCol("RSZBlabel", "modcurve.other_labels", "RSZB label", url_for_RSZB_label, short_title="RSZB label"),
+        SearchCol("RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
         LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label"),
         LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
         ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
@@ -945,13 +942,9 @@ def low_degree_points():
     info = to_dict(request.args, search_array=RatPointSearchArray())
     return rational_point_search(info)
 
-def rszb_link(label):
-    RSZBlabel = db.gps_gl2zhat_fine.lookup(label,"RSZBlabel")
-    return r'<a href="https://blue.lmfdb.xyz/ModularCurve/Q/%s">%s</a>'%(RSZBlabel,RSZBlabel) if RSZBlabel else ""
-
 ratpoint_columns = SearchColumns([
     LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-    ProcessedCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", rszb_link, short_title="RSZB label", orig="curve_label"),
+    SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
     ProcessedCol("curve_name", "modcurve.family", "Name", name_to_latex),
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
@@ -966,12 +959,20 @@ ratpoint_columns = SearchColumns([
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
     FloatCol("j_height", "ec.j_height", "$j$-height", default=True)])
 
+def ratpoint_postprocess(res, info, query):
+    labels = list(set(rec["curve_label"] for rec in res))
+    RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat_fine.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
+    for rec in res:
+        rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
+    return res
+
 @search_wrap(
     table=db.modcurve_points_test,
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
     bread=lambda: get_bread("Low-degree point search results"),
+    postprocess=ratpoint_postprocess,
 )
 def rational_point_search(info, query):
     parse_noop(info, query, "curve", qfield="curve_label")
@@ -1204,7 +1205,8 @@ def modcurve_data(label):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     if label == coarse_label:
-        labels = [label]
+        qtwists = list(db.gps_gl2zhat_fine.search({"coarse_label":label}, "label"))
+        labels = [label] + qtwists
     else:
         labels = [label, coarse_label]
     tables = ["gps_gl2zhat_fine" for lab in labels]
