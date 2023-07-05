@@ -870,7 +870,7 @@ class ModCurveSearchArray(SearchArray):
             name="obstructions",
             options=[("", ""),
                      ("nolocal", "Local obstruction"),
-                     ("noglobal", "No obstruction or points"),
+                     ("noglobal", "No known points"),
                      ("global", "Rational points")],
             knowl="modcurve.local_obstruction",
             label="Obstructions")
