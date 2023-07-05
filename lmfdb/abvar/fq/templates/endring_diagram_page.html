@@ -11,7 +11,7 @@
 <script type="text/javascript">
   function getcanvas()
   {
-    return $("#endring_diagram")[0].getContext('2d').canvas;
+    return $("#subdiagram")[0].getContext('2d').canvas;
   }
   function newh(amt)
   {
@@ -50,7 +50,7 @@
 <h3>{{title|safe}}<h3>
 
 
-<canvas id="endring_diagram" width="{{ cl.diagram_js.display_opts.w }}" height="{{ cl.diagram_js.display_opts.h }}">
+<canvas id="subdiagram" width="{{ cl.diagram_js.display_opts.w }}" height="{{ cl.diagram_js.display_opts.h }}">
   Sorry, your browser does not support the subgroup diagram.
 </canvas>
 

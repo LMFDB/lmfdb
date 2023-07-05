@@ -305,7 +305,7 @@ class AbvarFq_isoclass():
         display_opts = {}
         graph, rank_lookup, num_layers = diagram_js(self.endring_poset, display_opts)
         return {
-            'string': f'var [sdiagram,graph] = make_sdiagram("endring_diagram", "{self.label}", {graph}, {rank_lookup}, {num_layers});',
+            'string': f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{self.label}", {graph}, {rank_lookup}, {num_layers});',
             'display_opts': display_opts
         }
 
