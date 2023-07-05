@@ -8,7 +8,6 @@ import time
 from flask import abort, render_template, url_for, request, redirect, send_file
 from sage.all import PolynomialRing, ZZ
 from sage.databases.cremona import cremona_letter_code
-from collections import Counter
 
 from lmfdb import db
 from lmfdb.logger import make_logger
