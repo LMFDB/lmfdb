@@ -944,7 +944,7 @@ def low_degree_points():
 
 ratpoint_columns = SearchColumns([
     LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-    SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
+    #SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
     ProcessedCol("curve_name", "modcurve.family", "Name", name_to_latex),
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
@@ -972,7 +972,7 @@ def ratpoint_postprocess(res, info, query):
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
     bread=lambda: get_bread("Low-degree point search results"),
-    postprocess=ratpoint_postprocess,
+    #postprocess=ratpoint_postprocess,
 )
 def rational_point_search(info, query):
     parse_noop(info, query, "curve", qfield="curve_label")
