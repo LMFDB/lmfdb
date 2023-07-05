@@ -50,7 +50,6 @@ class HomePageTest(LmfdbTest):
         # self.check(homepage, "L/degree4/MaassForm/", 'data on L-functions associated to Maass cusp forms for GSp(4) of level 1')
         # self.check(homepage, "EllipticCurve/Q/102/c/", r'1 &amp; 2 &amp; 4 &amp; 4 &amp; 8 &amp; 8')
 
-
     # test global random
     def test_random(self):
         L = self.tc.get("/random", follow_redirects=True)
