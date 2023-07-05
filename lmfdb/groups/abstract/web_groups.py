@@ -1981,9 +1981,6 @@ class WebAbstractGroup(WebObj):
         return ZGord.factor()
 
 
-    #                                                                                                                        def	special_abstract_label(self):
-
-    
     def comm(self):
         return self.special_search("D")
 
