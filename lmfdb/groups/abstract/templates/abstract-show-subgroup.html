@@ -145,7 +145,7 @@
     {% if not seq.outer_equivalence %}
     {% set others = seq.autjugate_subgroups() %}
     {% if others == None %}
-     <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td> <td>Subgroups are not computed up to autjugacy.</td></tr>
+     <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td> <td>Subgroups are not computed up to automorphism.</td></tr>
       {% elif others %}
     <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td>{% for H in others %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">{{H.label}}</a></td>{% endfor %}</tr>
       {% endif %}

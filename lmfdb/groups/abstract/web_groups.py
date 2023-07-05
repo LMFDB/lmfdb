@@ -1655,6 +1655,7 @@ class WebAbstractGroup(WebObj):
         rep_data = self.representations[rep_type]
         if rep_type == "Lie":
             rep_type = "GLFq"
+            rep_data = rep_data[0]
         d = rep_data["d"]
         k = 1
         if rep_type == "GLZ":
@@ -1953,6 +1954,12 @@ class WebAbstractGroup(WebObj):
         )
 
     # special subgroups
+
+    #first function is if we only know special subgroups as abstract groups
+    def special_subs_label(self,label):
+        info=db.gps_groups_test.lucky({"label": label})
+        return info['tex_name']
+
     def cent(self):
         return self.special_search("Z")
 
@@ -1962,6 +1969,7 @@ class WebAbstractGroup(WebObj):
             return self.subgroups[self.cent()].subgroup_tex
         return None
 
+    
     def cent_order_factor(self):
         if self.live():
             ZGord = ZZ(self.G.Center().Order())
@@ -1972,6 +1980,10 @@ class WebAbstractGroup(WebObj):
             ZGord = self.order // ZZ(cent.split(".")[0])
         return ZGord.factor()
 
+
+    #                                                                                                                        def	special_abstract_label(self):
+
+    
     def comm(self):
         return self.special_search("D")
 
