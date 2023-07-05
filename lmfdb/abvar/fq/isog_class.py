@@ -10,7 +10,6 @@ TODO
 """
 
 from flask import url_for
-from collections import Counter
 
 from lmfdb.utils import encode_plot, display_float
 from lmfdb.logger import make_logger
@@ -327,7 +326,7 @@ class AbvarFq_isoclass():
                 rec = elt
                 break
         else:
-            assert false
+            assert False
 
         num_we = sum(1 for elt in self.weak_equivalence_classes if elt['multiplicator_ring'] == endring)
 
