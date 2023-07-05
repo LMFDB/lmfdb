@@ -10,21 +10,29 @@ table.reptable td, table.reptable th {
 }
 </style>
 
+<p> {{ place_code('gg') }}</p> 
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
-      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
-      <tr><td class="nowrap">{{KNOWL('gg.tnumber', 'Transitive number')}} $t$:<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
+      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:<td>&nbsp;&nbsp;<td>${{info.n}}$</td>
+      <td>{{ place_code('n') }}</td></tr>
+      <tr><td class="nowrap">{{KNOWL('gg.tnumber', 'Transitive number')}} $t$:<td>&nbsp;&nbsp;<td>${{info.t}}$</td>
+      <td>{{ place_code('t') }}</td></tr>
       {% if info.pretty_name %}
       <tr><td>{{KNOWL('gg.simple_name', title='Group')}}:<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
       {% endif %}
       {% if info.n < 16 %}
       <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
       {% endif %}
-      <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
-      <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
-      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</tr>
-      <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
-      <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
+      <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}
+      <td>{{ place_code('even') }}</td></tr>
+      <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</td>
+      <td>{{ place_code('primitive') }}</td></tr>
+      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</td>
+      <td>{{ place_code('nilpotent') }}</td></tr>
+      <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td>
+      <td>{{ place_code('auts') }}</td></tr>
+      <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}
+      <td>{{ place_code('gens') }}</td></tr>
     </table>
   </p>
 
@@ -72,19 +80,25 @@ table.reptable td, table.reptable th {
         There are {{ info.num_cc }} conjugacy classes of elements.
         Data not shown.
       {% endif %}
-
-
    </p>
+   <p>{{ place_code('ccs') }}</p>
+
+
 
 
 <p><h2> {{ KNOWL('gg.invariants', title='Group invariants') }}</h2>
   <div>
     <table>
-      <tr><td>{{KNOWL('group.order','Order')}}:<td>&nbsp;&nbsp;<td>{{info.ordermsg }}</tr>
-      <tr><td>{{KNOWL('group.cyclic','Cyclic')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</tr>
-      <tr><td>{{KNOWL('group.abelian', 'Abelian')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</tr>
-      <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</tr>
-      <tr><td>{{KNOWL('group.small_group_label','Label')}}:<td>&nbsp;&nbsp;<td>{{info.gapid | safe}}</tr>
+      <tr><td>{{KNOWL('group.order','Order')}}:<td>&nbsp;&nbsp;<td>{{info.ordermsg }}</td>
+      <td>{{place_code('order')}}</td></tr>
+      <tr><td>{{KNOWL('group.cyclic','Cyclic')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</td>
+      <td>{{place_code('cyclic')}}</td></tr>
+      <tr><td>{{KNOWL('group.abelian', 'Abelian')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</td>
+      <td>{{place_code('abelian')}}</td></tr>
+      <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</td>
+      <td>{{place_code('solvable')}}</td></tr>
+      <tr><td>{{KNOWL('group.small_group_label','Label')}}:<td>&nbsp;&nbsp;<td>{{info.gapid | safe}}
+      <td>{{place_code('id')}}</td></tr>
     </table>
 
     <table>
@@ -98,6 +112,9 @@ table.reptable td, table.reptable th {
       not available.
       {% endif %}
     </table> </div> </p>
+
+  <p>{{place_code('char_table')}}</p>
+
 {% if info.int_reps %}
 <p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
 </p>

@@ -91,3 +91,7 @@ class NumberFieldTest(LmfdbTest):
 
     def test_underlying_data(self):
         self.check_args('NumberField/2.2.10069.1', ['Underlying data', 'data/2.2.10069.1'])
+
+    def test_errors(self):
+        self.check_args('NumberField/18.0.10490638424...4432.1/download/sage', 'Invalid label')
+        self.check_args('NumberField/4.3.2.1/download/sage', 'There is no number field with label 4.3.2.1')

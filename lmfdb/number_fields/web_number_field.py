@@ -5,7 +5,7 @@ import yaml
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
+    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt, prod,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -13,6 +13,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
+from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
@@ -251,8 +252,13 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+def fake_label(label, coef):
+    if label != "N/A":
+        return [int(x) for x in label.split('.')]
+    poly = coeff_to_poly(coef)
+    return [poly.degree(), poly.degree()+1, poly.discriminant(), 0]
 
-def formatfield(coef, show_poly=False, missing_text=None):
+def formatfield(coef, show_poly=False, missing_text=None, data=None, link=False):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -265,8 +271,14 @@ def formatfield(coef, show_poly=False, missing_text=None):
     """
     if isinstance(coef, str):
         coef = string2list(coef)
-    thefield = WebNumberField.from_coeffs(coef)
-    if thefield._data is None:
+    if data is None:
+        thefield = WebNumberField.from_coeffs(coef)
+    else:
+        if data['label'] == "N/A":
+            thefield = None
+        else:
+            thefield = WebNumberField(data['label'], data=data)
+    if thefield is None or thefield._data is None:
         deg = len(coef) - 1
         mypolraw = coeff_to_poly(coef)
         mypol = latex(mypolraw)
@@ -276,11 +288,19 @@ def formatfield(coef, show_poly=False, missing_text=None):
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">Deg %d</a>' % (mypol,mypolraw,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
+            if link:
+                jump_link = str(url_for("number_fields.number_field_render_webpage")+'?jump=%s' % mypol)
+                mypol = '<a title = "Field with link to db" knowl="nf.field.link" kwargs="poly=%s&link=%s">%s</a>' % (mypol,jump_link,missing_text)
+            else:
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
-    return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
+    if data is None:
+        label = thefield.get_label()
+    else:
+        label = data['label']
+    return nf_display_knowl(label,thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity
 def modules2string(n, t, modlist):
@@ -322,6 +342,16 @@ def nf_knowl_guts(label):
     out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
+    if wnf.is_galois():
+        galstring = r'this field is Galois over $\Q$'
+    else:
+        res = wnf.resolvents()
+        if 'gal' in res:
+            galstring = formatfield(string2list(res['gal'][0]))
+        else:
+            galord = db.gps_transitive.lookup('%dT%d'%(wnf.degree(), wnf.galois_t()), 'order')
+            galstring = r'degree %d extension of $\Q$ is not in the database'%galord
+    out += '<br>Galois closure: ' + galstring
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
@@ -492,6 +522,23 @@ class WebNumberField:
 
     def haskey(self, key):
         return self._data and self._data.get(key) is not None
+
+    def discrootfieldcoeffs(self):
+        factored= factor_base_factor(self.disc(),self.ramified_primes())
+        if self.disc() < 0:
+            factored += [[-1,1]]
+        factored=[[z[0], z[1] % 2] for z in factored]
+        newd = prod([z[0]**z[1] for z in factored])
+        if newd == 1:
+            return ([0,1], 1)
+        if (newd % 4) == 1:
+            return ([(1-newd)//4, -1, 1], newd)
+        else:
+            return ([-newd, 0, 1], newd)
+
+    def discrootfield(self):
+        (rfcoeffs, newd) = self.discrootfieldcoeffs()
+        return formatfield(rfcoeffs, missing_text=r'$\Q(\sqrt{%s}$)'% compress_int(newd, sides=5)[0])
 
     # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,
@@ -725,7 +772,7 @@ class WebNumberField:
 
     def cnf(self):
         if self.degree()==1:
-            return r'=\frac{2^1\cdot (2\pi)^0 \cdot 1\cdot 1}{2\sqrt 1}=1$'
+            return r'=\frac{2^1 (2\pi)^0 \cdot 1\cdot 1}{2\cdot\sqrt 1}=1$'
         if not self.haskey('class_group'):
             return r'$<td>  '+na_text()
         # Otherwise we should have what we need
@@ -737,7 +784,7 @@ class WebNumberField:
         r2term= r'(2\pi)^{%s}\cdot'% r2
         disc = ZZ(self._data['disc_abs'])
         approx1 = r'\approx' if self.unit_rank()>0 else r'='
-        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
+        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\cdot\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
         ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
         return ltx
 
@@ -922,9 +969,8 @@ class WebNumberField:
         # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
-
-        # Fill in placeholders for this specific field:
-        for lang in ['sage', 'pari']:
+        for lang in self.code['field']:
             self.code['field'][lang] = self.code['field'][lang] % self.poly()
-        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
+        for lang in self.code['class_number_formula']:
+            self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
+        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }

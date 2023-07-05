@@ -20,7 +20,7 @@
 <p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the {{ KNOWL('cmf.satake_parameters',title='Satake angles') }} \(\theta_p = \textrm{Arg}(\iota_m(\alpha_p))\) are shown below.</p>
 {% endif %}
 <p>For more information on an embedded modular form you can click on its label.</p>
-
+{{ place_code('embeddings') }}
 <script>
 function get_all_embeddings(num_embeddings) {
   m_inp = $('input[name=m]');
@@ -164,7 +164,7 @@ function get_all_embeddings(num_embeddings) {
     <tr>
       <td>{{ KNOWL('cmf.embedding',title='Embeddings') }}: </td>
       <td><input type='text' name='m' style="width: 160px" value="{{info.m}}" placeholder="1-{{newform.dim}}"></td>
-      <td><span class="formexample"> e.g. 1-3 or {{newform.conrey_indexes[-1]}}.{{newform.relative_dim}}</span></td>
+      <td><span class="formexample"> e.g. 1-3 or {{newform.conrey_index}}.{{newform.relative_dim}}</span></td>
     </tr>
     {% endif %}
     <tr>

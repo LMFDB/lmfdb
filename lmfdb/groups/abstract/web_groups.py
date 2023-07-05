@@ -18,10 +18,13 @@ from sage.all import (
     prod,
     lcm,
     is_prime,
+    euler_phi,
     cartesian_product_iterator,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
+from sage.combinat.permutation import from_lehmer_code
+from sage.misc.cachefunc import cached_function
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -29,6 +32,7 @@ from lmfdb.utils import (
     to_ordinal,
     web_latex,
     letters2num,
+    WebObj,
 )
 from .circles import find_packing
 
@@ -82,6 +86,27 @@ def group_pretty_image(label):
     if img:
         return str(img)
     # we should not get here
+
+@cached_function(key=lambda label,name,pretty,ambient,aut,cache: (label,name,pretty,ambient,aut))
+def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, cache={}):
+    # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
+    if not name:
+        if pretty:
+            if label in cache and "tex_name" in cache[label]:
+                name = cache[label]["tex_name"]
+            else:
+                name = db.gps_groups.lookup(label, "tex_name")
+            if name is None:
+                name = f"Group {label}"
+            else:
+                name = f"${name}$"
+        else:
+            name = f"Group {label}"
+    if ambient is None:
+        args = label
+    else:
+        args = f"{label}%7C{ambient}%7C{aut}"
+    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 
 def primary_to_smith(invs):
@@ -139,29 +164,11 @@ def abelian_get_elementary(snf):
     return possiblep[0]
 
 
-class WebObj():
-    def __init__(self, label, data=None):
-        self.label = label
-        if data is None:
-            data = self._get_dbdata()
-        self._data = data
-        if isinstance(data, dict):
-            for key, val in self._data.items():
-                setattr(self, key, val)
-
-    @classmethod
-    def from_data(cls, data):
-        return cls(data["label"], data)
-
-    def _get_dbdata(self):
-        # self.table must be defined in subclasses
-        return self.table.lookup(self.label)
-
-
 class WebAbstractGroup(WebObj):
     table = db.gps_groups
 
     def __init__(self, label, data=None):
+        self.source = "db" # can be overridden below by either GAP or LiveAbelian
         if isinstance(data, WebAbstractGroup):
             # This happens if we're using the _minmax_data in tex_name
             self.G = data.G
@@ -177,9 +184,12 @@ class WebAbstractGroup(WebObj):
                 dbdata = self.table.lookup(label)
                 if dbdata is not None:
                     data = dbdata
+                else:
+                    self.source = "GAP"
         elif isinstance(data, LiveAbelianGroup):
             self._data = data.snf
             data = data.snf
+            self.source = "LiveAbelian"
         WebObj.__init__(self, label, data)
         if self._data is None:
             # Check if the label is for an order supported by GAP's SmallGroup
@@ -192,6 +202,7 @@ class WebAbstractGroup(WebObj):
                     i = ZZ(m.group(4))
                     if i <= maxi:
                         self._data = (n, i)
+                        self.source = "GAP"
         if isinstance(self._data, list):  # live abelian group
             self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
             self.G = LiveAbelianGroup(self.snf)
@@ -200,10 +211,20 @@ class WebAbstractGroup(WebObj):
             self.hyperelementary = self.elementary
             self.Zgroup = len(self.snf) == 1
             self.Agroup = True
+            self.source = "LiveAbelian"
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
+        #return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
+
+    def decode(self, perm, n):
+        lehmer = []
+        for j in range(1,n+1):
+            lehmer.append(perm % j)
+            perm = int(perm/j)
+        lehmer.reverse()
+        return libgap.PermList(from_lehmer_code(lehmer))
 
     @lazy_attribute
     def G(self):
@@ -233,7 +254,8 @@ class WebAbstractGroup(WebObj):
         elif self.elt_rep_type == 0:  # PcGroup
             return libgap.PcGroupCode(self.pc_code, self.order)
         elif self.elt_rep_type < 0:  # Permutation group
-            gens = [self.decode(g) for g in self.perm_gens]
+            n = self.transitive_degree
+            gens = [self.decode(g,n) for g in self.perm_gens]
             return libgap.Group(gens)
         else:
             # TODO: Matrix groups
@@ -333,6 +355,12 @@ class WebAbstractGroup(WebObj):
     def rational(self):
         # We don't want to compute the character table
         return None
+
+    @lazy_attribute
+    def transitive_degree(self):
+        if isinstance(self.G, LiveAbelianGroup):
+            return self.order
+        return "not computed"
 
     @lazy_attribute
     def pgroup(self):
@@ -498,6 +526,9 @@ class WebAbstractGroup(WebObj):
     def rank(self):
         if self.pgroup > 1:
             return ZZ(self.G.RankPGroup())
+        if isinstance(self.G, LiveAbelianGroup):
+            return len(self.snf)
+        return None
 
     @lazy_attribute
     def primary_abelian_invariants(self):
@@ -506,6 +537,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def smith_abelian_invariants(self):
+        if self.source == "LiveAbelian":
+            return primary_to_smith(self.G.AbelianInvariants())
         return primary_to_smith(self.primary_abelian_invariants)
 
     @lazy_attribute
@@ -659,7 +692,9 @@ class WebAbstractGroup(WebObj):
             if H.order == self.order:
                 disp = self.label if self.tex_name == " " else f'${self.tex_name}$'
             elif H.order == 1:
+                url = url_for(".by_label", label="1.1")
                 disp = '$C_1$'
+                disp = f'<a href="{url}">{disp}</a>'
             elif H.label:
                 url = url_for(".by_label", label=H.label)
                 disp = H.label if H.tex_name == " " else f'${H.tex_name}$'
@@ -759,14 +794,13 @@ class WebAbstractGroup(WebObj):
                 ])
             except AssertionError:  # timed out
                 pass
-        if not self.live():
-            props.extend([
-                ("Rank", f"${self.rank}$"),
-                ("Perm deg.", f"${self.transitive_degree}$"),
+        if "not" in str(self.transitive_degree):
+            props.extend([("Perm deg.", "not computed")])
+        else:
+            props.extend([("Perm deg.", f"${self.transitive_degree}$")])
                 # ("Faith. dim.", str(self.faithful_reps[0][0])),
-            ])
-        elif self.pgroup > 1:
-            props.append(("Rank", f"${self.rank}$"))
+        props.append(
+            ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
 
     @lazy_attribute
@@ -1119,6 +1153,23 @@ class WebAbstractGroup(WebObj):
             edges = [list(edge) for edge in edges]
         return [nodes, edges]
 
+    # Figuring out the subgroup count for an autjugacy class might not be stored
+    # directly.  We do them all at once.  If we only computed up to aut
+    # return {} since we don't need this
+    # output is a dictionary of aut_labels and counts
+    @lazy_attribute
+    def aut_class_counts(self):
+        counts = {}
+        if self.outer_equivalence:
+            return counts
+        subs = self.subgroups
+        for s in subs.values():
+            if s.aut_label in counts:
+                counts[s.aut_label] += s.count
+            else:
+                counts[s.aut_label] = s.count
+        return counts
+
     @lazy_attribute
     def tex_images(self):
         all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
@@ -1209,11 +1260,17 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def cc_stats(self):
         if self.abelian:
-            return self.order_stats
+            return sorted(self.order_stats)
         return sorted(Counter([cc.order for cc in self.conjugacy_classes]).items())
 
     @lazy_attribute
     def division_stats(self):
+        if isinstance(self.G, LiveAbelianGroup):
+            divcnts = [(z[0], z[1]/euler_phi(z[0])) for z in self.cc_stats]
+            self.number_divisions = sum([z[1] for z in divcnts])
+            return divcnts
+        if self.live():
+            return None
         return sorted(
             Counter([div.order for div in self.conjugacy_class_divisions]).items()
         )
@@ -1420,7 +1477,36 @@ class WebAbstractGroup(WebObj):
     def out_order_factor(self):
         return latex(factor(self.outer_order))
 
+    def live_composition_factors(self):
+        from .main import url_for_label
+        basiclist = []
+        if isinstance(self.G, LiveAbelianGroup) or self.solvable:
+            theorder = ZZ(self.G.Order()).factor()
+            # We could work harder here to get small group labels for
+            # these cyclic groups, but why bother?  This way, the lookup
+            # is only done for one of them, and only if the user clicks
+            # on the link
+            basiclist = [(url_for(".by_abelian_label", label=z[0]),
+                "C_{%d}"%z[0],
+                "" if z[1] == 1 else "<span style='font-size: small'> x %d</span>"% z[1]
+                )
+                for z in theorder]
+
+        # The only non-solvable option with order a multiple of 128
+        # below 2000 is ...
+        elif ZZ(self.G.Order()) == 1920:
+            basiclist = [
+                (url_for(".by_abelian_label", label=2), "C_2", "<span style='font-size: small'> x 5</span>"),
+                (url_for_label("60.5"), "A_5", "")]
+        if not basiclist:
+            return "data not computed"
+        return ", ".join('<a href="%s">$%s$</a>%s' % z for z in basiclist)
+
     def show_composition_factors(self):
+        if self.live():
+            return self.live_composition_factors()
+        if self.order == 1:
+            return "none"
         CF = Counter(self.composition_factors)
         display = {
             rec["label"]: rec["tex_name"]
@@ -1431,7 +1517,8 @@ class WebAbstractGroup(WebObj):
         from .main import url_for_label
 
         def exp(n):
-            return "" if n == 1 else f" ({n})"
+            #return "" if n == 1 else f" ({n})"
+            return "" if n == 1 else f"<span style='font-size: small'> x {n}</span>"
 
         return ", ".join(
             f'<a href="{url_for_label(label)}">${display[label]}$</a>{exp(e)}'
@@ -1444,9 +1531,6 @@ class WebAbstractGroup(WebObj):
 
     def cent_label(self):
         return self.subgroups[self.cent()].subgroup_tex
-
-    def central_quot(self):
-        return self.subgroups[self.cent()].quotient_tex
 
     def cent_order_factor(self):
         if self.live():
@@ -1483,9 +1567,6 @@ class WebAbstractGroup(WebObj):
     def fratt_label(self):
         return self.subgroups[self.fratt()].subgroup_tex
 
-    def frattini_quot(self):
-        return self.subgroups[self.fratt()].quotient_tex
-
     def gen_noun(self):
         if self.rank == 1:
             return "generators"
@@ -1495,6 +1576,8 @@ class WebAbstractGroup(WebObj):
             return "generating triples"
         elif self.rank == 4:
             return "generating quadruples"
+        elif not self.rank:
+            return "generating tuples"
         else:
             return f"generating {self.rank}-tuples"
 
@@ -1648,6 +1731,9 @@ class LiveAbelianGroup():
 
     def Exponent(self):
         return self.snf[-1] if self.snf else 1
+
+    def CharacterDegrees(self):
+        return [(1,self.Order())]
 
     def Sylows(self):
         if not self.snf:
@@ -1845,6 +1931,14 @@ class WebAbstractSubgroup(WebObj):
     def proj_img(self):
         if self.projective_image is not None:
             return self._lookup(self.projective_image, self._full, WebAbstractGroup)
+
+    def display_quotient(self, ab_invs=None):
+        q = self.quotient
+        if q:
+            return abstract_group_display_knowl(q)
+        if ab_invs:
+            return abelian_gp_display(ab_invs)
+        return '${self.quotient_tex}$'
 
     @lazy_attribute
     def _others(self):

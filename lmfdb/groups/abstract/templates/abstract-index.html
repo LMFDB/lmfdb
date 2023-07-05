@@ -32,7 +32,7 @@
 
 <h2 id='search_h2'> Search <button id="advancedtoggle" href="#">Advanced search options</button></h2>
 <!--<h2>Search</h2>-->
-<form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
+<form class="re-search" name="search" method = "get" action={{url_for('.index')}}>
   {{ info.search_array.html() | safe }}
 </form>
 

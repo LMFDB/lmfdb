@@ -31,7 +31,7 @@
 </form>
 
 <h2>Search</h2>
-<form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
+<form class="re-search" name="search" method = "get" action={{url_for('.index')}}>
   {{ info.search_array.html() | safe }}
 </form>
 

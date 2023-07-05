@@ -38,6 +38,7 @@ from .Lfunctionutilities import (
     getConductorIsogenyFromLabel)
 
 from lmfdb.characters.web_character import WebDirichlet
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
@@ -200,9 +201,10 @@ def url_for_lfunction(label):
         kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'),
 label.split('-')))
         kwargs['degree'] = int(kwargs['degree'])
+        url = url_for('.by_label', **kwargs)
     except Exception:
         return render_lfunction_exception("There is no L-function with label '%s'" % label)
-    return url_for('.by_label', **kwargs)
+    return url
 
 @l_function_page.route("/<label>")
 def by_full_label(label):
@@ -346,7 +348,7 @@ lfunc_columns = SearchColumns([
     MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", short_title="order of vanishing", default=True),
     MathCol("z1", "lfunction.zeros", "First zero", short_title="first zero", default=True),
     ProcessedCol("origins", "lfunction.underlying_object", "Origin",
-                 lambda origins: " ".join('<a href="%s">%s</a>' % (url, name) for name, url in origins),
+                 lambda origins: " ".join(f'<a href="{url_for("index")}{url.lstrip("/")}">{name}</a>' for name, url in origins),
                  default=True)],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
 lfunc_columns.dummy_download = True
@@ -965,7 +967,8 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
+    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
@@ -981,7 +984,8 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
+    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     return redirect(url_for('.l_function_cmf_page',
@@ -1003,7 +1007,8 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_a1(level, weight, character):
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
+    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
@@ -1187,6 +1192,7 @@ def render_single_Lfunction(Lclass, args, request):
 
 
 def render_lfunction_exception(err):
+    return abort(404,err) # the code below does not work, there is a problem rendering problem.html
     try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except Exception:

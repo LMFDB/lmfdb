@@ -681,17 +681,22 @@ def local_table(N, D, tama, bad_lpolys, cluster_pics):
     return '\n'.join(loctab)
 
 
-def galrep_table(galrep):
+def galrep_table(galrep, torsion_order):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
               th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
+              th_wrap('g2c.torsion_order', r'Is torsion prime?'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
         p = galrep[i]['prime']
         modellimage_lbl = galrep[i]['modell_image']
+        is_torsion = 'yes' if torsion_order % p == 0 else 'no'
         galtab.append('  <tr>')
-        modellimg = display_knowl('gsp4.subgroup_data', title=modellimage_lbl, kwargs={'label':modellimage_lbl})
-        galtab.extend([td_wrapc(p),td_wrapcn(modellimg)])
+        if modellimage_lbl == 'not computed':
+            modellimg = 'not computed'
+        else:
+            modellimg = display_knowl('gsp4.subgroup_data', title=modellimage_lbl, kwargs={'label':modellimage_lbl})
+        galtab.extend([td_wrapc(p),td_wrapcn(modellimg),td_wrapcn(is_torsion)])
         galtab.append('  </tr>')
     galtab.extend(['</tbody>', '</table>'])
     return '\n'.join(galtab)
@@ -731,6 +736,16 @@ def ratpts_simpletable(pts, pts_v, fh):
     return ratpts_table(spts, pts_v)
 
 
+def augment_galrep_and_nonsurj(galrep, nonsurj):
+
+    output = galrep.copy()
+    if nonsurj:
+        for p in nonsurj:
+            if p > 3:
+                output.append({'prime': p, 'modell_image' : 'not computed'})
+    return output
+
+
 ###############################################################################
 # Genus 2 curve class definition
 ###############################################################################
@@ -746,8 +761,8 @@ class WebG2C():
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, ratpts, clus, galrep, is_curve=True):
-        self.make_object(curve, endo, tama, ratpts, clus, galrep, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -796,10 +811,12 @@ class WebG2C():
                 except Exception:
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
+        nonsurj = curve.get('non_maximal_primes')
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
-        return WebG2C(curve, endo, tama, ratpts, clus, galrep, is_curve=(len(slabel) == 4))
+        galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
+        return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
 
-    def make_object(self, curve, endo, tama, ratpts, clus, galrep, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -893,7 +910,7 @@ class WebG2C():
 
             tamalist = [[item['p'], item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], clus)
-            data['galrep_table'] = galrep_table(galrep)
+            data['galrep_table'] = galrep_table(galrep, data['torsion_order'])
 
             lmfdb_label = data['label']
             cond, alpha, disc, num = split_g2c_lmfdb_label(lmfdb_label)
@@ -959,6 +976,13 @@ class WebG2C():
                 data['split_labels'] = endo['spl_facs_labels']
             data['split_condnorms'] = endo['spl_facs_condnorms']
             data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
+
+        # Nonsurjective primes data
+        if not nonsurj:
+            data['exists_nonsurj_data'] = False
+        else:
+            data['exists_nonsurj_data'] = True
+            data['nonmax_primes'] = nonsurj
 
         # Properties
         self.properties = properties = [('Label', data['label'])]
@@ -1094,6 +1118,10 @@ class WebG2C():
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
         code['locally_solvable'] = {'magma':'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsEverywhereLocally(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'}
         code['torsion_subgroup'] = {'magma':'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'}
+        code['decomp'] = {'magma':'HeuristicDecompositionFactors(C);'}
+        code['endos0'] = {'magma':'//Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code'}
+        code['endos1'] = {'magma':'HeuristicIsGL2(C); HeuristicEndomorphismDescription(C); HeuristicEndomorphismFieldOfDefinition(C);'}
+        code['endos2'] = {'magma':'HeuristicIsGL2(C : Geometric := true); HeuristicEndomorphismDescription(C : Geometric := true); HeuristicEndomorphismLatticeDescription(C);'}
 
         self._code = None
 

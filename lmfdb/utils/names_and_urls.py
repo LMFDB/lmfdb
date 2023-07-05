@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.utils.utilities import key_for_numerically_sort
+from flask import url_for
 #######################################################################
 # Functions for interacting with web structure
 #######################################################################
@@ -49,15 +50,6 @@ def name_and_object_from_url(url, check_existence=False):
         elif len(url_split) == 5: # curve
             #name = 'Curve ' + label_curve
             name = 'Elliptic curve ' + label_curve
-
-    elif url_split[0] == "Character":
-        # Character/Dirichlet/19/8
-        assert url_split[1] == "Dirichlet"
-        name = r"Dirichlet character \(\chi_{%s} (%s, \cdot) \)" % tuple(url_split[-2:])
-        label = ".".join(url_split[-2:])
-        obj_exists = True
-        if check_existence:
-            obj_exists = db.char_dir_values.exists({"label": label})
 
     elif url_split[0] == "Genus2Curve":
         obj_exists = True
@@ -146,6 +138,7 @@ def names_and_urls(instances, exclude={}):
     names = set()
     urls = set()
     exclude = set(exclude)
+    root = url_for('index')
 
     # remove duplicate urls
     for instance in instances:
@@ -159,7 +152,7 @@ def names_and_urls(instances, exclude={}):
         if not name:
             name = ''
         if obj_exists:
-            url = "/"+url
+            url = root + url
         else:
             # do not display unknown objects
             continue

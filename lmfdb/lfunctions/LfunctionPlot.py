@@ -8,6 +8,7 @@ from sage.all import prod
 from sage.arith.srange import srange
 from lmfdb.utils import signtocolour
 from sage.databases.cremona import cremona_letter_code
+from lmfdb.characters.TinyConrey import ConreyCharacter
 
 
 def svgBegin():
@@ -488,7 +489,7 @@ def paintSvgHoloNew(condmax):
     max_k = 0  # the largest weight we see
 
     for nf in db.mf_newforms.search({'analytic_conductor': {'$lte': condmax}},
-                                    projection=['analytic_conductor', 'label', 'weight', 'conrey_indexes', 'dim', 'char_degree'],
+                                    projection=['analytic_conductor', 'label', 'level', 'weight', 'conrey_index', 'dim', 'char_degree'],
                                     sort=[('analytic_conductor', 1)]):
         _, k, _, hecke_letter = nf['label'].split('.')
         if int(k) > max_k:
@@ -501,7 +502,8 @@ def paintSvgHoloNew(condmax):
             if z1 is not None:
                 values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
-            for character in nf['conrey_indexes']:
+            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit
+            for character in conrey_orbit:
                 for j in range(nf['dim'] // nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)

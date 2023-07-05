@@ -28,11 +28,9 @@
     {% if cl.jacobian_count is not none %}
     <tr><td>{{KNOWL('av.fq.jacobian',title='Jacobians')}}:</td><td>&nbsp;&nbsp;{{cl.jacobian_count}}</td></tr>
     {% endif %}
-    {#
     {% if cl.size is not none %}
     <tr><td>{{KNOWL('av.fq.isogeny_class_size',title='Isomorphism classes')}}:</td><td>&nbsp;&nbsp;{{cl.size}}</td></tr>
     {% endif %}
-    #}
 </table>
 </p>
 
@@ -99,24 +97,6 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 
 <h2>Point counts</h2>
 
-<p>
-{% if cl.has_principal_polarization == 1 %}
-{% if cl.has_jacobian == -1 %}
-This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
-{% elif cl.jacobian_count is not none %}
-This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians' if cl.jacobian_count != 1 else 'Jacobian')}} of {{ cl.jacobian_count }} curve{% if cl.jacobian_count != 1 %}s{% endif %} ({% if cl.jacobian_count == 1 %}which is {% if cl.hyp_count == 0 %}not {% endif %}hyperelliptic{% else %}of which {% if cl.hyp_count == 1 %}1 is{% elif cl.hyp_count == cl.jacobian_count %}all are{% else %}{{ cl.hyp_count }} are{% endif %} hyperelliptic{% endif %}), and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
-{% elif cl.has_jacobian == 1 %}
-This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
-{% else %}
-This isogeny class is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
-{% endif %}
-{% elif cl.has_principal_polarization == -1 %}
-This isogeny class is not {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, and therefore does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
-{% elif cl.has_jacobian == -1 %}
-This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}, and it is unknown whether it is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
-{% endif %}
-</p>
-
 <p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
 
 {% set n = cl.length_A_counts() if cl.length_A_counts() < 6 else 5 %}
@@ -164,6 +144,29 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 </p>
 
 
+<h2>Jacobians and polarizations</h2>
+
+<p>
+{% if cl.has_principal_polarization == 1 %}
+  {% if cl.has_jacobian == -1 %}
+  This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+  {% elif cl.jacobian_count is not none %}
+  This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians' if cl.jacobian_count != 1 else 'Jacobian')}} of {{ cl.jacobian_count }} curve{% if cl.jacobian_count != 1 %}s{% endif %} ({% if cl.jacobian_count == 1 %}which is {% if cl.hyp_count == 0 %}not {% endif %}hyperelliptic{% else %}of which {% if cl.hyp_count == 1 %}1 is{% elif cl.hyp_count == cl.jacobian_count %}all are{% else %}{{ cl.hyp_count }} are{% endif %} hyperelliptic{% endif %}), and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
+  {% elif cl.has_jacobian == 1 %}
+  This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
+  {% else %}
+  This isogeny class is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+  {% endif %}
+{% elif cl.has_principal_polarization == -1 %}
+This isogeny class is not {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, and therefore does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+{% elif cl.has_jacobian == -1 %}
+This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}, and it is unknown whether it is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
+{% else %}
+It is unknown whether this isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}} or whether it is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
+{% endif %}
+</p>
+
+
 <h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 
 {{cl.all_endo_info_display()|safe}}
@@ -181,6 +184,7 @@ This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is 
 </p>
 
 <h2 id="twist-anchor">Twists</h2>
+
 {% if cl.twists|length > 3 %}
 <script>
 function show_twists(number) {

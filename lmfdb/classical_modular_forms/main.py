@@ -4,10 +4,8 @@ import re
 import os
 import yaml
 
-from flask import render_template, url_for, redirect, abort, request
-from sage.all import (
-    ZZ, next_prime, cartesian_product_iterator,
-    cached_function, prime_range, prod, gcd, nth_prime)
+from flask import render_template, url_for, redirect, abort, request, make_response
+from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
@@ -36,6 +34,8 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.main import ORBIT_MAX_MOD
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -56,11 +56,16 @@ def learnmore_list():
             ('Classical modular form labels', url_for(".labels_page"))]
 
 
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 @cached_function
 def Nk2_bound(nontriv=None):
@@ -87,11 +92,7 @@ def level_bound(nontriv=None):
 #############################################################################
 
 def ALdims_knowl(al_dims, level, weight):
-    dim_dict = {}
-    for vec, dim, cnt in al_dims:
-        dim_dict[tuple(ev for (p, ev) in vec)] = dim
-    short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
-    # We erase plus_dim and minus_dim if they're obvious
+    short = "+".join(["$%s$"%(d) for d in al_dims])
     AL_table = ALdim_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
 
@@ -143,7 +144,7 @@ def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
     return r'+'.join(terms)
 
 def show_ALdims_col(info):
-    return any(space.get('AL_dims') for space in info["results"])
+    return any(space.get('ALdims') for space in info["results"])
 
 def display_ALdims(level, weight, al_dims):
     if al_dims:
@@ -251,12 +252,13 @@ def parse_n(info, newform, primes_only):
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    if min(info['CC_n']) < 1:
+    if info['CC_n'] and min(info['CC_n']) < 1:
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
-    if max(info['CC_n']) > newform.an_cc_bound:
+    if info['CC_n'] and max(info['CC_n']) > newform.an_cc_bound:
         errs.append(r"Only \(a_n\) up to %s are available; limiting to \(n \le %d\)" % (newform.an_cc_bound, newform.an_cc_bound))
         info['CC_n'] = [n for n in info['CC_n'] if n <= newform.an_cc_bound]
+
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
@@ -368,16 +370,19 @@ def render_newform_webpage(label):
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.title,
                            friends=newform.friends,
+                           code=newform.code,
                            KNOWL_ID="cmf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
@@ -400,16 +405,19 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
+                           code=newform.code,
                            KNOWL_ID="cmf.%s" % label)
 
 def render_space_webpage(label):
@@ -420,13 +428,14 @@ def render_space_webpage(label):
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -438,13 +447,14 @@ def render_full_gamma1_space_webpage(label):
         return abort(404, err.args)
     info={}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends)
 
@@ -643,6 +653,13 @@ def download_newspace(label):
 def download_full_space(label):
     return CMF_download().download_full_space(label)
 
+@cmf.route('/download_code_newform/<label>/<download_type>')
+def cmf_code_download(label,download_type):
+    response = make_response(CMF_download().download_code(label, download_type))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, prim=False):
     # qfield will be set to something by the logic in SearchParser.__call__, but we want it determined by prim
@@ -678,10 +695,10 @@ def parse_character(inp, query, qfield, prim=False):
     if orbit.isalpha():
         orbit = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
         if prim:
-            if level > 10000:
+            if level > ORBIT_MAX_MOD:
                 raise ValueError("The level is too large.")
             # Check that this character is actually primitive
-            conductor = db.char_dir_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            conductor = db.char_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
             if conductor is None:
                 raise ValueError("No character orbit with this label exists.")
             if conductor != level:
@@ -690,7 +707,7 @@ def parse_character(inp, query, qfield, prim=False):
     else:
         if prim:
             raise ValueError("You must use the orbit label when searching by primitive character")
-        query['conrey_indexes'] = {'$contains': int(orbit)}
+        query['conrey_index'] = ConreyCharacter(modulus=level,number=orbit).min_conrey_conj
 
 newform_only_fields = {
     'nf_label': 'Coefficient field',
@@ -1140,7 +1157,7 @@ def dimension_form_search(info, query):
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
-             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_index', 'dim', 'hecke_orbit_dims', 'ALdims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1157,13 +1174,13 @@ def dimension_space_search(info, query):
 space_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
-    MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_indexes"],
-                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
+    MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
+                      lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension", default=True),
     MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.mf_newspaces,
              title='Newspace search results',
@@ -1207,6 +1224,18 @@ def reliability_page():
     return render_template("single.html", kid='rcs.rigor.cmf', title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
+
+
+@cmf.route("/FormPictures")
+def picture_page():
+    t = "Pictures for classical modular forms"
+    return render_template(
+        "single.html",
+        kid='portrait.cmf',
+        title=t,
+        bread=get_bread(other="Form Pictures"),
+        learnmore=learnmore_list(),
+    )
 
 
 def projective_image_sort_key(im_type):

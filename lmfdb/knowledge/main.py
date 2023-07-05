@@ -41,7 +41,7 @@ _cache_time = 120
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
-allowed_annotation_id = re.compile("^[a-zA-Z0-9._-~]+$")  # all unreserved URL characters
+allowed_annotation_id = re.compile(r"^[a-zA-Z0-9._\-~]+$")  # all unreserved URL characters
 
 
 def allowed_id(ID):
@@ -300,18 +300,6 @@ def get_bread(breads=[]):
     return bc
 
 
-def searchbox(q="", clear=False):
-    """returns the searchbox"""
-    searchbox = u"""\
-    <form id='knowl-search' action="%s" method="GET">
-      <input name="search" value="%s" />"""
-    if clear:
-        searchbox += '<a href="%s">clear</a>' % url_for(".index")
-    searchbox += '<button type="submit">Go</button>'
-    searchbox += "</form>"
-    return searchbox % (url_for(".index"), q)
-
-
 @knowledge_page.route("/test")
 def test():
     """
@@ -384,6 +372,10 @@ def edit(ID):
 @knowledge_page.route("/show/<ID>")
 def show(ID):
     timestamp = request.args.get('timestamp')
+    try:
+        timestamp = int(timestamp)
+    except (TypeError, ValueError):
+        timestamp = None
     if timestamp is not None:
         timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp, showing=True)

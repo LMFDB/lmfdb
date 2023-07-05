@@ -1935,6 +1935,7 @@ div.box {
 }
 
 div.codebox {
+    text-align: left;
     padding: 5px;
     text-padding: 10px;
     border: 1px solid {{color.knowl_thin_border}};

@@ -87,12 +87,8 @@
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
-    {% if not gp.live() %}
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.transitive_degree}}</td></tr>
-    {% if not (gp.solvable or gp.simple) %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
-    {% endif %}
-    {% endif %}
   </table>
 </p>
 
@@ -143,6 +139,24 @@
           <td>{{ c[1] }}</td>
         {% endfor %}
         <td class="border-left">{{ gp.number_autjugacy_classes }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
+          {% if gp.division_stats %}
+            {% for c in gp.division_stats %}
+              <td>{{ c[1] }}</td>
+            {% endfor %}
+        <td class="border-left">{{ gp.number_divisions }}</td>
+          {% else %}
+            <td  colspan="{{gp.order_stats|length}}">data not computed</td>
+            <td class="border-left"></td>
+          {% endif %}
+      </tr>
+      <tr style="border-bottom:none;">
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+          <td colspan="{{gp.order_stats|length}}">data not computed</td>
+          <td class="border-left"></td>
       </tr>
       {% endif %}
     </tbody>
@@ -239,18 +253,40 @@
       {% endif %}
     </tr>
   {% endif %}
-  {% if not gp.live() or gp.pgroup > 1 %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
-    <td>${{gp.rank}}$</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %}
+      <td>not computed</td>
+    {% endif %}
   </tr>
-  {% endif %}
-  {% if not gp.live() and gp.order > 1 and gp.eulerian_function is defined %}
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+  {% if gp.eulerian_function is defined %}
     <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  
   </tr>
-  {% endif %}
+</table>
+
+{% else %}
+
+<h2>Constructions</h2>
+
+<table class=nowrap>
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+    {% if gp.eulerian_function %}
+      <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  </tr>
+  </tr>
 </table>
 
 {% endif %} {# not live and abelian #}
@@ -303,33 +339,33 @@
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
-    <td>$G/Z \simeq {{gp.central_quot()}}$</td>
+    <td>$G/Z \simeq$ {{gp.subgroups[gp.cent()].display_quotient()|safe}}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span>
  </td>
-    <td> $G/G' \simeq {{gp.abelian_quot()}}$ </td>
+    <td> $G/G' \simeq$ {{gp.subgroups[gp.comm()].display_quotient(ab_invs=gp.smith_abelian_invariants)|safe}}</td>
   </tr>
     <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
-    <td>$G/\Phi \simeq {{gp.frattini_quot()}}$ </td>
+    <td>$G/\Phi \simeq$ {{gp.subgroups[gp.fratt()].display_quotient()|safe}} </td>
   </tr>
  <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
-    <td>$G/\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
+    <td>$G/\operatorname{Fit} \simeq$ {{gp.subgroups[gp.fitting].display_quotient()|safe}}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
-    <td>$G/R \simeq {{gp.subgroups[gp.radical].quotient_tex}}$</td>
+    <td>$G/R \simeq$ {{gp.subgroups[gp.radical].display_quotient()|safe}}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
     <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
-    <td>$G/\operatorname{soc} \simeq {{gp.subgroups[gp.socle].quotient_tex}}$</td>
+    <td>$G/\operatorname{soc} \simeq$ {{gp.subgroups[gp.socle].display_quotient()|safe}}</td>
   </tr>
   {% if gp.pgroup == 0 %}
     {% for p, subgp in gp.sylow_subgroups() %}
@@ -489,7 +525,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
       {% if not loop.first %}
         ${{symb}}$</td><td>
       {% endif %}
-      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.label}}">${{sub.subgroup_tex}}$</span></td>
+      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.short_label}}">${{sub.subgroup_tex}}$</span></td>
     {% endfor %}
   </tr>
   {% endfor %}

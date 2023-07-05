@@ -14,13 +14,13 @@ from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
-    parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
+    parse_ints, parse_string_start, parse_subset, parse_newton_polygon, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.api import datapage
 from . import abvarfq_page
-from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
+from .search_parsing import parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 from lmfdb.utils import redirect_no_cache
@@ -159,20 +159,28 @@ def download_search(info):
     dltype = info["Submit"]
     R = PolynomialRing(ZZ, "x")
     delim = "bracket"
-    com = r"\\"  # single line comment start
+    com = ""   # single line comment start
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
-    filename = "weil_polynomials.gp"
+    eol = ""   # line continuation (only needed for gp)
+    filename = "weil_polynomials.txt"
     mydate = time.strftime("%d %B %Y")
-    if dltype == "sage":
-        com = "#"
-        filename = "weil_polynomials.sage"
-    if dltype == "magma":
-        com = ""
-        com1 = "/*"
-        com2 = "*/"
-        delim = "magma"
-        filename = "weil_polynomials.m"
+    if dltype == 'gp':
+        filename = 'weil_polynomials.gp'
+        com = r'\\'
+        eol = '\\'
+    if dltype == 'sage':
+        com = '#'
+        filename = 'weil_polynomials.sage'
+    if dltype == 'magma':
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'weil_polynomials.m'
+    elif dltype == 'oscar':
+        com1 = '#='
+        com2 = '=#'
+        filename = 'weil_polynomials.jl'
     s = com1 + "\n"
     s += com + " Weil polynomials downloaded from the LMFDB on %s.\n" % (mydate)
     s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
@@ -183,15 +191,20 @@ def download_search(info):
     if dltype == "magma":
         s += "P<x> := PolynomialRing(Integers()); \n"
         s += "data := ["
-    else:
-        if dltype == "sage":
-            s += "x = polygen(ZZ) \n"
+    elif dltype == "sage":
+        s += "x = polygen(ZZ) \n"
         s += "data = [ "
-    s += "\\\n"
+    elif dltype == "oscar":
+        s += "Rx,x = PolynomialRing(QQ) \n"
+        s += "data = [ "
+    else:
+        s += "data = [ "
+
+    s += eol + "\n"
     for f in db.av_fq_isog.search(ast.literal_eval(info["query"]), "poly"):
         poly = R(f)
-        s += str(poly) + ",\\\n"
-    s = s[:-3]
+        s += str(poly) + "," + eol + "\n"
+    s = s[:-2-len(eol)]
     s += "]\n"
     if delim == "magma":
         s = s.replace("[", "[*")

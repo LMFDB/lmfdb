@@ -6,12 +6,13 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
+from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
@@ -47,6 +48,11 @@ def split_lmfdb_label(lab):
 def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
+def conductor_from_label(lab):
+    if "?" in lab:
+        return lab.split(".")[0]
+    return split_lmfdb_label(lab)[0] if '.' in lab else split_cremona_label(lab)[0]
+
 def curve_lmfdb_label(conductor, iso_class, number):
     return "%s.%s%s" % (conductor, iso_class, number)
 
@@ -59,25 +65,46 @@ def class_lmfdb_label(conductor, iso_class):
 def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
+def cremona_label_to_lmfdb_label(clab):
+    return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
+
 logger = make_logger("ec")
 
 def gl2_subgroup_data(label):
+    Slevel = 0
     try:
         data = db.gps_gl2zhat.lookup(label)
         if data is None:
-            data = db.gps_gl2zhat.lucky({'Slabel':label})
-            if data is None:
+            r = re.match(r"([1-9][0-9]*)([A-Z][a-z]*)",label)
+            if r is None:
                 raise ValueError
+            Slevel = int(r[1])
+            if r[2] == "G":
+                data = db.gps_gl2zhat.lucky({'level':1})
+                print(data)
+                data['level'] = Slevel
+                data['generators'] = [[m.matrix()[0,0],m.matrix()[0,1],m.matrix()[1,0],m.matrix()[0,1]] for m in GL(2,Integers(Slevel)).generators()]
+                data['isogeny_orbits'] = [[Slevel,Slevel+1,1]]
+                data['orbits'] = [[Slevel,Slevel*Slevel-1,1]]
+                data['Slabel'] = label
+            else:
+                data = db.gps_gl2zhat.lucky({'Slabel':label,'level':Slevel})
+                if data is None:
+                    raise ValueError
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
     def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
-    info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
+    if label != data['label']:
+        info += row_wrap('Subgroup <b>%s</b> (%s)' % (label,data['label']), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
+    else:
+        info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
+    info += row_wrap('Order', GL(2,Integers(data['level'])).cardinality() / data['index'])
     info += row_wrap('Genus', data['genus'])
 
     def ratcusps(c, r):
@@ -92,9 +119,7 @@ def gl2_subgroup_data(label):
         return f" (of which {r} are rational)"
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
-    if label != data['label']:
-        info += row_wrap('LMFDB label', data['label'])
+    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == data['label'] else "no")
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
@@ -205,6 +230,32 @@ def short_latex_equation(ainvs):
 def latex_equations(ainvs):
     return [latex_equation(ainvs),homogeneous_latex_equation(ainvs),short_latex_equation(ainvs)]
 
+def sextic_twist_discriminant(ainvs):
+    r"""
+    Return D such that this is the sextic twist by D of 27.a4 (whose c6=-216) -- only for j=0
+    """
+    a1,a2,a3,a4,a6 = ainvs
+    D = -108 * (a1**6 + 12*a1**4*a2 + 48*a1**2*a2**2 + 64*a2**3 - 432*a3**2 - 1728*a6) # = -216*c6
+
+    # Remove 6th powers and invert: the minus sign in the exponent is
+    # because the text says that 27.a4 is this curve's sextic twist by
+    # D, not the other way round.
+
+    return D.sign() * prod(p ** ((-e)%6) for p,e in D.factor())
+
+def quartic_twist_discriminant(ainvs):
+    r"""
+    Return D such that this is the quartic twist by D of 32.a3 (whose c4=48) -- only for j=1728
+    """
+    a1,a2,a3,a4,a6 = ainvs
+    D = 27 * (a1**4 + 8*a1**2*a2 + 16*a2**2 - 24*a1*a3 - 48*a4)
+
+    # Remove 4th powers and invert: the minus sign in the exponent is
+    # because the text says that 32.a3 is this curve's quartic twist
+    # by D, not the other way round.
+
+    return D.sign() * prod(p ** ((-e)%4) for p,e in D.factor())
+
 class WebEC():
     """
     Class for an elliptic curve over Q
@@ -218,6 +269,7 @@ class WebEC():
         logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         self.make_curve()
+        assert 'ainvs' in self.data
 
     @staticmethod
     def by_label(label):
@@ -296,6 +348,17 @@ class WebEC():
         data['minq_label'] = db.ec_curvedata.lucky({'ainvs': self.min_quad_twist_ainvs},
                                                    projection='lmfdb_label' if self.label_type == 'LMFDB' else 'Clabel')
         data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
+        data['minq_url'] = url_for(".by_ec_label", label=data["minq_label"])
+
+        # higher minimal twists:
+        if self.cm == -3:
+            data['min_sextic_twist_disc'] = sextic_twist_discriminant(self.ainvs)
+            data['min_sextic_twist_label'] = '27.a4'
+            data['min_sextic_twist_url'] = url_for(".by_ec_label", label='27.a4')
+        if self.cm == -4:
+            data['min_quartic_twist_disc'] = quartic_twist_discriminant(self.ainvs)
+            data['min_quartic_twist_label'] = '32.a3'
+            data['min_quartic_twist_url'] = url_for(".by_ec_label", label='32.a3')
 
         # modular degree:
 
@@ -313,7 +376,21 @@ class WebEC():
         # ell-adic Galois images:
 
         # remove adelic image record (prime set to 0) from ell-adic data if present
-        data['galois_data'] = [r for r in list(db.ec_galrep.search({'lmfdb_label': lmfdb_label})) if r["prime"] > 0]
+        galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
+        data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
+        adelic_data = [r for r in galois_data if r["prime"] == 0]
+        if adelic_data:
+            assert len(adelic_data) == 1
+            my_adelic_data = adelic_data[0]
+            data['adelic_data'] =  my_adelic_data
+            data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
+            M = ZZ(self.adelic_level)
+            data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
+            P = M.prime_divisors()
+            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))**2*prod([p**2-1 for p in P]) // self.adelic_index
+            print(data['adelic_image_size'])
+        else:
+            data['adelic_data'] = {}
 
         # CM and Endo ring:
 
@@ -449,8 +526,12 @@ class WebEC():
 
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
-            ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
-            ('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant']))]
+            (f'Minimal quadratic twist {data["minq_label"]}', data['minq_url'])]
+        if self.cm == -3:
+            self.friends.append((f'Minimal sextic twist {data["min_sextic_twist_label"]}', data['min_sextic_twist_url']))
+        if self.cm == -4:
+            self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
+        self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
@@ -472,14 +553,15 @@ class WebEC():
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Pari/GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('Code to Oscar', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
                           ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
         try:
-            self.plot = encode_plot(self.E.plot())
+            self.plot = encode_plot(self.E.plot(), transparent=True)
         except AttributeError:
-            self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
+            self.plot = encode_plot(EllipticCurve(data['ainvs']).plot(), transparent=True)
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label),
@@ -578,6 +660,10 @@ class WebEC():
             mwbsd['lder_name'] = "L'(E,1)"
         else:
             mwbsd['lder_name'] = "L(E,1)"
+
+        mwbsd['equal'] = r'=' if mwbsd['analytic_rank'] < 2 else r'\overset{?}{=}'
+        mwbsd['rhs'] = '?' if mwbsd['sha'] == '?' else mwbsd['sha'] * mwbsd['real_period'] * mwbsd['reg'] * mwbsd['tamagawa_product'] / mwbsd['torsion']**2
+        mwbsd['formula'] = r'%0.9f \approx %s %s \frac{\# &#1064;(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \approx %0.9f' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
 
     def display_modell_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
@@ -695,13 +781,20 @@ class WebEC():
 
     def code(self):
         if self._code is None:
-
             # read in code.yaml from current directory:
             _curdir = os.path.dirname(os.path.abspath(__file__))
-            self._code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-
-            # Fill in placeholders for this specific curve:
-            for lang in ['sage', 'pari', 'magma']:
-                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
-
+            code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+            # fill in curve data
+            if self.data['adelic_data']:
+                adelic_gens = self.data['adelic_data']['adelic_gens']
+                adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
+            else:
+                adelic_gens = adelic_level = ''
+            data = { 'ainvs': self.data['ainvs'],
+                     'level': adelic_level,
+                     'adelic_gens': adelic_gens }
+            for prop in code:
+                for lang in code[prop]:
+                    code[prop][lang] = code[prop][lang].format(**data)
+            self._code = code
         return self._code

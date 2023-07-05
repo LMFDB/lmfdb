@@ -11,6 +11,12 @@ from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
 
 logger = make_logger("ecnf")
 
+def curve_url(c):
+    return url_for(".show_ecnf",
+                   nf=c['field_label'],
+                   conductor_label=c['conductor_label'],
+                   class_label=c['iso_label'],
+                   number=c['number'])
 
 class ECNF_isoclass():
 
@@ -81,20 +87,13 @@ class ECNF_isoclass():
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
         P = self.graph.plot(edge_labels=True)
-        self.graph_img = encode_plot(P)
+        self.graph_img = encode_plot(P, transparent=True)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
         self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 
         self.field = FIELD(self.field_label)
         self.field_name = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, self.field_name)
-
-        def curve_url(c):
-            return url_for(".show_ecnf",
-                           nf=c['field_label'],
-                           conductor_label=c['conductor_label'],
-                           class_label=c['iso_label'],
-                           number=c['number'])
 
         self.curves = [[c['short_label'], curve_url(c), web_ainvs(self.field_label,c['ainvs'])] for c in self.db_curves]
 
