@@ -970,7 +970,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroup_autprofile(self):
-        if self.has_subgroups:
+        if self.has_subgroups and (self.all_subgroups_known or self.complements_known or self.outer_equivalence):
             seen = set()
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
@@ -994,7 +994,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def normal_autprofile(self):
-        if self.has_subgroups:
+        if self.has_subgroups and (self.all_subgroups_known or self.complements_known or self.outer_equivalence):
             seen = set()
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
