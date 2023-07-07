@@ -2245,6 +2245,16 @@ def cc_data(gp, label, typ="complex"):
         ans += "<br>Centralizer: {}".format(
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
+
+    if wacc.representative ==None:
+        ans += "<br>Representative: not computed"
+    else:
+        if label == '1A':
+            ans += "<br>Representative: id"
+        else:
+            gp_value = WebAbstractGroup(gp)   #db.gps_groups_test.lucky({'label':gp})
+            repn = gp_value.decode(wacc.representative, as_str=True)
+            ans += "<br>Representative: {}".format("$" + repn + "$")
     return Markup(ans)
 
 

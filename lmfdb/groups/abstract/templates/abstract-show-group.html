@@ -500,6 +500,8 @@
 </div>
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}} and profile</h3>
+
+
 <p>
   <div>
     {# One of these (diagram/profile) will be activated by javascript below #}
@@ -535,10 +537,12 @@
   <div class="{{gp.diagram_classes()}}">
 
     {% if info.wide %}
-      {{ gp.canvas(1000, 300) | safe}}
-      {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
+    {{ gp.diagramorder_links() | safe }}
+    {{ gp.canvas(1000, 300) | safe}}
+    {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
       {{ gp.sub_info_area() | safe }}
     {% else %} {# not wide #}
+    {{ gp.diagramorder_links() | safe }}
       <table><tr>
         <td>{{gp.canvas(500, 300) | safe}}</td>
         <td valign="top">{{gp.sub_info_area() | safe}}</td>
