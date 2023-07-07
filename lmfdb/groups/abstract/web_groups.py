@@ -1029,14 +1029,19 @@ class WebAbstractGroup(WebObj):
     @cached_method
     def _normal_summary(self):
         if self.normal_index_bound is not None and self.normal_index_bound != 0:
-            return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown."
+            return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown. <br>"
         return ""
 
     @cached_method
     def _subgroup_summary(self, in_profile):
         if self.subgroup_index_bound != 0:
-            return f"All subgroup of index up to {self.subgroup_index_bound} are shown. <br>"
-            # TODO: add more verbiage here about Sylow subgroups, maximal subgroups and normal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
+            if self.normal_index_bound == None or self.normal_index_bound == 0:
+                return f"All subgroup of index up to {self.subgroup_index_bound} are shown, as well as all normal subgroups of any index. <br>"
+            elif self.normal_order_bound !=0:
+                return f"All subgroup of index up to {self.subgroup_index_bound} are shown, as well as normal subgroups of index up to {self.normal_index_bound} or of order up to {self.normal_order_bound}. <br>"
+            else:
+                return f"All subgroup of index up to {self.subgroup_index_bound} are shown, as well as normal subgroups of index up to {self.normal_index_bound}. <br>"
+            # TODO: add more verbiage here about Sylow subgroups, maximal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
         return ""
 
     def get_profile(self, sub_all, sub_aut):
@@ -1201,14 +1206,21 @@ class WebAbstractGroup(WebObj):
         if getpositions:
             s += '<button onclick="getpositions()">Get positions</button><br>\n'
             s += '<p><div id="positions"></div></p>\n'
-        s += '<div>\nEach subgroup order has its own level?\n'
-        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
+#        s += '<div>\nEach subgroup order has its own level?\n'
+#        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         for sub_all in ["subgroup", "normal"]:
             for sub_aut in ["", "aut"]:
                 cls = f'{sub_all}_{sub_aut}diagram'
                 s += f'<div class="{cls}">\n'
                 url = url_for(f'.{cls}', label=self.label)
                 s += f'<a href="{url}">See a full page version of the diagram</a>\n</div>\n'
+        return s
+
+
+    def diagramorder_links(self):
+        s = ""
+        s += '<div>\n For the  default diagram, subgroups are sorted vertically by the number of prime divisors (counted with multiplicity) in  their orders. <br>  To see  subgroups sorted vertically by order instead, check this box.'
+        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         return s
 
     def sub_info_area(self):
