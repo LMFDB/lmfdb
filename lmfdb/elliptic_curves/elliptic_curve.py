@@ -464,7 +464,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
-    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
+    ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
