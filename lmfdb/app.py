@@ -138,7 +138,7 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
-    vars['ALPHA'] = True # hardwired for alpha branch
+    #vars['ALPHA'] = True # hardwired for alpha branch
 
     def modify_url(**replace):
         urlparts = urlparse(request.url)

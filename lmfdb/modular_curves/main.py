@@ -658,23 +658,13 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
-    parse_ints(info, query, "points", qfield="num_known_degree1_points")
-    if "obstructions" in info:
-        if info["obstructions"] == "nolocal":
-            query["obstructions"] = {"$ne": []}
-        elif info["obstructions"] == "noglobal":
-            query["obstructions"] = []
-            if "num_known_degree1_points" in query:
-                # It would be better to simplify this, but it's not clear how to easily determine whether 0 is allowed by the expression entered
-                query["num_known_degree1_points"] = {"$and": [0, query["num_known_degree1_points"]]}
-            else:
-                query["num_known_degree1_points"] = 0
-        elif info["obstructions"] == "global":
-            if "num_known_degree1_points" in query:
-                # It would be better to simplify this, but it's not clear how to easily determine whether 0 is allowed by the expression entered
-                query["num_known_degree1_points"] = {"$and": [{"$gt": 0}, query["num_known_degree1_points"]]}
-            else:
-                query["num_known_degree1_points"] = {"$gt": 0}
+    if not info.get("points_quantifier"): # default, which is non-cuspidal
+        parse_ints(info, query, "points", qfield="num_known_degree1_noncusp_points")
+    elif info["points_quantifier"] == "noncm":
+        parse_ints(info, query, "points", qfield="num_known_degree1_noncm_points")
+    elif info["points_quantifier"] == "all":
+        parse_ints(info, query, "points", qfield="num_known_degree1_points")
+    parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
     parse_bool(info, query, "contains_negative_one")
@@ -860,18 +850,26 @@ class ModCurveSearchArray(SearchArray):
             example_col=True,
             example_span="",
         )
-        points = TextBox(
+        points_quantifier = SelectBox(
+            name="points_type",
+            options=[('', 'non-cusp'),
+                     ('noncm', 'non-CM'),
+                     ('all', 'all'),
+                     ],
+            min_width=105)
+        points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="Rational points",
+            label="Points",
             example="0, 3-5",
+            select_box=points_quantifier,
         )
         obstructions = SelectBox(
-            name="obstructions",
+            name="has_obstruction",
             options=[("", ""),
-                     ("nolocal", "Local obstruction"),
-                     ("noglobal", "No known points"),
-                     ("global", "Rational points")],
+                     ("yes", "Known obstruction"),
+                     ("not_yes", "No known obstruction"),
+                     ("no", "No obstruction")],
             knowl="modcurve.local_obstruction",
             label="Obstructions")
         family = SelectBox(
@@ -1205,8 +1203,7 @@ def modcurve_data(label):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     if label == coarse_label:
-        qtwists = list(db.gps_gl2zhat_fine.search({"coarse_label":label}, "label"))
-        labels = [label] + qtwists
+        labels = [label]
     else:
         labels = [label, coarse_label]
     tables = ["gps_gl2zhat_fine" for lab in labels]
