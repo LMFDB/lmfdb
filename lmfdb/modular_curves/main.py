@@ -297,7 +297,7 @@ def modcurve_postprocess(res, info, query):
     # Add in the number of models
     num_models = Counter()
     labels = [rec["label"] for rec in res]
-    for modcurve in db.modcurve_models_test.search({"modcurve":{"$in":labels}}, "modcurve"):
+    for modcurve in db.modcurve_models.search({"modcurve":{"$in":labels}}, "modcurve"):
         num_models[modcurve] += 1
     for rec in res:
         rec["models"] = num_models[rec["label"]]
@@ -395,7 +395,7 @@ def parse_family(inp, query, qfield):
     #'dont_display'
     #'gonality_bounds'
     #'modcurve'
-# cols currently unused in modcurve_modelmaps_test
+# cols currently unused in modcurve_modelmaps
     #'domain_label',
     #'dont_display',
     #'factored'
@@ -478,7 +478,7 @@ class ModCurve_download(Downloader):
         s += "covers := %s;\n" % parents_mag
 
         s += "\n// Models for this modular curve, if computed\n"
-        models = list(db.modcurve_models_test.search(
+        models = list(db.modcurve_models.search(
             {"modcurve": label, "model_type":{"$not":1}},
             ["equation", "number_variables", "model_type", "smooth"]))
         if models:
@@ -518,12 +518,12 @@ class ModCurve_download(Downloader):
             model_id += 1
 
         s += "\n// Maps from this modular curve, if computed\n"
-        maps = list(db.modcurve_modelmaps_test.search(
+        maps = list(db.modcurve_modelmaps.search(
             {"domain_label": label},
             ["domain_model_type", "codomain_label", "codomain_model_type",
              "coordinates", "leading_coefficients"]))
         codomain_labels = [m["codomain_label"] for m in maps]
-        codomain_models = list(db.modcurve_models_test.search(
+        codomain_models = list(db.modcurve_models.search(
             {"modcurve": {"$in": codomain_labels}},
             ["equation", "modcurve", "model_type"]))
         map_id = 0
@@ -963,7 +963,7 @@ def ratpoint_postprocess(res, info, query):
     return res
 
 @search_wrap(
-    table=db.modcurve_points_test,
+    table=db.modcurve_points,
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,

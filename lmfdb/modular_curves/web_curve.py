@@ -443,7 +443,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.modcurve_models_test.search({"modcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+        return list(db.modcurve_models.search({"modcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
 
     @lazy_attribute
     def formatted_models(self):
@@ -451,7 +451,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_count(self):
-        return db.modcurve_models_test.count({"modcurve": self.coarse_label})
+        return db.modcurve_models.count({"modcurve": self.coarse_label})
 
     @lazy_attribute
     def has_more_models(self):
@@ -461,7 +461,7 @@ class WebModCurve(WebObj):
     def modelmaps_to_display(self):
         # Ensure domain model and map have dont_display = False
         domain_types = [1] + [m["model_type"] for m in self.models_to_display]
-        return list(db.modcurve_modelmaps_test.search(
+        return list(db.modcurve_modelmaps.search(
             {"domain_label": self.coarse_label,
              "dont_display": False,
              "domain_model_type":{"$in": domain_types}},
@@ -575,7 +575,7 @@ class WebModCurve(WebObj):
                 {"label": {"$in": codomain_labels}},
                 ["label","name"]))
             # Do not display maps for which the codomain model has dont_display = False
-            image_eqs = list(db.modcurve_models_test.search(
+            image_eqs = list(db.modcurve_models.search(
                 {"modcurve": {"$in": codomain_labels},
                  "dont_display": False},
                 ["modcurve", "model_type", "equation"]))
@@ -598,7 +598,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def modelmaps_count(self):
-        return db.modcurve_modelmaps_test.count({"domain_label": self.coarse_label})
+        return db.modcurve_modelmaps.count({"domain_label": self.coarse_label})
 
     @lazy_attribute
     def has_more_modelmaps(self):
@@ -687,15 +687,15 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def known_degree1_points(self):
-        return db.modcurve_points_test.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
+        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
 
     @lazy_attribute
     def known_degree1_noncm_points(self):
-        return db.modcurve_points_test.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
+        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
 
     @lazy_attribute
     def known_low_degree_points(self):
-        return db.modcurve_points_test.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
+        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
 
     @lazy_attribute
     def low_degree_cusps(self):
@@ -703,7 +703,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def db_points(self):
-        return list(db.modcurve_points_test.search(
+        return list(db.modcurve_points.search(
             {"curve_label": self.coarse_label},
             sort=["degree", "j_height"],
             projection=["Elabel","cm","isolated","jinv","j_field","j_height",
