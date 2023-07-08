@@ -330,7 +330,7 @@ modcurve_columns = SearchColumns(
         CheckCol("squarefree", "av.squarefree", "Squarefree"),
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
-        ProcessedCol("models", "modcurve.models", "Models", lambda x: blankzeros(x)),
+        ProcessedCol("models", "modcurve.models", "Models", blankzeros),
         MathCol("num_known_degree1_points", "modcurve.known_points", "Points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
