@@ -3,7 +3,6 @@
 import re
 from collections import Counter
 from lmfdb import db
-from ast import literal_eval
 
 from flask import render_template, url_for, request, redirect, abort
 
@@ -54,7 +53,6 @@ from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
-from string import ascii_lowercase
 
 coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
 fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
