@@ -785,6 +785,8 @@ class WebAbstractGroup(WebObj):
             if cent_order_factored:
                 props.extend([(r"$\card{Z(G)}$",
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
+            elif self.center_label:
+                 props.extend([(r"$\card{Z(G)}$", self.center_label.split(".")[0])])                
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
@@ -968,7 +970,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroup_autprofile(self):
-        if self.has_subgroups:
+        if self.has_subgroups and (self.all_subgroups_known or self.complements_known or self.outer_equivalence):
             seen = set()
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
@@ -992,7 +994,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def normal_autprofile(self):
-        if self.has_subgroups:
+        if self.has_subgroups and (self.all_subgroups_known or self.complements_known or self.outer_equivalence):
             seen = set()
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
@@ -1027,14 +1029,19 @@ class WebAbstractGroup(WebObj):
     @cached_method
     def _normal_summary(self):
         if self.normal_index_bound is not None and self.normal_index_bound != 0:
-            return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown."
+            return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown. <br>"
         return ""
 
     @cached_method
     def _subgroup_summary(self, in_profile):
         if self.subgroup_index_bound != 0:
-            return f"All subgroup of index up to {self.subgroup_index_bound} are shown. <br>"
-            # TODO: add more verbiage here about Sylow subgroups, maximal subgroups and normal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
+            if self.normal_index_bound == None or self.normal_index_bound == 0:
+                return f"All subgroup of index up to {self.subgroup_index_bound} are shown, as well as all normal subgroups of any index. <br>"
+            elif self.normal_order_bound !=0:
+                return f"All subgroup of index up to {self.subgroup_index_bound} are shown, as well as normal subgroups of index up to {self.normal_index_bound} or of order up to {self.normal_order_bound}. <br>"
+            else:
+                return f"All subgroup of index up to {self.subgroup_index_bound} are shown, as well as normal subgroups of index up to {self.normal_index_bound}. <br>"
+            # TODO: add more verbiage here about Sylow subgroups, maximal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
         return ""
 
     def get_profile(self, sub_all, sub_aut):
@@ -1199,14 +1206,21 @@ class WebAbstractGroup(WebObj):
         if getpositions:
             s += '<button onclick="getpositions()">Get positions</button><br>\n'
             s += '<p><div id="positions"></div></p>\n'
-        s += '<div>\nEach subgroup order has its own level?\n'
-        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
+#        s += '<div>\nEach subgroup order has its own level?\n'
+#        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         for sub_all in ["subgroup", "normal"]:
             for sub_aut in ["", "aut"]:
                 cls = f'{sub_all}_{sub_aut}diagram'
                 s += f'<div class="{cls}">\n'
                 url = url_for(f'.{cls}', label=self.label)
                 s += f'<a href="{url}">See a full page version of the diagram</a>\n</div>\n'
+        return s
+
+
+    def diagramorder_links(self):
+        s = ""
+        s += '<div>\n For the  default diagram, subgroups are sorted vertically by the number of prime divisors (counted with multiplicity) in  their orders. <br>  To see  subgroups sorted vertically by order instead, check this box.'
+        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         return s
 
     def sub_info_area(self):
@@ -1354,7 +1368,7 @@ class WebAbstractGroup(WebObj):
             for sub in self.subgroups.values():
                 slab = sub.subgroup # Might be None
                 if slab in C:
-                    latex_lookup[slab] = sub.subgroup_tex_parened
+                    latex_lookup[slab] = abstract_group_display_knowl(slab, name='$'+sub.subgroup_tex_parened+'$')
                     sort_key[slab] = (
                         not sub.abelian,
                         sub.subgroup_order.is_prime_power(get_data=True)[0]
@@ -1375,10 +1389,10 @@ class WebAbstractGroup(WebObj):
                         else cgroup.order,
                         cgroup.order,
                     )
-                    latex_lookup[c] = sub_paren(cgroup.tex_name)
+                    latex_lookup[c] = abstract_group_display_knowl(slab, name='$'+sub_paren(cgroup.tex_name)+'$')
             df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
-            s = r" \times ".join(
-                "%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "")
+            s = r" $\, \times\, $ ".join(
+                "%s%s" % (latex_lookup[label], r" ${}^%s$ " % e if e > 1 else "")
                 for (label, e) in df
             )
         return s
@@ -1653,6 +1667,7 @@ class WebAbstractGroup(WebObj):
         rep_data = self.representations[rep_type]
         if rep_type == "Lie":
             rep_type = "GLFq"
+            rep_data = rep_data[0]
         d = rep_data["d"]
         k = 1
         if rep_type == "GLZ":
@@ -1795,12 +1810,9 @@ class WebAbstractGroup(WebObj):
         # For live groups
         return {}
 
-
-    #JP working on to show automorphism generators
     def auto_gens_list(self):
         gens = self.aut_gens
-        pr_gens = [ [ self.decode(gen) for gen in gens[i]] for i in range(len(gens))]
-        return pr_gens
+        return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
     def representation_line(self, rep_type):
         # TODO: Add links to searches for other representations when available
@@ -1954,6 +1966,12 @@ class WebAbstractGroup(WebObj):
         )
 
     # special subgroups
+
+    #first function is if we only know special subgroups as abstract groups
+    def special_subs_label(self,label):
+        info=db.gps_groups_test.lucky({"label": label})
+        return info['tex_name']
+
     def cent(self):
         return self.special_search("Z")
 
@@ -1963,6 +1981,7 @@ class WebAbstractGroup(WebObj):
             return self.subgroups[self.cent()].subgroup_tex
         return None
 
+    
     def cent_order_factor(self):
         if self.live():
             ZGord = ZZ(self.G.Center().Order())
@@ -1972,6 +1991,7 @@ class WebAbstractGroup(WebObj):
                 return None
             ZGord = self.order // ZZ(cent.split(".")[0])
         return ZGord.factor()
+
 
     def comm(self):
         return self.special_search("D")
@@ -2376,6 +2396,16 @@ class WebAbstractSubgroup(WebObj):
         if self.projective_image is not None:
             return self._lookup(self.projective_image, self._full, WebAbstractGroup)
 
+    def knowl(self, paren=False):
+        from lmfdb.groups.abstract.main import sub_display_knowl
+        knowlname = self.subgroup_tex_parened if paren else self.subgroup_tex
+        return sub_display_knowl(self.label, name=rf'${knowlname}$')
+
+    def quotient_knowl(self, paren=False):
+        # assumes there is a quotient group
+        knowlname = self.quotient_tex_parened if paren else self.quotient_tex
+        return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
+
     def display_quotient(self, subname=None, ab_invs=None):
         if subname is None:
             prefix = quoname = ""
@@ -2419,12 +2449,16 @@ class WebAbstractSubgroup(WebObj):
                 labels.extend([make_full(label) for label in llist])
         return list(db.gps_subgroups_test.search({"label": {"$in": labels}}))
 
+    
     def autjugate_subgroups(self):
-        return [
+        if self.amb.outer_equivalence == False and self.amb.complements_known == False and self.amb.subgroup_inclusions_known == False:
+            return None  #trying to say subgroups not computed up to autjugacy
+        else:
+            return [
             H
             for H in self.amb.subgroups.values()
             if H.aut_label == self.aut_label and H.label != self.label
-        ]
+            ]
 
     @lazy_attribute
     def centralizer_(self):
@@ -2524,6 +2558,9 @@ class WebAbstractDivision():
         self.label = label
         self.classes = classes
         self.order = classes[0].order
+
+    def size(self):
+        return sum([z.size for z in self.classes])
 
     def display_knowl(self, name=None):
         if not name:

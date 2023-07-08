@@ -234,25 +234,30 @@
   <table>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-  </table>
-</p>
-
-
-<p>
-  Minimum dimension of a faithful...
-  <table>
-    {% if gp.linC_degree != None %} <tr><td> ... {{KNOWL('group.linC_degree', 'complex matrix presentation')}}:</td><td>{{gp.linC_degree}}</td></tr> {% endif %}
-    {% if gp.irrC_degree == None %} <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
-    <tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td> ... {{KNOWL('group.irrC_degree','irreducible complex matrix presentation')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
-     {% if gp.linQ_degree != None %} <tr><td> ... {{KNOWL('group.linQ_degree', 'rational matrix presentation')}}:</td><td>{{gp.linQ_degree}}</td></tr> {% endif %}
+    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
+    <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
     {% if gp.irrQ_degree == None %}
-<tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>not computed</td></tr>
+<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
     {% elif gp.irrQ_degree == -1 %}
-<tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>no faithful irreducible rational representations</td></tr>
+<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
+    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+  <tr>
+    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
+    {% if gp.rank %}
+      <td>${{gp.rank}}$</td>
+    {% else %}
+      <td>not computed</td>
+    {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
+  {% if gp.eulerian_function != None %}
+    <td>${{gp.eulerian_function}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  </tr>
+</table>
 
-    <tr><td> ... {{KNOWL('group.irrQ_degree','irreducible rational matrix presentation')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
-  </table>
 </p>
 
 
@@ -271,9 +276,9 @@
     <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
   {% if gp.direct_product %}
       {% if gp.display_direct_product %}
-          <td>${{ gp.display_direct_product }}$</td>
+          <td>{{ gp.display_direct_product|safe }}</td>
       {% else %}
-          <td colspan="8">The group is a direct product of some of its subgroups but those subgroups have not been computed.</td>
+	  <td> not computed</td>
       {% endif %}
   {% elif gp.direct_product == False %}
       <td colspan="8"> not isomorphic to a non-trivial direct product</td>
@@ -286,17 +291,23 @@
     {% if gp.semidirect_product %}
       {% if gp.semidirect_products %}
         {% for sub, count, labels in gp.semidirect_products[:4] %}
-          <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+          <td>{{sub.knowl(paren=True)|safe}} $\,\rtimes\,$ {{sub.quotient_knowl(paren=True)|safe}} {% if count > 1 %} ({{count}}){% endif %}</td>
         {% endfor %}
         {% for i in range(4 - (gp.semidirect_products|length)) %}
         <td></td>
         {% endfor %}
         <td>{{semidirect_expressions_knowl(gp.label, "all " + (gp.semidirect_products | length | string) if (gp.semidirect_products|length > 4) else "more information") | safe}}</td>
+      {% else %}
+        {% if gp.abelian %}
+          <td colspan="8"> not isomorphic to a non-trivial semidirect product</td>
+        {% else %}
+          <td> not computed </td>
+        {% endif %}
       {% endif %}
   {% elif gp.semidirect_product == False %}
       <td colspan="8"> not isomorphic to a non-trivial semidirect product</td>
   {% else %}
-      <td> not computed</td>
+      <td> not computed </td>
   {% endif %}
   </tr>
   <tr>
@@ -315,7 +326,7 @@
     <tr>
       <td>{{KNOWL('group.nonsplit_product', 'Non-split product')}}:</td>
       {% for sub, count, labels in gp.nonsplit_products[:4] %}
-        <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+        <td>{{sub.knowl(paren=True)|safe}}&nbsp;.&nbsp;{{sub.quotient_knowl(paren=True)|safe}} {% if count > 1 %} ({{count}}){% endif %}</td>
       {% endfor %}
       {% for i in range(4 - (gp.nonsplit_products|length)) %}
       <td></td>
@@ -338,21 +349,6 @@
       {% endif %}
     </tr>
   {% endif %}
-  <tr>
-    <td>{{KNOWL('group.rank', 'Rank')}}:</td>
-    {% if gp.rank %}
-      <td>${{gp.rank}}$</td>
-    {% else %}
-      <td>not computed</td>
-    {% endif %}
-  </tr>
-  <tr>
-    <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
-  {% if gp.eulerian_function != None %}
-    <td>${{gp.eulerian_function}}$</td>
-    {% else %} <td>not computed</td> {% endif %}
-  
-  </tr>
 </table>
 
 {% else %}
@@ -395,8 +391,7 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
-
-     {% if gp.commutator_length %}
+     {% if gp.commutator_count %}
       <td>${{gp.commutator_count}}$</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
@@ -433,6 +428,8 @@
     {% if gp.cent() %}
     <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
     <td>{{gp.subgroups[gp.cent()].display_quotient("Z")|safe}}</td>
+    {% elif gp.center_label %}
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">${{gp.special_subs_label(gp.center_label)}}$</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -442,6 +439,8 @@
     {% if gp.comm() %}
     <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span></td> {# match single quote for code highlighting purposes: ' #}
     <td>{{gp.subgroups[gp.comm()].display_quotient("G'", ab_invs=gp.smith_abelian_invariants)|safe}}</td>
+     {% elif gp.commutator_label %}
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.comutator_label)}}">${{gp.special_subs_label(gp.commutator_label)}}$</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -451,6 +450,8 @@
     {% if gp.fratt() %}
     <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
     <td>{{gp.subgroups[gp.fratt()].display_quotient("\\Phi")|safe}} </td>
+     {% elif gp.frattini_label %}
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">${{gp.special_subs_label(gp.frattini_label)}}$</td>
     {% else %}
     <td> not computed</td>
     {% endif %}
@@ -499,6 +500,8 @@
 </div>
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}} and profile</h3>
+
+
 <p>
   <div>
     {# One of these (diagram/profile) will be activated by javascript below #}
@@ -534,10 +537,12 @@
   <div class="{{gp.diagram_classes()}}">
 
     {% if info.wide %}
-      {{ gp.canvas(1000, 300) | safe}}
-      {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
+    {{ gp.diagramorder_links() | safe }}
+    {{ gp.canvas(1000, 300) | safe}}
+    {{ gp.fullpage_links(user_is_authenticated and BETA) | safe }}
       {{ gp.sub_info_area() | safe }}
     {% else %} {# not wide #}
+    {{ gp.diagramorder_links() | safe }}
       <table><tr>
         <td>{{gp.canvas(500, 300) | safe}}</td>
         <td valign="top">{{gp.sub_info_area() | safe}}</td>

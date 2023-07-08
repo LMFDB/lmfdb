@@ -738,7 +738,7 @@ def auto_gens(label):
         "auto_gens_page.html",
         gp=gp,
         title="Generators of automorphism group for %s" % label,
-        bread=get_bread([("Automoorphism group generators", " ")]),
+        bread=get_bread([("Automorphism group generators", " ")]),
         learnmore=learnmore_list(),
     )
 
@@ -803,7 +803,7 @@ def _subgroup_diagram(label, typ, title, only):
 @abstract_page.route("/diagram/<label>")
 def subgroup_diagram(label):
     title = f"Diagram of subgroups up to conjugation for group {label}"
-    return _subgroup_diagram(label, "conj", only=("subgroup", ""))
+    return _subgroup_diagram(label, "conj", title, only=("subgroup", ""))
 
 @abstract_page.route("/autdiagram/<label>")
 def subgroup_autdiagram(label):
@@ -966,8 +966,8 @@ group_columns = SearchColumns([
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree"),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree"),
-    MathCol("irrC_degree", "group.irrC_degree", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
-    MathCol("irrQ_degree", "group.irrQ_degree", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree"),
+    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
+    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
@@ -1317,11 +1317,19 @@ def render_abstract_subgroup(label):
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
     info["pos_int_and_factor"] = pos_int_and_factor
 
-    if seq.normal:
-        title = r"Normal subgroup $%s \trianglelefteq %s$"
+
+    if seq.subgroup_tex != "?":
+        if seq.normal:
+            title = r"Normal subgroup $%s \trianglelefteq %s$"
+        else:
+            title = r"Non-normal subgroup $%s \subseteq %s$"
+        title = title % (seq.subgroup_tex, seq.ambient_tex)
     else:
-        title = r"Non-normal subgroup $%s \subseteq %s$"
-    title = title % (seq.subgroup_tex, seq.ambient_tex)
+        if seq.normal:
+            title = r"Normal subgroup of $%s$"
+        else:
+            title = r"Non-normal subgroup of $%s$"
+        title = title % (seq.ambient_tex)
 
     properties = [
         ("Label", label),
@@ -1819,17 +1827,19 @@ class GroupsSearchArray(SearchArray):
         )
         irrC_degree = TextBox(
             name="irrC_degree",
-            label=r"$\C$-irrep degree",
-            knowl="group.irrC_degree",
+            label=r"Minimal degree of $\C$-irrep",
+            knowl="group.min_complex_irrep_deg",
             example="3",
             example_span="4, or a range like 3..5",
+            advanced=True,
         )
         irrQ_degree = TextBox(
             name="irrQ_degree",
-            label=r"$\Q$-irrep degree",
-            knowl="group.irrQ_degree",
+            label=r"Minimal degree of $\Q$-irrep",
+            knowl="group.min_rational_irrep_deg",
             example="3",
             example_span="4, or a range like 3..5",
+            advanced=True,
         )
         schur_multiplier = TextBox(
             name="schur_multiplier",
@@ -2241,6 +2251,16 @@ def cc_data(gp, label, typ="complex"):
         ans += "<br>Centralizer: {}".format(
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
+
+    if wacc.representative ==None:
+        ans += "<br>Representative: not computed"
+    else:
+        if label == '1A':
+            ans += "<br>Representative: id"
+        else:
+            gp_value = WebAbstractGroup(gp)   #db.gps_groups_test.lucky({'label':gp})
+            repn = gp_value.decode(wacc.representative, as_str=True)
+            ans += "<br>Representative: {}".format("$" + repn + "$")
     return Markup(ans)
 
 
@@ -2256,16 +2276,16 @@ def rchar_data(label):
     ans += "<br>Schur index: {}".format(mychar.schur_index)
     nt = mychar.nt
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
-    if mychar._data.get("image"):
-        txt = "Image"
-        imageknowl = (
-            '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(mychar.image)
-        )
-        if mychar.schur_index > 1:
-            txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
-        ans += "<br>{}: {}".format(txt, imageknowl)
-    else:
-        ans += "<br>Image: not computed"
+    #if mychar._data.get("image"):
+    #    txt = "Image"
+    #    imageknowl = (
+    #        '<a title = "{0} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args={0}">{0}</a>'.format(mychar.image)
+    #    )
+    #    if mychar.schur_index > 1:
+    #        txt = r"Image of ${}\ *\ ${}".format(mychar.schur_index, label)
+    #    ans += "<br>{}: {}".format(txt, imageknowl)
+    #else:
+    #    ans += "<br>Image: not computed"
     return Markup(ans)
 
 
@@ -2288,14 +2308,14 @@ def cchar_data(label):
     ans += "<br>Frobenius-Schur indicator: {}".format(mychar.indicator)
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
     ans += "<br>Field of character values: {}".format(formatfield(mychar.field))
-    if mychar._data.get("image"):
-        imageknowl = (
-            '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
-            % (mychar.image, mychar.image, mychar.image)
-        )
-        ans += "<br>Image: {}".format(imageknowl)
-    else:
-        ans += "<br>Image: not computed"
+    #if mychar._data.get("image"):
+    #    imageknowl = (
+    #        '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
+    #        % (mychar.image, mychar.image, mychar.image)
+    #    )
+    #    ans += "<br>Image: {}".format(imageknowl)
+    #else:
+    #    ans += "<br>Image: not computed"
     return Markup(ans)
 
 
@@ -2467,7 +2487,7 @@ def semidirect_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Semidirect product expressions for ${gp.tex_name}$:<br />\n"
     for sub, cnt, labels in gp.semidirect_products:
-        ans += fr"${sub.subgroup_tex_parened}~\rtimes~{sub.quotient_tex_parened}$"
+        ans += fr"{sub.knowl(paren=True)} $\,\rtimes\,$ {sub.quotient_knowl(paren=True)}"
         if cnt > 1:
             ans += f" in {cnt} ways"
         ans += ' via '
@@ -2480,7 +2500,7 @@ def nonsplit_data(label):
     ans = f"Nonsplit product expressions for ${gp.tex_name}$:<br />\n"
     ans += "<table>\n"
     for sub, cnt, labels in gp.nonsplit_products:
-        ans += f"<tr><td>${sub.subgroup_tex_parened}~.~{sub.quotient_tex_parened}$</td><td>"
+        ans += fr"<tr><td>{sub.knowl(paren=True)} $\,.\,$ {sub.quotient_knowl(paren=True)}</td><td>"
         if cnt > 1:
             ans += f" in {cnt} ways"
         ans += ' via </td>'
