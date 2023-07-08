@@ -732,7 +732,7 @@ def format_coeffs(coeffs):
 
 
 def url_for_label(label):
-    return url_for(".by_label", label=label)
+    return url_for("number_fields.by_label", label=label)
 
 @nf_page.route("/<label>")
 def by_label(label):
@@ -1035,17 +1035,24 @@ def unlatex(s):
 @nf_page.route('/<nf>/download/<download_type>')
 def nf_download(**args):
     typ = args['download_type']
-    if typ == 'data':
-        response = make_response(nf_data(**args))
-    else:
-        response = make_response(nf_code(**args))
+    try:
+        if typ == 'data':
+            response = make_response(nf_data(**args))
+        else:
+            response = make_response(nf_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 
 
 def nf_data(**args):
     label = args['nf']
+    if not FIELD_LABEL_RE.fullmatch(label):
+        raise ValueError(f"Invalid label {label}")
     nf = WebNumberField(label)
+    if nf.is_null():
+        raise ValueError(f"There is no number field with label {label}")
     data = '/* Data is in the following format\n'
     data += '   Note, if the class group has not been computed, it, the class number, the fundamental units, regulator and whether grh was assumed are all 0.\n'
     data += '[polynomial,\ndegree,\nt-number of Galois group,\nsignature [r,s],\ndiscriminant,\nlist of ramifying primes,\nintegral basis as polynomials in a,\n1 if it is a cm field otherwise 0,\nclass number,\nclass group structure,\n1 if grh was assumed and 0 if not,\nfundamental units,\nregulator,\nlist of subfields each as a pair [polynomial, number of subfields isomorphic to one defined by this polynomial]\n]'
@@ -1112,8 +1119,12 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#
 
 def nf_code(**args):
     label = args['nf']
+    if not FIELD_LABEL_RE.fullmatch(label):
+        raise ValueError(f"Invalid label {label}")
     lang = args['download_type']
     nf = WebNumberField(label)
+    if nf.is_null():
+        raise ValueError(f"There is no number field with label {label}")
     nf.make_code_snippets()
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
     if lang == 'oscar':
@@ -1132,7 +1143,6 @@ def nf_code(**args):
 
 class NFSearchArray(SearchArray):
     noun = "field"
-    plural_noun = "fields"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),

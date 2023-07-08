@@ -513,7 +513,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return where + olo, values
 
-    def _search_iterator(self, cur, search_cols, extra_cols, projection, query=""):
+    def _search_iterator(self, cur, search_cols, extra_cols, projection, query="", silent=False):
         """
         Returns an iterator over the results in a cursor,
         filling in columns from the extras table if needed.
@@ -525,6 +525,7 @@ class PostgresSearchTable(PostgresTable):
         - ``extra_cols`` -- the columns in the extras table in the results
         - ``projection`` -- the projection requested.
         - ``query`` -- the dictionary specifying the query (optional, only used for slow query print statements)
+        - ``silent`` -- whether to suppress slow query warnings
 
         OUTPUT:
 
@@ -549,7 +550,7 @@ class PostgresSearchTable(PostgresTable):
                     }
                 t = time.time()
         finally:
-            if total > self.slow_cutoff:
+            if not silent and total > self.slow_cutoff:
                 self.logger.info("Search iterator for {0} {1} required a total of \033[91m{2!s}s\033[0m".format(self.search_table, query, total))
             if isinstance(cur, pg_cursor):
                 cur.close()
@@ -860,7 +861,7 @@ class PostgresSearchTable(PostgresTable):
                     # but the sorting runtime is small compared to getting the records from
                     # postgres in the first place, so we use a simpler option.
                     # We override the projection on the iterator since we need to sort
-                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1, query=Q))
+                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1, query=Q, silent=silent))
                 if all(
                     (asc == 1 or self.col_type[col] in number_types)
                     for col, asc in raw_sort
@@ -895,14 +896,14 @@ class PostgresSearchTable(PostgresTable):
                 if info is not None:
                     # caller is requesting count data
                     info["number"] = self.count(query)
-                return self._search_iterator(cur, search_cols, extra_cols, projection, query=query)
+                return self._search_iterator(cur, search_cols, extra_cols, projection, query=query, silent=silent)
             if nres is None:
                 exact_count = cur.rowcount < prelimit
                 nres = offset + cur.rowcount
             else:
                 exact_count = True
             results = cur.fetchmany(limit)
-            results = list(self._search_iterator(results, search_cols, extra_cols, projection, query=query))
+            results = list(self._search_iterator(results, search_cols, extra_cols, projection, query=query, silent=silent))
         if info is not None:
             if offset >= nres > 0:
                 # We're passing in an info dictionary, so this is a front end query,
@@ -1092,7 +1093,7 @@ class PostgresSearchTable(PostgresTable):
         #    if cur.rowcount > 0:
         #        return {k:v for k,v in zip(search_cols, random.choice(list(cur)))}
 
-    def random_sample(self, ratio, query={}, projection=1, mode=None, repeatable=None):
+    def random_sample(self, ratio, query={}, projection=1, mode=None, repeatable=None, silent=False):
         """
         Returns a random sample of rows from this table.  Note that ratio is not guaranteed, and different modes will have different levels of randomness.
 
@@ -1107,6 +1108,7 @@ class PostgresSearchTable(PostgresTable):
           - ``choice`` -- all results satisfying the query are fetched, then a random subset is chosen.  This will be slow if a large number of rows satisfy the query, but performs much better when only a few rows satisfy the query.  This option matches ratio mostly accurately.
           - ``None`` -- Uses ``bernoulli`` if more than ``self._count_cutoff`` results satisfy the query, otherwise uses ``choice``.
         - ``repeatable`` -- an integer, giving a random seed for a repeatable result.
+        - ``silent`` -- whether to suppress slow query warnings
         """
         if mode is None:
             if self.count(query) > self._count_cutoff:
@@ -1145,7 +1147,7 @@ class PostgresSearchTable(PostgresTable):
                 "SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}"
             ).format(cols, Identifier(self.search_table), repeatable, qstr)
             cur = self._execute(selecter, values, buffered=True)
-            return self._search_iterator(cur, search_cols, extra_cols, projection, query=query)
+            return self._search_iterator(cur, search_cols, extra_cols, projection, query=query, silent=silent)
 
     def copy_to_example(self, searchfile, extrafile=None, id=None, sep=u"|", commit=True):
         """

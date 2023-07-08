@@ -1,4 +1,5 @@
 import re
+from flask import url_for
 from urllib.parse import urlencode
 from markupsafe import escape
 from sage.all import (
@@ -68,11 +69,18 @@ def display_knowl(kid, title=None, kwargs={}):
     there will be no edit link for authenticated users.
     """
     from lmfdb.knowledge.knowl import knowl_title
+    from flask_login import current_user
+    from lmfdb.users.pwdmanager import userdb
     ktitle = knowl_title(kid)
     if ktitle is None:
         # Knowl not found
-        if title is None:
-            return """<span class="knowl knowl-error">'%s'</span>""" % kid
+        if current_user.is_authenticated and userdb.can_read_write_userdb():
+            if title is None:
+                return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
+            else:
+                return f"""<a href="{ url_for('knowledge.edit', ID=kid) }"><span class="knowl knowl-error">{title}</span></a>"""
+        elif title is None:
+            return f"""<span class="knowl knowl-error">'{kid}'</span>"""
         else:
             return title
     else:

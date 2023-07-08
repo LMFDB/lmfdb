@@ -41,6 +41,7 @@ from lmfdb.utils import (
     dispcyclomat,
     search_wrap,
     web_latex,
+    pluralize,
     Downloader,
     pos_int_and_factor,
 )
@@ -1610,7 +1611,6 @@ def download_group(**args):
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     sorts = [
             ("", "order", ["order", "counter"]),
             ("exponent", "exponent", ["exponent", "order", "counter"]),
@@ -2229,7 +2229,7 @@ def cc_data(gp, label, typ="complex"):
     ans += "<br>Order of elements: {}".format(wacc.order)
     if wacc.centralizer == None:
         ans +="<br>Centralizer: not computed"
-    else:    
+    else:
         centralizer = f"{wacc.group}.{wacc.centralizer}"
         wcent = WebAbstractSubgroup(centralizer)
         ans += "<br>Centralizer: {}".format(
@@ -2303,8 +2303,7 @@ def crep_data(label):
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
     ans += "<br>Irreducible: {}".format(info["irreducible"])
-    plural = "" if len(info["gens"]) == 1 else "s"
-    ans += "<br>Matrix generator{}: ".format(plural)
+    ans += f"<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
     N = info["cyc_order_mat"]
     genlist = ["$" + dispcyclomat(N, gen) + "$" for gen in info["gens"]]
     ans += ",".join(genlist)
@@ -2321,8 +2320,7 @@ def qrep_data(label):
     ans += "<br>Group name: ${}$".format(group_names_pretty(info["group"]))
     ans += "<br>Dimension: ${}$".format(info["dim"])
     ans += "<br>Irreducible: {}".format(info["irreducible"])
-    plural = "" if len(info["gens"]) == 1 else "s"
-    ans += "<br>Matrix generator{}: ".format(plural)
+    ans += f"<br>{pluralize(len(info['gens']), 'Matrix generator', omit_n=True)}: "
     genlist = ["$" + dispZmat(gen) + "$" for gen in info["gens"]]
     ans += ",".join(genlist)
     return Markup(ans)

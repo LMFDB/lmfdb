@@ -574,7 +574,6 @@ def reliability():
 
 class LFSearchArray(SearchArray):
     noun = "field"
-    plural_noun = "fields"
     sorts = [("", "prime", ['p', 'n', 'c', 'label']),
              ("n", "degree", ['n', 'p', 'c', 'label']),
              ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),

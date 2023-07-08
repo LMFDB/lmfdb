@@ -422,7 +422,6 @@ def reliability():
 
 class GalSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     sorts = [("", "degree", ["n", "t"]),
              ("gp", "order", ["order", "n", "t"]),
              ("nilpotency", "nilpotency class", ["nilpotency", "n", "t"]),
