@@ -48,7 +48,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Mod-$\ell$ Galois representation labels', url_for(".labels_page"))]
+            (r'Mod-$\ell$ Galois representation labels', url_for(".labels_page"))]
 
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -363,17 +363,17 @@ class ModLGalRep_stats(StatsDisplay):
         {'cols': ['dimension', 'image_abstract_group'],
          'constraint': {'base_ring_order':2},
          'totaler': totaler(),
-         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),('for $\ell=2$',None)]},
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=2$',None)]},
         {'cols': ['dimension', 'image_abstract_group'],
          'constraint': {'base_ring_order':3},
          'buckets': {'dimension': ['1', '2']},
          'totaler': totaler(),
-         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),('for $\ell=3$',None)]},
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=3$',None)]},
         {'cols': ['dimension', 'image_abstract_group'],
          'constraint': {'base_ring_order':5},
          'buckets': {'dimension': ['1', '2']},
          'totaler': totaler(),
-         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),('for $\ell=5$',None)]},
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=5$',None)]},
     ]
 
 @modlgal_page.route("/Q/stats")

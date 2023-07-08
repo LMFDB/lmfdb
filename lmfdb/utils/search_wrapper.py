@@ -62,7 +62,7 @@ class Wrapper():
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
-        except ValueError as err:
+        except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
