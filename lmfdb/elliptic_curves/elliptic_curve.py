@@ -1002,7 +1002,7 @@ def modm_reduce():
     galois_image = db.ec_galrep.lucky({"lmfdb_label":label, "prime":0}, "adelic_gens")
     cur_lang = request.args.get('cur_lang')
 
-    if data == None or galois_image == None:
+    if data is None or galois_image is None:
         return "\\text{Invalid curve or adelic image not computed}"
     try:
         new_mod = int(request.args.get('m'))
