@@ -163,14 +163,13 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
-def display_props(proplist):
+def display_props(proplist, joiner="and"):
     if len(proplist) == 1:
         return proplist[0]
     elif len(proplist) == 2:
-        return " and ".join(proplist)
+        return f" {joiner} ".join(proplist)
     else:
-        return ", ".join(proplist[:-1]) + f", and {proplist[-1]}"
-
+        return ", ".join(proplist[:-1]) + f", {joiner} {proplist[-1]}"
 
 def find_props(
     gp,
@@ -468,10 +467,13 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         show=overall_display,
     )
     if type == "normal":
-        return f"The subgroup is {display_props(props)}."
+        main = f"The subgroup is {display_props(props)}."
     else:
-        return f"This subgroup is {display_props(props)}."
-
+        main = f"This subgroup is {display_props(props)}."
+    unknown = [prop for prop in overall_order if getattr(sgp, prop) is None]
+    if unknown:
+        main += "  Whether it is {display_props(unknown, 'or')} has not been computed."
+    return main
 
 # function to create string of group characteristics
 def create_boolean_string(gp, type="normal"):
@@ -558,13 +560,17 @@ def create_boolean_string(gp, type="normal"):
         show=(short_show if short_string else overall_display),
     )
     if type == "ambient":
-        return f"The ambient group is {display_props(props)}."
+        main = f"The ambient group is {display_props(props)}."
     elif type == "quotient":
-        return f"The quotient is {display_props(props)}."
+        main = f"The quotient is {display_props(props)}."
     elif type == "knowl":
-        return f"{display_props(props)}."
+        main = f"{display_props(props)}."
     else:
-        return f"This group is {display_props(props)}."
+        main = f"This group is {display_props(props)}."
+    unknown = [prop for prop in overall_order if getattr(gp, prop) is None]
+    if unknown and type != "knowl":
+        main += "  Whether it is {display_props(unknown, 'or')} has not been computed."
+    return main
 
 
 def url_for_label(label):
