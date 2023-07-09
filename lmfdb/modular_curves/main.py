@@ -831,7 +831,7 @@ class ModCurveSearchArray(SearchArray):
         )
         cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) f or d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm_discriminants = SelectBox(
             name="cm_discriminants",
             options=cm_opts,
