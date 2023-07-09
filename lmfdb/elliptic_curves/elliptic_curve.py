@@ -1023,8 +1023,7 @@ def modm_reduce():
 
 def gl1_gen(M):
     # Returns a list of generators of gl1 mod M
-    a = factor(M)
-    a.sort()
+    a = sorted(factor(M))
     q = [p[0]**p[1] for p in a]
     gens = []
     if a[0][0] == 2:
@@ -1050,6 +1049,7 @@ def gl2_element_lifter(N, M):
     m = prod([p[0]**p[1] for p in a if (N % p[0]) == 0])
     # `mat` is an element of gl2 mod N written as a list
     mat_id = [1, 0, 0, 1]
+
     def lifter(mat):
         return [CRT([mat[i], mat_id[i]], [m, M/m]) for i in range(4)]
     return lifter
@@ -1070,6 +1070,7 @@ def gl2_project(subgroup_gen, M):
     # Returns the projection to mod M (removes duplicates)
     if M == 1:
         return []
+
     def project(x):
         return int(Mod(x, M))
     gens = []
@@ -1113,7 +1114,7 @@ class ECSearchArray(SearchArray):
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
-    null_column_explanations = { 
+    null_column_explanations = {
                                  'adelic_level': False, # not applicable to CM curves, computed for all non-CM curves
                                  'adelic_index': False, # not applicable to CM curves, computed for all non-CM curves
                                  'adelic_genus': False, # not applicable to CM curves, computed for all non-CM curves
