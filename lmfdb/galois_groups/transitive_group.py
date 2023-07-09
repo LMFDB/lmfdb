@@ -33,17 +33,17 @@ def knowl_cache(galois_labels=None, results=None):
         cur = results
     else:
         assert results is None
-        cur = db.gps_transitive.search({"label": {"$in": galois_labels}}, ["label", "order", "gapid", "pretty"])
+        cur = db.gps_transitive.search({"label": {"$in": galois_labels}}, ["label", "order", "abstract_label", "pretty"])
     for rec in cur:
         label = rec["label"]
         cache[label] = rec
-        gp_label = f'{rec["order"]}.{rec["gapid"]}'
+        gp_label = rec['abstract_label']
         gp_labels.append(gp_label)
         reverse[gp_label].append(label)
     # calling abstract_group_namecache has the effect of filling in the "pretty" attribute when possible.
     # The resulting cache will have two types of records: abstract group ones with keys
     # "label", "order" and "tex_name", and transitive group ones with keys
-    # "label", "order", "gapid" and "pretty".  The labels will be of different kinds (6.1 vs 3T2),
+    # "label", "order", "abstract_label" and "pretty".  The labels will be of different kinds (6.1 vs 3T2),
     # and serve as keys for the cache dictionary.
     return abstract_group_namecache(gp_labels, cache, reverse)
 
@@ -106,8 +106,8 @@ class WebGaloisGroup:
             return self._data['arith_equiv']
         return 0
 
-    def gapid(self):
-        return int(self._data['gapid'])
+    def abstract_label(self):
+        return self._data['abstract_label']
 
     def order(self):
         return int(self._data['order'])
@@ -118,7 +118,7 @@ class WebGaloisGroup:
     def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty') is not None:
             return self._data['pretty']
-        gp_label = f"{self.order()}.{self.gapid()}"
+        gp_label = self.abstract_label()
         group = db.gps_groups.lookup(gp_label)
         if group and group.get('tex_name'):
             return f"${group['tex_name']}$"
@@ -226,9 +226,8 @@ def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache={}):
     pretty = group_obj.display_short(True) if group else ''
     if pretty != '':
         # modify if we use knowls and have the gap id
-        if useknowls and group['gapid']:
-            gp_label = f"{group['order']}.{group['gapid']}"
-            pretty = abstract_group_display_knowl(gp_label, cache=cache)
+        if useknowls and group['abstract_label']:
+            pretty = abstract_group_display_knowl(group['abstract_label'], cache=cache)
         if skip_nTj:
             # This is used for statistics where we want to display the abstract group, but we still need to be able to get back to the nTj label for searching
             if useknowls and pretty.startswith('<a title = "Group'):
@@ -593,11 +592,11 @@ def group_alias_table():
     ans += r'</tbody></table>'
     return ans
 
-def nt2gap(n, t):
+def nt2abstract(n, t):
     res = db.gps_transitive.lookup('{}T{}'.format(n,t))
-    if res and 'gapid' in res:
-        return [res['order'], res['gapid']]
-    raise NameError('GAP id not found')
+    if res and 'abstract_label' in res:
+        return res['abstract_label']
+    raise NameError('Abstract group id not found')
 
 def complete_group_code(code):
     # Order direct products
@@ -605,18 +604,19 @@ def complete_group_code(code):
     if code1 in aliases:
         return aliases[code1]
     # Try nTj notation
-    rematch = re.match(r"^(\d+)T(\d+)$", code)
+    rematch = re.match(r"^(\d+)[Tt](\d+)$", code)
     if rematch:
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
-    # convert small group label to GAP code
-    if re.match(r'^\d+\.\d+$',code):
-        code = "[%s,%s]"%tuple(code.split("."))
-    # Try GAP code
-    rematch = re.match(r'^\[\d+,\d+\]$', code)
+    # covert GAP code to abstract group label
+    rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
-        nts = list(db.gps_transitive.search({'gapidfull':code}, projection=['n','t']))
+        code = "%s.%s" % (rematch.group(1), rematch.group(2))
+    # Try abstract group label
+    rematch = re.match(r'^(\d+)\.([0-9a-zA-Z]+)$', code)
+    if rematch:
+        nts = list(db.gps_transitive.search({'abstract_label':code.lower()}, projection=['n','t']))
         nts = [(z['n'], z['t']) for z in nts]
         return nts
     else:

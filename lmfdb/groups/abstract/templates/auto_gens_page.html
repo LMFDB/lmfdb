@@ -1,0 +1,38 @@
+
+{% extends "base.html" %}
+
+{% block body %}
+
+<br>
+
+<p>
+  &nbsp; Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns). <br>
+
+  {% if gp.element_repr_type == 'PC' %} &nbsp; The entries in the table are given as words on the generators in the presentation for this group.   {% endif %}
+</p>
+
+
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr> <th> </th>         {% for c in gp.auto_gens_list()[0] %}
+        <th>${{c}}$</th>
+        {% endfor %}
+      </tr>
+      <tbody>
+	{% for i in range(1,gp.auto_gens_list()|length) %}
+      <tr> <td>  </td>
+	{% for j in gp.auto_gens_list()[i] %}
+      <td>${{j}}$ </td>
+      {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+      </thead>
+    </table>
+</p>
+
+
+
+{% endblock %}

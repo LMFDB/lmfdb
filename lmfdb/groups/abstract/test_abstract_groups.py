@@ -64,7 +64,7 @@ class AbGpsTest(LmfdbTest):
             "4432676798593", # factor of aut_order
         ])
         self.check_args("/Groups/Abstract/ab/3000", [ # large cyclic group
-            r"C_{2}^{3} \times C_{100}", # automorphism group structure
+            r"C_2^3\times C_{100}", # automorphism group structure
         ])
 
     def test_underlying_data(self):

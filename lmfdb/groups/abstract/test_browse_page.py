@@ -428,8 +428,8 @@ class AbGpsHomeTest(LmfdbTest):
         Check that we can restrict to maximal or non-maximal subgroups only
         """
         self.check_args("/Groups/Abstract/?maximal=yes&search_type=Subgroups", "2.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?maximal=yes&search_type=Subgroups", "8.2.4.b1.b1")
-        self.check_args("/Groups/Abstract/?maximal=no&search_type=Subgroups", "8.2.4.b1.b1")
+        self.not_check_args("/Groups/Abstract/?maximal=yes&search_type=Subgroups", "8.2.4.b1.a1")
+        self.check_args("/Groups/Abstract/?maximal=no&search_type=Subgroups", "8.2.4.b1.a1")
         self.not_check_args("/Groups/Abstract/?maximal=no&search_type=Subgroups", "2.1.2.a1.a1")
 
     def test_subgroup_central_search(self):
@@ -504,7 +504,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can search by quotient label
         """
-        self.check_args("/Groups/Abstract/?quotient=16.5&search_type=Subgroups", "32.12.16.a1.a1")
+        self.check_args("/Groups/Abstract/?quotient=16.5&search_type=Subgroups", "32.12.16.b1.a1")
         self.not_check_args("/Groups/Abstract/?quotient=16.5&search_type=Subgroups", "1.1.1.a1.a1")
 
     def test_subgroup_index_search(self):

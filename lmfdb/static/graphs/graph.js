@@ -246,23 +246,6 @@ class Renderer {
     for (var i = 0; i < this.graph.edges.length; i++) {
       this.drawEdge(this.graph.edges[i]);
     }
-    if(whoisshowing > 1) { // heights are by order
-      var orderlist = this.options.orderlist;
-      for (var i = 0; i<orderlist.length; i++) {
-        var coords = this.translate([this.graph.layoutMinX+150, -10*(i-1)-6.5]);
-        coords[0] -= this.graph.order_border_x;
-        //this.drawOrder(orderlist[i], coords);
-      }
-    }
-  }
-
-  drawOrder(ord, posn) {
-    this.ctx.moveTo(0,0);
-    this.ctx.strokeStyle = 'black';
-    this.ctx.fillStyle = 'black';
-    this.ctx.font = "16px Arial";
-    var textwidth = this.ctx.measureText(ord).width;
-    this.ctx.fillText(ord, posn[0]-textwidth, posn[1]);
   }
 
   drawNode(node) {

@@ -129,7 +129,7 @@ gg_columns = SearchColumns([
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
                       default=True)
 ],
-    db_cols=["bound_siblings", "gapid", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
+    db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
@@ -139,7 +139,7 @@ def gg_postprocess(res, info, query):
         others += sum([[tuple(pair[0]) for pair in rec["subfields"]] for rec in res], [])
     others = sorted(set(others))
     others = ["T".join(str(c) for c in nt) for nt in others]
-    others = list(db.gps_transitive.search({"label": {"$in": others}}, ["label", "order", "gapid", "pretty"]))
+    others = list(db.gps_transitive.search({"label": {"$in": others}}, ["label", "order", "abstract_label", "pretty"]))
     cache = knowl_cache(results=res+others)
     for rec in res:
         pretty = cache[rec["label"]].get("pretty")
@@ -267,11 +267,8 @@ def render_group_webpage(args):
         data['parity'] = "$%s$" % data['parity']
         data['subinfo'] = subfield_display(n, data['subfields'])
         data['resolve'] = resolve_display(data['quotients'])
-        if data['gapid'] == 0:
-            data['gapid'] = "not available"
-        else:
-            gp_label = f"{data['order']}.{data['gapid']}"
-            data['gapid'] = abstract_group_display_knowl(gp_label, gp_label)
+        gp_label = data['abstract_label']
+        data['groupid'] = abstract_group_display_knowl(gp_label, gp_label)
         data['otherreps'] = wgg.otherrep_list()
         ae = data['arith_equiv']
         if ae>0:
@@ -426,9 +423,9 @@ def reliability():
 class GalSearchArray(SearchArray):
     noun = "group"
     sorts = [("", "degree", ["n", "t"]),
-             ("gp", "order", ["order", "gapid", "n", "t"]),
+             ("gp", "order", ["order", "n", "t"]),
              ("nilpotency", "nilpotency class", ["nilpotency", "n", "t"]),
-             ("num_conj_classes", "num. conjugacy classes", ["num_conj_classes", "order", "gapid", "n", "t"])]
+             ("num_conj_classes", "num. conjugacy classes", ["num_conj_classes", "order", "n", "t"])]
     jump_example = "8T14"
     jump_egspan = "e.g. 8T14"
     jump_knowl = "gg.search_input"
