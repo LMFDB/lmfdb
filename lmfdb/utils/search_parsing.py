@@ -1706,8 +1706,7 @@ def parse_string_start(
 def str_to_intervals(inp, split_minus=True, parse_singleton=int):
     inp = inp.replace(" ", "")
     if "," in inp:
-        X = [str_to_intervals(piece)[0] for piece in inp.split(",")]
-        X.sort()
+        X = sorted([str_to_intervals(piece)[0] for piece in inp.split(",")])
         i = 0
         while i < len(X) - 1:
             if X[i][1] >= X[i+1][0]:
