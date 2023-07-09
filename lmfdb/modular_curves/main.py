@@ -918,7 +918,6 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
-    sort_knowl = "modcurve.sort_order"
     sorts = [
         ("", "level", ["level", "index", "genus", "label"]),
         ("index", "index", ["index", "level", "genus", "label"]),
