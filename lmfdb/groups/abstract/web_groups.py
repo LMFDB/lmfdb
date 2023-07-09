@@ -807,7 +807,6 @@ class WebAbstractGroup(WebObj):
             else:
                 props.extend([("Perm deg.", f"${self.permutation_degree}$")])
 
-                
         if  self.transitive_degree is None:
             props.extend([("Trans deg.", "not computed")])
         else:
@@ -822,7 +821,7 @@ class WebAbstractGroup(WebObj):
             return False
         return self.all_subgroups_known is not None
 
-# below fails to show subgroups when there are some    
+# below fails to show subgroups when there are some
 #       if self.all_subgroups_known: # Not None and equals True
 #            return True
 #        return False
