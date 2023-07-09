@@ -1171,7 +1171,8 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     order_lookup = [[n, Omega[n], by_Omega[Omega[n]].index(n)] for n in orders]
     max_width = max(sum(order_ctr[n] for n in by_Omega[W]) for W in by_Omega)
     display_opts["w"] = max(display_opts["w"], min(100 * max_width, 20000))
-    display_opts["h"] = max(display_opts["h"], len(by_Omega))
+    display_opts["layers"] = max(display_opts["layers"], len(by_Omega))
+    display_opts["h"] = 160 * display_opts["layers"]
 
     return [ll, layers[1]], order_lookup
 
@@ -1188,7 +1189,7 @@ def diagram_js_string(gp, only=None):
             glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all=="normal"))
 
     if any(glist):
-        return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {display_opts["h"]});', display_opts
+        return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {display_opts["layers"]});', display_opts
     else:
         return "", display_opts
 
