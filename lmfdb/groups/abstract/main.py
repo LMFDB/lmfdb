@@ -470,7 +470,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         main = f"The subgroup is {display_props(props)}."
     else:
         main = f"This subgroup is {display_props(props)}."
-    unknown = [prop for prop in overall_order if getattr(sgp, prop) is None]
+    unknown = [overall_display[prop] for prop in overall_order if getattr(sgp, prop) is None]
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -567,7 +567,7 @@ def create_boolean_string(gp, type="normal"):
         main = f"{display_props(props)}."
     else:
         main = f"This group is {display_props(props)}."
-    unknown = [prop for prop in overall_order if getattr(gp, prop) is None]
+    unknown = [overall_display[prop] for prop in overall_order if getattr(gp, prop) is None]
     if unknown and type != "knowl":
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
