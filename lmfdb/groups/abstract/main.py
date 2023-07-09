@@ -2242,7 +2242,7 @@ def cc_data(gp, label, typ="complex"):
         ans = "<h3>Conjugacy class {}</h3>".format(label)
         ans += "<br>Size of class: {}".format(wacc.size)
     ans += "<br>Order of elements: {}".format(wacc.order)
-    if wacc.centralizer == None:
+    if wacc.centralizer is None:
         ans +="<br>Centralizer: not computed"
     else:
         centralizer = f"{wacc.group}.{wacc.centralizer}"
@@ -2251,7 +2251,7 @@ def cc_data(gp, label, typ="complex"):
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
 
-    if wacc.representative ==None:
+    if wacc.representative is None:
         ans += "<br>Representative: not computed"
     else:
         if label == '1A':
@@ -2296,7 +2296,7 @@ def cchar_data(label):
     if mychar.faithful:
         ans += "<br>Faithful character"
     else:
-        if mychar.kernel == None:
+        if mychar.kernel is None:
             ans += "<br>Not faithful but kernel not computed."
         else:    
             ker = WebAbstractSubgroup(f"{mychar.group}.{mychar.kernel}")
