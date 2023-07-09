@@ -24,11 +24,15 @@
 
 {% block body -%}
 <div id="header">
-  <div id="logo"><a href="{{ url_for('index') }}">
+    <div id="logo"><a href="{{ url_for('index') }}">
+{% if ALPHA %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo-alpha.png') }}" />
+{% else %}
 {% if BETA %}
     <img src="{{ url_for('static', filename='images/lmfdb-logo-beta.png') }}" />
 {% else %}
     <img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" />
+{% endif %}
 {% endif %}
 </a></div>
     <div class="right">
