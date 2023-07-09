@@ -47,7 +47,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, SearchCol, MultiProcessedCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -1180,7 +1180,6 @@ def diagram_js_string(gp, only=None):
     glist = [[], [], [], []]
     order_lookup = [[], [], [], []]
     display_opts = defaultdict(int)
-    orders = set()
     limit = (100 if only is None else 0)
     for i, pair in enumerate([("subgroup", ""), ("subgroup", "aut"), ("normal", ""), ("normal", "aut")]):
         sub_all, sub_aut = pair

@@ -20,7 +20,6 @@ from sage.all import (
     prod,
     lcm,
     is_prime,
-    euler_phi,
     cartesian_product_iterator,
 )
 from sage.libs.gap.libgap import libgap
@@ -227,14 +226,6 @@ class WebAbstractGroup(WebObj):
     def live(self):
         #return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
-
-    def decode(self, perm, n):
-        lehmer = []
-        for j in range(1,n+1):
-            lehmer.append(perm % j)
-            perm = int(perm/j)
-        lehmer.reverse()
-        return libgap.PermList(from_lehmer_code(lehmer))
 
     @lazy_attribute
     def G(self):
