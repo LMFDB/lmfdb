@@ -28,6 +28,7 @@ lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
+modm_not_computed_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\?)')
 
 
 def match_coeff_vec(lab):
@@ -391,6 +392,11 @@ class WebEC():
             print(data['adelic_image_size'])
         else:
             data['adelic_data'] = {}
+
+        if hasattr(self, "modm_images") and self.modm_images and not modm_not_computed_regex.fullmatch(self.modm_images[-1]):
+            self.modcurve_url = url_for("modcurve.by_label", label=self.modm_images[-1])
+        else:
+            self.modcurve_url = None
 
         # CM and Endo ring:
 

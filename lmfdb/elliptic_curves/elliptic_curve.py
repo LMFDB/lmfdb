@@ -5,7 +5,7 @@ import re
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex, Jacobian
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime, is_prime, is_prime_power, PolynomialRing, latex, Jacobian, factor, prod, CRT, primitive_root, Mod, gcd
 from sage.databases.cremona import parse_cremona_label, class_to_int
 from sage.schemes.elliptic_curves.constructor import EllipticCurve_from_Weierstrass_polynomial
 
@@ -23,6 +23,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
 from lmfdb.utils.common_regex import ZLLIST_RE
+from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -388,7 +389,11 @@ def url_for_label(label):
 
 elladic_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*')
-modm_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.([a-z]+|\?)(\.(\d+)-(\d+).(\d+))?')
+
+modm_full = r'(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)'
+modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
+modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
+modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
 class EC_download(Downloader):
     table = db.ec_curvedata
@@ -988,6 +993,101 @@ def tor_struct_search_Q(prefill="any"):
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
     return "\n".join(["<select name='torsion_structure', style='width: 155px'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+# route for modm reduction. Called by modm_reduction in lmfdb.js.
+@ec_page.route("/adelic_image_modm_reduce")
+def modm_reduce():
+    label = request.args.get('label')
+    data = db.ec_curvedata.lookup(label, ["adelic_level", "modm_images"])
+    galois_image = db.ec_galrep.lucky({"lmfdb_label":label, "prime":0}, "adelic_gens")
+    cur_lang = request.args.get('cur_lang')
+
+    if data == None or galois_image == None:
+        return "\\text{Invalid curve or adelic image not computed}"
+    try:
+        new_mod = int(request.args.get('m'))
+        if new_mod <= 0:
+            raise ValueError
+    except ValueError:
+        return "\\text{Invalid input, please enter a positive integer}"
+
+    galois_level = data['adelic_level']
+
+    ans = gl2_lift(galois_image, galois_level, new_mod)
+    if ans == []:
+        result = "\\text{trivial group}"
+    else:
+        result = ",".join([str(latex(dispZmat_from_list(z,2))) for z in ans])
+    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang
+    return result
+
+def gl1_gen(M):
+    # Returns a list of generators of gl1 mod M
+    a = factor(M)
+    a.sort()
+    q = [p[0]**p[1] for p in a]
+    gens = []
+    if a[0][0] == 2:
+        if a[0][1] > 1:
+            gens.append(CRT([-1, 1], [q[0], M/q[0]]))
+        if a[0][1] > 2:
+            gens.append(CRT([5, 1], [q[0], M/q[0]]))
+        q.pop(0)
+    for p in q:
+        gens.append(CRT([primitive_root(p), 1], [p, M/p]))
+    return gens
+
+def gl1_ker(N, M):
+    # Returns a list of generators for kernel of gl1 mod M projecting to mod N
+    gens = gl1_gen(M)
+    gens = [Mod(g, M)**(Mod(g, N).multiplicative_order()) for g in gens]
+    return [int(g) for g in gens if g != 1]
+
+def gl2_element_lifter(N, M):
+    # Returns a function that lift elements of gl2 mod N to gl2 mod M.
+    # Requires N | M, positive integers.
+    a = factor(M)
+    m = prod([p[0]**p[1] for p in a if (N % p[0]) == 0])
+    # `mat` is an element of gl2 mod N written as a list
+    mat_id = [1, 0, 0, 1]
+    def lifter(mat):
+        return [CRT([mat[i], mat_id[i]], [m, M/m]) for i in range(4)]
+    return lifter
+
+def gl2_lift_divisible(subgroup_gen, N, M):
+    # Input: generators of a subgroup of gl2 mod N, integers N and M
+    # Returns the lift to mod M where N | M, positive integers
+    if N == M:
+        return subgroup_gen.copy()
+    lifter = gl2_element_lifter(N, M)
+    result = [lifter(x) for x in subgroup_gen]
+    result += [[1, N, 0, 1], [1, 0, N, 1], [1+N, N, M-N, 1+M-N]]
+    result += [[g, 0, 0, 1] for g in gl1_ker(N, M)]
+    return result
+
+def gl2_project(subgroup_gen, M):
+    # Input: generators of a subgroup of gl2 (implicitly mod N divisible by M)
+    # Returns the projection to mod M (removes duplicates)
+    if M == 1:
+        return []
+    def project(x):
+        return int(Mod(x, M))
+    gens = []
+    unique = set()
+    for g in subgroup_gen:
+        reduced = tuple(project(x) for x in g)
+        if reduced in unique or reduced == (1, 0, 0, 1):
+            continue
+        unique.add(reduced)
+        gens.append(list(reduced))
+    return gens
+
+def gl2_lift(subgroup_gen, N, M):
+    # Input: generators of a subgroup of gl2 mod N, and some positive integer M
+    # Returns the projection and/or lift to mod M
+    n = gcd(N, M)
+    gens = gl2_project(subgroup_gen, n)
+    return gl2_lift_divisible(gens, n, M)
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
