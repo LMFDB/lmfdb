@@ -96,3 +96,7 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13&search_type=List")
         assert '[0, 0, 1, -849658625, 9532675710156]' in L.get_data(as_text=True)
         assert '[0, -1, 1, -10, -20]' not in L.get_data(as_text=True)
+
+        # Test error handling
+        L = self.tc.get("EllipticCurve/Q/?conductor=162&jinv=-1159088625%2F097152")
+        assert ' is not a valid input' in L.get_data(as_text=True)

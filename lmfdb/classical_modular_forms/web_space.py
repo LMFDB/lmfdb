@@ -3,8 +3,10 @@
 # See templates/space.html for how functions are called
 
 from lmfdb import db
+from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
     display_knowl, web_latex, coeff_to_power_series,
     web_latex_factored_integer, prop_int_pretty)
@@ -81,50 +83,39 @@ def cyc_display(m, d, real_sub):
         return name
 
 def ALdim_table(al_dims, level, weight):
-    # Assume that the primes always appear in the same order
-    al_dims = sorted(al_dims, key=lambda x:tuple(-ev for (p,ev) in x[0]))
-    header = []
-    first_row = al_dims[0][0]
-    primes = [p for (p,ev) in first_row]
+    def sign_char(x): return "-" if x else "+"
+    def url_sign_char(x): return "-" if x else "%2B"
+    primes = ZZ(level).prime_divisors()
     num_primes = len(primes)
-    for p, ev in first_row:
-        header.append(r'<th>\(%s\)</th>'%p)
-    if len(first_row) > 1:
+    header = [r'<th>\(%s\)</th>'%p for p in primes]
+    if num_primes > 1:
         header.append(r"<th class='right'>%s</th>"%(display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
-    header.append('<th>Dim.</th>')
+    header.append('<th>Dim</th>')
     rows = []
-    fricke = {1:0,-1:0}
-    for i, (vec, dim, cnt) in enumerate(al_dims):
-        row = []
-        sign = 1
-        s = ''
-        for p, ev in vec:
-            if ev == 1:
-                s += '%2B'
-                symb = '+'
-            else:
-                sign = -sign
-                s += '-'
-                symb = '-'
-            row.append(r'<td>\(%s\)</td>'%(symb))
-        if len(vec) > 1:
-            row.append(r"<td class='right'>\(%s\)</td>"%('+' if sign == 1 else '-'))
-        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':s}
-        if cnt == 1:
-            query['jump'] = 'yes'
+    fricke = [0,0]
+    for i, dim in enumerate(al_dims):
+        if dim == 0:
+            continue
+        b = list(reversed(ZZ(i).bits()))
+        b = [0 for j in range(num_primes-len(b))] + b
+        row = list(map(lambda x:r'<td>\(%s\)</td>'%sign_char(x),b))
+        sign = sum(b) % 2
+        if num_primes > 1:
+            row.append(r"<td class='right'>$%s$</td>"%sign_char(sign))
+        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
         link = newform_search_link(r'\(%s\)'%dim, **query)
         row.append(r'<td>%s</td>'%(link))
         fricke[sign] += dim
-        if i == len(al_dims) - 1 and len(vec) > 1:
+        if i == len(al_dims) - 1 and num_primes > 1:
             tr = "<tr class='endsection'>"
         else:
             tr = "<tr>"
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
         plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
-        plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
+        plus_link = newform_search_link(r'\(%s\)'%fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
         minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
-        minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
+        minus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
@@ -153,13 +144,11 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
 
 def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
-    Returns the label for the space using the orbit index
-    eg::
-
-        N.k.c --> N.k.i
+    Returns the label for a space specified using a Conrey index
+    e.g. 23.2.22 -> 23.2.b (because 23.b is the character orbit label of the Conrey character 23.22)
     """
-    N, k, chi = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
+    N, k, n = map(int, spacelabel_conrey.split('.'))
+    return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
 
 
 def trace_expansion_generic(space, prec_max=10):
@@ -232,11 +221,11 @@ class WebNewformSpace():
         self.num_forms = data.get('num_forms')
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
-        self.char_conrey = self.conrey_indexes[0]
+        self.char_conrey = self.conrey_index
         self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
+        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_index', 'sub_mult'])
+        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
 
@@ -271,7 +260,7 @@ class WebNewformSpace():
             ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
-        if self.conrey_indexes[0] == 1:
+        if self.conrey_index == 1:
             self.trivial_character = True
             character_str = "trivial character"
             if self.dim == 0:
@@ -282,7 +271,6 @@ class WebNewformSpace():
         else:
             self.trivial_character = False
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
-            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of modular forms of level %s, weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
@@ -316,7 +304,7 @@ class WebNewformSpace():
         return self.char_orbit_link + ord_deg
 
     def _vec(self):
-        return [self.level, self.weight, self.conrey_indexes[0]]
+        return [self.level, self.weight, self.conrey_index]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -346,7 +334,7 @@ class WebNewformSpace():
         return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
 
     def subspace_latex(self, new=False):
-        return common_latex("M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)
+        return common_latex("M", self.weight, self.conrey_index, "S", 0, "new" if new else "", symbolic_chi=True)
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
@@ -357,7 +345,7 @@ class WebNewformSpace():
                                   for N, i, conrey, mult in self.oldspaces)
 
     def ALdim_table(self):
-        return ALdim_table(self.AL_dims, self.level, self.weight)
+        return ALdim_table(self.ALdims, self.level, self.weight)
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)
@@ -505,10 +493,10 @@ class WebGamma1Space():
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
             rowtype = "oddrow" if i%2 else "evenrow"
-            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_indexes'][0])
+            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_index'])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
-                                             number=space['conrey_indexes'][0])
+                                             orbit_label=space['char_orbit_label'])
             chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']

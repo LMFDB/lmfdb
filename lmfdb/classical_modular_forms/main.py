@@ -5,9 +5,7 @@ import os
 import yaml
 
 from flask import render_template, url_for, redirect, abort, request, make_response
-from sage.all import (
-    ZZ, next_prime, cartesian_product_iterator,
-    cached_function, prime_range, prod, gcd, nth_prime)
+from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
@@ -36,6 +34,7 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.characters.main import ORBIT_MAX_MOD
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
@@ -93,11 +92,7 @@ def level_bound(nontriv=None):
 #############################################################################
 
 def ALdims_knowl(al_dims, level, weight):
-    dim_dict = {}
-    for vec, dim, cnt in al_dims:
-        dim_dict[tuple(ev for (p, ev) in vec)] = dim
-    short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
-    # We erase plus_dim and minus_dim if they're obvious
+    short = "+".join(["$%s$"%(d) for d in al_dims])
     AL_table = ALdim_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
 
@@ -149,7 +144,7 @@ def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
     return r'+'.join(terms)
 
 def show_ALdims_col(info):
-    return any(space.get('AL_dims') for space in info["results"])
+    return any(space.get('ALdims') for space in info["results"])
 
 def display_ALdims(level, weight, al_dims):
     if al_dims:
@@ -712,7 +707,7 @@ def parse_character(inp, query, qfield, prim=False):
     else:
         if prim:
             raise ValueError("You must use the orbit label when searching by primitive character")
-        query['conrey_indexes'] = {'$contains': int(orbit)}
+        query['conrey_index'] = ConreyCharacter(modulus=level,number=orbit).min_conrey_conj
 
 newform_only_fields = {
     'nf_label': 'Coefficient field',
@@ -1162,7 +1157,7 @@ def dimension_form_search(info, query):
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
-             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_index', 'dim', 'hecke_orbit_dims', 'ALdims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1179,13 +1174,13 @@ def dimension_space_search(info, query):
 space_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
-    MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_indexes"],
-                      lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
+    MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
+                      lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension", default=True),
     MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.mf_newspaces,
              title='Newspace search results',

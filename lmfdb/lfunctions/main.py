@@ -38,6 +38,7 @@ from .Lfunctionutilities import (
     getConductorIsogenyFromLabel)
 
 from lmfdb.characters.web_character import WebDirichlet
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
@@ -966,7 +967,8 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
+    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
@@ -982,7 +984,8 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
+    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     return redirect(url_for('.l_function_cmf_page',
@@ -1004,7 +1007,8 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_a1(level, weight, character):
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
+    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,

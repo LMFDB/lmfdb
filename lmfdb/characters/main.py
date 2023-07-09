@@ -76,7 +76,7 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     noun = "character"
     sorts = [("", "modulus", ["modulus", "orbit_index"]),
-             ("conductor", "conductor", ["conductor", "prim_orbit_index", "modulus", "orbit_index"]),
+             ("conductor", "conductor", ["conductor", "modulus", "orbit_index"]),
              ("order", "order", ["order", "modulus", "orbit_index"])]
     jump_example = "13.2"
     jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
@@ -532,33 +532,21 @@ def dirchar_data(label):
         return abort(404, f"Invalid label {label}")
 
 def _dir_knowl_data(label, orbit=False):
-    modulus, number = label.split('.')
-    modulus = int(modulus)
     try:
-        numbers = int(number)
-    except ValueError:
-        return "Invalid label for Dirichlet character: %s" % label
-    try:
-        if isinstance(numbers, list):
-            number = numbers[0]
-
-            def conrey_link(i):
-                return "<a href='%s'> %s.%s</a>" % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
-            if len(numbers) <= 2:
-                numbers = [conrey_link(k) for k in numbers]
-            else:
-                numbers = [conrey_link(numbers[0]), '&#8230;', conrey_link(numbers[-1])]
+        parts = label.split('.')
+        modulus = int(parts[0])
+        if orbit:
+            assert(modulus <= ORBIT_MAX_MOD)
+            args = {'type': 'Dirichlet', 'modulus': modulus, 'orbit_label': parts[1]}
         else:
-            number = numbers
-            numbers = None
-
-        args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
+            number = int(parts[1])
+            args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
         webchar = make_webchar(args)
 
-        if orbit and modulus <= ORBIT_MAX_MOD:
+        if orbit:
             inf = "Dirichlet character orbit %s.%s\n" % (modulus, webchar.orbit_label)
         else:
-            inf = r"Dirichlet character \(\chi_{%s}(%s, \cdot)\)" % (modulus, number) + "\n"
+            inf = r"Dirichlet character \(\chi_{%s}(%s, \cdot)\)" % (modulus, parts[1]) + "\n"
         inf += "<div><table class='chardata'>\n"
 
         def row_wrap(header, val):
@@ -568,8 +556,6 @@ def _dir_knowl_data(label, orbit=False):
         inf += row_wrap('Degree', euler_phi(webchar.order))
         inf += row_wrap('Minimal', webchar.isminimal)
         inf += row_wrap('Parity', webchar.parity)
-        if numbers:
-            inf += row_wrap('Characters', ",&nbsp;".join(numbers))
         if modulus <= ORBIT_MAX_MOD:
             if not orbit:
                 inf += row_wrap('Orbit label', '%s.%s' % (modulus, webchar.orbit_label))
@@ -579,7 +565,7 @@ def _dir_knowl_data(label, orbit=False):
             inf += '<div align="right">\n'
             inf += '<a href="%s">%s.%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=webchar.orbit_label)), modulus, webchar.orbit_label)
             inf += '</div>\n'
-        elif numbers is None:
+        else:
             inf += '<div align="right">\n'
             inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
             inf += '</div>\n'
