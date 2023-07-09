@@ -1062,7 +1062,6 @@ class WebAbstractGroup(WebObj):
         if not self.subgroup_inclusions_known:
             return 0
         def impose_limit(n):
-            print(f"Imposing limit {limit} on {n} for {sub_all}_{sub_aut}")
             if limit != 0 and n > limit:
                 return 0
             return n
