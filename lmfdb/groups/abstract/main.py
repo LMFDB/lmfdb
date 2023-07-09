@@ -68,8 +68,6 @@ from .stats import GroupStats
 abstract_group_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)$")
 
 
-
-
 #abstract_subgroup_label_regex = re.compile(
 #    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?(\.([N|M]|([N][C](\d+))))?$"
 #)
@@ -742,7 +740,7 @@ def auto_gens(label):
         learnmore=learnmore_list(),
     )
 
-    
+
 @abstract_page.route("/sub/<label>")
 def by_subgroup_label(label):
     if subgroup_label_is_valid(label):
@@ -1316,7 +1314,6 @@ def render_abstract_subgroup(label):
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
     info["pos_int_and_factor"] = pos_int_and_factor
 
-
     if seq.subgroup_tex != "?":
         if seq.normal:
             title = r"Normal subgroup $%s \trianglelefteq %s$"
@@ -1601,7 +1598,6 @@ def download_group(**args):
             if gp_data["solvable"]:
                 s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
                 s += "encd:= " + str(wag.pc_code) + "; \n"
-
 
             if dltype == "magma":
                 s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
@@ -2298,7 +2294,7 @@ def cchar_data(label):
     else:
         if mychar.kernel is None:
             ans += "<br>Not faithful but kernel not computed."
-        else:    
+        else:
             ker = WebAbstractSubgroup(f"{mychar.group}.{mychar.kernel}")
             ans += "<br>Not faithful with kernel {}".format(
                 sub_display_knowl(ker.label, "$" + ker.subgroup_tex + "$")
@@ -2455,6 +2451,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             ans += " characteristic.<br />"
         else:
             ambient = WebAbstractGroup(ambient)
+
             def sub_matches(H):
                 if profiledata is None:
                     return H.subgroup == label

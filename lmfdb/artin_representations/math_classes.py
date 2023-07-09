@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
-    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset, 
+    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,
     raw_typeset_poly, pos_int_and_factor)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
 from lmfdb.groups.abstract.main import abstract_group_display_knowl

@@ -222,9 +222,10 @@ def pos_int_and_factor(n, factor_base=None):
     if n == 1:
         return "$1$"
     n = ZZ(n)
-    if factor_base: 
+    if factor_base:
         factors = [(p, ZZ(n).valuation(p)) for p in factor_base]
         factors = [(z[0],z[1]) for z in factors if z[1]>0]
+
         def power_prime(p, exponent):
             if exponent == 1:
                 return " " + str(p) + " "
