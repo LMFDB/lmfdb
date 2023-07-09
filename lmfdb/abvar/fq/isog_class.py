@@ -311,13 +311,23 @@ class AbvarFq_isoclass():
 
 
 
+    @lazy_attribute
+    def endring_select_line(self):
+        notation = r'notation'
+        return rf"""
+            Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')},
+            with the {display_knowl('av.fq.endomorphism_ring_notation', notation) }
+            $[\mathrm{{index}}]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
+            in the diagram to see information about it.
+"""
+
     def endringinfo(self, endring):
         for elt in self.weak_equivalence_classes:
             if elt['multiplicator_ring'] == endring and elt['is_invertible']:
                 rec = elt
                 break
         else:
-            assert false
+            assert False
 
         num_we = sum(1 for elt in self.weak_equivalence_classes if elt['multiplicator_ring'] == endring)
 
