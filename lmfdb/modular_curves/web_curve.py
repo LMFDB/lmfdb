@@ -4,17 +4,14 @@ from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
-from sage.databases.cremona import class_to_int
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
-from lmfdb.elliptic_curves.web_ec import latex_equation as EC_equation
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
 from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
-from string import ascii_lowercase
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -214,7 +211,7 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
     nb_coords = len(m["coordinates"])
     f["codomain_name"] = codomain_name
     varhigh = "XYZWTUVRSABCDEFGHIKLMNOPQJ"
-    ce = f["codomain_equation"] = ["0"] + [teXify_pol(l).upper() for l in codomain_equation]
+    f["codomain_equation"] = ["0"] + [teXify_pol(l).upper() for l in codomain_equation]
     lead = m["leading_coefficients"]
     if lead is None:
         lead = ["1"]*nb_coords
@@ -446,7 +443,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.modcurve_models_test.search({"modcurve": self.label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+        return list(db.modcurve_models.search({"modcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
 
     @lazy_attribute
     def formatted_models(self):
@@ -454,7 +451,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_count(self):
-        return db.modcurve_models_test.count({"modcurve": self.label})
+        return db.modcurve_models.count({"modcurve": self.coarse_label})
 
     @lazy_attribute
     def has_more_models(self):
@@ -464,8 +461,8 @@ class WebModCurve(WebObj):
     def modelmaps_to_display(self):
         # Ensure domain model and map have dont_display = False
         domain_types = [1] + [m["model_type"] for m in self.models_to_display]
-        return list(db.modcurve_modelmaps_test.search(
-            {"domain_label": self.label,
+        return list(db.modcurve_modelmaps.search(
+            {"domain_label": self.coarse_label,
              "dont_display": False,
              "domain_model_type":{"$in": domain_types}},
             ["degree", "domain_model_type", "codomain_label", "codomain_model_type",
@@ -578,7 +575,7 @@ class WebModCurve(WebObj):
                 {"label": {"$in": codomain_labels}},
                 ["label","name"]))
             # Do not display maps for which the codomain model has dont_display = False
-            image_eqs = list(db.modcurve_models_test.search(
+            image_eqs = list(db.modcurve_models.search(
                 {"modcurve": {"$in": codomain_labels},
                  "dont_display": False},
                 ["modcurve", "model_type", "equation"]))
@@ -601,7 +598,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def modelmaps_count(self):
-        return db.modcurve_modelmaps_test.count({"domain_label": self.label})
+        return db.modcurve_modelmaps.count({"domain_label": self.coarse_label})
 
     @lazy_attribute
     def has_more_modelmaps(self):
@@ -690,15 +687,15 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def known_degree1_points(self):
-        return db.modcurve_points_test.count({"curve_label": self.label, "degree": 1, "cusp": False})
+        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
 
     @lazy_attribute
     def known_degree1_noncm_points(self):
-        return db.modcurve_points_test.count({"curve_label": self.label, "degree": 1, "cm": 0, "cusp": False})
+        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
 
     @lazy_attribute
     def known_low_degree_points(self):
-        return db.modcurve_points_test.count({"curve_label": self.label, "degree": {"$gt": 1}, "cusp": False})
+        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
 
     @lazy_attribute
     def low_degree_cusps(self):
@@ -706,8 +703,8 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def db_points(self):
-        return list(db.modcurve_points_test.search(
-            {"curve_label": self.label},
+        return list(db.modcurve_points.search(
+            {"curve_label": self.coarse_label},
             sort=["degree", "j_height"],
             projection=["Elabel","cm","isolated","jinv","j_field","j_height",
                         "jorig","residue_field","degree","coordinates"]))
