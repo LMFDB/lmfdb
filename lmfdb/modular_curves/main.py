@@ -953,7 +953,7 @@ ratpoint_columns = SearchColumns([
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
-    FloatCol("j_height", "ec.j_height", "$j$-height", default=True)])
+    FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
 
 def ratpoint_postprocess(res, info, query):
     labels = list(set(rec["curve_label"] for rec in res))
