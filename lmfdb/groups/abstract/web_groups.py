@@ -769,7 +769,7 @@ class WebAbstractGroup(WebObj):
                               ("Solvable", solv_str)])
             props.extend([
                 (r"$\card{G^{\mathrm{ab}}}$", web_latex(self.Gab_order_factor()))])
-            if self.has_subgroups:
+            if self.has_subgroups or self.live():
                 cent_order_factored = self.cent_order_factor()
             else:
                 cent_order_factored = 0
@@ -777,13 +777,13 @@ class WebAbstractGroup(WebObj):
                 props.extend([(r"$\card{Z(G)}$",
                     web_latex(cent_order_factored) if cent_order_factored else nc)])
             elif self.center_label:
-                 props.extend([(r"$\card{Z(G)}$", self.center_label.split(".")[0])])                
+                props.extend([(r"$\card{Z(G)}$", self.center_label.split(".")[0])])
             else:
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
             if self.aut_order is None:
                   props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
-            else:      
+            else:
                 try:
                     props.extend([
                         (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order)))
@@ -801,7 +801,7 @@ class WebAbstractGroup(WebObj):
                 except AssertionError:  # timed out
                     pass
 
-        if not self.live():        
+        if not self.live():
             if self.permutation_degree is None:
                 props.extend([("Perm deg.", "not computed")])
             else:
@@ -1972,7 +1972,6 @@ class WebAbstractGroup(WebObj):
             return self.subgroups[self.cent()].subgroup_tex
         return None
 
-    
     def cent_order_factor(self):
         if self.live():
             ZGord = ZZ(self.G.Center().Order())
