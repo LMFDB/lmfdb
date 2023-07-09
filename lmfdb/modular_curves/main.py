@@ -316,7 +316,7 @@ modcurve_columns = SearchColumns(
         LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
         ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
         ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
-        ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
+        ProcessedCol("name", "modcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
         MathCol("level", "modcurve.level", "Level", default=True),
         MathCol("index", "modcurve.index", "Index", default=True),
         MathCol("genus", "modcurve.genus", "Genus", default=True),
