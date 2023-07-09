@@ -24,7 +24,6 @@ from sage.all import (
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
-from sage.combinat.permutation import from_lehmer_code
 from sage.misc.cachefunc import cached_function, cached_method
 from collections import Counter, defaultdict
 from lmfdb.utils import (
