@@ -100,13 +100,11 @@
 <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{ {{nb_var-1}} }$: </p>
 {% elif type == 2 %}
 <p> {%  if smooth == True %}
-  {{ KNOWL('ag.smooth', 'Smooth') }}
-  {{ KNOWL('ag.plane_model', 'plane model') }}:
+  {{ KNOWL('modcurve.plane_model', 'Smooth plane model') }}:
   {% elif smooth == False %}
-  {{ KNOWL('ag.smooth', 'Singular') }}
-  {{ KNOWL('ag.plane_model', 'plane model') }}:
+  {{ KNOWL('modcurve.plane_model', 'Singular plane model') }}:
   {% else %}
-  {{ KNOWL('ag.plane_model', 'Plane model') }}:
+  {{ KNOWL('modcurve.plane_model', 'Plane model') }}:
   {% endif %}
 </p>
 {% elif type == 5 %}

@@ -28,7 +28,7 @@ from lmfdb.utils import (
     parse_floats,
     parse_interval,
     parse_element_of,
- #   parse_bool_unknown,
+    parse_bool_unknown,
     parse_nf_string,
     parse_nf_jinv,
     integer_divisors,
@@ -40,14 +40,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns,
-    MathCol,
-    FloatCol,
-    CheckCol,
-#    SearchCol,
-    LinkCol,
-    ProcessedCol,
-    MultiProcessedCol,
+    SearchColumns, MathCol, FloatCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
@@ -57,19 +50,9 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
-    WebModCurve,
-    get_bread,
-    canonicalize_name,
-    name_to_latex,
-    factored_conductor,
-    formatted_dims,
-    url_for_EC_label,
-    url_for_ECNF_label,
-    showj_nf,
-    combined_data,
+    WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
+    formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
-
-
 
 coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
 fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
@@ -314,7 +297,7 @@ def modcurve_postprocess(res, info, query):
     # Add in the number of models
     num_models = Counter()
     labels = [rec["label"] for rec in res]
-    for modcurve in db.modcurve_models_test.search({"modcurve":{"$in":labels}}, "modcurve"):
+    for modcurve in db.modcurve_models.search({"modcurve":{"$in":labels}}, "modcurve"):
         num_models[modcurve] += 1
     for rec in res:
         rec["models"] = num_models[rec["label"]]
@@ -333,7 +316,7 @@ modcurve_columns = SearchColumns(
         LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
         ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
         ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
-        ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
+        ProcessedCol("name", "modcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
         MathCol("level", "modcurve.level", "Level", default=True),
         MathCol("index", "modcurve.index", "Index", default=True),
         MathCol("genus", "modcurve.genus", "Genus", default=True),
@@ -347,7 +330,7 @@ modcurve_columns = SearchColumns(
         CheckCol("squarefree", "av.squarefree", "Squarefree"),
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
-        ProcessedCol("models", "modcurve.models", "Models", lambda x: blankzeros(x)),
+        ProcessedCol("models", "modcurve.models", "Models", blankzeros),
         MathCol("num_known_degree1_points", "modcurve.known_points", "Points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
@@ -412,7 +395,7 @@ def parse_family(inp, query, qfield):
     #'dont_display'
     #'gonality_bounds'
     #'modcurve'
-# cols currently unused in modcurve_modelmaps_test
+# cols currently unused in modcurve_modelmaps
     #'domain_label',
     #'dont_display',
     #'factored'
@@ -495,7 +478,7 @@ class ModCurve_download(Downloader):
         s += "covers := %s;\n" % parents_mag
 
         s += "\n// Models for this modular curve, if computed\n"
-        models = list(db.modcurve_models_test.search(
+        models = list(db.modcurve_models.search(
             {"modcurve": label, "model_type":{"$not":1}},
             ["equation", "number_variables", "model_type", "smooth"]))
         if models:
@@ -535,12 +518,12 @@ class ModCurve_download(Downloader):
             model_id += 1
 
         s += "\n// Maps from this modular curve, if computed\n"
-        maps = list(db.modcurve_modelmaps_test.search(
+        maps = list(db.modcurve_modelmaps.search(
             {"domain_label": label},
             ["domain_model_type", "codomain_label", "codomain_model_type",
              "coordinates", "leading_coefficients"]))
         codomain_labels = [m["codomain_label"] for m in maps]
-        codomain_models = list(db.modcurve_models_test.search(
+        codomain_models = list(db.modcurve_models.search(
             {"modcurve": {"$in": codomain_labels}},
             ["equation", "modcurve", "model_type"]))
         map_id = 0
@@ -673,23 +656,13 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
-    parse_ints(info, query, "points", qfield="num_known_degree1_points")
-    if "obstructions" in info:
-        if info["obstructions"] == "nolocal":
-            query["obstructions"] = {"$ne": []}
-        elif info["obstructions"] == "noglobal":
-            query["obstructions"] = []
-            if "num_known_degree1_points" in query:
-                # It would be better to simplify this, but it's not clear how to easily determine whether 0 is allowed by the expression entered
-                query["num_known_degree1_points"] = {"$and": [0, query["num_known_degree1_points"]]}
-            else:
-                query["num_known_degree1_points"] = 0
-        elif info["obstructions"] == "global":
-            if "num_known_degree1_points" in query:
-                # It would be better to simplify this, but it's not clear how to easily determine whether 0 is allowed by the expression entered
-                query["num_known_degree1_points"] = {"$and": [{"$gt": 0}, query["num_known_degree1_points"]]}
-            else:
-                query["num_known_degree1_points"] = {"$gt": 0}
+    if not info.get("points_quantifier"): # default, which is non-cuspidal
+        parse_ints(info, query, "points", qfield="num_known_degree1_noncusp_points")
+    elif info["points_quantifier"] == "noncm":
+        parse_ints(info, query, "points", qfield="num_known_degree1_noncm_points")
+    elif info["points_quantifier"] == "all":
+        parse_ints(info, query, "points", qfield="num_known_degree1_points")
+    parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
     parse_bool(info, query, "contains_negative_one")
@@ -875,18 +848,26 @@ class ModCurveSearchArray(SearchArray):
             example_col=True,
             example_span="",
         )
-        points = TextBox(
+        points_quantifier = SelectBox(
+            name="points_type",
+            options=[('', 'non-cusp'),
+                     ('noncm', 'non-CM'),
+                     ('all', 'all'),
+                     ],
+            min_width=105)
+        points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="Rational points",
+            label="Points",
             example="0, 3-5",
+            select_box=points_quantifier,
         )
         obstructions = SelectBox(
-            name="obstructions",
+            name="has_obstruction",
             options=[("", ""),
-                     ("nolocal", "Local obstruction"),
-                     ("noglobal", "No obstruction or points"),
-                     ("global", "Rational points")],
+                     ("yes", "Known obstruction"),
+                     ("not_yes", "No known obstruction"),
+                     ("no", "No obstruction")],
             knowl="modcurve.local_obstruction",
             label="Obstructions")
         family = SelectBox(
@@ -937,7 +918,6 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
-    sort_knowl = "modcurve.sort_order"
     sorts = [
         ("", "level", ["level", "index", "genus", "label"]),
         ("index", "index", ["index", "level", "genus", "label"]),
@@ -972,7 +952,7 @@ ratpoint_columns = SearchColumns([
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
-    FloatCol("j_height", "ec.j_height", "$j$-height", default=True)])
+    FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
 
 def ratpoint_postprocess(res, info, query):
     labels = list(set(rec["curve_label"] for rec in res))
@@ -982,7 +962,7 @@ def ratpoint_postprocess(res, info, query):
     return res
 
 @search_wrap(
-    table=db.modcurve_points_test,
+    table=db.modcurve_points,
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
@@ -1220,8 +1200,7 @@ def modcurve_data(label):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     if label == coarse_label:
-        qtwists = list(db.gps_gl2zhat_fine.search({"coarse_label":label}, "label"))
-        labels = [label] + qtwists
+        labels = [label]
     else:
         labels = [label, coarse_label]
     tables = ["gps_gl2zhat_fine" for lab in labels]

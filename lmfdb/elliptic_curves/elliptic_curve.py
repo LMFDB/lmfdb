@@ -448,9 +448,9 @@ ec_columns = SearchColumns([
                   short_title="ℓ-adic images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("adelic_level", "ec.adelic_galois_image", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
-    MathCol("adelic_index", "ec.adelic_galois_image", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
-    MathCol("adelic_genus", "ec.adelic_galois_image", "Adelic genus", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_level", "ec.galois_rep", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_index", "ec.galois_rep", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_genus", "ec.galois_rep", "Adelic genus", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
     ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
     ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
@@ -464,7 +464,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
-    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
+    ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
@@ -1002,7 +1002,7 @@ def modm_reduce():
     galois_image = db.ec_galrep.lucky({"lmfdb_label":label, "prime":0}, "adelic_gens")
     cur_lang = request.args.get('cur_lang')
 
-    if data == None or galois_image == None:
+    if data is None or galois_image is None:
         return "\\text{Invalid curve or adelic image not computed}"
     try:
         new_mod = int(request.args.get('m'))

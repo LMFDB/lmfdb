@@ -95,7 +95,7 @@
       status: future
       colspan: onecolumn
     - title: Modular curves
-      status: beta
+      status: future
       url_for: "modcurve.index"
       colspan: onecolumn
     - title: Hilbert surfaces
