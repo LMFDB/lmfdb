@@ -10,4 +10,3 @@ class ModCrvTest(LmfdbTest):
         assert 'Search' in L.get_data(as_text=True)
         assert 'Find' in L.get_data(as_text=True)
         assert 'X_0(N)' in L.get_data(as_text=True)
-        

@@ -806,7 +806,7 @@ class WebAbstractGroup(WebObj):
             else:
                 props.extend([("Perm deg.", f"${self.permutation_degree}$")])
 
-        if  self.transitive_degree is None:
+        if self.transitive_degree is None:
             props.extend([("Trans deg.", "not computed")])
         else:
             props.extend([("Trans deg.", f"${self.transitive_degree}$")])
@@ -831,7 +831,7 @@ class WebAbstractGroup(WebObj):
             if self.number_normal_subgroups is None:
                 return " "
             elif self.number_characteristic_subgroups is None:
-                return  """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
+                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
             else:
                 ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
                 if self.number_characteristic_subgroups < self.number_normal_subgroups:
@@ -839,16 +839,16 @@ class WebAbstractGroup(WebObj):
                 else:
                     ret_str=ret_str+ " all characteristic. "
                 return ret_str
-        elif self.number_normal_subgroups < self.number_subgroups:        
+        elif self.number_normal_subgroups < self.number_subgroups:
             ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
         else:
-            ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal""" 
+            ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
             ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ "> """ + str(self.number_characteristic_subgroups) + """ characteristic</a>). """
-        else:    
+        else:
             ret_str = ret_str + ", all characteristic. "
         return ret_str
-    
+
     @lazy_attribute
     def subgroups(self):
         if not self.has_subgroups:
@@ -1066,6 +1066,7 @@ class WebAbstractGroup(WebObj):
         # If limit is nonzero, then a count of 0 is returned (indicating that the diagram should not be shown) when there would be more nodes than the limit.
         if not self.subgroup_inclusions_known:
             return 0
+
         def impose_limit(n):
             if limit != 0 and n > limit:
                 return 0
@@ -1153,6 +1154,7 @@ class WebAbstractGroup(WebObj):
                 if sib == 0 or H.quotient_order <= sib:
                     by_aut[H.aut_label].add(H.short_label)
                     return True
+
             def contains(G):
                 return [h for h in G.contains if test(subs[h])]
         else:
@@ -1160,6 +1162,7 @@ class WebAbstractGroup(WebObj):
                 if H.normal:
                     by_aut[H.aut_label].add(H.short_label)
                     return True
+
             def contains(G):
                 return [h for h in G.normal_contains if test(subs[h])]
         nodes = [H for H in subs.values() if test(H)]
@@ -1209,7 +1212,6 @@ class WebAbstractGroup(WebObj):
                 url = url_for(f'.{cls}', label=self.label)
                 s += f'<a href="{url}">See a full page version of the diagram</a>\n</div>\n'
         return s
-
 
     def diagramorder_links(self):
         s = ""
@@ -1354,7 +1356,7 @@ class WebAbstractGroup(WebObj):
         # return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
         if self.direct_factorization is None:
             return False  # signal that it is a direct product, but we don't have the data
-        else:    
+        else:
             C = dict(self.direct_factorization)
             # We can use the list of subgroups to get the latex
             latex_lookup = {}
@@ -1849,6 +1851,7 @@ class WebAbstractGroup(WebObj):
                 return self.representation_line("PC")
             return "data not computed"
             #raise NotImplementedError
+
         def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
@@ -1910,7 +1913,6 @@ class WebAbstractGroup(WebObj):
         else:
             return self.transitive_degree
 
-        
     def live_composition_factors(self):
         from .main import url_for_label
         basiclist = []
@@ -1984,7 +1986,6 @@ class WebAbstractGroup(WebObj):
                 return None
             ZGord = self.order // ZZ(cent.split(".")[0])
         return ZGord.factor()
-
 
     def comm(self):
         return self.special_search("D")
@@ -2442,7 +2443,6 @@ class WebAbstractSubgroup(WebObj):
                 labels.extend([make_full(label) for label in llist])
         return list(db.gps_subgroups_test.search({"label": {"$in": labels}}))
 
-    
     def autjugate_subgroups(self):
         if self.amb.outer_equivalence == False and self.amb.complements_known == False and self.amb.subgroup_inclusions_known == False:
             return None  #trying to say subgroups not computed up to autjugacy

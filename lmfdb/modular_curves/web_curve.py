@@ -730,6 +730,7 @@ class WebModCurve(WebObj):
     def get_coordstr(self, rec):
         if rec.get("coordinates") is None:
             return ""
+
         def make_point(coord):
             if rec["degree"] != 1:
                 R = PolynomialRing(QQ, name="w")
@@ -768,7 +769,8 @@ class WebModCurve(WebObj):
     def db_rational_points(self):
         pts = []
         for rec in self.db_points:
-            if rec["degree"] != 1: continue
+            if rec["degree"] != 1:
+                continue
             coordstr = self.get_coordstr(rec)
             pts.append(
                 (rec["Elabel"],
@@ -785,7 +787,8 @@ class WebModCurve(WebObj):
     def db_nf_points(self):
         pts = []
         for rec in self.db_points:
-            if rec["degree"] == 1: continue
+            if rec["degree"] == 1:
+                continue
             coordstr = self.get_coordstr(rec)
             pts.append(
                 (rec["Elabel"],
@@ -936,6 +939,7 @@ class WebModCurve(WebObj):
         # The poset of curves near this one in the lattice of subgroups of GL2(Zhat).
         # Goes up one level (higher index), and down to some collection of named curves
         # May be empty (if it's too far to a named curve)
+
         class LatNode:
             def __init__(self, label, x):
                 self.label = label
@@ -972,7 +976,8 @@ class WebModCurve(WebObj):
         nodes, edges = [LatNode(lab, x) for (lab, x) in zip(self.lattice_labels, self.lattice_x)], []
         if nodes:
             minrank = min(node.rank for node in nodes)
-            for node in nodes: node.rank -= minrank
+            for node in nodes:
+                node.rank -= minrank
             # below = [node.label for node in nodes if node.index < self.index] -- why is this not used?
             above = [node.label for node in nodes if node.index > self.index]
             edges = [[lab, self.label] for lab in above] + [[self.label, lab] for lab in self.parents if lab in self.lattice_labels]

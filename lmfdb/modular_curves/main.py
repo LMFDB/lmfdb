@@ -323,7 +323,7 @@ modcurve_columns = SearchColumns(
         ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
         ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality", default=True),
         MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps",  short_title="Q-cusps", default=True),
+        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps", default=True),
         CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center", default=True),
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
         CheckCol("simple", "modcurve.simple", "Simple"),
@@ -829,9 +829,9 @@ class ModCurveSearchArray(SearchArray):
             label="Squarefree",
             example_col=True,
         )
-        cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')] +
-                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
+                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+                   + [('-%d'%d, 'CM discriminant -%d'%d) f or d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm_discriminants = SelectBox(
             name="cm_discriminants",
             options=cm_opts,
@@ -1060,9 +1060,9 @@ class RatPointSearchArray(SearchArray):
             label="$j$-height",
             example="1.0-4.0",
         )
-        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
-                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
+                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+                   + [('-%d'%d, 'CM discriminant -%d'%d) f or d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",
