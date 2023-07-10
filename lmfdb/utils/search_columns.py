@@ -92,7 +92,7 @@ class MathCol(SearchCol):
 
     def display(self, rec):
         val = self.get(rec)
-        return f"${val}$" if val else ""
+        return f"${val}$" if val is not None else ""
 
 
 class FloatCol(MathCol):
