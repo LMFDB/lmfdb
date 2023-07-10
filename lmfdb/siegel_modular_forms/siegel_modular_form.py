@@ -1512,7 +1512,7 @@ class SMF_stats(StatsDisplay):
     baseurl_func = ".index"
     # right now we don't have all these columns in our database.
     # we stick to what we have
-    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
+    buckets = {'level':['1-100','101-300','301-600', '601-%d'%level_bound()],
                'degree':['2', '3-%d'%degree_bound()],
                'weight' : ['(3,2)', '(4,2)', '(5,2)-(8,2)', '(9,2)-(16,2)', '(17,2)-(%d,%d)' % (weight_bound(2)[0], weight_bound(2)[1])],
                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
