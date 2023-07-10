@@ -1156,6 +1156,7 @@ class PostgresTable(PostgresBase):
                         if not self._table_exists(table + "_tmp"):
                             self._clone(table, table + "_tmp")
                 self.stats.refresh_stats(suffix=suffix)
+                self.stats.refresh_null_counts(suffix=suffix)
             if not inplace:
                 swapped_tables = (
                     [self.search_table]

@@ -833,7 +833,6 @@ def labels_page():
 
 class BelyiSearchArray(SearchArray):
     noun = "map"
-    plural_noun = "maps"
     sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
              ("g", "genus", ['g', 'deg', 'group_num', 'label']),
              # ("field", "base field", ['base_field_label', 'deg', 'group_num', 'g', 'label']),

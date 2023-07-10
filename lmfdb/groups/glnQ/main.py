@@ -205,7 +205,6 @@ def how_computed_page():
 
 class GLnQSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
 

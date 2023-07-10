@@ -6,8 +6,14 @@ from lmfdb import db
 
 myhash = defaultdict(list)
 
-for g in db.gps_groups.search({}, ['tex_name', 'label']):
+for g in db.gps_groups_test.search({}, ['tex_name', 'label']):
     myhash[g['tex_name']].append(g['label'])
+
+for g in db.gps_subgroups_test.search({}, ['quotient_tex', 'subgroup_tex', 'label']):
+    if g['quotient_tex']:
+        myhash[g['quotient_tex']].append(g['label'])
+    if g['subgroup_tex']:
+        myhash[g['subgroup_tex']].append(g['label'])
 
 count = 1
 with open("eqguts.tex", "w") as eqguts:
