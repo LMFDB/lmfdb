@@ -380,17 +380,15 @@ class AbvarFq_isoclass():
             pic_label = ".".join(str(c) for c in rec["pic_invs"])
             pic_url = url_for("abstract.by_abelian_label", label=pic_label)
             pic = r"\times ".join(f"C_{{{c}}}" for c in rec["pic_invs"])
-        if rec["cohen_macaulay_type"] == 1:
-            cm_type = "$1$ (%s)" % display_knowl('ag.gorenstein', 'Gorenstein')
-        else:
-            cm_type = "$%s$" % rec["cohen_macaulay_type"]
+
+        cm_type = "$%s$" % rec["cohen_macaulay_type"]
 
         ans = "\n".join([
             f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
             "<table>",
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
             fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td><a href='{pic_url}'>${pic}$</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td><a href='{pic_url}'>${pic}$</td></tr>",
             # FIXME
             # f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td>{abstract_group_display_knowl(label=pic_label, name=pic)}</td></tr>",
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
