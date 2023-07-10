@@ -225,10 +225,10 @@ function show_qexp(qstyle) {
 <form id="qexp">
   <table><tr><td>
   <div class="smalloutput">
-    <span>\(\operatorname{Tr}(L_{\text{spin}}(f,s)) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
+    <span>\(L_{\rm spin}(\operatorname{Tr}(f),s)\) =  {{ newform.trace_expansion(prec_max=10) | safe }}</span>
   </div>
   <div class="mediumoutput nodisplay">
-    <span>\(\operatorname{Tr}(L_{\text{spin}}(f,s)) = \) {{ newform.trace_expansion(prec_max=100) | safe }}</span>
+    <span>\(L_{\rm spin}(\operatorname{Tr}(f),s)\) = {{ newform.trace_expansion(prec_max=100) | safe }}</span>
   </div></td></tr></table>
 
   <p style="padding-left: 1ch;">

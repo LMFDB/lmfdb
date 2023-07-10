@@ -1641,7 +1641,7 @@ class SMFSearchArray(SearchArray):
             options=[('paramodular', 'paramodular'),
                      ('Siegel', 'Siegel'),
                      ('principal', 'principal')],
-            width=150)
+            )
 
         level_quantifier = SelectBox(
             name='level_type',
@@ -1739,14 +1739,7 @@ class SMFSearchArray(SearchArray):
             label='Automorphic type',
             options=[('', 'any type'), ('G', '(G)'), ('Y', '(Y)'),
                      ('P', '(P)'), ('Q', '(Q)'), ('B', '(B)'), ('F', '(F)')],
-            width=82)
-        
- #       analytic_conductor = TextBox(
- #           name='analytic_conductor',
- #           knowl='mf.siegel.analytic_conductor',
- #           label='Analytic conductor',
- #           example='1-10',
- #           example_span='1-10')
+            )
 
         Nk2 = TextBox(
             name='Nk2',
@@ -1754,40 +1747,6 @@ class SMFSearchArray(SearchArray):
             label=r'\(N(2k+j-2)^2\)',
             example='40-100',
             example_span='40-100')
-
- #       cm = SelectBox(
- #           name='cm',
- #           options=[('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')],
- #           width=82)
- #       rm = SelectBox(
- #           name='rm',
- #           options=[('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')],
- #           width=82)
- #       self_twist = DoubleSelectBox(
- #           label='Self-twists',
- #           knowl='mf.siegel.self_twist',
- #           select_box1=cm,
- #           select_box2=rm,
- #           example_col=True)
-
- #       self_twist_discs = TextBox(
- #           name='self_twist_discs',
- #           label='CM/RM discriminant',
- #           knowl='mf.siegel.self_twist',
- #           example='-3',
- #           example_span='-3')
-
- #       inner_twist_count = TextBox(
- #           name='inner_twist_count',
- #           knowl='mf.siegel.inner_twist_count',
- #           label='Inner twist count',
- #           example='1-',
- #           example_span='0, 1-, 2-3')
-
- #       is_self_dual = YesNoBox(
- #           name='is_self_dual',
- #           knowl='mf.siegel.selfdual',
- #           label='Is self-dual')
 
         coefficient_ring_index = TextBox(
             name='hecke_ring_index',
@@ -1845,41 +1804,28 @@ class SMFSearchArray(SearchArray):
                      ('reductions', 'reductions')])
 
         self.browse_array = [
-            [degree],
-            [family, level],
-            [weight, aut_type],
+            [degree, family],
+            [level, weight],
             [level_primes, character],
             [char_order, char_primitive],
             [dim, coefficient_field],
-            [results],
-            [Nk2],
-#            [analytic_conductor, Nk2],
-#            [self_twist, self_twist_discs],
-#            [inner_twist_count, is_self_dual],
             [coefficient_ring_index, hecke_ring_generator_nbound],
-#            [analytic_rank, projective_image],
-#            [results, projective_image_type]]
+            [results, Nk2],
+            [aut_type]
 ]
         self.refine_array = [
             [degree, family, level, weight, aut_type, Nk2, dim],
-#            [level, weight, analytic_conductor, Nk2, dim],
             [level_primes, character, char_primitive, char_order, coefficient_field],
-#            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
             [coefficient_ring_index, hecke_ring_generator_nbound]
-#            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
         ]
         self.space_array = [
             [degree, family, level, weight, Nk2, dim],
             [level_primes, character, char_primitive, char_order]
-#            [level, weight, analytic_conductor, Nk2, dim],
-#            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
             [degree, family, level, weight, Nk2, hdim],
             [level_primes, character, char_primitive, char_order]
-#            [level, weight, analytic_conductor, Nk2, hdim],
-#            [level_primes, character, char_primitive, char_order, hnum_newforms]
         ]
 
         self.traces_array = [
