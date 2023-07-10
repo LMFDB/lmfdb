@@ -108,6 +108,17 @@ def diagram_js(layers, display_opts):
 
     return [ll, layers[1]], rank_lookup, len(ranks)
 
+def display_abelian_group(inv):
+    if inv == []:
+        label = "1.1"
+        url = url_for("abstract.by_label", label=label)
+        name = "C_1"
+    else:
+        label = ".".join(str(c) for c in inv)
+        url = url_for("abstract.by_abelian_label", label=label)
+        name = r"\times ".join(f"C_{{{c}}}" for c in inv)
+    return fr"""<a href="{url}">${name}$</a>"""
+
 class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
@@ -372,14 +383,6 @@ class AbvarFq_isoclass():
             conductor = "\mathcal{O}_{\mathbb{Q}[F]}"
             if M != 1:
                 conductor = f"{M} {conductor}"
-        if rec["pic_invs"] == []:
-            pic_label = "1.1"
-            pic_url = url_for("abstract.by_label", label="1.1")
-            pic = "C_1"
-        else:
-            pic_label = ".".join(str(c) for c in rec["pic_invs"])
-            pic_url = url_for("abstract.by_abelian_label", label=pic_label)
-            pic = r"\times ".join(f"C_{{{c}}}" for c in rec["pic_invs"])
 
         cm_type = "$%s$" % rec["cohen_macaulay_type"]
 
@@ -388,7 +391,7 @@ class AbvarFq_isoclass():
             "<table>",
             fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
             fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td><a href='{pic_url}'>${pic}$</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{display_abelian_group(rec['pic_invs'])}</td></tr>",
             # FIXME
             # f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td>{abstract_group_display_knowl(label=pic_label, name=pic)}</td></tr>",
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
@@ -690,7 +693,7 @@ class AbvarFq_isoclass():
         'endomorphism_ring': lambda x : x['endomorphism_ring'],
         # 'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
         'isom_label' : lambda x : x['isom_label'],
-        'kernel' : lambda x : x['kernel'],
+        'kernel' : lambda x : display_abelian_group(x['kernel']),
         'label' : lambda x : x['label'],
         }
         res = ""
