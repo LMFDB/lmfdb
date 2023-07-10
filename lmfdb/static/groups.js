@@ -145,3 +145,85 @@ function getpositions() {
 
   return mylist;
 }
+
+var styles=['subgroup_diagram', 'subgroup_profile', 'subgroup_autdiagram', 'subgroup_autprofile', 'normal_diagram', 'normal_profile', 'normal_autdiagram', 'normal_autprofile'];
+function button_on(who) {
+  $('button.'+who).css('background', '{{color.lf_an_button_bkg}}');
+  $('button.'+who).css('border', '2px solid {{color.lf_an_button_brd}}');
+}
+function other_buttons_off(keep) {
+  for (var i = 0; i < styles.length; i++) {
+    if(styles[i] != keep) {
+      $('button.'+styles[i]).css('background', '{{color.lf_ar_button_bkg}}');
+      $('button.'+styles[i]).css('border', '1px solid {{color.lf_ar_button_brd}}');
+    }
+  }
+}
+var mode_pairs = [['subgroup', 'normal'], ['', 'aut'], ['diagram', 'profile']];
+function select_subgroup_mode(mode) {
+  var cls, thismode, opposite_mode, piece;
+  cls = "";
+  for (var i = 0; i < mode_pairs.length; i++) {
+    for (var j = 0; j < 2; j++) {
+      thismode = mode_pairs[i][j];
+      if (thismode == mode) {
+        opposite_mode = mode_pairs[i][1-j];
+        if ($("button.sub_" + mode).hasClass("sub_active")) {
+          return; // already active
+        }
+        piece = mode;
+        break;
+      }
+      if ($("button.sub_" + thismode).hasClass("sub_active")){
+        piece = thismode;
+      }
+    }
+    cls += piece;
+    if (i == 0) {
+      cls += "_";
+    }
+  }
+  $("button.sub_" + mode).removeClass("sub_inactive");
+  $("button.sub_" + mode).addClass("sub_active");
+  $("button.sub_" + opposite_mode).removeClass("sub_active");
+  $("button.sub_" + opposite_mode).addClass("sub_inactive");
+  show_info(cls);
+}
+
+var heightstyle='div'; // alternative is 'order'
+function show_info(style) {
+  for (var i = 0; i < styles.length; i++) {
+    $('div.' + styles[i]).hide();
+  }
+  $('div.'+style).show();
+  if (style.endsWith("diagram")) {
+    whoisshowing = 0;
+    if (style.endsWith("autdiagram")) {
+      whoisshowing += 1;
+    }
+    if (heightstyle=='order') {
+      whoisshowing += 4;
+    }
+    if (style.startsWith("normal")) {
+      whoisshowing += 2;
+    }
+    sdiagram.newgraph(glist[whoisshowing]);
+    sdiagram.setSize();
+    sdiagram.draw();
+  }
+  for (var i = 0; i < styles.length; i++) {
+    $('button.' + styles[i]).show();
+  }
+}
+function toggleheight()
+{
+  if (heightstyle=='div') {
+    heightstyle = 'order';
+  } else {
+    heightstyle = 'div';
+  }
+  mytoggleheights($("#orderForHeight").prop('checked'));
+}
+
+
+
