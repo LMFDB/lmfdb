@@ -667,7 +667,7 @@ class AbvarFq_isoclass():
         ('degree', 'av.polarization_degree', 'Degree'),
         ('aut_group', 'av.aut_group', 'Automorphism Group'),
         #('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
-        ('endomorphism_ring', 'av.endomorphism_ring', 'Endomorphism ring'),
+        ('endomorphism_ring', 'ag.endomorphism_ring', 'Endomorphism ring'),
         ('kernel', 'av.polarization_kernel', 'Kernel'),
     ]
 
