@@ -665,7 +665,7 @@ class AbvarFq_isoclass():
     header_polarized_varieties = [
         ('label', 'av.fq.lmfdb_label', 'Label'),
         ('degree', 'av.polarization_degree', 'Degree'),
-        ('aut_group', 'av.aut_group', 'Automorphism Group'),
+        ('aut_group', 'ag.aut_group', 'Automorphism Group'),
         #('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
         ('endomorphism_ring', 'ag.endomorphism_ring', 'Endomorphism ring'),
         ('kernel', 'av.polarization_kernel', 'Kernel'),
