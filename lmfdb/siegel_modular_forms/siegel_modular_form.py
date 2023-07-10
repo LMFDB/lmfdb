@@ -1586,10 +1586,10 @@ def dynamic_statistics():
 class SMFSearchArray(SearchArray):
     sort_knowl = 'smf.sort_order'
     _sort = [
-        ('degree', 'degree', ['degree', 'family']),
-        ('family', 'family', ['family', 'level']),
         ('level', 'level', ['level', 'weight']),
         ('weight', 'weight', ['weight', 'level']),
+        ('family', 'family', ['family', 'level']),
+        ('degree', 'degree', ['degree', 'level']),
         ('character', 'character', ['level', 'char_orbit_index', 'weight']),
         ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
@@ -1597,7 +1597,6 @@ class SMFSearchArray(SearchArray):
         ('dim', 'dimension', ['dim', 'level', 'weight']),
         ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
         ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
-#        ('inner_twist_count', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
         ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
     ]
     for name, disp, sord in _sort:
@@ -1814,9 +1813,9 @@ class SMFSearchArray(SearchArray):
             [aut_type]
 ]
         self.refine_array = [
-            [degree, family, level, weight, aut_type, Nk2, dim],
+            [degree, family, level, weight],
             [level_primes, character, char_primitive, char_order, coefficient_field],
-            [coefficient_ring_index, hecke_ring_generator_nbound]
+            [coefficient_ring_index, hecke_ring_generator_nbound, Nk2, dim, aut_type]
         ]
         self.space_array = [
             [degree, family, level, weight, Nk2, dim],
