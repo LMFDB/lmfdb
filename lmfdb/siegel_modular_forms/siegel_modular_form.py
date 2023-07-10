@@ -401,7 +401,6 @@ def render_space_webpage(label):
     info = {'results':space.newforms, # so we can reuse search result code
             'columns':newform_columns}
     set_info_funcs(info)
-    print("space.newforms=", space.newforms)
     return render_template("smf_space.html",
                            info=info,
                            space=space,
@@ -1003,10 +1002,8 @@ newform_columns = SearchColumns([
              learnmore=learnmore_list)
 
 def newform_search(info, query):
-    # query['__sort__'] = ['aut_rep_type']
     newform_parse(info, query)
     set_info_funcs(info)
-    print("info=",info)
 
 def trace_postprocess(res, info, query, spaces=False):
     if res:
