@@ -2233,6 +2233,7 @@ class WebAbstractSubgroup(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         s = self.subgroup_tex
+        print("$$$$$$$$$$$$$$$ ", self.subgroup)
         if s is None:
             self.subgroup_tex = "?"
             self.subgroup_tex_parened = "(?)"
@@ -2240,9 +2241,18 @@ class WebAbstractSubgroup(WebObj):
             self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
         if self._data.get("quotient"):
             q = self.quotient_tex
+            print("++++++++++++++++ ", q)
             if q is None:
-                self.quotient_tex = "?"
-                self.quotient_tex_parened = "(?)"
+                tryhard = db.gps_groups_test.lookup(self.quotient)
+                print("&&&&&&&&&&&&&&&&&&&& ", self._data['quotient'])
+                print("--------- ", tryhard)
+                if tryhard and tryhard.tex_name:
+                    q = tryhard.tex_name
+                    self.quotient_tex = q
+                    self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+                else:
+                    self.quotient_tex = "?"
+                    self.quotient_tex_parened = "(?)"
             else:
                 self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
 
@@ -2397,6 +2407,7 @@ class WebAbstractSubgroup(WebObj):
 
     def quotient_knowl(self, paren=False):
         # assumes there is a quotient group
+        print ("********************** ", self.quotient_tex)
         knowlname = self.quotient_tex_parened if paren else self.quotient_tex
         return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
 
