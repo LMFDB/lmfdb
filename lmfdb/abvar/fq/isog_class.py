@@ -668,7 +668,7 @@ class AbvarFq_isoclass():
         ('aut_group', 'ag.aut_group', 'Automorphism Group'),
         #('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
         ('endomorphism_ring', 'ag.endomorphism_ring', 'Endomorphism ring'),
-        ('kernel', 'av.polarization_kernel', 'Kernel'),
+        ('kernel', 'av.polarization', 'Kernel'),
     ]
 
     @lazy_attribute
