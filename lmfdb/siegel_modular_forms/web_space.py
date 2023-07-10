@@ -295,7 +295,7 @@ class WebNewformSpace():
 #        self.char_conrey = self.conrey_indexes[0]
 #        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.smf_newforms.search({'space_label':self.label}, projection=2))
-        self.newforms = sorted(self.newforms, key=lambda f : aut_rep_type_sort_key(f['aut_rep_type']))
+        self.newforms = sorted(self.newforms, key=lambda f : (aut_rep_type_sort_key(f['aut_rep_type']), f['dim']))
 #        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
 #        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)

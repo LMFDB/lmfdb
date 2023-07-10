@@ -1002,6 +1002,7 @@ newform_columns = SearchColumns([
              learnmore=learnmore_list)
 
 def newform_search(info, query):
+    query['__sort__'] = ['weight', 'level', 'aut_rep_type', 'dim']
     newform_parse(info, query)
     set_info_funcs(info)
 
@@ -1600,7 +1601,7 @@ class SMFSearchArray(SearchArray):
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
-    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    _sort_forms = [(name, disp, sord + ['dim', 'hecke_orbit']) for (name, disp, sord) in _sort]
     sorts = {'List': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces,
