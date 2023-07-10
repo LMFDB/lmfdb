@@ -113,6 +113,14 @@ class AbvarFq_isoclass():
     Class for an isogeny class of abelian varieties over a finite field
     """
     name = "isogeny"
+
+    select_line = rf"""
+            Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')},
+            with the {display_knowl('av.fq.endomorphism_ring_notation', 'notation') }
+            $[\mathrm{{index}}]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
+            in the diagram to see information about it.
+"""
+
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
@@ -313,13 +321,7 @@ class AbvarFq_isoclass():
 
     @lazy_attribute
     def endring_select_line(self):
-        notation = r'notation'
-        return rf"""
-            Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')},
-            with the {display_knowl('av.fq.endomorphism_ring_notation', notation) }
-            $[\mathrm{{index}}]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
-            in the diagram to see information about it.
-"""
+        return self.select_line
 
     def endringinfo(self, endring):
         for elt in self.weak_equivalence_classes:

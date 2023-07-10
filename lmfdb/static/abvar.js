@@ -48,7 +48,13 @@ function showsubinfo(node, isocls) {
 }
 
 function clearsubinfo() {
-  $(".selectedsub").map(function() {
-    return this.innerHTML='Click on an endomorphism ring in the diagram to see information about it.';
-  });
+  $.get(`/Variety/Abelian/Fq/endringinfo/`,
+        function(data){
+          $(".selectedsub").map(function() {
+            this.innerHTML = data;
+            renderMathInElement(this, katexOpts);
+            return;
+          });
+          //$(".subgp").hover(highlight_group, unhighlight_group);
+        });
 }
