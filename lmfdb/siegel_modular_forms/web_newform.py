@@ -1541,9 +1541,10 @@ function switch_basis(btype) {
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 
+    # for now only displaying Lfunction of the trace form. Does that make sense?
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
-        return raw_typeset_qexp([[elt] for elt in self.texp[:prec]])
+        return raw_typeset_lfunc([[elt] for elt in self.texp[:prec]])
 
     def hecke_ev_header(self, n):
         return 'a_{%s}'%n
