@@ -96,6 +96,8 @@ def group_pretty_image(label):
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
+    if name and '?' in name:
+        name = None
     if not name:
         if pretty:
             if label in cache and "tex_name" in cache[label]:
@@ -1909,7 +1911,7 @@ class WebAbstractGroup(WebObj):
 
     def trans_degree(self):
         if self.transitive_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.transitive_degree
 
@@ -2233,19 +2235,15 @@ class WebAbstractSubgroup(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         s = self.subgroup_tex
-        print("$$$$$$$$$$$$$$$ ", self.subgroup)
         if s is None:
             self.subgroup_tex = "?"
-            self.subgroup_tex_parened = "(?)"
+            self.subgroup_tex_parened = "?"
         else:
             self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
         if self._data.get("quotient"):
             q = self.quotient_tex
-            print("++++++++++++++++ ", q)
             if q is None:
                 tryhard = db.gps_groups_test.lookup(self.quotient)
-                print("&&&&&&&&&&&&&&&&&&&& ", self._data['quotient'])
-                print("--------- ", tryhard)
                 if tryhard and tryhard.tex_name:
                     q = tryhard.tex_name
                     self.quotient_tex = q
@@ -2402,13 +2400,16 @@ class WebAbstractSubgroup(WebObj):
 
     def knowl(self, paren=False):
         from lmfdb.groups.abstract.main import sub_display_knowl
+        # jjjjjjjjjjj
         knowlname = self.subgroup_tex_parened if paren else self.subgroup_tex
         return sub_display_knowl(self.label, name=rf'${knowlname}$')
 
     def quotient_knowl(self, paren=False):
         # assumes there is a quotient group
-        print ("********************** ", self.quotient_tex)
-        knowlname = self.quotient_tex_parened if paren else self.quotient_tex
+        if '?' in self.quotient_tex:
+            knowlname = WebAbstractGroup(self.quotient).tex_name
+        else:
+            knowlname = self.quotient_tex_parened if paren else self.quotient_tex
         return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
 
     def display_quotient(self, subname=None, ab_invs=None):

@@ -1367,13 +1367,16 @@ def shortsubinfo(ambient, short_label):
 
     def subinfo_getsub(title, knowlid, lab):
         full_lab = "%s.%s" % (ambient, lab)
-        h = WebAbstractSubgroup(full_lab)
+        h = WebAbstractSubgroup(full_lab) if lab else None
         prop = display_knowl(knowlid, title)
-        return f"<tr><td>{prop}</td><td>{h.make_span()}</td></tr>\n"
+        if lab:
+            return f"<tr><td>{prop}</td><td>{h.make_span()}</td></tr>\n"
+        else:
+            return f"<tr><td>{prop}</td><td>not computed</td></tr>\n"
 
     ans = (
         'Information on the subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n'
-        % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
+        % (wsg.spanclass(), wsg.label, wsg.subgroup_tex if '?' not in wsg.subgroup_tex else '')
     )
     ans += f"<p>{create_boolean_subgroup_string(wsg, type='knowl')}</p>"
     ans += "<table>"
@@ -1398,16 +1401,19 @@ def shortsubinfo(ambient, short_label):
     #    ans += f"<tr><td>{display_knowl('group.generators', 'Generators')}</td><td>${gp.show_subgroup_generators(wsg)}$</td></tr>"
     # if not wsg.characteristic:
     #    ans += f"<tr><td>Number of autjugates</td><td>{wsg.conjugacy_class_count}</td></tr>"
+    alt_tex = wsg.label if '?' in wsg.subgroup_tex else rf'${wsg.subgroup_tex}$'
     ans += (
-        '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ subgroup homepage</a></td>'
-        % (url_for_subgroup_label(wsg.label), wsg.subgroup_tex)
+        '<tr><td></td><td style="text-align: right"><a href="%s">%s subgroup homepage</a></td>'
+        % (url_for_subgroup_label(wsg.label), alt_tex)
     )
-    ans += (
-        '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>'
-        % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
-    )
+    if wsg.subgroup:
+        ans += (
+            '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>'
+            % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
+        )
+        
     # print ""
-    # print ans
+    # print (ans)
     ans += "</table>"
     return ans
 
