@@ -2,7 +2,7 @@ from lmfdb.tests import LmfdbTest
 
 def no_groups():
     from lmfdb import db
-    return db.gps_groups_test.count() == 0
+    return db.gps_subgroups_test.count() == 0
 
 class AbGpsTest(LmfdbTest):
     # All tests should pass
