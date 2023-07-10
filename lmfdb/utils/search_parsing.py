@@ -1060,7 +1060,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         else:
             from lmfdb.galois_groups.transitive_group import complete_group_code
 
-            gcs = complete_group_code(inp.upper())
+            gcs = complete_group_code(inp)
 
         galfield, nfield = qfield
         if nfield and nfield not in query:
@@ -1081,7 +1081,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
-            raise SearchParsingError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
+            raise SearchParsingError("It needs to be a list made up of abstract group labels or GAP ids, such as 4.1, 2430.h, [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 # The queries for inertia (and wild inertia) subgroups are different
 # than the ones for Galois groups.
@@ -1099,19 +1099,19 @@ def parse_inertia(inp, query, qfield, err_msg=None):
         # For wild inertia, qfield=('wild_gap', 'wild_gap')
 
         # Need to convert it to GAP id
-        from lmfdb.galois_groups.transitive_group import nt2gap
+        from lmfdb.galois_groups.transitive_group import nt2abstract
 
         iner_gap, iner = qfield
         # Check for nTj
-        rematch = re.match(r"^(\d+)T(\d+)$", inp)
+        rematch = re.match(r"^(\d+)[Tt](\d+)$", inp)
         if rematch:
             n = int(rematch.group(1))
             t = int(rematch.group(2))
             if iner != iner_gap:
                 query[iner] = ["t", [n, t]]
             else:
-                gapid = nt2gap(n, t)
-                query[iner] = gapid
+                abstractid = nt2abstract(n, t)
+                query[iner] = abstractid
         else:
             # Check for an alias, like D4
             from lmfdb.galois_groups.transitive_group import aliases
@@ -1119,7 +1119,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
             inp2 = inp.upper()
             if inp2 in aliases:
                 nt = aliases[inp2][0]
-                query[iner_gap] = nt2gap(nt[0], nt[1])
+                query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
                 # Check for Gap code
                 rematch = re.match(r"^\[(\d+),(\d+)\]$", inp)
@@ -1443,6 +1443,8 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
         query[qfield] = process(True)
     elif inp in ["False", "no", "-1", "0", "odd"]:
         query[qfield] = process(False)
+    elif inp == "unknown":
+        query[qfield] = None
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
         pass
@@ -1702,6 +1704,57 @@ def parse_string_start(
         query.update(make_sub_query(parts[0]))
     else:
         collapse_ors(["$or", [make_sub_query(part) for part in parts]], query)
+
+def str_to_intervals(inp, split_minus=True, parse_singleton=int):
+    inp = inp.replace(" ", "")
+    if "," in inp:
+        X = sorted([str_to_intervals(piece)[0] for piece in inp.split(",")])
+        i = 0
+        while i < len(X) - 1:
+            if X[i][1] >= X[i+1][0]:
+                X[i:i+2] = [[X[i][0], max(X[i][1], X[i+1][1])]]
+            else:
+                i += 1
+        return X
+    if ".." in inp[1:] or (split_minus and "-" in inp[1:]):
+        if ".." in inp[1:]:
+            ix = inp.index("..", 1)
+            stop = ix + 2
+        else:
+            ix = inp.index("-", 1)
+            stop = ix + 1
+        start, end = inp[:ix], inp[stop:]
+    else:
+        start = end = inp
+    start, end = (parse_singleton(start), parse_singleton(end))
+    if start > end:
+        raise SearchParsingError("Endpoint less than startpoint in range")
+    return [(start, end)]
+
+@search_parser
+def parse_interval(inp, query, qfield, quantifier_type, bounds_field=None, split_minus=True, parse_singleton=int):
+    if bounds_field is None:
+        bounds_field = qfield + "_bounds"
+    if quantifier_type == "atmost":
+        query[bounds_field + ".2"] = {"$lte": parse_singleton(inp)}
+    elif quantifier_type == "atleast":
+        query[bounds_field + ".1"] = {"$gte": parse_singleton(inp)}
+    else:
+        X = str_to_intervals(inp, split_minus, parse_singleton)
+        if quantifier_type == "exactly":
+            def make_subquery(pair):
+                return {bounds_field + ".2": {"$lte": pair[1]},
+                        bounds_field + ".1": {"$gte": pair[0]}}
+        else:
+            def make_subquery(pair):
+                return {bounds_field + ".2": {"$gte": pair[0]},
+                        bounds_field + ".1": {"$lte": pair[1]}}
+        if quantifier_type == "exactly" and len(X) == 1 and X[0][0] == X[0][1]:
+            query[qfield] = X[0][0]
+        elif len(X) == 1:
+            query.update(make_subquery(X[0]))
+        else:
+            collapse_ors(["$or", [make_subquery(pair) for pair in X]], query)
 
 @search_parser
 def parse_newton_polygon(inp, query, qfield, mode=None, reversed=False):

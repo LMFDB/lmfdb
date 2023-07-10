@@ -222,7 +222,6 @@ def how_computed_page():
 
 class GLnCSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
 

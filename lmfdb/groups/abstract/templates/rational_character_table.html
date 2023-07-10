@@ -6,10 +6,16 @@
       <td>{{ c.display_knowl() | safe }}</td>
     {% endfor %}
   </tr>
+    <tr>
+    <td></td><td>Size</td>
+    {% for c in gp.conjugacy_class_divisions %}
+      <td class="right">{{ c.size() }}</td>
+    {% endfor %}
+  </tr>
   {% for p in gp.factors_of_order %}
     {% set ploop = loop %}
     <tr>
-      <td></td><td>{{p}}P</td>
+      <td></td><td>{{KNOWL('group.conjugacy_class.power_classes',"{} P".format(p))}}</td>
       {% for c in gp.conjugacy_class_divisions %}
         <td>{{ gp.conjugacy_classes[c.classes.0.powers[ploop.index0]-1].division.label }}</td>
       {% endfor %}
