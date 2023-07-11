@@ -715,6 +715,12 @@ class AbvarFq_isoclass():
           {self.display_rows_polarizations()}
         </table>
 """
+    @lazy_attribute
+    def number_principal_polarizations(self):
+        if self.polarized_abelian_varieties:
+            return sum(1 for elt in self.polarized_abelian_varieties if elt['degree'] == 1)
+        else:
+            return None
 
 
 
