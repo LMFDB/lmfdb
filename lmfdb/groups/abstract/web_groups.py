@@ -975,8 +975,8 @@ class WebAbstractGroup(WebObj):
         if self.has_subgroups:
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
-                if s.normal:
-                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += s.conjugacy_class_count
+                if s.normal: 
+                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex,s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
@@ -989,8 +989,8 @@ class WebAbstractGroup(WebObj):
             seen = set()
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
-                if s.normal and s.aut_label not in seen:
-                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += 1
+                if s.normal and s.aut_label not in seen:   
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex,s.quotient_order] += 1
                     seen.add(s.aut_label)
             return self._finalize_profile(by_order)
 
@@ -1007,9 +1007,14 @@ class WebAbstractGroup(WebObj):
                     tup[0] = f"{order}.?"
                 # TODO: In the normal case, should we display the quotient somehow?
                 # TODO: Deal with the orders where all we know is a count from normal_counts
+                if len(tup) > 3:
+                    if tup[5] is None:
+                        ord_str = "\\text{unknown group of order }" + str(tup[6])
+                    else:
+                        ord_str = tup[5]  
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
-                    + ("" if len(tup) == 3 else " ( $%s$ )" % (tup[5]))
+                    + ("" if len(tup) == 3 else " ( $%s$ )" % (ord_str))  
                     + (" x " + str(cnt) if cnt > 1 else "")
                 )
             return sep.join(l)
@@ -1905,7 +1910,7 @@ class WebAbstractGroup(WebObj):
 
     def perm_degree(self):
         if self.permutation_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.permutation_degree
 
