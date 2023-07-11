@@ -781,14 +781,14 @@ def Qchar_table(label):
         learnmore=learnmore_list(),
     )
 
-def _subgroup_diagram(label, typ, title, only):
+def _subgroup_diagram(label, title, only, style):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     dojs, display_opts = diagram_js_string(gp, only=only)
-    info = {"dojs": dojs, "type": typ}
+    info = {"dojs": dojs, "style":style}
     info.update(display_opts)
     return render_template(
         "diagram_page.html",
@@ -801,22 +801,22 @@ def _subgroup_diagram(label, typ, title, only):
 @abstract_page.route("/diagram/<label>")
 def subgroup_diagram(label):
     title = f"Diagram of subgroups up to conjugation for group {label}"
-    return _subgroup_diagram(label, "conj", title, only=("subgroup", ""))
+    return _subgroup_diagram(label, title, only=("subgroup", ""), style="diagram")
 
 @abstract_page.route("/autdiagram/<label>")
 def subgroup_autdiagram(label):
     title = f"Diagram of subgroups up to automorphism for group {label}"
-    return _subgroup_diagram(label, "aut", title, only=("subgroup", "aut"))
+    return _subgroup_diagram(label, title, only=("subgroup", "aut"), style="autdiagram")
 
 @abstract_page.route("/normal_diagram/<label>")
 def normal_diagram(label):
     title = f"Diagram of normal subgroups up to conjugation for group {label}"
-    return _subgroup_diagram(label, "conj", title, only=("normal", ""))
+    return _subgroup_diagram(label, title, only=("normal", ""), style="normal_diagram")
 
 @abstract_page.route("/normal_autdiagram/<label>")
 def normal_autdiagram(label):
     title = f"Diagram of normal subgroups up to automorphism for group {label}"
-    return _subgroup_diagram(label, "aut", title, only=("normal", "aut"))
+    return _subgroup_diagram(label, title, only=("normal", "aut"), style="normal_autdiagram")
 
 def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
@@ -961,7 +961,7 @@ group_columns = SearchColumns([
     #                  ["center_label", "smith_abelian_invariants"],
     #                  display_url_invs),
     ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms"),
-    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, default=True, align="center", short_title="outer automorphisms"),
+    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, align="center", short_title="outer automorphisms"),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree"),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree"),
     MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
@@ -1367,13 +1367,16 @@ def shortsubinfo(ambient, short_label):
 
     def subinfo_getsub(title, knowlid, lab):
         full_lab = "%s.%s" % (ambient, lab)
-        h = WebAbstractSubgroup(full_lab)
+        h = WebAbstractSubgroup(full_lab) if lab else None
         prop = display_knowl(knowlid, title)
-        return f"<tr><td>{prop}</td><td>{h.make_span()}</td></tr>\n"
+        if lab:
+            return f"<tr><td>{prop}</td><td>{h.make_span()}</td></tr>\n"
+        else:
+            return f"<tr><td>{prop}</td><td>not computed</td></tr>\n"
 
     ans = (
         'Information on the subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n'
-        % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
+        % (wsg.spanclass(), wsg.label, wsg.subgroup_tex if '?' not in wsg.subgroup_tex else '')
     )
     ans += f"<p>{create_boolean_subgroup_string(wsg, type='knowl')}</p>"
     ans += "<table>"
@@ -1398,16 +1401,19 @@ def shortsubinfo(ambient, short_label):
     #    ans += f"<tr><td>{display_knowl('group.generators', 'Generators')}</td><td>${gp.show_subgroup_generators(wsg)}$</td></tr>"
     # if not wsg.characteristic:
     #    ans += f"<tr><td>Number of autjugates</td><td>{wsg.conjugacy_class_count}</td></tr>"
+    alt_tex = wsg.label if '?' in wsg.subgroup_tex else rf'${wsg.subgroup_tex}$'
     ans += (
-        '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ subgroup homepage</a></td>'
-        % (url_for_subgroup_label(wsg.label), wsg.subgroup_tex)
+        '<tr><td></td><td style="text-align: right"><a href="%s">%s subgroup homepage</a></td>'
+        % (url_for_subgroup_label(wsg.label), alt_tex)
     )
-    ans += (
-        '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>'
-        % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
-    )
+    if wsg.subgroup:
+        ans += (
+            '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>'
+            % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
+        )
+
     # print ""
-    # print ans
+    # print (ans)
     ans += "</table>"
     return ans
 
@@ -2377,12 +2383,12 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         profiledata[0] = None
         tex_name = profiledata[2]
         if tex_name is None:
-            ans = "Unknown group<br />"
+            ans = "Unidentified group<br />"
         else:
             ans = f"Group ${tex_name}$<br />"
         ans += f"Order: {order}<br />"
         if profiledata[1] is None:
-            ans += "Isomorphism class unknown<br />"
+            ans += "Isomorphism class has not been identified<br />"
         else:
             # TODO: add hash knowl and search link to groups with this order and hash
             ans += f"Hash: {profiledata[1]}<br />"
@@ -2424,13 +2430,13 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if quotient_tex in [None, "?"]:
             quotient_tex = profiledata[5]
         if quotient_tex in [None, "?"]:
-            ans += "Unknown quotient<br />"
+            ans += "identified quotient<br />"
         else:
             ans += f"Quotient ${quotient_tex}$<br />"
         ambient_order = int(ambient.split(".")[0])
         ans += f"Quotient order: {ambient_order // order}<br />"
         if profiledata[4] is None:
-            ans += "Quotient isomorphism class unknown<br />"
+            ans += "Quotient isomorphism class has not been identified<br />"
         else:
             # TODO: add hash knowl and search link to groups with this order and hash
             ans += f"Quotient hash: {profiledata[4]}<br />"
