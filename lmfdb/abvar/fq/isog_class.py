@@ -305,7 +305,7 @@ class AbvarFq_isoclass():
             else:
                 factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
             istr = f"_{{{i}}}" if num_ind[N] > 1 else ""
-            we_pic = f"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
+            we_pic = rf"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
             tex[R] = "[%s]^{%s}%s" % (factored_index, we_pic, istr)
             texlabels.add(tex[R])
         texlabels = {rec["label"]: rec["image"] for rec in db.av_fq_teximages.search({"label": {"$in": list(texlabels)}})}
@@ -354,11 +354,11 @@ class AbvarFq_isoclass():
 
         # Ring display
         names = ["R"]
-        if rec["is_Zconductor_sum"]:
+        if rec.get("is_Zconductor_sum"):
             names.append(r"\mathbb{Z} + \mathfrak{f}_R")
-        elif rec["is_ZFVconductor_sum"]:
+        elif rec.get("is_ZFVconductor_sum"):
             names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
-        gen = rec["generator_over_ZFV"]
+        gen = rec.get("generator_over_ZFV")
         if gen:
             d, num = gen
             num = to_R(num)
@@ -371,35 +371,39 @@ class AbvarFq_isoclass():
             names.append(fr"\mathbb{{Z}}[{','.join(gens)}]")
         names = "=".join(names)
 
-        # conductor
-        M, d, num = rec["conductor"]
-        num = to_R(num)
-        if num != 0:
-            conductor = latex(num)
-            if d != 1:
-                conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-            conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_{{\mathbb{{Q}}(F)}}}}"
-        else:
-            conductor = "\mathcal{O}_{\mathbb{Q}[F]}"
-            if M != 1:
-                conductor = f"{M} {conductor}"
+        ans = [
+            "<table>",
+            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
+        ]
+
+        if rec["conductor"]:
+            # conductor
+            M, d, num = rec["conductor"]
+            num = to_R(num)
+            if num != 0:
+                conductor = latex(num)
+                if d != 1:
+                    conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+                conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_{{\mathbb{{Q}}(F)}}}}"
+            else:
+                conductor = r"\mathcal{O}_{\mathbb{Q}[F]}"
+                if M != 1:
+                    conductor = f"{M} {conductor}"
+            ans.append(
+                fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
+            )
+
 
         cm_type = "$%s$" % rec["cohen_macaulay_type"]
 
-        ans = "\n".join([
-            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
-            "<table>",
-            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{display_abelian_group(rec['pic_invs'])}</td></tr>",
-            # FIXME
-            # f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td>{abstract_group_display_knowl(label=pic_label, name=pic)}</td></tr>",
+        ans.extend([
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
         # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
-        return ans
+        return "\n".join(ans)
 
     def _make_jacpol_property(self):
         ans = []
