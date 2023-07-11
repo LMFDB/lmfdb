@@ -829,26 +829,28 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgp_paragraph(self):
+        charcolor = r'Characteristic subgroups are shown in <span class="chargp">this color</span>.'
+        normalcolor = r'Normal (but not characteristic) subgroups are shown in <span class="normgp">this color</span>.'
         if self.number_subgroups is None:
             if self.number_normal_subgroups is None:
                 return " "
             elif self.number_characteristic_subgroups is None:
-                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
+                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambiunt=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
             else:
                 ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
                 if self.number_characteristic_subgroups < self.number_normal_subgroups:
-                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>)."
+                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>).<p>"+charcolor+"  "+normalcolor
                 else:
-                    ret_str=ret_str+ " all characteristic. "
+                    ret_str=ret_str+ ", and all normal subgroups are characteristic.<p>"+charcolor
                 return ret_str
         elif self.number_normal_subgroups < self.number_subgroups:
             ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
         else:
             ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
-            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ "> """ + str(self.number_characteristic_subgroups) + """ characteristic</a>). """
+            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ ">""" + str(self.number_characteristic_subgroups) + """ characteristic</a>).<p>"""+charcolor+" "+normalcolor
         else:
-            ret_str = ret_str + ", all characteristic. "
+            ret_str = ret_str + ", and all normal subgroups are characteristic. <p>"+charcolor
         return ret_str
 
     @lazy_attribute
@@ -1009,12 +1011,12 @@ class WebAbstractGroup(WebObj):
                 # TODO: Deal with the orders where all we know is a count from normal_counts
                 if len(tup) > 3:
                     if tup[5] is None:
-                        ord_str = "\\text{unknown group of order }" + str(tup[6])
+                        ord_str = "unidentified group of order " + str(tup[6])
                     else:
-                        ord_str = tup[5]
+                        ord_str = rf'${tup[5]}$'
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
-                    + ("" if len(tup) == 3 else " ( $%s$ )" % (ord_str))
+                    + ("" if len(tup) == 3 else " (%s)" % (ord_str))  
                     + (" x " + str(cnt) if cnt > 1 else "")
                 )
             return sep.join(l)
