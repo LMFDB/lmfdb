@@ -2383,12 +2383,12 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         profiledata[0] = None
         tex_name = profiledata[2]
         if tex_name is None:
-            ans = "Unknown group<br />"
+            ans = "Unidentified group<br />"
         else:
             ans = f"Group ${tex_name}$<br />"
         ans += f"Order: {order}<br />"
         if profiledata[1] is None:
-            ans += "Isomorphism class unknown<br />"
+            ans += "Isomorphism class has not been identified<br />"
         else:
             # TODO: add hash knowl and search link to groups with this order and hash
             ans += f"Hash: {profiledata[1]}<br />"
@@ -2430,13 +2430,13 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if quotient_tex in [None, "?"]:
             quotient_tex = profiledata[5]
         if quotient_tex in [None, "?"]:
-            ans += "Unknown quotient<br />"
+            ans += "identified quotient<br />"
         else:
             ans += f"Quotient ${quotient_tex}$<br />"
         ambient_order = int(ambient.split(".")[0])
         ans += f"Quotient order: {ambient_order // order}<br />"
         if profiledata[4] is None:
-            ans += "Quotient isomorphism class unknown<br />"
+            ans += "Quotient isomorphism class has not been identified<br />"
         else:
             # TODO: add hash knowl and search link to groups with this order and hash
             ans += f"Quotient hash: {profiledata[4]}<br />"
