@@ -15,7 +15,6 @@ from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
 from .main import logger
-from distutils.version import StrictVersion
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask_login import UserMixin, AnonymousUserMixin
