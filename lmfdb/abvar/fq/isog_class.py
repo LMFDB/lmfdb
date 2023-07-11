@@ -399,6 +399,7 @@ class AbvarFq_isoclass():
 
         ans.extend([
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{display_abelian_group(rec['pic_invs'])}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
