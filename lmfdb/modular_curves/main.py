@@ -331,7 +331,7 @@ modcurve_columns = SearchColumns(
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "Points"),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
     db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
@@ -851,14 +851,14 @@ class ModCurveSearchArray(SearchArray):
         points_type = SelectBox(
             name="points_type",
             options=[('', 'non-cusp'),
-                     ('noncm', 'non-CM'),
+                     ('noncm', 'non-CM, non-cusp'),
                      ('all', 'all'),
                      ],
             min_width=105)
         points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="Points",
+            label="$j$-points",
             example="0, 3-5",
             select_box=points_type,
         )
