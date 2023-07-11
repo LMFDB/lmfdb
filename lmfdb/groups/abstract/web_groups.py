@@ -96,8 +96,8 @@ def group_pretty_image(label):
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
-    if name and '?' in name:
-        name = None
+#    if name and '?' in name:
+#        name = None
     if not name:
         if pretty:
             if label in cache and "tex_name" in cache[label]:
