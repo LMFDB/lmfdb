@@ -1976,7 +1976,7 @@ class WebAbstractGroup(WebObj):
     def cent_label(self):
         cent = self.cent()
         if cent:
-            return self.subgroups[self.cent()].subgroup_tex
+            return self.subgroups[self.cent()].knowl()
         return None
 
     def cent_order_factor(self):
@@ -1995,7 +1995,7 @@ class WebAbstractGroup(WebObj):
     def comm_label(self):
         comm = self.comm()
         if comm:
-            return self.subgroups[comm].subgroup_tex
+            return self.subgroups[comm].knowl()
         return nc
 
     def abelian_quot(self):
@@ -2020,7 +2020,7 @@ class WebAbstractGroup(WebObj):
     def fratt_label(self):
         fratt = self.fratt()
         if fratt:
-            return self.subgroups[fratt].subgroup_tex
+            return self.subgroups[fratt].knowl()
         return None
 
     def gen_noun(self):
@@ -2400,7 +2400,6 @@ class WebAbstractSubgroup(WebObj):
 
     def knowl(self, paren=False):
         from lmfdb.groups.abstract.main import sub_display_knowl
-        # jjjjjjjjjjj
         knowlname = self.subgroup_tex_parened if paren else self.subgroup_tex
         return sub_display_knowl(self.label, name=rf'${knowlname}$')
 
