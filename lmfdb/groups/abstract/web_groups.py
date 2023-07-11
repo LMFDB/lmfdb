@@ -1011,12 +1011,12 @@ class WebAbstractGroup(WebObj):
                 # TODO: Deal with the orders where all we know is a count from normal_counts
                 if len(tup) > 3:
                     if tup[5] is None:
-                        ord_str = "\\text{unknown group of order }" + str(tup[6])
+                        ord_str = "unidentified group of order " + str(tup[6])
                     else:
-                        ord_str = tup[5]
+                        ord_str = rf'${tup[5]}$'
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
-                    + ("" if len(tup) == 3 else " ( $%s$ )" % (ord_str))
+                    + ("" if len(tup) == 3 else " (%s)" % (ord_str))  
                     + (" x " + str(cnt) if cnt > 1 else "")
                 )
             return sep.join(l)
