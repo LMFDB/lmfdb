@@ -166,7 +166,6 @@ class Configuration(_Configuration):
             default=INFO,
         )
 
-
         logginggroup.add_argument(
             "--slowcutoff",
             dest="logging_slowcutoff",
