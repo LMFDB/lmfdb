@@ -310,6 +310,7 @@
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
      {% if gp.commutator_count %}
       <td>${{gp.commutator_count}}$</td>
+    {% elif gp.abelian %} <td>$0$</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
   {% endif %}
@@ -343,7 +344,7 @@
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
     {% if gp.cent() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
+    <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq$ {{gp.cent_label()|safe}}</span></td>
     <td>{{gp.subgroups[gp.cent()].display_quotient("Z")|safe}}</td>
     {% elif gp.center_label %}
     <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">${{gp.special_subs_label(gp.center_label)}}$</td>
@@ -354,7 +355,7 @@
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
     {% if gp.comm() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span></td> {# match single quote for code highlighting purposes: ' #}
+    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq$ {{gp.subgroups[gp.comm()].knowl()|safe}}</span></td> {# match single quote for code highlighting purposes: ' #}
     <td>{{gp.subgroups[gp.comm()].display_quotient("G'", ab_invs=gp.smith_abelian_invariants)|safe}}</td>
      {% elif gp.commutator_label %}
     <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.comutator_label)}}">${{gp.special_subs_label(gp.commutator_label)}}$</td>
@@ -365,7 +366,7 @@
   <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
     {% if gp.fratt() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq$ {{gp.subgroups[gp.fratt()].knowl()|safe}}</span></td>
     <td>{{gp.subgroups[gp.fratt()].display_quotient("\\Phi")|safe}} </td>
      {% elif gp.frattini_label %}
     <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">${{gp.special_subs_label(gp.frattini_label)}}$</td>
@@ -376,7 +377,7 @@
  <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
     {% if gp.fitting %}
-    <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq$ {{gp.subgroups[gp.fitting].knowl()|safe}}</td>
     <td>{{gp.subgroups[gp.fitting].display_quotient("\\operatorname{Fit}")|safe}}</td>
     {% else %}
     <td> not computed</td>
@@ -385,7 +386,7 @@
   <tr>
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
     {% if gp.radical %}
-    <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq$ {{gp.subgroups[gp.radical].knowl()|safe}}</td>
     <td>{{gp.subgroups[gp.radical].display_quotient("R")|safe}}</td>
     {% else %}
     <td>not computed</td>
@@ -394,20 +395,18 @@
   <tr>
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
     {% if gp.socle %}
-    <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq$ {{gp.subgroups[gp.socle].knowl()|safe}}</td>
     <td>{{gp.subgroups[gp.socle].display_quotient("\\operatorname{soc}")|safe}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}
   </tr>
-  {% if gp.pgroup == 0 %}
     {% for p, subgp in gp.sylow_subgroups() %}
       <tr>
         <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}:</td>
-        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{ {{p}} } \simeq {{subgp.subgroup_tex}}$</span></td>
+        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.short_label}}">$P_{ {{p}} } \simeq$ {{subgp.knowl()|safe}}</span></td>
       </tr>
     {% endfor %}
-  {% endif %}
 </table>
 
 
