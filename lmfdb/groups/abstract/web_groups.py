@@ -1008,7 +1008,7 @@ class WebAbstractGroup(WebObj):
                 # TODO: In the normal case, should we display the quotient somehow?
                 # TODO: Deal with the orders where all we know is a count from normal_counts
                 if len(tup) > 3:
-                    if tup[5] == None:
+                    if tup[5] is None:
                         ord_str = "\\text{unknown group of order }" + str(tup[6])
                     else:
                         ord_str = tup[5]  
