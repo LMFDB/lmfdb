@@ -105,7 +105,10 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
             else:
                 name = db.gps_groups_test.lookup(label, "tex_name")
             if name is None:
-                name = f"Group {label}"
+                if label is None:
+                    name = '?'
+                else:
+                    name = f"Group {label}"
             else:
                 name = f"${name}$"
         else:
