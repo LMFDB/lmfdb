@@ -14,7 +14,7 @@ from lmfdb.backend.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
-from .main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
+from .main import logger
 from distutils.version import StrictVersion
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
@@ -301,8 +301,6 @@ class LmfdbUser(UserMixin):
 
     def is_anonymous(self):
         """required by flask-login user class"""
-        if StrictVersion(FLASK_LOGIN_VERSION) < StrictVersion(FLASK_LOGIN_LIMIT):
-            return not self.is_authenticated()
         return not self.is_authenticated
 
     def is_admin(self):
