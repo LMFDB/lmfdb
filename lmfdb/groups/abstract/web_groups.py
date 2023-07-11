@@ -1903,13 +1903,13 @@ class WebAbstractGroup(WebObj):
 
     def perm_degree(self):
         if self.permutation_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.permutation_degree
 
     def trans_degree(self):
         if self.transitive_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.transitive_degree
 
