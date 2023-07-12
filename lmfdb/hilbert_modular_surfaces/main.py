@@ -478,13 +478,13 @@ class HMSurfaceSearchArray(SearchArray):
             example="1",
             example_span="1, 3-4",
         )
-//        pa = TextBox(
-//            name="pa",
-//            knowl="ag.arithmetic_genus",
-//            label="Arithmetic genus",
-//            example="0",
-//            example_span="0, 2-3",
-//        )
+#        pa = TextBox(
+#            name="pa",
+#            knowl="ag.arithmetic_genus",
+#            label="Arithmetic genus",
+#            example="0",
+#            example_span="0, 2-3",
+#        )
         K2 = TextBox(
             name="K2",
             knowl="hmsurface.k2",
