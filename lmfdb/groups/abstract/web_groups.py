@@ -1010,13 +1010,15 @@ class WebAbstractGroup(WebObj):
                     sep = ", &nbsp;&nbsp;"
                 if label is None:
                     tup[0] = f"{order}.?"
-                # TODO: In the normal case, should we display the quotient somehow?
                 # TODO: Deal with the orders where all we know is a count from normal_counts
                 if len(tup) > 3:
                     if tup[5] is None:
                         ord_str = "unidentified group of order " + str(tup[6])
                     else:
-                        ord_str = rf'${tup[5]}$'
+                        if tup[3]:
+                            ord_str = tup[3]
+                        else:
+                            ord_str = rf'${tup[5]}$'
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
                     + ("" if len(tup) == 3 else " (%s)" % (ord_str))
