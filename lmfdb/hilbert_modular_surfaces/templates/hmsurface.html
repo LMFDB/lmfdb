@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>  Real quadratic field   {{ surface.field.knowl()|safe }} </h2>
+<h2> Real quadratic field {{ surface.field.knowl()|safe }} </h2>
 <p>
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  surface.field.generator_name() }}\), with {{
