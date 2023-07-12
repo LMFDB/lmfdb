@@ -373,7 +373,7 @@ class HMSurfaceSearchArray(SearchArray):
         )
         level_norm = TextBoxWithSelect(
             name="level_norm",
-            knowl="hmsurface.level",
+            knowl="hmsurface.levelnorm",
             label="Norm of level ideal",
             example="1",
             example_span="1, 10-20",
@@ -555,12 +555,12 @@ class HMSurface_stats(StatsDisplay):
 
     @property
     def short_summary(self):
-        hmsurface_knowl = display_knowl("hmsurface", title="Hilbert modular surfaces")
+        hmsurface_knowl = display_knowl("hmsurface.hmsurface", title="Hilbert modular surfaces")
         return rf'The database currently contains {self.nsurfaces} {hmsurface_knowl}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
 
     @property
     def summary(self):
-        hmsurface_knowl = display_knowl("hmsurface", title="modular surfaces")
+        hmsurface_knowl = display_knowl("hmsurface.hmsurface", title="modular surfaces")
         return rf"The database currently contains {self.nsurfaces} {hmsurface_knowl}."
 
     table = db.hmsurfaces_invs
