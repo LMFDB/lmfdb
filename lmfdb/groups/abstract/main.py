@@ -905,7 +905,7 @@ def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
 class Group_download(Downloader):
-    table = db.gps_groups
+    table = db.gps_groups_test
     title = "Abstract groups"
     columns = "label"
     column_wrappers = { "label" : lambda x : [int(a) for a in x.split(".")] }
