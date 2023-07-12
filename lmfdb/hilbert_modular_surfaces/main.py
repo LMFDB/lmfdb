@@ -220,7 +220,7 @@ hmsurface_columns = SearchColumns(
         ),
         MathCol(
             "level_norm",
-            "hmsurface.level_norm",
+            "hmsurface.levelnorm",
             "Level norm",
             default=True,
             align="center",
@@ -243,11 +243,11 @@ hmsurface_columns = SearchColumns(
         MathCol("h20", "ag.hodge_numbers", "$h^{2,0}$", align="center"),
         MathCol("K2", "hmsurface.K2", "$K^2$", align="center"),
         MathCol(
-            "nb_cusps", "hmsurface.nb_cusps", "Cusps", default=True, align="center"
+            "nb_cusps", "hmsurface.cusps", "Cusps", default=True, align="center"
         ),
         MathCol(
             "nb_ell",
-            "hmsurface.elliptic_pts",
+            "hmsurface.elliptic_point",
             "Elliptic points",
             default=True,
             align="center",
