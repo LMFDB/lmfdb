@@ -8,21 +8,21 @@
 <h2> Browse </h2>
 
 <p>
-  By discriminant of the base field:
+  By {{ KNOWL('nf.abs_discriminant', 'discriminant') }} of the base field:
   {% for discr in info.discr_list %}
   <a href="?field_discr={{discr}}&sort_order=field_discr">{{discr}}</a>&nbsp;
   {% endfor %}
 </p>
 
 <p>
-  By norm of the level ideal:  
+  By {{ KNOWL('hmsurface.levelnorm', 'norm of the level ideal') }}:  
   {% for lvl in info.level_norm_list %}
   <a href="?level_norm={{lvl}}&sort_order=level_norm">{{lvl}}</a>&nbsp;
   {% endfor %}
 </p>
 
 <p>
-  By Kodaira dimension:
+  By {{ KNOWL('hmsurface.kodaira_dimension', 'Kodaira dimension') }}:
   {% for dim in info.kodaira_list %}
   <a href="?kodaira_quantifier=exactly&kodaira_dims={{dim}}">{{dim}}</a>&nbsp;
   {% endfor %}
