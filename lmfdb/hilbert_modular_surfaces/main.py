@@ -487,7 +487,7 @@ class HMSurfaceSearchArray(SearchArray):
         )
         euler_nb = TextBox(
             name="euler_nb",
-            knowl="hmsurface.euler_nb",
+            knowl="hmsurface.euler_number",
             label="Euler number",
             example="2",
             example_span="1-5",
