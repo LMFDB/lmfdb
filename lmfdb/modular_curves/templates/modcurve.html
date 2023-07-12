@@ -230,7 +230,7 @@ We are removing this section until we have more sources of non-rational points. 
 
 {% set modelisos = curve.formatted_modelisos %}
 {% if modelisos %}
-<h2> Maps betweeen models of this curve </h2>
+<h2> Maps between models of this curve </h2>
 {% for degree, domain_model_type, codomain_label, codomain_model_type, codomain_name, codomain_equation, coord_names, equations in modelisos %}
 <p>Birational map from {{ curve.model_type_str(domain_model_type) }} to {{ curve.model_type_str(codomain_model_type) }}:</p>
 <table valign="center">
