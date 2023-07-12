@@ -2443,18 +2443,25 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
 
     if gp and not gp.live():
         if ambient is None:
-            ans += "It has {} subgroups".format(gp.number_subgroups)
-            if gp.number_normal_subgroups < gp.number_subgroups:
-                ans += " in {} conjugacy classes, {} normal, ".format(
-                    gp.number_subgroup_classes, gp.number_normal_subgroups
-                )
-            else:
-                ans += ", all normal, "
-            if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
-                ans += str(gp.number_characteristic_subgroups)
-            else:
-                ans += "all"
-            ans += " characteristic.<br />"
+            if gp.number_subgroups is not None:
+                ans += "It has {} subgroups".format(gp.number_subgroups)
+                if gp.number_normal_subgroups is not None:
+                    if gp.number_normal_subgroups < gp.number_subgroups:
+                        ans += " in {} conjugacy classes, {} normal, ".format(
+                            gp.number_subgroup_classes, gp.number_normal_subgroups
+                        )
+                    else:
+                        ans += ", all normal, "
+                    if gp.number_characteristic_subgroups is not None:
+                        if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
+                            ans += str(gp.number_characteristic_subgroups)
+                        else:
+                            ans += "all"
+                        ans += " characteristic.<br />"
+                    else:
+                        ans = ans[:-2] + ".<br />"
+                else:
+                    ans += ".<br />"
         else:
             ambient = WebAbstractGroup(ambient)
 
