@@ -14,7 +14,7 @@
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.subgroup_order)}} </td></tr>
     <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.pos_int_and_factor(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(seq.sub.exponent)}} </td></tr>
-    <tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td> ${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>
+    {% if seq.amb.show_subgroup_flag() %}<tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td> ${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>{% endif %}
   </table>
 </p>
 

@@ -1736,6 +1736,13 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
+
+    def show_subgroup_flag(self):
+        if self.representations.get("Lie"):
+            if self.representations["Lie"][0]["family"][0] == "P": 	# Issue with projective Lie groups
+                return False
+        return True
+    
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
@@ -1895,6 +1902,15 @@ class WebAbstractGroup(WebObj):
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
 
+
+    def aut_gens_flag(self): #issue with Lie type when family is projective
+        if self.aut_gens is None:
+            return False
+        elif self.element_repr_type == "Lie":
+            if self.representations["Lie"][0]["family"][0] == "P":
+                return False
+        return True    
+    
     # outer automorphism group
     def show_outer_group(self):
         try:
