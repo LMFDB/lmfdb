@@ -238,7 +238,7 @@ hmsurface_columns = SearchColumns(
             default=True,
             align="center",
         ),
-        MathCol("chi", "hmsurface.chi", "Hol. Euler char.", default=True),
+        MathCol("chi", "ag.holomorphic_euler_char", "Hol. Euler char.", default=True),
         MathCol("h11", "ag.hodge_numbers", "$h^{1,1}$", align="center"),
         MathCol("h20", "ag.hodge_numbers", "$h^{2,0}$", align="center"),
         MathCol("K2", "hmsurface.K2", "$K^2$", align="center"),
@@ -473,7 +473,7 @@ class HMSurfaceSearchArray(SearchArray):
         )
         chi = TextBox(
             name="chi",
-            knowl="hmsurface.chi",
+            knowl="ag.holomorphic_euler_char",
             label="Holomorphic Euler characteristic",
             example="1",
             example_span="1, 3-4",
