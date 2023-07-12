@@ -1015,7 +1015,7 @@ class WebAbstractGroup(WebObj):
                     if tup[5] is None:
                         ord_str = "unidentified group of order " + str(tup[6])
                     else:
-                        if tup[3]:
+                        if tup[3] and '?' in tup[5]:
                             ord_str = tup[3]
                         else:
                             ord_str = rf'${tup[5]}$'
