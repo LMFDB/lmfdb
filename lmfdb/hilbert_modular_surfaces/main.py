@@ -331,7 +331,7 @@ class HMSurfaceSearchArray(SearchArray):
     def __init__(self):
         field_discr = TextBox(
             name="field_discr",
-            knowl="nf.abs_discriminant",
+            knowl="nf.discriminant",
             label="Field discriminant",
             example="12",
             example_span="12, 5-100",
