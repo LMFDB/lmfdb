@@ -3,6 +3,7 @@
 # See templates/space.html for how functions are called
 
 from lmfdb import db
+from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.utils import (
@@ -116,50 +117,39 @@ def cyc_display(m, d, real_sub):
         return name
 
 def ALdim_table(al_dims, level, weight):
-    # Assume that the primes always appear in the same order
-    al_dims = sorted(al_dims, key=lambda x:tuple(-ev for (p,ev) in x[0]))
-    header = []
-    first_row = al_dims[0][0]
-    primes = [p for (p,ev) in first_row]
+    def sign_char(x): return "-" if x else "+"
+    def url_sign_char(x): return "-" if x else "%2B"
+    primes = ZZ(level).prime_divisors()
     num_primes = len(primes)
-    for p, ev in first_row:
-        header.append(r'<th>\(%s\)</th>'%p)
-    if len(first_row) > 1:
+    header = [r'<th>\(%s\)</th>'%p for p in primes]
+    if num_primes > 1:
         header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.siegel.fricke', title='Fricke').replace('"',"'")))
-    header.append('<th>Dim.</th>')
+    header.append('<th>Dim</th>')
     rows = []
-    fricke = {1:0,-1:0}
-    for i, (vec, dim, cnt) in enumerate(al_dims):
-        row = []
-        sign = 1
-        s = ''
-        for p, ev in vec:
-            if ev == 1:
-                s += '%2B'
-                symb = '+'
-            else:
-                sign = -sign
-                s += '-'
-                symb = '-'
-            row.append(r'<td>\(%s\)</td>'%(symb))
-        if len(vec) > 1:
-            row.append(r"<td class='right'>\(%s\)</td>"%('+' if sign == 1 else '-'))
-        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':s}
-        if cnt == 1:
-            query['jump'] = 'yes'
+    fricke = [0,0]
+    for i, dim in enumerate(al_dims):
+        if dim == 0:
+            continue
+        b = list(reversed(ZZ(i).bits()))
+        b = [0 for j in range(num_primes-len(b))] + b
+        row = list(map(lambda x:r'<td>\(%s\)</td>'%sign_char(x),b))
+        sign = sum(b) % 2
+        if num_primes > 1:
+            row.append(r"<td class='right'>$%s$</td>"%sign_char(sign))
+        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
         link = newform_search_link(r'\(%s\)'%dim, **query)
         row.append(r'<td>%s</td>'%(link))
         fricke[sign] += dim
-        if i == len(al_dims) - 1 and len(vec) > 1:
+        if i == len(al_dims) - 1 and num_primes > 1:
             tr = "<tr class='endsection'>"
         else:
             tr = "<tr>"
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
-        plus_knowl = display_knowl('smf.plus_space',title='Plus space').replace('"',"'")
-        plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
-        minus_knowl = display_knowl('smf.minus_space',title='Minus space').replace('"',"'")
-        minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
+        plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
+        plus_link = newform_search_link(r'\(%s\)'%fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
+        minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
+        minus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
@@ -289,9 +279,9 @@ class WebNewformSpace():
         self.factored_level = web_latex_factored_integer(self.level, equals=True)
 #        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
-#        self.num_forms = data.get('num_forms')
+        self.num_forms = data.get('num_forms')
 #        self.trace_bound = data.get('trace_bound')
-#        self.has_trace_form = (data.get('traces') is not None)
+        self.has_trace_form = (data.get('traces') is not None)
 #        self.char_conrey = self.conrey_indexes[0]
 #        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.smf_newforms.search({'space_label':self.label}, projection=2))
@@ -317,19 +307,19 @@ class WebNewformSpace():
             ('Level', prop_int_pretty(self.level)),
             ('Family', self.family_str),
             ('Weight', self.weight_str),
-#            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
+            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
 #            ('Rep. character', '$%s$' % self.char_conrey_str),
-#            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension', prop_int_pretty(self.cusp_dim)),
         ]
-#        if self.num_forms is not None:
-#            self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))
+        if self.num_forms is not None:
+            self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))
 #        self.properties.append(('Sturm bound', prop_int_pretty(self.sturm_bound)))
 #        if data.get('trace_bound') is not None:
 #            self.properties.append(('Trace bound', prop_int_pretty(self.trace_bound)))
         # Work around search results not including None
-#        if data.get('num_forms') is None:
-#            self.num_forms = None
+        if data.get('num_forms') is None:
+            self.num_forms = None
 
         # Breadcrumbs
 #        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
@@ -342,6 +332,7 @@ class WebNewformSpace():
             ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
 
+        self.trivial_character = True
 #        if self.conrey_indexes[0] == 1:
 #            self.trivial_character = True
 #            character_str = "trivial character"
@@ -440,7 +431,7 @@ class WebNewformSpace():
                                   for N, i, conrey, mult in self.oldspaces)
 
     def ALdim_table(self):
-        return ALdim_table(self.AL_dims, self.level, self.weight)
+        return ALdim_table(self.ALdims, self.level, self.weight)
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)

@@ -281,4 +281,24 @@ function show_qexp(qstyle) {
 </div>
 {% endif %}
 
+{% if newform.char_orbit_index == 1 and newform.level != 1 %}
+<h2>{{KNOWL('mf.siegel.atkin-lehner', title='Atkin-Lehner signs')}}</h2>
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th class="center"> \( p \) </th>
+      <th class="center">Sign
+    </tr>
+  </thead>
+  <tbody>
+    {% for p, ev in newform.atkin_lehner_eigenvals %}
+    <tr>
+      <td class="center"> \({{ p }}\) </td>
+      <td class="center"> \({{ ev }}\)</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
 {% endblock %}

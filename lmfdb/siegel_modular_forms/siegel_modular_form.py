@@ -1370,16 +1370,15 @@ def dimension_space_search(info, query):
     query['__sort__'] = []
 
 space_columns = SearchColumns([
-    LinkCol("label", "smf.label", "Label", url_for_label, default=True),
+    LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
     MultiProcessedCol("character", "mf.siegel.character", r"$\chi$", ["level", "conrey_indexes"],
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True)
-    #    MultiProcessedCol("decomp", "smf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-#    MultiProcessedCol("al_dims", "smf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "AL_dims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
-    ])
+    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True),
+    MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.smf_newspaces,
              title='Newspace search results',
