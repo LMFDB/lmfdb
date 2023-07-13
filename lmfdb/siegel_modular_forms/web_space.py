@@ -116,7 +116,7 @@ def cyc_display(m, d, real_sub):
     else:
         return name
 
-def ALdim_table(al_dims, level, weight):
+def ALdim_table(al_dims, al_dims_G, level, weight):
     def sign_char(x): return "-" if x else "+"
     def url_sign_char(x): return "-" if x else "%2B"
     primes = ZZ(level).prime_divisors()
@@ -125,8 +125,10 @@ def ALdim_table(al_dims, level, weight):
     if num_primes > 1:
         header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.siegel.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim</th>')
+    header.append('<th>' + r"$\mathbf{(G)}$" + '</th>')
     rows = []
     fricke = [0,0]
+    fricke_G = [0,0]
     for i, dim in enumerate(al_dims):
         if dim == 0:
             continue
@@ -139,19 +141,25 @@ def ALdim_table(al_dims, level, weight):
         query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
         link = newform_search_link(r'\(%s\)'%dim, **query)
         row.append(r'<td>%s</td>'%(link))
+        query_G = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b)), 'aut_rep_type' : 'G'}
+        link_G = newform_search_link(r'\(%s\)'%al_dims_G[i], **query_G)
+        row.append(r'<td>%s</td>'%(link_G))
         fricke[sign] += dim
+        fricke_G[sign] += al_dims_G[i]
         if i == len(al_dims) - 1 and num_primes > 1:
             tr = "<tr class='endsection'>"
         else:
             tr = "<tr>"
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
-        plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
+        plus_knowl = display_knowl('mf.siegel.plus_space',title='Plus space').replace('"',"'")
         plus_link = newform_search_link(r'\(%s\)'%fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
-        minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
+        plus_link_G = newform_search_link(r'\(%s\)'%fricke_G[0], level=level, weight=weight, char_order=1, fricke_eigenval=1, aut_rep_type='G')
+        minus_knowl = display_knowl('mf.siegel.minus_space',title='Minus space').replace('"',"'")
         minus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
-        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
-        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
+        minus_link_G = newform_search_link(r'\(%s\)'%fricke_G[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1, aut_rep_type='G')
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link, plus_link_G))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link, minus_link_G))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 
@@ -431,7 +439,7 @@ class WebNewformSpace():
                                   for N, i, conrey, mult in self.oldspaces)
 
     def ALdim_table(self):
-        return ALdim_table(self.ALdims, self.level, self.weight)
+        return ALdim_table(self.ALdims, self.ALdims_G, self.level, self.weight)
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)
