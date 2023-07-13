@@ -113,7 +113,7 @@ def display_AL(info):
     return all(mf['char_order'] == 1 for mf in results)
 
 def display_Fricke(info):
-    return any(char_order(mf) == 1 for mf in info["results"])
+    return any(mf['char_order'] == 1 for mf in info["results"])
 
 # For spaces
 def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
@@ -968,24 +968,24 @@ newform_columns = SearchColumns([
     ColGroup("traces", "mf.siegel.trace_form", "Traces",
              [_trace_col(i) for i in range(6)],
              default=True),
-#    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
-#    ColGroup("atkin_lehner", "smf.atkin-lehner", "A-L signs",
-#             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
-#             contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
-#    ProcessedCol("fricke_eigenval", "smf.fricke", "Fricke sign",
-#                 lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
-#                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
-    ProcessedCol("hecke_ring_index_factorization", "smf.coefficient_ring", "Coefficient ring index",
+    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
+    ColGroup("atkin_lehner", "mf.siegel.atkin-lehner", "A-L signs",
+             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
+             contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
+    ProcessedCol("fricke_eigenval", "mf.siegel.fricke", "Fricke sign",
+                 lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
+                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
+    ProcessedCol("hecke_ring_index_factorization", "mf.siegel.coefficient_ring", "Coefficient ring index",
                  lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
 #    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
       ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Aut. Type", lambda x : r'\(\mathbf{(' + x + r')}\)' , align="center", default=True),
     ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Cusp", lambda x : "&#x2713;" if (x not in ['F', 'K']) else "", align="center", default=True),
-    MultiProcessedCol("qexp", "smf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
+    MultiProcessedCol("qexp", "mf.siegel.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)
 ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization', 'aut_rep_type'],
+    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization', 'aut_rep_type', 'atkin_lehner_eigenvals', 'fricke_eigenval'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,

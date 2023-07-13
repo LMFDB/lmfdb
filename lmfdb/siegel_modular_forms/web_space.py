@@ -125,7 +125,7 @@ def ALdim_table(al_dims, level, weight):
     for p, ev in first_row:
         header.append(r'<th>\(%s\)</th>'%p)
     if len(first_row) > 1:
-        header.append(r"<th class='right'>%s</th>"%(display_knowl('smf.fricke', title='Fricke').replace('"',"'")))
+        header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.siegel.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}
