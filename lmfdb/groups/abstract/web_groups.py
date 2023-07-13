@@ -1010,13 +1010,15 @@ class WebAbstractGroup(WebObj):
                     sep = ", &nbsp;&nbsp;"
                 if label is None:
                     tup[0] = f"{order}.?"
-                # TODO: In the normal case, should we display the quotient somehow?
                 # TODO: Deal with the orders where all we know is a count from normal_counts
                 if len(tup) > 3:
                     if tup[5] is None:
                         ord_str = "unidentified group of order " + str(tup[6])
                     else:
-                        ord_str = rf'${tup[5]}$'
+                        if tup[3] and '?' in tup[5]:
+                            ord_str = tup[3]
+                        else:
+                            ord_str = rf'${tup[5]}$'
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
                     + ("" if len(tup) == 3 else " (%s)" % (ord_str))
@@ -1736,6 +1738,12 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
+    def show_subgroup_flag(self):
+        if self.representations.get("Lie"):
+            if self.representations["Lie"][0]["family"][0] == "P": 	# Issue with projective Lie groups
+                return False
+        return True
+
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
@@ -1894,6 +1902,14 @@ class WebAbstractGroup(WebObj):
     # TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
+
+    def aut_gens_flag(self): #issue with Lie type when family is projective
+        if self.aut_gens is None:
+            return False
+        elif self.element_repr_type == "Lie":
+            if self.representations["Lie"][0]["family"][0] == "P":
+                return False
+        return True
 
     # outer automorphism group
     def show_outer_group(self):

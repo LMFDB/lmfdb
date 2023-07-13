@@ -905,7 +905,7 @@ def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
 class Group_download(Downloader):
-    table = db.gps_groups
+    table = db.gps_groups_test
     title = "Abstract groups"
     columns = "label"
     column_wrappers = { "label" : lambda x : [int(a) for a in x.split(".")] }
@@ -2259,9 +2259,13 @@ def cc_data(gp, label, typ="complex"):
         if label == '1A':
             ans += "<br>Representative: id"
         else:
-            gp_value = WebAbstractGroup(gp)   #db.gps_groups_test.lucky({'label':gp})
-            repn = gp_value.decode(wacc.representative, as_str=True)
-            ans += "<br>Representative: {}".format("$" + repn + "$")
+            gp_value = WebAbstractGroup(gp)
+            if gp_value.representations.get("Lie"):
+                if gp_value.representations["Lie"][0]["family"][0] == "P":  #Problem with projective lie groups
+                    pass
+                else:
+                    repn = gp_value.decode(wacc.representative, as_str=True)
+                    ans += "<br>Representative: {}".format("$" + repn + "$")
     return Markup(ans)
 
 
@@ -2443,18 +2447,25 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
 
     if gp and not gp.live():
         if ambient is None:
-            ans += "It has {} subgroups".format(gp.number_subgroups)
-            if gp.number_normal_subgroups < gp.number_subgroups:
-                ans += " in {} conjugacy classes, {} normal, ".format(
-                    gp.number_subgroup_classes, gp.number_normal_subgroups
-                )
-            else:
-                ans += ", all normal, "
-            if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
-                ans += str(gp.number_characteristic_subgroups)
-            else:
-                ans += "all"
-            ans += " characteristic.<br />"
+            if gp.number_subgroups is not None:
+                ans += "It has {} subgroups".format(gp.number_subgroups)
+                if gp.number_normal_subgroups is not None:
+                    if gp.number_normal_subgroups < gp.number_subgroups:
+                        ans += " in {} conjugacy classes, {} normal, ".format(
+                            gp.number_subgroup_classes, gp.number_normal_subgroups
+                        )
+                    else:
+                        ans += ", all normal, "
+                    if gp.number_characteristic_subgroups is not None:
+                        if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
+                            ans += str(gp.number_characteristic_subgroups)
+                        else:
+                            ans += "all"
+                        ans += " characteristic.<br />"
+                    else:
+                        ans = ans[:-2] + ".<br />"
+                else:
+                    ans += ".<br />"
         else:
             ambient = WebAbstractGroup(ambient)
 

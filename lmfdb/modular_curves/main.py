@@ -331,7 +331,7 @@ modcurve_columns = SearchColumns(
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "Points"),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
     db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
@@ -656,11 +656,11 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
-    if not info.get("points_quantifier"): # default, which is non-cuspidal
+    if not info.get("points_type"): # default, which is non-cuspidal
         parse_ints(info, query, "points", qfield="num_known_degree1_noncusp_points")
-    elif info["points_quantifier"] == "noncm":
+    elif info["points_type"] == "noncm":
         parse_ints(info, query, "points", qfield="num_known_degree1_noncm_points")
-    elif info["points_quantifier"] == "all":
+    elif info["points_type"] == "all":
         parse_ints(info, query, "points", qfield="num_known_degree1_points")
     parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
@@ -848,19 +848,19 @@ class ModCurveSearchArray(SearchArray):
             example_col=True,
             example_span="",
         )
-        points_quantifier = SelectBox(
+        points_type = SelectBox(
             name="points_type",
             options=[('', 'non-cusp'),
-                     ('noncm', 'non-CM'),
+                     ('noncm', 'non-CM, non-cusp'),
                      ('all', 'all'),
                      ],
             min_width=105)
         points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="Points",
+            label="$j$-points",
             example="0, 3-5",
-            select_box=points_quantifier,
+            select_box=points_type,
         )
         obstructions = SelectBox(
             name="has_obstruction",
