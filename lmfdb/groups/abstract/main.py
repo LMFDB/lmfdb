@@ -2259,9 +2259,13 @@ def cc_data(gp, label, typ="complex"):
         if label == '1A':
             ans += "<br>Representative: id"
         else:
-            gp_value = WebAbstractGroup(gp)   #db.gps_groups_test.lucky({'label':gp})
-            repn = gp_value.decode(wacc.representative, as_str=True)
-            ans += "<br>Representative: {}".format("$" + repn + "$")
+            gp_value = WebAbstractGroup(gp)
+            if gp_value.representations.get("Lie"):
+                if gp_value.representations["Lie"][0]["family"][0] == "P":  #Problem with projective lie groups
+                    pass
+                else:    
+                    repn = gp_value.decode(wacc.representative, as_str=True)
+                    ans += "<br>Representative: {}".format("$" + repn + "$")
     return Markup(ans)
 
 
