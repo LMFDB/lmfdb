@@ -232,7 +232,7 @@ def random_space():
 def interesting_newforms():
     # print("routed to interesting_newforms")
     return interesting_knowls(
-        "smf",
+        "mf.siegel",
         db.smf_newforms,
         url_for_label,
         regex=LABEL_RE,
