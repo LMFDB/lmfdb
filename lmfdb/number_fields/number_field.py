@@ -21,7 +21,7 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
-    raw_typeset_int, compress_poly_Q)
+    raw_typeset_int, compress_poly_Q, compress_polynomial)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol
@@ -894,7 +894,7 @@ def nf_postprocess(res, info, query):
     cache = knowl_cache(list(set(galois_labels)))
     for rec in res:
         wnf = WebNumberField.from_data(rec)
-        rec["poly"] = wnf.web_poly()
+        rec["poly"] = '$'+compress_polynomial(wnf.poly(),30)+'$'
         rec["disc"] = wnf.disc_factored_latex()
         rec["galois"] = wnf.galois_string(cache=cache)
         rec["class_group_desc"] = wnf.class_group_invariants()
