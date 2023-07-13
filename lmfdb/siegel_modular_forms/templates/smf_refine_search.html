@@ -1,0 +1,14 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% if info.search_type == 'DynStats' %}
+<p>See the {{ KNOWL('rcs.cande.smf', title='completeness knowl') }} for a description of the set of newforms that are included in these statistics.</p>
+{% endif %}
+
+{% block show_results %}{% endblock %}
+{% include 'debug_info.html' %}
+
+{% endblock %}
