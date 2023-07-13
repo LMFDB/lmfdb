@@ -114,6 +114,16 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
   return [renderer,glist];
 }
 
+function mytogglevert(use_big_on_top) {
+  var miny = glist[whoisshowing].layoutMinY;
+  var maxy = glist[whoisshowing].layoutMaxY;
+  for(var i=0; i< sdiagram.graph.nodes.length; i++) {
+    glist[whoisshowing].nodes[i].layoutPosY = maxy + miny - glist[whoisshowing].nodes[i].layoutPosY;
+  }
+  sdiagram.setSize();
+  sdiagram.draw();
+}
+
 function mytoggleheights(use_order_for_height) {
   var who_old = whoisshowing;
   if (use_order_for_height && (whoisshowing < 4)) {
@@ -132,7 +142,6 @@ function mytoggleheights(use_order_for_height) {
   sdiagram.setSize();
   sdiagram.draw();
 }
-
 function getpositions() {
   var mylist="[\""+ambientlabel+"\",[";
   for (var i = 0; i < ourg.nodes.length; i++) {
