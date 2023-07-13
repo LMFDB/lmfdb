@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-from collections import defaultdict
-import re
-import os
-import yaml
+#
+# Author: Nils Skoruppa <nils.skoruppa@gmail.com>
+from io import BytesIO
 
-from flask import render_template, url_for, redirect, abort, request
-from sage.all import (
-    ZZ, next_prime, cartesian_product_iterator,
-    cached_function, prime_range, prod, gcd, nth_prime)
-from sage.databases.cremona import class_to_int, cremona_letter_code
+from flask import render_template, url_for, request, send_file, redirect
+from sage.all import latex, Set
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -181,24 +177,8 @@ def index():
     # print("routed to index")
     info = to_dict(request.args, search_array=SMFSearchArray())
     if len(request.args) > 0:
-        # hidden_search_type for prev/next buttons
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
-
-        if search_type in ['List', 'Random']:
-            return newform_search(info)
-        elif search_type in ['Spaces', 'RandomSpace']:
-            return space_search(info)
-        elif search_type == 'Dimensions':
-            return dimension_form_search(info)
-        elif search_type == 'SpaceDimensions':
-            bad_keys = [key for key in newform_only_fields if key in info]
-            if bad_keys:
-                flash_error("%s invalid for searching spaces", ", ".join(bad_keys))
-            return dimension_space_search(info)
-        elif search_type == 'Traces':
-            return trace_search(info)
-        elif search_type == 'SpaceTraces':
-            return space_trace_search(info)
+        if 'download' in request.args:
+            return download_sample(request.args.get('download'))
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = SMF_stats()
@@ -221,7 +201,7 @@ def random_form():
     label = db.smf_newforms.random()
     return url_for_label(label)
 
-@smf.route("/random_space/")
+@smf_page.route("/random")
 @redirect_no_cache
 def random_space():
     # print("routed to random_space")
@@ -291,36 +271,58 @@ def parse_n(info, newform, primes_only):
         info['CC_n'] = list(range(2, maxp + 1))
     return errs
 
-def parse_m(info, newform):
-    errs = []
-    maxm = min(newform.dim, 20)
-    info['default_mrange'] = '1-%s'%maxm
-    mrange = info.get('m', '1-%s'%maxm)
-    if '.' in mrange:
-        # replace embedding codes with the corresponding integers
-        # If error, need to replace 'm' by default
-        try:
-            mrange = re.sub(r'\d+\.\d+', newform.embedding_from_embedding_label, mrange)
-        except ValueError:
-            errs.append("Invalid embedding label")
-            mrange = info['m'] = '1-%s'%maxm
+@smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
+@smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
+def Sp4Z_j_space(k,j):
+    bread = [("Modular forms", url_for('modular_forms')),
+             ('Siegel', url_for('.index')),
+             (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
+             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
+    if j%2:
+        # redirect to general page for Sp4Z_j which will display an error message
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
+    info = { 'args':{'k':str(k),'j':str(j)} }
     try:
-        info['CC_m'] = integer_options(mrange, 1000)
-    except (ValueError, TypeError) as err:
-        info['CC_m'] = list(range(1, maxm + 1))
-        if err.args and err.args[0] == 'Too many options':
-            errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
+        if j in [0,2]:
+            headers, table = dimensions._dimension_Sp4Z([k])
+            info['samples'] = find_samples('Sp4Z' if j==0 else 'Sp4Z_2', k)
         else:
-            errs.append("<span style='color:black'>Embeddings</span> must consist of integers or embedding codes")
-    if max(info['CC_m']) > newform.dim:
-        errs.append("Only %s embeddings exist" % newform.dim)
-        info['CC_m'] = [m for m in info['CC_m'] if m <= newform.dim]
-    elif min(info['CC_m']) < 1:
-        errs.append("Embeddings are labeled by positive integers")
-        info['CC_m'] = [m for m in info['CC_m'] if m >= 1]
-    return errs
+            headers, table = dimensions._dimension_Gamma_2([k], j, group='Sp4(Z)')
+        info['headers'] = headers
+        info['subspace'] = table[k]
+    except NotImplementedError:
+        # redirect to general page for Sp4Z_j which will display an error message
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
+    return render_template('ModularForm_GSp4_Q_full_level_space.html',
+                           title = r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           bread=bread,
+                           info=info)
 
-def parse_prec(info):
+
+@smf_page.route('/Sp4Z/<int:k>')
+@smf_page.route('/Sp4Z/<int:k>/')
+def Sp4Z_space(k):
+    return redirect(url_for(".Sp4Z_j_space", k=k, j=0), 301)
+
+# handle URLs in scalar valued SMF L-function format
+@smf_page.route('/Sp4Z/<int:k>/<orbit>')
+def Sp4Z_form(k,orbit):
+    label = 'Sp4Z.%d_%s' % (k,orbit)
+    return redirect(url_for('.by_label',label=label))
+
+@smf_page.route('/Sp4Z_2/<int:k>')
+@smf_page.route('/Sp4Z_2/<int:k>/')
+def Sp4Z_2_space(k):
+    return redirect(url_for(".Sp4Z_j_space", k=k, j=2), 301)
+
+
+@smf_page.route('/Sp4Z_j')
+@smf_page.route('/Sp4Z_j/')
+def Sp4Z_j():
+    bread = [("Modular forms", url_for('modular_forms')),
+             ('Siegel', url_for('.index')),
+             (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
+    info={'args': request.args}
     try:
         info['emb_prec'] = int(info.get('prec',6))
         if info['emb_prec'] < 1 or info['emb_prec'] > 15:
@@ -526,7 +528,6 @@ def by_url_level(degree, family, level):
     if ('degree' in info) or ('family' in info) or ('level' in info):
         return redirect(url_for('.index', **request.args), code=307)
     else:
-        info['degree'] = degree
         info['family'] = family
         info['level'] = level
     return newform_search(info)
@@ -1878,11 +1879,4 @@ class SMFSearchArray(SearchArray):
                 knowl="mf.siegel.include_all_spaces")
             return [search_again] + [(v, d) for v, d in spaces if v != st]
 
-    def html(self, info=None):
-        # We need to override html to add the trace inputs
-        layout = [self.hidden_inputs(info), self.main_table(info), self.buttons(info)]
-        st = self._st(info)
-        if st in ["Traces", "SpaceTraces"]:
-            trace_table = self._print_table(self.traces_array, info, layout_type="box")
-            layout.append(trace_table)
-        return "\n".join(layout)
+    return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties=properties, info=info)
