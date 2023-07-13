@@ -2263,7 +2263,7 @@ def cc_data(gp, label, typ="complex"):
             if gp_value.representations.get("Lie"):
                 if gp_value.representations["Lie"][0]["family"][0] == "P":  #Problem with projective lie groups
                     pass
-                else:    
+                else:
                     repn = gp_value.decode(wacc.representative, as_str=True)
                     ans += "<br>Representative: {}".format("$" + repn + "$")
     return Markup(ans)
