@@ -970,7 +970,11 @@ class WebNumberField:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         for lang in self.code['field']:
-            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+            f = self.poly()
+            if lang == "pari":
+                # In pari, x is the highest priority variable, so it's impossible to create an extension on top of this field if we use x.
+                f = f.change_variable_name("y")
+            self.code['field'][lang] = self.code['field'][lang] % f
         for lang in self.code['class_number_formula']:
             self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
         self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
