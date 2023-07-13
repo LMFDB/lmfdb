@@ -5,7 +5,7 @@ import yaml
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
+    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt, prod,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -13,6 +13,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
+from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
@@ -257,7 +258,7 @@ def fake_label(label, coef):
     poly = coeff_to_poly(coef)
     return [poly.degree(), poly.degree()+1, poly.discriminant(), 0]
 
-def formatfield(coef, show_poly=False, missing_text=None, data=None):
+def formatfield(coef, show_poly=False, missing_text=None, data=None, link=False):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -289,7 +290,11 @@ def formatfield(coef, show_poly=False, missing_text=None, data=None):
         if missing_text is None:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
+            if link:
+                jump_link = str(url_for("number_fields.number_field_render_webpage")+'?jump=%s' % mypol)
+                mypol = '<a title = "Field with link to db" knowl="nf.field.link" kwargs="poly=%s&link=%s">%s</a>' % (mypol,jump_link,missing_text)
+            else:
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
     if data is None:
         label = thefield.get_label()
@@ -517,6 +522,23 @@ class WebNumberField:
 
     def haskey(self, key):
         return self._data and self._data.get(key) is not None
+
+    def discrootfieldcoeffs(self):
+        factored= factor_base_factor(self.disc(),self.ramified_primes())
+        if self.disc() < 0:
+            factored += [[-1,1]]
+        factored=[[z[0], z[1] % 2] for z in factored]
+        newd = prod([z[0]**z[1] for z in factored])
+        if newd == 1:
+            return ([0,1], 1)
+        if (newd % 4) == 1:
+            return ([(1-newd)//4, -1, 1], newd)
+        else:
+            return ([-newd, 0, 1], newd)
+
+    def discrootfield(self):
+        (rfcoeffs, newd) = self.discrootfieldcoeffs()
+        return formatfield(rfcoeffs, missing_text=r'$\Q(\sqrt{%s}$)'% compress_int(newd, sides=5)[0])
 
     # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,

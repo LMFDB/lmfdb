@@ -27,7 +27,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of', 'parse_not_element_of',
            'parse_subset', 'parse_submultiset', 'parse_list',
            'parse_list_start', 'parse_string_start', 'parse_restricted', 'parse_regex_restricted',
-           'parse_noop', 'parse_equality_constraints', 'parse_gap_id',
+           'parse_noop', 'parse_equality_constraints', 'parse_gap_id', 'parse_interval',
            'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt', 'parse_nf_jinv',
            'parse_container', 'parse_hmf_weight', 'parse_count', 'parse_newton_polygon',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
@@ -38,7 +38,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SearchButton', 'SearchButtonWithSelect', 'RowSpacer',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
-           'SneakyTextBox',
+           'SneakyTextBox', 'SneakySelectBox',
            'Downloader', 'WebObj',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
            'Configuration', 'plural_form', 'pluralize',
@@ -48,7 +48,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'redirect_no_cache', 'letters2num', 'num2letters',
            'raw_typeset', 'raw_typeset_poly', 'raw_typeset_poly_factor',
            'raw_typeset_qexp', 'raw_typeset_int', 'compress_poly_Q',
-           'input_string_to_poly', 'dispZmat', 'dispcyclomat']
+           'input_string_to_poly', 'dispZmat', 'dispcyclomat',
+           'pos_int_and_factor', 'compress_polynomial']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -113,6 +114,8 @@ from .web_display import (
     raw_typeset,
     raw_typeset_poly,
     compress_poly_Q,
+    compress_polynomial,
+    pos_int_and_factor,
     raw_typeset_poly_factor,
     raw_typeset_qexp,
     raw_typeset_int,
@@ -138,7 +141,7 @@ from .search_parsing import (
     parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string, parse_newton_polygon,
     parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
-    parse_subfield,
+    parse_subfield, parse_interval,
     clean_input, prep_ranges, input_string_to_poly)
 
 from .search_wrapper import search_wrap, count_wrap
@@ -147,7 +150,7 @@ from .search_boxes import (
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
     SelectBox, YesNoBox, YesNoMaybeBox, ExcludeOnlyBox,
     ParityBox, ParityMod, SubsetBox, SubsetNoExcludeBox, SelectBoxNoEg, CountBox,
-    SneakyTextBox,
+    SneakyTextBox, SneakySelectBox,
     SearchButton, SearchButtonWithSelect, RowSpacer)
 from .downloader import Downloader
 from .display_stats import formatters, proportioners, totaler, StatsDisplay

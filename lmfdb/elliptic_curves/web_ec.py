@@ -28,6 +28,7 @@ lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
+modm_not_computed_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\?)')
 
 
 def match_coeff_vec(lab):
@@ -230,6 +231,32 @@ def short_latex_equation(ainvs):
 def latex_equations(ainvs):
     return [latex_equation(ainvs),homogeneous_latex_equation(ainvs),short_latex_equation(ainvs)]
 
+def sextic_twist_discriminant(ainvs):
+    r"""
+    Return D such that this is the sextic twist by D of 27.a4 (whose c6=-216) -- only for j=0
+    """
+    a1,a2,a3,a4,a6 = ainvs
+    D = -108 * (a1**6 + 12*a1**4*a2 + 48*a1**2*a2**2 + 64*a2**3 - 432*a3**2 - 1728*a6) # = -216*c6
+
+    # Remove 6th powers and invert: the minus sign in the exponent is
+    # because the text says that 27.a4 is this curve's sextic twist by
+    # D, not the other way round.
+
+    return D.sign() * prod(p ** ((-e)%6) for p,e in D.factor())
+
+def quartic_twist_discriminant(ainvs):
+    r"""
+    Return D such that this is the quartic twist by D of 32.a3 (whose c4=48) -- only for j=1728
+    """
+    a1,a2,a3,a4,a6 = ainvs
+    D = 27 * (a1**4 + 8*a1**2*a2 + 16*a2**2 - 24*a1*a3 - 48*a4)
+
+    # Remove 4th powers and invert: the minus sign in the exponent is
+    # because the text says that 32.a3 is this curve's quartic twist
+    # by D, not the other way round.
+
+    return D.sign() * prod(p ** ((-e)%4) for p,e in D.factor())
+
 class WebEC():
     """
     Class for an elliptic curve over Q
@@ -322,6 +349,17 @@ class WebEC():
         data['minq_label'] = db.ec_curvedata.lucky({'ainvs': self.min_quad_twist_ainvs},
                                                    projection='lmfdb_label' if self.label_type == 'LMFDB' else 'Clabel')
         data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
+        data['minq_url'] = url_for(".by_ec_label", label=data["minq_label"])
+
+        # higher minimal twists:
+        if self.cm == -3:
+            data['min_sextic_twist_disc'] = sextic_twist_discriminant(self.ainvs)
+            data['min_sextic_twist_label'] = '27.a4'
+            data['min_sextic_twist_url'] = url_for(".by_ec_label", label='27.a4')
+        if self.cm == -4:
+            data['min_quartic_twist_disc'] = quartic_twist_discriminant(self.ainvs)
+            data['min_quartic_twist_label'] = '32.a3'
+            data['min_quartic_twist_url'] = url_for(".by_ec_label", label='32.a3')
 
         # modular degree:
 
@@ -350,9 +388,15 @@ class WebEC():
             M = ZZ(self.adelic_level)
             data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
             P = M.prime_divisors()
-            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))^2*prod([p^2-1 for p in P]) // self.adelic_index
+            data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))**2*prod([p**2-1 for p in P]) // self.adelic_index
+            print(data['adelic_image_size'])
         else:
             data['adelic_data'] = {}
+
+        if hasattr(self, "modm_images") and self.modm_images and not modm_not_computed_regex.fullmatch(self.modm_images[-1]):
+            self.modcurve_url = url_for("modcurve.by_label", label=self.modm_images[-1])
+        else:
+            self.modcurve_url = None
 
         # CM and Endo ring:
 
@@ -488,8 +532,12 @@ class WebEC():
 
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
-            ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
-            ('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant']))]
+            (f'Minimal quadratic twist {data["minq_label"]}', data['minq_url'])]
+        if self.cm == -3:
+            self.friends.append((f'Minimal sextic twist {data["min_sextic_twist_label"]}', data['min_sextic_twist_url']))
+        if self.cm == -4:
+            self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
+        self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')

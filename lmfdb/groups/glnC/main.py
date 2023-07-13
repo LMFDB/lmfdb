@@ -122,7 +122,7 @@ glnC_columns.dummy_download=True
 
 
 def glnC_postprocess(res, info, query):
-    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
+    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups_test.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
     for gp in res:
         gp["tex_name"] = tex_names[gp["group"]]
     return res
@@ -222,7 +222,6 @@ def how_computed_page():
 
 class GLnCSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
 

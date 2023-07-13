@@ -698,7 +698,6 @@ def labels_page():
 
 class BMFSearchArray(SearchArray):
     noun = "form"
-    plural_noun = "forms"
     sorts = [("", "level norm", ['level_norm', 'label']),
              ("field", "field", ['field_deg', ('field_disc', -1), 'level_norm', 'label'])]
     jump_example = "2.0.4.1-65.2-a"

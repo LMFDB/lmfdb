@@ -1156,6 +1156,7 @@ class PostgresTable(PostgresBase):
                         if not self._table_exists(table + "_tmp"):
                             self._clone(table, table + "_tmp")
                 self.stats.refresh_stats(suffix=suffix)
+                self.stats.refresh_null_counts(suffix=suffix)
             if not inplace:
                 swapped_tables = (
                     [self.search_table]
@@ -2551,3 +2552,8 @@ class PostgresTable(PostgresBase):
         """
         updater = SQL("UPDATE meta_tables SET important = %s WHERE name = %s")
         self._execute(updater, [importance, self.search_table])
+
+    def sum_column(self, col):
+        summer = SQL("SELECT SUM({0}) FROM {1}")
+        summer = summer.format(Identifier(col), Identifier(self.search_table))
+        return self._execute(summer).fetchone()[0]
