@@ -115,10 +115,13 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
 }
 
 function mytogglevert(use_big_on_top) {
-  var miny = glist[whoisshowing].layoutMinY;
-  var maxy = glist[whoisshowing].layoutMaxY;
-  for(var i=0; i< sdiagram.graph.nodes.length; i++) {
-    glist[whoisshowing].nodes[i].layoutPosY = maxy + miny - glist[whoisshowing].nodes[i].layoutPosY;
+  for(var g=0; g < glist.length; g++) {
+    if (!glist[g] || glist[g].layoutMinY == undefined) continue;
+    var miny = glist[g].layoutMinY;
+    var maxy = glist[g].layoutMaxY;
+    for(var i=0; i< sdiagram.graph.nodes.length; i++) {
+      glist[g].nodes[i].layoutPosY = maxy + miny - glist[g].nodes[i].layoutPosY;
+    }
   }
   sdiagram.setSize();
   sdiagram.draw();
