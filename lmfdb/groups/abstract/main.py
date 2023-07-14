@@ -1506,7 +1506,7 @@ def gp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Abstract group data - {label}"
-    return datapage(label, ["gps_groups", "gps_groups_cc", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", "group", "group", "group", "ambient"])
+    return datapage(label, ["gps_groups_test", "gps_groups_cc_test", "gps_qchar_test", "gps_char_test", "gps_subgroups_test"], bread=bread, title=title, label_cols=["label", "group", "group", "group", "ambient"])
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
