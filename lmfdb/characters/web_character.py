@@ -677,7 +677,7 @@ class WebDBDirichlet(WebDirichlet):
         if self.modulus == 1:
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
-        upper_limit = min(200, self.order + 1)
+        upper_limit = min(31, self.order + 1)
         gal_orbit = gal_orbit[:upper_limit]
         self.galoisorbit = list(
             self._char_desc(num, prim=self.isprimitive) for num in gal_orbit

@@ -194,21 +194,21 @@ class ConreyCharacter():
         return DirichletCharacter(H,M(order_corrected_genvalues))
 
     @cached_method
-    def galois_orbit(self, limit=200):
+    def galois_orbit(self, limit=31):
         order = self.order
         if order == 1:
             return [1]
         elif order < limit or order * order < limit * self.modulus:
             logger.debug(f"compute all conjugate characters and return first {limit}")
             return self.galois_orbit_all(limit)
-        elif self.modulus < 30 * order:
+        elif limit == 1 or self.modulus < 30 * order:
             logger.debug(f"compute {limit} first conjugate characters")
             return self.galois_orbit_search(limit)
         else:
             logger.debug(f"galois orbit of size {order} too expansive, give up")
             return []
 
-    def galois_orbit_all(self, limit=200):
+    def galois_orbit_all(self, limit=31):
         # construct all Galois orbit, assume not too large
         order = self.order
         chi = chik = Mod(self.number, self.modulus)
@@ -218,9 +218,9 @@ class ConreyCharacter():
                 output.append(Integer(chik))
                 chik *= chi
         output.sort()
-        return output[:100]
+        return output[:limit]
 
-    def galois_orbit_search(self, limit=200):
+    def galois_orbit_search(self, limit=31):
         # fishing strategy, assume orbit relatively dense
         order = self.order
         num = self.number
