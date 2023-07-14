@@ -358,7 +358,7 @@ class WebAbstractGroup(WebObj):
     def transitive_degree(self):
         if isinstance(self.G, LiveAbelianGroup):
             return self.order
-        return "not computed"
+        return None # "not computed"
 
     @lazy_attribute
     def pgroup(self):
