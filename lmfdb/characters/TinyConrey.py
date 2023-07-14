@@ -213,7 +213,7 @@ class ConreyCharacter():
         order = self.order
         chi = chik = Mod(self.number, self.modulus)
         output = []
-        for k in range(2,order):
+        for k in range(1,order):
             if gcd(k,order) == 1:
                 output.append(Integer(chik))
                 chik *= chi
