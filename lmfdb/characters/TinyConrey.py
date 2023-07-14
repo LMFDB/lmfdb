@@ -2,6 +2,8 @@ from sage.all import (gcd, Mod, Integer, Integers, Rational, pari, Pari,
                       DirichletGroup, CyclotomicField, euler_phi, lcm)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
+from lmfdb.logger import make_logger
+logger = make_logger("TinyConrey")
 
 def symbol_numerator(cond, parity):
     # Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007).
@@ -191,20 +193,41 @@ class ConreyCharacter():
         order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
         return DirichletCharacter(H,M(order_corrected_genvalues))
 
-    @property
-    def galois_orbit(self):
+    @cached_method
+    def galois_orbit(self, limit=200):
         order = self.order
         if order == 1:
             return [1]
+        elif order < limit or order * order < limit * self.modulus:
+            logger.debug(f"compute all conjugate characters and return first {limit}")
+            return self.galois_orbit_all(limit)
+        elif self.modulus < 30 * order:
+            logger.debug(f"compute {limit} first conjugate characters")
+            return self.galois_orbit_search(limit)
+        else:
+            logger.debug(f"galois orbit of size {order} too expansive, give up")
+            return []
 
+    def galois_orbit_all(self, limit=200):
+        # construct all Galois orbit, assume not too large
+        order = self.order
+        chi = chik = Mod(self.number, self.modulus)
         output = []
-
-        for k in range(1,order):
+        for k in range(2,order):
             if gcd(k,order) == 1:
-                an_orbit = pari("znconreyexp(%s,charpow(%s,%s,%d))"%(self.G,self.G,self.chi_pari,k))
-                output.append(Integer(an_orbit))
+                output.append(Integer(chik))
+                chik *= chi
         output.sort()
-        return output
+        return output[:100]
+
+    def galois_orbit_search(self, limit=200):
+        # fishing strategy, assume orbit relatively dense
+        order = self.order
+        num = self.number
+        mod = self.modulus
+        kmax = limit * 50
+        cmd = f"a=Mod({num},{mod});my(valid(k)=my(l=znlog(k,a,{order}));l&&gcd(l,{order})==1);[ k | k <- [1..{kmax}], gcd(k,{mod})==1 && valid(k) ]"
+        return list(map(Integer,pari(cmd)[:limit]))
 
     @cached_method
     def kernel_field_poly(self):
@@ -216,4 +239,4 @@ class ConreyCharacter():
 
     @property
     def min_conrey_conj(self):
-        return self.galois_orbit[0]
+        return self.galois_orbit(1)[0]

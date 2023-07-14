@@ -576,7 +576,7 @@ class WebDBDirichlet(WebDirichlet):
 
     def _populate_from_db(self):
 
-        gal_orbit = self.chi.galois_orbit
+        gal_orbit = self.chi.galois_orbit()
         min_conrey_conj = gal_orbit[0]
 
         orbit_data = db.char_orbits.lucky(
@@ -884,13 +884,12 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         database.
         """
 
-        chi = ConreyCharacter(mod, num)
+        chi = self.chi
         is_prim = chi.is_primitive()
         order = chi.order
         valuepairs = compute_values(chi, self.groupelts)
 
-        gal_orbit = chi.galois_orbit
-        min_conrey_conj = gal_orbit[0]
+        min_conrey_conj = chi.min_conrey_conj
 
         # This next db lookup takes ages, I don't know how to speed it up
         orbit_label = db.char_orbits.lucky(
@@ -1152,7 +1151,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             upper_limit = min(self.maxrows + 1, self.degree + 1)
             if self.maxrows < self.degree + 1:
                 self.rowtruncate = True
-            self.galorbnums = self.first_chi.galois_orbit[:upper_limit]
+            self.galorbnums = self.first_chi.galois_orbit(upper_limit)
             self.galoisorbit = list(
                 self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
             )
