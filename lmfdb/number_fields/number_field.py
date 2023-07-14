@@ -509,7 +509,7 @@ def render_field_webpage(args):
     # Get rid of python L for big numbers
     #ram_primes = ram_primes.replace('L', '')
     if not ram_primes:
-        ram_primes = r'\(\textrm{None}\)'
+        ram_primes = r'None'
     if nf.is_cm_field():
         # Reflex fields table
         table = ""
