@@ -832,8 +832,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgp_paragraph(self):
-        charcolor = r'Characteristic subgroups are shown in <span class="chargp">this color</span>.'
-        normalcolor = r'Normal (but not characteristic) subgroups are shown in <span class="normgp">this color</span>.'
+        charcolor = display_knowl('group.characteristic_subgroup', "Characteristic") + r' subgroups are shown in <span class="chargp">this color</span>.'
+        normalcolor = display_knowl('group.subgroup.normal', "Normal") + r' (but not characteristic) subgroups are shown in <span class="normgp">this color</span>.'
         if self.number_subgroups is None:
             if self.number_normal_subgroups is None:
                 return " "
