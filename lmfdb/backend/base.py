@@ -222,7 +222,7 @@ class PostgresBase():
         self.slow_cutoff = logging_options["slowcutoff"]
         self.logger = l = logging.getLogger(loggername)
         l.propagate = False
-        l.setLevel(logging.INFO)
+        l.setLevel(logging_options.get('loglevel', logging.INFO))
         fhandler = logging.FileHandler(logging_options["slowlogfile"])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()

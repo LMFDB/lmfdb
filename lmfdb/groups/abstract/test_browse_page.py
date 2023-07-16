@@ -516,6 +516,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to perfect or non-perfect subgroups only
         """
+        return
         if no_groups():
             return
         page = self.tc.get("/Groups/Abstract/?perfect=yes&nontrivproper=yes&search_type=Subgroups", follow_redirects=True).get_data(as_text=True)

@@ -96,6 +96,8 @@ def group_pretty_image(label):
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
+    if name and '?' in name:
+        name = None
     if not name:
         if pretty:
             if label in cache and "tex_name" in cache[label]:
@@ -103,7 +105,10 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
             else:
                 name = db.gps_groups_test.lookup(label, "tex_name")
             if name is None:
-                name = f"Group {label}"
+                if label is None:
+                    name = '?'
+                else:
+                    name = f"Group {label}"
             else:
                 name = f"${name}$"
         else:
@@ -827,26 +832,28 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgp_paragraph(self):
+        charcolor = display_knowl('group.characteristic_subgroup', "Characteristic") + r' subgroups are shown in <span class="chargp">this color</span>.'
+        normalcolor = display_knowl('group.subgroup.normal', "Normal") + r' (but not characteristic) subgroups are shown in <span class="normgp">this color</span>.'
         if self.number_subgroups is None:
             if self.number_normal_subgroups is None:
                 return " "
             elif self.number_characteristic_subgroups is None:
-                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
+                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
             else:
                 ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
                 if self.number_characteristic_subgroups < self.number_normal_subgroups:
-                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>)."
+                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>).<p>"+charcolor+"  "+normalcolor
                 else:
-                    ret_str=ret_str+ " all characteristic. "
+                    ret_str=ret_str+ ", and all normal subgroups are characteristic.<p>"+charcolor
                 return ret_str
         elif self.number_normal_subgroups < self.number_subgroups:
             ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
         else:
             ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
-            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ "> """ + str(self.number_characteristic_subgroups) + """ characteristic</a>). """
+            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ ">""" + str(self.number_characteristic_subgroups) + """ characteristic</a>).<p>"""+charcolor+" "+normalcolor
         else:
-            ret_str = ret_str + ", all characteristic. "
+            ret_str = ret_str + ", and all normal subgroups are characteristic. <p>"+charcolor
         return ret_str
 
     @lazy_attribute
@@ -974,7 +981,7 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal:
-                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += s.conjugacy_class_count
+                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex,s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
@@ -988,7 +995,7 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal and s.aut_label not in seen:
-                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += 1
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex,s.quotient_order] += 1
                     seen.add(s.aut_label)
             return self._finalize_profile(by_order)
 
@@ -1003,11 +1010,18 @@ class WebAbstractGroup(WebObj):
                     sep = ", &nbsp;&nbsp;"
                 if label is None:
                     tup[0] = f"{order}.?"
-                # TODO: In the normal case, should we display the quotient somehow?
                 # TODO: Deal with the orders where all we know is a count from normal_counts
+                if len(tup) > 3:
+                    if tup[5] is None:
+                        ord_str = "unidentified group of order " + str(tup[6])
+                    else:
+                        if tup[3] and '?' in tup[5]:
+                            ord_str = tup[3]
+                        else:
+                            ord_str = rf'${tup[5]}$'
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
-                    + ("" if len(tup) == 3 else " ( $%s$ )" % (tup[5]))
+                    + ("" if len(tup) == 3 else " (%s)" % (ord_str))
                     + (" x " + str(cnt) if cnt > 1 else "")
                 )
             return sep.join(l)
@@ -1724,6 +1738,12 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
+    def show_subgroup_flag(self):
+        if self.representations.get("Lie"):
+            if self.representations["Lie"][0]["family"][0] == "P": 	# Issue with projective Lie groups
+                return False
+        return True
+
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
@@ -1883,6 +1903,14 @@ class WebAbstractGroup(WebObj):
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
 
+    def aut_gens_flag(self): #issue with Lie type when family is projective
+        if self.aut_gens is None:
+            return False
+        elif self.element_repr_type == "Lie":
+            if self.representations["Lie"][0]["family"][0] == "P":
+                return False
+        return True
+
     # outer automorphism group
     def show_outer_group(self):
         try:
@@ -1903,13 +1931,13 @@ class WebAbstractGroup(WebObj):
 
     def perm_degree(self):
         if self.permutation_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.permutation_degree
 
     def trans_degree(self):
         if self.transitive_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.transitive_degree
 
@@ -1974,7 +2002,7 @@ class WebAbstractGroup(WebObj):
     def cent_label(self):
         cent = self.cent()
         if cent:
-            return self.subgroups[self.cent()].subgroup_tex
+            return self.subgroups[self.cent()].knowl()
         return None
 
     def cent_order_factor(self):
@@ -1993,7 +2021,7 @@ class WebAbstractGroup(WebObj):
     def comm_label(self):
         comm = self.comm()
         if comm:
-            return self.subgroups[comm].subgroup_tex
+            return self.subgroups[comm].knowl()
         return nc
 
     def abelian_quot(self):
@@ -2018,7 +2046,7 @@ class WebAbstractGroup(WebObj):
     def fratt_label(self):
         fratt = self.fratt()
         if fratt:
-            return self.subgroups[fratt].subgroup_tex
+            return self.subgroups[fratt].knowl()
         return None
 
     def gen_noun(self):
@@ -2235,14 +2263,20 @@ class WebAbstractSubgroup(WebObj):
         s = self.subgroup_tex
         if s is None:
             self.subgroup_tex = "?"
-            self.subgroup_tex_parened = "(?)"
+            self.subgroup_tex_parened = "?"
         else:
             self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
         if self._data.get("quotient"):
             q = self.quotient_tex
             if q is None:
-                self.quotient_tex = "?"
-                self.quotient_tex_parened = "(?)"
+                tryhard = db.gps_groups_test.lookup(self.quotient)
+                if tryhard and tryhard.tex_name:
+                    q = tryhard.tex_name
+                    self.quotient_tex = q
+                    self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+                else:
+                    self.quotient_tex = "?"
+                    self.quotient_tex_parened = "(?)"
             else:
                 self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
 
@@ -2397,7 +2431,10 @@ class WebAbstractSubgroup(WebObj):
 
     def quotient_knowl(self, paren=False):
         # assumes there is a quotient group
-        knowlname = self.quotient_tex_parened if paren else self.quotient_tex
+        if '?' in self.quotient_tex:
+            knowlname = WebAbstractGroup(self.quotient).tex_name
+        else:
+            knowlname = self.quotient_tex_parened if paren else self.quotient_tex
         return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
 
     def display_quotient(self, subname=None, ab_invs=None):
