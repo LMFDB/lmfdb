@@ -261,6 +261,7 @@ def netloc_redirect():
     from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
+    app.logger.info(f"Requested url = {request.url}")
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
