@@ -249,6 +249,10 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
+@app.after_request
+def print_done(T):
+    app.logger.info(f"done with     = {request.url}")
+    return T
 
 @app.before_request
 def netloc_redirect():
@@ -261,6 +265,7 @@ def netloc_redirect():
     from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
+    app.logger.info(f"Requested url = {request.url}")
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
