@@ -249,6 +249,10 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
+@app.after_request
+def print_done(T):
+    app.logger.info(f"done with     = {request.url}")
+    return T
 
 @app.before_request
 def netloc_redirect():
