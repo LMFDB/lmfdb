@@ -677,7 +677,9 @@ class ECNF():
 
         # Plot
         if K.signature()[0]:
-            self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()), transparent=True)
+            self.plot = db.ec_nfportraits.lookup(self.label, "portrait")
+            if self.plot is None:
+                self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()), transparent=True)
             self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.properties += [(None, self.plot_link)]
         self.properties += [('Base field', self.field.field_pretty())]
