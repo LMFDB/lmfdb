@@ -119,8 +119,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
             this_poly = ZZT(list(reversed(g)))
             this_degree = this_poly.degree()
             this_number_field = NumberField(this_poly, "a")
-            this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group().__pari__()[2].sage()
+            this_t_number = this_number_field.galois_group().group().transitive_number()
             gal_list.append([this_degree, this_t_number])
 
         # casting from ZZT -> ZZpT
