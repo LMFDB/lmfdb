@@ -126,7 +126,7 @@ def name_to_latex(name):
         name = name.replace("S4", "{S_4}")
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
-    elif "sym" in name: 
+    elif "sym" in name:
         name = name.replace('sym', r"{\mathrm{sym}}")
     if name[1] != "(":
         name = "X_" + name[1:]
