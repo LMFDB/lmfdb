@@ -127,7 +127,7 @@ def name_to_latex(name):
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
     elif "sym" in name: 
-        name = name.replace('sym', r"{\mathrm{Sym}}")
+        name = name.replace('sym', r"{\mathrm{sym}}")
     if name[1] != "(":
         name = "X_" + name[1:]
     return f"${name}$"
