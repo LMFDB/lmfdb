@@ -104,7 +104,7 @@ def canonicalize_name(name):
         cname = "X0(2)"
     elif cname == "Xpm1(3)":
         cname = "X0(3)"
-    elif cname == "Xns+(2)":
+    elif cname in ["Xns+(2)", "Xsym(1)"]:
         cname = "X(1)"
     elif cname == "Xpm1(4)":
         cname = "X0(4)"
