@@ -297,6 +297,7 @@ def bad_bots_list():
         for elt in [
             "The Knowledge AI",
             "Wolfram",
+            "Amazonbot",
         ]
     ]
 
