@@ -64,7 +64,7 @@ CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z]+(\d+)")
 SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+")
 S_LABEL_RE = re.compile(r"\d+(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
-NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4)?\(\d+\)")
+NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|SYM)?\(\d+\)")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -338,7 +338,7 @@ modcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -357,6 +357,8 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
     elif inp == "X1":
         query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
+    elif inp == "Xsym": # add X(1), X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
 
@@ -884,6 +886,7 @@ class ModCurveSearchArray(SearchArray):
                      ("Xspplus", "Xsp+(N)"),
                      ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
+                     ("Xsym", "Xsym(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
             label="Family",
@@ -1089,6 +1092,7 @@ class RatPointSearchArray(SearchArray):
                      ("Xspplus", "Xsp+(N)"),
                      ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
+                     ("Xsym", "Xsym(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
             label="Family",
