@@ -581,10 +581,16 @@ def add_friend(friends, friend):
 
 
 def th_wrap(kwl, title, colspan=1):
-    if colspan > 1:
-        return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+    if kwl:
+        if colspan > 1:
+            return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+        else:
+            return ' <th>%s</th>' % display_knowl(kwl, title=title)
     else:
-        return ' <th>%s</th>' % display_knowl(kwl, title=title)
+        if colspan > 1:
+            return ' <th colspan=%s>%s</th>' % (colspan, title)
+        else:
+            return ' <th>%s</th>' % title
 
 
 def td_wrapl(val):
@@ -684,7 +690,7 @@ def local_table(N, D, tama, bad_lpolys, cluster_pics):
 def galrep_table(galrep, torsion_order):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
-              th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
+              th_wrap('g2c.galois_rep_modell_image', r'mod-\(\ell\) image'),
               th_wrap('g2c.torsion_order', r'Is torsion prime?'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
