@@ -311,7 +311,7 @@ class WebNewform():
 
     @property
     def conrey_orbit(self):
-        return ConreyCharacter(self.level,self.conrey_index).galois_orbit
+        return ConreyCharacter(self.level,self.conrey_index).galois_orbit()
 
     @lazy_attribute
     def embedding_labels(self):

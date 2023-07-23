@@ -46,6 +46,8 @@ from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label, gsp4_subgroup_data
 
+modell_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)')
+
 ###############################################################################
 # List and dictionaries needed for routing and searching
 ###############################################################################
@@ -602,6 +604,8 @@ g2c_columns = SearchColumns([
     MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-automorphisms"),
     MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
     MathCol("num_rat_wpts", "g2c.num_rat_wpts", r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
+    ProcessedCol("modell_images", "g2c.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gsp4.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                  short_title="mod-ℓ images", default=lambda info: info.get("galois_image"), align="center"),
     CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
     CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
     MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
@@ -666,6 +670,14 @@ def genus2_curve_search(info, query):
         split=False,
         keepbrackets=True,
     )
+    if info.get('galois_image'):
+        labels = [a.strip() for a in info['galois_image'].split(',')]
+        modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a)]
+        if len(modell_labels) != len(labels):
+            err = "Unrecognized Galois image label, it should be the label of a subgroup of GSp(2,Z/ellZ) such as 2.45.1, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
+            flash_error(err)
+            raise ValueError(err)
+        query['modell_images'] = {'$contains': modell_labels }
 
     parse_ints(info, query, "two_selmer_rank", "2-Selmer rank")
     parse_ints(info, query, "analytic_rank", "analytic rank")
@@ -1116,6 +1128,14 @@ class G2CSearchArray(SearchArray):
             short_label=r"\(\overline{\Q}\)-simple",
         )
 
+        galois_image = SneakyTextBox(
+            name="galois_image",
+            label=r"Galois image",
+            short_label=r"Galois image",
+            example="2.45.1 or 3.720.4",
+            knowl="g2c.galois_rep_modell_image",
+            )
+
         count = CountBox()
 
         self.browse_array = [
@@ -1130,7 +1150,7 @@ class G2CSearchArray(SearchArray):
             [two_selmer_rank, geometric_endomorphism],
             [analytic_sha, has_square_sha],
             [analytic_rank, locally_solvable],
-            [count],
+            [count, galois_image],
         ]
 
         self.refine_array = [
@@ -1162,7 +1182,7 @@ class G2CSearchArray(SearchArray):
                 locally_solvable,
                 is_gl2_type,
             ],
-            [geometric_invariants],
+            [geometric_invariants, galois_image],
         ]
 
     _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
