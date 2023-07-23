@@ -860,11 +860,9 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
 
     def _fill_contents(self):
         logger.info(f"[DC] start filling content {self.__class__.__name__}, defined in WebDBDirichletGroup")
-        
 
         for c in self.first_chars():
             self.add_row(c)
-
 
     def add_row(self, num):
         """
