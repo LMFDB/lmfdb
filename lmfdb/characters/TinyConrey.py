@@ -93,8 +93,6 @@ class PariConreyGroup():
         pass
 
 
-
-
 class ConreyCharacter():
     """
     minimal implementation of character from its Conrey index
