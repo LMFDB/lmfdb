@@ -681,8 +681,8 @@ def genus2_curve_search(info, query):
         parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
                      qfield='non_maximal_primes', mode=info.get('nonmax_quantifier'))
         if query.get("non_maximal_primes"):
-            if info.get("st_group","USp(4)") != "USp(4)":
-                flash_error("Non-maximal prime searches are only supported for curves with Sato-Tate group USp(4)")
+            if info.get("st_group","USp(4)") != "USp(4)" or info.get("geom_end_alg","Q") != "Q":
+                flash_error("Non-maximal prime searches are only supported for curves with geometric endomorphism algebra Q, equivalently, with Sato-Tate group USp(4)")
             query["st_group"] = "USp(4)"
     parse_ints(info, query, "two_selmer_rank", "2-Selmer rank")
     parse_ints(info, query, "analytic_rank", "analytic rank")
