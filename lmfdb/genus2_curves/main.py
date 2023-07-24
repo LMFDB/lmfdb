@@ -595,9 +595,8 @@ g2c_columns = SearchColumns([
     ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
     CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
     ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center"),
-    ProcessedCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes",
-                lambda tors: r",".join([str(t) for t in tors]),
-                mathmode=True, align="center"),
+    ProcessedCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes", lambda ps: r",".join([str(t) for t in ps]),
+                 default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
     CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-automorphisms"),
@@ -678,7 +677,13 @@ def genus2_curve_search(info, query):
             flash_error(err)
             raise ValueError(err)
         query['modell_images'] = {'$contains': modell_labels }
-
+    if info.get('nonmax_primes'):
+        parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                     qfield='non_maximal_primes', mode=info.get('nonmax_quantifier'))
+        if query.get("non_maximal_primes"):
+            if info.get("st_group","USp(4)") != "USp(4)" or info.get("geom_end_alg","Q") != "Q":
+                flash_error("Non-maximal prime searches are only supported for curves with geometric endomorphism algebra Q, equivalently, with Sato-Tate group USp(4)")
+            query["st_group"] = "USp(4)"
     parse_ints(info, query, "two_selmer_rank", "2-Selmer rank")
     parse_ints(info, query, "analytic_rank", "analytic rank")
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
@@ -1128,12 +1133,22 @@ class G2CSearchArray(SearchArray):
             short_label=r"\(\overline{\Q}\)-simple",
         )
 
-        galois_image = SneakyTextBox(
+        galois_image = TextBox(
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
             example="2.45.1 or 3.720.4",
             knowl="g2c.galois_rep_modell_image",
+            )
+        nonmax_quant = SubsetBox(
+            name="nonmax_quantifier")
+        nonmax_primes = TextBoxWithSelect(
+            name="nonmax_primes",
+            label=r"Nonmaximal $\ell$",
+            short_label=r"Nonmax$\ \ell$",
+            knowl="g2c.galois_rep.non_maximal_primes",
+            example="2,3",
+            select_box=nonmax_quant,
             )
 
         count = CountBox()
@@ -1150,7 +1165,8 @@ class G2CSearchArray(SearchArray):
             [two_selmer_rank, geometric_endomorphism],
             [analytic_sha, has_square_sha],
             [analytic_rank, locally_solvable],
-            [count, galois_image],
+            [galois_image, nonmax_primes],
+            [count],
         ]
 
         self.refine_array = [
@@ -1182,7 +1198,7 @@ class G2CSearchArray(SearchArray):
                 locally_solvable,
                 is_gl2_type,
             ],
-            [geometric_invariants, galois_image],
+            [galois_image, nonmax_primes, geometric_invariants, ],
         ]
 
     _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
