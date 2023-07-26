@@ -502,7 +502,7 @@ def paintSvgHoloNew(condmax):
             if z1 is not None:
                 values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
-            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit
+            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit(100)
             for character in conrey_orbit:
                 for j in range(nf['dim'] // nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
