@@ -984,7 +984,7 @@ class WebG2C():
             data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
 
         # Nonsurjective primes data
-        if not nonsurj:
+        if nonsurj is None:
             data['exists_nonsurj_data'] = False
         else:
             data['exists_nonsurj_data'] = True
