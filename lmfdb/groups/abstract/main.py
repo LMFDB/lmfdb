@@ -2412,9 +2412,15 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f"Order: {order}<br />"
         ans += f"Exponent: {gp.exponent}<br />"
         if quotient_label == "None":
-            isomorphism_label = "Subgroups with this isomorphism type: "
+            if aut:
+                isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type: "
+            else:
+                isomorphism_label = "Representatives of classes of subgroups up to conjugacy with this isomorphism type: "
         else:
-            isomorphism_label = "Subgroups with this isomorphism type and quotient: "
+            if aut:  #JP FIX BELOW
+                isomorphism_label = "Subgroups with this isomorphism type and quotient: "
+            else:
+                isomorphism_label = "Subgroups with this isomorphism type and quotient: "
     if quotient_label != "None":
         if quotient_label.startswith("ab/"):
             data = canonify_abelian_label(quotient_label[3:])
