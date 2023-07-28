@@ -2372,7 +2372,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         for i, c in enumerate(profiledata):
             if c in ["None", "?"]:
                 profiledata[i] = None
-        if len(profiledata) == 7 and profiledata[3] is not None: 
+        if len(profiledata) == 7 and profiledata[3] is not None:
             quotient_label = profiledata[3]
             quotient_tex = profiledata[5]
         else:
@@ -2417,7 +2417,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             else:
                 isomorphism_label = "Representatives of classes of subgroups up to conjugation with this isomorphism type: "
         else:
-            if aut == "True": 
+            if aut == "True":
                 isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type and quotient: "
             else:
                 isomorphism_label = "Representatives  of classes of subgroups up to conjugation with this isomorphism type and quotient: "
@@ -2480,7 +2480,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                     return H.subgroup == label
                 if len(profiledata) == 3 and label != "None":
                     return H.subgroup == label
-                if len(profiledata) == 7 and label != "None" and quotient_label != "None":  
+                if len(profiledata) == 7 and label != "None" and quotient_label != "None":
                     return H.subgroup == label and H.quotient == quotient_label
                 return all(a == b for (a, b) in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
 
