@@ -2372,7 +2372,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         for i, c in enumerate(profiledata):
             if c in ["None", "?"]:
                 profiledata[i] = None
-        if len(profiledata) == 6 and profiledata[3] is not None:
+        if len(profiledata) == 7 and profiledata[3] is not None:
             quotient_label = profiledata[3]
             quotient_tex = profiledata[5]
         else:
@@ -2412,9 +2412,15 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f"Order: {order}<br />"
         ans += f"Exponent: {gp.exponent}<br />"
         if quotient_label == "None":
-            isomorphism_label = "Subgroups with this isomorphism type: "
+            if aut == "True":
+                isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type: "
+            else:
+                isomorphism_label = "Representatives of classes of subgroups up to conjugation with this isomorphism type: "
         else:
-            isomorphism_label = "Subgroups with this isomorphism type and quotient: "
+            if aut == "True":
+                isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type and quotient: "
+            else:
+                isomorphism_label = "Representatives  of classes of subgroups up to conjugation with this isomorphism type and quotient: "
     if quotient_label != "None":
         if quotient_label.startswith("ab/"):
             data = canonify_abelian_label(quotient_label[3:])
@@ -2474,12 +2480,12 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                     return H.subgroup == label
                 if len(profiledata) == 3 and label != "None":
                     return H.subgroup == label
-                if len(profiledata) == 6 and label != "None" and quotient_label != "None":
+                if len(profiledata) == 7 and label != "None" and quotient_label != "None":
                     return H.subgroup == label and H.quotient == quotient_label
                 return all(a == b for (a, b) in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
 
             subs = [H for H in ambient.subgroups.values() if sub_matches(H)]
-            if aut and not ambient.outer_equivalence:
+            if aut == "True" and not ambient.outer_equivalence:
                 # TODO: need to deal with non-canonical labels
                 subs = [H for H in subs if H.label.split(".")[-1] == "a1"]
             subs.sort(key=lambda H: label_sortkey(H.label))
