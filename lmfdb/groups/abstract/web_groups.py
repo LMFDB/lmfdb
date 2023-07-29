@@ -358,7 +358,7 @@ class WebAbstractGroup(WebObj):
     def transitive_degree(self):
         if isinstance(self.G, LiveAbelianGroup):
             return self.order
-        return "not computed"
+        return None # "not computed"
 
     @lazy_attribute
     def pgroup(self):
@@ -981,11 +981,11 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal:
-                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex,s.quotient_order] += s.conjugacy_class_count
+                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
-                        by_order[d][None, None, None, None, None, None] = cnt - sum(by_order[d].values())
+                        by_order[d][None, None, None, None, None, None, self.order // d] = cnt - sum(by_order[d].values())
             return self._finalize_profile(by_order)
 
     @lazy_attribute
@@ -1005,6 +1005,8 @@ class WebAbstractGroup(WebObj):
             sep = ", "
             for tup in subs:
                 cnt, label, tex = tup[0], tup[1], tup[3]
+                if tex is None:
+                    tex = "?"
                 tup = list(tup[1:])
                 if len(tup) == 6:
                     sep = ", &nbsp;&nbsp;"
