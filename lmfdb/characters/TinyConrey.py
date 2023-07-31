@@ -237,9 +237,15 @@ class ConreyCharacter():
         order = self.order
         num = self.number
         mod = self.modulus
-        kmax = min(mod,limit * 50)
-        cmd = f"a=Mod({num},{mod});my(valid(k)=my(l=znlog(k,a,{order}));l&&gcd(l,{order})==1);[ k | k <- [1..{kmax}], gcd(k,{mod})==1 && valid(k) ]"
-        return list(map(Integer,pari(cmd)[:limit]))
+        kmin = 1
+        width = kmax = min(mod,limit * 50)
+        while True:
+            cmd = f"a=Mod({num},{mod});my(valid(k)=my(l=znlog(k,a,{order}));l&&gcd(l,{order})==1);[ k | k <- [{kmin}..{kmax}], gcd(k,{mod})==1 && valid(k) ]"
+            ans = [Integer(m) for m in pari(cmd)[:limit]]
+            if ans:
+                return ans
+            kmin += width
+            kmax += width
 
     @property
     def min_conrey_conj(self):
