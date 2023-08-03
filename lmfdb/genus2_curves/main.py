@@ -372,7 +372,7 @@ def render_isogeny_class_webpage(label):
 def url_for_curve_label(label):
     slabel = label.split(".")
     return url_for(
-        ".by_url_curve_label",
+        "g2c.by_url_curve_label",
         cond=slabel[0],
         alpha=slabel[1],
         disc=slabel[2],
