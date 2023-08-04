@@ -1258,6 +1258,7 @@ class ArtinLfunction(Lfunction):
         self.level = self.artin.conductor()
 
         # disable expensive L-functions, these should not be linked anywhere regardless
+        # this threshold comes from lmfdb/artin_representations/main.py
         if not is_debug_mode() and self.level**self.degree > 729000000000000:
             raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as the conductor/degree is too large.')
 
