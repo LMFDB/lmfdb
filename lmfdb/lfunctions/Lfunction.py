@@ -44,6 +44,8 @@ from sage.all import (
 )
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
+from lmfdb.app import is_debug_mode
+
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     Downloader,
@@ -1254,6 +1256,11 @@ class ArtinLfunction(Lfunction):
         self.primitive = self.artin.primitive()
         self.degree = self.artin.dimension()
         self.level = self.artin.conductor()
+
+        # disable expensive L-functions, these should not be linked anywhere regardless
+        if not is_debug_mode() and self.level**self.degree > 729000000000000:
+            raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as the conductor/degree is too large.')
+
         self.level_factored = factor(self.level)
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
@@ -1320,7 +1327,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         # Check for compulsory arguments
         if "t" in args and "family" in args:
             args["label"] = args["family"] + "_" + args["t"]
-        validate_required_args ('Unable to construct hypergeometric motive L-function.', args, 'label')
+        validate_required_args('Unable to construct hypergeometric motive L-function.', args, 'label')
         self._Ltype = "hgmQ"
 
         # Put the arguments into the object dictionary
