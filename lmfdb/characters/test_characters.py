@@ -142,6 +142,9 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
         assert 'Error: Galois orbits have only been computed for modulus up to 100,000' in W.get_data(as_text=True)
 
+        W = self.tc.get('/Character/Dirichlet/58589/50021', follow_redirects=True)
+        assert 'Number field defined by a degree 1428 polynomial' in W.get_data(as_text=True)
+
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert '/NumberField/1.1.1.1' in W.get_data(as_text=True)
