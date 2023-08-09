@@ -213,7 +213,7 @@ class ConreyCharacter():
         elif order < limit or order * order < limit * self.modulus:
             logger.debug(f"compute all conjugate characters and return first {limit}")
             return self.galois_orbit_all(limit)
-        elif limit == 1 or self.modulus < 30 * order:
+        elif limit == 1 or self.modulus <= 1000000:
             logger.debug(f"compute {limit} first conjugate characters")
             return self.galois_orbit_search(limit)
         else:
