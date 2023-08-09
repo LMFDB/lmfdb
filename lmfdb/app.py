@@ -307,7 +307,7 @@ def badbot():
     ua = request.user_agent.string.lower()
     for elt in bad_bots_list():
         if elt in ua:
-            time.sleep(5)
+            time.sleep(10)
 
 
 def timestamp():
