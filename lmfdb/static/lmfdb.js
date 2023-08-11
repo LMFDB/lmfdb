@@ -403,17 +403,17 @@ function modm_reduction_callback(res) {
   $('#modm_reduction').html(katex.renderToString(latex_gens));
   // {# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}
   var line_break = '<br><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>';
-
+  
   var sage_code = `gens = ${gens}${line_break}GL(2,Integers(${level})).subgroup(gens)${line_break}`;
   $('#sage_modm_image').html(sage_code);
-  $('#sage_modm_image').show();
   if (! $('#sage_modm_image').hasClass("sage")){
+    $('#sage_modm_image').show();
     $('#sage_modm_image').addClass('sage nodisplay code codebox');
   }
   var magma_code = `Gens := ${gens};${line_break}sub&ltGL(2,Integers(${level}))|Gens&gt&semi;${line_break}`;
   $('#magma_modm_image').html(magma_code);
-  $('#magma_modm_image').show();
   if (! $('#magma_modm_image').hasClass("magma")){
+    $('#magma_modm_image').show();
     $('#magma_modm_image').addClass('magma nodisplay code codebox');
   }
   $('.'+cur_lang).css('display','inline-block');
