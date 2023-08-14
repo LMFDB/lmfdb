@@ -471,6 +471,7 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
 <form><p> Input positive integer $m$ to see the generators of the reduction of $H$ to $\mathrm{GL}_2(\Z/m\Z)$: <label for="modm"></label> <input type="text" id="modm">
 <button title="Reduce mod $m$" onclick="modm_reduction('{{data.lmfdb_label}}', $('#modm').val(), cur_lang); return false;">submit</button></p></form>
 <p id="modm_reduction"></p>
+<p id="modm_level"></p>
 <p>The torsion field $K:=\Q(E[{{data.adelic_level}}])$ is a degree-${{data.data.adelic_image_size}}$ Galois extension of $\Q$ with $\Gal(K/\Q)$ isomorphic to the projection of $H$ to $\GL_2(\Z/{{data.adelic_level}}\Z)$.
 {% endif %}
 
