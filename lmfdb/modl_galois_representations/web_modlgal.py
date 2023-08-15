@@ -94,9 +94,9 @@ class WebModLGalRep(WebObj):
         kerfield = WebNumberField.from_coeffs(self.kernel_polynomial)
         if kerfield and kerfield._data:
             friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
-        kerfield = WebNumberField.from_coeffs(self.projective_kernel_polynomial)
-        if kerfield and kerfield._data:
-            friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
+        projkerfield = WebNumberField.from_coeffs(self.projective_kernel_polynomial)
+        if projkerfield and projkerfield._data and projkerfield.label != kerfield.label:
+            friends.append(("Number field "+projkerfield.field_pretty(), url_for("number_fields.by_label", label=projkerfield.label)))
 
         if self.dimension > 1 and hasattr(self, "determinant_label"):
             friends.append(("Determinant " + self.determinant_label, url_for_modlgal_label(label=self.determinant_label)))
