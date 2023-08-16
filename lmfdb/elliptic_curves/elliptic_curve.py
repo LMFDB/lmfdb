@@ -1012,13 +1012,25 @@ def modm_reduce():
         return "\\text{Invalid input, please enter a positive integer}"
 
     galois_level = data['adelic_level']
+    modm_images = data['modm_images']
+    modm_level_index = [image.split('.')[:2] for image in modm_images]
+    if modm_level_index:
+        relevant_m = gcd(new_mod, int(modm_level_index[-1][0]))
+        index = '1' # the case where level gcd is 1
+        for level_index in reversed(modm_level_index):
+            if (relevant_m % int(level_index[0]) == 0):
+                index = level_index[1]
+                break
+    else:
+        # should not happen if adelic image is computed
+        index = '-1'
 
     ans = gl2_lift(galois_image, galois_level, new_mod)
     if ans == []:
         result = "\\text{trivial group}"
     else:
         result = ",".join([str(latex(dispZmat_from_list(z,2))) for z in ans])
-    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang
+    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang + '.' + index
     return result
 
 def gl1_gen(M):
