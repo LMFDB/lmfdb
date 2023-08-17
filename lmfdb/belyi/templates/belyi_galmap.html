@@ -36,7 +36,7 @@ function show_eqns(eqnstyle) {
 <table>
   <tr class='std_eqn nodisplay'>
     <td>
-      $\displaystyle {{ data.curve }}$
+      {{ data.curve|safe }}
       {% if data.g == 0 %}
         , with affine coordinate $x$
       {% endif %}
@@ -56,7 +56,7 @@ function show_eqns(eqnstyle) {
   </tr>
   <tr class='plane_eqn'>
     <td>
-      \(\displaystyle {{ data.plane_model }} = 0\)
+      {{ data.plane_model|safe }}
       {% if data["curve_label"] %}
         , isomorphic to
         {% if data.g == 1 %}
@@ -88,9 +88,9 @@ function show_eqns(eqnstyle) {
 <h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
 <div class='std_eqn nodisplay'>
   {% if data.g == 0 %}
-    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x) =\) {{data.map|safe}} </p>
   {% else %}
-    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x,y) =\) {{data.map|safe}} </p>
   {% endif %}
 </div>
 <div class='plane_eqn'>
