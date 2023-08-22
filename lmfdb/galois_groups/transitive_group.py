@@ -592,9 +592,13 @@ def group_alias_table():
     ans += r'</tbody></table>'
     return ans
 
-def nt2abstract(n, t):
+def nt2abstract(n, t, output="pair"):
     res = db.gps_transitive.lookup('{}T{}'.format(n,t))
     if res and 'abstract_label' in res:
+        if output == "pair":
+            gapid = res['abstract_label'].split('.')
+            return [int(z) for z in gapid]
+        # Otherwise output abstract group label
         return res['abstract_label']
     raise NameError('Abstract group id not found')
 
