@@ -1053,7 +1053,7 @@ class PostgresTable(PostgresBase):
                 raise ValueError("You must specify a column that is contained in the datafile and uniquely specifies each row")
         with open(datafile) as F:
             tables = [self.search_table]
-            columns = self.search_cols
+            columns = list(self.search_cols)
             if self.extra_table is not None:
                 tables.append(self.extra_table)
                 columns.extend(self.extra_cols)
