@@ -1141,7 +1141,7 @@ class PostgresTable(PostgresBase):
                 ordered = False
             if etable is not None:
                 ecols = SQL(", ").join([
-                    SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table))
+                    SQL("{0} = {1}.{0}").format(Identifier(col), Identifier(tmp_table))
                     for col in ecols
                 ])
                 self._execute(updater.format(
