@@ -377,8 +377,14 @@ class PostgresBase():
 
         - ``tablename`` -- a string, the name of the table
         """
-        cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"), [tablename], silent=True)
+        cur = self._execute(SQL("SELECT 1 FROM pg_tables where tablename=%s"), [tablename], silent=True)
         return cur.fetchone() is not None
+
+    def _all_tablenames(self):
+        """
+        Return all (postgres) table names in the database
+        """
+        return list(self._execute(SQL("SELECT tablename FROM pg_tables ORDER BY tablename"), silent=True))
 
     def _get_locks(self):
         return self._execute(SQL(
