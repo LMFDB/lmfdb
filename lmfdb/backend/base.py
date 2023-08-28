@@ -384,7 +384,7 @@ class PostgresBase():
         """
         Return all (postgres) table names in the database
         """
-        return [rec[0] for rec in self._execute(SQL("SELECT tablename FROM pg_tables ORDER BY tablename"), silent=True))]
+        return [rec[0] for rec in self._execute(SQL("SELECT tablename FROM pg_tables ORDER BY tablename"), silent=True)]
 
     def _get_locks(self):
         return self._execute(SQL(
