@@ -513,7 +513,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         print("Table meta_tables_hist created")
 
-    def create_table_like(self, new_name, table, data=False, commit=True):
+    def create_table_like(self, new_name, table, tablespace=None, data=False, commit=True):
         """
         Copies the schema from an existing table, but none of the data, indexes or stats.
 
@@ -521,6 +521,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         - ``new_name`` -- a string giving the desired table name.
         - ``table`` -- a string or PostgresSearchTable object giving an existing table.
+        - ``tablespace`` -- the tablespace for the new table
         """
         if isinstance(table, str):
             table = self[table]
@@ -558,6 +559,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             extra_columns,
             search_order,
             extra_order,
+            tablespace=tablespace,
             commit=commit,
         )
         if data:
@@ -591,6 +593,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         extra_columns=None,
         search_order=None,
         extra_order=None,
+        tablespace=None,
         force_description=False,
         commit=True,
     ):
@@ -618,6 +621,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             in the search table, speeding up scans.
         - ``search_order`` -- (optional) list of column names, specifying the default order of columns
         - ``extra_order`` -- (optional) list of column names, specifying the default order of columns
+        - ``tablespace`` -- (optional) a postgres tablespace to use for the new table
         - ``force_description`` -- whether to require descriptions
 
         COMMON TYPES:
@@ -733,6 +737,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             creator = SQL("CREATE TABLE {0} ({1})").format(
                 Identifier(name), SQL(", ").join(processed_search_columns)
             )
+            if tablespace is not None:
+                creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
             self._execute(creator)
             self.grant_select(name)
             if extra_columns is not None:
@@ -741,6 +747,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     Identifier(name + "_extras"),
                     SQL(", ").join(processed_extra_columns),
                 )
+                if tablespace is not None:
+                    creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
                 self._execute(creator)
                 self.grant_select(name + "_extras")
             creator = SQL(
@@ -758,6 +766,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 "constraint_cols jsonb, constraint_values jsonb, threshold integer)"
             )
             creator = creator.format(Identifier(name + "_stats"))
+            if tablespace is not None:
+                creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
             self._execute(creator)
             self.grant_select(name + "_stats")
             self.grant_insert(name + "_stats")
