@@ -212,7 +212,7 @@ class PostgresBase():
     to the postgres database, as well as a name used when creating a logger.
     """
 
-    def __init__(self, loggername, db, tablespace=None):
+    def __init__(self, loggername, db):
         # Have to record this object in the db so that we can reset the connection if necessary.
         # This function also sets self.conn
         db.register_object(self)
@@ -232,7 +232,6 @@ class PostgresBase():
         shandler = logging.StreamHandler()
         shandler.setFormatter(formatter)
         l.addHandler(shandler)
-        self.tablespace = tablespace
 
     def _execute(
             self,
