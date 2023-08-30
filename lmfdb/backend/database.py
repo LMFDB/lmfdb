@@ -772,8 +772,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 "constraint_cols jsonb, constraint_values jsonb, threshold integer){1}"
             )
             creator = creator.format(Identifier(name + "_stats"), tablespace)
-            if tablespace is not None:
-                creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
             self._execute(creator)
             self.grant_select(name + "_stats")
             self.grant_insert(name + "_stats")
