@@ -205,7 +205,7 @@ class PostgresStatsTable(PostgresBase):
     saving = False
 
     def __init__(self, table, total=None):
-        PostgresBase.__init__(self, table.search_table, table._db)
+        PostgresBase.__init__(self, table.search_table, table._db, table._get_tablespace())
         self.table = table
         self.search_table = st = table.search_table
         self.stats = st + "_stats"

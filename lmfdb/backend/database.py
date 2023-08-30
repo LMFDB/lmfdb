@@ -513,7 +513,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         print("Table meta_tables_hist created")
 
-    def create_table_like(self, new_name, table, tablespace=None, data=False, commit=True):
+    def create_table_like(self, new_name, table, tablespace=None, data=False, indexes=False, commit=True):
         """
         Copies the schema from an existing table, but none of the data, indexes or stats.
 
@@ -522,6 +522,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``new_name`` -- a string giving the desired table name.
         - ``table`` -- a string or PostgresSearchTable object giving an existing table.
         - ``tablespace`` -- the tablespace for the new table
+        - ``data`` -- whether to copy over data from the source table
+        - ``indexes`` -- whether to copy over indexes from the source table
         """
         if isinstance(table, str):
             table = self[table]
@@ -579,6 +581,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     ),
                     commit=commit,
                 )
+        if indexes:
+            for idata in table.list_indexes(verbose=False).values():
+                self[new_name].create_index(**idata)
+        if data:
             self[new_name].stats.refresh_stats()
 
     def create_table(
@@ -733,39 +739,39 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             if col_description is None:
                 col_description = {col: "" for col in description_columns}
 
+        tablespace = self._tablespace_clause(tablespace)
         with DelayCommit(self, commit, silence=True):
-            creator = SQL("CREATE TABLE {0} ({1})").format(
-                Identifier(name), SQL(", ").join(processed_search_columns)
+            creator = SQL("CREATE TABLE {0} ({1}){2}").format(
+                Identifier(name),
+                SQL(", ").join(processed_search_columns),
+                tablespace,
             )
-            if tablespace is not None:
-                creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
             self._execute(creator)
             self.grant_select(name)
             if extra_columns is not None:
-                creator = SQL("CREATE TABLE {0} ({1})")
+                creator = SQL("CREATE TABLE {0} ({1}){2}")
                 creator = creator.format(
                     Identifier(name + "_extras"),
                     SQL(", ").join(processed_extra_columns),
+                    tablespace,
                 )
-                if tablespace is not None:
-                    creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
                 self._execute(creator)
                 self.grant_select(name + "_extras")
             creator = SQL(
                 "CREATE TABLE {0} "
                 "(cols jsonb, values jsonb, count bigint, "
-                "extra boolean, split boolean DEFAULT FALSE)"
+                "extra boolean, split boolean DEFAULT FALSE){1}"
             )
-            creator = creator.format(Identifier(name + "_counts"))
+            creator = creator.format(Identifier(name + "_counts"), tablespace)
             self._execute(creator)
             self.grant_select(name + "_counts")
             self.grant_insert(name + "_counts")
             creator = SQL(
                 "CREATE TABLE {0} "
                 '(cols jsonb, stat text COLLATE "C", value numeric, '
-                "constraint_cols jsonb, constraint_values jsonb, threshold integer)"
+                "constraint_cols jsonb, constraint_values jsonb, threshold integer){1}"
             )
-            creator = creator.format(Identifier(name + "_stats"))
+            creator = creator.format(Identifier(name + "_stats"), tablespace)
             if tablespace is not None:
                 creator += SQL(" TABLESPACE {0}").format(Identifier(tablespace))
             self._execute(creator)

@@ -212,7 +212,7 @@ class PostgresBase():
     to the postgres database, as well as a name used when creating a logger.
     """
 
-    def __init__(self, loggername, db):
+    def __init__(self, loggername, db, tablespace=None):
         # Have to record this object in the db so that we can reset the connection if necessary.
         # This function also sets self.conn
         db.register_object(self)
@@ -232,6 +232,7 @@ class PostgresBase():
         shandler = logging.StreamHandler()
         shandler.setFormatter(formatter)
         l.addHandler(shandler)
+        self.tablespace = tablespace
 
     def _execute(
             self,
@@ -902,6 +903,17 @@ class PostgresBase():
 
                 return addid, cur.rowcount
 
+    def _tablespace_clause(self, tablespace=None):
+        """
+        A clause for use in CREATE statements
+        """
+        if tablespace is None:
+            tablespace = self.tablespace
+        if tablespace is None:
+            return SQL("")
+        else:
+            return SQL(" TABLESPACE {0}").format(Identifier(tablespace))
+
     def _clone(self, table, tmp_table):
         """
         Utility function: creates a table with the same schema as the given one.
@@ -921,7 +933,7 @@ class PostgresBase():
                 "Run db.%s.cleanup_from_reload() if you want to delete it and proceed."
                 % (tmp_table, table)
             )
-        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
+        creator = SQL("CREATE TABLE {0} (LIKE {1}){2}").format(Identifier(tmp_table), Identifier(table), self._tablespace_clause())
         self._execute(creator)
 
     def _check_col_datatype(self, typ):
@@ -931,7 +943,9 @@ class PostgresBase():
 
     def _create_table(self, name, columns):
         """
-        Utility function: creates a table with the schema specified by ``columns``
+        Utility function: creates a table with the schema specified by ``columns``.
+
+        If self is a table, the new table will be in the same tablespace.
 
         INPUT:
 
@@ -943,7 +957,7 @@ class PostgresBase():
         for col, typ in columns:
             self._check_col_datatype(typ)
         table_col = SQL(", ").join(SQL("{0} %s" % typ).format(Identifier(col)) for col, typ in columns)
-        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
+        creator = SQL("CREATE TABLE {0} ({1}){2}").format(Identifier(name), table_col, self._tablespace_clause())
         self._execute(creator)
 
     def _create_table_from_header(self, filename, name, sep, addid=True):

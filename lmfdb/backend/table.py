@@ -148,7 +148,7 @@ class PostgresTable(PostgresBase):
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
         self._include_nones = include_nones
-        PostgresBase.__init__(self, search_table, db)
+        PostgresBase.__init__(self, search_table, db, self._get_tablespace())
         self.col_type = {}
         self.has_id = False
         self.search_cols = []
@@ -275,8 +275,14 @@ class PostgresTable(PostgresBase):
         if not verbose:
             return output
 
-    @staticmethod
-    def _create_index_statement(name, table, type, columns, modifiers, storage_params):
+    def _get_tablespace(self):
+        """
+        Determine the tablespace hosting this table (which is then used for indexes and constraints)
+        """
+        cur = self._execute(SQL("SELECT tablespace FROM pg_tables WHERE tablename=%s"), [self.search_table])
+        return cur.fetchone()[0]
+
+    def _create_index_statement(self, name, table, type, columns, modifiers, storage_params):
         """
         Utility function for making the create index SQL statement.
         """
@@ -290,6 +296,7 @@ class PostgresTable(PostgresBase):
             )
         else:
             storage_params = SQL("")
+        tablespace = self._tablespace_clause()
         modifiers = [" " + " ".join(mods) if mods else "" for mods in modifiers]
         # The inner % operator is on strings prior to being wrapped by SQL: modifiers have been whitelisted.
         columns = SQL(", ").join(
@@ -297,8 +304,8 @@ class PostgresTable(PostgresBase):
             for col, mods in zip(columns, modifiers)
         )
         # The inner % operator is on strings prior to being wrapped by SQL: type has been whitelisted.
-        creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}" % (type))
-        return creator.format(Identifier(name), Identifier(table), columns, storage_params)
+        creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}{4}" % (type))
+        return creator.format(Identifier(name), Identifier(table), columns, storage_params, tablespace)
 
     def _create_counts_indexes(self, suffix="", warning_only=False):
         """
@@ -1079,7 +1086,7 @@ class PostgresTable(PostgresBase):
                 SQL("{0} " + self.col_type[col]).format(Identifier(col))
                 for col in columns
             ])
-            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(tmp_table), processed_columns)
+            creator = SQL("CREATE TABLE {0} ({1}){2}").format(Identifier(tmp_table), processed_columns, self._tablespace_clause())
             self._execute(creator)
             # We need to add an id column and populate it correctly
             if label_col != "id":
@@ -2438,7 +2445,7 @@ class PostgresTable(PostgresBase):
             col_type_SQL = SQL(", ").join(
                 SQL("{0} %s" % typ).format(Identifier(col)) for col, typ in col_type
             )
-            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), col_type_SQL)
+            creator = SQL("CREATE TABLE {0} ({1}){2}").format(Identifier(self.extra_table), col_type_SQL, self._tablespace_clause())
             self._execute(creator)
             if columns:
                 self.drop_constraints(columns)
