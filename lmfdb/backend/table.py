@@ -29,7 +29,7 @@ _operator_classes = {
         "varchar_ops",
         "varchar_pattern_ops",
     ],
-    "gin": ["jsonb_path_ops"],
+    "gin": ["jsonb_path_ops", "array_ops"],
     "gist": ["inet_ops"],
     "hash": [
         "bpchar_pattern_ops",
