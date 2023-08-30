@@ -903,12 +903,16 @@ class PostgresBase():
 
                 return addid, cur.rowcount
 
+    def _get_tablespace(self):
+        # overridden in table and statstable
+        pass
+
     def _tablespace_clause(self, tablespace=None):
         """
         A clause for use in CREATE statements
         """
         if tablespace is None:
-            tablespace = self.tablespace
+            tablespace = self._get_tablespace()
         if tablespace is None:
             return SQL("")
         else:

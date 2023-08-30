@@ -205,7 +205,7 @@ class PostgresStatsTable(PostgresBase):
     saving = False
 
     def __init__(self, table, total=None):
-        PostgresBase.__init__(self, table.search_table, table._db, table._get_tablespace())
+        PostgresBase.__init__(self, table.search_table, table._db)
         self.table = table
         self.search_table = st = table.search_table
         self.stats = st + "_stats"
@@ -215,6 +215,10 @@ class PostgresStatsTable(PostgresBase):
             if total is None:
                 total = self._slow_count({}, extra=False)
         self.total = total
+
+    def _get_tablespace(self):
+        # We use the same tablespace for stats and counts tables as for the main search table
+        return self.table._get_tablespace()
 
     def _has_stats(self, jcols, ccols, cvals, threshold, split_list=False, threshold_inequality=False, suffix=""):
         """

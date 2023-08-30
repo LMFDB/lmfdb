@@ -148,7 +148,7 @@ class PostgresTable(PostgresBase):
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
         self._include_nones = include_nones
-        PostgresBase.__init__(self, search_table, db, self._get_tablespace())
+        PostgresBase.__init__(self, search_table, db)
         self.col_type = {}
         self.has_id = False
         self.search_cols = []
