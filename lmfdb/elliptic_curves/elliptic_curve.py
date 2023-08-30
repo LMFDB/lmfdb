@@ -758,7 +758,7 @@ def EC_data(label):
     if match_lmfdb_label(label):
         conductor, iso_class, number = split_lmfdb_label(label)
         if not number: # isogeny class
-            return datapage(label, ["ec_classdata", "ec_padic"], bread=bread, label_col="lmfdb_iso", sorts=[[], ["p"]])
+            return datapage(label, ["ec_classdata", "ec_padic", "ec_curvedata"], title=f"Elliptic curve isogeny class data - {label}", bread=bread, label_cols=["lmfdb_iso", "lmfdb_iso", "lmfdb_iso"], sorts=[[], ["p"], ['conductor', 'iso_nlabel', 'lmfdb_number']])
         iso_label = class_lmfdb_label(conductor, iso_class)
         labels = [label] * 8
         label_cols = ["lmfdb_label"] * 8
