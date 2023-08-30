@@ -530,6 +530,8 @@ def by_url_space_label(level, weight, char_orbit_label):
 @cmf.route("/<int:level>/<int:weight>/<int:conrey_index>/")
 def by_url_space_conreylabel(level, weight, conrey_index):
     label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index))
+    if label is None:
+        return abort(404, "Invalid space label: not relatively prime")
     return redirect(url_for_label(label), code=301)
 
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
@@ -593,7 +595,11 @@ def jump_box(info):
     jump = info.pop("jump").strip()
     errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
-        jump = convert_spacelabel_from_conrey(jump)
+        newjump = convert_spacelabel_from_conrey(jump)
+        if newjump is None:
+            errmsg = "%s is not a valid space label"
+        else:
+            jump = newjump
     #handle direct trace_hash search
     if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
         label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
