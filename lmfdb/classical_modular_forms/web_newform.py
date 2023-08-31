@@ -557,7 +557,7 @@ class WebNewform():
     def projective_image_knowl(self):
         if self.projective_image:
             gp_name = "C2^2" if self.projective_image == "D2" else ( "S3" if self.projective_image == "D3" else self.projective_image )
-            gp_label = db.gps_groups_test.lucky({'name':gp_name}, 'label')
+            gp_label = db.gps_groups.lucky({'name':gp_name}, 'label')
             gp_display = fr'\({self.projective_image_latex}\)'
             return gp_display if gp_label is None else abstract_group_display_knowl(gp_label, gp_display)
 
@@ -604,7 +604,7 @@ class WebNewform():
     @property
     def artin_image_display(self):
         if self.artin_image:
-            pretty = db.gps_groups_test.lookup(self.artin_image, 'tex_name')
+            pretty = db.gps_groups.lookup(self.artin_image, 'tex_name')
             return pretty if pretty else self.artin_image
 
     def artin_image_knowl(self):

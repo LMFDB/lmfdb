@@ -119,7 +119,7 @@ class WebGaloisGroup:
         if self._data.get('pretty') is not None:
             return self._data['pretty']
         gp_label = self.abstract_label()
-        group = db.gps_groups_test.lookup(gp_label)
+        group = db.gps_groups.lookup(gp_label)
         if group and group.get('tex_name'):
             return f"${group['tex_name']}$"
         if emptyifnotpretty:
