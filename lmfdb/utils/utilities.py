@@ -755,7 +755,6 @@ class Pagination():
     has_previous = property(lambda x: x.page > 1)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
-    end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
 
     @property
     def end(self):

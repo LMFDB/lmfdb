@@ -3,6 +3,7 @@ import csv
 import os
 import tempfile
 import time
+import re
 
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 
@@ -1913,34 +1914,30 @@ class PostgresTable(PostgresBase):
         """
         to_remove = []
         to_swap = []
+        tablenames = [name for name in self._all_tablenames() if name.startswith(self.search_table)]
         for suffix in ["", "_extras", "_stats", "_counts"]:
             head = self.search_table + suffix
             tablename = head + "_tmp"
-            if self._table_exists(tablename):
+            if tablename in tablenames:
                 to_remove.append(tablename)
-            backup_number = 1
-            tails = []
-            while True:
-                tail = "_old{0}".format(backup_number)
-                tablename = head + tail
-                if self._table_exists(tablename):
-                    tails.append(tail)
-                else:
-                    break
-                backup_number += 1
+            olds = []
+            for name in tablenames:
+                m = re.fullmatch(head + r"_old(\d+)", name)
+                if m:
+                    olds.append(int(m.group(1)))
+            olds.sort()
             if keep_old > 0:
-                for new_number, tail in enumerate(tails[-keep_old:], 1):
-                    newtail = "_old{0}".format(new_number)
-                    if newtail != tail:  # we might be keeping everything
-                        to_swap.append((head, tail, newtail))
-                tails = tails[:-keep_old]
-            to_remove.extend([head + tail for tail in tails])
+                for new_number, n in enumerate(olds[-keep_old:], 1):
+                    if n != new_number:
+                        to_swap.append((head, n, new_number))
+                olds = olds[:-keep_old]
+            to_remove.extend([head + f"_old{n}" for n in olds])
         with DelayCommit(self, silence=True):
             for table in to_remove:
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print("Dropped {0}".format(table))
             for head, cur_tail, new_tail in to_swap:
-                self._swap([head], cur_tail, new_tail)
+                self._swap([head], f"_old{cur_tail}", f"_old{new_tail}")
                 print("Swapped {0} to {1}".format(head + cur_tail, head + new_tail))
 
     def max_id(self, table=None):
