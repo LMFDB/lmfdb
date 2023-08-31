@@ -453,6 +453,13 @@ class PostgresTable(PostgresBase):
                 name = "_".join([self.search_table] + [col[:2] for col in columns])
             else:
                 name = "_".join([self.search_table] + ["".join(col[0] for col in columns)])
+            if len(name) >= 64:
+                name = name[:63]
+            if self._relation_exists(name):
+                disamb = 0
+                while self._relation_exists(name + str(disamb)):
+                    disamb += 1
+                name += str(disamb)
 
         with DelayCommit(self, silence=True):
             self._check_index_name(name, "Index")
