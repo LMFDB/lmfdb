@@ -112,13 +112,13 @@ def stats():
             if not sizes['toast_bytes']:
                 sizes['toast_bytes'] = 0
             if sizes['nrows']:
-                avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
+                avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extras_bytes']) / sizes['nrows']))
             else:
                 avg_size = 0
             stats[tablename] = {
                 'db':dname, 'table':link, 'dbSize':dbSize[dname], 'dbObjects':dbObjects[dname],
                 'size': csize, 'avgObjSize':avg_size,
-                'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']),
+                'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extras_bytes']),
                 'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
                 'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts'],
                 'tablespace': tablespaces[tablename],
