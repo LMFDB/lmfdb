@@ -64,7 +64,7 @@ CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z]+(\d+)")
 SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+")
 S_LABEL_RE = re.compile(r"\d+(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
-NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4)?\(\d+\)")
+NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|SYM)?\(\d+\)")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -316,14 +316,14 @@ modcurve_columns = SearchColumns(
         LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
         ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
         ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
-        ProcessedCol("name", "modcurve.name", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
+        ProcessedCol("name", "modcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
         MathCol("level", "modcurve.level", "Level", default=True),
         MathCol("index", "modcurve.index", "Index", default=True),
         MathCol("genus", "modcurve.genus", "Genus", default=True),
         ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
         ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality", default=True),
         MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps",  short_title="Q-cusps", default=True),
+        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps", default=True),
         CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center", default=True),
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
         CheckCol("simple", "modcurve.simple", "Simple"),
@@ -331,14 +331,14 @@ modcurve_columns = SearchColumns(
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "Points"),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
     db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -357,6 +357,8 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
     elif inp == "X1":
         query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
+    elif inp == "Xsym": # add X(1), X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
 
@@ -656,11 +658,11 @@ def modcurve_search(info, query):
     parse_ints(info, query, "rational_cusps")
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
-    if not info.get("points_quantifier"): # default, which is non-cuspidal
+    if not info.get("points_type"): # default, which is non-cuspidal
         parse_ints(info, query, "points", qfield="num_known_degree1_noncusp_points")
-    elif info["points_quantifier"] == "noncm":
+    elif info["points_type"] == "noncm":
         parse_ints(info, query, "points", qfield="num_known_degree1_noncm_points")
-    elif info["points_quantifier"] == "all":
+    elif info["points_type"] == "all":
         parse_ints(info, query, "points", qfield="num_known_degree1_points")
     parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
@@ -829,9 +831,9 @@ class ModCurveSearchArray(SearchArray):
             label="Squarefree",
             example_col=True,
         )
-        cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')] +
-                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
+                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm_discriminants = SelectBox(
             name="cm_discriminants",
             options=cm_opts,
@@ -844,23 +846,22 @@ class ModCurveSearchArray(SearchArray):
             knowl="modcurve.contains_negative_one",
             label="Contains $-I$",
             example="yes",
-            example_value=True,
             example_col=True,
             example_span="",
         )
-        points_quantifier = SelectBox(
+        points_type = SelectBox(
             name="points_type",
             options=[('', 'non-cusp'),
-                     ('noncm', 'non-CM'),
+                     ('noncm', 'non-CM, non-cusp'),
                      ('all', 'all'),
                      ],
             min_width=105)
         points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="Points",
+            label="$j$-points",
             example="0, 3-5",
-            select_box=points_quantifier,
+            select_box=points_type,
         )
         obstructions = SelectBox(
             name="has_obstruction",
@@ -884,6 +885,7 @@ class ModCurveSearchArray(SearchArray):
                      ("Xspplus", "Xsp+(N)"),
                      ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
+                     ("Xsym", "Xsym(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
             label="Family",
@@ -918,7 +920,6 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
-    sort_knowl = "modcurve.sort_order"
     sorts = [
         ("", "level", ["level", "index", "genus", "label"]),
         ("index", "index", ["index", "level", "genus", "label"]),
@@ -941,7 +942,7 @@ def low_degree_points():
 ratpoint_columns = SearchColumns([
     LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
     #SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
-    ProcessedCol("curve_name", "modcurve.family", "Name", name_to_latex),
+    ProcessedCol("curve_name", "modcurve.standard", "Name", name_to_latex),
     MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
     MathCol("degree", "modcurve.point_degree", "Degree", default=True),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
@@ -953,7 +954,7 @@ ratpoint_columns = SearchColumns([
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
-    FloatCol("j_height", "ec.j_height", "$j$-height", default=True)])
+    FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
 
 def ratpoint_postprocess(res, info, query):
     labels = list(set(rec["curve_label"] for rec in res))
@@ -1061,9 +1062,9 @@ class RatPointSearchArray(SearchArray):
             label="$j$-height",
             example="1.0-4.0",
         )
-        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')] +
-                   [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')] +
-                   [('-%d'%d, 'CM discriminant -%d'%d) for  d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
+                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",
@@ -1090,6 +1091,7 @@ class RatPointSearchArray(SearchArray):
                      ("Xspplus", "Xsp+(N)"),
                      ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
+                     ("Xsym", "Xsym(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
             label="Family",

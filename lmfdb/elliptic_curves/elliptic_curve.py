@@ -448,9 +448,9 @@ ec_columns = SearchColumns([
                   short_title="ℓ-adic images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
     ProcessedCol("modell_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("adelic_level", "ec.adelic_galois_image", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
-    MathCol("adelic_index", "ec.adelic_galois_image", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
-    MathCol("adelic_genus", "ec.adelic_galois_image", "Adelic genus", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_level", "ec.galois_rep", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_index", "ec.galois_rep", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
+    MathCol("adelic_genus", "ec.galois_rep", "Adelic genus", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
     ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
     ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
@@ -464,7 +464,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
-    ProcessedCol("modm_images", "ec.galois_rep_modm_image", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
+    ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
@@ -758,7 +758,7 @@ def EC_data(label):
     if match_lmfdb_label(label):
         conductor, iso_class, number = split_lmfdb_label(label)
         if not number: # isogeny class
-            return datapage(label, ["ec_classdata", "ec_padic"], bread=bread, label_col="lmfdb_iso", sorts=[[], ["p"]])
+            return datapage(label, ["ec_classdata", "ec_padic", "ec_curvedata"], title=f"Elliptic curve isogeny class data - {label}", bread=bread, label_cols=["lmfdb_iso", "lmfdb_iso", "lmfdb_iso"], sorts=[[], ["p"], ['conductor', 'iso_nlabel', 'lmfdb_number']])
         iso_label = class_lmfdb_label(conductor, iso_class)
         labels = [label] * 8
         label_cols = ["lmfdb_label"] * 8
@@ -1012,19 +1012,30 @@ def modm_reduce():
         return "\\text{Invalid input, please enter a positive integer}"
 
     galois_level = data['adelic_level']
+    modm_images = data['modm_images']
+    modm_level_index = [image.split('.')[:2] for image in modm_images]
+    if modm_level_index:
+        relevant_m = gcd(new_mod, int(modm_level_index[-1][0]))
+        index = '1' # the case where level gcd is 1
+        for level_index in reversed(modm_level_index):
+            if (relevant_m % int(level_index[0]) == 0):
+                index = level_index[1]
+                break
+    else:
+        # should not happen if adelic image is computed
+        index = '-1'
 
     ans = gl2_lift(galois_image, galois_level, new_mod)
     if ans == []:
         result = "\\text{trivial group}"
     else:
         result = ",".join([str(latex(dispZmat_from_list(z,2))) for z in ans])
-    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang
+    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang + '.' + index
     return result
 
 def gl1_gen(M):
     # Returns a list of generators of gl1 mod M
-    a = factor(M)
-    a.sort()
+    a = sorted(factor(M))
     q = [p[0]**p[1] for p in a]
     gens = []
     if a[0][0] == 2:
@@ -1050,6 +1061,7 @@ def gl2_element_lifter(N, M):
     m = prod([p[0]**p[1] for p in a if (N % p[0]) == 0])
     # `mat` is an element of gl2 mod N written as a list
     mat_id = [1, 0, 0, 1]
+
     def lifter(mat):
         return [CRT([mat[i], mat_id[i]], [m, M/m]) for i in range(4)]
     return lifter
@@ -1070,6 +1082,7 @@ def gl2_project(subgroup_gen, M):
     # Returns the projection to mod M (removes duplicates)
     if M == 1:
         return []
+
     def project(x):
         return int(Mod(x, M))
     gens = []
@@ -1113,7 +1126,7 @@ class ECSearchArray(SearchArray):
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
     jump_knowl = "ec.q.search_input"
-    null_column_explanations = { 
+    null_column_explanations = {
                                  'adelic_level': False, # not applicable to CM curves, computed for all non-CM curves
                                  'adelic_index': False, # not applicable to CM curves, computed for all non-CM curves
                                  'adelic_genus': False, # not applicable to CM curves, computed for all non-CM curves

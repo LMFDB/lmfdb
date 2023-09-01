@@ -1060,7 +1060,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         else:
             from lmfdb.galois_groups.transitive_group import complete_group_code
 
-            gcs = complete_group_code(inp.upper())
+            gcs = complete_group_code(inp)
 
         galfield, nfield = qfield
         if nfield and nfield not in query:
@@ -1081,7 +1081,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
-            raise SearchParsingError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
+            raise SearchParsingError("It needs to be a list made up of abstract group labels or GAP ids, such as 4.1, 2430.h, [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 # The queries for inertia (and wild inertia) subgroups are different
 # than the ones for Galois groups.
@@ -1099,19 +1099,19 @@ def parse_inertia(inp, query, qfield, err_msg=None):
         # For wild inertia, qfield=('wild_gap', 'wild_gap')
 
         # Need to convert it to GAP id
-        from lmfdb.galois_groups.transitive_group import nt2gap
+        from lmfdb.galois_groups.transitive_group import nt2abstract
 
         iner_gap, iner = qfield
         # Check for nTj
-        rematch = re.match(r"^(\d+)T(\d+)$", inp)
+        rematch = re.match(r"^(\d+)[Tt](\d+)$", inp)
         if rematch:
             n = int(rematch.group(1))
             t = int(rematch.group(2))
             if iner != iner_gap:
                 query[iner] = ["t", [n, t]]
             else:
-                gapid = nt2gap(n, t)
-                query[iner] = gapid
+                abstractid = nt2abstract(n, t)
+                query[iner] = abstractid
         else:
             # Check for an alias, like D4
             from lmfdb.galois_groups.transitive_group import aliases
@@ -1119,7 +1119,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
             inp2 = inp.upper()
             if inp2 in aliases:
                 nt = aliases[inp2][0]
-                query[iner_gap] = nt2gap(nt[0], nt[1])
+                query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
                 # Check for Gap code
                 rematch = re.match(r"^\[(\d+),(\d+)\]$", inp)
@@ -1443,6 +1443,8 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
         query[qfield] = process(True)
     elif inp in ["False", "no", "-1", "0", "odd"]:
         query[qfield] = process(False)
+    elif inp == "unknown":
+        query[qfield] = None
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
         pass
@@ -1706,8 +1708,7 @@ def parse_string_start(
 def str_to_intervals(inp, split_minus=True, parse_singleton=int):
     inp = inp.replace(" ", "")
     if "," in inp:
-        X = [str_to_intervals(piece)[0] for piece in inp.split(",")]
-        X.sort()
+        X = sorted([str_to_intervals(piece)[0] for piece in inp.split(",")])
         i = 0
         while i < len(X) - 1:
             if X[i][1] >= X[i+1][0]:

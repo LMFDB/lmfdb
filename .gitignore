@@ -33,4 +33,4 @@ local.sh
 LMFDBinventory.log
 LMFDBtransactions_inv.log
 
-
+scripts/groups/Make-images/images/*.png

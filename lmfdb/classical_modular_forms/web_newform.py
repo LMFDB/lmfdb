@@ -311,7 +311,7 @@ class WebNewform():
 
     @property
     def conrey_orbit(self):
-        return ConreyCharacter(self.level,self.conrey_index).galois_orbit
+        return ConreyCharacter(self.level,self.conrey_index).galois_orbit()
 
     @lazy_attribute
     def embedding_labels(self):
@@ -546,7 +546,7 @@ class WebNewform():
             if Nk2 > Nk2_bound(nontriv=nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv=nontriv), nontriv_text) )
-            raise ValueError("Newform %s not found" % label)
+            raise ValueError("The newform %s is not in the database (but it may be added in the future)" % label)
         return WebNewform(data, embedding_label=embedding_label)
 
     @property

@@ -25,6 +25,7 @@ import __main__
 from requests import get
 import socket
 from contextlib import closing
+from logging import INFO
 
 COCALC_port = 0
 root_lmfdb_path = os.path.abspath(
@@ -154,6 +155,15 @@ class Configuration(_Configuration):
 
         logginggroup.add_argument(
             "--logfocus", help="name of a logger to focus on", default=argparse.SUPPRESS
+        )
+
+        logginggroup.add_argument(
+            "--loglevel",
+            help="loglevel for flask [default: %(default)s]",
+            dest="logging_loglevel",
+            metavar="LEVEL",
+            type=int,
+            default=INFO,
         )
 
         logginggroup.add_argument(
@@ -334,6 +344,7 @@ class Configuration(_Configuration):
             "slowcutoff": opts["logging"]["slowcutoff"],
             "slowlogfile": opts["logging"]["slowlogfile"],
             "editor": opts["logging"]["editor"],
+            "loglevel": opts["logging"]["loglevel"],
         }
         if "logfocus" in extopts:
             self.logging_options["logfocus"] = extopts["logfocus"]

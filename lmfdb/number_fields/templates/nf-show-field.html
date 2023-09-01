@@ -112,7 +112,10 @@ table.ntdata a {
 
         <h2> {{ KNOWL('nf.class_number_formula', title='Class number formula') }}</h2>
 <p style="margin:10px 280px;">
-$\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) = \frac{2^{r_1}\cdot (2\pi)^{r_2}\cdot R\cdot  h}{w\cdot\sqrt{|D|}} {{ info.cnf|safe }} {{ info.grh_label|safe }}
+\[
+\begin{aligned}\lim_{s\to 1} (s-1)\zeta_K(s) =\mathstrut &amp; \frac{2^{r_1}\cdot (2\pi)^{r_2}\cdot R\cdot  h}{w\cdot\sqrt{|D|}}\cr {{ info.cnf|safe }}
+\end{aligned}\]
+<span style="float: right;">{{ info.grh_label|safe }}</span>
 </p>
 <center>
 {{ place_code('class_number_formula') }}

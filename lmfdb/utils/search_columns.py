@@ -91,7 +91,8 @@ class MathCol(SearchCol):
         self.orig = [orig if (orig is not None) else name]
 
     def display(self, rec):
-        return f"${self.get(rec)}$"
+        val = self.get(rec)
+        return f"${val}$" if val is not None else ""
 
 
 class FloatCol(MathCol):
@@ -110,7 +111,8 @@ class CheckCol(SearchCol):
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
-        return "&#x2713;" if self.get(rec) else ""
+        val = self.get(rec)
+        return "&#x2713;" if val else ("?" if val is None else "")
 
 
 class CheckMaybeCol(SearchCol):

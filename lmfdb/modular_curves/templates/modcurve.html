@@ -100,13 +100,11 @@
 <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{ {{nb_var-1}} }$: </p>
 {% elif type == 2 %}
 <p> {%  if smooth == True %}
-  {{ KNOWL('ag.smooth', 'Smooth') }}
-  {{ KNOWL('ag.plane_model', 'plane model') }}:
+  {{ KNOWL('modcurve.plane_model', 'Smooth plane model') }}:
   {% elif smooth == False %}
-  {{ KNOWL('ag.smooth', 'Singular') }}
-  {{ KNOWL('ag.plane_model', 'plane model') }}:
+  {{ KNOWL('modcurve.plane_model', 'Singular plane model') }}:
   {% else %}
-  {{ KNOWL('ag.plane_model', 'Plane model') }}:
+  {{ KNOWL('modcurve.plane_model', 'Plane model') }}:
   {% endif %}
 </p>
 {% elif type == 5 %}
@@ -232,7 +230,7 @@ We are removing this section until we have more sources of non-rational points. 
 
 {% set modelisos = curve.formatted_modelisos %}
 {% if modelisos %}
-<h2> Maps betweeen models of this curve </h2>
+<h2> Maps between models of this curve </h2>
 {% for degree, domain_model_type, codomain_label, codomain_model_type, codomain_name, codomain_equation, coord_names, equations in modelisos %}
 <p>Birational map from {{ curve.model_type_str(domain_model_type) }} to {{ curve.model_type_str(codomain_model_type) }}:</p>
 <table valign="center">
