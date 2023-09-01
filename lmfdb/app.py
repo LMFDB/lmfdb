@@ -249,6 +249,10 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
+@app.after_request
+def print_done(T):
+    app.logger.info(f"done with     = {request.url}")
+    return T
 
 @app.before_request
 def netloc_redirect():
@@ -261,6 +265,7 @@ def netloc_redirect():
     from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
+    app.logger.info(f"Requested url = {request.url}")
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
@@ -292,6 +297,17 @@ def bad_bots_list():
         for elt in [
             "The Knowledge AI",
             "Wolfram",
+            "petalbot",
+        ]
+    ]
+
+
+@cached_function
+def very_bad_bots_list():
+    return [
+        elt.lower()
+        for elt in [
+            "Amazonbot",
         ]
     ]
 
@@ -299,9 +315,12 @@ def bad_bots_list():
 @app.before_request
 def badbot():
     ua = request.user_agent.string.lower()
+    for elt in very_bad_bots_list():
+        if elt in ua:
+            return render_template("404.html", title='Too many requests'), 429
     for elt in bad_bots_list():
         if elt in ua:
-            time.sleep(5)
+            time.sleep(10)
 
 
 def timestamp():

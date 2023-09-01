@@ -148,7 +148,10 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     e.g. 23.2.22 -> 23.2.b (because 23.b is the character orbit label of the Conrey character 23.22)
     """
     N, k, n = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
+    try:
+        return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
+    except AssertionError: # N and n not relatively prime
+        pass
 
 
 def trace_expansion_generic(space, prec_max=10):

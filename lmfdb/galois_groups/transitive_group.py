@@ -119,7 +119,7 @@ class WebGaloisGroup:
         if self._data.get('pretty') is not None:
             return self._data['pretty']
         gp_label = self.abstract_label()
-        group = db.gps_groups_test.lookup(gp_label)
+        group = db.gps_groups.lookup(gp_label)
         if group and group.get('tex_name'):
             return f"${group['tex_name']}$"
         if emptyifnotpretty:
@@ -592,9 +592,13 @@ def group_alias_table():
     ans += r'</tbody></table>'
     return ans
 
-def nt2abstract(n, t):
+def nt2abstract(n, t, output="pair"):
     res = db.gps_transitive.lookup('{}T{}'.format(n,t))
     if res and 'abstract_label' in res:
+        if output == "pair":
+            gapid = res['abstract_label'].split('.')
+            return [int(z) for z in gapid]
+        # Otherwise output abstract group label
         return res['abstract_label']
     raise NameError('Abstract group id not found')
 
