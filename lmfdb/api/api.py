@@ -96,6 +96,7 @@ def stats():
         dname, _ = split_db(tablename)
         dbSize[dname] += sizes['total_bytes']
         dbObjects[dname] += sizes['nrows']
+    tablespaces = db.tablespaces()
     for tablename, sizes in table_sizes.items():
         tsize = sizes['total_bytes']
         size += tsize
@@ -119,7 +120,9 @@ def stats():
                 'size': csize, 'avgObjSize':avg_size,
                 'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']),
                 'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
-                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts']}
+                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts'],
+                'tablespace': tablespaces[tablename],
+            }
     dataSize = size - indexSize
     info['ntables'] = len(table_sizes)
     info['nobjects'] = nobjects
