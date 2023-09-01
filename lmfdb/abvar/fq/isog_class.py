@@ -108,11 +108,30 @@ def diagram_js(layers, display_opts):
 
     return [ll, layers[1]], rank_lookup, len(ranks)
 
+def display_abelian_group(inv):
+    if inv == []:
+        label = "1.1"
+        url = url_for("abstract.by_label", label=label)
+        name = "C_1"
+    else:
+        label = ".".join(str(c) for c in inv)
+        url = url_for("abstract.by_abelian_label", label=label)
+        name = r"\times ".join(f"C_{{{c}}}" for c in inv)
+    return fr"""<a href="{url}">${name}$</a>"""
+
 class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
     """
     name = "isogeny"
+
+    select_line = rf"""
+            Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')},
+            with the {display_knowl('av.fq.endomorphism_ring_notation', 'notation') }
+            $[\mathrm{{index}}]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
+            in the diagram to see information about it.
+"""
+
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
@@ -286,7 +305,7 @@ class AbvarFq_isoclass():
             else:
                 factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
             istr = f"_{{{i}}}" if num_ind[N] > 1 else ""
-            we_pic = f"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
+            we_pic = rf"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
             tex[R] = "[%s]^{%s}%s" % (factored_index, we_pic, istr)
             texlabels.add(tex[R])
         texlabels = {rec["label"]: rec["image"] for rec in db.av_fq_teximages.search({"label": {"$in": list(texlabels)}})}
@@ -313,13 +332,7 @@ class AbvarFq_isoclass():
 
     @lazy_attribute
     def endring_select_line(self):
-        notation = r'notation'
-        return rf"""
-            Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')},
-            with the {display_knowl('av.fq.endomorphism_ring_notation', notation) }
-            $[\mathrm{{index}}]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
-            in the diagram to see information about it.
-"""
+        return self.select_line
 
     def endringinfo(self, endring):
         for elt in self.weak_equivalence_classes:
@@ -341,11 +354,11 @@ class AbvarFq_isoclass():
 
         # Ring display
         names = ["R"]
-        if rec["is_Zconductor_sum"]:
+        if rec.get("is_Zconductor_sum"):
             names.append(r"\mathbb{Z} + \mathfrak{f}_R")
-        elif rec["is_ZFVconductor_sum"]:
+        elif rec.get("is_ZFVconductor_sum"):
             names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
-        gen = rec["generator_over_ZFV"]
+        gen = rec.get("generator_over_ZFV")
         if gen:
             d, num = gen
             num = to_R(num)
@@ -358,45 +371,40 @@ class AbvarFq_isoclass():
             names.append(fr"\mathbb{{Z}}[{','.join(gens)}]")
         names = "=".join(names)
 
-        # conductor
-        M, d, num = rec["conductor"]
-        num = to_R(num)
-        if num != 0:
-            conductor = latex(num)
-            if d != 1:
-                conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
-            conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_{{\mathbb{{Q}}(F)}}}}"
-        else:
-            conductor = "\mathcal{O}_{\mathbb{Q}[F]}"
-            if M != 1:
-                conductor = f"{M} {conductor}"
-        if rec["pic_invs"] == []:
-            pic_label = "1.1"
-            pic_url = url_for("abstract.by_label", label="1.1")
-            pic = "C_1"
-        else:
-            pic_label = ".".join(str(c) for c in rec["pic_invs"])
-            pic_url = url_for("abstract.by_abelian_label", label=pic_label)
-            pic = r"\times ".join(f"C_{{{c}}}" for c in rec["pic_invs"])
-        if rec["cohen_macaulay_type"] == 1:
-            cm_type = "$1$ (%s)" % display_knowl('ag.gorenstein', 'Gorenstein')
-        else:
-            cm_type = "$%s$" % rec["cohen_macaulay_type"]
-
-        ans = "\n".join([
-            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+        ans = [
             "<table>",
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_index', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td><a href='{pic_url}'>${pic}$</td></tr>",
-            # FIXME
-            # f"<tr><td>{display_knowl('av.fq.picard_group', 'Picard group')}:</td><td>{abstract_group_display_knowl(label=pic_label, name=pic)}</td></tr>",
+            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
+        ]
+
+        if rec["conductor"]:
+            # conductor
+            M, d, num = rec["conductor"]
+            num = to_R(num)
+            if num != 0:
+                conductor = latex(num)
+                if d != 1:
+                    conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+                conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_{{\mathbb{{Q}}(F)}}}}"
+            else:
+                conductor = r"\mathcal{O}_{\mathbb{Q}[F]}"
+                if M != 1:
+                    conductor = f"{M} {conductor}"
+            ans.append(
+                fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
+            )
+
+
+        cm_type = "$%s$" % rec["cohen_macaulay_type"]
+
+        ans.extend([
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{display_abelian_group(rec['pic_invs'])}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
         # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
-        return ans
+        return "\n".join(ans)
 
     def _make_jacpol_property(self):
         ans = []
@@ -664,11 +672,11 @@ class AbvarFq_isoclass():
 
     header_polarized_varieties = [
         ('label', 'av.fq.lmfdb_label', 'Label'),
-        ('degree', 'av.polarization_degree', 'Degree'),
-        ('aut_group', 'av.aut_group', 'Automorphism Group'),
+        ('degree', 'av.polarization', 'Degree'),
+        ('aut_group', 'ag.aut_group', 'Automorphism Group'),
         #('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
-        ('endomorphism_ring', 'av.endomorphism_ring', 'Endomorphism ring'),
-        ('kernel', 'av.polarization_kernel', 'Kernel'),
+        ('endomorphism_ring', 'ag.endomorphism_ring', 'Endomorphism ring'),
+        ('kernel', 'av.polarization', 'Kernel'),
     ]
 
     @lazy_attribute
@@ -690,7 +698,7 @@ class AbvarFq_isoclass():
         'endomorphism_ring': lambda x : x['endomorphism_ring'],
         # 'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
         'isom_label' : lambda x : x['isom_label'],
-        'kernel' : lambda x : x['kernel'],
+        'kernel' : lambda x : display_abelian_group(x['kernel']),
         'label' : lambda x : x['label'],
         }
         res = ""
@@ -707,6 +715,12 @@ class AbvarFq_isoclass():
           {self.display_rows_polarizations()}
         </table>
 """
+    @lazy_attribute
+    def number_principal_polarizations(self):
+        if self.polarized_abelian_varieties:
+            return sum(1 for elt in self.polarized_abelian_varieties if elt['degree'] == 1)
+        else:
+            return None
 
 
 

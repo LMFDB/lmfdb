@@ -808,6 +808,10 @@ def endringinfo(label, endring):
     return isoclass.endringinfo(endring)
 
 
+@abvarfq_page.route("/endringinfo/")
+def endring_select_line():
+    return AbvarFq_isoclass.select_line
+
 
 def search_input_error(info=None, bread=None):
     if info is None:
