@@ -1290,4 +1290,4 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         Returns a dictionary giving giving the tablespace for all tables
         """
         D = {rec[0]: rec[1] for rec in self._execute(SQL("SELECT tablename, tablespace FROM pg_tables"))}
-        return {name: space if space else "" for (name, space) in D.items() if name in self.tablenames}
+        return {name: space if space else "" for (name, space) in D.items()}
