@@ -758,7 +758,7 @@ def EC_data(label):
     if match_lmfdb_label(label):
         conductor, iso_class, number = split_lmfdb_label(label)
         if not number: # isogeny class
-            return datapage(label, ["ec_classdata", "ec_padic"], bread=bread, label_col="lmfdb_iso", sorts=[[], ["p"]])
+            return datapage(label, ["ec_classdata", "ec_padic", "ec_curvedata"], title=f"Elliptic curve isogeny class data - {label}", bread=bread, label_cols=["lmfdb_iso", "lmfdb_iso", "lmfdb_iso"], sorts=[[], ["p"], ['conductor', 'iso_nlabel', 'lmfdb_number']])
         iso_label = class_lmfdb_label(conductor, iso_class)
         labels = [label] * 8
         label_cols = ["lmfdb_label"] * 8
@@ -1012,13 +1012,25 @@ def modm_reduce():
         return "\\text{Invalid input, please enter a positive integer}"
 
     galois_level = data['adelic_level']
+    modm_images = data['modm_images']
+    modm_level_index = [image.split('.')[:2] for image in modm_images]
+    if modm_level_index:
+        relevant_m = gcd(new_mod, int(modm_level_index[-1][0]))
+        index = '1' # the case where level gcd is 1
+        for level_index in reversed(modm_level_index):
+            if (relevant_m % int(level_index[0]) == 0):
+                index = level_index[1]
+                break
+    else:
+        # should not happen if adelic image is computed
+        index = '-1'
 
     ans = gl2_lift(galois_image, galois_level, new_mod)
     if ans == []:
         result = "\\text{trivial group}"
     else:
         result = ",".join([str(latex(dispZmat_from_list(z,2))) for z in ans])
-    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang
+    result += '.' + str(new_mod) + '.' + str(ans) + '.' + cur_lang + '.' + index
     return result
 
 def gl1_gen(M):
