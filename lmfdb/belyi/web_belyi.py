@@ -255,7 +255,7 @@ class WebBelyiGalmap():
 
         crv_str = galmap["curve"]
         if crv_str == "PP1":
-            data["curve"] = r"\mathbb{P}^1"
+            data["curve"] = r"$\mathbb{P}^1$"
         else:
             data["curve"] = raw_typeset(crv_str, r'$\displaystyle '+make_curve_latex(crv_str, nu=self.embedding)+'$')
 
