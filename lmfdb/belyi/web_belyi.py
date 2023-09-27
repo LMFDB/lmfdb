@@ -6,6 +6,7 @@ from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing, NumberField, factor
 from lmfdb.utils import names_and_urls, prop_int_pretty, raw_typeset
 from flask import url_for
+import re
 
 from lmfdb import db
 
@@ -143,6 +144,15 @@ def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
         f_str += latex(factor(cs[-1])) + latex(mons[-1])
     return f_str
 
+def belyi_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    str = str.replace('nu',r'\nu')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return str
+
 ###############################################################################
 # Belyi map class definitions
 ###############################################################################
@@ -263,7 +273,9 @@ class WebBelyiGalmap():
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         # plane model
         if galmap.get("plane_model"):
-            data["plane_model"] = raw_typeset(galmap["plane_model"]+'=0', r'$\displaystyle '+galmap["plane_model_latex"]+'=0$')
+            data["plane_model"] = raw_typeset(galmap["plane_model"]+'=0', r'$\displaystyle '+belyi_latex(galmap["plane_model"])+'=0$')
+            data["plane_model2"] = r'$\displaystyle '+galmap["plane_model_latex"]+'=0$'
+
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
 
