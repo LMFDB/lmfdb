@@ -57,9 +57,6 @@ function show_eqns(eqnstyle) {
   <tr class='plane_eqn'>
     <td>
       {{ data.plane_model|safe }}
-      <br>
-      <hr>
-      {{ data.plane_model2|safe }}
       {% if data["curve_label"] %}
         , isomorphic to
         {% if data.g == 1 %}
