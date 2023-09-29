@@ -1054,7 +1054,7 @@ class PostgresTable(PostgresBase):
                 raise ValueError("You must specify a column that is contained in the datafile and uniquely specifies each row")
         with open(datafile) as F:
             tables = [self.search_table]
-            columns = self.search_cols
+            columns = list(self.search_cols)
             if self.extra_table is not None:
                 tables.append(self.extra_table)
                 columns.extend(self.extra_cols)
@@ -1142,7 +1142,7 @@ class PostgresTable(PostgresBase):
                 ordered = False
             if etable is not None:
                 ecols = SQL(", ").join([
-                    SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table))
+                    SQL("{0} = {1}.{0}").format(Identifier(col), Identifier(tmp_table))
                     for col in ecols
                 ])
                 self._execute(updater.format(
