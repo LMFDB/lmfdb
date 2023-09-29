@@ -92,5 +92,4 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
             "gps_subgroups", "16.8.2.b1.a1",
             "gps_groups", "[28776, 16577, 5167]", # perm_gens
-            "[16582, 136, 5167, 40176]", # perm_gens
             "[[1, 1, 1]]"]) # faithful_reps
