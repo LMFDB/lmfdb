@@ -121,7 +121,7 @@ def stats():
                 'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extras_bytes']),
                 'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
                 'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts'],
-                'tablespace': tablespaces[tablename],
+                'tablespace': tablespaces.get(tablename, ""),
             }
     dataSize = size - indexSize
     info['ntables'] = len(table_sizes)
