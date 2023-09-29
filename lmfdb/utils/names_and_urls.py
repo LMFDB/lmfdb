@@ -128,7 +128,7 @@ def name_and_object_from_url(url, check_existence=False):
     elif url_split[:2] == ["Character", "Dirichlet"]:
         modulus = int(url_split[2])
         conrey = int(url_split[3])
-        name = "Character $\chi_{%d}(%d, \cdot)$" % (modulus, conrey)
+        name = r"Character $\chi_{%d}(%d, \cdot)$" % (modulus, conrey)
         obj_exists = True
     else:
         # FIXME
