@@ -233,7 +233,7 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
 
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
-    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
+    MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
                       display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),

@@ -194,7 +194,7 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=G2CSearchArray())
-    if len(info) > 1:
+    if request.args:
         return genus2_curve_search(info)
     info["stats"] = G2C_stats()
     info["stats_url"] = url_for(".statistics")

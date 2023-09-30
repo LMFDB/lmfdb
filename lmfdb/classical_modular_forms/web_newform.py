@@ -814,9 +814,9 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_gen(self):
-        if self.field_poly_root_of_unity == 4:
-            return r'\(i = \sqrt{-1}\)'
-        elif (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
+        if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
+            if self.field_poly_root_of_unity == 4:
+                return r'\(i = \sqrt{-1}\)'
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
@@ -872,10 +872,10 @@ function switch_basis(btype) {
         # univariate polynomial rings don't support order,
         # we work around it by introducing a dummy variable
         """
-        if self.field_poly_root_of_unity == 4:
-            return PolynomialRing(QQ, 'i')
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
+            if m == 4:
+                return PolynomialRing(QQ, 'i')
             return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order='negdeglex')
         if self.single_generator:
             if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
