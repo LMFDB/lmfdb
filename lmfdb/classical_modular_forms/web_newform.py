@@ -872,10 +872,10 @@ function switch_basis(btype) {
         # univariate polynomial rings don't support order,
         # we work around it by introducing a dummy variable
         """
-        if self.field_poly_root_of_unity == 4:
-            return PolynomialRing(QQ, 'i')
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
+            if m == 4:
+                return PolynomialRing(QQ, 'i')
             return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order='negdeglex')
         if self.single_generator:
             if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
