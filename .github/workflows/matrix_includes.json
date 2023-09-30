@@ -102,11 +102,6 @@
     {
         "files": "lmfdb/groups/abstract/test_browse_page.py lmfdb/groups/abstract/test_abstract_groups.py",
         "folders": "groups/abstract",
-        "server": "proddb"
-    },
-    {
-        "files": "lmfdb/groups/abstract/test_browse_page.py lmfdb/groups/abstract/test_abstract_groups.py",
-        "folders": "groups/abstract",
         "server": "devmirror"
     },
     {
