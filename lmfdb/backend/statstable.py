@@ -216,6 +216,10 @@ class PostgresStatsTable(PostgresBase):
                 total = self._slow_count({}, extra=False)
         self.total = total
 
+    def _get_tablespace(self):
+        # We use the same tablespace for stats and counts tables as for the main search table
+        return self.table._get_tablespace()
+
     def _has_stats(self, jcols, ccols, cvals, threshold, split_list=False, threshold_inequality=False, suffix=""):
         """
         Checks whether statistics have been recorded for a given set of columns.

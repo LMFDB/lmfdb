@@ -30,7 +30,7 @@ _operator_classes = {
         "varchar_ops",
         "varchar_pattern_ops",
     ],
-    "gin": ["jsonb_path_ops"],
+    "gin": ["jsonb_path_ops", "array_ops"],
     "gist": ["inet_ops"],
     "hash": [
         "bpchar_pattern_ops",
@@ -276,8 +276,14 @@ class PostgresTable(PostgresBase):
         if not verbose:
             return output
 
-    @staticmethod
-    def _create_index_statement(name, table, type, columns, modifiers, storage_params):
+    def _get_tablespace(self):
+        """
+        Determine the tablespace hosting this table (which is then used for indexes and constraints)
+        """
+        cur = self._execute(SQL("SELECT tablespace FROM pg_tables WHERE tablename=%s"), [self.search_table])
+        return cur.fetchone()[0]
+
+    def _create_index_statement(self, name, table, type, columns, modifiers, storage_params):
         """
         Utility function for making the create index SQL statement.
         """
@@ -291,6 +297,7 @@ class PostgresTable(PostgresBase):
             )
         else:
             storage_params = SQL("")
+        tablespace = self._tablespace_clause()
         modifiers = [" " + " ".join(mods) if mods else "" for mods in modifiers]
         # The inner % operator is on strings prior to being wrapped by SQL: modifiers have been whitelisted.
         columns = SQL(", ").join(
@@ -298,8 +305,8 @@ class PostgresTable(PostgresBase):
             for col, mods in zip(columns, modifiers)
         )
         # The inner % operator is on strings prior to being wrapped by SQL: type has been whitelisted.
-        creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}" % (type))
-        return creator.format(Identifier(name), Identifier(table), columns, storage_params)
+        creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}{4}" % (type))
+        return creator.format(Identifier(name), Identifier(table), columns, storage_params, tablespace)
 
     def _create_counts_indexes(self, suffix="", warning_only=False):
         """
@@ -447,6 +454,13 @@ class PostgresTable(PostgresBase):
                 name = "_".join([self.search_table] + [col[:2] for col in columns])
             else:
                 name = "_".join([self.search_table] + ["".join(col[0] for col in columns)])
+            if len(name) >= 64:
+                name = name[:63]
+            if self._relation_exists(name):
+                disamb = 0
+                while self._relation_exists(name + str(disamb)):
+                    disamb += 1
+                name += str(disamb)
 
         with DelayCommit(self, silence=True):
             self._check_index_name(name, "Index")
@@ -1054,7 +1068,7 @@ class PostgresTable(PostgresBase):
                 raise ValueError("You must specify a column that is contained in the datafile and uniquely specifies each row")
         with open(datafile) as F:
             tables = [self.search_table]
-            columns = self.search_cols
+            columns = list(self.search_cols)
             if self.extra_table is not None:
                 tables.append(self.extra_table)
                 columns.extend(self.extra_cols)
@@ -1080,7 +1094,7 @@ class PostgresTable(PostgresBase):
                 SQL("{0} " + self.col_type[col]).format(Identifier(col))
                 for col in columns
             ])
-            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(tmp_table), processed_columns)
+            creator = SQL("CREATE TABLE {0} ({1}){2}").format(Identifier(tmp_table), processed_columns, self._tablespace_clause())
             self._execute(creator)
             # We need to add an id column and populate it correctly
             if label_col != "id":
@@ -1142,7 +1156,7 @@ class PostgresTable(PostgresBase):
                 ordered = False
             if etable is not None:
                 ecols = SQL(", ").join([
-                    SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table))
+                    SQL("{0} = {1}.{0}").format(Identifier(col), Identifier(tmp_table))
                     for col in ecols
                 ])
                 self._execute(updater.format(
@@ -2435,7 +2449,7 @@ class PostgresTable(PostgresBase):
             col_type_SQL = SQL(", ").join(
                 SQL("{0} %s" % typ).format(Identifier(col)) for col, typ in col_type
             )
-            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), col_type_SQL)
+            creator = SQL("CREATE TABLE {0} ({1}){2}").format(Identifier(self.extra_table), col_type_SQL, self._tablespace_clause())
             self._execute(creator)
             if columns:
                 self.drop_constraints(columns)
