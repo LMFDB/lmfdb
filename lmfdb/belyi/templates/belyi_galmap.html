@@ -84,7 +84,7 @@ function show_eqns(eqnstyle) {
 {% else %}
 <h2>Curve</h2>
   <p>
-    {{data.curve}}
+    {{data.curve|safe}}
     {%- if data.g == 0 -%}
       , with affine coordinate $x$
     {% endif %}
