@@ -3,7 +3,7 @@
 from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing, NumberField, factor
+from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
 from lmfdb.utils import names_and_urls, prop_int_pretty, raw_typeset
 from flask import url_for
 import re
