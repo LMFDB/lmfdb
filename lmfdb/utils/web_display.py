@@ -121,6 +121,18 @@ def compress_int(n, cutoff=15, sides=2):
     else:
         return res, False
 
+def compress_complicated(expression, cutoff=15, sides=2):
+    r"""
+    Takes a string and any numbers (consecutive digits) longer than
+    cutoff gets replaced
+    """
+    def c_int(n):
+        n = str(n.group())
+        if len(n) >= cutoff:
+            return n[:sides] + r'\!\cdots\!' + n[-sides:]
+        else:
+            return n
+    return re.sub(r'\d+', c_int, expression)
 
 def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     short, shortened = compress_int(n, cutoff=cutoff, sides=sides)
