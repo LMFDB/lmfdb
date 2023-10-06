@@ -4,7 +4,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
 from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset, 
-        web_latex, compress_complicated)
+        web_latex, compress_expression)
 from flask import url_for
 import re
 
@@ -292,13 +292,13 @@ class WebBelyiGalmap():
         if crv_str == "PP1":
             data["curve"] = r"$\mathbb{P}^1$"
         else:
-            data["curve"] = raw_typeset(crv_str, r'$\displaystyle '+compress_complicated(make_curve_latex(crv_str, nu=self.embedding))+'$', extra=curve_ref)
+            data["curve"] = raw_typeset(crv_str, r'$\displaystyle '+compress_expression(make_curve_latex(crv_str, nu=self.embedding))+'$', extra=curve_ref)
 
-        data["map"] = raw_typeset(galmap["map"], r'$\displaystyle '+compress_complicated(make_map_latex(galmap["map"], nu=self.embedding))+'$')
+        data["map"] = raw_typeset(galmap["map"], r'$\displaystyle '+compress_expression(make_map_latex(galmap["map"], nu=self.embedding))+'$')
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         # plane model
         if galmap.get("plane_model"):
-            data["plane_model"] = raw_typeset(compress_complicated(galmap["plane_model"])+'=0', r'$\displaystyle '+belyi_latex(galmap["plane_model"])+'=0$', extra=curve_ref)
+            data["plane_model"] = raw_typeset(compress_expression(galmap["plane_model"])+'=0', r'$\displaystyle '+belyi_latex(galmap["plane_model"])+'=0$', extra=curve_ref)
 
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']

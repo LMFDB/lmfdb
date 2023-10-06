@@ -121,7 +121,7 @@ def compress_int(n, cutoff=15, sides=2):
     else:
         return res, False
 
-def compress_complicated(expression, cutoff=15, sides=2):
+def compress_expression(expression, cutoff=15, sides=2):
     r"""
     Takes a string and any numbers (consecutive digits) longer than
     cutoff gets replaced
