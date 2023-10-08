@@ -115,8 +115,9 @@ def web_latex(x, enclose=True):
 
 def compress_int(n, cutoff=15, sides=2):
     res = str(n)
-    if abs(n) >= 10**cutoff:
-        short = res[:sides + (1 if n < 0 else 0)] + r'\!\cdots\!' + res[-sides:]
+    minus_width = 1 if '-' in res else 0
+    if len(res) > cutoff+minus_width:
+        short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
         return short, True
     else:
         return res, False
@@ -126,13 +127,7 @@ def compress_expression(expression, cutoff=15, sides=2):
     Takes a string and any numbers (consecutive digits) longer than
     cutoff gets replaced
     """
-    def c_int(n):
-        n = str(n.group())
-        if len(n) >= cutoff:
-            return n[:sides] + r'\!\cdots\!' + n[-sides:]
-        else:
-            return n
-    return re.sub(r'\d+', c_int, expression)
+    return re.sub(r'\d+', lambda a: compress_int(str(a.group()),cutoff, sides)[0], expression)
 
 def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     short, shortened = compress_int(n, cutoff=cutoff, sides=sides)
