@@ -175,11 +175,11 @@ def validate_label(label):
     elif re.match(r'^\d+\.[a-z]+\.\d+$', label):  # label has both orbit and number
         return True
     else:
-        raise ValueError(("It must be of the form modulus.number, or "
+        raise ValueError("It must be of the form modulus.number, or "
                           "modulus.letter, or modulus.letter.number, "
                           "with modulus and number positive natural numbers "
                           " and letter an alphabetic letter."
-                          ))
+                          )
 
 def jump(info):
     jump_box = info["jump"].strip()  # only called when this present
