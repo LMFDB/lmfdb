@@ -175,7 +175,7 @@ def prime_from_label(K, lab):
     make_keys(K,p)
     d = K.psort_dict[p]
     try:
-        return next((P for P in d if d[P][:2]==(n,j)))
+        return next(P for P in d if d[P][:2]==(n,j))
     except StopIteration:
         return 0
 

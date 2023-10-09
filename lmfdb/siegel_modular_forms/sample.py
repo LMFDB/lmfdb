@@ -129,10 +129,10 @@ def export(collection, name):
 
     # Fourier coefficients and eigenvalues
     fcs = db.smf_fc.search({'owner_id': id_link}, ['det', 'data'])
-    doc['Fourier_coefficients'] = dict(((fc['det'], fc['data']) for fc in fcs))
+    doc['Fourier_coefficients'] = dict((fc['det'], fc['data']) for fc in fcs)
 
     evs = db.smf_ev.search({'owner_id': id_link}, ['index', 'data'])
-    doc['eigenvalues'] = dict(((ev['index'], ev['data']) for ev in evs))
+    doc['eigenvalues'] = dict((ev['index'], ev['data']) for ev in evs)
 
     label = doc['collection'][0] + '.' + doc['name']
     doc['label']= label
