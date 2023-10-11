@@ -379,5 +379,4 @@ def ideals_iterator(K,minnorm=1,maxnorm=Infinity):
     r""" Return an iterator over all ideals of norm n up to maxnorm (sorted).
     """
     for n in srange(minnorm,maxnorm+1):
-        for I in ideals_of_norm(K,n):
-            yield I
+        yield from ideals_of_norm(K,n)
