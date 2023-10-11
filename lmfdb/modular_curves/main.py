@@ -957,7 +957,7 @@ ratpoint_columns = SearchColumns([
     FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
 
 def ratpoint_postprocess(res, info, query):
-    labels = list(set(rec["curve_label"] for rec in res))
+    labels = list({rec["curve_label"] for rec in res})
     RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat_fine.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
     for rec in res:
         rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")

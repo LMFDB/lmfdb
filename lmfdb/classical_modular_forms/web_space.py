@@ -98,7 +98,7 @@ def ALdim_table(al_dims, level, weight):
             continue
         b = list(reversed(ZZ(i).bits()))
         b = [0 for j in range(num_primes-len(b))] + b
-        row = list(map(lambda x:r'<td>\(%s\)</td>'%sign_char(x),b))
+        row = [r'<td>\(%s\)</td>'%sign_char(x) for x in b]
         sign = sum(b) % 2
         if num_primes > 1:
             row.append(r"<td class='right'>$%s$</td>"%sign_char(sign))

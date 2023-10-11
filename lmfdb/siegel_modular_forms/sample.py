@@ -85,7 +85,7 @@ class Sample_class (SageObject):
     def eigenvalues(self, index_list):
         query = {'owner_id': self.__id, 'index': {'$in': index_list}}
         evs = db.smf_ev.search(query, ['index', 'data'])
-        return dict((ev['index'], self.__field(str(ev['data']))) for ev in evs)
+        return {ev['index']: self.__field(str(ev['data'])) for ev in evs}
 
     def available_Fourier_coefficients(self, det_list=None):
         query = {'owner_id': self.__id}
@@ -97,7 +97,7 @@ class Sample_class (SageObject):
         query = {'owner_id': self.__id, 'det': {'$in': det_list}}
         fcs = db.smf_fc.search(query, ['det', 'data'])
         P = PolynomialRing(self.__field, names='x,y')
-        return dict((fcd['det'], dict((tuple(literal_eval(f)), P(str(poly))) for f, poly in fcd['data'].items() )) for fcd in fcs)
+        return {fcd['det']: {tuple(literal_eval(f)): P(str(poly)) for f, poly in fcd['data'].items() } for fcd in fcs}
 
 
 def Sample(collection, name):
@@ -129,10 +129,10 @@ def export(collection, name):
 
     # Fourier coefficients and eigenvalues
     fcs = db.smf_fc.search({'owner_id': id_link}, ['det', 'data'])
-    doc['Fourier_coefficients'] = dict((fc['det'], fc['data']) for fc in fcs)
+    doc['Fourier_coefficients'] = {fc['det']: fc['data'] for fc in fcs}
 
     evs = db.smf_ev.search({'owner_id': id_link}, ['index', 'data'])
-    doc['eigenvalues'] = dict((ev['index'], ev['data']) for ev in evs)
+    doc['eigenvalues'] = {ev['index']: ev['data'] for ev in evs}
 
     label = doc['collection'][0] + '.' + doc['name']
     doc['label']= label
