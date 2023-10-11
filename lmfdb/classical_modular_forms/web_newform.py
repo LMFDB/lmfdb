@@ -286,8 +286,8 @@ class WebNewform():
     # Breadcrumbs
     @property
     def bread(self):
-        kwds = dict(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label,
-                    hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label": self.char_orbit_label,
+                    "hecke_orbit": cremona_letter_code(self.hecke_orbit - 1)}
         if self.embedding_label is not None:
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)

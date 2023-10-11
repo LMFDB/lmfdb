@@ -36,19 +36,9 @@ function show_eqns(eqnstyle) {
 <table>
   <tr class='std_eqn nodisplay'>
     <td>
-      $\displaystyle {{ data.curve }}$
-      {% if data.g == 0 %}
+      {{ data.curve|safe }}
+      {%- if data.g == 0 -%}
         , with affine coordinate $x$
-      {% endif %}
-      {% if data["curve_label"] %}
-        , isomorphic to
-        {% if data.g == 1 %}
-          elliptic
-        {% endif %}
-        {% if data.g == 2 %}
-          genus 2 
-        {% endif %}
-        curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
       {% endif %}
     </td>
     <td>
@@ -56,18 +46,7 @@ function show_eqns(eqnstyle) {
   </tr>
   <tr class='plane_eqn'>
     <td>
-      \(\displaystyle {{ data.plane_model }} = 0\)
-      {% if data["curve_label"] %}
-        , isomorphic to
-        {% if data.g == 1 %}
-          elliptic
-        {% endif %}
-        {% if data.g == 2 %}
-          genus 2 
-        {% endif %}
-        curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
-      {% endif %}
-    </td>
+      {{ data.plane_model|safe }}
     <td>
     </td>
   </tr>
@@ -88,9 +67,9 @@ function show_eqns(eqnstyle) {
 <h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
 <div class='std_eqn nodisplay'>
   {% if data.g == 0 %}
-    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x) =\) {{data.map|safe}} </p>
   {% else %}
-    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x,y) =\) {{data.map|safe}} </p>
   {% endif %}
 </div>
 <div class='plane_eqn'>
@@ -105,20 +84,17 @@ function show_eqns(eqnstyle) {
 {% else %}
 <h2>Curve</h2>
   <p>
-    \(\displaystyle {{data.curve}}\)
-    {% if data.g == 0 %}
+    {{data.curve|safe}}
+    {%- if data.g == 0 -%}
       , with affine coordinate $x$
-    {% endif %}
-    {% if data["curve_label"] %}
-      , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
     {% endif %}
   </p>
 
 <h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
   {% if data.g == 0 %}
-    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x) =\) {{data.map|safe}} </p>
   {% else %}
-    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x,y) =\) {{data.map|safe}} </p>
   {% endif %}
 {% endif %}
 

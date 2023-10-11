@@ -858,12 +858,12 @@ aliases['GL(2,5)'] = [(24,1353)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]
-siblings = dict(
-    (elt["label"], [tuple(z[0]) for z in elt["siblings"]])
+siblings = {
+    elt["label"]: [tuple(z[0]) for z in elt["siblings"]]
     for elt in db.gps_transitive.search(
         {"label": {"$in": labels}}, ["label", "siblings"]
     )
-)
+}
 for ky in aliases.keys():
     nt = aliases[ky][0]
     label = "%sT%s"% nt

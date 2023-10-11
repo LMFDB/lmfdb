@@ -310,7 +310,7 @@ lf_columns = SearchColumns([
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])
 
 def lf_postprocess(res, info, query):
-    cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
+    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))
     for rec in res:
         rec["cache"] = cache
     return res

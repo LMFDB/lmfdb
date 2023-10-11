@@ -515,7 +515,7 @@ def render_field_webpage(args):
         table = ""
         reflex_fields = db.nf_fields_reflex.search({"nf_label" : label})
         reflex_fields_list = []
-        field_labels_dict = dict()
+        field_labels_dict = {}
         for reflex_field in reflex_fields:
             if len(reflex_field['rf_coeffs']) > 1:
                 reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])

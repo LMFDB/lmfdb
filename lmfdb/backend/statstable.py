@@ -545,7 +545,7 @@ class PostgresStatsTable(PostgresBase):
             ccols, cvals, allcols = Json([]), Json([]), cols
         else:
             ccols, cvals = self._split_dict(constraint)
-            allcols = sorted(list(set(cols + list(constraint))))
+            allcols = sorted(set(cols + list(constraint)))
             # Ideally we would include the constraint in the query, but it's not easy to do that
             # So we check the results in Python
         jcols = Json(cols)
@@ -1155,7 +1155,7 @@ class PostgresStatsTable(PostgresBase):
             else:
                 ccols, cvals = self._split_dict(constraint)
             # We need to include the constraints in the count table if we're not grouping by that column
-            allcols = sorted(list(set(cols + list(constraint))))
+            allcols = sorted(set(cols + list(constraint)))
             if any(key.startswith("$") for key in constraint):
                 raise ValueError("Top level special keys not allowed")
             qstr, values = self.table._parse_dict(constraint)

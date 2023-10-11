@@ -272,7 +272,7 @@ def lfuncEPtex(L, fmt):
         fmt could be any of the values: "abstract"
     """
     from .Lfunction import Lfunction_from_db
-    if ((L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db))) and fmt == "arithmetic":
+    if (L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db)) and fmt == "arithmetic":
         try:
             return lfuncEPhtml(L, fmt)
         except Exception:
