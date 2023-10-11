@@ -3,7 +3,7 @@
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
-from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset, 
+from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset,
         web_latex, compress_expression)
 from flask import url_for
 import re
@@ -285,8 +285,6 @@ class WebBelyiGalmap():
                 curve_ref += 'genus 2'
             curve_ref += rf' curve with label <a href="{url}">{data["curve_label"]}</a>'
 
-
-            
         # curve equations
         crv_str = galmap["curve"]
         if crv_str == "PP1":
