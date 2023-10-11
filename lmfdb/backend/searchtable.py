@@ -81,7 +81,7 @@ class PostgresSearchTable(PostgresTable):
         elif projection == 3:
             return tuple(["id"] + self.search_cols), tuple(self.extra_cols)
         elif isinstance(projection, dict):
-            projvals = set(bool(val) for val in projection.values())
+            projvals = {bool(val) for val in projection.values()}
             if len(projvals) > 1:
                 raise ValueError("You cannot both include and exclude.")
             including = projvals.pop()

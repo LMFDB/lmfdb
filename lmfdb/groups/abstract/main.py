@@ -520,8 +520,7 @@ def create_boolean_string(gp, type="normal"):
         "quasisimple",
         "almost_simple",
     ]
-    short_show = set(
-        [
+    short_show = {
             "cyclic",
             "abelian",
             "nonabelian",
@@ -530,8 +529,7 @@ def create_boolean_string(gp, type="normal"):
             "nab_simple",
             "nonsolvable",
             "nab_perfect",
-        ]
-    )
+        }
     short_string = type == "knowl"
 
     # Implications should give edges of a DAG, and should be listed in the group.properties_interdependencies knowl

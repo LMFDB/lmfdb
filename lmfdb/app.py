@@ -163,7 +163,7 @@ def ctx_proc_userdata():
 @app.context_processor
 def inject_sidebar():
     from .homepage import get_sidebar
-    return dict(sidebar=get_sidebar())
+    return {"sidebar": get_sidebar()}
 
 ##############################
 # Bottom link to google code #
@@ -657,7 +657,7 @@ def add_colors():
         if color is None:
             from .utils.config import Configuration
             color = Configuration().get_color()
-    return dict(color=all_color_schemes[color].dict())
+    return {"color": all_color_schemes[color].dict()}
 
 
 @app.route("/style.css")

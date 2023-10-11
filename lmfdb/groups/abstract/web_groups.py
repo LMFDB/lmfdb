@@ -1109,7 +1109,7 @@ class WebAbstractGroup(WebObj):
                 if any(H.aut_label is None or H.diagramx is None for H in subs):
                     # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
-                return impose_limit(len(set(H.aut_label for H in subs)))
+                return impose_limit(len({H.aut_label for H in subs}))
             else:
                 if self.outer_equivalence or any(H.diagramx is None for H in subs):
                     # We don't know subgroups up to conjugacy or can't lay out subgroups
@@ -1490,7 +1490,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def tex_images(self):
-        all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
+        all_tex = list({H.subgroup_tex for H in self.subgroups.values()}) + ["?"]
         return {
             rec["label"]: rec["image"]
             for rec in db.gps_images.search({"label": {"$in": all_tex}}, ["label", "image"])
@@ -2159,7 +2159,7 @@ class LiveAbelianGroup():
 
     def Phiquotient(self):
         # Make all exponents by 1
-        snf1 = [prod([z for z in ZZ(n).prime_factors()]) for n in self.snf]
+        snf1 = [prod(list(ZZ(n).prime_factors())) for n in self.snf]
         return LiveAbelianGroup(snf1)
 
     def FittingSubgroup(self):

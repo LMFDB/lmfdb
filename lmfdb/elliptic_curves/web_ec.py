@@ -646,7 +646,7 @@ class WebEC():
         mwbsd['heights'] = [RR(h) for h in mwbsd['heights']]
 
         # Mordell-Weil group
-        invs = [0 for a in range(self.rank)] + [n for n in self.torsion_structure]
+        invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
         mwbsd['mw_struct'] = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
 
         # Torsion structure and generators:

@@ -603,7 +603,7 @@ def parse_pandt(info, family):
 
         try:
             if info.get('t'):
-                info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
+                info['ts'] = sorted(set(map(QQ, info.get('t').split(","))))
                 info['t'] = ",".join(map(str, info['ts']))
             else:
                 info['ts'] = None
