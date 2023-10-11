@@ -130,15 +130,15 @@ def stats():
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
     if info['sortby'] == 'name':
-        sortedkeys = sorted(list(stats))
+        sortedkeys = sorted(stats)
     elif info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
     elif info['sortby'] == 'objects':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
     else:
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 

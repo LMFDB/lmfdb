@@ -967,7 +967,7 @@ def datetime_to_timestamp_in_ms(dt):
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 
-class WebObj(object):
+class WebObj:
     def __init__(self, label, data=None):
         self.label = label
         if data is None:

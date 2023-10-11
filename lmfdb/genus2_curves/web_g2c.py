@@ -508,7 +508,7 @@ def split_statement(coeffs, labels, condnorms):
         # Otherwise give defining equation:
         else:
             statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
-            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple(map (lambda x: strlist_to_nfelt(x, 'b'),coeffs[n]))
+            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple((strlist_to_nfelt(x, 'b') for x in coeffs[n]))
             statement += "<br>&nbsp;&nbsp; Conductor norm: %s" % condnorms[n]
     return statement
 
