@@ -35,7 +35,7 @@ def ImmutableExtensionFactory(t, t_name):
     class ImmutableExtensionClass(t):
         @staticmethod
         def __new__(cls, x):
-            return super(ImmutableExtensionClass, cls).__new__(cls, x)
+            return super().__new__(cls, x)
 
     return ImmutableExtensionClass
 

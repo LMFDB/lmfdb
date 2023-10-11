@@ -170,8 +170,7 @@ class Downloader():
         @stream_with_context
         def _generator():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
-            for line in generator:
-                yield line
+            yield from generator
 
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
