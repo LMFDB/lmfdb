@@ -14,13 +14,13 @@ from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
-    parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
+    parse_ints, parse_string_start, parse_subset, parse_newton_polygon, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.api import datapage
 from . import abvarfq_page
-from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
+from .search_parsing import parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 from lmfdb.utils import redirect_no_cache

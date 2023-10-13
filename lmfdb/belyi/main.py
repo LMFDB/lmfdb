@@ -629,11 +629,11 @@ def belyi_data(label):
     if label.count("-") == 1:  # passport label length
         labels = [label, label]
         label_cols = ["plabel", "plabel"]
-        tables = ["belyi_passports_fixed", "belyi_galmaps"]
+        tables = ["belyi_passports", "belyi_galmaps"]
     elif label.count("-") == 2:  # galmap label length
         labels = [label, "-".join(label.split("-")[:-1]), label]
         label_cols = ["label", "plabel", "label"]
-        tables = ["belyi_galmaps", "belyi_passports_fixed", "belyi_galmap_portraits"]
+        tables = ["belyi_galmaps", "belyi_passports", "belyi_galmap_portraits"]
     else:
         return abort(404, f"Invalid label {label}")
     return datapage(labels, tables, title=f"Belyi map data - {label}", bread=bread, label_cols=label_cols)
@@ -725,8 +725,8 @@ class Belyi_stats(StatsDisplay):
 
     def __init__(self):
         self.ngalmaps = comma(db.belyi_galmaps.stats.count())
-        self.npassports = comma(db.belyi_passports_fixed.stats.count())
-        self.max_deg = comma(db.belyi_passports_fixed.max("deg"))
+        self.npassports = comma(db.belyi_passports.stats.count())
+        self.max_deg = comma(db.belyi_passports.max("deg"))
         self.deg_knowl = display_knowl("belyi.degree", title="degree")
         self.belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
 
@@ -744,11 +744,11 @@ class Belyi_stats(StatsDisplay):
     ]
     stat_list += [
         {"cols": "pass_size",
-         "table": db.belyi_passports_fixed,
+         "table": db.belyi_passports,
          "top_title": [("passport sizes", "belyi.pass_size")],
          "totaler": {"avg": True}},
         {"cols": "num_orbits",
-         "table": db.belyi_passports_fixed,
+         "table": db.belyi_passports,
          "top_title": [("number of Galois orbits", "belyi.num_orbits"), ("per", None), ("passport", "belyi.passport")],
          "totaler": {"avg": True}}
     ]

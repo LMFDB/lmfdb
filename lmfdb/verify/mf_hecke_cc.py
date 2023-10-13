@@ -55,18 +55,6 @@ class mf_hecke_cc(MfChecker):
         return self._run_query(query=query)
 
     @overall_long
-    def check_conrey_indexes(self):
-        """
-        when grouped by hecke_orbit_code, check that conrey_indexs
-        match conrey_indexes, embedding_index ranges from 1 to
-        relative_dim (when grouped by conrey_index), and embedding_m
-        ranges from 1 to dim
-        """
-        # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
-        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_index)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim)")
-        return self._run_query(query=query)
-
-    @overall_long
     def check_an_length(self):
         """
         check that an_normalized is a list of pairs of doubles of length at least 1000
