@@ -508,7 +508,7 @@ def split_statement(coeffs, labels, condnorms):
         # Otherwise give defining equation:
         else:
             statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
-            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple(map (lambda x: strlist_to_nfelt(x, 'b'),coeffs[n]))
+            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple((strlist_to_nfelt(x, 'b') for x in coeffs[n]))
             statement += "<br>&nbsp;&nbsp; Conductor norm: %s" % condnorms[n]
     return statement
 
@@ -581,10 +581,16 @@ def add_friend(friends, friend):
 
 
 def th_wrap(kwl, title, colspan=1):
-    if colspan > 1:
-        return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+    if kwl:
+        if colspan > 1:
+            return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+        else:
+            return ' <th>%s</th>' % display_knowl(kwl, title=title)
     else:
-        return ' <th>%s</th>' % display_knowl(kwl, title=title)
+        if colspan > 1:
+            return ' <th colspan=%s>%s</th>' % (colspan, title)
+        else:
+            return ' <th>%s</th>' % title
 
 
 def td_wrapl(val):
@@ -684,7 +690,7 @@ def local_table(N, D, tama, bad_lpolys, cluster_pics):
 def galrep_table(galrep, torsion_order):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
-              th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
+              th_wrap('g2c.galois_rep_modell_image', r'mod-\(\ell\) image'),
               th_wrap('g2c.torsion_order', r'Is torsion prime?'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
@@ -978,7 +984,7 @@ class WebG2C():
             data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
 
         # Nonsurjective primes data
-        if not nonsurj:
+        if nonsurj is None:
             data['exists_nonsurj_data'] = False
         else:
             data['exists_nonsurj_data'] = True

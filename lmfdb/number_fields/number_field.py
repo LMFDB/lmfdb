@@ -20,7 +20,7 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
-    raw_typeset_int, compress_poly_Q)
+    raw_typeset_int, compress_poly_Q, compress_polynomial)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -552,13 +552,13 @@ def render_field_webpage(args):
     # Get rid of python L for big numbers
     #ram_primes = ram_primes.replace('L', '')
     if not ram_primes:
-        ram_primes = r'\textrm{None}'
+        ram_primes = r'None'
     if nf.is_cm_field():
         # Reflex fields table
         table = ""
         reflex_fields = db.nf_fields_reflex.search({"nf_label" : label})
         reflex_fields_list = []
-        field_labels_dict = dict()
+        field_labels_dict = {}
         for reflex_field in reflex_fields:
             if len(reflex_field['rf_coeffs']) > 1:
                 reflex_fields_list.append(['', reflex_field['rf_coeffs'], reflex_field['multiplicity']])
@@ -775,7 +775,7 @@ def format_coeffs(coeffs):
 
 
 def url_for_label(label):
-    return url_for(".by_label", label=label)
+    return url_for("number_fields.by_label", label=label)
 
 @nf_page.route("/<label>")
 def by_label(label):
@@ -887,6 +887,16 @@ nf_columns = SearchColumns([
     MathCol("regulator", "nf.regulator", "Regulator", align="left")],
     db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "monogenic", "num_ram"])
 
+def nf_postprocess(res, info, query):
+    galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
+    cache = knowl_cache(list(set(galois_labels)))
+    for rec in res:
+        wnf = WebNumberField.from_data(rec)
+        rec["poly"] = '$'+compress_polynomial(wnf.poly(),30)+'$'
+        rec["disc"] = wnf.disc_factored_latex()
+        rec["galois"] = wnf.galois_string(cache=cache)
+        rec["class_group_desc"] = wnf.class_group_invariants()
+    return res
 
 @search_wrap(table=db.nf_fields,
              title='Number field search results',
@@ -1023,17 +1033,24 @@ def unlatex(s):
 @nf_page.route('/<nf>/download/<download_type>')
 def nf_download(**args):
     typ = args['download_type']
-    if typ == 'data':
-        response = make_response(nf_data(**args))
-    else:
-        response = make_response(nf_code(**args))
+    try:
+        if typ == 'data':
+            response = make_response(nf_data(**args))
+        else:
+            response = make_response(nf_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 
 
 def nf_data(**args):
     label = args['nf']
+    if not FIELD_LABEL_RE.fullmatch(label):
+        raise ValueError(f"Invalid label {label}")
     nf = WebNumberField(label)
+    if nf.is_null():
+        raise ValueError(f"There is no number field with label {label}")
     data = '/* Data is in the following format\n'
     data += '   Note, if the class group has not been computed, it, the class number, the fundamental units, regulator and whether grh was assumed are all 0.\n'
     data += '[polynomial,\ndegree,\nt-number of Galois group,\nsignature [r,s],\ndiscriminant,\nlist of ramifying primes,\nintegral basis as polynomials in a,\n1 if it is a cm field otherwise 0,\nclass number,\nclass group structure,\n1 if grh was assumed and 0 if not,\nfundamental units,\nregulator,\nlist of subfields each as a pair [polynomial, number of subfields isomorphic to one defined by this polynomial]\n]'
@@ -1100,8 +1117,12 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#
 
 def nf_code(**args):
     label = args['nf']
+    if not FIELD_LABEL_RE.fullmatch(label):
+        raise ValueError(f"Invalid label {label}")
     lang = args['download_type']
     nf = WebNumberField(label)
+    if nf.is_null():
+        raise ValueError(f"There is no number field with label {label}")
     nf.make_code_snippets()
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
     if lang == 'oscar':
@@ -1120,7 +1141,6 @@ def nf_code(**args):
 
 class NFSearchArray(SearchArray):
     noun = "field"
-    plural_noun = "fields"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),

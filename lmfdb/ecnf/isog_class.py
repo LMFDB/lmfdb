@@ -256,7 +256,7 @@ def make_graph(M):
 def make_iso_matrix(clist):  # clist is a list of ECNFs
     Elist = [E.E for E in clist]
     cl = Elist[0].isogeny_class()
-    perm = dict([(i, cl.index(E)) for i, E in enumerate(Elist)])
+    perm = {i: cl.index(E) for i, E in enumerate(Elist)}
     return permute_mat(cl.matrix(), perm, True)
 
 

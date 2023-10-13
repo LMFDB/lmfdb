@@ -772,7 +772,7 @@ class WebNumberField:
 
     def cnf(self):
         if self.degree()==1:
-            return r'=\frac{2^1 (2\pi)^0 \cdot 1\cdot 1}{2\cdot\sqrt 1}=1$'
+            return r'=\mathstrut &amp \frac{2^1 (2\pi)^0 \cdot 1\cdot 1}{2\cdot\sqrt 1}' + r'\cr' + r'= \mathstrut &amp; 1'
         if not self.haskey('class_group'):
             return r'$<td>  '+na_text()
         # Otherwise we should have what we need
@@ -784,8 +784,10 @@ class WebNumberField:
         r2term= r'(2\pi)^{%s}\cdot'% r2
         disc = ZZ(self._data['disc_abs'])
         approx1 = r'\approx' if self.unit_rank()>0 else r'='
+        approx1 += r"\mathstrut &amp;"
         ltx = r'%s\frac{%s%s %s \cdot %s}{%s\cdot\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
-        ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
+        ltx += "\\cr"
+        ltx += r'\approx \mathstrut &amp; %s'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
         return ltx
 
     def is_cm_field(self):
@@ -970,7 +972,11 @@ class WebNumberField:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         for lang in self.code['field']:
-            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+            f = self.poly()
+            if lang == "pari":
+                # In pari, x is the highest priority variable, so it's impossible to create an extension on top of this field if we use x.
+                f = f.change_variable_name("y")
+            self.code['field'][lang] = self.code['field'][lang] % f
         for lang in self.code['class_number_formula']:
             self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
         self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }

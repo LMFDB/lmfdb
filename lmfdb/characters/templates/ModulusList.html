@@ -105,7 +105,7 @@ The characters are grouped with respect to order and stacked integers indicate (
 <table>
   <tr>
     {% for e in entry %}
-    <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
+    <td class="{% if e[0][1] == true -%}primitive{%- else -%}imprimitive{%- endif %}">
       {% for chi in e %}
         <a href="{{url_for('characters.render_Dirichletwebpage', modulus=row, number=chi[0])}}">${{ chi[0] }}$</a>
       {% if loop.first %}<br/>{% endif %}

@@ -444,7 +444,7 @@ def simple_search_postgres(search_dict, projection=None):
     metadata['record_count'] = info['number']
     metadata['correct_count'] = info['exact_count']
     if data:
-        data_out = list(list(data))
+        data_out = list(data)
     else:
         data_out = []
     metadata['view_count'] = len(data_out)

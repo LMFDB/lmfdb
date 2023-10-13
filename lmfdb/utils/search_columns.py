@@ -141,7 +141,8 @@ class MathCol(SearchCol):
         self.orig = [orig if (orig is not None) else name]
 
     def display(self, rec):
-        return f"${self.get(rec)}$"
+        val = self.get(rec)
+        return f"${val}$" if val is not None else ""
 
     def download(self, rec, lang):
         s = self.get(rec)
@@ -168,7 +169,8 @@ class CheckCol(SearchCol):
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
-        return "&#x2713;" if self.get(rec) else ""
+        val = self.get(rec)
+        return "&#x2713;" if val else ("?" if val is None else "")
 
 class CheckMaybeCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
@@ -193,7 +195,10 @@ class LinkCol(SearchCol):
         self.url_for = url_for
 
     def display(self, rec):
-        return f'<a href="{self.url_for(self.get(rec))}">{self.get(rec)}</a>'
+        link = self.get(rec)
+        if link is None:
+            return ""
+        return f'<a href="{self.url_for(link)}">{link}</a>'
 
 
 class ProcessedCol(SearchCol):
@@ -205,7 +210,7 @@ class ProcessedCol(SearchCol):
         self.mathmode = mathmode
 
     def display(self, rec):
-        s = self.func(self.get(rec))
+        s = str(self.func(self.get(rec)))
         if s and self.mathmode:
             s = f"${s}$"
         return s

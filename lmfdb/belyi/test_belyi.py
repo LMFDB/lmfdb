@@ -20,10 +20,11 @@ class BelyiTest(LmfdbTest):
         self.check_args("/Belyi/9T33-5.2.2_5.3.1_2.2.2.2.1-a", "3.1.14175.1")
 
     def test_smooth_equation(self):
-        self.check_args("/Belyi/9T33-9_5.1.1.1.1_5.1.1.1.1-a", r"\phi(x) = 9075734485907514624 \frac{x^{9}}{4537867242953757312 x^{9} - 10520021716426424475 x^{8} + 12447550725170242500 x^{6} - 9941569340991356250 x^{4} + 4201111257707812500 x^{2} - 724916949326171875}\)")
+        self.check_args("/Belyi/7T5-7_7_3.3.1-a", r"\frac{50000 x^{5} + 60000 x^{4} + \left(7000 \nu + 5000\right) x^{3} + 50000 x^{2} y + \left(7000 \nu - 11400\right) x^{2} + 40000 x y + \left(455 \nu - 1725\right) x + \left(500 \nu + 2500\right) y - 532 \nu + 284}{50000 x^{5} + 60000 x^{4} + \left(7000 \nu + 5000\right) x^{3} + \left(7000 \nu - 11400\right) x^{2} + \left(455 \nu - 1725\right) x - 532 \nu + 284}")
+        self.check_args("/Belyi/7T5-7_7_3.3.1-a", r"y^{2} = x^{6} + \frac{4}{5} x^{5} + \left(\frac{13}{50} \nu - \frac{19}{50}\right) x^{4} + \left(\frac{21}{125} \nu - \frac{7}{25}\right) x^{3} + \left(-\frac{709}{10000} \nu + \frac{279}{10000}\right) x^{2} + \left(-\frac{153}{6250} \nu + \frac{67}{6250}\right) x + \frac{83}{15625} \nu + \frac{47}{15625}")
 
     def test_plane_equation(self):
-        self.check_args("/Belyi/9T33-9_5.1.1.1.1_5.1.1.1.1-a", r"x^{9} t + \left(-126 x^{4} + 420 x^{3} - 540 x^{2} + 315 x - 70\right) = 0")
+        self.check_args("/Belyi/9T33-9_5.1.1.1.1_5.1.1.1.1-a", r"x^{9} t + \left(-126 x^{4} + 420 x^{3} - 540 x^{2} + 315 x - 70")
 
     # web pages
 

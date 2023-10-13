@@ -46,6 +46,8 @@ from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label, gsp4_subgroup_data
 
+modell_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)')
+
 ###############################################################################
 # List and dictionaries needed for routing and searching
 ###############################################################################
@@ -192,7 +194,7 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=G2CSearchArray())
-    if len(info) > 1:
+    if request.args:
         return genus2_curve_search(info)
     info["stats"] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
@@ -370,7 +372,7 @@ def render_isogeny_class_webpage(label):
 def url_for_curve_label(label):
     slabel = label.split(".")
     return url_for(
-        ".by_url_curve_label",
+        "g2c.by_url_curve_label",
         cond=slabel[0],
         alpha=slabel[1],
         disc=slabel[2],
@@ -609,14 +611,17 @@ g2c_columns = SearchColumns([
     CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
     ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center", is_string=True),
     NonMaxPrimesCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes",
-                lambda tors: r",".join([str(t) for t in tors]),
-                mathmode=True, align="center"),
+                    lambda tors: r",".join([str(t) for t in tors]),
+                    default=lambda info: info.get("nonmax_primes"),
+                    mathmode=True, align="center"),
     CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
     CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
     MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-automorphisms", is_string=True),
     MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-automorphisms", is_string=True),
     MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
     MathCol("num_rat_wpts", "g2c.num_rat_wpts", r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
+    ProcessedCol("modell_images", "g2c.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gsp4.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
+                  short_title="mod-ℓ images", default=lambda info: info.get("galois_image"), align="center"),
     CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
     CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
     MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
@@ -681,7 +686,21 @@ def genus2_curve_search(info, query):
         split=False,
         keepbrackets=True,
     )
-
+    if info.get('galois_image'):
+        labels = [a.strip() for a in info['galois_image'].split(',')]
+        modell_labels = [a for a in labels if modell_image_label_regex.fullmatch(a)]
+        if len(modell_labels) != len(labels):
+            err = "Unrecognized Galois image label, it should be the label of a subgroup of GSp(2,Z/ellZ) such as 2.45.1, or the label of a subgroup of GL(2,F_ell), such as %s, or a list of such labels"
+            flash_error(err)
+            raise ValueError(err)
+        query['modell_images'] = {'$contains': modell_labels }
+    if info.get('nonmax_primes'):
+        parse_primes(info, query, 'nonmax_primes', name='non-maximal primes',
+                     qfield='non_maximal_primes', mode=info.get('nonmax_quantifier'))
+        if query.get("non_maximal_primes"):
+            if info.get("st_group","USp(4)") != "USp(4)" or info.get("geom_end_alg","Q") != "Q":
+                flash_error("Non-maximal prime searches are only supported for curves with geometric endomorphism algebra Q, equivalently, with Sato-Tate group USp(4)")
+            query["st_group"] = "USp(4)"
     parse_ints(info, query, "two_selmer_rank", "2-Selmer rank")
     parse_ints(info, query, "analytic_rank", "analytic rank")
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
@@ -946,7 +965,6 @@ def g2c_code_download(**args):
 
 class G2CSearchArray(SearchArray):
     noun = "curve"
-    plural_noun = "curves"
 
     def __init__(self):
         geometric_invariants = SneakyTextBox(
@@ -1132,6 +1150,24 @@ class G2CSearchArray(SearchArray):
             short_label=r"\(\overline{\Q}\)-simple",
         )
 
+        galois_image = TextBox(
+            name="galois_image",
+            label=r"Galois image",
+            short_label=r"Galois image",
+            example="2.45.1 or 3.720.4",
+            knowl="g2c.galois_rep_modell_image",
+            )
+        nonmax_quant = SubsetBox(
+            name="nonmax_quantifier")
+        nonmax_primes = TextBoxWithSelect(
+            name="nonmax_primes",
+            label=r"Nonmaximal $\ell$",
+            short_label=r"Nonmax$\ \ell$",
+            knowl="g2c.galois_rep.non_maximal_primes",
+            example="2,3",
+            select_box=nonmax_quant,
+            )
+
         count = CountBox()
 
         self.browse_array = [
@@ -1146,6 +1182,7 @@ class G2CSearchArray(SearchArray):
             [two_selmer_rank, geometric_endomorphism],
             [analytic_sha, has_square_sha],
             [analytic_rank, locally_solvable],
+            [galois_image, nonmax_primes],
             [count],
         ]
 
@@ -1178,11 +1215,10 @@ class G2CSearchArray(SearchArray):
                 locally_solvable,
                 is_gl2_type,
             ],
-            [geometric_invariants],
+            [galois_image, nonmax_primes, geometric_invariants, ],
         ]
 
     _default = ["cond", "class", "abs_disc", "disc_sign", "label"]
-    sort_knowl = "g2c.sort_order"
     sorts = [("", "conductor", _default),
              ("disc", "absolute discriminant", ["abs_disc"] + _default),
              ("num_rat_pts", "rational points", ["num_rat_pts"] + _default),

@@ -12,6 +12,7 @@ from sage.all import Integer, vector, ZZ
 
 from lmfdb.lmfdb_database import db
 from psycopg2.sql import SQL, Composable, Literal
+from lmfdb.utils import pluralize
 from lmfdb.backend.utils import IdentifierWrapper as Identifier
 
 integer_types = (int, Integer)
@@ -28,12 +29,6 @@ def accumulate_failures(L):
                 a = [a]
             ans.extend(a)
     return ans
-
-def pluralize(n, noun):
-    if n == 1:
-        return "1 %s"%(noun)
-    else:
-        return "%d %ss"%(n, noun)
 
 class TooManyFailures(AssertionError):
     pass
@@ -144,7 +139,7 @@ class TableChecker():
         return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
 
     def get_checks(self, typ):
-        return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
+        return [MethodType(f, self) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
 
     def get_check(self, check):
         check = getattr(self.__class__, check)
@@ -481,6 +476,13 @@ class TableChecker():
         return self._run_query(SQL("(SELECT PROD(s) FROM UNNEST({0}) s) != {1}").format(
             Identifier(array_column), Identifier(value_column)), constraint)
 
+    def check_array_dotproduct(self, array_column1, array_column2, value_column, constraint={}):
+        """
+        Checks that sum(a * b for (a, b) in zip(array_column1, array_column2)) == value_column
+        """
+        return self._run_query(SQL("(SELECT SUM(a*b) FROM UNNEST({0}, {1}) as t(a,b)) != {2}").format(
+            Identifier(array_column1), Identifier(array_column2), Identifier(value_column)), constraint)
+
     def check_divisible(self, numerator, denominator, constraint={}):
         numerator = self._make_sql(numerator)
         denominator = self._make_sql(denominator)
@@ -586,7 +588,9 @@ class TableChecker():
                 if col in convert_to_base26
                 else Identifier(col) for col in other_columns]
         #intertwine the separator
-        oc = [oc_converted[i//2] if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
+        if isinstance(sep, str):
+            sep = [sep] * (len(oc_converted) - 1)
+        oc = [oc_converted[i//2] if i%2 == 0 else Literal(sep[i//2]) for i in range(2*len(oc_converted)-1)]
 
         return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
@@ -682,5 +686,5 @@ class TableChecker():
         """
         check that the uniqueness constraints are satisfied
         """
-        constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
+        constraints = {tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE'}
         return [constraint for constraint in self.uniqueness_constraints if tuple(sorted(constraint)) not in constraints]

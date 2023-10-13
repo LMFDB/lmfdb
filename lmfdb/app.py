@@ -138,6 +138,7 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
+    #vars['ALPHA'] = True # hardwired for alpha branch
 
     def modify_url(**replace):
         url = request.url
@@ -149,6 +150,8 @@ def ctx_proc_userdata():
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
     vars['zip'] = zip
+    from lmfdb.utils import pluralize
+    vars['pluralize'] = pluralize
 
     return vars
 
@@ -164,7 +167,7 @@ def ctx_proc_userdata():
 @app.context_processor
 def inject_sidebar():
     from .homepage import get_sidebar
-    return dict(sidebar=get_sidebar())
+    return {"sidebar": get_sidebar()}
 
 ##############################
 # Bottom link to google code #
@@ -250,6 +253,10 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
+@app.after_request
+def print_done(T):
+    app.logger.info(f"done with     = {request.url}")
+    return T
 
 @app.before_request
 def netloc_redirect():
@@ -262,6 +269,7 @@ def netloc_redirect():
     from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
+    app.logger.info(f"Requested url = {request.url}")
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
@@ -293,6 +301,17 @@ def bad_bots_list():
         for elt in [
             "The Knowledge AI",
             "Wolfram",
+            "petalbot",
+        ]
+    ]
+
+
+@cached_function
+def very_bad_bots_list():
+    return [
+        elt.lower()
+        for elt in [
+            "Amazonbot",
         ]
     ]
 
@@ -300,9 +319,12 @@ def bad_bots_list():
 @app.before_request
 def badbot():
     ua = request.user_agent.string.lower()
+    for elt in very_bad_bots_list():
+        if elt in ua:
+            return render_template("404.html", title='Too many requests'), 429
     for elt in bad_bots_list():
         if elt in ua:
-            time.sleep(5)
+            time.sleep(10)
 
 
 def timestamp():
@@ -639,7 +661,7 @@ def add_colors():
         if color is None:
             from .utils.config import Configuration
             color = Configuration().get_color()
-    return dict(color=all_color_schemes[color].dict())
+    return {"color": all_color_schemes[color].dict()}
 
 
 @app.route("/style.css")

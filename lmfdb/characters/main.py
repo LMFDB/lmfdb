@@ -75,7 +75,6 @@ def render_characterNavigation():
 
 class DirichSearchArray(SearchArray):
     noun = "character"
-    plural_noun = "characters"
     sorts = [("", "modulus", ["modulus", "orbit_index"]),
              ("conductor", "conductor", ["conductor", "modulus", "orbit_index"]),
              ("order", "order", ["order", "modulus", "orbit_index"])]
@@ -176,11 +175,11 @@ def validate_label(label):
     elif re.match(r'^\d+\.[a-z]+\.\d+$', label):  # label has both orbit and number
         return True
     else:
-        raise ValueError(("It must be of the form modulus.number, or "
+        raise ValueError("It must be of the form modulus.number, or "
                           "modulus.letter, or modulus.letter.number, "
                           "with modulus and number positive natural numbers "
                           " and letter an alphabetic letter."
-                          ))
+                          )
 
 def jump(info):
     jump_box = info["jump"].strip()  # only called when this present
@@ -234,7 +233,7 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
 
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
-    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
+    MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
                       display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
@@ -275,7 +274,7 @@ def render_DirichletNavigation():
             headers, entries, rows, cols = get_character_modulus(modulus_start, modulus_end, limit=8)
             info['entries'] = entries
             info['rows'] = list(range(modulus_start, modulus_end + 1))
-            info['cols'] = sorted(list({r[1] for r in entries}))
+            info['cols'] = sorted({r[1] for r in entries})
             return render_template("ModulusList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
@@ -429,7 +428,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
             info['bread'] = bread([('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
             info['learnmore'] = learn()
-            info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
+            info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
             info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
             if 'gens' in info:
                 info['generators'] = ', '.join(r'<a href="%s">$\chi_{%s}(%s,\cdot)$' % (url_for(".render_Dirichletwebpage", modulus=modulus, number=g), modulus, g) for g in info['gens'])
@@ -447,7 +446,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                 info['show_orbit_label'] = True
                 info['downloads'] = [('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))]
                 info['learnmore'] = learn()
-                info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
+                info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
                 info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
                 info['bread'] = bread(
                     [('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
@@ -510,7 +509,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     info['bread'] = bread_crumbs
     info['learnmore'] = learn()
     info['downloads'] = downloads
-    info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
+    info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
     info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
