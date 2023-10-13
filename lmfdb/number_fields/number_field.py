@@ -870,10 +870,10 @@ def number_field_jump(info):
 nf_columns = SearchColumns([
     ProcessedCol("label", "nf.label", "Label",
                  lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label)),
-                 default=True),
+                 default=True, is_string=True),
     PolynomialCol("coeffs", "nf.defining_polynomial", "Polynomial", default=True, inline=False),
     MathCol("degree", "nf.degree", "Degree", align="center"),
-    MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), align="center"),
+    MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), apply_download=False, align="center"),
     DiscriminantCol("disc", "nf.disc", "Discriminant", ['disc_sign', 'disc_abs'], func=None, default=True, align="left"),
     MathCol("num_ram", "nf.ramified_primes", "Ram. prime count", short_title="ramified prime count"),
     MathCol("rd", "nf.root_discriminant", "Root discriminant"),
@@ -883,7 +883,7 @@ nf_columns = SearchColumns([
     SearchCol("galois", "nf.galois_group", "Galois group", default=True),
     ClassGroupCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
-    MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 + - 1, align="center", mathmode=True),
+    MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True),
     MathCol("regulator", "nf.regulator", "Regulator", align="left")],
     db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "monogenic", "num_ram"])
 

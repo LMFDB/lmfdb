@@ -39,7 +39,7 @@ from lmfdb.utils import (
     web_latex_factored_integer,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol, FinGroupCol, NonMaxPrimesCol
 from lmfdb.utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
@@ -576,22 +576,6 @@ class G2C_download(Downloader):
         ],
         "gp": ["[apply(Polrev,c)|c<-data];"],
     }
-
-class ListCol(ProcessedCol):
-    def download(self, rec, lang):
-        s = self.func(self.get(rec)).replace('"','')
-        return s
-class FinGroupCol(ProcessedCol):
-    def download(self, rec, lang):
-        return self.get(rec)
-
-class NonMaxPrimesCol(ProcessedCol):
-    def download(self, rec, lang):
-        s = self.get(rec)
-        if s is None or s == "":
-            return lang.to_lang([])
-        else:
-            return s
 
 g2c_columns = SearchColumns([
     LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),

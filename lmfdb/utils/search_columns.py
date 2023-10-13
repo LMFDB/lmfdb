@@ -81,6 +81,7 @@ class SearchCol:
         self.inline = kwds.pop("inline", True)
         self.is_string = kwds.pop("is_string", True)
         self.cell_function_name = kwds.pop("cell_function_name", None)
+        self.download_col = kwds.pop("download_col", None)
         if not self.inline and self.cell_function_name is None:
             self.cell_function_name = f"process_{name}"
 
@@ -88,12 +89,17 @@ class SearchCol:
             assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")
             setattr(self, key, getattr(self, key) + val)
 
-    def _get(self, rec):
+    def _get(self, rec, name=None):
         # We support dictionaries as well as classes like
         # AbvarFq_isoclass that are created in a postprocess step
+        if name is None:
+            name = self.name
+            orig = self.orig[0]
+        else:
+            orig = name
         if isinstance(rec, dict):
-            return rec.get(self.orig[0], "")
-        val = getattr(rec, self.name)
+            return rec.get(orig, "")
+        val = getattr(rec, name)
         return val() if callable(val) else val
 
     def get(self, rec):
@@ -115,8 +121,10 @@ class SearchCol:
         if (self.contingent is None or self.contingent(info)) and (rank is None or rank == 0):
             yield self
 
-    def download(self, rec, language):
-        s = self._get(rec)
+    def download(self, rec, language, name=None):
+        if self.download_col is not None:
+            name = self.download_col
+        s = self._get(rec, name=name)
         if self.is_string:
             return '"{0}"'.format(s)
         else:
@@ -144,13 +152,6 @@ class MathCol(SearchCol):
         val = self.get(rec)
         return f"${val}$" if val is not None else ""
 
-    def download(self, rec, lang):
-        s = self.get(rec)
-        if self.is_string:
-            return '"{0}"'.format(s)
-        else:
-            return s
-
 class FloatCol(MathCol):
     def __init__(self, name, knowl, title, prec=3, default=False, align="center", **kwds):
         kwds.setdefault('is_string', False)
@@ -161,7 +162,6 @@ class FloatCol(MathCol):
         val = self._get(rec)
         # We mix string processing directives so that we can use variable precision
         return f"%.{self.prec}f" % val
-
 
 class CheckCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
@@ -239,11 +239,12 @@ class ProcessedLinkCol(SearchCol):
 
 class MultiProcessedCol(SearchCol):
     def __init__(self, name, knowl, title, inputs, func, default=False,
-                 mathmode=False, align="left", **kwds):
+                 mathmode=False, align="left", apply_download=True, **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
         self.func = func
         self.orig = inputs
         self.mathmode = mathmode
+        self.apply_download = apply_download
 
     def display(self, rec):
         s = self.func(*[rec.get(col) for col in self.orig])
@@ -252,7 +253,10 @@ class MultiProcessedCol(SearchCol):
         return s
 
     def download(self, rec, language):
-        return [rec.get(col) for col in self.orig]
+        data = [rec.get(col) for col in self.orig]
+        if self.apply_download:
+            return self.func(*data)
+        return data
 
 class ContingentCol(ProcessedCol):
     def __init__(self, name, knowl, title, func, contingent=lambda info: True,
@@ -302,31 +306,6 @@ class ColGroup(SearchCol):
         return [sub.get(rec) for sub in self.subcols]
 
 
-class PolynomialCol(SearchCol):
-    def __init__(self, name, knowl, title, default=False, orig=None,
-                 mathmode=False, align="left", **kwds):
-        super().__init__(name, knowl, title, default, align, **kwds)
-        self.cell_function_name = f'process_{name}'
-        self.orig = [orig if (orig is not None) else name]
-        self.mathmode = mathmode
-
-    def cell_function_body(self, lang):
-        if lang.name == 'sage':
-            return "return QQ['x'](x)"
-        elif lang.name == 'magma':
-            return "return ZZx![c : c in x];"
-        elif lang.name == 'gp':
-            return "Pol(Vecrev(x))"
-        else:
-            raise NotImplementedError('Language not supported yet')
-
-    def display(self, rec):
-        return pol_to_html(str(coeff_to_poly(self.get(rec))))
-
-    def download(self, rec, lang):
-        return self.get(rec)
-
-
 class SearchColumns:
     above_results = ""  # Can add text above the Results (1-50 of ...) if desired
     above_table = ""  # Can add text above the results table if desired
@@ -359,3 +338,49 @@ class SearchColumns:
         # rank is None in the body of the table, and 0..(maxrank-1) in the header
         for C in self.columns:
             yield from C.show(info, rank)
+
+
+
+# The following column types are used to control download behavior
+
+class PolynomialCol(SearchCol):
+    def __init__(self, name, knowl, title, default=False, orig=None,
+                 mathmode=False, align="left", **kwds):
+        super().__init__(name, knowl, title, default, align, **kwds)
+        self.cell_function_name = f'process_{name}'
+        self.orig = [orig if (orig is not None) else name]
+        self.mathmode = mathmode
+
+    def cell_function_body(self, lang):
+        if lang.name == 'sage':
+            return "return QQ['x'](x)"
+        elif lang.name == 'magma':
+            return "return ZZx![c : c in x];"
+        elif lang.name == 'gp':
+            return "Pol(Vecrev(x))"
+        else:
+            raise NotImplementedError('Language not supported yet')
+
+    def display(self, rec):
+        return pol_to_html(str(coeff_to_poly(self.get(rec))))
+
+    def download(self, rec, lang):
+        return self.get(rec)
+
+class ListCol(ProcessedCol):
+    def download(self, rec, lang):
+        s = self.func(self.get(rec)).replace('"','')
+        return s
+
+class FinGroupCol(ProcessedCol):
+    def download(self, rec, lang):
+        return self.get(rec)
+
+class NonMaxPrimesCol(ProcessedCol):
+    def download(self, rec, lang):
+        s = self.get(rec)
+        if s is None or s == "":
+            return lang.to_lang([])
+        else:
+            return s
+

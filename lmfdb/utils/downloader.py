@@ -1,4 +1,5 @@
 import time
+import datetime
 
 from flask import abort, send_file, stream_with_context, Response
 
@@ -9,7 +10,7 @@ from io import BytesIO
 class DownloadLanguage():
     # We choose the most common values
     comment_prefix = '#'
-    assignment_defn = ' = '
+    assignment_defn = '='
     line_end = ''
     delim_start = '['
     delim_end = ']'
@@ -32,7 +33,10 @@ class DownloadLanguage():
         elif inp is False:
             return self.false
         if isinstance(inp, str):
-            return '"{0}"'.format(str(inp))
+            inp = inp.replace("\\", "\\\\")
+            if len(inp) >= 2 and inp[0] == '"' and inp[-1] == '"':
+                return inp
+            return '"{0}"'.format(inp)
         if isinstance(inp, int):
             return str(inp)
         if level == 0:
@@ -44,10 +48,9 @@ class DownloadLanguage():
             sep = ', '
         try:
             if level == 0:
-                begin = start + '\\\n'
-            else:
-                begin = start
-            return begin + sep.join(self.to_lang(c, level=level + 1) for c in inp) + end
+                start = start + '\n'
+                end = '\n' + end
+            return start + sep.join(self.to_lang(c, level=level + 1) for c in inp) + end
         except TypeError:
             # not an iterable object
             return str(inp)
@@ -93,6 +96,13 @@ class SageLanguage(DownloadLanguage):
     makedata = '    return [ make_row(row) for row in data ]\n'
     makedata_basic = '    return data\n'
 
+    def initialize(self, cols):
+        from lmfdb.number_fields.number_field import PolynomialCol
+        if any(isinstance(c, PolynomialCol) for c in cols):
+            return '\nZZx.<x> = ZZ[]\n\n'
+        else:
+            return '\n'
+
 class GPLanguage(DownloadLanguage):
     name = 'gp'
     start_and_end = ['{[',']}']
@@ -110,6 +120,15 @@ class GPLanguage(DownloadLanguage):
     makedata = '    [make_row(row)|row<-data]\n'
     makedata_basic = '    data\n'
 
+class OscarLanguage(DownloadLanguage):
+    name = 'oscar'
+
+    def initialize(self, cols):
+        from lmfdb.number_fields.number_field import PolynomialCol
+        if any(isinstance(c, PolynomialCol) for c in cols):
+            return '\nRx,x = PolynomialRing(QQ)\n\n'
+        else:
+            return '\n'
 
 class TextLanguage(DownloadLanguage):
     name = 'text'
@@ -163,6 +182,7 @@ class Downloader():
         'sage': SageLanguage(),
         'gp': GPLanguage(),
         'text': TextLanguage(),
+        'oscar': OscarLanguage(),
     }
     postprocess = None
     def get(self, name, default=None):
@@ -221,6 +241,8 @@ class Downloader():
         """
         lang = self.languages[info.get(self.lang_key, 'text')]
         filename = self.get('filename_base', self.table.search_table)
+        ts = datetime.datetime.now().strftime("%m%d_%H%M")
+        filename = f"lmfdb_{filename}_{ts}"
         title = self.get('title', self.table.search_table)
         short_name = self.get('short_name', title.split(' ')[-1].lower())
         var_name = self.get('var_name', short_name.replace('_',' '))
@@ -259,6 +281,7 @@ class Downloader():
             s += c + '\n'
             s += c + ' ' + make_data_comment  + '\n'
         s += '\n\n'
+        s += lang.assign("columns", lang.to_lang([c.name for c in cols]))
         s += lang.assign("data", lang.to_lang(res_list, level=0))
         s += lang.initialize(cols)
         if make_data_comment:

@@ -93,7 +93,8 @@ class AbvarFq_isoclass():
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
+        self.decompositionraw = list(zip(self.simple_distinct, self.simple_multiplicities))
+        self.decompositioninfo = decomposition_display(self.decompositionraw)
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
