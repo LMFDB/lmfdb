@@ -86,7 +86,7 @@ class LmfdbTest(unittest2.TestCase):
                 assert expected in magma.eval(magma_code)
             else:
                 raise ValueError("mode must be either 'equal' or 'in")
-        except RuntimeError as the_error:
+        except (RuntimeError, TypeError) as the_error:
             if str(the_error).startswith("unable to start magma"):
                 pass
             else:
