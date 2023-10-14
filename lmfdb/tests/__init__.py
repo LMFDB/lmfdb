@@ -82,7 +82,7 @@ class LmfdbTest(unittest2.TestCase):
         has_magma = False
         try:
             has_magma = "2" == magma.eval("1 + 1")
-        except RuntimeError:
+        except (RuntimeError, TypeError):
             pass
 
         if has_magma:
