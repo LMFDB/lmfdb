@@ -234,6 +234,13 @@ class Downloader():
         resp = Response(_generator(), mimetype='text/plain', headers=headers)
         return resp
 
+    def modify_query(self, query):
+        """
+        This is a hook for downloaders to modify a query before executing it.
+        It is used in artin representations to only include non-hidden representations
+        """
+        pass
+
     def __call__(self, info):
         """
         Generate download file for a list of search results determined by the
@@ -258,6 +265,7 @@ class Downloader():
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
+            self.modify_query(query)
             data = list(self.table.search(query, projection=proj))
             if self.postprocess is not None:
                 data = self.postprocess(data, info, query)
@@ -265,6 +273,7 @@ class Downloader():
             res_list = [[c.download(rec, lang) for c in cols] for rec in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
+        #print("RES LIST", res_list)
         c = lang.comment_prefix
         s = c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)
         s += c + ' Each entry in the following data list has the form:\n'
@@ -281,7 +290,8 @@ class Downloader():
             s += c + '\n'
             s += c + ' ' + make_data_comment  + '\n'
         s += '\n\n'
-        s += lang.assign("columns", lang.to_lang([c.name for c in cols]))
+        column_names = [(c.name if c.download_col is None else c.download_col) for c in cols]
+        s += lang.assign("columns", lang.to_lang(column_names))
         s += lang.assign("data", lang.to_lang(res_list, level=0))
         s += lang.initialize(cols)
         if make_data_comment:

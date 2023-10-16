@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
-    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
+    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg, Downloader,
     display_knowl, search_wrap, to_dict, comma, prop_int_pretty, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
@@ -227,25 +227,33 @@ def url_for_label(label):
     return url_for(".render_artin_representation_webpage", label=label)
 
 artin_columns = SearchColumns([
-    SearchCol("galois_links", "artin.label", "Label", default=True),
+    SearchCol("galois_links", "artin.label", "Label", download_col="baselabel", default=True),
     MathCol("dimension", "artin.dimension", "Dimension", default=True),
-    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", default=True),
+    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", download_col="conductor", default=True),
     MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count"),
-    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field"),
-    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center", short_title="image"),
-    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center"),
-    SearchCol("container", "artin.permutation_container", "Container", align="center"),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field", download_col="NFGal", is_string=False),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center", short_title="image", download_col="GaloisLabel"),
+    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center", download_col="ProjBoth", is_string=False),
+    SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t", is_string=False),
     MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True, short_title="indicator"),
-    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True, short_title="trace of complex conj.")],[
-        "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True, short_title="trace of complex conj.")],
+    db_cols = ["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
 
 artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
-artin_columns.dummy_download = True
 
 def artin_postprocess(res, info, query):
     gp_labels = list(set([rec["GaloisLabel"] for rec in res] + [rec["Container"].upper() for rec in res] + ["T".join(str(c) for c in rec["Proj_nTj"]) for rec in res]))
     cache = knowl_cache(gp_labels)
     return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
+
+class ArtinDownload(Downloader):
+    table = db.artin_reps
+    title = "Artin representations"
+    def modify_query(self, query):
+        query['Hide'] = 0
+
+    def postprocess(self, res, info, query):
+        return artin_postprocess(res, info, query)
 
 @search_wrap(table=db.artin_reps,
              title='Artin representation search results',
@@ -254,7 +262,7 @@ def artin_postprocess(res, info, query):
              columns=artin_columns,
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             shortcuts={'jump':artin_representation_jump},
+             shortcuts={'jump':artin_representation_jump, 'download': ArtinDownload()},
              postprocess=artin_postprocess,
              bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')])
 def artin_representation_search(info, query):
