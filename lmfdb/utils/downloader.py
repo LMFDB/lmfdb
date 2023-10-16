@@ -258,21 +258,23 @@ class Downloader():
             make_data_comment = make_data_comment.format(short_name=short_name, var_name=var_name)
         columns = info["columns"]
         proj = columns.db_cols
-        cols = [c for c in columns.columns_shown(info) if c.default(info)]
-        data_format = self.get('data_format', [c.title for c in cols])
-        if isinstance(data_format, dict):
-            data_format = data_format[lang.name]
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
             self.modify_query(query)
-            data = list(self.table.search(query, projection=proj))
-            if self.postprocess is not None:
-                data = self.postprocess(data, info, query)
-            #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
-            res_list = [[c.download(rec, lang) for c in cols] for rec in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
+        data = list(self.table.search(query, projection=proj))
+        info["results"] = data
+        if self.postprocess is not None:
+            data = self.postprocess(data, info, query)
+        #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
+        cols = [c for c in columns.columns_shown(info, rank=-1) if c.default(info)]
+        print("COLS", [c.name for c in cols])
+        data_format = self.get('data_format', [c.title for c in cols])
+        if isinstance(data_format, dict):
+            data_format = data_format[lang.name]
+        res_list = [[c.download(rec, lang) for c in cols] for rec in data]
         #print("RES LIST", res_list)
         c = lang.comment_prefix
         s = c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)

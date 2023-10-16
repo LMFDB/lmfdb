@@ -118,7 +118,8 @@ class SearchCol:
         return self.title
 
     def show(self, info, rank=None):
-        if (self.contingent is None or self.contingent(info)) and (rank is None or rank == 0):
+        # rank = 0 indicates the header row, rank = -1 indicates downloading
+        if (self.contingent is None or self.contingent(info)) and (rank is None or rank <= 0):
             yield self
 
     def download(self, rec, language, name=None):
@@ -141,6 +142,10 @@ class SpacerCol(SearchCol):
     def display_knowl(self):
         return ""
 
+    def show(self, info, rank=None):
+        if rank == -1:
+            return []
+        return super().show(info, rank)
 
 class MathCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", orig=None, **kwds):
@@ -274,7 +279,7 @@ class ContingentCol(ProcessedCol):
         self.contingent = contingent
 
     def show(self, info, rank=None):
-        if self.contingent(info) and (rank is None or rank == 0):
+        if self.contingent(info) and (rank is None or rank <= 0):
             yield self
 
 
@@ -284,6 +289,7 @@ class ColGroup(SearchCol):
     def __init__(self, name, knowl, title, subcols,
                  contingent=lambda info: True, default=False, orig=None,
                  align="center", **kwds):
+        kwds["is_string"] = False # when downloading, we always want a list of subcolumn contents
         super().__init__(name, knowl, title, default, align, **kwds)
         self.subcols = subcols
         self.contingent = contingent
@@ -305,13 +311,15 @@ class ColGroup(SearchCol):
                 if sub.default(info):
                     n += 1
             self.th_content = f" colspan={n}"
-            if rank == 0:
+            if rank <= 0:
                 yield self
             else:
                 yield from subcols
 
     def download(self, rec, language):
-        return [sub.get(rec) for sub in self.subcols]
+        if self.download_col is not None:
+            return self._get(rec, name=self.download_col)
+        return [sub.download(rec, language) for sub in self.subcols]
 
 
 class SearchColumns:
