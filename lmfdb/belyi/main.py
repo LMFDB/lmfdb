@@ -651,7 +651,7 @@ belyi_columns = SearchColumns([
     MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
     MathCol("g", "belyi.genus", "Genus", default=True),
     MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
-    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True)])
+    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True, apply_download=False)])
 
 
 @search_wrap(

@@ -203,11 +203,12 @@ class LinkCol(SearchCol):
 
 class ProcessedCol(SearchCol):
     def __init__(self, name, knowl, title, func, default=False, orig=None,
-                 mathmode=False, align="left", **kwds):
+                 mathmode=False, align="left", apply_download=False, **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
         self.func = func
         self.orig = [orig if (orig is not None) else name]
         self.mathmode = mathmode
+        self.apply_download = apply_download
 
     def display(self, rec):
         s = str(self.func(self.get(rec)))
@@ -217,6 +218,8 @@ class ProcessedCol(SearchCol):
 
     def download(self, rec, lang):
         s = self.get(rec)
+        if self.apply_download:
+            s = self.func(s)
         if self.is_string:
             return '"{0}"'.format(s)
         else:
