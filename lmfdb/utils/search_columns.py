@@ -182,7 +182,7 @@ class CheckMaybeCol(SearchCol):
             return "&#x2713;"
         return "" if self.get(rec) < 0 else "not computed"
 
-    def download(self, rec, language):
+    def download(self, rec, language, name=None):
         ans = self.get(rec)
         if ans == 0:
             return "not computed"
@@ -216,8 +216,10 @@ class ProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
-    def download(self, rec, lang):
-        s = self.get(rec)
+    def download(self, rec, lang, name=None):
+        if self.download_col is not None:
+            name = self.download_col
+        s = self._get(rec, name=name)
         if self.apply_download:
             s = self.func(s)
         if self.is_string:
@@ -255,10 +257,13 @@ class MultiProcessedCol(SearchCol):
             s = f"${s}$"
         return s
 
-    def download(self, rec, language):
-        data = [rec.get(col) for col in self.orig]
-        if self.apply_download:
-            return self.func(*data)
+    def download(self, rec, language, name=None):
+        if self.download_col is None:
+            data = [rec.get(col) for col in self.orig]
+            if self.apply_download:
+                return self.func(*data)
+        else:
+            data = self._get(rec, name=self.download_col)
         return data
 
 class ContingentCol(ProcessedCol):
