@@ -8,7 +8,7 @@ from sage.all import euler_phi, PolynomialRing, QQ, gcd
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
-    StatsDisplay, totaler, proportioners, comma, flash_warning)
+    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
@@ -234,21 +234,22 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
-                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
+                      display_galois_orbit, default=True, align="center", short_title="Conrey labels", apply_download=False),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
     MathCol("order", "character.dirichlet.order", "Order", default=True),
-    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
+    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True, is_string=False),
     CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
 
-character_columns.dummy_download = True
+class DirichletDownload(Downloader):
+    table = db.char_orbits
 
 @search_wrap(
     table=db.char_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
-    shortcuts={"jump": jump},
+    shortcuts={"jump": jump, "download": DirichletDownload()},
     url_for_label=url_for_label,
     learnmore=learn,
     random_projection="label",
