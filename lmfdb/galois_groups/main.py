@@ -94,6 +94,10 @@ def index():
     info['degree_list'] = list(range(1, 48))
     return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, learnmore=learnmore_list())
 
+def _set_show_subs(info):
+    degree_str = prep_ranges(info.get('n'))
+    info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
+
 class GG_download(Downloader):
     table = db.gps_transitive
     title = "Transitive groups"
@@ -106,6 +110,8 @@ class GG_download(Downloader):
         "sage": ['return [TransitiveGroup(r[0],r[1]) for r in data]',],
         "oscar": ['return [transitive_group(r...) for r in data]',],
     }
+    def modify_query(self, info, query):
+        _set_show_subs(info)
 
 # For the search order-parsing
 def make_order_key(order):
@@ -123,11 +129,12 @@ gg_columns = SearchColumns([
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
                       lambda subs, cache: WebGaloisGroup(None, {"subfields": subs}).subfields(cache=cache),
-                      default=lambda info: info["show_subs"]),
+                      default=lambda info: info["show_subs"], download_col="subfields"),
     MultiProcessedCol("siblings", "gg.other_representations", "Low Degree Siblings",
                       ["siblings", "bound_siblings", "cache"],
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
-                      default=True)
+                      default=True,
+                      apply_download=lambda s, b, c: [s, b])
 ],
     db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
@@ -219,8 +226,7 @@ def galois_group_search(info, query):
         query["parity"] = -1
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
 
-    degree_str = prep_ranges(info.get('n'))
-    info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
+    _set_show_subs(info)
 
 def yesno(val):
     if val:

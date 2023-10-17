@@ -249,7 +249,7 @@ def artin_postprocess(res, info, query):
 class ArtinDownload(Downloader):
     table = db.artin_reps
     title = "Artin representations"
-    def modify_query(self, query):
+    def modify_query(self, info, query):
         query['Hide'] = 0
 
     def postprocess(self, res, info, query):

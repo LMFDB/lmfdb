@@ -233,9 +233,9 @@ class Downloader():
         resp = Response(_generator(), mimetype='text/plain', headers=headers)
         return resp
 
-    def modify_query(self, query):
+    def modify_query(self, info, query):
         """
-        This is a hook for downloaders to modify a query before executing it.
+        This is a hook for downloaders to modify the info dictionary or a query before executing it.
         It is used in artin representations to only include non-hidden representations
         """
         pass
@@ -260,7 +260,7 @@ class Downloader():
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
-            self.modify_query(query)
+            self.modify_query(info, query)
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
         data = list(self.table.search(query, projection=proj))
