@@ -14,7 +14,7 @@ from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    to_dict, flash_error, display_knowl,
+    to_dict, flash_error, display_knowl, Downloader,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
@@ -315,81 +315,6 @@ def ecnf_data(label):
     title = f"Elliptic curve data - {label}"
     return datapage(label, "ec_nfcurves", title=title, bread=bread)
 
-def download_search(info):
-    dltype = info['Submit']
-    delim = 'bracket'
-    com = ''   # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    eol = ''   # line continuation (only needed for gp)
-    filename = 'elliptic_curves.txt'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'gp':
-        filename = 'elliptic_curves.gp'
-        com = r'\\'
-        eol = '\\'
-    if dltype == 'sage':
-        com = '#'
-        filename = 'elliptic_curves.sage'
-    if dltype == 'magma':
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'elliptic_curves.m'
-    elif dltype == 'oscar':
-        com1 = '#='
-        com2 = '=#'
-        filename = 'elliptic_curves.jl'
-    s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [[field_poly],[Weierstrass Coefficients, constant first in increasing degree]]\n'
-    s += '\n' + com2
-    s += '\n'
-
-    if dltype == 'magma':
-        s += 'P<x> := PolynomialRing(Rationals()); \n'
-        s += 'data := ['
-    elif dltype == 'sage':
-        s += 'R.<x> = QQ[]; \n'
-        s += 'data = [ '
-    elif dltype == 'oscar':
-        s += 'R,x = PolynomialRing(QQ);\n'
-        s += 'data = ['
-    else:
-        s += 'data = [ '
-    s += eol + '\n'
-    nf_dict = {}
-    for f in db.ec_nfcurves.search(ast.literal_eval(info["query"]), ['field_label', 'ainvs']):
-        nf = str(f['field_label'])
-        # look up number field and see if we already have the min poly
-        if nf in nf_dict:
-            poly = nf_dict[nf]
-        else:
-            poly = str(WebNumberField(f['field_label']).poly())
-            nf_dict[nf] = poly
-        entry = str(f['ainvs'])
-        entry = entry.replace('u','')
-        entry = entry.replace('\'','')
-        entry = entry.replace(';','],[')
-        s += '[[' + poly + '], [[' + entry + ']]],'+eol+'\n'
-    s = s[:-2-len(eol)]
-    s += ']\n'
-
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
-    strIO = BytesIO()
-    strIO.write(s.encode('utf-8'))
-    strIO.seek(0)
-    return send_file(strIO,
-                     download_name=filename,
-                     as_attachment=True)
-
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
     if info.get('jump','') == "random":
@@ -427,55 +352,55 @@ ecnf_columns = SearchColumns([
     MultiProcessedCol("label", "ec.curve_label", "Label", ["short_label", "field_label", "conductor_label", "iso_label", "number"],
                       lambda label, field, conductor, iso, number: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number), label),
-                      default=True, align="center"),
+                      default=True, align="center", download_col="short_label"),
     MultiProcessedCol("iso_class", "ec.isogeny_class", "Class", ["field_label", "conductor_label", "iso_label", "short_class_label"],
                       lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso), short_class_label),
-                      short_title="isogeny class", default=True, align="center"),
+                      short_title="isogeny class", default=True, align="center", download_col="short_class_label"),
     MathCol("class_size", "ec.isogeny", "Class size", short_title="isogeny class size"),
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree"),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center"),
     MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center"),
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center"),
-    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
-    ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
+    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center", is_string=False),
+    ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center", is_string=False),
     FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes",
                  lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
-                 default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
+                 default=lambda info: info.get("bad_primes"), mathmode=True, align="center", is_string=False),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center", default=True),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                 lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
+                 lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center", is_string=False),
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
-                 default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type"),
+                 default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type", is_string=False),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
-                 default=True, short_title="CM discriminant", mathmode=True, align="center"),
+                 default=True, short_title="CM discriminant", mathmode=True, align="center", is_string=False),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
                  lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
-                 short_title="Sato-Tate group", align="center", orig="cm_type"),
+                 short_title="Sato-Tate group", align="center", orig="cm_type", is_string=False),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
     CheckCol("base_change", "ec.base_change", "Base change"),
     CheckCol("semistable", "ec.semistable", "Semistable"),
     CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),
     ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join(str(p) for p in primes),
-                 short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
+                 short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center", is_string=False),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
-                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
+                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center", is_string=False),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
-    ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
-    ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
-    ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
-    ProcessedCol("Lvalue", "lfunction.leading_coeff", "Leading coeff", lambda v: str(v)[:11], short_title="leading coefficient", align="left"),
+    ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", is_string=False),
+    ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left", is_string=False),
+    ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left", is_string=False),
+    ProcessedCol("Lvalue", "lfunction.leading_coeff", "Leading coeff", lambda v: str(v)[:11], short_title="leading coefficient", align="left", is_string=False),
     ProcessedCol("jinv", "ec.j_invariant", "j-invariant", lambda v: web_latex(Ra([QQ(s) for s in v.split(',')])), align="left"),
     MultiProcessedCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients",
                       ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
-                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left"),
+                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left", download_col="ainvs"),
     MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", default=True, short_title="Weierstrass equation", align="left"),
 ])
 ecnf_columns.below_download = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
@@ -485,12 +410,15 @@ quantities.</p>"""
 
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(\[\d+\])?')
 
+class ECNFDownload(Downloader):
+    table=db.ec_nfcurves
+
 @search_wrap(table=db.ec_nfcurves,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
              columns=ecnf_columns,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':download_search},
+                        'download':ECNFDownload()},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')])

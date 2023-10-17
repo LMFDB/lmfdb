@@ -289,7 +289,7 @@ class ColGroup(SearchCol):
     def __init__(self, name, knowl, title, subcols,
                  contingent=lambda info: True, default=False, orig=None,
                  align="center", **kwds):
-        kwds["is_string"] = False # when downloading, we always want a list of subcolumn contents
+        kwds.setdefault('is_string', False) # when downloading, we always want a list of subcolumn contents
         super().__init__(name, knowl, title, default, align, **kwds)
         self.subcols = subcols
         self.contingent = contingent
