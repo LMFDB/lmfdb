@@ -256,7 +256,9 @@ class Downloader():
         if make_data_comment:
             make_data_comment = make_data_comment.format(short_name=short_name, var_name=var_name)
         columns = info["columns"]
-        proj = columns.db_cols
+        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
+        # These virtual columns are often only used in display code and won't be present in the database, so we just strip them out
+        proj = [col for col in columns.db_cols if col in self.table.search_cols]
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
