@@ -79,7 +79,6 @@ class SearchCol:
             self.th_style = self.td_style = f"text-align:{align};"
         self.th_content = self.td_content = ""
         self.inline = kwds.pop("inline", True)
-        self.is_string = kwds.pop("is_string", True)
         self.cell_function_name = kwds.pop("cell_function_name", None)
         self.download_col = kwds.pop("download_col", None)
         if not self.inline and self.cell_function_name is None:
@@ -126,7 +125,7 @@ class SearchCol:
         if self.download_col is not None:
             name = self.download_col
         s = self._get(rec, name=name)
-        if self.is_string:
+        if self.is_string or self.is_string is None and isinstance(s, str):
             return '"{0}"'.format(s)
         else:
             return s
@@ -225,7 +224,9 @@ class ProcessedCol(SearchCol):
         if self.download_col is not None:
             name = self.download_col
         s = self._get(rec, name=name)
-        if self.apply_download:
+        if callable(self.apply_download):
+            s = self.apply_download(s)
+        elif self.apply_download:
             s = self.func(s)
         if self.is_string:
             return '"{0}"'.format(s)
@@ -265,7 +266,9 @@ class MultiProcessedCol(SearchCol):
     def download(self, rec, language, name=None):
         if self.download_col is None:
             data = [rec.get(col) for col in self.orig]
-            if self.apply_download:
+            if callable(self.apply_download):
+                return self.apply_download(*data)
+            elif self.apply_download:
                 return self.func(*data)
         else:
             data = self._get(rec, name=self.download_col)

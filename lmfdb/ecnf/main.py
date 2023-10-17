@@ -380,7 +380,7 @@ ecnf_columns = SearchColumns([
                  default=True, short_title="CM discriminant", mathmode=True, align="center", is_string=False),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
                  lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
-                 short_title="Sato-Tate group", align="center", orig="cm_type", is_string=False),
+                 short_title="Sato-Tate group", align="center", orig="cm_type", apply_download=lambda v: '1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
     CheckCol("base_change", "ec.base_change", "Base change"),
     CheckCol("semistable", "ec.semistable", "Semistable"),
