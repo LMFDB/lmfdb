@@ -1,5 +1,6 @@
 from .web_display import display_knowl
 from lmfdb.utils import pol_to_html, coeff_to_poly
+from sage.all import Rational
 
 template_sage = r'''
 def make_cell_{column}(rec):
@@ -88,7 +89,7 @@ class SearchCol:
             assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")
             setattr(self, key, getattr(self, key) + val)
 
-    def _get(self, rec, name=None):
+    def _get(self, rec, name=None, downloading=False):
         # We support dictionaries as well as classes like
         # AbvarFq_isoclass that are created in a postprocess step
         if name is None:
@@ -97,7 +98,7 @@ class SearchCol:
         else:
             orig = name
         if isinstance(rec, dict):
-            return rec.get(orig, "")
+            return rec.get(orig, None if downloading else "")
         val = getattr(rec, name)
         return val() if callable(val) else val
 
@@ -124,7 +125,7 @@ class SearchCol:
     def download(self, rec, language, name=None):
         if self.download_col is not None:
             name = self.download_col
-        return self._get(rec, name=name)
+        return self._get(rec, name=name, downloading=True)
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -215,25 +216,21 @@ class ProcessedCol(SearchCol):
     def download(self, rec, lang, name=None):
         if self.download_col is not None:
             name = self.download_col
-        s = self._get(rec, name=name)
+        s = self._get(rec, name=name, downloading=True)
         if callable(self.apply_download):
             s = self.apply_download(s)
         elif self.apply_download:
             s = self.func(s)
         return s
 
-class ProcessedLinkCol(SearchCol):
-    def __init__(self, name, knowl, title, url_func, disp_func, default=False,
-                 orig=None, align="left", **kwds):
-        super().__init__(name, knowl, title, default, align, **kwds)
+class ProcessedLinkCol(ProcessedCol):
+    def __init__(self, name, knowl, title, url_func, disp_func, *args, **kwds):
+        super().__init__(name, knowl, title, disp_func, *args, **kwds)
         self.url_func = url_func
-        self.disp_func = disp_func
-        self.orig = [orig if (orig is not None) else name]
 
     def display(self, rec):
-        x = self.get(rec)
-        url = self.url_func(x)
-        disp = self.disp_func(x)
+        disp = super().display(rec)
+        url = self.url_func(self.get(rec))
         return f'<a href="{url}">{disp}</a>'
 
 
@@ -260,7 +257,7 @@ class MultiProcessedCol(SearchCol):
             elif self.apply_download:
                 return self.func(*data)
         else:
-            data = self._get(rec, name=self.download_col)
+            data = self._get(rec, name=self.download_col, downloading=True)
         return data
 
 class ContingentCol(ProcessedCol):
@@ -309,7 +306,7 @@ class ColGroup(SearchCol):
 
     def download(self, rec, language):
         if self.download_col is not None:
-            return self._get(rec, name=self.download_col)
+            return self._get(rec, name=self.download_col, downloading=True)
         return [sub.download(rec, language) for sub in self.subcols]
 
 
@@ -372,22 +369,18 @@ class PolynomialCol(SearchCol):
         return pol_to_html(str(coeff_to_poly(self.get(rec))))
 
     def download(self, rec, lang):
-        return self.get(rec)
+        return self._get(rec, downloading=True)
 
 class ListCol(ProcessedCol):
+    # Lists of integers or rationals stored as a string
+    # Handles unnested lists like "[1,2,3]" or "1,2,3"
+    # Handles once-nested lists like "[[1,2],[3,4]]" or "1,2;3,4"
+    # Handles single quotes wrapping the integers/rationals, like "['1','2','3']"
     def download(self, rec, lang):
-        s = self.func(self.get(rec)).replace('"','')
-        return s
-
-class FinGroupCol(ProcessedCol):
-    def download(self, rec, lang):
-        return self.get(rec)
-
-class NonMaxPrimesCol(ProcessedCol):
-    def download(self, rec, lang):
-        s = self.get(rec)
-        if s is None or s == "":
-            return lang.to_lang([])
-        else:
-            return s
-
+        s = super().download(rec, lang)
+        s = s.replace(" ", "").replace("'", "")
+        s = s.lstrip("[").rstrip("]")
+        for obreak in [";", "],["]:
+            if obreak in s:
+                return [[Rational(y) for y in x.split(",")] for x in s.split(obreak)]
+        return [Rational(x) for x in s.split(",")]
