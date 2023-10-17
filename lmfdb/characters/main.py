@@ -238,7 +238,7 @@ character_columns = SearchColumns([
     MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
     MathCol("order", "character.dirichlet.order", "Order", default=True),
-    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True, is_string=False),
+    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
     CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
 
 class DirichletDownload(Downloader):

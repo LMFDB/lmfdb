@@ -231,10 +231,10 @@ artin_columns = SearchColumns([
     MathCol("dimension", "artin.dimension", "Dimension", default=True),
     MathCol("factored_conductor_latex", "artin.conductor", "Conductor", download_col="conductor", default=True),
     MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count"),
-    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field", download_col="NFGal", is_string=False),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field", download_col="NFGal"),
     SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center", short_title="image", download_col="GaloisLabel"),
-    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center", download_col="ProjBoth", is_string=False),
-    SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t", is_string=False),
+    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center", download_col="ProjBoth"),
+    SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t"),
     MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True, short_title="indicator"),
     MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True, short_title="trace of complex conj.")],
     db_cols = ["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])

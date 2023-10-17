@@ -634,7 +634,7 @@ abvar_columns = SearchColumns([
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-rank deficit"),
     MathCol("curve_count", "av.fq.curve_point_counts", "points on curve"),
     MathCol("abvar_count", "ag.fq.point_counts", "points on variety"),
-    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw", is_string=False, default=True)],
+    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw", default=True)],
     db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "abvar_count"])
 
 @search_wrap(

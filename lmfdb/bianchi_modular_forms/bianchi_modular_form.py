@@ -151,9 +151,9 @@ bmf_columns = SearchColumns([
     #MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
                  lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else ""),
-                 default=True, align="center", is_string=False),
-    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center", is_string=False),
-    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, short_title="CM", align="center", is_string=False)])
+                 default=True, align="center"),
+    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
+    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, short_title="CM", align="center")])
 
 class BianchiDownload(Downloader):
     table=db.bmf_forms

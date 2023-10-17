@@ -6,6 +6,7 @@ from flask import abort, send_file, stream_with_context, Response
 from werkzeug.datastructures import Headers
 from ast import literal_eval
 from io import BytesIO
+from sage.all import Integer, Rational
 
 class DownloadLanguage():
     # We choose the most common values
@@ -34,10 +35,8 @@ class DownloadLanguage():
             return self.false
         if isinstance(inp, str):
             inp = inp.replace("\\", "\\\\")
-            if len(inp) >= 2 and inp[0] == '"' and inp[-1] == '"':
-                return inp
             return '"{0}"'.format(inp)
-        if isinstance(inp, int):
+        if isinstance(inp, (int, Integer, Rational)):
             return str(inp)
         if level == 0:
             start, end = self.start_and_end

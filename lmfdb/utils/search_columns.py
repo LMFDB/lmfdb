@@ -124,11 +124,7 @@ class SearchCol:
     def download(self, rec, language, name=None):
         if self.download_col is not None:
             name = self.download_col
-        s = self._get(rec, name=name)
-        if self.is_string or self.is_string is None and isinstance(s, str):
-            return '"{0}"'.format(s)
-        else:
-            return s
+        return self._get(rec, name=name)
 
 class SpacerCol(SearchCol):
     def __init__(self, name, **kwds):
@@ -148,7 +144,6 @@ class SpacerCol(SearchCol):
 
 class MathCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", orig=None, **kwds):
-        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
         self.orig = [orig if (orig is not None) else name]
 
@@ -158,7 +153,6 @@ class MathCol(SearchCol):
 
 class FloatCol(MathCol):
     def __init__(self, name, knowl, title, prec=3, default=False, align="center", **kwds):
-        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
         self.prec = prec
 
@@ -169,7 +163,6 @@ class FloatCol(MathCol):
 
 class CheckCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
-        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
@@ -178,7 +171,6 @@ class CheckCol(SearchCol):
 
 class CheckMaybeCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, align="center", **kwds):
-        kwds.setdefault('is_string', False)
         super().__init__(name, knowl, title, default, align, **kwds)
 
     def display(self, rec):
@@ -228,10 +220,7 @@ class ProcessedCol(SearchCol):
             s = self.apply_download(s)
         elif self.apply_download:
             s = self.func(s)
-        if self.is_string:
-            return '"{0}"'.format(s)
-        else:
-            return s
+        return s
 
 class ProcessedLinkCol(SearchCol):
     def __init__(self, name, knowl, title, url_func, disp_func, default=False,
@@ -292,7 +281,6 @@ class ColGroup(SearchCol):
     def __init__(self, name, knowl, title, subcols,
                  contingent=lambda info: True, default=False, orig=None,
                  align="center", **kwds):
-        kwds.setdefault('is_string', False) # when downloading, we always want a list of subcolumn contents
         super().__init__(name, knowl, title, default, align, **kwds)
         self.subcols = subcols
         self.contingent = contingent

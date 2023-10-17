@@ -870,7 +870,7 @@ def number_field_jump(info):
 nf_columns = SearchColumns([
     ProcessedCol("label", "nf.label", "Label",
                  lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label)),
-                 default=True, is_string=True),
+                 default=True),
     PolynomialCol("coeffs", "nf.defining_polynomial", "Polynomial", default=True, inline=False),
     MathCol("degree", "nf.degree", "Degree", align="center"),
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), apply_download=False, align="center"),
