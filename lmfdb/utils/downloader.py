@@ -233,6 +233,12 @@ class Downloader():
         resp = Response(_generator(), mimetype='text/plain', headers=headers)
         return resp
 
+    def get_table(self, info):
+        """
+        This is a hook for downloaders to modify the search table based on info, which happens for hgm for example.
+        """
+        return self.table
+
     def modify_query(self, info, query):
         """
         This is a hook for downloaders to modify the info dictionary or a query before executing it.
@@ -246,10 +252,11 @@ class Downloader():
         ``query`` field in ``info``.
         """
         lang = self.languages[info.get(self.lang_key, 'text')]
-        filename = self.get('filename_base', self.table.search_table)
+        table = self.get_table(info)
+        filename = self.get('filename_base', table.search_table)
         ts = datetime.datetime.now().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
-        title = self.get('title', self.table.search_table)
+        title = self.get('title', table.search_table)
         short_name = self.get('short_name', title.split(' ')[-1].lower())
         var_name = self.get('var_name', short_name.replace('_',' '))
         make_data_comment = lang.make_data_comment
@@ -258,20 +265,22 @@ class Downloader():
         columns = info["columns"]
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
         # These virtual columns are often only used in display code and won't be present in the database, so we just strip them out
-        proj = [col for col in columns.db_cols if col in self.table.search_cols]
+        if isinstance(columns.db_cols, list):
+            proj = [col for col in columns.db_cols if col in table.search_cols]
+        else:
+            proj = columns.db_cols # some tables use 1 for project-to-all
         # reissue query here
         try:
             query = literal_eval(info.get('query', '{}'))
             self.modify_query(info, query)
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
-        data = list(self.table.search(query, projection=proj))
+        data = list(table.search(query, projection=proj))
         info["results"] = data
         if self.postprocess is not None:
             data = self.postprocess(data, info, query)
         #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
         cols = [c for c in columns.columns_shown(info, rank=-1) if c.default(info)]
-        print("COLS", [c.name for c in cols])
         data_format = self.get('data_format', [c.title for c in cols])
         if isinstance(data_format, dict):
             data_format = data_format[lang.name]

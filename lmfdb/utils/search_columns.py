@@ -384,3 +384,9 @@ class ListCol(ProcessedCol):
             if obreak in s:
                 return [[Rational(y) for y in x.split(",")] for x in s.split(obreak)]
         return [Rational(x) for x in s.split(",")]
+
+class RationalCol(ProcessedCol):
+    # Columns for rational numbers stored as strings
+    def download(self, rec, lang):
+        s = super().download(rec, lang)
+        return Rational(s)
