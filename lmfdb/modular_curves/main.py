@@ -329,12 +329,12 @@ modcurve_columns = SearchColumns(
         CheckCol("simple", "modcurve.simple", "Simple"),
         CheckCol("squarefree", "av.squarefree", "Squarefree"),
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
+        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros),
         MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
-    db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -419,6 +419,9 @@ class ModCurve_download(Downloader):
             "return([[Mod(Mat([a[1],a[2];a[3],a[4]]),r[2])|a<-r[3]]|r<-data])"
         ]
     }
+
+    def postprocess(self, data, info, query):
+        return modcurve_postprocess(data, info, query)
 
     def download_modular_curve_magma_str(self, label):
         s = ""
