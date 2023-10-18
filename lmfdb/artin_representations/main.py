@@ -38,9 +38,12 @@ OLD_LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$
 OLD_ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
 Dn_RE = re.compile(r'^d\d+$')
 
-artin_Lfunction_threshold = {2: 10000,
-                             3: 10000,
-                             4: 4000}
+# degree -> bound on conductor
+artin_Lfunction_threshold = {
+    2: 10000,
+    3: 10000,
+    4: 4000,
+}
 
 
 # Utility for permutations
