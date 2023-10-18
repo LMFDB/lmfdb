@@ -956,7 +956,7 @@ ratpoint_columns = SearchColumns([
     LinkCol("Elabel", "modcurve.elliptic_curve_of_point", "Elliptic curve", lambda Elabel: url_for_ECNF_label(Elabel) if "-" in Elabel else url_for_EC_label(Elabel), default=True),
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
-    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
+    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True, download_col="jinv"),
     FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
 
 def ratpoint_postprocess(res, info, query):
@@ -966,11 +966,15 @@ def ratpoint_postprocess(res, info, query):
         rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
     return res
 
+class ModCurvePoints_download(Downloader):
+    table = db.modcurve_points
+
 @search_wrap(
     table=db.modcurve_points,
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
+    shortcuts={"download": ModCurvePoints_download()},
     bread=lambda: get_bread("Low-degree point search results"),
     #postprocess=ratpoint_postprocess,
 )
