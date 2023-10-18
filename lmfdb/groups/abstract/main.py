@@ -1054,7 +1054,7 @@ subgroup_columns = SearchColumns([
         MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
                           display_url,
-                          default=True, short_title="Sub. name"),
+                          default=True, short_title="Sub. name", apply_download=False),
         ProcessedCol("subgroup_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Sub. order"),
         CheckCol("normal", "group.subgroup.normal", "norm", default=True, short_title="Sub. normal"),
         CheckCol("characteristic", "group.characteristic_subgroup", "char", default=True, short_title="Sub. characteristic"),
@@ -1070,7 +1070,7 @@ subgroup_columns = SearchColumns([
         MultiProcessedCol("ambient_name", "group.name", "Name",
                           ["ambient", "ambient_tex"],
                           display_url,
-                          default=True, short_title="Ambient name"),
+                          default=True, short_title="Ambient name", apply_download=False),
         ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Ambient order")],
              default=True),
     SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
@@ -1078,7 +1078,7 @@ subgroup_columns = SearchColumns([
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
                           display_url,
-                          default=True, short_title="Quo. name"),
+                          default=True, short_title="Quo. name", apply_download=False),
         ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", default=True, align="center", short_title="Quo. order"),
         CheckCol("quotient_cyclic", "group.cyclic", "cyc", default=True, short_title="Quo. cyclic"),
         CheckCol("quotient_abelian", "group.abelian", "ab", default=True, short_title="Quo. abelian"),
@@ -1087,11 +1087,15 @@ subgroup_columns = SearchColumns([
              default=True)],
     tr_class=["bottom-align", ""])
 
+class Subgroup_download(Downloader):
+    table = db.gps_subgroups
+
 @search_wrap(
     table=db.gps_subgroups,
     title="Subgroup search results",
     err_title="Subgroup search input error",
     columns=subgroup_columns,
+    shortcuts={"download": Subgroup_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
     url_for_label=url_for_subgroup_label,

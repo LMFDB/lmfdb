@@ -299,10 +299,10 @@ class ColGroup(SearchCol):
                 if sub.default(info):
                     n += 1
             self.th_content = f" colspan={n}"
-            if rank <= 0:
-                yield self
-            else:
+            if rank is None or rank > 0:
                 yield from subcols
+            else:
+                yield self
 
     def download(self, rec, language):
         if self.download_col is not None:
