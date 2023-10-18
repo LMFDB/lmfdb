@@ -173,7 +173,7 @@ def by_url_belyi_search_url(smthorlabel):
             ),
             301,
         )
-    elif len(sigma_spl) == 3  and len(split) == 3:  # galmap
+    elif len(sigma_spl) == 3 and len(split) == 3:  # galmap
         return redirect(
             url_for(
                 ".by_url_belyi_galmap_label",
