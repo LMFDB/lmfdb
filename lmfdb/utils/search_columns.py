@@ -199,9 +199,12 @@ class LinkCol(SearchCol):
 
 
 class ProcessedCol(SearchCol):
-    def __init__(self, name, knowl, title, func, default=False, orig=None,
+    def __init__(self, name, knowl, title, func=None, default=False, orig=None,
                  mathmode=False, align="left", apply_download=False, **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
+        if func is None:
+            # Some other column types like RationalCol inherit from ProcessedCol
+            func = lambda x: x
         self.func = func
         self.orig = [orig if (orig is not None) else name]
         self.mathmode = mathmode
