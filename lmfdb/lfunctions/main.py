@@ -51,7 +51,7 @@ from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
     search_wrap, list_to_factored_poly_otherorder, flash_error,
-    parse_primes, coeff_to_poly,
+    parse_primes, coeff_to_poly, Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
@@ -175,6 +175,15 @@ def process_search(res, info, query):
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
         L['root_analytic_conductor'] = display_float(L['root_analytic_conductor'], 3)
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
+    return res
+
+def process_download(res, info, query):
+    for L in res:
+        L['mus'] = list(zip(L['mu_real'], L['mu_imag']))
+        L['nus'] = [(0.5*r,i) for (r,i) in zip(L['nu_real_doubled'], L['nu_imag'])]
+        if info['search_array'].force_rational:
+            # root_angle is either 0 or 0.5
+            L['root_number'] = 1 - int(4*L['root_angle'])
     return res
 
 def process_trace(res, info, query):
@@ -317,11 +326,11 @@ lfunc_columns = SearchColumns([
     MultiProcessedCol("label", "lfunction.label", "Label",
                          ["label", "url"],
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
-                         default=True),
+                         default=True, download_col="label"),
     MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", short_title="root analytic conductor", default=True),
     MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", short_title="analytic conductor", default=True),
     MathCol("degree", "lfunction.degree", "$d$", short_title="degree", default=True),
-    MathCol("factored_conductor", "lfunction.conductor", "$N$", short_title="conductor", default=True),
+    MathCol("factored_conductor", "lfunction.conductor", "$N$", short_title="conductor", default=True, download_col="conductor"),
     LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), short_title="central character", default=True, align="center"),
     MathCol("mus", "lfunction.functional_equation", r"$\mu$", default=True),
     MathCol("nus", "lfunction.functional_equation", r"$\nu$", default=True),
@@ -349,16 +358,21 @@ lfunc_columns = SearchColumns([
     MathCol("z1", "lfunction.zeros", "First zero", short_title="first zero", default=True),
     ProcessedCol("origins", "lfunction.underlying_object", "Origin",
                  lambda origins: " ".join(f'<a href="{url_for("index")}{url.lstrip("/")}">{name}</a>' for name, url in origins),
-                 default=True)],
+                 default=True,
+                 download_col="instance_urls")],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
-lfunc_columns.dummy_download = True
+
+class LfuncDownload(Downloader):
+    table = db.lfunc_search
+    def postprocess(self, data, info, query):
+        return process_download(data, info, query)
 
 @search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
              columns=lfunc_columns,
-             shortcuts={'jump':jump_box},
+             shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
