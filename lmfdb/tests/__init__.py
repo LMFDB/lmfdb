@@ -79,18 +79,19 @@ class LmfdbTest(unittest2.TestCase):
         equality only if magma is installed; if it isn't, then the test
         passes."""
         from sage.all import magma
+        has_magma = False
         try:
+            has_magma = "2" == magma.eval("1 + 1")
+        except (RuntimeError, TypeError):
+            pass
+
+        if has_magma:
             if mode == 'equal':
                 assert expected == magma.eval(magma_code)
             elif mode == 'in':
                 assert expected in magma.eval(magma_code)
             else:
                 raise ValueError("mode must be either 'equal' or 'in")
-        except RuntimeError as the_error:
-            if str(the_error).startswith("unable to start magma"):
-                pass
-            else:
-                raise
 
     def check_sage_compiles_and_extract_variables(self, sage_code):
         """

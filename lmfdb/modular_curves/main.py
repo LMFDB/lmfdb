@@ -88,7 +88,7 @@ def index():
 @modcurve_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=ModCurveSearchArray())
-    if len(info) > 1:
+    if request.args:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
     info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
