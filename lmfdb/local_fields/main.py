@@ -17,7 +17,7 @@ from lmfdb.utils import (
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -273,6 +273,9 @@ def url_for_label(label):
 def local_field_jump(info):
     return redirect(url_for_label(info['jump']), 301)
 
+def unpack_slopes(slopes, t, u):
+    return eval_rational_list(slopes), t, u
+
 class LF_download(Downloader):
     table = db.lf_fields
     title = '$p$-adic fields'
@@ -296,15 +299,16 @@ lf_columns = SearchColumns([
     MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                       ["n", "gal", "cache"],
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
-                      default=True),
+                      default=True,
+                      apply_download=lambda n, t, cache: [n, t]),
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
-    ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
+    ListCol("visible", "lf.visible_slopes", "Visible slopes",
                     show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
-                      default=True, mathmode=True),
+                      default=True, mathmode=True, apply_download=unpack_slopes),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])

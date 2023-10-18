@@ -371,6 +371,16 @@ class PolynomialCol(SearchCol):
     def download(self, rec, lang):
         return self._get(rec, downloading=True)
 
+def eval_rational_list(s):
+    s = s.replace(" ", "").replace("'", "")
+    s = s.lstrip("[").rstrip("]")
+    if not s:
+        return []
+    for obreak in [";", "],["]:
+        if obreak in s:
+            return [[Rational(y) for y in x.split(",")] for x in s.split(obreak)]
+    return [Rational(x) for x in s.split(",")]
+
 class ListCol(ProcessedCol):
     # Lists of integers or rationals stored as a string
     # Handles unnested lists like "[1,2,3]" or "1,2,3"
@@ -378,12 +388,7 @@ class ListCol(ProcessedCol):
     # Handles single quotes wrapping the integers/rationals, like "['1','2','3']"
     def download(self, rec, lang):
         s = super().download(rec, lang)
-        s = s.replace(" ", "").replace("'", "")
-        s = s.lstrip("[").rstrip("]")
-        for obreak in [";", "],["]:
-            if obreak in s:
-                return [[Rational(y) for y in x.split(",")] for x in s.split(obreak)]
-        return [Rational(x) for x in s.split(",")]
+        return eval_rational_list(s)
 
 class RationalCol(ProcessedCol):
     # Columns for rational numbers stored as strings
