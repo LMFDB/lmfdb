@@ -30,10 +30,11 @@ from lmfdb.utils import (
     proportioners,
     totaler,
     web_latex_factored_integer,
+    Downloader,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
+    SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol, RationalCol,
 )
 from lmfdb.api import datapage
 
@@ -135,9 +136,9 @@ modlgal_columns = SearchColumns(
         MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$", default=True),
         MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension", default=True),
         ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, default=True, align="center"),
-        SearchCol("top_slope_rational", "modlgal.top_slope", "Top slope", align="center", default=lambda info: info.get("top_slope")),
+        RationalCol("top_slope_rational", "modlgal.top_slope", "Top slope", lambda x: x, align="center", default=lambda info: info.get("top_slope")),
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
-                          image_pretty, default=True, align="center"),
+                          image_pretty, default=True, align="center", apply_download=False),
         SearchCol("image_index", "modgal.image_index", "Index", short_title="image index"),
         SearchCol("image_order", "modgal.image_order", "Order", short_title="image order"),
         CheckCol("is_surjective", "modlgal.is_surjective", "Surjective", default=True),
@@ -153,11 +154,14 @@ modlgal_columns = SearchColumns(
              "image_index", "image_order", "top_slope_rational", "generating_primes"]
     )
 
+class ModLGalDownload(Downloader):
+    table = db.modlgal_reps
+
 @search_wrap(
     table=db.modlgal_reps,
     title=r"Mod-$\ell$ Galois representation search results",
     err_title=r"Mod-$\ell$ Galois representations search input error",
-    shortcuts={"jump": modlgal_jump },
+    shortcuts={"jump": modlgal_jump, "download":ModLGalDownload()},
     columns=modlgal_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modlgal_label,
