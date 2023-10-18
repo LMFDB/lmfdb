@@ -9,6 +9,7 @@ from flask import render_template, request, url_for, redirect, abort
 from sage.all import ZZ, cached_function
 
 from lmfdb import db
+from lmfdb.app import is_debug_mode
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
@@ -36,6 +37,10 @@ ORBIT_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+$')
 OLD_LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
 OLD_ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
 Dn_RE = re.compile(r'^d\d+$')
+
+artin_Lfunction_threshold = {2: 10000,
+                             3: 10000,
+                             4: 4000}
 
 
 # Utility for permutations
@@ -387,7 +392,7 @@ def render_artin_representation_webpage(label):
                     friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
 
         # Dimension > 1
-        elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
+        elif the_rep.conductor() <= artin_Lfunction_threshold.get(int(the_rep.dimension()), 0) or is_debug_mode():
             friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                               label=the_rep.label())))
         orblabel = re.sub(r'\.[a-z]+$', '', label)

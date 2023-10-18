@@ -63,6 +63,7 @@ from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
+from lmfdb.artin_representations.main import artin_Lfunction_threshold
 import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
@@ -1259,7 +1260,7 @@ class ArtinLfunction(Lfunction):
 
         # disable expensive L-functions, these should not be linked anywhere regardless
         # this threshold comes from lmfdb/artin_representations/main.py
-        if not is_debug_mode() and self.level**self.degree > 729000000000000:
+        if not (self.level <= artin_Lfunction_threshold.get(int(self.degree), 0) or is_debug_mode()):
             raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as the conductor/degree is too large.')
 
         self.level_factored = factor(self.level)
