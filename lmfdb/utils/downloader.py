@@ -35,7 +35,7 @@ class DownloadLanguage():
         elif inp is False:
             return self.false
         if isinstance(inp, str):
-            inp = inp.replace("\\", "\\\\")
+            inp = inp.replace("\\", "\\\\").replace('"', '\\"')
             return '"{0}"'.format(inp)
         if isinstance(inp, (int, Integer, Rational)):
             return str(inp)

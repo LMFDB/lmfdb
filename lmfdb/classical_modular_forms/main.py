@@ -848,7 +848,7 @@ newform_columns = SearchColumns([
                       lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                       short_title="RM",
-                      default=True),
+                      default=True, download_col="rm_discs"),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual"),
     MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists"),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*"),

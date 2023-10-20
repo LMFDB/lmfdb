@@ -95,6 +95,21 @@ def index():
     return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, learnmore=learnmore_list())
 
 def _set_show_subs(info):
+    def includes_composite(s):
+        s = s.replace(' ','').replace('..','-')
+        for interval in s.split(','):
+            if '-' in interval[1:]:
+                ix = interval.index('-',1)
+                a,b = int(interval[:ix]), int(interval[ix+1:])
+                if b == a:
+                    if a != 1 and not a.is_prime():
+                        return True
+                if b > a and b > 3:
+                    return True
+            else:
+                a = ZZ(interval)
+                if a != 1 and not a.is_prime():
+                    return True
     degree_str = prep_ranges(info.get('n'))
     info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
 
@@ -166,21 +181,6 @@ def gg_postprocess(res, info, query):
              learnmore=learnmore_list,
              bread=lambda: get_bread([("Search results", ' ')]))
 def galois_group_search(info, query):
-    def includes_composite(s):
-        s = s.replace(' ','').replace('..','-')
-        for interval in s.split(','):
-            if '-' in interval[1:]:
-                ix = interval.index('-',1)
-                a,b = int(interval[:ix]), int(interval[ix+1:])
-                if b == a:
-                    if a != 1 and not a.is_prime():
-                        return True
-                if b > a and b > 3:
-                    return True
-            else:
-                a = ZZ(interval)
-                if a != 1 and not a.is_prime():
-                    return True
     if info.get('jump','').strip():
         jump_list = ["1T1", "2T1", "3T1", "4T1", "4T2", "5T1", "6T1", "7T1",
           "8T1", "8T2", "8T3", "8T5", "9T1", "9T2", "10T1", "11T1", "12T1",
