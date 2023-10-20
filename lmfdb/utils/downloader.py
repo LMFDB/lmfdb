@@ -288,7 +288,7 @@ class Downloader():
             lines = [f"return Map({','.join(pairs)})"]
         else:
             return ""
-        return "\n".join("    " + line for line in lines)
+        return "".join("    " + line + "\n" for line in lines)
 
 
     def makedata_code(self, lang):
@@ -302,7 +302,7 @@ class Downloader():
             lines = ["return"]
         else:
             return ""
-        return "\n".join("    " + line for line in lines)
+        return "".join("    " + line + "\n" for line in lines)
 
     def __call__(self, info):
         """
