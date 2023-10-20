@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import ast
 import re
-from io import BytesIO
-import time
 
-from flask import abort, render_template, url_for, request, redirect, send_file
-from sage.rings.all import PolynomialRing, ZZ
+from flask import abort, render_template, url_for, request, redirect
+from sage.rings.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db

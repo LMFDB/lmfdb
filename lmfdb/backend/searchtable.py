@@ -2,7 +2,6 @@
 import random
 import time
 from itertools import islice
-from collections import defaultdict
 
 from psycopg2.extensions import cursor as pg_cursor
 
@@ -1029,14 +1028,14 @@ class PostgresSearchTable(PostgresTable):
             if tbl2.extra_table in alltables:
                 if tbl2.search_table in alltables:
                     frm += SQL(" JOIN {0} ON {1} = {2} JOIN {3} ON {0}.{4} = {3}.{4}").format(
-                        Identifier(tb2.search_table),
+                        Identifier(tbl2.search_table),
                         qualify(Identifier(col1), tbl1),
                         qualify(Identifier(col2), tbl2),
-                        Identifier(tb2.extra_table),
+                        Identifier(tbl2.extra_table),
                         Identifier("id"))
                 else:
                     frm += SQL(" JOIN {0} ON {1} = {2}").format(
-                        Identifier(tb2.extra_table),
+                        Identifier(tbl2.extra_table),
                         qualify(Identifier(col1), tbl1),
                         qualify(Identifier(col2), tbl2))
             else:
@@ -1108,7 +1107,7 @@ class PostgresSearchTable(PostgresTable):
                             vals,
                             silent=silent,
                             buffered=(prelimit is None),
-                            slow_note=(self.search_table, "analyze", orig_query, repr(orig_projection), prelimit, offset))
+                            slow_note=(self.search_table, "analyze", orig_query, repr(orig_proj), prelimit, offset))
         # _search_iterator only cares about search_cols + extra_cols, so we just use the original projection
         if limit is None:
             if info is not None:

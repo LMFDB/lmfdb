@@ -4,11 +4,9 @@
 
 import ast
 import re
-from io import BytesIO
-import time
 from urllib.parse import quote, unquote
 
-from flask import render_template, request, url_for, redirect, send_file, make_response, abort
+from flask import render_template, request, url_for, redirect, make_response, abort
 from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
@@ -26,7 +24,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
+from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats

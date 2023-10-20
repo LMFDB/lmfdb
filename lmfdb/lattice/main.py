@@ -1,11 +1,9 @@
 
 # -*- coding: utf-8 -*-
-import ast
 import re
-from io import BytesIO
 import time
 
-from flask import abort, render_template, request, url_for, redirect, make_response, send_file
+from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (

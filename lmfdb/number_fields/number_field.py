@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-D
 
-import ast
 import os
 import re
-from io import BytesIO
-
-import time
 
 from flask import abort, render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, RealField, log
