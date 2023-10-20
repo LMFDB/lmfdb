@@ -372,14 +372,18 @@ class PolynomialCol(SearchCol):
         return self._get(rec, downloading=True)
 
 def eval_rational_list(s):
+    def split(x):
+        if not x:
+            return []
+        return x.split(",")
     s = s.replace(" ", "").replace("'", "")
     s = s.lstrip("[").rstrip("]")
     if not s:
         return []
     for obreak in [";", "],["]:
         if obreak in s:
-            return [[Rational(y) for y in x.split(",")] for x in s.split(obreak)]
-    return [Rational(x) for x in s.split(",")]
+            return [[Rational(y) for y in split(x)] for x in s.split(obreak)]
+    return [Rational(x) for x in split(s)]
 
 class ListCol(ProcessedCol):
     # Lists of integers or rationals stored as a string
