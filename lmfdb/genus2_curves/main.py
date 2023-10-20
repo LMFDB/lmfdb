@@ -613,7 +613,7 @@ g2c_columns = SearchColumns([
     ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
     ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),
-    ListCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants",  lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True),
+    ListCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True),
     ListCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True),
     ListCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True),
     ListCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True)

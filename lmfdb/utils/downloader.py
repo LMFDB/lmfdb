@@ -1,5 +1,6 @@
 import time
 import datetime
+import re
 
 from flask import abort, send_file, stream_with_context, Response
 
@@ -78,10 +79,11 @@ class MagmaLanguage(DownloadLanguage):
 
     def initialize(self, cols):
         from lmfdb.number_fields.number_field import PolynomialCol
-        if any(isinstance(c, PolynomialCol) for c in cols):
-            return '\nZZx<x> := PolynomialRing(Integers());\n\n'
-        else:
-            return '\n'
+        column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
+        s = f"RecFormat := recformat<{','.join(column_names)}>;\n"
+        if any(isinstance(col, PolynomialCol) for col in cols):
+            s += 'ZZx<x> := PolynomialRing(Integers());\n'
+        return s + '\n'
 
 class SageLanguage(DownloadLanguage):
     name = 'sage'
@@ -106,7 +108,6 @@ class GPLanguage(DownloadLanguage):
     name = 'gp'
     start_and_end = ['{[',']}']
     comment_prefix = '\\\\'
-    assignment_defn = '='
     none = 'null'
     true = '1'
     false = '0'
@@ -118,6 +119,20 @@ class GPLanguage(DownloadLanguage):
     function_end = '}\n'
     makedata = '    [make_row(row)|row<-data]\n'
     makedata_basic = '    data\n'
+
+class GAPLanguage(DownloadLanguage):
+    name = 'gap'
+    start_and_end = ['[',']']
+    assignment_defn = ':='
+    line_end = ';'
+    none = '[]'
+    true = 'true'
+    false = 'false'
+    offset = 1
+    make_data_comment = 'To create a list of {short_name}, type "{var_name} := make_data();"'
+    file_suffix = '.g'
+    function_start = '{func_name} := function({func_args})\n'
+    function_end = 'end;\n'
 
 class OscarLanguage(DownloadLanguage):
     name = 'oscar'
@@ -246,6 +261,49 @@ class Downloader():
         """
         pass
 
+    def get_sort(self, info, query):
+        SA = self.search_array
+        if SA is not None and SA.sorts is not None:
+            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            sord = info.get("sort_order", "")
+            sop = info.get("sort_dir", "")
+            for name, display, S in sorts:
+                if name == sord:
+                    if sop == "op":
+                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S], f"{display} (reversed)"
+                    return S, display
+        return None, None
+
+    def createrecord_code(self, lang, column_names):
+        if lang.name == "sage":
+            lines = ["return {col: val for col, val in zip(column_names, row)}"]
+        elif lang.name == "magma":
+            pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
+            lines = [f"return rec<RecFormat|{','.join(pairs)}>;"]
+        elif lang.name == "gap":
+            pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
+            lines = [f"return rec({','.join(pairs)});"]
+        elif lang.name == "gp":
+            pairs = [f"{col},row[{i+1}]" for i, col in enumerate(column_names)]
+            lines = [f"return Map({','.join(pairs)})"]
+        else:
+            return ""
+        return "\n".join("    " + line for line in lines)
+
+
+    def makedata_code(self, lang):
+        if lang.name == "sage":
+            lines = ["return [create_record(row) for row in data]"]
+        elif lang.name == "magma":
+            lines = ["return [create_record(row) : row in data];"]
+        elif lang.name == "gap":
+            lines = ["return List(data, create_record);"]
+        elif lang.name == "gp":
+            lines = ["return"]
+        else:
+            return ""
+        return "\n".join("    " + line for line in lines)
+
     def __call__(self, info):
         """
         Generate download file for a list of search results determined by the
@@ -253,6 +311,7 @@ class Downloader():
         """
         lang = self.languages[info.get(self.lang_key, 'text')]
         table = self.get_table(info)
+        self.search_array = info.get("search_array")
         filename = self.get('filename_base', table.search_table)
         ts = datetime.datetime.now().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
@@ -275,57 +334,57 @@ class Downloader():
             self.modify_query(info, query)
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
-        data = list(table.search(query, projection=proj))
+        sort, sort_desc = self.get_sort(info, query)
+        data = list(table.search(query, projection=proj, sort=sort))
         info["results"] = data
         if self.postprocess is not None:
             data = self.postprocess(data, info, query)
-        #res_list = [[c.download_type.repr(lang, c.get(rec)) for c in cols] for rec in data]
-        cols = [c for c in columns.columns_shown(info, rank=-1) if c.default(info)]
-        data_format = self.get('data_format', [c.title for c in cols])
-        if isinstance(data_format, dict):
-            data_format = data_format[lang.name]
-        res_list = [[c.download(rec, lang) for c in cols] for rec in data]
+        cols = [col for col in columns.columns_shown(info, rank=-1) if col.default(info)]
+        data_format = [col.title for col in cols]
+        res_list = [[col.download(rec, lang) for col in cols] for rec in data]
         #print("RES LIST", res_list)
         c = lang.comment_prefix
-        s = c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)
+        s = c + ' Query "%s" returned %d %s%s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name, "" if sort_desc is None else f", sorted by {sort_desc}")
         s += c + ' Each entry in the following data list has the form:\n'
         s += c + '    [' + ', '.join(data_format) + ']\n'
-        data_desc = self.get('data_description')
-        if isinstance(data_desc, dict):
-            data_desc = data_desc[lang.name]
-        if data_desc is not None:
-            if isinstance(data_desc, str):
-                data_desc = [data_desc]
-            for line in data_desc:
-                s += c + ' %s\n' % line
+        s += c + ' For more details, see the definitions at the bottom of the file.'
         if make_data_comment:
             s += c + '\n'
             s += c + ' ' + make_data_comment  + '\n'
         s += '\n\n'
-        column_names = [(c.name if c.download_col is None else c.download_col) for c in cols]
+        column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
         s += lang.assign("columns", lang.to_lang(column_names))
         s += lang.assign("data", lang.to_lang(res_list, level=0))
         s += lang.initialize(cols)
         if make_data_comment:
-            for c in cols:
-                if not c.inline:
-                    func_body = "    " + c.cell_function_body(lang).replace("\n", "\n    ")
-                    s += lang.func_start(c.cell_function_name, "x")
-                    s += func_body + '\n'
-                    s += lang.function_end
-            if any(c.cell_function_name is not None for c in cols):
-                rowline = "    " + lang.return_keyword + lang.delim_start
-                for i, c in enumerate(cols):
-                    if i:
-                        rowline += ","
-                    if c.cell_function_name is None:
-                        rowline += f"row[{i + lang.offset}]"
-                    else:
-                        rowline += f"{c.cell_function_name}(row[{i + lang.offset}])"
-                rowline += lang.delim_end + lang.line_end + "\n"
-                s += '\n' + lang.func_start("make_row", "row") + rowline + lang.function_end
-                s += "\n\n" + lang.func_start("make_data", "") + lang.makedata + lang.function_end
+            s += "\n\n" + lang.func_start("create_record", "row") + self.createrecord_code(lang, column_names) + lang.function_end
+            s += "\n\n" + lang.func_start("make_data", "") + self.makedata_code(lang) + lang.function_end + "\n\n"
+        # We need to be able to look up knowls within knowls, so to reduce the number of database calls we just get them all.
+        if any(col.download_desc is None for col in cols):
+            from lmfdb.knowledge.knowl import knowldb
+            all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
+            knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
+            def knowl_subber(match):
+                return match.group(1)
+        for col, name in zip(cols, column_names):
+            if col.download_desc is None:
+                knowldata = all_knowls.get(col.knowl)
+                if knowldata is None:
+                    continue
+                # We want to remove KNOWL macros
+                _, content = knowldata
+                knowl = knowl_re.sub(knowl_subber, content)
             else:
-                s += "\n\n" + lang.func_start("make_row", "data") + lang.makedata_basic + lang.function_end
-                s += "\n\n" + lang.func_start("make_data", "") + lang.makedata_basic + lang.function_end
+                knowl = col.download_desc
+            if knowl:
+                if name.lower() == col.title.lower():
+                    s += c + f" {col.title} --\n"
+                else:
+                    s += c + f"{col.title} ({name}) --\n"
+                for line in knowl.split("\n"):
+                    if line.strip():
+                        s += c + "    " + line.rstrip() + "\n"
+                    else:
+                        s += "\n"
+                s += "\n\n"
         return self._wrap(s, filename, lang=lang)

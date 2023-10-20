@@ -143,7 +143,7 @@ hmf_columns = SearchColumns([
     MathCol("disc", "nf.discriminant", "Field discriminant"),
     ListCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
     MathCol("level_norm", "mf.level_norm", "Level norm"),
-    ListCol("weight", "mf.hilbert.weight_vector", "Weight", lambda x: x, mathmode=True),
+    ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
     ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes")),
     ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"))])

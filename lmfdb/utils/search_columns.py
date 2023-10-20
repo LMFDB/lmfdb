@@ -49,7 +49,8 @@ def get_default_func(default, name):
 
 class SearchCol:
     def __init__(self, name, knowl, title, default=False, align="left",
-                 contingent=None, short_title=None, **kwds):
+                 contingent=None, short_title=None, download_desc=None,
+                 download_col=None, **kwds):
         # Both contingent and default can be functions that take info
         # as an input (if default is a boolean it's translated to the
         # constant function with that value)
@@ -79,11 +80,8 @@ class SearchCol:
         else:
             self.th_style = self.td_style = f"text-align:{align};"
         self.th_content = self.td_content = ""
-        self.inline = kwds.pop("inline", True)
-        self.cell_function_name = kwds.pop("cell_function_name", None)
-        self.download_col = kwds.pop("download_col", None)
-        if not self.inline and self.cell_function_name is None:
-            self.cell_function_name = f"process_{name}"
+        self.download_desc = download_desc
+        self.download_col = download_col
 
         for key, val in kwds.items():
             assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")
@@ -354,7 +352,6 @@ class PolynomialCol(SearchCol):
     def __init__(self, name, knowl, title, default=False, orig=None,
                  mathmode=False, align="left", **kwds):
         super().__init__(name, knowl, title, default, align, **kwds)
-        self.cell_function_name = f'process_{name}'
         self.orig = [orig if (orig is not None) else name]
         self.mathmode = mathmode
 

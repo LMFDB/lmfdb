@@ -586,12 +586,14 @@ function control_sort(S) {
 function update_download_url(link) {
   var show = $("input[name=showcol]");
   var hide = $("input[name=hidecol]");
+  var sort = $("input[name=sort_order]");
+  var sort_dir = $("input[name=sort_dir]");
   var i = link.href.indexOf("&showcol=");
   //console.log("pre", link.href);
   if (i != -1) {
     link.href = link.href.slice(0, i);
   }
-  link.href = link.href + "&showcol=" + show.val() + "&hidecol=" + hide.val();
+  link.href = link.href + "&showcol=" + show.val() + "&hidecol=" + hide.val() + "&sort_order=" + sort.val() + "&sort_dir=" + sort_dir.val();
   //console.log("post", link.href);
   return true;
 };
