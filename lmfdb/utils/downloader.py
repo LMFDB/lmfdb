@@ -1,6 +1,7 @@
 import time
 import datetime
 import re
+import itertools
 
 from flask import abort, send_file, stream_with_context, Response
 
@@ -39,24 +40,37 @@ class DownloadLanguage():
             return '"{0}"'.format(inp)
         if isinstance(inp, (int, Integer, Rational)):
             return str(inp)
-        if level == 0:
-            start, end = self.start_and_end
-            sep = ',\n'
-        else:
-            start = self.delim_start
-            end = self.delim_end
-            sep = ', '
+        start = self.delim_start
+        end = self.delim_end
         try:
-            if level == 0:
-                start = start + '\n'
-                end = '\n' + end
-            return start + sep.join(self.to_lang(c, level=level + 1) for c in inp) + end
+            it = iter(inp)
         except TypeError:
             # not an iterable object
             return str(inp)
+        else:
+            return start + ", ".join(self.to_lang(c, level=level + 1) for c in it) + end
 
-    def assign(self, name, elt):
-        return name + ' ' + self.assignment_defn + ' ' + elt + self.line_end + '\n'
+    def to_lang_iter(self, inp):
+        # We separate the code for handling an iterable as input so that we can use yield
+        start, end = self.start_and_end
+        sep = ',\n'
+        it = iter(inp)
+        yield start + "\n"
+        try:
+            yield self.to_lang(next(it))
+        except StopIteration:
+            pass
+        for row in it:
+            yield sep + self.to_lang(row)
+        yield "\n" + end
+
+    def assign(self, name, inp):
+        return name + " " + self.assignment_defn + " " + inp + self.line_end + "\n"
+
+    def assign_iter(self, name, inp):
+        yield name + " " + self.assignment_defn + " "
+        yield from inp
+        yield self.line_end + "\n"
 
     def func_start(self, fname, fargs):
         return self.function_start.format(func_name=fname, func_args=fargs)
@@ -198,7 +212,9 @@ class Downloader():
         'text': TextLanguage(),
         'oscar': OscarLanguage(),
     }
-    postprocess = None
+    def postprocess(self, row, info, query):
+        return row
+
     def get(self, name, default=None):
         if hasattr(self, name):
             return getattr(self, name)
@@ -234,8 +250,8 @@ class Downloader():
             title = self.get('title', self.table.search_table)
         filename = filebase
         if add_ext:
-            filename += self.file_suffix[lang]
-        c = self.comment_prefix[lang]
+            filename += lang.file_suffix
+        c = lang.comment_prefix
         mydate = time.strftime("%d %B %Y")
 
         @stream_with_context
@@ -335,56 +351,62 @@ class Downloader():
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
         sort, sort_desc = self.get_sort(info, query)
-        data = list(table.search(query, projection=proj, sort=sort))
-        info["results"] = data
-        if self.postprocess is not None:
-            data = self.postprocess(data, info, query)
+        num_results = table.count(query)
+        data = iter(table.search(query, projection=proj, sort=sort))
+        # We get the first 50 results, in order to accommodate sections (like modular forms) where default and contingent columns rely on having access to info["results"]
+        # We don't get all the results, since we want to support downloading millions of records, where this would time out.
+        info["results"] = first50 = [self.postprocess(row, info, query) for row in itertools.islice(data, 50)]
         cols = [col for col in columns.columns_shown(info, rank=-1) if col.default(info)]
         data_format = [col.title for col in cols]
-        res_list = [[col.download(rec, lang) for col in cols] for rec in data]
-        #print("RES LIST", res_list)
-        c = lang.comment_prefix
-        s = c + ' Query "%s" returned %d %s%s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name, "" if sort_desc is None else f", sorted by {sort_desc}")
-        s += c + ' Each entry in the following data list has the form:\n'
-        s += c + '    [' + ', '.join(data_format) + ']\n'
-        s += c + ' For more details, see the definitions at the bottom of the file.'
-        if make_data_comment:
-            s += c + '\n'
-            s += c + ' ' + make_data_comment  + '\n'
-        s += '\n\n'
         column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
-        s += lang.assign("columns", lang.to_lang(column_names))
-        s += lang.assign("data", lang.to_lang(res_list, level=0))
-        s += lang.initialize(cols)
-        if make_data_comment:
-            s += "\n\n" + lang.func_start("create_record", "row") + self.createrecord_code(lang, column_names) + lang.function_end
-            s += "\n\n" + lang.func_start("make_data", "") + self.makedata_code(lang) + lang.function_end + "\n\n"
-        # We need to be able to look up knowls within knowls, so to reduce the number of database calls we just get them all.
-        if any(col.download_desc is None for col in cols):
-            from lmfdb.knowledge.knowl import knowldb
-            all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
-            knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
-            def knowl_subber(match):
-                return match.group(1)
-        for col, name in zip(cols, column_names):
-            if col.download_desc is None:
-                knowldata = all_knowls.get(col.knowl)
-                if knowldata is None:
-                    continue
-                # We want to remove KNOWL macros
-                _, content = knowldata
-                knowl = knowl_re.sub(knowl_subber, content)
-            else:
-                knowl = col.download_desc
-            if knowl:
-                if name.lower() == col.title.lower():
-                    s += c + f" {col.title} --\n"
+        first50 = [[col.download(rec, lang) for col in cols] for rec in first50]
+        #print("FIRST FIFTY", first50)
+        c = lang.comment_prefix
+        def make_download():
+            yield c + ' Query "%s" returned %d %s%s.\n\n' %(str(info.get('query')), num_results, short_name if num_results == 1 else short_name, "" if sort_desc is None else f", sorted by {sort_desc}")
+            yield c + ' Each entry in the following data list has the form:\n'
+            yield c + '    [' + ', '.join(data_format) + ']\n'
+            yield c + ' For more details, see the definitions at the bottom of the file.\n'
+            if make_data_comment:
+                yield '\n' + c + ' ' + make_data_comment  + '\n'
+            yield '\n\n'
+            yield lang.assign("columns", lang.to_lang(column_names))
+            yield from lang.assign_iter("data", lang.to_lang_iter(
+                itertools.chain(first50, map(
+                    lambda rec: [
+                        col.download(self.postprocess(rec, info, query), lang)
+                        for col in cols
+                    ], data))))
+            yield lang.initialize(cols)
+            if make_data_comment:
+                yield "\n" + lang.func_start("create_record", "row") + self.createrecord_code(lang, column_names) + lang.function_end
+                yield "\n" + lang.func_start("make_data", "") + self.makedata_code(lang) + lang.function_end + "\n\n"
+            # We need to be able to look up knowls within knowls, so to reduce the number of database calls we just get them all.
+            if any(col.download_desc is None for col in cols):
+                from lmfdb.knowledge.knowl import knowldb
+                all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
+                knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
+                def knowl_subber(match):
+                    return match.group(1)
+            for col, name in zip(cols, column_names):
+                if col.download_desc is None:
+                    knowldata = all_knowls.get(col.knowl)
+                    if knowldata is None:
+                        continue
+                    # We want to remove KNOWL macros
+                    _, content = knowldata
+                    knowl = knowl_re.sub(knowl_subber, content)
                 else:
-                    s += c + f"{col.title} ({name}) --\n"
-                for line in knowl.split("\n"):
-                    if line.strip():
-                        s += c + "    " + line.rstrip() + "\n"
+                    knowl = col.download_desc
+                if knowl:
+                    if name.lower() == col.title.lower():
+                        yield c + f" {col.title} --\n"
                     else:
-                        s += "\n"
-                s += "\n\n"
-        return self._wrap(s, filename, lang=lang)
+                        yield c + f"{col.title} ({name}) --\n"
+                    for line in knowl.split("\n"):
+                        if line.strip():
+                            yield c + "    " + line.rstrip() + "\n"
+                        else:
+                            yield "\n"
+                    yield "\n\n"
+        return self._wrap_generator(make_download(), filename, lang=lang)

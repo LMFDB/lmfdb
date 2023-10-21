@@ -28,5 +28,5 @@ class AbvarFq_download(Downloader):
                           lang=lang,
                           title='Curves in abelian variety isogeny class %s,'%(label))
 
-    def postprocess(self, res, info, query):
-        return [AbvarFq_isoclass(x) for x in res]
+    def postprocess(self, rec, info, query):
+        return AbvarFq_isoclass(rec)

@@ -177,15 +177,6 @@ def process_search(res, info, query):
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
     return res
 
-def process_download(res, info, query):
-    for L in res:
-        L['mus'] = list(zip(L['mu_real'], L['mu_imag']))
-        L['nus'] = [(0.5*r,i) for (r,i) in zip(L['nu_real_doubled'], L['nu_imag'])]
-        if info['search_array'].force_rational:
-            # root_angle is either 0 or 0.5
-            L['root_number'] = 1 - int(4*L['root_angle'])
-    return res
-
 def process_trace(res, info, query):
     res = common_postprocess(res, info, query)
     if info.get('view_modp') == 'reductions':
@@ -364,8 +355,13 @@ lfunc_columns = SearchColumns([
 
 class LfuncDownload(Downloader):
     table = db.lfunc_search
-    def postprocess(self, data, info, query):
-        return process_download(data, info, query)
+    def postprocess(self, rec, info, query):
+        rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
+        rec['nus'] = [(0.5*r,i) for (r,i) in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        if info['search_array'].force_rational:
+            # root_angle is either 0 or 0.5
+            rec['root_number'] = 1 - int(4*rec['root_angle'])
+        return rec
 
 @search_wrap(table=db.lfunc_search,
              postprocess=process_search,

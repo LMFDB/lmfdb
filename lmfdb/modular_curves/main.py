@@ -293,18 +293,6 @@ def modcurve_jump(info):
         else:
             return redirect(url_for_modcurve_label(label))
 
-def modcurve_postprocess(res, info, query):
-    # Add in the number of models
-    num_models = Counter()
-    labels = [rec["label"] for rec in res]
-    for modcurve in db.modcurve_models.search({"modcurve":{"$in":labels}}, "modcurve"):
-        num_models[modcurve] += 1
-    for rec in res:
-        rec["models"] = num_models[rec["label"]]
-        if rec["genus"] == 0 and not rec["pointless"]: # P^1
-            rec["models"] += 1
-    return res
-
 def blankzeros(n):
     return "$%o$"%n if n else ""
 
@@ -334,7 +322,7 @@ modcurve_columns = SearchColumns(
         MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -419,9 +407,6 @@ class ModCurve_download(Downloader):
             "return([[Mod(Mat([a[1],a[2];a[3],a[4]]),r[2])|a<-r[3]]|r<-data])"
         ]
     }
-
-    def postprocess(self, data, info, query):
-        return modcurve_postprocess(data, info, query)
 
     def download_modular_curve_magma_str(self, label):
         s = ""
@@ -630,7 +615,6 @@ def modcurve_text_download(label):
     err_title="Modular curves search input error",
     shortcuts={"jump": modcurve_jump, "download": ModCurve_download()},
     columns=modcurve_columns,
-    postprocess=modcurve_postprocess,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modcurve_label,
 )

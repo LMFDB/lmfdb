@@ -252,8 +252,11 @@ class ArtinDownload(Downloader):
     def modify_query(self, info, query):
         query['Hide'] = 0
 
-    def postprocess(self, res, info, query):
-        return artin_postprocess(res, info, query)
+    def postprocess(self, rec, info, query):
+        # We don't use the cache here since it requires all gp_labels in advance
+        # Fortunately, the download columns override the three places where it would be needed
+        # (pretty_galois_knowl, projective_group and container)
+        return ArtinRepresentation(data=rec)
 
 @search_wrap(table=db.artin_reps,
              title='Artin representation search results',

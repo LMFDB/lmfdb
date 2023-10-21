@@ -52,10 +52,6 @@ class ClassGroupCol(MathCol):
         x = self.get(rec)
         return x if isinstance(x, str) else f'${x}$'
 
-    def download(self, rec, lang):
-        x = self._get(rec)
-        return [] if x == 'trivial' else x
-
 class DiscriminantCol(MultiProcessedCol):
     def display(self, rec):
         D = ZZ(rec['disc_abs']) * ZZ(rec['disc_sign'])
@@ -75,8 +71,6 @@ class NF_download(Downloader):
         "sage": ["TODO : write function body code for sage" ],
         "gp": ["TODO : write function body code for gp"],
     }
-    postprocess = lambda self, x, y, z : nf_postprocess(x, y, z)
-
 
 def init_nf_count():
     global nfields, init_nf_flag, max_deg
@@ -862,8 +856,8 @@ nf_columns = SearchColumns([
     CheckCol("cm", "nf.cm_field", "CM field"),
     CheckCol("is_galois", "nf.galois_group", "Galois"),
     CheckMaybeCol("monogenic", "nf.monogenic", "Monogenic"),
-    SearchCol("galois", "nf.galois_group", "Galois group", default=True),
-    ClassGroupCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True),
+    SearchCol("galois", "nf.galois_group", "Galois group", default=True, download_col="galois_label"),
+    ClassGroupCol("class_group_desc", "nf.ideal_class_group", "Class group", default=True, download_col="class_group"),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center"),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True),
     MathCol("regulator", "nf.regulator", "Regulator", align="left")],
