@@ -139,56 +139,58 @@ class CMF_download(Downloader):
     qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
+        if isinstance(lang, str):
+            lang = self.languages.get(lang, self.languages['sage'])
         hecke_nf = self._get_hecke_nf(label)
         if hecke_nf is None:
             return abort(404, "No q-expansion found for %s" % label)
 
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
-        level_data = self.assign(lang, 'level', level)
-        weight_data = self.assign(lang, 'weight', weight)
+        level_data = lang.assign('level', level)
+        weight_data = lang.assign('weight', weight)
 
-        c = self.comment_prefix[lang]
-        func_start = self.get('function_start',{}).get(lang,[])
-        func_end = self.get('function_end',{}).get(lang,[])
+        c = lang.comment_prefix
+        func_start = lang.func_start(func_name="make_data", func_args="")
+        func_end = lang.function_end
 
         explain = '\n'
         explain += c + ' We generate the q-expansion using the Hecke eigenvalues a_p at the primes.\n'
-        aps_data = self.assign(lang, 'aps_data', aps)
+        aps_data = lang.assign('aps_data', aps)
         code = ''
-        hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
+        hecke_ring_character_values = lang.assign('hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            func_body = self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
+            func_body = self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang.name,[])
             explain += c + ' Each a_p is given as list of pairs\n'
             explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
             basis_data = ''
-            poly_data = self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            poly_data = lang.assign('poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
         else:
             explain += c + ' Each a_p is given as a linear combination\n'
             explain += c + ' of the following basis for the coefficient ring.\n'
             poly_data = '\n' + c + ' The following line gives the coefficients of\n'
             poly_data += c + ' the defining polynomial for the coefficient field.\n'
-            poly_data = self.assign(lang, 'poly_data', hecke_nf['field_poly'], level=1)
+            poly_data = lang.assign('poly_data', hecke_nf['field_poly'])
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
-                func_body = self.get('qexp_function_body_powbasis',{}).get(lang,[])
+                func_body = self.get('qexp_function_body_powbasis',{}).get(lang.name,[])
             else:
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
                 basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-                basis_data += self.assign(lang, 'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
+                basis_data += lang.assign('basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
-                func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
+                func_body = self.get('qexp_function_body_generic',{}).get(lang.name,[])
 
         if lang in ['sage']:
-            explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
+            explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (lang.assignment_defn, lang.line_end)
 
-        if lang in ['sage']:
-            code = '\n' + '\n'.join(func_start) + '\n'
+        if lang.name in ['sage']:
+            code = '\n' + func_start + '\n'
             code += '    ' + '\n    '.join(func_body) + '\n'
-            code += '\n'.join(func_end)
+            code += func_end
 
         return self._wrap(explain + code + level_data + weight_data + poly_data + basis_data + hecke_ring_character_values + aps_data,
                           label + '.qexp',
@@ -207,6 +209,7 @@ class CMF_download(Downloader):
 
     def download_multiple_traces(self, info, spaces=False):
         lang = info.get(self.lang_key,'text').strip()
+        lang = self.languages.get(lang, self.languages['sage'])
         query = literal_eval(info.get('query', '{}'))
         if spaces:
             count = db.mf_newspaces.count(query)
@@ -221,16 +224,16 @@ class CMF_download(Downloader):
         else:
             res = list(db.mf_newforms.search(query, projection=['label', 'traces']))
         s = ""
-        c = self.comment_prefix[lang]
+        c = lang.comment_prefix
         s += c + ' Query "%s" returned %d %s.\n\n' % (str(info.get('query')), len(res), 'spaces' if spaces else 'forms')
         s += c + ' Below are two lists, one called labels, and one called traces (in matching order).\n'
         s += c + ' Each list of traces starts with a_1 (giving the dimension).\n\n'
-        s += 'labels ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        s += 'labels ' + lang.assignment_defn + lang.start_and_end[0] + '\\\n'
         s += ',\n'.join(rec['label'] for rec in res)
-        s += self.start_and_end[lang][1] + '\n\n'
-        s += 'traces ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        s += lang.start_and_end[1] + '\n\n'
+        s += 'traces ' + lang.assignment_defn + lang.start_and_end[0] + '\\\n'
         s += ',\n'.join('[' + ', '.join(str(t) for t in rec['traces']) for rec in res)
-        s += self.start_and_end[lang][1]
+        s += lang.start_and_end[1]
         return self._wrap(s, 'mf_newforms_traces', lang=lang)
 
     def download_multiple_space_traces(self, info):
@@ -305,11 +308,11 @@ class CMF_download(Downloader):
                           title='Stored data for newform %s,'%(label))
 
     def download_code(self, label, lang):
+        if lang == 'gp':
+            lang = 'pari'
         Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
         if not lang in Fullname:
             abort(404,"Invalid code language specified: " + lang)
-        if lang=='gp':
-            lang = 'pari'
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
@@ -356,18 +359,19 @@ class CMF_download(Downloader):
 
     def download_spaces(self, info):
         lang = info.get(self.lang_key,'text').strip()
+        lang = self.languages.get(lang, self.languages['sage'])
         query = literal_eval(info.get('query', '{}'))
         proj = ['label', 'analytic_conductor', 'conrey_index', 'char_order']
         spaces = list(db.mf_newspaces.search(query, projection=proj))
         s = ""
-        c = self.comment_prefix[lang]
+        c = lang.comment_prefix
         s += c + ' Query "%s" returned %d spaces.\n\n' % (str(info.get('query')), len(spaces))
         s += c + ' Below one list called data.\n'
         s += c + ' Each entry in the list has the form:\n'
         s += c + " %s\n" % proj
-        s += 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        s += 'data ' + lang.assignment_defn + lang.start_and_end[0] + '\\\n'
         s += ',\n'.join('[' + ', '.join(str(spc[col]) for col in proj) + ']' for spc in spaces)
-        s += self.start_and_end[lang][1]
+        s += lang.start_and_end[1]
         return self._wrap(s, 'mf_newspaces', lang=lang)
 
     # Magma

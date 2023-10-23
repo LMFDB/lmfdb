@@ -69,6 +69,8 @@ class DownloadLanguage():
         yield "\n" + end
 
     def assign(self, name, inp):
+        if not isinstance(inp, str):
+            inp = self.to_lang(inp)
         return name + " " + self.assignment_defn + " " + inp + self.line_end + "\n"
 
     def assign_iter(self, name, inp):
@@ -393,7 +395,7 @@ class Downloader():
             if make_data_comment:
                 yield '\n' + c + ' ' + make_data_comment  + '\n'
             yield '\n\n'
-            yield lang.assign("columns", lang.to_lang(column_names))
+            yield lang.assign("columns", column_names)
             yield from lang.assign_iter("data", lang.to_lang_iter(
                 itertools.chain(first50, map(
                     lambda rec: [
