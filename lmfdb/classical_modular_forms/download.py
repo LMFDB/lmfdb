@@ -151,7 +151,7 @@ class CMF_download(Downloader):
         weight_data = lang.assign('weight', weight)
 
         c = lang.comment_prefix
-        func_start = lang.func_start(func_name="make_data", func_args="")
+        func_start = lang.func_start(fname="make_data", fargs="")
         func_end = lang.function_end
 
         explain = '\n'
@@ -396,6 +396,7 @@ class CMF_download(Downloader):
     def _magma_ConvertToHeckeField(self, newform, hecke_nf):
         begin = ['function ConvertToHeckeField(input: pass_field := false, Kf := [])',
                  '    if not pass_field then']
+        magma = self.languages['magma']
         if newform.dim == 1:
             return begin + [
                     '        Kf := Rationals();',
@@ -412,7 +413,7 @@ class CMF_download(Downloader):
                     ]
         elif hecke_nf['hecke_ring_power_basis']:
             return begin + [
-                    '        ' + self.assign('magma', 'poly', newform.field_poly, level=1).rstrip('\n'),
+                    '        ' + magma.assign('poly', newform.field_poly).rstrip('\n'),
                     '        Kf := NumberField(Polynomial([elt : elt in poly]));',
                     '        AssignNames(~Kf, ["nu"]);',
                     '    end if;',
@@ -423,12 +424,12 @@ class CMF_download(Downloader):
                     ]
         else:
             return begin + [
-                    '        ' + self.assign('magma', 'poly', newform.field_poly, level=1).rstrip('\n'),
+                    '        ' + magma.assign('poly', newform.field_poly).rstrip('\n'),
                     '        Kf := NumberField(Polynomial([elt : elt in poly]));',
                     '        AssignNames(~Kf, ["nu"]);',
                     '    end if;',
-                    '    ' + self.assign('magma', 'Rf_num', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
-                    '    ' + self.assign('magma', 'Rf_basisdens', hecke_nf['hecke_ring_denominators']).rstrip('\n'),
+                    '    ' + magma.assign('Rf_num', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
+                    '    ' + magma.assign('Rf_basisdens', hecke_nf['hecke_ring_denominators']).rstrip('\n'),
                     '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
                     '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
                     '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
@@ -443,6 +444,7 @@ class CMF_download(Downloader):
             returns a string containing magma code to create the character
             for r in magma using the default generators.
         """
+        magma = self.languages['magma']
         level = newform.level
         order = newform.char_values[1]
         char_gens = newform.char_values[2]
@@ -451,10 +453,10 @@ class CMF_download(Downloader):
         out = [
                 explain,
                 'function MakeCharacter_%d_%s()' % (newform.level, newform.char_orbit_label),
-                '    ' + self.assign('magma', 'N', level).rstrip('\n'), # level
-                '    ' + self.assign('magma', 'order', order).rstrip('\n'), # order of the character
-                '    ' + self.assign('magma', 'char_gens', char_gens, level=1).rstrip('\n'), # generators
-                '    ' + self.assign('magma', 'v', newform.char_values[3]).rstrip('\n'),
+                '    ' + magma.assign('N', level).rstrip('\n'), # level
+                '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
+                '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
+                '    ' + magma.assign('v', newform.char_values[3]).rstrip('\n'),
                 '    // chi(gens[i]) = zeta^v[i]',
                 '    assert SequenceToList(UnitGenerators(DirichletGroup(N))) eq char_gens;',
                 '    F := CyclotomicField(order);',
@@ -482,10 +484,10 @@ class CMF_download(Downloader):
             out += [
                 explain,
                 'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
-                    '    ' + self.assign('magma', 'N', level).rstrip('\n'), # level
-                    '    ' + self.assign('magma', 'order', order).rstrip('\n'), # order of the character
-                    '    ' + self.assign('magma', 'char_gens', char_gens, level=1).rstrip('\n'), # generators
-                    '    ' + self.assign('magma', 'char_values', char_values, level=1).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
+                    '    ' + magma.assign('N', level).rstrip('\n'), # level
+                    '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
+                    '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
+                    '    ' + magma.assign('char_values', char_values).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
                     '    assert SequenceToList(UnitGenerators(DirichletGroup(N))) eq char_gens;',
                     '    values := ConvertToHeckeField(char_values : pass_field := true, Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
                     '    F := Universe(values);// the Hecke field',
@@ -542,8 +544,8 @@ class CMF_download(Downloader):
         return [
             'function qexpCoeffs()',
             '    ' + explain,
-            '    ' + self.assign('magma', 'weight', newform.weight).rstrip('\n'),
-            '    ' + self.assign('magma', 'raw_aps', hecke_nf['ap'], prepend='    ' * 2).rstrip('\n'),
+            '    ' + magma.assign('weight', newform.weight).rstrip('\n'),
+            '    ' + magma.assign('raw_aps', hecke_nf['ap']).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
             '    chi := MakeCharacter_%d_%s_Hecke(Universe(aps));' % (newform.level, newform.char_orbit_label),
             '    return ExtendMultiplicatively(weight, aps, chi);',
