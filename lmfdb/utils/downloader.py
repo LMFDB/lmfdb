@@ -28,6 +28,11 @@ class DownloadLanguage():
     def initialize(self, cols):
         return ''
 
+    def delim(self, inp):
+        # We allow the language to specify the delimiter based on the contents of inp
+        # This allows magma to use sequences if the types are all the same
+        return self.delim_start, self.delim_end
+
     def to_lang(self, inp, level=1):
         if inp is None:
             return self.none
@@ -40,14 +45,13 @@ class DownloadLanguage():
             return '"{0}"'.format(inp)
         if isinstance(inp, (int, Integer, Rational)):
             return str(inp)
-        start = self.delim_start
-        end = self.delim_end
         try:
             it = iter(inp)
         except TypeError:
             # not an iterable object
             return str(inp)
         else:
+            start, end = self.delim(inp)
             return start + ", ".join(self.to_lang(c, level=level + 1) for c in it) + end
 
     def to_lang_iter(self, inp):
@@ -80,8 +84,6 @@ class MagmaLanguage(DownloadLanguage):
     comment_prefix = '//'
     assignment_defn = ':='
     line_end = ';'
-    delim_start = '[*'
-    delim_end = '*]'
     none = '[]'
     offset = 1
     make_data_comment = 'To create a list of {short_name}, type "{var_name}:= make_data();"'
@@ -90,6 +92,23 @@ class MagmaLanguage(DownloadLanguage):
     function_end = 'end function;\n'
     makedata = '    return [* make_row(row) : row in data *];\n'
     makedata_basic = '    return data;\n'
+
+    def delim(self, inp):
+        # We use sequences if possible
+        typ = set(type(x) for x in inp)
+        if len(typ) > 1:
+            return "[*", "*]"
+        typ = typ.pop()
+        while issubclass(typ, (list, tuple)):
+            leveled = []
+            for x in inp:
+                leveled.extend(x)
+            typ = set(type(x) for x in leveled)
+            if len(typ) > 1:
+                return "[*", "*]"
+            typ = typ.pop()
+            inp = leveled
+        return "[", "]"
 
     def initialize(self, cols):
         from lmfdb.number_fields.number_field import PolynomialCol
@@ -227,6 +246,8 @@ class Downloader():
         """
         if title is None:
             title = self.get('title', self.table.search_table)
+        if isinstance(lang, str):
+            lang = self.languages.get(lang, TextLanguage())
         filename = filebase + lang.file_suffix
         c = lang.comment_prefix
         mydate = time.strftime("%d %B %Y")
@@ -248,6 +269,8 @@ class Downloader():
         """
         if title is None:
             title = self.get('title', self.table.search_table)
+        if isinstance(lang, str):
+            lang = self.languages.get(lang, TextLanguage())
         filename = filebase
         if add_ext:
             filename += lang.file_suffix
