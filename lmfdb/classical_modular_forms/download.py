@@ -539,6 +539,7 @@ class CMF_download(Downloader):
                 ]
 
     def _magma_qexpCoeffs(self, newform, hecke_nf):
+        magma = self.languages['magma']
         explain = '// To make the coeffs of the qexp of the newform in the Hecke field type "qexpCoeffs();"'
         self.explain.append(explain)
         return [
