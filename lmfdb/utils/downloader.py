@@ -97,6 +97,8 @@ class MagmaLanguage(DownloadLanguage):
 
     def delim(self, inp):
         # We use sequences if possible
+        if not inp:
+            return "[", "]"
         typ = set(type(x) for x in inp)
         if len(typ) > 1:
             return "[*", "*]"
