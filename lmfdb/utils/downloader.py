@@ -289,7 +289,7 @@ class Downloader():
             # and we get killed after the timeout (30s).  So we instead insert
             # an occasional sleep call, which is enough to stay alive.
             for i, line in enumerate(generator, 1):
-                if i % 1000 == 0:
+                if i % 10000 == 0:
                     time.sleep(0.001)
                 yield line
 
