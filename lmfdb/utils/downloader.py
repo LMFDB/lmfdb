@@ -288,10 +288,17 @@ class Downloader():
             # But that seems to make gunicorn think that the process has frozen
             # and we get killed after the timeout (30s).  So we instead insert
             # an occasional sleep call, which is enough to stay alive.
+            buff = ""
             for i, line in enumerate(generator, 1):
-                if i % 100000 == 0:
+                if i % 10000 == 0:
                     time.sleep(0.001)
-                yield line
+                if i % 1000 == 0:
+                    yield buff
+                    buff = ""
+                buff += line
+                #yield line
+            if buff:
+                yield buff
 
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
