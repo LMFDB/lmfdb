@@ -156,6 +156,16 @@ def poly_to_field_label(pol):
     except Exception:
         return None
 
+@nf_page.route('/delay')
+def delay():
+    from time import sleep
+    from flask import Response
+    import json
+    def delay_inner():
+        for i in range(10):
+            sleep(1)
+            yield json.dumps({'delay': i})
+    return Response(delay_inner(), mimetype="text/event-stream")
 
 @nf_page.route("/Source")
 def source():
