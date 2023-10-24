@@ -291,10 +291,9 @@ class Downloader():
             buff = ""
             for i, line in enumerate(generator, 1):
                 if i % 10000 == 0:
-                    time.sleep(0.001)
-                if i % 1000 == 0:
                     yield buff
                     buff = ""
+                    time.sleep(0.001)
                 buff += line
                 #yield line
             if buff:
