@@ -288,7 +288,7 @@ class Downloader():
             t0 = time.time()
             for line in generator:
                 if time.time() - t0 > 4:
-                    sleep(0.1)
+                    sleep(0.001)
                     t0 = time.time()
                 yield line
             #yield from generator
