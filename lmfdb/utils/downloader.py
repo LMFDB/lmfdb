@@ -288,7 +288,7 @@ class Downloader():
 
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
-        resp = Response(_generator(), mimetype='text/plain', headers=headers)
+        resp = Response(_generator(), mimetype='text/event-stream', headers=headers)
         return resp
 
     def get_table(self, info):
