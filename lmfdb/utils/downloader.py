@@ -294,7 +294,7 @@ class Downloader():
             #yield from generator
 
         headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=filename)
+        #headers.add('Content-Disposition', 'attachment', filename=filename)
         resp = Response(_generator(), mimetype='text/event-stream', headers=headers)
         return resp
 
