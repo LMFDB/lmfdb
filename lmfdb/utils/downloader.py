@@ -280,7 +280,6 @@ class Downloader():
             filename += lang.file_suffix
         c = lang.comment_prefix
         mydate = time.strftime("%d %B %Y")
-        from time import sleep
 
         @stream_with_context
         def _generator():
@@ -289,11 +288,9 @@ class Downloader():
             # But that seems to make gunicorn think that the process has frozen
             # and we get killed after the timeout (30s).  So we instead insert
             # an occasional sleep call, which is enough to stay alive.
-            t0 = time.time()
-            for line in generator:
-                if time.time() - t0 > 4:
-                    sleep(0.001)
-                    t0 = time.time()
+            for i, line in enumerate(generator, 1):
+                if i % 1000 == 0:
+                    time.sleep(0.001)
                 yield line
 
         headers = Headers()
