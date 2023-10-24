@@ -287,7 +287,7 @@ class Downloader():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
             t0 = time.time()
             for line in generator:
-                if time.time() - t0 > 25:
+                if time.time() - t0 > 4:
                     sleep(0.1)
                     t0 = time.time()
                 yield line
