@@ -352,28 +352,21 @@ function increase_start_by_count_and_submit_form() {
 
 
 // callbacks for the search page to get exact count. Used in matches.html
-function get_count_of_results(download_limit) {
+function get_count_of_results() {
     var address = window.location.href;
     $("#result-count").html("computing...");
     $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
     address += "&result_count=1";
-    var callback = function(res) {
-        get_count_callback(res, download_limit);
-    }
-    $.ajax({url: address, success: callback});
+    $.ajax({url: address, success: get_count_callback});
 };
 
-function get_count_callback(res, download_limit) {
+function get_count_callback(res) {
     $('#result-count').html(res['nres']);
     $('#result-count2').html(res['nres']);
-    if (parseInt(res['nres'], 10) > download_limit) {
-        $("#download-msg").html("There are too many search results ("+res['nres']+") for downloading.");
-    } else {
-        $("#download-msg").html("");
-        $("#download-form").show();
-    }
+    $("#download-msg").html("");
+    $("#download-form").show();
 };
 
 /**

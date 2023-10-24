@@ -285,13 +285,16 @@ class Downloader():
         @stream_with_context
         def _generator():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
+            # It would be nice to be able to just do `yield from generator`
+            # But that seems to make gunicorn think that the process has frozen
+            # and we get killed after the timeout (30s).  So we instead insert
+            # an occasional sleep call, which is enough to stay alive.
             t0 = time.time()
             for line in generator:
                 if time.time() - t0 > 4:
                     sleep(0.001)
                     t0 = time.time()
                 yield line
-            #yield from generator
 
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
