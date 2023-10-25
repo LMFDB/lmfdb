@@ -2,34 +2,6 @@ from .web_display import display_knowl
 from lmfdb.utils import pol_to_html, coeff_to_poly
 from sage.all import Rational
 
-template_sage = r'''
-def make_cell_{column}(rec):
-    return {constructor_function}
-'''
-
-template_magma = r'''
-define make_cell_{column}(rec) in Magma, and
-    return {constructor_function}
-'''
-
-template_gp = r'''
-define make_cell_{column}(rec) in gp, and
-    return {constructor_function}
-'''
-
-default_template = {'sage' : template_sage,\
-            'magma' : template_magma,\
-            'gp' : template_gp }
-
-def tf(val, language):
-    if language == 'sage':
-        return 'True' if val else 'False'
-    elif language == 'magma':
-        return 'true' if val else 'false'
-    elif language in ['pari', 'gp']:
-        return '1' if val else '0'
-    raise NotImplementedError('{language = } is not recognized')
-
 def get_default_func(default, name):
     def f(info):
         if "hidecol" in info and name in info["hidecol"].split("."):

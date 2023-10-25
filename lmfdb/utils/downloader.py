@@ -290,27 +290,40 @@ class Downloader():
         'text': TextLanguage(),
         'oscar': OscarLanguage(),
     }
-    def __init__(self, table, title=None, filebase=None, short_name=None, var_name=None, lang_key='Submit'):
+    def __init__(self, table=None, title=None, filebase=None, short_name=None, var_name=None, lang_key='Submit'):
+        if table is None:
+            table = self.__class__.table
         self.table = table
 
         if title is None:
-            title = table.search_table
+            if hasattr(self.__class__, "title"):
+                title = self.__class__.title
+            else:
+                title = table.search_table
         self.title = title
 
         if short_name is None:
-            short_name = title.split(" ")[-1].lower()
+            if hasattr(self.__class__, "short_name"):
+                short_name = self.__class__.short_name
+            else:
+                short_name = title.split(" ")[-1].lower()
         self.short_name = short_name
 
         if var_name is None:
-            var_name = short_name.replace(" ", "_")
+            if hasattr(self.__class__, "var_name"):
+                var_name = self.__class__.var_name
+            else:
+                var_name = short_name.replace(" ", "_")
         self.var_name = var_name
 
         if filebase is None:
-            filebase = table.search_table
+            if hasattr(self.__class__, "filebase"):
+                filebase = self.__class__.filebase
+            else:
+                filebase = table.search_table
         self.filebase = filebase
 
         self.lang_key = lang_key
-
 
     def postprocess(self, row, info, query):
         """
@@ -506,7 +519,6 @@ class Downloader():
         filename = self.filebase
         ts = datetime.datetime.now().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
-        title = self.title
 
         # This comment is near the top of the file and describes how to call the make_data function defined below.
         make_data_comment = lang.make_data_comment
