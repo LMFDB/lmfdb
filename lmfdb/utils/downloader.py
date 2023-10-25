@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+This file defines two kinds of classes used in constructing download files for the LMFDB:
+
+* DownloadLanguage, representing languages such as Sage and Magma
+* Downloader, provides utility functions for downloading both search results and a single object.
+  Can subclassed to provide customization
+
+These interact with the column types defined in search_columns.py to support downloading different types of data.
+In particular, the languages shown available for download are set by the `languages` attribute of a `SearchColumns` object.
+"""
+
+
 import time
 import datetime
 import re
@@ -11,29 +24,61 @@ from io import BytesIO
 from sage.all import Integer, Rational
 
 class DownloadLanguage():
-    # We choose the most common values
+    # We choose the most common values; override these if needed in each subclass
     comment_prefix = '#'
     assignment_defn = '='
-    line_end = ''
-    delim_start = '['
-    delim_end = ']'
-    start_and_end = ['[',']']
-    make_data_comment = ''
+    line_end = '' # Semicolon also common
+
+    delim_start = '[' # These are default delimiters used when wrapping a list in the default to_lang function
+    delim_end = ']' # If the needed delimiter depends on context, a language can override the delim method instead
+    start_and_end = ['[',']'] # These are the delimiters used in a multiline list
+    make_data_comment = '' # A formattable comment describing how to call the make_data() function,
+    #                        with placeholders `short_name` and `var_name`
     none = 'NULL'
     true = 'true'
     false = 'false'
-    offset = 0 # 0-based by default
+    offset = 0 # the offset for the first entry in a list; 0-based by default
     return_keyword = 'return '
 
+    # Other required attributes in a subclass
+    # name -- the name of the language, used when passing back and forth to strings
+    # file_suffix -- the string appended to produce the full filename
+    # function_start -- a formattable string giving the first line of a function definition
+    #                   (with placeholders `func_name` and `func_args`)
+    # function_end -- a string giving the line that ends a function definition
+
+    # A language may want to add clauses to the createrecord_code and makedata_code methods
+    # of Downloader (and any subclasses where these were overridden
+
     def initialize(self, cols):
-        return ''
+        """
+        This code block is inserted at a global level below the data list, to provide
+        file-wide definitions for use in the create_record and make_data functions.
+
+        INPUT:
+
+        - ``cols`` -- the list of search columns being downloaded
+        """
+        return ""
 
     def delim(self, inp):
+        """
+        Returns the start and end delimiters appropriate for wrapping a list.
+        A utility method used in ``to_lang``.
+
+        INPUT:
+
+        - ``inp`` -- a python iterable
+        """
         # We allow the language to specify the delimiter based on the contents of inp
         # This allows magma to use sequences if the types are all the same
         return self.delim_start, self.delim_end
 
     def to_lang(self, inp, level=1):
+        """
+        Converts a python object into a string for use in the given language.  At a minimum,
+        should support None, True, False, strings, integers, floats, rationals, and (nested) lists of these objects
+        """
         if inp is None:
             return self.none
         elif inp is True:
@@ -55,7 +100,14 @@ class DownloadLanguage():
             return start + ", ".join(self.to_lang(c, level=level + 1) for c in it) + end
 
     def to_lang_iter(self, inp):
-        # We separate the code for handling an iterable as input so that we can use yield
+        """
+        To support long lists of downloaded objects, this entry point creates a generator
+        yielding strings making a a multiline list corresponding to the input.
+
+        INPUT:
+
+        - ``inp`` -- an iterable python object (currently called with the output of itertools.chain)
+        """
         start, end = self.start_and_end
         sep = ',\n'
         it = iter(inp)
@@ -69,34 +121,58 @@ class DownloadLanguage():
         yield "\n" + end
 
     def assign(self, name, inp):
+        """
+        Creates an assignment clause in this language.
+
+        INPUT:
+
+        - ``name`` -- the variable name being assigned to.
+        - ``inp`` -- a python object holding the desired contents of the variable
+                     (or a string, already parsed into the language)
+        """
         if not isinstance(inp, str):
             inp = self.to_lang(inp)
         return name + " " + self.assignment_defn + " " + inp + self.line_end + "\n"
 
     def assign_iter(self, name, inp):
+        """
+        Creates an assignment clause from an iterable
+
+        INPUT:
+
+        - ``name`` -- the variable name being assigned to.
+        - ``inp`` -- a python iterable holding the desired contents of the variable
+        """
         yield name + " " + self.assignment_defn + " "
         yield from inp
         yield self.line_end + "\n"
 
     def func_start(self, fname, fargs):
+        """
+        Creates the first line of a function definition.
+
+        INPUT:
+
+        - ``fname`` -- the name of the function
+        - ``fargs`` -- a string, giving the function arguments, already parsed into the needed format
+        """
         return self.function_start.format(func_name=fname, func_args=fargs)
 
 class MagmaLanguage(DownloadLanguage):
     name = 'magma'
+    file_suffix = '.m'
     comment_prefix = '//'
     assignment_defn = ':='
     line_end = ';'
     none = '[]'
     offset = 1
     make_data_comment = 'To create a list of {short_name}, type "{var_name}:= make_data();"'
-    file_suffix = '.m'
     function_start = 'function {func_name}({func_args})\n'
     function_end = 'end function;\n'
-    makedata = '    return [* make_row(row) : row in data *];\n'
-    makedata_basic = '    return data;\n'
 
     def delim(self, inp):
-        # We use sequences if possible
+        # Magma has several types corresponding to Python lists
+        # We use Sequences if possible, and Lists if not
         if not inp:
             return "[", "]"
         typ = set(type(x) for x in inp)
@@ -124,15 +200,13 @@ class MagmaLanguage(DownloadLanguage):
 
 class SageLanguage(DownloadLanguage):
     name = 'sage'
+    file_suffix = '.sage'
     none = 'None'
     true = 'True'
     false = 'False'
     make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
-    file_suffix = '.sage'
     function_start = 'def {func_name}({func_args}):\n'
     function_end = ''
-    makedata = '    return [ make_row(row) for row in data ]\n'
-    makedata_basic = '    return data\n'
 
     def initialize(self, cols):
         from lmfdb.number_fields.number_field import PolynomialCol
@@ -143,6 +217,7 @@ class SageLanguage(DownloadLanguage):
 
 class GPLanguage(DownloadLanguage):
     name = 'gp'
+    file_suffix = '.gp'
     start_and_end = ['{[',']}']
     comment_prefix = '\\\\'
     none = 'null'
@@ -151,15 +226,12 @@ class GPLanguage(DownloadLanguage):
     offset = 1
     return_keyword = ''
     make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
-    file_suffix = '.gp'
     function_start = '{func_name}({func_args}) = \n{{\n' # Need double bracket since we're formatting these
     function_end = '}\n'
-    makedata = '    [make_row(row)|row<-data]\n'
-    makedata_basic = '    data\n'
 
 class GAPLanguage(DownloadLanguage):
     name = 'gap'
-    start_and_end = ['[',']']
+    file_suffix = '.g'
     assignment_defn = ':='
     line_end = ';'
     none = '[]'
@@ -167,12 +239,17 @@ class GAPLanguage(DownloadLanguage):
     false = 'false'
     offset = 1
     make_data_comment = 'To create a list of {short_name}, type "{var_name} := make_data();"'
-    file_suffix = '.g'
     function_start = '{func_name} := function({func_args})\n'
     function_end = 'end;\n'
 
 class OscarLanguage(DownloadLanguage):
     name = 'oscar'
+    file_suffix = '.jl'
+    offset = 1
+    none = 'nothing'
+    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
+    function_start = 'function {func_name}({func_args})\n'
+    function_end = 'end\n'
 
     def initialize(self, cols):
         from lmfdb.number_fields.number_field import PolynomialCol
@@ -183,9 +260,6 @@ class OscarLanguage(DownloadLanguage):
 
 class TextLanguage(DownloadLanguage):
     name = 'text'
-    delim_start = ' ['
-    delim_end = ' ]'
-    make_data_comment = ''
     file_suffix = '.txt'
 
 class Downloader():
@@ -198,29 +272,9 @@ class Downloader():
     - a ``title`` attribute (e.g. ``'Genus 2 curves'``), used at the beginning
       of the top comment.  Defaults to table name.
     - a ``short_name`` attribute (e.g. ``'curves'``), which is used in comments.
-      Defaults to lower cased title.
+      Defaults to last word of lower cased title.
     - a ``var_name`` attribute (e.g. ``'curves'``), used as a variable name in comments.
       Defaults to short_name, with spaces replaced by underscores.
-    - a ``columns`` attribute, which is either a list of columns,
-      a string (indicating a single column),
-      or a dictionary with keys language names and values the appropriate columns.
-      In all cases, exclude the label column, which is prepended automatically.
-    - a ``column_wrappers`` attribute, which is a dictionary with column names
-      as keys and unary functions f as values; data for the named columns
-      be mapped through f when being added to the download data (column names
-      that do not appear in columns will be ignored)
-    - a ``data_format`` attribute, which is a list of strings
-      (defaulting to the names of the columns), not including the label
-    - a ``data_description`` attribute (optional), which is a list of strings
-      describing the data format (or a string if there is only one line)
-    - a ``function_body`` attribute, which is a dictionary
-      with keys the download languages, and values
-      lists of strings giving lines of a function to
-      reconstruct appropriate objects in that system.
-      For skipped languages, no function will be defined.
-
-    You may also want to override the default behavior of the `to_lang` function,
-    which is used to print the values of the columns.
 
     An instance of the resulting class is usually then
     passed into the `shortcuts` argument of the `search_wrap`
@@ -232,24 +286,74 @@ class Downloader():
         'magma': MagmaLanguage(),
         'sage': SageLanguage(),
         'gp': GPLanguage(),
+        'gap': GAPLanguage(),
         'text': TextLanguage(),
         'oscar': OscarLanguage(),
     }
+    def __init__(self, table, title=None, filebase=None, short_name=None, var_name=None, lang_key='Submit'):
+        self.table = table
+
+        if title is None:
+            title = table.search_table
+        self.title = title
+
+        if short_name is None:
+            short_name = title.split(" ")[-1].lower()
+        self.short_name = short_name
+
+        if var_name is None:
+            var_name = short_name.replace(" ", "_")
+        self.var_name = var_name
+
+        if filebase is None:
+            filebase = table.search_table
+        self.filebase = filebase
+
+        self.lang_key = lang_key
+
+
     def postprocess(self, row, info, query):
+        """
+        This function is called on each result from the database.
+
+        This hooks makes it possible to construct a python object wrapping the record that provides
+        additional methods for supporting search columns.  See abelian varieties and artin representations
+        for examples.
+        """
         return row
 
     def get(self, name, default=None):
+        """
+        We emulate dictionary-style access to attributes, with a default value.
+
+        INPUT:
+
+        - ``name`` -- a string, the name of an attribute
+        - ``default`` -- the value to be returned if the attribute does not exist
+        """
         if hasattr(self, name):
             return getattr(self, name)
         else:
             return default
 
-    def _wrap(self, result, filebase, lang, title=None):
+    def _wrap(self, result, filebase, lang, title=None, add_ext=True):
         """
         Adds the time downloaded as a comment, make into a flask response.
+
+        INPUT:
+
+        - ``result`` -- a string, the contents of the file to be downloaded
+        - ``filebase`` -- the base part of the filename, without a suffix
+        - ``lang`` -- a download language, or string giving a key into ``self.languages``
+        - ``title`` -- the title, included in a comment at the top of the file
+        - ``add_ext`` -- whether to add the extension to the filename (determined by the language)
+
+        OUTPUT:
+
+        An http response, as generated by Flask's `send_file` function.
         """
         if title is None:
-            title = self.get('title', self.table.search_table)
+            title = self.title
         if isinstance(lang, str):
             lang = self.languages.get(lang, TextLanguage())
         filename = filebase + lang.file_suffix
@@ -265,14 +369,22 @@ class Downloader():
 
     def _wrap_generator(self, generator, filebase, lang='text', title=None, add_ext=True):
         """
-        As for _wrap, but uses a stream.  For use with large files.
+        As for _wrap, but uses a stream.  For use with (potentially) large files.
 
         INPUT:
 
-        - generator -- yields the contents of the file, usually one line at a time.
+        - ``generator`` -- yields the contents of the file, usually one line at a time
+        - ``filebase`` -- the base part of the filename, without a suffix
+        - ``lang`` -- a download language, or string giving a key into ``self.languages``
+        - ``title`` -- the title, included in a comment at the top of the file
+        - ``add_ext`` -- whether to add the extension to the filename (determined by the language)
+
+        OUTPUT:
+
+        An http response giving the file as an attachment
         """
         if title is None:
-            title = self.get('title', self.table.search_table)
+            title = self.title
         if isinstance(lang, str):
             lang = self.languages.get(lang, TextLanguage())
         filename = filebase
@@ -319,6 +431,15 @@ class Downloader():
         pass
 
     def get_sort(self, info, query):
+        """
+        This determines the sort order requested from the database.
+
+        OUPUT:
+
+        - a list or other object appropriate for passing as the ``sort`` argument
+          to the ``search`` method of the search table.
+        - a string describing the search order
+        """
         SA = self.search_array
         if SA is not None and SA.sorts is not None:
             sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
@@ -332,52 +453,67 @@ class Downloader():
         return None, None
 
     def createrecord_code(self, lang, column_names):
+        """
+        The contents of a function that creates a record from an entry of the data list.
+
+        By default, this just creates a record/dictionary using the column names as keys
+        and the contents as values, but it can be overridden in a subclass.
+        """
         if lang.name == "sage":
-            lines = ["return {col: val for col, val in zip(column_names, row)}"]
+            line = "return {col: val for col, val in zip(column_names, row)}"
         elif lang.name == "magma":
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
-            lines = [f"return rec<RecFormat|{','.join(pairs)}>;"]
+            line = f"return rec<RecFormat|{','.join(pairs)}>;"
         elif lang.name == "gap":
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
-            lines = [f"return rec({','.join(pairs)});"]
+            line = f"return rec({','.join(pairs)});"
         elif lang.name == "gp":
             pairs = [f"{col},row[{i+1}]" for i, col in enumerate(column_names)]
-            lines = [f"return Map({','.join(pairs)})"]
+            line = f"return Map({','.join(pairs)})"
         else:
             return ""
-        return "".join("    " + line + "\n" for line in lines)
+        return "    " + line + "\n"
 
 
     def makedata_code(self, lang):
+        """
+        The contents of a function that processes the input data list to produce
+        a more user friendly version.  By default, this turns the entries into
+        records/dictionaries, but can be overridden in a subclass.
+        """
         if lang.name == "sage":
-            lines = ["return [create_record(row) for row in data]"]
+            line = "return [create_record(row) for row in data]"
         elif lang.name == "magma":
-            lines = ["return [create_record(row) : row in data];"]
+            line = "return [create_record(row) : row in data];"
         elif lang.name == "gap":
-            lines = ["return List(data, create_record);"]
+            line = "return List(data, create_record);"
         elif lang.name == "gp":
-            lines = ["return"]
+            line = "return [create_record(row) | row<-data];"
         else:
             return ""
-        return "".join("    " + line + "\n" for line in lines)
+        return "    " + line + "\n"
 
     def __call__(self, info):
         """
         Generate download file for a list of search results determined by the
         ``query`` field in ``info``.
+
+        This is the main entry point for generating a download file from search results.
         """
         lang = self.languages[info.get(self.lang_key, 'text')]
         table = self.get_table(info)
         self.search_array = info.get("search_array")
-        filename = self.get('filename_base', table.search_table)
+        filename = self.filebase
         ts = datetime.datetime.now().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
-        title = self.get('title', table.search_table)
-        short_name = self.get('short_name', title.split(' ')[-1].lower())
-        var_name = self.get('var_name', short_name.replace('_',' '))
+        title = self.title
+
+        # This comment is near the top of the file and describes how to call the make_data function defined below.
         make_data_comment = lang.make_data_comment
         if make_data_comment:
-            make_data_comment = make_data_comment.format(short_name=short_name, var_name=var_name)
+            make_data_comment = make_data_comment.format(short_name=self.short_name, var_name=self.var_name)
+
+        # Determine which columns will be fetched from the database
         columns = info["columns"]
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
         # These virtual columns are often only used in display code and won't be present in the database, so we just strip them out
@@ -385,15 +521,24 @@ class Downloader():
             proj = [col for col in columns.db_cols if col in table.search_cols]
         else:
             proj = columns.db_cols # some tables use 1 for project-to-all
-        # reissue query here
+
+        # Extract the query and modify it
         try:
             query = literal_eval(info.get('query', '{}'))
             self.modify_query(info, query)
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
+
+        # Determine the sort order
         sort, sort_desc = self.get_sort(info, query)
+
+        # The number of results is needed in advance since we want to show it at the top
+        # while the iterator won't be done
         num_results = table.count(query)
+
+        # Actually issue the query, and store the result in an iterator
         data = iter(table.search(query, projection=proj, sort=sort))
+
         # We get the first 50 results, in order to accommodate sections (like modular forms) where default and contingent columns rely on having access to info["results"]
         # We don't get all the results, since we want to support downloading millions of records, where this would time out.
         info["results"] = first50 = [self.postprocess(row, info, query) for row in itertools.islice(data, 50)]
@@ -402,9 +547,18 @@ class Downloader():
         column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
         first50 = [[col.download(rec, lang) for col in cols] for rec in first50]
         #print("FIRST FIFTY", first50)
+
+        # Create a generator that produces the lines of the download file
         c = lang.comment_prefix
         def make_download():
-            yield c + ' Query "%s" returned %d %s%s.\n\n' %(str(info.get('query')), num_results, short_name if num_results == 1 else short_name, "" if sort_desc is None else f", sorted by {sort_desc}")
+            # We start with a string describing the query, the number of results and the sort order
+            yield c + ' Query "%s" returned %d %s%s.\n\n' %(
+                str(info.get('query')),
+                num_results,
+                self.short_name if num_results == 1 else self.short_name + "s",
+                "" if sort_desc is None else f", sorted by {sort_desc}")
+
+            # We then describe the columns included, both in a comment and as a variable
             yield c + ' Each entry in the following data list has the form:\n'
             yield c + '    [' + ', '.join(data_format) + ']\n'
             yield c + ' For more details, see the definitions at the bottom of the file.\n'
@@ -412,23 +566,35 @@ class Downloader():
                 yield '\n' + c + ' ' + make_data_comment  + '\n'
             yield '\n\n'
             yield lang.assign("columns", column_names)
+
+            # This is where the actual contents are included, applying postprocess and col.download to each
             yield from lang.assign_iter("data", lang.to_lang_iter(
-                itertools.chain(first50, map(
-                    lambda rec: [
-                        col.download(self.postprocess(rec, info, query), lang)
-                        for col in cols
-                    ], data))))
+                itertools.chain(
+                    first50,
+                    map(
+                        lambda rec: [col.download(rec, lang) for col in cols],
+                        map(
+                            lambda rec: self.postprocess(rec, info, query),
+                            data)))))
+
+            # Here we allow language specific global initialization code, like defining polynomial rings
             yield lang.initialize(cols)
+
+            # Now the two function definitions, create_record and make_data, that aim to make the data list more user friendly
             if make_data_comment:
                 yield "\n" + lang.func_start("create_record", "row") + self.createrecord_code(lang, column_names) + lang.function_end
                 yield "\n" + lang.func_start("make_data", "") + self.makedata_code(lang) + lang.function_end + "\n\n"
             # We need to be able to look up knowls within knowls, so to reduce the number of database calls we just get them all.
+
+            # We do some global preprocessing to get access to knowls that define the columns
             if any(col.download_desc is None for col in cols):
                 from lmfdb.knowledge.knowl import knowldb
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
                 def knowl_subber(match):
                     return match.group(1)
+
+            # If we haven't specified a more specific download_desc, we use the column knowl to get a string to add to the bottom of the file for each column
             for col, name in zip(cols, column_names):
                 if col.download_desc is None:
                     knowldata = all_knowls.get(col.knowl)
@@ -450,4 +616,5 @@ class Downloader():
                         else:
                             yield "\n"
                     yield "\n\n"
+
         return self._wrap_generator(make_download(), filename, lang=lang)
