@@ -289,8 +289,9 @@ class Downloader():
             # and we get killed after the timeout (30s).  So we instead insert
             # an occasional sleep call, which is enough to stay alive.
             buff = ""
+            threshold = 10240 # 10KB
             for i, line in enumerate(generator, 1):
-                if i % 10000 == 0:
+                if len(buff) > threshold:
                     yield buff
                     buff = ""
                     time.sleep(0.001)
