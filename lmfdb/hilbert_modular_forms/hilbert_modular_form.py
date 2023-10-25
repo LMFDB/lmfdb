@@ -148,15 +148,12 @@ hmf_columns = SearchColumns([
     ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes")),
     ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"))])
 
-class HMFDownload(Downloader):
-    table = db.hmf_forms
-
 @search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',
              err_title='Hilbert modular form search error',
              columns=hmf_columns,
              per_page=50,
-             shortcuts={'jump':hilbert_modular_form_jump, 'download': HMFDownload()},
+             shortcuts={'jump':hilbert_modular_form_jump, 'download': Downloader(db.hmf_forms)},
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,

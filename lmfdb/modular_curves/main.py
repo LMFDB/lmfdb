@@ -392,10 +392,7 @@ def parse_family(inp, query, qfield):
 
 class ModCurve_download(Downloader):
     table = db.gps_gl2zhat_fine
-    title = "Modular curves with provisional labels (RSZB labels are stable, LMFDB labels will change!)"
-    columns = ['RSZBlabel','level','generators']
-    data_format = ["RSZB label", "N=level", "generators=[[a1,b1,c1,d1],[a2,b2,c2,d2],...]]"]
-    data_description = "defining the projection of H to GL(2,Z/NZ) as a list of quadruples that are coefficients of 2x2 matrices that generate H"
+    title = "Modular curves"
     function_body = {
         "magma": [
             "return [r[2] eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(r[2]))|[[c:c in g]:g in r[3]]>:r in data];"
@@ -950,15 +947,12 @@ def ratpoint_postprocess(res, info, query):
         rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
     return res
 
-class ModCurvePoints_download(Downloader):
-    table = db.modcurve_points
-
 @search_wrap(
     table=db.modcurve_points,
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
-    shortcuts={"download": ModCurvePoints_download()},
+    shortcuts={"download": Downloader(db.modcurve_points)},
     bread=lambda: get_bread("Low-degree point search results"),
     #postprocess=ratpoint_postprocess,
 )

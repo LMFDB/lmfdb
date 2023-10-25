@@ -905,10 +905,6 @@ def get_sub_url(label):
 class Group_download(Downloader):
     table = db.gps_groups
     title = "Abstract groups"
-    columns = "label"
-    column_wrappers = { "label" : lambda x : [int(a) for a in x.split(".")] }
-    data_format = ["[N,i]"]
-    data_description = "for the small group identifier N.i of the ith group of order N."
     function_body = {
         "magma": ['return [SmallGroup(r[1],r[2]) : r in data];',],
         "sage": ['return [gap.SmallGroup(r) for r in data]',],

@@ -116,10 +116,6 @@ def _set_show_subs(info):
 class GG_download(Downloader):
     table = db.gps_transitive
     title = "Transitive groups"
-    columns = "label"
-    column_wrappers = { "label" : lambda x : [int(a) for a in x.split("T")] }
-    data_format = ["[n,t]"]
-    data_description = "for the transitive group identifier nTt, where n is the degree and t is the T-number."
     function_body = {
         "magma": ['return [TransitiveGroup(r[1],r[2]) : r in data];',],
         "sage": ['return [TransitiveGroup(r[0],r[1]) for r in data]',],

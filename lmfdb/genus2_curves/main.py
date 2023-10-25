@@ -562,9 +562,6 @@ def genus2_jump(info):
 class G2C_download(Downloader):
     table = db.g2c_curves
     title = "Genus 2 curves"
-    columns = "eqn"
-    data_format = ["[[f coeffs],[h coeffs]]"]
-    data_description = "defining the hyperelliptic curve y^2+h(x)y=f(x)."
     function_body = {
         "magma": [
             "R<x>:=PolynomialRing(Rationals());",

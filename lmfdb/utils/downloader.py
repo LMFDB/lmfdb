@@ -292,7 +292,8 @@ class Downloader():
     }
     def __init__(self, table=None, title=None, filebase=None, short_name=None, var_name=None, lang_key='Submit'):
         if table is None:
-            table = self.__class__.table
+            if hasattr(self.__class__, "table"):
+                table = self.__class__.table
         self.table = table
 
         if title is None:

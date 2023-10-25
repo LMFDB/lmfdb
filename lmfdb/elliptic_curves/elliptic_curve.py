@@ -395,19 +395,6 @@ modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
 modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
 modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
-class EC_download(Downloader):
-    table = db.ec_curvedata
-    title = "Elliptic curves"
-    columns = "ainvs"
-    #data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
-    data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
-    function_body = {
-        "magma": ["return [EllipticCurve([a:a in ai]):ai in data];",],
-        "sage": ["return [EllipticCurve(ai) for ai in data]",],
-        "gp": ["[ellinit(ai)|ai<-data];"],
-        "oscar": ["return [EllipticCurve(ai) for ai in data]",],
-    }
-
 def make_modcurve_link(label):
     from lmfdb.modular_curves.main import modcurve_link
     return modcurve_link(label)
@@ -468,7 +455,6 @@ ec_columns = SearchColumns([
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
-
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
@@ -477,7 +463,7 @@ ec_columns = SearchColumns([
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':EC_download()},
+                        'download':Downloader(db.ec_curvedata, title="Elliptic curves")},
              bread=lambda:get_bread('Search results'))
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')

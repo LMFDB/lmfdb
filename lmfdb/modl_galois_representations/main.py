@@ -154,14 +154,11 @@ modlgal_columns = SearchColumns(
              "image_index", "image_order", "top_slope_rational", "generating_primes"]
     )
 
-class ModLGalDownload(Downloader):
-    table = db.modlgal_reps
-
 @search_wrap(
     table=db.modlgal_reps,
     title=r"Mod-$\ell$ Galois representation search results",
     err_title=r"Mod-$\ell$ Galois representations search input error",
-    shortcuts={"jump": modlgal_jump, "download":ModLGalDownload()},
+    shortcuts={"jump": modlgal_jump, "download":Downloader(db.modlgal_reps)},
     columns=modlgal_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modlgal_label,

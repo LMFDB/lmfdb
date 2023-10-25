@@ -627,14 +627,11 @@ st_columns = SearchColumns([
 
 ])
 
-class STDownload(Downloader):
-    table = db.gps_st
-
 @search_wrap(
     table=db.gps_st,
     title="Sato-Tate group search results",
     err_title="Sato-Tate group search input error",
-    shortcuts={"jump": lambda v: search_by_label(v['jump']), "download": STDownload()},
+    shortcuts={"jump": lambda v: search_by_label(v['jump']), "download": Downloader(db.gps_st)},
     columns=st_columns,
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,

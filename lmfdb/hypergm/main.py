@@ -416,7 +416,6 @@ class HGMDownload(Downloader):
     table = db.hgm_motives # overridden if family search
     def get_table(self, info):
         search_type = info.get("search_type", info.get("hst", "Motive"))
-        print("SEARCH TYPE", search_type)
         if search_type in ["Family", "RandomFamily"]:
             return db.hgm_families
         else:

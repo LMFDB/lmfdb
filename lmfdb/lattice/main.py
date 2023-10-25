@@ -178,14 +178,11 @@ lattice_columns = SearchColumns([
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector", default=True),
     MathCol("aut", "lattice.group_order", "Aut. group order", default=True)])
 
-class LatDownload(Downloader):
-    table = db.lat_lattices
-
 @search_wrap(table=db.lat_lattices,
              title='Integral lattices search results',
              err_title='Integral lattices search error',
              columns=lattice_columns,
-             shortcuts={'download':LatDownload(),
+             shortcuts={'download':Downloader(db.lat_lattices),
                         'label':lambda info:lattice_by_label_or_name(info.get('label'))},
              postprocess=lattice_search_isometric,
              url_for_label=url_for_label,

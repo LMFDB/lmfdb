@@ -279,9 +279,6 @@ def unpack_slopes(slopes, t, u):
 class LF_download(Downloader):
     table = db.lf_fields
     title = '$p$-adic fields'
-    columns = ['p', 'coeffs']
-    data_format = ['p', '[coeffs]']
-    data_description = 'defining the $p$-adic field over Qp by adjoining a root of f(x).'
     function_body = {'magma':['Prec := 100; // Default precision of 100',
                               'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
                      'sage':['Prec = 100 # Default precision of 100',

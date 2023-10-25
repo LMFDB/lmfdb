@@ -155,14 +155,11 @@ bmf_columns = SearchColumns([
     ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
     ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, short_title="CM", align="center")])
 
-class BianchiDownload(Downloader):
-    table=db.bmf_forms
-
 @search_wrap(table=db.bmf_forms,
              title='Bianchi modular form search results',
              err_title='Bianchi modular forms search input error',
              columns=bmf_columns,
-             shortcuts={'jump': bianchi_modular_form_jump, 'download': BianchiDownload()},
+             shortcuts={'jump': bianchi_modular_form_jump, 'download': Downloader(db.bmf_forms)},
              bread=lambda:get_bread("Search results"),
              url_for_label=url_for_label,
              learnmore=learnmore_list,

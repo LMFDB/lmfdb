@@ -241,15 +241,12 @@ character_columns = SearchColumns([
     ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
     CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
 
-class DirichletDownload(Downloader):
-    table = db.char_orbits
-
 @search_wrap(
     table=db.char_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
-    shortcuts={"jump": jump, "download": DirichletDownload()},
+    shortcuts={"jump": jump, "download": Downloader(db.char_orbits)},
     url_for_label=url_for_label,
     learnmore=learn,
     random_projection="label",
