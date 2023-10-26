@@ -2,8 +2,8 @@
 """
 This file defines two kinds of classes used in constructing download files for the LMFDB:
 
-* DownloadLanguage, representing languages such as Sage and Magma
-* Downloader, provides utility functions for downloading both search results and a single object.
+* ``DownloadLanguage``, representing languages such as Sage and Magma
+* ``Downloader``, provides utility functions for downloading both search results and a single object.
   Can subclassed to provide customization.  An instance of this class should be passed in as a
   download shortcut to the search_wrap constructor.
 
@@ -604,7 +604,7 @@ class Downloader():
             cols = [cols[i] for i in include]
             column_names = [column_names[i] for i in include]
         data_format = [col.title for col in cols]
-        first50 = [[col.download(rec, lang) for col in cols] for rec in first50]
+        first50 = [[col.download(rec) for col in cols] for rec in first50]
         #print("FIRST FIFTY", first50)
 
         # Create a generator that produces the lines of the download file
@@ -631,7 +631,7 @@ class Downloader():
                 itertools.chain(
                     first50,
                     map(
-                        lambda rec: [col.download(rec, lang) for col in cols],
+                        lambda rec: [col.download(rec) for col in cols],
                         map(
                             lambda rec: self.postprocess(rec, info, query),
                             data)))))
