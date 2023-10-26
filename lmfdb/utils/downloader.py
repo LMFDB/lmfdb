@@ -4,7 +4,8 @@ This file defines two kinds of classes used in constructing download files for t
 
 * DownloadLanguage, representing languages such as Sage and Magma
 * Downloader, provides utility functions for downloading both search results and a single object.
-  Can subclassed to provide customization
+  Can subclassed to provide customization.  An instance of this class should be passed in as a
+  download shortcut to the search_wrap constructor.
 
 These interact with the column types defined in search_columns.py to support downloading different types of data.
 In particular, the languages shown available for download are set by the `languages` attribute of a `SearchColumns` object.
@@ -47,10 +48,10 @@ class DownloadLanguage():
     #                   (with placeholders `func_name` and `func_args`)
     # function_end -- a string giving the line that ends a function definition
 
-    # A language may want to add clauses to the createrecord_code and makedata_code methods
-    # of Downloader (and any subclasses where these were overridden
+    # You may also want to update the inclusions dictionaries of Downloader objects,
+    # as well as the createrecord_code and makedata_code methods.
 
-    def initialize(self, cols):
+    def initialize(self, cols, downloader):
         """
         This code block is inserted at a global level below the data list, to provide
         file-wide definitions for use in the create_record and make_data functions.
@@ -58,6 +59,7 @@ class DownloadLanguage():
         INPUT:
 
         - ``cols`` -- the list of search columns being downloaded
+        - ``downloader`` -- the Downloader object
         """
         return ""
 
@@ -147,6 +149,9 @@ class DownloadLanguage():
         yield from inp
         yield self.line_end + "\n"
 
+    def record_assign(self, name, key, val):
+        return f'{name}["{key}"] = {val}'
+
     def func_start(self, fname, fargs):
         """
         Creates the first line of a function definition.
@@ -190,13 +195,19 @@ class MagmaLanguage(DownloadLanguage):
             inp = leveled
         return "[", "]"
 
-    def initialize(self, cols):
+    def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
         column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
+        for var, (require, bylang) in downloader.inclusions.items():
+            if "magma" in bylang and all(col in column_names for col in require):
+                column_names.append(var)
         s = f"RecFormat := recformat<{','.join(column_names)}>;\n"
         if any(isinstance(col, PolynomialCol) for col in cols):
             s += 'ZZx<x> := PolynomialRing(Integers());\n'
         return s + '\n'
+
+    def record_assign(self, name, key, val):
+        return f'{name}`{key} = {val}'
 
 class SageLanguage(DownloadLanguage):
     name = 'sage'
@@ -208,7 +219,7 @@ class SageLanguage(DownloadLanguage):
     function_start = 'def {func_name}({func_args}):\n'
     function_end = ''
 
-    def initialize(self, cols):
+    def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
         if any(isinstance(c, PolynomialCol) for c in cols):
             return '\nZZx.<x> = ZZ[]\n\n'
@@ -229,6 +240,9 @@ class GPLanguage(DownloadLanguage):
     function_start = '{func_name}({func_args}) = \n{{\n' # Need double bracket since we're formatting these
     function_end = '}\n'
 
+    def record_assign(self, name, key, val):
+        return f'mapput(~{name}, "{key}", {val})'
+
 class GAPLanguage(DownloadLanguage):
     name = 'gap'
     file_suffix = '.g'
@@ -242,6 +256,9 @@ class GAPLanguage(DownloadLanguage):
     function_start = '{func_name} := function({func_args})\n'
     function_end = 'end;\n'
 
+    def record_assign(self, name, key, val):
+        return f'{name}.{key} = {val}'
+
 class OscarLanguage(DownloadLanguage):
     name = 'oscar'
     file_suffix = '.jl'
@@ -251,7 +268,7 @@ class OscarLanguage(DownloadLanguage):
     function_start = 'function {func_name}({func_args})\n'
     function_end = 'end\n'
 
-    def initialize(self, cols):
+    def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
         if any(isinstance(c, PolynomialCol) for c in cols):
             return '\nRx,x = PolynomialRing(QQ)\n\n'
@@ -290,6 +307,14 @@ class Downloader():
         'text': TextLanguage(),
         'oscar': OscarLanguage(),
     }
+
+    # To automatically add data to the create_record function, you can modify the following dictionary,
+    # which should have keys to be inserted in the resulting record, with values a pair (cols, bylang),
+    # where cols is a list of column names required to be present in order to insert this code,
+    # and bylang is a dictionary giving code snippets to be added defining the key.
+    # See NFDownloader in lmfdb/number_fields/number_field.py for an example.
+    inclusions = {}
+
     def __init__(self, table=None, title=None, filebase=None, short_name=None, var_name=None, lang_key='Submit'):
         if table is None:
             if hasattr(self.__class__, "table"):
@@ -474,19 +499,26 @@ class Downloader():
         and the contents as values, but it can be overridden in a subclass.
         """
         if lang.name == "sage":
-            line = "return {col: val for col, val in zip(column_names, row)}"
+            lines = ["out = {col: val for col, val in zip(columns, row)}"]
         elif lang.name == "magma":
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
-            line = f"return rec<RecFormat|{','.join(pairs)}>;"
+            lines = [f"out := rec<RecFormat|{','.join(pairs)}>;"]
         elif lang.name == "gap":
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
-            line = f"return rec({','.join(pairs)});"
+            lines = [f"out := rec({','.join(pairs)});"]
         elif lang.name == "gp":
             pairs = [f"{col},row[{i+1}]" for i, col in enumerate(column_names)]
-            line = f"return Map({','.join(pairs)})"
+            lines = [f"out = Map({','.join(pairs)})"]
+        elif lang.name == "oscar":
+            lines = ["out = Dict(zip(columns, row))"]
         else:
             return ""
-        return "    " + line + "\n"
+        for var, (require, bylang) in self.inclusions.items():
+            if all(col in column_names for col in require) and lang.name in bylang:
+                lines.append(bylang[lang.name])
+                lines.append(lang.record_assign("out", var, var))
+        lines.append(lang.return_keyword + "out" + lang.line_end)
+        return "".join("    " + line + "\n" for line in lines)
 
 
     def makedata_code(self, lang):
@@ -503,6 +535,8 @@ class Downloader():
             line = "return List(data, create_record);"
         elif lang.name == "gp":
             line = "return [create_record(row) | row<-data];"
+        elif lang.name == "oscar":
+            line = "return [create_record(row) for row in data]"
         else:
             return ""
         return "    " + line + "\n"
@@ -556,8 +590,20 @@ class Downloader():
         # We don't get all the results, since we want to support downloading millions of records, where this would time out.
         info["results"] = first50 = [self.postprocess(row, info, query) for row in itertools.islice(data, 50)]
         cols = [col for col in columns.columns_shown(info, rank=-1) if col.default(info)]
-        data_format = [col.title for col in cols]
         column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
+        if len(column_names) != len(set(column_names)):
+            # There are some cases where multiple displayed columns correspond to the same underlying data
+            # (Weirstrass coefficients and Weierstrass equation for elliptic curves for example).
+            # In such cases, we use the *name* to remove duplicates, and assume that we can choose either column
+            seen = set()
+            include = []
+            for i, name in enumerate(column_names):
+                if name not in seen:
+                    include.append(i)
+                    seen.add(name)
+            cols = [cols[i] for i in include]
+            column_names = [column_names[i] for i in include]
+        data_format = [col.title for col in cols]
         first50 = [[col.download(rec, lang) for col in cols] for rec in first50]
         #print("FIRST FIFTY", first50)
 
@@ -591,7 +637,7 @@ class Downloader():
                             data)))))
 
             # Here we allow language specific global initialization code, like defining polynomial rings
-            yield lang.initialize(cols)
+            yield lang.initialize(cols, self)
 
             # Now the two function definitions, create_record and make_data, that aim to make the data list more user friendly
             if make_data_comment:

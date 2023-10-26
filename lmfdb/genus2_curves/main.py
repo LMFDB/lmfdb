@@ -562,16 +562,15 @@ def genus2_jump(info):
 class G2C_download(Downloader):
     table = db.g2c_curves
     title = "Genus 2 curves"
-    function_body = {
-        "magma": [
-            "R<x>:=PolynomialRing(Rationals());",
-            "return [HyperellipticCurve(R![c:c in r[1]],R![c:c in r[2]]):r in data];",
-        ],
-        "sage": [
-            "R.<x>=PolynomialRing(QQ)",
-            "return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]",
-        ],
-        "gp": ["[apply(Polrev,c)|c<-data];"],
+    inclusions = {
+        "curve": (
+            ["eqn"],
+            {
+                "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
+                "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
+                "gp": 'curve = apply(Polrev, mapget(out, "eqn"))',
+            }
+        ),
     }
 
 g2c_columns = SearchColumns([

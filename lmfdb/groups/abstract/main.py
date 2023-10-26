@@ -905,11 +905,6 @@ def get_sub_url(label):
 class Group_download(Downloader):
     table = db.gps_groups
     title = "Abstract groups"
-    function_body = {
-        "magma": ['return [SmallGroup(r[1],r[2]) : r in data];',],
-        "sage": ['return [gap.SmallGroup(r) for r in data]',],
-        "oscar": ['return [small_group(r...) for r in data]',],
-    }
 
 def group_postprocess(res, info, query):
     # We want to get latex for all of the centers, central quotients, commutators and abelianizations in one query

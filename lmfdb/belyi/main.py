@@ -413,18 +413,14 @@ def make_base_field(rec):
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
     title = "Belyi maps"
-    columns = "triples"
-    data_format = ["permutation_triples"]
-    data_description = ["where the permutation triples are in one line notation"]
-    function_body = {
-        "magma": [
-            "deg := #(data[1][1][1]);",
-            "return [[[Sym(deg) ! t: t in s]: s in triples]: triples in data];",
-        ],
-        "sage": [
-            "deg = len(data[0][0][0])",
-            "return [[map(SymmetricGroup(deg), s) for s in triples] for triples in data]",
-        ],
+    inclusions = {
+        "perms": (
+            ["deg", "triples"],
+            {
+                "magma": 'perms := [[Sym(deg) ! t : t in s] : s in out`triples];',
+                "sage": 'perms = [map(SymmetricGroup(deg), s) for s in out["triples"]]',
+            }
+        ),
     }
 
     # could use static method instead of adding self
@@ -651,7 +647,9 @@ belyi_columns = SearchColumns([
     MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
     MathCol("g", "belyi.genus", "Genus", default=True),
     MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
-    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True, apply_download=False)])
+    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True, apply_download=False),
+    MathCol("triples", "belyi.permutation_triple", "Triples", align="left"),
+])
 
 
 @search_wrap(

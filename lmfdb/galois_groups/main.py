@@ -116,10 +116,15 @@ def _set_show_subs(info):
 class GG_download(Downloader):
     table = db.gps_transitive
     title = "Transitive groups"
-    function_body = {
-        "magma": ['return [TransitiveGroup(r[1],r[2]) : r in data];',],
-        "sage": ['return [TransitiveGroup(r[0],r[1]) for r in data]',],
-        "oscar": ['return [transitive_group(r...) for r in data]',],
+    inclusions = {
+        "group": (
+            ["label"],
+            {
+                "magma": 'n, t := Explode([StringToInteger(c) : c in Split(out`label, "T")]);\n    group := TransitiveGroup(n, t);',
+                "sage": 'TransitiveGroup(*[int(c) for c in out["label"].split("T")])',
+                # "oscar": 'transitive_group(...)',
+            }
+        ),
     }
     def modify_query(self, info, query):
         _set_show_subs(info)

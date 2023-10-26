@@ -321,8 +321,9 @@ modcurve_columns = SearchColumns(
         ProcessedCol("models", "modcurve.models", "Models", blankzeros),
         MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
+        ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators"),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -393,16 +394,15 @@ def parse_family(inp, query, qfield):
 class ModCurve_download(Downloader):
     table = db.gps_gl2zhat_fine
     title = "Modular curves"
-    function_body = {
-        "magma": [
-            "return [r[2] eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(r[2]))|[[c:c in g]:g in r[3]]>:r in data];"
-        ],
-        "sage": [
-            "return [GL(2,Integers(r[1])).subgroup(r[2]) for r in data]"
-        ],
-        "gp": [
-            "return([[Mod(Mat([a[1],a[2];a[3],a[4]]),r[2])|a<-r[3]]|r<-data])"
-        ]
+    inclusions = {
+        "subgroup": (
+            ["level", "generators"],
+            {
+                "magma": 'subgroup := out`level eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(out`level))|out`generators>;',
+                "sage": 'subgroup = GL(2, Integers(out["level"])).subgroup(out["generators"])',
+                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")]',
+            }
+        ),
     }
 
     def download_modular_curve_magma_str(self, label):
@@ -938,7 +938,8 @@ ratpoint_columns = SearchColumns([
     ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True, download_col="jinv"),
-    FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
+    FloatCol("j_height", "nf.weil_height", "$j$-height", default=True),
+])
 
 def ratpoint_postprocess(res, info, query):
     labels = list({rec["curve_label"] for rec in res})

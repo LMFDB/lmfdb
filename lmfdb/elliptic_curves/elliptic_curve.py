@@ -395,6 +395,21 @@ modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
 modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
 modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
+class EC_download(Downloader):
+    table = db.ec_curvedata
+    title = "Elliptic curves"
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"))',
+                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+            }
+        )
+    }
+
 def make_modcurve_link(label):
     from lmfdb.modular_curves.main import modcurve_link
     return modcurve_link(label)
@@ -450,7 +465,7 @@ ec_columns = SearchColumns([
     ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
                   short_title="j-invariant", align="center"),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
-    ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
+    ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])

@@ -279,11 +279,16 @@ def unpack_slopes(slopes, t, u):
 class LF_download(Downloader):
     table = db.lf_fields
     title = '$p$-adic fields'
-    function_body = {'magma':['Prec := 100; // Default precision of 100',
-                              'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
-                     'sage':['Prec = 100 # Default precision of 100',
-                             "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
-                     'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
+    inclusions = {
+        'field': (
+            ["p", "coeffs"],
+            {
+                "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
+                "gp": 'field = Polrev(mapget(out, "coeffs"))',
+            }
+        ),
+    }
 
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),

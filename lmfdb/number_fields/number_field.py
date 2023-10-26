@@ -863,6 +863,28 @@ def nf_postprocess(res, info, query):
         rec["class_group_desc"] = wnf.class_group_invariants()
     return res
 
+class NFDownloader(Downloader):
+    table = db.nf_fields
+    title = "Number fields"
+    inclusions = {
+        "poly": (
+            ["coeffs"],
+            {
+                "sage": 'poly = ZZx(out["coeffs"])',
+                "magma": 'poly := ZZx!(out`coeffs)',
+                "gp": 'poly = Polrev(mapget(out, "coeffs"))',
+            }
+        ),
+        "field": (
+            ["coeffs"],
+            {
+                "sage": 'field.<a> = NumberField(poly)',
+                "magma": 'field<a> := NumberField(poly);',
+                "gp": 'field = nfinit(poly)',
+            }
+        ),
+    }
+
 @search_wrap(table=db.nf_fields,
              title='Number field search results',
              err_title='Number field search error',
@@ -870,7 +892,7 @@ def nf_postprocess(res, info, query):
              per_page=50,
              shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
-                        'download':Downloader(db.nf_fields)},
+                        'download':NFDownloader()},
              url_for_label=url_for_label,
              postprocess=nf_postprocess,
              bread=lambda:[('Number fields', url_for(".number_field_render_webpage")),
