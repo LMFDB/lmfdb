@@ -613,7 +613,7 @@ hgcwa_columns.languages = ['gap', 'magma']
 
 class HGCWADownloader(Downloader):
     table = db.hgcwa_passports
-    title = "Higher genus curves"
+    title = "Higher genus curve"
 
 @search_wrap(
     table=db.hgcwa_passports,
