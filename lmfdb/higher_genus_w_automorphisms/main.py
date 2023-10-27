@@ -15,7 +15,7 @@ from sage.all import Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, to_dict,
+    flash_error, to_dict, Downloader,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap, redirect_no_cache)
@@ -592,6 +592,13 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
                     a linear function of variable g for genus (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
+def trim_gen_vecs(vec):
+    if len(vec) <= 1:
+        return str(vec)
+    if len(vec[0]) > 20:
+        return fr"[[{', '.join(vec[0][:10])}, \dots], \dots]"
+    return fr"[{vec[0]},\dots]"
+
 hgcwa_columns = SearchColumns([
     LinkCol("passport_label", "dq.curve.highergenus.aut.label", "Refined passport label",
             lambda label: f"/HigherGenus/C/Aut/{label}"),
@@ -600,8 +607,13 @@ hgcwa_columns = SearchColumns([
     ProcessedCol("group", "group.small_group_label", "Group", group_display, mathmode=True, align="center"),
     MathCol("group_order", "group.order", "Group order"),
     MathCol("dim", "curve.highergenus.aut.dimension", "Dimension"),
-    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True)])
+    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True, default=False),
+    ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", trim_gen_vecs, mathmode=True])
 hgcwa_columns.languages = ['gap', 'magma']
+
+class HGCWADownloader(Downloader):
+    table = db.hgcwa_passports
+    title = "Higher genus curves"
 
 @search_wrap(
     table=db.hgcwa_passports,
@@ -612,7 +624,7 @@ hgcwa_columns.languages = ['gap', 'magma']
     url_for_label=url_for_label,
     random_projection="passport_label",
     shortcuts={'jump': higher_genus_w_automorphisms_jump,
-               'download': hgcwa_code_download_search },
+               'download': HGCWADownloader() },
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list)
 def higher_genus_w_automorphisms_search(info, query):
