@@ -84,7 +84,7 @@ class SearchCol:
     Name, knowl and title can be passed either positionally or as a keyword argument; other values should be
     provided as keywords so that subclasses don't need to worry about passing positional arguments appropriately.
     """
-    def __init__(self, name, knowl, title, default=False, align="left",
+    def __init__(self, name, knowl, title, default=None, align="left",
                  mathmode=False, contingent=None, short_title=None, orig=None,
                  download_desc=None, download_col=None, **kwds):
         # Both contingent and default can be functions that take info
@@ -94,6 +94,7 @@ class SearchCol:
         # up on the list of possible columns
         # If default is false, then that column is included in the
         # selector but not displayed by default
+        assert default is not None
         assert "," not in name
         self.name = name
         self.knowl = knowl
@@ -242,8 +243,9 @@ class MathCol(SearchCol):
     """
     Math columns display their contents in math mode and use center alignment by default.
     """
-    def __init__(self, name, knowl, title, default=False, align="center", **kwds):
-        super().__init__(name, knowl, title, default=default, align=align, mathmode=True, **kwds)
+    def __init__(self, name, knowl, title, align="center", **kwds):
+        kwds["mathmode"] = True
+        super().__init__(name, knowl, title, align=align, **kwds)
 
 
 class FloatCol(MathCol):

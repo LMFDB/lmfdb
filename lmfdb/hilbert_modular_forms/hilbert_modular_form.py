@@ -139,14 +139,14 @@ hmf_columns = SearchColumns([
                       default=True,
                       download_col="short_label"),
     ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
-    MathCol("deg", "nf.degree", "Field degree"),
-    MathCol("disc", "nf.discriminant", "Field discriminant"),
+    MathCol("deg", "nf.degree", "Field degree", default=False),
+    MathCol("disc", "nf.discriminant", "Field discriminant", default=False),
     ListCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
-    MathCol("level_norm", "mf.level_norm", "Level norm"),
-    ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True),
+    MathCol("level_norm", "mf.level_norm", "Level norm", default=False),
+    ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True, default=False),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
-    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes")),
-    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"))])
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
+    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
 
 @search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',

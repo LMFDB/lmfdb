@@ -138,7 +138,7 @@ bmf_columns = SearchColumns([
                                   field_label=fld,
                                   level_label=lvl),
                           lvl),
-                      default=True, download_col="level_label"), # teXify_pol(v['level_ideal'])
+                      default=True, download_col="level_label"),
     MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
                       lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
                           url_for("bmf.render_bmf_webpage",

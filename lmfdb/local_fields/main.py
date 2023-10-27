@@ -292,7 +292,7 @@ class LF_download(Downloader):
 
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
-    MathCol("n", "lf.degree", "$n$", short_title="degree"),
+    MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
     ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
     MathCol("p", "lf.qp", "$p$", default=True, short_title="prime"),
     MathCol("e", "lf.ramification_index", "$e$", default=True, short_title="ramification index"),
@@ -303,8 +303,8 @@ lf_columns = SearchColumns([
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
                       default=True,
                       apply_download=lambda n, t, cache: [n, t]),
-    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
-    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
+    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
+    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
     ListCol("visible", "lf.visible_slopes", "Visible slopes",
                     show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
