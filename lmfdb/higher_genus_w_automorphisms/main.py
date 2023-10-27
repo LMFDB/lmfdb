@@ -607,8 +607,8 @@ hgcwa_columns = SearchColumns([
     ProcessedCol("group", "group.small_group_label", "Group", group_display, mathmode=True, align="center"),
     MathCol("group_order", "group.order", "Group order"),
     MathCol("dim", "curve.highergenus.aut.dimension", "Dimension"),
-    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True, default=False),
-    ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", trim_gen_vecs, mathmode=True)])
+    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
+    ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", trim_gen_vecs, mathmode=True, default=False)])
 hgcwa_columns.languages = ['gap', 'magma']
 
 class HGCWADownloader(Downloader):
