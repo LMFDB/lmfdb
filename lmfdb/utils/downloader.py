@@ -605,6 +605,12 @@ class Downloader():
             column_names = [column_names[i] for i in include]
         data_format = [col.title for col in cols]
         first50 = [[col.download(rec) for col in cols] for rec in first50]
+        if num_results > 10000:
+            # Estimate the size of the download file.  This won't necessarily be a great estimate
+            # since later rows are often larger, but it's something
+            size_estimate = sum([len(lang.to_lang(row)) for rec in first50]) * num_results / 50
+            if size_estimate > 100 * 1024**2: # 100MB
+                return abort(413, "Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
         #print("FIRST FIFTY", first50)
 
         # Create a generator that produces the lines of the download file

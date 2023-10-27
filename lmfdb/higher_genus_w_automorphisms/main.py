@@ -636,7 +636,7 @@ class HGCWADownloader(Downloader):
             ["gen_vectors"],
             {
                 "magma": "n := #out`gen_vectors[1];\n    S := SymmetricGroup(n);\n    gens := [S!genvec : genvec in out`gen_vectors];",
-                "gap": "n := Length(gen_vectors);\n    perm_list:= List([1..n], x->PermList(out.gen_vectors[x]));"
+                "gap": "n := Length(gen_vectors[1]);\n    perm_list:= List([1..n], x->PermList(out.gen_vectors[x]));"
             }
         ),
         "G": (
