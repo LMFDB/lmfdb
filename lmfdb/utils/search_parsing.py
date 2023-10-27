@@ -129,7 +129,10 @@ class SearchParser():
             if self.error_is_safe:
                 flash_error(f"<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. {err}.", inp, name)
             else:
-                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
+                if err.trim_msg_error:
+                    flash_error("%s", str(err))
+                else:
+                    flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info["err"] = ""
             raise
 
@@ -1180,7 +1183,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         F1 = poly_to_field_label(F1)
         if F1:
             return F1
-        raise SearchParsingError("%s does not define a number field in the database." % F)
+        raise SearchParsingError("%s does not define a number field in the database." % F, trim_msg_error=True)
 
     if F[0] == "q":
         if "(" in F and ")" in F:
