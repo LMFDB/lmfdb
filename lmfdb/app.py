@@ -110,15 +110,15 @@ app.jinja_env.add_extension('jinja2.ext.do')
 #  * meta_description, shortthanks, feedbackpage
 #  * DEBUG and BETA variables storing whether running in each mode
 
-try:
-    # In order to support running under gunicorn with gevent workers,
-    # we try to patch psycopg2 to add an appropriate callback function
-    from psycogreen.gevent import patch_psycopg
-    patch_psycopg()
-except Exception:
-    app.logger.info("Exception in psycogreen; not running with gevent support")
-else:
-    app.logger.info("Gevent support enabled")
+# try:
+#     # In order to support running under gunicorn with gevent workers,
+#     # we try to patch psycopg2 to add an appropriate callback function
+#     from psycogreen.gevent import patch_psycopg
+#     patch_psycopg()
+# except Exception:
+#     app.logger.info("Exception in psycogreen; not running with gevent support")
+# else:
+#     app.logger.info("Gevent support enabled")
 
 @app.context_processor
 def ctx_proc_userdata():
