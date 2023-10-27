@@ -610,7 +610,7 @@ def display_gen_vecs(vecs):
         elif len(tups) == 1:
             return display_cycle(tups[0])
         else:
-            return f"{display_cycle(tups[0])}{cdots}{display_cycle(tups[1])}"
+            return f"{display_cycle(tups[0])}{cdots}{display_cycle(tups[-1])}"
     dots = r",\ldots" if len(vecs) > 1 else ""
     return display_perm(Permutation(vecs[0])) + dots
 
