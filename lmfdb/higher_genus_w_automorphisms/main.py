@@ -596,7 +596,7 @@ def trim_gen_vecs(vec):
     if len(vec) <= 1:
         return str(vec)
     if len(vec[0]) > 20:
-        return fr"[[{', '.join(vec[0][:10])}, \dots], \dots]"
+        return fr"[[{', '.join([str(c) for c in vec[0][:10]])}, \dots], \dots]"
     return fr"[{vec[0]},\dots]"
 
 hgcwa_columns = SearchColumns([
