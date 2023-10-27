@@ -400,15 +400,14 @@ hgm_columns = SearchColumns([
                           url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
                           ab_label(A, B) if t is None else
                           make_abt_label(A, B, t)),
-                      default=True,
                       download_col="label"),
-    MathCol("A", None, "$A$", default=True, short_title="A"),
-    MathCol("B", None, "$B$", default=True, short_title="B"),
-    RationalCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
-    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
-    MathCol("degree", None, "Degree", default=True),
-    MathCol("weight", None, "Weight", default=True),
-    MathCol("famhodge", None, "Hodge", default=True)])
+    MathCol("A", None, "$A$", short_title="A"),
+    MathCol("B", None, "$B$", short_title="B"),
+    RationalCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    MathCol("degree", None, "Degree"),
+    MathCol("weight", None, "Weight"),
+    MathCol("famhodge", None, "Hodge")])
 
 hgm_columns.db_cols = 1  # all cols, since the table varies
 

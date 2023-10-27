@@ -622,16 +622,16 @@ def jump(info):
     return by_label(jump_box)
 
 abvar_columns = SearchColumns([
-    LinkCol("label", "ab.fq.lmfdb_label", "Label", url_for_label, default=True),
-    MathCol("g", "ag.dimension", "Dimension", default=True),
-    MathCol("field", "ag.base_field", "Base field", download_col="q", default=True),
+    LinkCol("label", "ab.fq.lmfdb_label", "Label", url_for_label),
+    MathCol("g", "ag.dimension", "Dimension"),
+    MathCol("field", "ag.base_field", "Base field", download_col="q"),
     MathCol("p", "ag.base_field", "Base char.", short_title="base characteristic", default=False),
-    MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", short_title="L-polynomial", download_col="polynomial", default=True),
-    MathCol("p_rank", "av.fq.p_rank", "$p$-rank", default=True),
+    MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", short_title="L-polynomial", download_col="polynomial"),
+    MathCol("p_rank", "av.fq.p_rank", "$p$-rank"),
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-rank deficit", default=False),
     MathCol("curve_count", "av.fq.curve_point_counts", "points on curve", default=False),
     MathCol("abvar_count", "ag.fq.point_counts", "points on variety", default=False),
-    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw", default=True)],
+    SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw")],
     db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "abvar_count"])
 
 @search_wrap(

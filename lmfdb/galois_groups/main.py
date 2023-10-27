@@ -135,11 +135,11 @@ def make_order_key(order):
     return '%03d%s'%(order1,str(order))
 
 gg_columns = SearchColumns([
-    LinkCol("label", "gg.label", "Label", url_for_label, default=True),
-    SearchCol("pretty", "gg.simple_name", "Name", default=True),
-    MathCol("order", "group.order", "Order", default=True, align="right"),
-    MathCol("parity", "gg.parity", "Parity", default=True, align="right"),
-    CheckCol("solv", "group.solvable", "Solvable", default=True),
+    LinkCol("label", "gg.label", "Label", url_for_label),
+    SearchCol("pretty", "gg.simple_name", "Name"),
+    MathCol("order", "group.order", "Order", align="right"),
+    MathCol("parity", "gg.parity", "Parity", align="right"),
+    CheckCol("solv", "group.solvable", "Solvable"),
     MathCol("nilpotency", "group.nilpotent", "Nil. class", short_title="nilpotency class", default=False),
     MathCol("num_conj_classes", "gg.conjugacy_classes", "Conj. classes", short_title="conjugacy classes", default=False),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
@@ -149,7 +149,6 @@ gg_columns = SearchColumns([
     MultiProcessedCol("siblings", "gg.other_representations", "Low Degree Siblings",
                       ["siblings", "bound_siblings", "cache"],
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
-                      default=True,
                       apply_download=lambda s, b, c: [s, b])
 ],
     db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])

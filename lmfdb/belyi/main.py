@@ -640,14 +640,14 @@ def url_for_label(label):
 
 
 belyi_columns = SearchColumns([
-    LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label, default=True),
-    MathCol("deg", "belyi.degree", "Degree", default=True),
-    SearchCol("group", "belyi.group", "Group", default=True),
-    MathCol("abc", "belyi.abc", "abc", default=True, align="left", short_title="abc triple"),
-    MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
-    MathCol("g", "belyi.genus", "Genus", default=True),
-    MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
-    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True, apply_download=False),
+    LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label),
+    MathCol("deg", "belyi.degree", "Degree"),
+    SearchCol("group", "belyi.group", "Group"),
+    MathCol("abc", "belyi.abc", "abc", align="left", short_title="abc triple"),
+    MathCol("lambdas", "belyi.ramification_type", "Ramification type", align="left"),
+    MathCol("g", "belyi.genus", "Genus"),
+    MathCol("orbit_size", "belyi.orbit_size", "Orbit Size"),
+    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), apply_download=False),
     MathCol("triples", "belyi.permutation_triple", "Triples", align="left", default=False),
 ])
 

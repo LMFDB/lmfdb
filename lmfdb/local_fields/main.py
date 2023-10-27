@@ -291,17 +291,16 @@ class LF_download(Downloader):
     }
 
 lf_columns = SearchColumns([
-    LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
+    LinkCol("label", "lf.field.label", "Label", url_for_label),
     MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
-    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
-    MathCol("p", "lf.qp", "$p$", default=True, short_title="prime"),
-    MathCol("e", "lf.ramification_index", "$e$", default=True, short_title="ramification index"),
-    MathCol("f", "lf.residue_field_degree", "$f$", default=True, short_title="residue field degree"),
-    MathCol("c", "lf.discriminant_exponent", "$c$", default=True, short_title="discriminant exponent"),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs),
+    MathCol("p", "lf.qp", "$p$", short_title="prime"),
+    MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index"),
+    MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree"),
+    MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent"),
     MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                       ["n", "gal", "cache"],
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
-                      default=True,
                       apply_download=lambda n, t, cache: [n, t]),
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
@@ -310,7 +309,7 @@ lf_columns = SearchColumns([
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
-                      default=True, mathmode=True, apply_download=unpack_slopes),
+                      mathmode=True, apply_download=unpack_slopes),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])

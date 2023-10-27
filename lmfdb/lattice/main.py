@@ -170,13 +170,13 @@ def url_for_label(label):
     return url_for(".render_lattice_webpage", label=label)
 
 lattice_columns = SearchColumns([
-    LinkCol("label", "lattice.label", "Label", url_for_label, default=True),
-    MathCol("dim", "lattice.dimension", "Dimension", default=True),
-    MathCol("det", "lattice.determinant", "Determinant", default=True),
-    MathCol("level", "lattice.level", "Level", default=True),
-    MathCol("class_number", "lattice.class_number", "Class number", default=True),
-    MathCol("minimum", "lattice.minimal_vector", "Minimal vector", default=True),
-    MathCol("aut", "lattice.group_order", "Aut. group order", default=True)])
+    LinkCol("label", "lattice.label", "Label", url_for_label),
+    MathCol("dim", "lattice.dimension", "Dimension"),
+    MathCol("det", "lattice.determinant", "Determinant"),
+    MathCol("level", "lattice.level", "Level"),
+    MathCol("class_number", "lattice.class_number", "Class number"),
+    MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
+    MathCol("aut", "lattice.group_order", "Aut. group order")])
 
 @search_wrap(table=db.lat_lattices,
              title='Integral lattices search results',

@@ -920,22 +920,22 @@ def group_postprocess(res, info, query):
     return res
 
 group_columns = SearchColumns([
-    LinkCol("label", "group.label", "Label", get_url, default=True),
-    MathCol("tex_name", "group.name", "Name", default=True),
-    ProcessedCol("order", "group.order", "Order", show_factor, default=True, align="center"),
-    ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, default=True, align="center"),
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    ProcessedCol("order", "group.order", "Order", show_factor, align="center"),
+    ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, align="center"),
     MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class", default=False),
     MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length", default=False),
     MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length", default=False),
     MathCol("rank", "group.rank", "Rank", default=False),
-    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", default=True, short_title="conjugacy classes"),
+    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", short_title="conjugacy classes"),
     MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups", default=False),
     MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes", default=False),
     MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups", default=False),
     MultiProcessedCol("center_label", "group.center", "Center",
                       ["center_label", "tex_cache"],
                       display_url_cache,
-                      default=True, download_col="center_label"),
+                      download_col="center_label"),
     MultiProcessedCol("central_quotient", "group.central_quotient_isolabel", "Central quotient",
                       ["central_quotient", "tex_cache"],
                       display_url_cache, download_col="central_quotient", default=False),
@@ -958,7 +958,7 @@ group_columns = SearchColumns([
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
-                      default=True, align="center")])
+                      align="center")])
 
 @search_wrap(
     table=db.gps_groups,
@@ -1040,42 +1040,39 @@ def group_parse(info, query):
     parse_ints(info, query, "order_factorization_type")
 
 subgroup_columns = SearchColumns([
-    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
+    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
     ColGroup("subgroup_cols", None, "Subgroup", [
         MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
                           display_url,
-                          default=True, short_title="Sub. name", apply_download=False),
-        ProcessedCol("subgroup_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Sub. order"),
-        CheckCol("normal", "group.subgroup.normal", "norm", default=True, short_title="Sub. normal"),
-        CheckCol("characteristic", "group.characteristic_subgroup", "char", default=True, short_title="Sub. characteristic"),
-        CheckCol("cyclic", "group.cyclic", "cyc", default=True, short_title="Sub. cyclic"),
-        CheckCol("abelian", "group.abelian", "ab", default=True, short_title="Sub. abelian"),
-        CheckCol("solvable", "group.solvable", "solv", default=True, short_title="Sub. solvable"),
-        CheckCol("maximal", "group.maximal_subgroup", "max", default=True, short_title="Sub. maximal"),
-        CheckCol("perfect", "group.perfect", "perf", default=True, short_title="Sub. perfect"),
-        CheckCol("central", "group.central", "cent", default=True, short_title="Sub. central")],
-             default=True),
-    SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
+                          short_title="Sub. name", apply_download=False),
+        ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
+        CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
+        CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
+        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
+        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
+        CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable"),
+        CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
+        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
+        CheckCol("central", "group.central", "cent", short_title="Sub. central")]),
+    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
                           ["ambient", "ambient_tex"],
                           display_url,
-                          default=True, short_title="Ambient name", apply_download=False),
-        ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Ambient order")],
-             default=True),
-    SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
+                          short_title="Ambient name", apply_download=False),
+        ProcessedCol("ambient_order", "group.order", "Order", show_factor, align="center", short_title="Ambient order")]),
+    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
                           display_url,
-                          default=True, short_title="Quo. name", apply_download=False),
-        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", default=True, align="center", short_title="Quo. order"),
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", default=True, short_title="Quo. cyclic"),
-        CheckCol("quotient_abelian", "group.abelian", "ab", default=True, short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", default=True, short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", default=True, short_title="Quo. maximal")],
-             default=True)],
+                          short_title="Quo. name", apply_download=False),
+        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", short_title="Quo. cyclic"),
+        CheckCol("quotient_abelian", "group.abelian", "ab", short_title="Quo. abelian"),
+        CheckCol("quotient_solvable", "group.solvable", "solv", short_title="Quo. solvable"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal")])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):

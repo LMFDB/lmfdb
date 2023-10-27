@@ -815,7 +815,7 @@ def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
 
 newform_columns = SearchColumns([
-    LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
+    LinkCol("label", "cmf.label", "Label", url_for_label),
     MathCol("level", "cmf.level", "Level", default=False),
     MathCol("weight", "cmf.weight", "Weight", default=False),
     MultiProcessedCol("character", "cmf.character", "Char",
@@ -831,10 +831,10 @@ newform_columns = SearchColumns([
                       apply_download=False,
                       default=False),
     MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order", default=False),
-    MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="dimension"),
+    MathCol("dim", "cmf.dimension", "Dim", align="right", short_title="dimension"),
     MathCol("relative_dim", "cmf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension", default=False),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
-    MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True, download_col="nf_label"),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", align="center", short_title="analytic conductor"),
+    MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, download_col="nf_label"),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
                  lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
                  contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
@@ -857,10 +857,10 @@ newform_columns = SearchColumns([
     ColGroup("traces", "cmf.trace_form", "Traces",
              [_trace_col(i) for i in range(4)],
              default=True, download_col="trace_display"), # download_col needed since ColGroup by default passes control to subcolumns, which create a bigint knowl in this case
-    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
+    SpacerCol("atkin_lehner", contingent=display_AL),
     ColGroup("atkin_lehner", "cmf.atkin-lehner", "A-L signs",
              lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
-             contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"], download_col="atkin_lehner_eigenvals"),
+             contingent=display_AL, orig=["atkin_lehner_eigenvals"], download_col="atkin_lehner_eigenvals"),
     ProcessedCol("fricke_eigenval", "cmf.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
@@ -1181,15 +1181,15 @@ def dimension_space_search(info, query):
     query['__sort__'] = []
 
 space_columns = SearchColumns([
-    LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
+    LinkCol("label", "cmf.label", "Label", url_for_label),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", short_title="analytic conductor", align="left"),
     MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
                       lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
-                      short_title="character", default=True),
-    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension", default=True),
-    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+                      short_title="character"),
+    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order"),
+    MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension"),
+    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.mf_newspaces,
              title='Newspace search results',

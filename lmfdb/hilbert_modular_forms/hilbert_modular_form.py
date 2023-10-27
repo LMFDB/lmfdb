@@ -136,15 +136,14 @@ hmf_columns = SearchColumns([
     MultiProcessedCol("label", "mf.hilbert.label", "Label",
                       ["field_label", "label", "short_label"],
                       lambda fld, label, short: '<a href="%s">%s</a>' % (url_for('hmf.render_hmf_webpage', field_label=fld, label=label), short),
-                      default=True,
                       download_col="short_label"),
-    ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
+    ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MathCol("deg", "nf.degree", "Field degree", default=False),
     MathCol("disc", "nf.discriminant", "Field discriminant", default=False),
-    ListCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
+    ListCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True),
     MathCol("level_norm", "mf.level_norm", "Level norm", default=False),
     ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True, default=False),
-    MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
+    MathCol("dimension", "mf.hilbert.dimension", "Dimension"),
     ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
     ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
 

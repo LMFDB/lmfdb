@@ -594,14 +594,13 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
 
 hgcwa_columns = SearchColumns([
     LinkCol("passport_label", "dq.curve.highergenus.aut.label", "Refined passport label",
-            lambda label: f"/HigherGenus/C/Aut/{label}",
-            default=True),
-    MathCol("genus", "ag.curve.genus", "Genus", default=True),
+            lambda label: f"/HigherGenus/C/Aut/{label}"),
+    MathCol("genus", "ag.curve.genus", "Genus"),
     MathCol("g0", "curve.highergenus.aut.quotientgenus", "Quotient genus", default=False),
-    ProcessedCol("group", "group.small_group_label", "Group", group_display, mathmode=True, align="center", default=True),
-    MathCol("group_order", "group.order", "Group order", default=True),
-    MathCol("dim", "curve.highergenus.aut.dimension", "Dimension", default=True),
-    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), default=True, mathmode=True)])
+    ProcessedCol("group", "group.small_group_label", "Group", group_display, mathmode=True, align="center"),
+    MathCol("group_order", "group.order", "Group order"),
+    MathCol("dim", "curve.highergenus.aut.dimension", "Dimension"),
+    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True)])
 hgcwa_columns.languages = ['gap', 'magma']
 
 @search_wrap(

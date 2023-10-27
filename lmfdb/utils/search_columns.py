@@ -94,7 +94,9 @@ class SearchCol:
         # up on the list of possible columns
         # If default is false, then that column is included in the
         # selector but not displayed by default
-        assert default is not None
+        assert not (default is True)
+        if default is None:
+            default = True
         assert "," not in name
         self.name = name
         self.knowl = knowl

@@ -130,15 +130,14 @@ def url_for_label(label):
 
 bmf_columns = SearchColumns([
     ProcessedCol("field_label", "nf", "Base field",
-                 lambda fld: nf_display_knowl(fld, field_pretty(fld)),
-                 default=True),
+                 lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MultiProcessedCol("level", "mf.bianchi.level", "Level", ["field_label", "level_label"],
                       lambda fld, lvl: '<a href="{}">{}</a>'.format(
                           url_for("bmf.render_bmf_space_webpage",
                                   field_label=fld,
                                   level_label=lvl),
                           lvl),
-                      default=True, download_col="level_label"),
+                      download_col="level_label"),
     MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
                       lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
                           url_for("bmf.render_bmf_webpage",
@@ -146,14 +145,14 @@ bmf_columns = SearchColumns([
                                   level_label=lvl,
                                   label_suffix=suff),
                           short),
-                      default=True, download_col="short_label"),
+                      download_col="short_label"),
     # See Issue #4170
-    #MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
+    #MathCol("dimension", "mf.bianchi.newform", "Dimension"),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
                  lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else ""),
                  default=True, align="center"),
-    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
-    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, short_title="CM", align="center")])
+    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, align="center"),
+    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, short_title="CM", align="center")])
 
 @search_wrap(table=db.bmf_forms,
              title='Bianchi modular form search results',

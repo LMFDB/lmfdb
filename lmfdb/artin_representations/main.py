@@ -227,16 +227,16 @@ def url_for_label(label):
     return url_for(".render_artin_representation_webpage", label=label)
 
 artin_columns = SearchColumns([
-    SearchCol("galois_links", "artin.label", "Label", download_col="baselabel", default=True),
-    MathCol("dimension", "artin.dimension", "Dimension", default=True),
-    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", download_col="conductor", default=True),
+    SearchCol("galois_links", "artin.label", "Label", download_col="baselabel"),
+    MathCol("dimension", "artin.dimension", "Dimension"),
+    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", download_col="conductor"),
     MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count", default=False),
-    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field", download_col="NFGal"),
-    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center", short_title="image", download_col="GaloisLabel"),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", short_title="Artin stem field", download_col="NFGal"),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", align="center", short_title="image", download_col="GaloisLabel"),
     SearchCol("projective_group", "artin.projective_image", "Projective image", align="center", download_col="ProjBoth", default=False),
     SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t", default=False),
-    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True, short_title="indicator"),
-    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True, short_title="trace of complex conj.")],
+    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", short_title="indicator"),
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", short_title="trace of complex conj.")],
     db_cols = ["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
 
 artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"

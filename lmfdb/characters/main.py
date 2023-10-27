@@ -232,14 +232,14 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
             return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
 character_columns = SearchColumns([
-    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
+    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
-                      display_galois_orbit, default=True, align="center", short_title="Conrey labels", apply_download=False),
-    MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
-    MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
-    MathCol("order", "character.dirichlet.order", "Order", default=True),
-    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
-    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
+                      display_galois_orbit, align="center", short_title="Conrey labels", apply_download=False),
+    MathCol("modulus", "character.dirichlet.modulus", "Modulus"),
+    MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
+    MathCol("order", "character.dirichlet.order", "Order"),
+    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd"),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive")])
 
 @search_wrap(
     table=db.char_orbits,
