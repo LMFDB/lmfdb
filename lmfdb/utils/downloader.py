@@ -24,6 +24,8 @@ from ast import literal_eval
 from io import BytesIO
 from sage.all import Integer, Rational
 
+from lmfdb.utils import plural_form, pluralize
+
 class DownloadLanguage():
     # We choose the most common values; override these if needed in each subclass
     comment_prefix = '#'
@@ -339,7 +341,7 @@ class Downloader():
             if hasattr(self.__class__, "var_name"):
                 var_name = self.__class__.var_name
             else:
-                var_name = short_name.replace(" ", "_")
+                var_name = plural_form(short_name.replace(" ", "_"))
         self.var_name = var_name
 
         if filebase is None:
@@ -558,7 +560,7 @@ class Downloader():
         # This comment is near the top of the file and describes how to call the make_data function defined below.
         make_data_comment = lang.make_data_comment
         if make_data_comment:
-            make_data_comment = make_data_comment.format(short_name=self.short_name, var_name=self.var_name)
+            make_data_comment = make_data_comment.format(short_name=plural_form(self.short_name), var_name=self.var_name)
 
         # Determine which columns will be fetched from the database
         columns = info["columns"]
@@ -617,10 +619,9 @@ class Downloader():
         c = lang.comment_prefix
         def make_download():
             # We start with a string describing the query, the number of results and the sort order
-            yield c + ' Query "%s" returned %d %s%s.\n\n' %(
+            yield c + ' Query "%s" returned %s%s.\n\n' %(
                 str(info.get('query')),
-                num_results,
-                self.short_name if num_results == 1 else self.short_name + "s",
+                pluralize(num_results, self.short_name),
                 "" if sort_desc is None else f", sorted by {sort_desc}")
 
             # We then describe the columns included, both in a comment and as a variable
