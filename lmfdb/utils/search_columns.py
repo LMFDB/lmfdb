@@ -214,6 +214,7 @@ class SearchCol:
           constructed through a postprocess step).  This corresponds to a row (of the search results,
           or of the underlying table in the database).
         """
+        name = None
         if self.download_col is not None:
             name = self.download_col
         return self._get(rec, name=name, downloading=True)
