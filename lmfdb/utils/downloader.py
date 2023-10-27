@@ -207,7 +207,7 @@ class MagmaLanguage(DownloadLanguage):
         return s + '\n'
 
     def record_assign(self, name, key, val):
-        return f'{name}`{key} := {val}'
+        return f'{name}`{key} := {val};'
 
 class SageLanguage(DownloadLanguage):
     name = 'sage'

@@ -631,6 +631,22 @@ hgcwa_columns.languages = ['gap', 'magma']
 class HGCWADownloader(Downloader):
     table = db.hgcwa_passports
     title = "Higher genus curve"
+    inclusions = {
+        "gens": (
+            ["gen_vectors"],
+            {
+                "magma": "n := #out`gen_vectors[1];\n    S := SymmetricGroup(n);\n    gens := [S!genvec : genvec in out`gen_vectors];",
+                "gap": "n := Length(gen_vectors);\n    perm_list:= List([1..n], x->PermList(out.gen_vectors[x]));"
+            }
+        ),
+        "G": (
+            ["gen_vectors"],
+            {
+                "magma": "G := PermutationGroup<n| gens>;",
+                "gap": "S := SymmetricGroup(n);\n    G:=Subgroup(S, perm_list);"
+            }
+        ),
+    }
 
 @search_wrap(
     table=db.hgcwa_passports,
