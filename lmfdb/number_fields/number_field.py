@@ -59,7 +59,7 @@ class DiscriminantCol(MultiProcessedCol):
         D = factor_base_factorization_latex(factor_base_factor(D,rec['ramps']), cutoff=30)
         return '$' + s + D + '$'
 
-    def download(self, rec, lang):
+    def download(self, rec):
         return ZZ(rec['disc_abs']) * ZZ(rec['disc_sign'])
 
 def init_nf_count():

@@ -140,7 +140,7 @@ hmf_columns = SearchColumns([
     ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MathCol("deg", "nf.degree", "Field degree", default=False),
     MathCol("disc", "nf.discriminant", "Field discriminant", default=False),
-    ListCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True),
+    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True),
     MathCol("level_norm", "mf.level_norm", "Level norm", default=False),
     ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True, default=False),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension"),
@@ -640,8 +640,8 @@ class HMFSearchArray(SearchArray):
             name='field_label',
             label='Base field',
             knowl='nf',
-            example='2.0.4.1',
-            example_span=r'either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example='2.2.5.1',
+            example_span=r'either a totally real field label, e.g. 2.2.5.1 for \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Qsqrt5',
             example_span_colspan=4)
 
         degree = TextBox(
