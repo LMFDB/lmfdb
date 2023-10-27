@@ -809,10 +809,10 @@ def newspace_parse(info, query):
             query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
-    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
+    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right")
 
 def _AL_col(i, p):
-    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
+    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True)
 
 newform_columns = SearchColumns([
     LinkCol("label", "cmf.label", "Label", url_for_label),
@@ -844,19 +844,19 @@ newform_columns = SearchColumns([
                       ["is_cm", "cm_discs"],
                       lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
                       short_title="CM",
-                      default=True, download_col="cm_discs"),
+                      download_col="cm_discs"),
     MultiProcessedCol("rm", "cmf.self_twist", "RM",
                       ["is_rm", "rm_discs"],
                       lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                       short_title="RM",
-                      default=True, download_col="rm_discs"),
+                      download_col="rm_discs"),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual", default=False),
     MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists", default=False),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*", default=False),
     ColGroup("traces", "cmf.trace_form", "Traces",
              [_trace_col(i) for i in range(4)],
-             default=True, download_col="trace_display"), # download_col needed since ColGroup by default passes control to subcolumns, which create a bigint knowl in this case
+             download_col="trace_display"), # download_col needed since ColGroup by default passes control to subcolumns, which create a bigint knowl in this case
     SpacerCol("atkin_lehner", contingent=display_AL),
     ColGroup("atkin_lehner", "cmf.atkin-lehner", "A-L signs",
              lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
@@ -869,7 +869,7 @@ newform_columns = SearchColumns([
     ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group", default=False),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
-                      default=True, download_col="qexp_display")],
+                      download_col="qexp_display")],
     ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 

@@ -84,7 +84,7 @@ class SearchCol:
     Name, knowl and title can be passed either positionally or as a keyword argument; other values should be
     provided as keywords so that subclasses don't need to worry about passing positional arguments appropriately.
     """
-    def __init__(self, name, knowl, title, default=None, align="left",
+    def __init__(self, name, knowl, title, default=True, align="left",
                  mathmode=False, contingent=None, short_title=None, orig=None,
                  download_desc=None, download_col=None, **kwds):
         # Both contingent and default can be functions that take info
@@ -94,9 +94,6 @@ class SearchCol:
         # up on the list of possible columns
         # If default is false, then that column is included in the
         # selector but not displayed by default
-        assert not (default is True)
-        if default is None:
-            default = True
         assert "," not in name
         self.name = name
         self.knowl = knowl

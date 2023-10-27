@@ -350,7 +350,7 @@ ecnf_columns = SearchColumns([
     MultiProcessedCol("label", "ec.curve_label", "Label", ["short_label", "field_label", "conductor_label", "iso_label", "number"],
                       lambda label, field, conductor, iso, number: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number), label),
-                      default=True, align="center", download_col="short_label"),
+                      align="center", download_col="short_label"),
     MultiProcessedCol("iso_class", "ec.isogeny_class", "Class", ["field_label", "conductor_label", "iso_label", "short_class_label"],
                       lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso), short_class_label),
@@ -375,7 +375,7 @@ ecnf_columns = SearchColumns([
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
-                 default=True, short_title="CM discriminant", mathmode=True, align="center"),
+                 short_title="CM discriminant", mathmode=True, align="center"),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
                  lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
                  short_title="Sato-Tate group", align="center", orig="cm_type", apply_download=lambda v: '1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),

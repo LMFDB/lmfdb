@@ -584,7 +584,7 @@ g2c_columns = SearchColumns([
     MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank", default=False),
     ListCol("torsion_subgroup", "g2c.torsion", "Torsion",
                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}",
-                 default=True, mathmode=True, align="center"),
+                 mathmode=True, align="center"),
     ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v),
                  short_title="Qbar-end algebra", align="center"),
     ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center", default=False),
