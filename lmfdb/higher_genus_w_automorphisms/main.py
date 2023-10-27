@@ -592,12 +592,27 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
                     a linear function of variable g for genus (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-def trim_gen_vecs(vec):
-    if len(vec) <= 1:
-        return str(vec)
-    if len(vec[0]) > 20:
-        return fr"[[{', '.join([str(c) for c in vec[0][:10]])}, \dots], \dots]"
-    return fr"[{vec[0]},\dots]"
+def display_gen_vecs(vecs):
+    def display_perm(perm):
+        if perm.size() <= 20:
+            return perm.cycle_string()
+        def display_cycle(c):
+            if len(c) > 20:
+                ldots = r",\ldots"
+                c = c[:10]
+            else:
+                ldots = ""
+            return fr"({','.join(str(x) for x in c)}{ldots})"
+        tups = [cyc for cyc in perm.cycle_tuples() if len(cyc) > 1]
+        cdots = r"\cdots" if len(tups) > 2 else ""
+        if len(tups) == 0:
+            return "()"
+        elif len(tups) == 1:
+            return display_cycle(tups[0])
+        else:
+            return f"{display_cycle(tups[0])}{cdots}{display_cycle(tups[1])}"
+    dots = r",\ldots" if len(vecs) > 1 else ""
+    return display_perm(Permutation(vecs[0])) + dots
 
 hgcwa_columns = SearchColumns([
     LinkCol("passport_label", "dq.curve.highergenus.aut.label", "Refined passport label",
@@ -608,7 +623,9 @@ hgcwa_columns = SearchColumns([
     MathCol("group_order", "group.order", "Group order"),
     MathCol("dim", "curve.highergenus.aut.dimension", "Dimension"),
     ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
-    ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", trim_gen_vecs, mathmode=True, default=False)])
+    #CheckCol("hyperelliptic", "ag.hyperelliptic_curve", "Hyperelliptic", default=False),
+    #CheckCol("cyclic_trigonal", "ag.cyclic_trigonal", "Cyclic trigonal", default=False),
+    ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", display_gen_vecs, mathmode=True, default=False)])
 hgcwa_columns.languages = ['gap', 'magma']
 
 class HGCWADownloader(Downloader):
