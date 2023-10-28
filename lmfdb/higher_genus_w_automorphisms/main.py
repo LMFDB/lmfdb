@@ -638,14 +638,14 @@ class HGCWADownloader(Downloader):
             ["gen_vectors"],
             {
                 "magma": "n := #out`gen_vectors[1];\n    S := SymmetricGroup(n);\n    gens := [S!genvec : genvec in out`gen_vectors];",
-                "gap": "n := Length(out.gen_vectors[1]);\n    perm_list:= List([1..Length(out.gen_vectors)], x->PermList(out.gen_vectors[x]));"
+                "gap": "gens:= List([1..Length(out.gen_vectors)], x->PermList(out.gen_vectors[x]));"
             }
         ),
         "G": (
             ["gen_vectors"],
             {
                 "magma": "G := PermutationGroup<n| gens>;",
-                "gap": "S := SymmetricGroup(n);\n    G:=Subgroup(S, perm_list);"
+                "gap": "G:=Subgroup(SymmetricGroup(Length(out.gen_vectors[1])), perm_list);"
             }
         ),
     }

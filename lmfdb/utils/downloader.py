@@ -259,7 +259,7 @@ class GAPLanguage(DownloadLanguage):
     function_end = 'end;\n'
 
     def record_assign(self, name, key, val):
-        return f'{name}.{key} = {val}'
+        return f'{name}.{key} := {val};'
 
 class OscarLanguage(DownloadLanguage):
     name = 'oscar'
@@ -506,8 +506,9 @@ class Downloader():
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"out := rec<RecFormat|{','.join(pairs)}>;"]
         elif lang.name == "gap":
+            local_vars = ["out"] + [var for (var, (require, bylang)) in self.inclusions.items() if "gap" in bylang]
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
-            lines = [f"out := rec({','.join(pairs)});"]
+            lines = [f"local {', '.join(local_vars)};", f"out := rec({','.join(pairs)});"]
         elif lang.name == "gp":
             pairs = [f"{col},row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"out = Map({','.join(pairs)})"]
