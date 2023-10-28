@@ -645,7 +645,7 @@ class HGCWADownloader(Downloader):
             ["gen_vectors"],
             {
                 "magma": "G := PermutationGroup<n| gens>;",
-                "gap": "G:=Subgroup(SymmetricGroup(Length(out.gen_vectors[1])), perm_list);"
+                "gap": "G:=Subgroup(SymmetricGroup(Length(out.gen_vectors[1])), gens);"
             }
         ),
     }
