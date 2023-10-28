@@ -616,7 +616,7 @@ class Downloader():
         if num_results > 10000:
             # Estimate the size of the download file.  This won't necessarily be a great estimate
             # since later rows are often larger, but it's something
-            size_estimate = sum([len(lang.to_lang(row)) for rec in first50]) * num_results / 50
+            size_estimate = sum([len(lang.to_lang(rec)) for rec in first50]) * num_results / 50
             if size_estimate > 100 * 1024**2: # 100MB
                 return abort(413, "Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
         #print("FIRST FIFTY", first50)
