@@ -437,17 +437,22 @@ class Downloader():
         @stream_with_context
         def _generator():
             yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
-            # It would be nice to be able to just do `yield from generator`
-            # But that seems to make gunicorn think that the process has frozen
-            # and we get killed after the timeout (30s).  So we instead insert
-            # an occasional sleep call, which is enough to stay alive.
+            # Rather than just doing `yield from generator`, we need to buffer
+            # since otherwise the response is inefficiently broken up into tiny chunks
+            # causing the download to slow.
+
+            # When running asynchronously (which we couldn't get to work), a sleep here
+            # was also necessary to prevent gunicorn from timing out the worker.
+            # Unfortunately, making asynchronous mode work reliably required further
+            # changes to the underlying database interactions, so is not currently
+            # implemented.
             buff = ""
             threshold = 10240 # 10KB
             for i, line in enumerate(generator, 1):
                 if len(buff) > threshold:
                     yield buff
                     buff = ""
-                    time.sleep(0.001)
+                    #time.sleep(0.001)
                 buff += line
                 #yield line
             if buff:
