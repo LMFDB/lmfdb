@@ -127,7 +127,7 @@ def add_lfunction_friends(friends, label):
                     cmf_label = '.'.join(s[4:])
                     url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                     friends.append(("Modular form " + cmf_label, url))
-            friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=label)))
+            friends.append(("L-function", url_for('l_functions.by_full_label', label=rec["label"])))
     return friends
 
 @artin_representations_page.route("/")
@@ -379,13 +379,13 @@ def render_artin_representation_webpage(label):
         if the_rep.dimension() == 1:
             # Zeta is loaded differently
             if the_rep.conductor == 1:
-                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=1, number=1)))
+                friends.append(("L-function", url_for('l_functions.by_full_label', label='1-1-1.1-r0-0-0')))
             else:
                 # looking for Lhash dirichlet_L_modulus.number
                 mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
                 lres = db.lfunc_instances.lucky({'Lhash': mylhash})
                 if lres is not None:
-                    friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+                    friends.append(("L-function", url_for('l_functions.by_full_label', label=lres["label"])))
         if case == 'rep':
             orblabel = re.sub(r'\.[a-z]+$', '', label)
             friends.append(("Galois orbit " + artin_label_pretty(orblabel),

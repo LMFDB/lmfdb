@@ -599,6 +599,8 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
+    if nf.degree() == 1:
+        info['friends'].append(('L-function', url_for('l_functions.by_full_label', label='1-1-1.1-r0-0-0')))
     info['friends'].append(('Galois group', url_for("galois_groups.by_label", label="%dT%d" % (n, t))))
     discrootfieldcoeffs = nf.discrootfieldcoeffs()[0]
     rf_label = db.nf_fields.lucky({'coeffs': discrootfieldcoeffs}, 'label')
