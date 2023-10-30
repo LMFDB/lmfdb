@@ -609,7 +609,6 @@ function resetStart()
 {
   // resets start if not changing search_type
   $('input[name=start]').val('')
-  // this will be cleaned by the cleanSubmit
 }
 
 
@@ -791,10 +790,21 @@ $(document).ready(function () {
     form => form.addEventListener('formdata',
     function(event) {
       let formData = event.formData;
+      let alldeleted = true;
       for (let [name, value] of Array.from(formData.entries())) {
         if (value === '' ||
-			(name === 'count' && value == 50))
-			formData.delete(name);
+	    (name === 'count' && value == 50)) {
+	  formData.delete(name);
+        } else {
+          alldeleted = false;
+        }
+      }
+      if (formData.has("hst") && formData.has("search_type") && formData.get("hst") == formData.get("search_type")) {
+        formData.delete("hst");
+      }
+      if (alldeleted) {
+        // Need at least one parameter to trigger search results.
+        formData.set('search_type', '');
       }
     })
   )

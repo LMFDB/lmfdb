@@ -676,9 +676,9 @@ class SearchArray(UniqueRepresentation):
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         if info is None:
-            return [("List", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
+            return [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
         else:
-            return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
+            return [("", "Search again"), ("Random", "Random %s" % self.noun)]
 
     def hidden(self, info):
         # Override this method to change the hidden inputs
@@ -736,7 +736,11 @@ class SearchArray(UniqueRepresentation):
 
     def _st(self, info):
         if info is not None:
-            return info.get("search_type", info.get("hst", "List"))
+            search_type = info.get("search_type", info.get("hst", ""))
+            if search_type == "List":
+                # Backward compatibility
+                search_type = ""
+            return search_type
 
     def dynstats_array(self, info):
         if self._st(info) == "DynStats":

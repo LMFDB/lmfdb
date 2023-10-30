@@ -167,9 +167,9 @@ def index():
     info = to_dict(request.args, search_array=CMFSearchArray())
     if len(request.args) > 0:
         # hidden_search_type for prev/next buttons
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
 
-        if search_type in ['List', 'Random']:
+        if search_type in ['List', '', 'Random']:
             return newform_search(info)
         elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
@@ -1113,7 +1113,7 @@ def dimension_form_postprocess(res, info, query):
 
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
-        info_copy['search_type'] = 'List'
+        info_copy['search_type'] = ''
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
@@ -1439,7 +1439,7 @@ class CMFSearchArray(SearchArray):
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
     _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
-    sorts = {'List': _sort_forms,
+    sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces,
              'SpaceTraces': _sort_spaces}
@@ -1723,17 +1723,17 @@ class CMFSearchArray(SearchArray):
     def main_array(self, info):
         if info is None:
             return self.browse_array
-        search_type = info.get('search_type', info.get('hst', 'List'))
+        search_type = info.get('search_type', info.get('hst', ''))
         if search_type in ['Spaces', 'SpaceTraces']:
             return self.space_array
         elif search_type == 'SpaceDimensions':
             return self.sd_array
         else:
-            # search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
+            # search_type in ['List', '', 'Dimensions', 'Traces', 'DynStats']:
             return self.refine_array
 
     def search_types(self, info):
-        basic = [('List', 'List of forms'),
+        basic = [('', 'List of forms'),
                  ('Dimensions', 'Dimension table'),
                  ('Traces', 'Traces table'),
                  ('Random', 'Random form')]
@@ -1744,7 +1744,7 @@ class CMFSearchArray(SearchArray):
         if info is None:
             return basic
         st = self._st(info)
-        if st in ["List", "Dimensions", "Traces"]:
+        if st in ["List", "", "Dimensions", "Traces"]:
             return self._search_again(info, basic)
         elif st == "SpaceDimensions":
             return self._search_again(info, spaces)

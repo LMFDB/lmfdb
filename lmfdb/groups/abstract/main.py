@@ -587,9 +587,9 @@ def index():
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
         info["search_type"] = search_type = info.get(
-            "search_type", info.get("hst", "List")
+            "search_type", info.get("hst", "")
         )
-        if search_type in ["List", "Random"]:
+        if search_type in ["List", "", "Random"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
             info["search_array"] = SubgroupSearchArray()
@@ -1219,13 +1219,13 @@ def render_abstract_group(label, data=None):
 
         # "internal" friends
         sbgp_of_url = (
-            " /Groups/Abstract/?hst=Subgroups&subgroup=" + label + "&search_type=Subgroups"
+            " /Groups/Abstract/?subgroup=" + label + "&search_type=Subgroups"
         )
         sbgp_url = (
-            "/Groups/Abstract/?hst=Subgroups&ambient=" + label + "&search_type=Subgroups"
+            "/Groups/Abstract/?ambient=" + label + "&search_type=Subgroups"
         )
         quot_url = (
-            "/Groups/Abstract/?hst=Subgroups&quotient=" + label + "&search_type=Subgroups"
+            "/Groups/Abstract/?quotient=" + label + "&search_type=Subgroups"
         )
 
         friends = [
@@ -1268,13 +1268,13 @@ def render_abstract_group(label, data=None):
 
         if db.gps_st.count({"component_group": label}) > 0:
             st_url = (
-                "/SatoTateGroup/?hst=List&"
+                "/SatoTateGroup/?"
                 + 'include_irrational=yes&'
                 + 'component_group=%5B'
                 + str(gap_ints[0])
                 + "%2C"
                 + str(gap_ints[1])
-                + "%5D&search_type=List"
+                + "%5D"
             )
             friends += [("As the component group of a Sato-Tate group", st_url)]
 

@@ -147,7 +147,7 @@ class DirichSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('List', 'List of characters'),
+            ('', 'List of characters'),
             ('Random', 'Random character')])
 
 
@@ -280,8 +280,8 @@ def render_DirichletNavigation():
     if request.args:
         # hidden_search_type for prev/next buttons
         info = to_dict(request.args, search_array=DirichSearchArray())
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-        if search_type in ['List', 'Random']:
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        if search_type in ['List', '', 'Random']:
             return dirichlet_character_search(info)
         assert False
 

@@ -108,8 +108,8 @@ def contents():
 def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Random']:
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        if search_type in ['List', '', 'Random']:
             return l_function_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -124,8 +124,8 @@ def index():
 def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Random']:
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        if search_type in ['List', '', 'Random']:
             return l_function_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
@@ -657,12 +657,12 @@ class LFunctionSearchArray(SearchArray):
 
     def search_types(self, info):
         if self.force_rational:
-            L = [('List', 'List of L-functions'),
+            L = [('', 'List of L-functions'),
                  ('Traces', 'Traces table'),
                  ('Euler', 'Euler factors'),
                  ('Random', 'Random L-function')]
         else:
-            L = [('List', 'List of L-functions'),
+            L = [('', 'List of L-functions'),
                  ('Random', 'Random L-function')]
         return self._search_again(info, L)
 

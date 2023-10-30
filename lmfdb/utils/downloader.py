@@ -570,8 +570,6 @@ class Downloader():
         pieces = [piece for piece in pieces if not any(piece.startswith(bad) for bad in omit)]
         urlparts = urlparts._replace(query="&".join(pieces))
         url = urlunparse(urlparts)
-        print("URL", url)
-        print("INFO", info)
 
         # This comment is near the top of the file and describes how to call the make_data function defined below.
         make_data_comment = lang.make_data_comment

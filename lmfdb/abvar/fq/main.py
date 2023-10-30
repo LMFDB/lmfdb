@@ -74,10 +74,10 @@ def abelian_varieties():
     info = to_dict(request.args, search_array=AbvarSearchArray())
     if request.args:
         # hidden_search_type for prev/next buttons
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
         if search_type == "Counts":
             return abelian_variety_count(info)
-        elif search_type in ['List', 'Random']:
+        elif search_type in ['List', '', 'Random']:
             return abelian_variety_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -516,7 +516,7 @@ class AbvarSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('List', 'List of isogeny classes'),
+            ('', 'List of isogeny classes'),
             ('Counts', 'Counts table'),
             ('Random', 'Random isogeny class')])
 
@@ -668,7 +668,7 @@ def abelian_variety_count(info, query):
     def url_generator(g, q):
         info_copy = dict(urlgen_info)
         info_copy.pop("search_array", None)
-        info_copy["search_type"] = "List"
+        info_copy["search_type"] = ""
         info_copy["g"] = g
         info_copy["q"] = q
         return url_for("abvarfq.abelian_varieties", **info_copy)

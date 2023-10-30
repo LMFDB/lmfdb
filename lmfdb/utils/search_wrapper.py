@@ -148,7 +148,11 @@ class SearchWrapper(Wrapper):
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
-        info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        search_type = info.get("search_type", info.get("hst", ""))
+        if search_type == "List":
+            # Backward compatibility
+            search_type = ""
+        info["search_type"] = search_type
         info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
