@@ -599,11 +599,6 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
-    if nf.can_class_number():
-        # hide ones that take a long time to compute on the fly
-        # note that the first degree 4 number field missed the zero of the zeta function
-        if abs(D**n) < 50000000:
-            info['friends'].append(('L-function', url_for('l_functions.l_function_nf_page', label=label)))
     info['friends'].append(('Galois group', url_for("galois_groups.by_label", label="%dT%d" % (n, t))))
     discrootfieldcoeffs = nf.discrootfieldcoeffs()[0]
     rf_label = db.nf_fields.lucky({'coeffs': discrootfieldcoeffs}, 'label')
