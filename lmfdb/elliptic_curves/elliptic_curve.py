@@ -470,6 +470,13 @@ ec_columns = SearchColumns([
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
+class ECDownloader(Downloader):
+    table = db.ec_curvedata
+    title = "Elliptic curves"
+    def modify_query(self, info, query):
+        if info.get("optimal") == "on":
+            query["__one_per__"] = "lmfdb_iso"
+
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
@@ -478,7 +485,7 @@ ec_columns = SearchColumns([
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':Downloader(db.ec_curvedata, title="Elliptic curves")},
+                        'download':ECDownloader()},
              bread=lambda:get_bread('Search results'))
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')

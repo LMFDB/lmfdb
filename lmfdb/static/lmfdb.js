@@ -564,11 +564,9 @@ function control_sort(S) {
     S.options[i].text = spaces + t.slice(2, t.length);
   }
   if (curdir == asc) {
-    console.log("Setting dir op");
     S.options[n].text = dec + label;
     $("input[name=sort_dir]").val('op');
   } else {
-    console.log("Setting dir std");
     S.options[n].text = asc + label;
     $("input[name=sort_dir]").val('');
   }
@@ -577,17 +575,22 @@ function control_sort(S) {
 };
 
 function update_download_url(link) {
-  var show = $("input[name=showcol]");
-  var hide = $("input[name=hidecol]");
-  var sort = $("input[name=sort_order]");
-  var sort_dir = $("input[name=sort_dir]");
-  var i = link.href.indexOf("&showcol=");
-  //console.log("pre", link.href);
-  if (i != -1) {
-    link.href = link.href.slice(0, i);
+  // console.log("before modification", link.href);
+  var url = new URL(link.href);
+  var params = url.searchParams;
+  var keys = ["showcol", "hidecol", "sort_order", "sort_dir"];
+  for (var i = 0; i < keys.length; ++i) {
+    var newval = $("input[name="+keys[i]+"]").val();
+    if (newval.length == 0) {
+      params.delete(keys[i]);
+    } else {
+      params.set(keys[i], newval);
+    }
   }
-  link.href = link.href + "&showcol=" + show.val() + "&hidecol=" + hide.val() + "&sort_order=" + sort.val() + "&sort_dir=" + sort_dir.val();
-  //console.log("post", link.href);
+  url.search = params.toString();
+  link.href = url.href;
+  console.log(link.href);
+  // console.log("after modification", link.href);
   return true;
 };
 
@@ -597,7 +600,6 @@ function blur_sort(S) {
     t = S.options[i].text;
     if (t.slice(0, 1) != ' ') { // unicode space
       S.selectedIndex = i;
-      console.log("Blurring at ", i);
       break;
     }
   }

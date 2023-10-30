@@ -155,6 +155,12 @@ def ctx_proc_userdata():
             # Cocalc weirdness that lets them serve pages on https from within a project
             url = url[7:]
         urlparts = urlparse(url)
+        if "query_add" in replace:
+            assert "query" not in replace
+            if urlparts.query:
+                replace["query"] = replace.pop("query_add") + "&" + urlparts.query
+            else:
+                replace["query"] = replace.pop("query_add")
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url

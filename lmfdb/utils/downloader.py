@@ -17,7 +17,8 @@ import datetime
 import re
 import itertools
 
-from flask import abort, send_file, stream_with_context, Response
+from flask import abort, send_file, stream_with_context, Response, request
+from urllib.parse import urlparse, urlunparse
 
 from werkzeug.datastructures import Headers
 from ast import literal_eval
@@ -562,6 +563,15 @@ class Downloader():
         filename = self.filebase
         ts = datetime.datetime.now().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
+        urlparts = urlparse(request.url)
+        pieces = urlparts.query.split("&")
+        # We omit the download-specific parts that were added in lmfdb/templates/download_search_results.html
+        omit = ["Submit=", "download=", "query="]
+        pieces = [piece for piece in pieces if not any(piece.startswith(bad) for bad in omit)]
+        urlparts = urlparts._replace(query="&".join(pieces))
+        url = urlunparse(urlparts)
+        print("URL", url)
+        print("INFO", info)
 
         # This comment is near the top of the file and describes how to call the make_data function defined below.
         make_data_comment = lang.make_data_comment
@@ -584,6 +594,10 @@ class Downloader():
         except Exception as err:
             return abort(404, "Unable to parse query: %s" % err)
 
+        one_per = query.pop("__one_per__", None)
+        if isinstance(one_per, str):
+            one_per = [one_per]
+
         # Determine the sort order
         sort, sort_desc = self.get_sort(info, query)
 
@@ -592,7 +606,7 @@ class Downloader():
         num_results = table.count(query)
 
         # Actually issue the query, and store the result in an iterator
-        data = iter(table.search(query, projection=proj, sort=sort))
+        data = iter(table.search(query, projection=proj, sort=sort, one_per=one_per))
 
         # We get the first 50 results, in order to accommodate sections (like modular forms) where default and contingent columns rely on having access to info["results"]
         # We don't get all the results, since we want to support downloading millions of records, where this would time out.
@@ -625,6 +639,7 @@ class Downloader():
         c = lang.comment_prefix
         def make_download():
             # We start with a string describing the query, the number of results and the sort order
+            yield c + ' Search link: %s\n' % url
             yield c + ' Query "%s" returned %s%s.\n\n' %(
                 str(info.get('query')),
                 pluralize(num_results, self.short_name),
