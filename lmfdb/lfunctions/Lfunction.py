@@ -750,6 +750,8 @@ class Lfunction_Maass(Lfunction):
             title_end = ""  #" on $%s$" % (self.group)
 
         else:   # Generate from Maass form
+            if not is_debug_mode():
+                raise ValueError(f'Error constructing L-function for Maass form {self.maass_id}, as it is not in the database')
 
             # Create the Maass form
             self.mf = WebMaassForm.by_maass_id(self.maass_id)
