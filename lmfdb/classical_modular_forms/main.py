@@ -1113,7 +1113,7 @@ def dimension_form_postprocess(res, info, query):
 
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
-        info_copy['search_type'] = ''
+        info_copy.pop('search_type', None)
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)

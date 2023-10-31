@@ -668,7 +668,7 @@ def abelian_variety_count(info, query):
     def url_generator(g, q):
         info_copy = dict(urlgen_info)
         info_copy.pop("search_array", None)
-        info_copy["search_type"] = ""
+        info_copy.pop("search_type", None)
         info_copy["g"] = g
         info_copy["q"] = q
         return url_for("abvarfq.abelian_varieties", **info_copy)
