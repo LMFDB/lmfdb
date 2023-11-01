@@ -1094,7 +1094,7 @@ class RatPointSearchArray(SearchArray):
 
     def search_types(self, info):
         # There is no homepage for a point, so we disable the random link
-        return [("List", "Search again")]
+        return [("", "Search again")]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
