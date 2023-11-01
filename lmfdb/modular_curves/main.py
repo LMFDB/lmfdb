@@ -1105,6 +1105,10 @@ class RatPointSearchArray(SearchArray):
                              [residue_field, j_field, jinv, j_height, isolated],
                              [family, cusp]]
 
+    def search_types(self, info):
+        # There is no homepage for a point, so we disable the random link
+        return [("List", "Search again")]
+
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
         self.ncurves = comma(db.gps_gl2zhat_fine.count())
