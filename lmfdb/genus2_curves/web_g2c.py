@@ -264,7 +264,7 @@ def real_geom_end_alg_name(name):
         "M_2(R)":r"\mathrm{M}_2(\R)",
         "M_2(C)":r"\mathrm{M}_2(\C)"
         }
-    if name in name_dict.keys():
+    if name in name_dict:
         return name_dict[name]
     else:
         return name
@@ -282,7 +282,7 @@ def geom_end_alg_name(name):
         "M_2(Q)":r"\mathrm{M}_2(\Q)",
         "M_2(CM)":r"\mathrm{M}_2(\mathsf{CM})"
         }
-    if name in name_dict.keys():
+    if name in name_dict:
         return name_dict[name]
     else:
         return name

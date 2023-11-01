@@ -329,7 +329,7 @@ def read_num():
 def expect_var(vars):
     c = expr_peekc()
     is_valid_var = False
-    for var in vars.keys():
+    for var in vars:
         if var == c:
             is_valid_var = True
             break
