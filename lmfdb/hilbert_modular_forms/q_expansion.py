@@ -41,7 +41,7 @@ def qexpansion(field_label=None):
             v = next(S)
             continue
 
-        if field_label is None or not field_label != v["field_label"]:
+        if field_label is None or field_label != v['field_label']:
             field_label = v["field_label"]
             print("...new field " + field_label)
 

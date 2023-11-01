@@ -816,7 +816,7 @@ def dispcyclomat(n, mat):
 
 
 def list_to_latex_matrix(li):
-    """
+    r"""
     Given a list of lists representing a matrix, output a latex representation
     of that matrix as a string.
 

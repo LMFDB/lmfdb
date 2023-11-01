@@ -128,6 +128,8 @@ def modcurve_link(label):
 
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
+    if RSZB_LABEL_RE.fullmatch(label):
+        label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))

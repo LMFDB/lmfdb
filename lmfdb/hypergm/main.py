@@ -458,7 +458,7 @@ def hgm_search(info, query):
     # Combine the parts of the query if there are A,B parts
     if queryab:
         queryabrev = {}
-        for k in queryab.keys():
+        for k in queryab:
             queryabrev[k+'rev'] = queryab[k]
         query['$or'] = [queryab, queryabrev]
 
