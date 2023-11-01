@@ -268,12 +268,19 @@ class CheckCol(SearchCol):
     to represent a True value, and question mark for unknown, and blank for False.
     They are also centered by default.
     """
-    def __init__(self, name, knowl, title, align="center", **kwds):
+    def __init__(self, name, knowl, title, align="center", unknown="?", no="", **kwds):
         super().__init__(name, knowl, title, align=align, **kwds)
+        self.unknown = unknown
+        self.no = no
 
     def display(self, rec):
         val = self._get(rec, downloading=True) # We emulate downloading so that we can determine if the value is None
-        return "&#x2713;" if val else ("?" if val is None else "")
+        if val:
+            return "&#x2713;"
+        elif val is None:
+            return self.unknown
+        else:
+            return self.no
 
 
 class CheckMaybeCol(SearchCol):
@@ -282,17 +289,19 @@ class CheckMaybeCol(SearchCol):
     They explicitly show "not computed" rather than "?" for unknown values.
     They are also centered by default.
     """
-    def __init__(self, name, knowl, title, align="center", **kwds):
+    def __init__(self, name, knowl, title, align="center", unknown="?", no="", **kwds):
         super().__init__(name, knowl, title, align=align, **kwds)
+        self.unknown = unknown
+        self.no = no
 
     def display(self, rec):
         ans = self.get(rec)
         if ans > 0:
             return "&#x2713;"
         elif ans < 0:
-            return ""
+            return self.no
         else:
-            return "not computed"
+            return self.unknown
 
     def download(self, rec, name=None):
         ans = self._get(rec)

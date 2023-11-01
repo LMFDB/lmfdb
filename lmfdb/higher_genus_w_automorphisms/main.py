@@ -623,8 +623,8 @@ hgcwa_columns = SearchColumns([
     MathCol("group_order", "group.order", "Group order"),
     MathCol("dim", "curve.highergenus.aut.dimension", "Dimension"),
     ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
-    #CheckCol("hyperelliptic", "ag.hyperelliptic_curve", "Hyperelliptic", default=False),
-    #CheckCol("cyclic_trigonal", "ag.cyclic_trigonal", "Cyclic trigonal", default=False),
+    CheckCol("hyperelliptic", "ag.hyperelliptic_curve", "Hyperelliptic", unknown="", default=False),
+    CheckCol("cyclic_trigonal", "ag.cyclic_trigonal", "Cyclic trigonal", unknown="", default=False),
     ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", display_gen_vecs, mathmode=True, default=False)])
 hgcwa_columns.languages = ['gap', 'magma']
 
