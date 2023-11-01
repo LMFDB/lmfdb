@@ -170,7 +170,7 @@ class WebHMF():
         if field is None:
             field = HilbertNumberField(self.dbdata['field_label'])
         agree = True
-        for key in self.dbdata.keys():
+        for key in self.dbdata:
             if key in ['is_base_change', 'is_CM']:
                 continue
             if key=='hecke_eigenvalues':

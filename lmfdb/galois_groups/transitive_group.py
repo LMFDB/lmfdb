@@ -191,7 +191,7 @@ class WebGaloisGroup:
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         for lang in self.code['gg']:
             self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
-        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        self.code['show'] = { lang:'' for lang in self.code['prompt'] }
 
 ############  Misc Functions
 
@@ -864,7 +864,7 @@ siblings = {
         {"label": {"$in": labels}}, ["label", "siblings"]
     )
 }
-for ky in aliases.keys():
+for ky in aliases:
     nt = aliases[ky][0]
     label = "%sT%s"% nt
     aliases[ky] = siblings[label][:]
