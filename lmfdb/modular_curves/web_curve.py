@@ -362,7 +362,7 @@ class WebModCurve(WebObj):
             tail.append(
                 (str(D[a]), url_for(".index_Q", **D))
             )
-        tail.append((self.label, " "))
+        tail.append((self.label, url_for(".by_label", label=self.label)))
         return get_bread(tail)
 
     @lazy_attribute

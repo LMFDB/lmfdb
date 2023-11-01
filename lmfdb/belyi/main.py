@@ -160,8 +160,9 @@ def by_url_belyi_search_url(smthorlabel):
         split = split[:-1]
     if len(split) == 1:
         return by_url_belyi_search_group(group=split[0])
-    elif len(split) == 2:  # passport
-        sigma_spl = (split[1]).split('_')
+
+    sigma_spl = (split[1]).split('_')
+    if len(sigma_spl) == 3 and len(split) == 2: # passport
         return redirect(
             url_for(
                 ".by_url_belyi_passport_label",
@@ -172,8 +173,7 @@ def by_url_belyi_search_url(smthorlabel):
             ),
             301,
         )
-    elif len(split) == 3:  # galmap
-        sigma_spl = (split[1]).split('_')
+    elif len(sigma_spl) == 3 and len(split) == 3:  # galmap
         return redirect(
             url_for(
                 ".by_url_belyi_galmap_label",

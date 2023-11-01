@@ -541,7 +541,7 @@ class WebNewform():
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
-            nontriv = not (a == 'a')
+            nontriv = a != "a"
             from .main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv=nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"

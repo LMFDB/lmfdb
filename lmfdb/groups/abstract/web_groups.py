@@ -2483,7 +2483,7 @@ class WebAbstractSubgroup(WebObj):
         return list(db.gps_subgroups.search({"label": {"$in": labels}}))
 
     def autjugate_subgroups(self):
-        if self.amb.outer_equivalence == False and self.amb.complements_known == False and self.amb.subgroup_inclusions_known == False:
+        if self.amb.outer_equivalence is False and self.amb.complements_known is False and self.amb.subgroup_inclusions_known is False:
             return None  #trying to say subgroups not computed up to autjugacy
         else:
             return [

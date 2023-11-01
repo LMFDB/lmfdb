@@ -127,6 +127,7 @@ def add_lfunction_friends(friends, label):
                     cmf_label = '.'.join(s[4:])
                     url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                     friends.append(("Modular form " + cmf_label, url))
+            friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=label)))
     return friends
 
 @artin_representations_page.route("/")
@@ -359,7 +360,7 @@ def render_artin_representation_webpage(label):
         if proj_coefs != the_nf.polynomial():
             friends.append(("Field {}".format(proj_wnf.get_label()),
                 str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
-    if case == 'rep':
+    if case == 'rep' or the_rep.galois_conjugacy_size()==1:
         cc = the_rep.central_character()
         if cc is not None:
             if the_rep.dimension()==1:
@@ -377,25 +378,24 @@ def render_artin_representation_webpage(label):
         #if the_rep.dimension() <= 6:
         if the_rep.dimension() == 1:
             # Zeta is loaded differently
-            if cc.modulus == 1 and cc.number == 1:
-                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+            if the_rep.conductor == 1:
+                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=1, number=1)))
             else:
                 # looking for Lhash dirichlet_L_modulus.number
                 mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
                 lres = db.lfunc_instances.lucky({'Lhash': mylhash})
                 if lres is not None:
                     friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
-
-        # Dimension > 1
-        elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
-            friends.append(("L-function", url_for("l_functions.l_function_artin_page",
-                                              label=the_rep.label())))
-        orblabel = re.sub(r'\.[a-z]+$', '', label)
-        friends.append(("Galois orbit " + artin_label_pretty(orblabel),
-            url_for(".render_artin_representation_webpage", label=orblabel)))
+        if case == 'rep':
+            orblabel = re.sub(r'\.[a-z]+$', '', label)
+            friends.append(("Galois orbit " + artin_label_pretty(orblabel),
+                url_for(".render_artin_representation_webpage", label=orblabel)))
+        else:
+            newlabel = label+'.'+num2letters(1)
+            friends.append(("Artin representation " + artin_label_pretty(newlabel),
+                url_for(".render_artin_representation_webpage", label=newlabel)))
     else:
         add_lfunction_friends(friends,label)
-        friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'.'+num2letters(j)
             friends.append(("Artin representation " + artin_label_pretty(newlabel),
