@@ -328,13 +328,7 @@ def read_num():
 
 def expect_var(vars):
     c = expr_peekc()
-    is_valid_var = False
-    for var in vars:
-        if var == c:
-            is_valid_var = True
-            break
-
-    if is_valid_var:
+    if c in vars:
         var = expr_getc()
         return (None, vars[var])
     else:
