@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
-    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
+    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg, Downloader,
     display_knowl, search_wrap, to_dict, comma, prop_int_pretty, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
@@ -127,6 +127,7 @@ def add_lfunction_friends(friends, label):
                     cmf_label = '.'.join(s[4:])
                     url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                     friends.append(("Modular form " + cmf_label, url))
+            friends.append(("L-function", url_for('l_functions.by_full_label', label=rec["label"])))
     return friends
 
 @artin_representations_page.route("/")
@@ -227,25 +228,36 @@ def url_for_label(label):
     return url_for(".render_artin_representation_webpage", label=label)
 
 artin_columns = SearchColumns([
-    SearchCol("galois_links", "artin.label", "Label", default=True),
-    MathCol("dimension", "artin.dimension", "Dimension", default=True),
-    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", default=True),
-    MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count"),
-    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", default=True, short_title="Artin stem field"),
-    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", default=True, align="center", short_title="image"),
-    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center"),
-    SearchCol("container", "artin.permutation_container", "Container", align="center"),
-    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", default=True, short_title="indicator"),
-    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", default=True, short_title="trace of complex conj.")],[
-        "Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
+    SearchCol("galois_links", "artin.label", "Label", download_col="baselabel"),
+    MathCol("dimension", "artin.dimension", "Dimension"),
+    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", download_col="conductor"),
+    MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count", default=False),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", short_title="Artin stem field", download_col="NFGal"),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", align="center", short_title="image", download_col="GaloisLabel"),
+    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center", download_col="ProjBoth", default=False),
+    SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t", default=False),
+    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", short_title="indicator"),
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", short_title="trace of complex conj.")],
+    db_cols=["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
 
 artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
-artin_columns.dummy_download = True
 
 def artin_postprocess(res, info, query):
     gp_labels = list(set([rec["GaloisLabel"] for rec in res] + [rec["Container"].upper() for rec in res] + ["T".join(str(c) for c in rec["Proj_nTj"]) for rec in res]))
     cache = knowl_cache(gp_labels)
     return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
+
+class ArtinDownload(Downloader):
+    table = db.artin_reps
+    title = "Artin representations"
+    def modify_query(self, info, query):
+        query['Hide'] = 0
+
+    def postprocess(self, rec, info, query):
+        # We don't use the cache here since it requires all gp_labels in advance
+        # Fortunately, the download columns override the three places where it would be needed
+        # (pretty_galois_knowl, projective_group and container)
+        return ArtinRepresentation(data=rec)
 
 @search_wrap(table=db.artin_reps,
              title='Artin representation search results',
@@ -254,7 +266,7 @@ def artin_postprocess(res, info, query):
              columns=artin_columns,
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             shortcuts={'jump':artin_representation_jump},
+             shortcuts={'jump':artin_representation_jump, 'download': ArtinDownload()},
              postprocess=artin_postprocess,
              bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')])
 def artin_representation_search(info, query):
@@ -359,7 +371,7 @@ def render_artin_representation_webpage(label):
         if proj_coefs != the_nf.polynomial():
             friends.append(("Field {}".format(proj_wnf.get_label()),
                 str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
-    if case == 'rep':
+    if case == 'rep' or the_rep.galois_conjugacy_size()==1:
         cc = the_rep.central_character()
         if cc is not None:
             if the_rep.dimension()==1:
@@ -377,25 +389,24 @@ def render_artin_representation_webpage(label):
         #if the_rep.dimension() <= 6:
         if the_rep.dimension() == 1:
             # Zeta is loaded differently
-            if cc.modulus == 1 and cc.number == 1:
-                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+            if the_rep.conductor == 1:
+                friends.append(("L-function", url_for('l_functions.by_full_label', label='1-1-1.1-r0-0-0')))
             else:
                 # looking for Lhash dirichlet_L_modulus.number
                 mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
                 lres = db.lfunc_instances.lucky({'Lhash': mylhash})
                 if lres is not None:
-                    friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
-
-        # Dimension > 1
-        elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
-            friends.append(("L-function", url_for("l_functions.l_function_artin_page",
-                                              label=the_rep.label())))
-        orblabel = re.sub(r'\.[a-z]+$', '', label)
-        friends.append(("Galois orbit " + artin_label_pretty(orblabel),
-            url_for(".render_artin_representation_webpage", label=orblabel)))
+                    friends.append(("L-function", url_for('l_functions.by_full_label', label=lres["label"])))
+        if case == 'rep':
+            orblabel = re.sub(r'\.[a-z]+$', '', label)
+            friends.append(("Galois orbit " + artin_label_pretty(orblabel),
+                url_for(".render_artin_representation_webpage", label=orblabel)))
+        else:
+            newlabel = label+'.'+num2letters(1)
+            friends.append(("Artin representation " + artin_label_pretty(newlabel),
+                url_for(".render_artin_representation_webpage", label=newlabel)))
     else:
         add_lfunction_friends(friends,label)
-        friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'.'+num2letters(j)
             friends.append(("Artin representation " + artin_label_pretty(newlabel),

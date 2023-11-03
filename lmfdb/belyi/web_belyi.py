@@ -271,7 +271,7 @@ class WebBelyiGalmap():
 
         curve_ref = ''
         # add curve link, if in LMFDB
-        if 'curve_label' in galmap.keys():
+        if 'curve_label' in galmap:
             data['curve_label'] = galmap['curve_label']
             for name, url in self.friends:
                 if "curve" in name.lower() and data['curve_label'] in name:
