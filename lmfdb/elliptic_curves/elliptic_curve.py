@@ -205,7 +205,7 @@ class ECstats(StatsDisplay):
     formatters = {'torsion_structure': latex_tor,
                   'sha': latex_sha}
 
-    query_formatters = {'torsion_structure': 'torsion_structure={}'.format,
+    query_formatters = {'torsion_structure': 'torsion={}'.format,
                         'sha': 'sha={}'.format}
 
     stat_list = [
