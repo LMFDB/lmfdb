@@ -22,6 +22,7 @@ from sage.rings.all import Integer, QQ, RR, ZZ
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
+from sage.misc.lazy_attribute import lazy_attribute
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
@@ -79,7 +80,6 @@ class AbvarFq_isoclass():
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
         self.__dict__.update(dbdata)
-        self.make_class()
 
     @classmethod
     def by_label(cls, label):
@@ -92,14 +92,28 @@ class AbvarFq_isoclass():
         except (AttributeError, TypeError):
             raise ValueError("Label not found in database")
 
-    def make_class(self):
-        self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
-        self.basechangeinfo = self.basechange_display()
-        self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+    @lazy_attribute
+    def decompositionraw(self):
+        return list(zip(self.simple_distinct, self.simple_multiplicities))
+
+    @lazy_attribute
+    def decompositioninfo(self):
+        return decomposition_display(self.decompositionraw)
+
+    @lazy_attribute
+    def basechangeinfo(self):
+        return self.basechange_display()
+
+    @lazy_attribute
+    def formatted_polynomial(self):
+        return list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+
+    @lazy_attribute
+    def expanded_polynomial(self):
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
-            self.expanded_polynomial = ''
+            return ""
         else:
-            self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
+            return latex.latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):

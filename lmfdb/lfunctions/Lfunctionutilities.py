@@ -57,7 +57,7 @@ def string2number(s):
                 return CDF(exp(2*pi*I*q))
         if 'I' in strs:
             return CDF(strs)
-        elif (isinstance(s, list) or isinstance(s, tuple)) and len(s) == 2:
+        elif (isinstance(s, (list, tuple))) and len(s) == 2:
             return CDF(tuple(s))
         elif '/' in strs:
             return Rational(strs)

@@ -747,7 +747,7 @@ class ECNF():
         self._code = None # will be set if needed by get_code()
 
         self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
-        for lang in [["Magma","magma"], ["GP", "gp"], ["SageMath","sage"]]:
+        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"]]:
             self.downloads.append(('Code to {}'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))

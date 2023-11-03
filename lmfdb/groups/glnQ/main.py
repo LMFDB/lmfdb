@@ -102,10 +102,10 @@ def get_url(label):
     return url_for(".by_label", label=label)
 
 glnQ_columns = SearchColumns([
-    LinkCol("label", "group.label", "Label", get_url, default=True),
-    MathCol("tex_name", "group.name", "Name", default=True),
-    MathCol("order", "group.order", "Order", default=True),
-    MathCol("dim", "group.dimension", "Dimension", default=True)],
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    MathCol("order", "group.order", "Order"),
+    MathCol("dim", "group.dimension", "Dimension")],
     db_cols=["label", "group", "order", "dim"])
 glnQ_columns.dummy_download=True
 
