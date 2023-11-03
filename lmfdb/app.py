@@ -110,6 +110,15 @@ app.jinja_env.add_extension('jinja2.ext.do')
 #  * meta_description, shortthanks, feedbackpage
 #  * DEBUG and BETA variables storing whether running in each mode
 
+# try:
+#     # In order to support running under gunicorn with gevent workers,
+#     # we try to patch psycopg2 to add an appropriate callback function
+#     from psycogreen.gevent import patch_psycopg
+#     patch_psycopg()
+# except Exception:
+#     app.logger.info("Exception in psycogreen; not running with gevent support")
+# else:
+#     app.logger.info("Gevent support enabled")
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -141,7 +150,17 @@ def ctx_proc_userdata():
     #vars['ALPHA'] = True # hardwired for alpha branch
 
     def modify_url(**replace):
-        urlparts = urlparse(request.url)
+        url = request.url
+        if url.startswith("https, "):
+            # Cocalc weirdness that lets them serve pages on https from within a project
+            url = url[7:]
+        urlparts = urlparse(url)
+        if "query_add" in replace:
+            assert "query" not in replace
+            if urlparts.query:
+                replace["query"] = replace.pop("query_add") + "&" + urlparts.query
+            else:
+                replace["query"] = replace.pop("query_add")
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url

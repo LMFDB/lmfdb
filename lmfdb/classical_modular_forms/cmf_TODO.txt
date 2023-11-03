@@ -19,7 +19,7 @@ FINAL CHECKS:
 * Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
 * Add completeness table and metadata in order to make claims about provability
 * Reduce clutter in the url: count, start, hidden_search_type (David)
-* Prevent all=1 in cleanSubmit when no arguments from browse page.
+* Prevent search_type=List in cleanSubmit when no arguments from browse page.
 * q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
 * Add related objects from Artin representations back to weight 1 forms
 * Remove Future Plans page and port everything to github

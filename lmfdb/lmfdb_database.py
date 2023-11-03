@@ -12,7 +12,6 @@ from lmfdb.backend.database import PostgresDatabase
 from lmfdb.backend.searchtable import PostgresSearchTable
 from lmfdb.backend.statstable import PostgresStatsTable
 
-
 def overrides(super_class):
     def overrider(method):
         super_method = getattr(super_class, method.__name__)

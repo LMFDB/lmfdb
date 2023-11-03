@@ -989,7 +989,9 @@ class WebObj:
         return self._data is None
 
 def plural_form(noun):
-    return noun + "s"
+    if noun and noun[-1] != "s":
+        noun += "s"
+    return noun
 
 def pluralize(n, noun, omit_n=False):
     if n == 1:
