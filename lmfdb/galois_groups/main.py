@@ -321,7 +321,7 @@ def render_group_webpage(args):
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] += ' (not nilpotent)'
         downloads = []
-        for lang in [["Magma","magma"], ["SageMath","sage"], ["Oscar", "oscar"]]:
+        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         bread = get_bread([(label, ' ')])
