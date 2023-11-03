@@ -590,6 +590,7 @@ def display_gen_vecs(vecs):
     def display_perm(perm):
         if perm.size() <= 20:
             return perm.cycle_string()
+
         def display_cycle(c):
             if len(c) > 20:
                 ldots = r",\ldots"

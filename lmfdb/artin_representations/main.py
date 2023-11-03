@@ -238,7 +238,7 @@ artin_columns = SearchColumns([
     SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t", default=False),
     MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", short_title="indicator"),
     MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", short_title="trace of complex conj.")],
-    db_cols = ["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
+    db_cols=["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
 
 artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
 
