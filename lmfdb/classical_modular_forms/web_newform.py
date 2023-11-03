@@ -406,9 +406,9 @@ class WebNewform():
         downloads.append(
                 ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
         downloads.append(
-                ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+                ('Code to PariGP', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
-                ('Code to Sage', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+                ('Code to SageMath', url_for(".cmf_code_download", label=self.label, download_type='sage')))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads

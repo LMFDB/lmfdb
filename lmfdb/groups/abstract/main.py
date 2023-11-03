@@ -1211,9 +1211,9 @@ def render_abstract_group(label, data=None):
         title = f"Abstract group ${gp.tex_name}$"
 
         downloads = [
+            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
             ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
             ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
             ("Underlying data", url_for(".gp_data", label=label)),
         ]
 

@@ -692,7 +692,7 @@ def render_field_webpage(args):
                   ('Galois group', group_pretty_and_nTj(data['degree'], t))]
     downloads = [('Stored data to gp',
                   url_for('.nf_download', nf=label, download_type='data'))]
-    for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"], ["Oscar", "oscar"]]:
+    for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "gp"), ("SageMath", "sage")]:
         downloads.append(('Code to {}'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
     downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
