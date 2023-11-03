@@ -529,7 +529,6 @@ class Downloader():
         lines.append(lang.return_keyword + "out" + lang.line_end)
         return "".join("    " + line + "\n" for line in lines)
 
-
     def makedata_code(self, lang):
         """
         The contents of a function that processes the input data list to produce
@@ -635,6 +634,7 @@ class Downloader():
 
         # Create a generator that produces the lines of the download file
         c = lang.comment_prefix
+
         def make_download():
             # We start with a string describing the query, the number of results and the sort order
             yield c + ' Search link: %s\n' % url
@@ -676,6 +676,7 @@ class Downloader():
                 from lmfdb.knowledge.knowl import knowldb
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
+
                 def knowl_subber(match):
                     return match.group(1)
 

@@ -343,7 +343,7 @@ class ProcessedCol(SearchCol):
         super().__init__(name, knowl, title, **kwds)
         if func is None:
             # Some other column types like RationalCol inherit from ProcessedCol
-            func = lambda x: x
+            def func(x): return x
         self.func = func
         self.apply_download = apply_download
 
@@ -535,7 +535,6 @@ class SearchColumns:
         # rank is None in the body of the table, and 0..(maxrank-1) in the header
         for C in self.columns:
             yield from C.show(info, rank)
-
 
 
 # The following column types are used to control download behavior

@@ -857,7 +857,6 @@ class Lfunction_HMF(Lfunction):
         # Put the arguments into the object dictionary
         self.origin_label = args['label']
 
-
         # disable L-functions on the fly in production
         if not is_debug_mode():
             raise ValueError(f'Error constructing L-function for Hilbert modular form {self.origin_label}, as it is not in the database')
@@ -1036,11 +1035,9 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         # Load form (S) from database
         label = '%d_%s'%(self.weight,self.orbit)
 
-
         # disable L-functions on the fly in production
         if not is_debug_mode():
             raise ValueError(f'Error constructing L-function for Siegel modular form {label}, as it is not in the database')
-
 
         self.S = Sample('Sp4Z', label)
         if not self.S:
@@ -1280,7 +1277,6 @@ class ArtinLfunction(Lfunction):
         self.degree = self.artin.dimension()
         self.level = self.artin.conductor()
 
-
         self.level_factored = factor(self.level)
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
@@ -1352,7 +1348,6 @@ class HypergeometricMotiveLfunction(Lfunction):
 
         # Put the arguments into the object dictionary
         self.origin_label = args["label"]
-
 
         # disable L-functions on the fly in production
         if not is_debug_mode():
@@ -1446,12 +1441,10 @@ class SymmetricPowerLfunction(Lfunction):
         self.m = int(self.power)
         self.origin_label = str(self.conductor) + '.' + self.isogeny
 
-
         # disable L-functions on the fly in production
         # FIXME: redirect for m = 1?
         if not is_debug_mode():
             raise ValueError(f'Error constructing L-function for symmetric power {self.m} of {self.origin_label}, as it is not in the database')
-
 
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented "
