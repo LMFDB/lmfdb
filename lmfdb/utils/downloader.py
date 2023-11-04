@@ -629,7 +629,9 @@ class Downloader():
             # since later rows are often larger, but it's something
             size_estimate = sum([len(lang.to_lang(rec)) for rec in first50]) * num_results / 50
             if size_estimate > 100 * 1024**2: # 100MB
-                return abort(413, "Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
+                # We need to delete the data iterator, otherwise it will try to go through all of the records when another connection to the database is opened.
+                del data
+                raise ValueError("Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
         #print("FIRST FIFTY", first50)
 
         # Create a generator that produces the lines of the download file
