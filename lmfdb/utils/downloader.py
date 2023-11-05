@@ -327,7 +327,7 @@ class Downloader():
         if title is None:
             if hasattr(self.__class__, "title"):
                 title = self.__class__.title
-            else:
+            elif table is not None:
                 title = table.search_table
         self.title = title
 
@@ -348,7 +348,7 @@ class Downloader():
         if filebase is None:
             if hasattr(self.__class__, "filebase"):
                 filebase = self.__class__.filebase
-            else:
+            elif table is not None:
                 filebase = table.search_table
         self.filebase = filebase
 
