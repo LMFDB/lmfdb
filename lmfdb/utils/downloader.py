@@ -334,14 +334,14 @@ class Downloader():
         if short_name is None:
             if hasattr(self.__class__, "short_name"):
                 short_name = self.__class__.short_name
-            else:
+            elif title is not None:
                 short_name = title.split(" ")[-1].lower()
         self.short_name = short_name
 
         if var_name is None:
             if hasattr(self.__class__, "var_name"):
                 var_name = self.__class__.var_name
-            else:
+            elif short_name is not None:
                 var_name = plural_form(short_name.replace(" ", "_"))
         self.var_name = var_name
 
