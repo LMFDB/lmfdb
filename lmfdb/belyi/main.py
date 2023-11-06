@@ -601,7 +601,7 @@ class Belyi_download(Downloader):
         if data is None:
             return abort(404, f"Label not found: {label}")
         return self._wrap(Json.dumps(data),
-            label, title=f'Data for embedded Belyi map with label {label},')
+            label, lang=lang, title=f'Data for embedded Belyi map with label {label},')
 
 
 @belyi_page.route("/download_galmap_to_magma/<label>")

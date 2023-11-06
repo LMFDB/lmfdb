@@ -594,6 +594,7 @@ class ModCurve_download(Downloader):
                 return abort(404, "Label not found: %s" % label)
             return self._wrap(Json.dumps(data),
                               label,
+                              lang=lang,
                               title='Data for modular curve with label %s,'%label)
 
 @modcurve_page.route("/download_to_magma/<label>")
