@@ -458,7 +458,7 @@ class CMF_download(Downloader):
                 '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
                 '    ' + magma.assign('v', newform.char_values[3]).rstrip('\n'),
                 '    // chi(gens[i]) = zeta^v[i]',
-                '    assert SequenceToList(UnitGenerators(DirichletGroup(N))) eq char_gens;',
+                '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
                 '    F := CyclotomicField(order);',
                 '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),[F|F.1^e:e in v]);',
                 '    return MinimalBaseRingCharacter(chi);',
@@ -488,7 +488,7 @@ class CMF_download(Downloader):
                     '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
                     '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
                     '    ' + magma.assign('char_values', char_values).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
-                    '    assert SequenceToList(UnitGenerators(DirichletGroup(N))) eq char_gens;',
+                    '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
                     '    values := ConvertToHeckeField(char_values : pass_field := true, Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
                     '    F := Universe(values);// the Hecke field',
                     '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),values);',
