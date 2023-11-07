@@ -283,7 +283,7 @@ def api_query(table, id=None):
         except KeyError as err:
             return apierror("No key %s in table %s", [err, table])
         except Exception as err:
-            return apierror(str(err))
+            return apierror(str(err).replace("%", "%%"))
 
     if single_object and not data:
         return apierror("no document with id %s found in table %s.", [id, table])
