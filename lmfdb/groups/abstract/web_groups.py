@@ -213,7 +213,7 @@ class WebAbstractGroup(WebObj):
                 if libgap.SmallGroupsAvailable(n):
                     maxi = libgap.NrSmallGroups(n)
                     i = ZZ(m.group(2))
-                    if i <= maxi:
+                    if 0 < i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
         if isinstance(self._data, list):  # live abelian group
@@ -1995,8 +1995,11 @@ class WebAbstractGroup(WebObj):
 
     #first function is if we only know special subgroups as abstract groups
     def special_subs_label(self,label):
-        info=db.gps_groups.lucky({"label": label})
-        return info['tex_name']
+        info = db.gps_groups.lucky({"label": label})
+        if info is None:
+            return label
+        else:
+            return f"${info['tex_name']}$"
 
     def cent(self):
         return self.special_search("Z")
