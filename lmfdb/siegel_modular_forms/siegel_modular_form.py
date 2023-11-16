@@ -979,7 +979,7 @@ newform_columns = SearchColumns([
                  lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
 #    ProcessedCol("sato_tate_group", "smf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
       ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Aut. Type", lambda x : r'\(\mathbf{(' + x + r')}\)' , align="center", default=True),
-    ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Cusp", lambda x : "&#x2713;" if (x not in ['F', 'K']) else "", align="center", default=True),
+    ProcessedCol("aut_rep_type", "mf.siegel.automorphic_type", "Cusp", lambda x : "&#x2713;" if (x not in ['F', 'Q']) else "", align="center", default=True),
     MultiProcessedCol("qexp", "mf.siegel.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       default=True)
