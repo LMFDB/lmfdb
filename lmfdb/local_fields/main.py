@@ -20,6 +20,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
     transitive_group_display_knowl, group_display_inertia,
@@ -28,6 +29,7 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
+from collections import Counter
 import re
 LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 
@@ -576,6 +578,50 @@ def reliability():
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+@local_fields_page.route("/family/<label>")
+def family_page(label):
+    m = FAMILY_RE.match(label)
+    if m is None:
+        flash_error("Invalid label %s", label)
+        return redirect(url_for(".index"))
+    p, den, nums = m.groups()
+    p, den, nums = ZZ(p), ZZ(den), [ZZ(n) for n in nums.split("_")]
+    slopes = [n / den for n in nums]
+    family = pAdicSlopeFamily(p, slopes=slopes)
+    bread = get_bread([(str(p), url_for(".families_page_p", p=p)),
+                       (str(family.n), url_for(".families_page_pn", p=p, n=family.n)),
+                       (label, "")])
+    title = f"$p$-adic family {label}"
+    return render_template(
+        "lf-family.html",
+        title=title,
+        bread=bread,
+        family=family,
+        learnmore=learnmore_list(),
+    )
+
+@local_fields_page.route("/families/<int:p>")
+def families_page_p(p):
+    pass
+
+@local_fields_page.route("/families/<int:p>/<int:n>")
+def families_page_pn(p, n):
+    p, n = ZZ(p), ZZ(n)
+    w = n.exact_log(p)
+    if n != p**w:
+        flash_error("%s must be a power of %s", n, p)
+        return redirect(url_for(".index"))
+    bread = get_bread([(str(p), url_for(".families_page_p", p=p)),
+                       (str(n), "")])
+    count_cache = Counter()
+    for rec in db.lf_fields.search({"p": p, "f": 1, "e": n}, ["visible"]):
+        count_cache[rec["visible"]] += 1
+    return render_template(
+        "lf-families.html",
+        title=f"{p}-adic families of degree {n}",
+        bread=bread,
+        families=pAdicSlopeFamily.families(p, w, count_cache),
+        learnmore=learnmore_list())
 
 class LFSearchArray(SearchArray):
     noun = "field"
