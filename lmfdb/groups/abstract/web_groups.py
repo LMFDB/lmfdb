@@ -278,7 +278,9 @@ class WebAbstractGroup(WebObj):
         return ZZ(self.G.Order())
     @lazy_attribute
     def exponent(self):
-        return ZZ(self.G.Exponent())
+        if self.G:
+            return ZZ(self.G.Exponent())
+        return None
 
     @lazy_attribute
     def cyclic(self):
@@ -2391,9 +2393,14 @@ class WebAbstractSubgroup(WebObj):
         # We set various properties from S for create_boolean_subgroup_string
         if not S:
             order = self.subgroup_order
-            self.order = order
-            self.pgroup = len(ZZ(order).abs().factor())==1
-            return self
+            #newgroup.order = order
+            #newgroup.pgroup = len(ZZ(order).abs().factor())==1
+            newgroup = WebAbstractGroup('nolabel',
+                data={'order': order, 'G': None, 'abelian': self.abelian,
+                      # What if aut_label is set?
+                      'aut_group': self.aut_label, 'aut_order': None,
+                      'pgroup':len(ZZ(order).abs().factor())==1})
+            return newgroup
         for prop in [
             "pgroup",
             "is_elementary",

@@ -14,7 +14,7 @@
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.subgroup_order)}} </td></tr>
     <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.pos_int_and_factor(seq.quotient_order)}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td>
-    {% if seq.sub|attr('exponent')  %}
+    {% if seq.sub.exponent  %}
         {{info.pos_int_and_factor(seq.sub.exponent)}} 
     {% else %}
         not computed
