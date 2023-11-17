@@ -1183,6 +1183,7 @@ def dimension_space_postprocess(res, info, query):
         (query.get('weight_parity') == 1 and query.get('char_parity') == -1)):
         raise ValueError("Inconsistent parity for character and weight")
     urlgen_info = dict(info)
+    #print(urlgen_info)
     urlgen_info['count'] = 50
     # Remove entries that are unused for dimension tables
     urlgen_info.pop('hidden_search_type', None)
@@ -1236,9 +1237,9 @@ def dimension_space_postprocess(res, info, query):
         N = space['level']
         k = tuple(space['weight'])
         dims = DimGrid.from_db(space)
-        if space.get('num_forms') is None:
-            dim_dict[g,F,N,k] = False
-        elif (g,F,N,k) not in dim_dict:
+       # if space.get('num_forms') is None:
+        #    dim_dict[g,F,N,k] = False
+        if (g,F,N,k) not in dim_dict:
             dim_dict[g,F,N,k] = dims
         elif dim_dict[g,F,N,k] is not False:
             dim_dict[g,F,N,k] += dims
