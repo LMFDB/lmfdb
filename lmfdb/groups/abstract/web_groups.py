@@ -1877,34 +1877,22 @@ class WebAbstractGroup(WebObj):
             return "data not computed"
             #raise NotImplementedError
 
-        def sort_key1(typ):
+        def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
             return ["Lie", "PC", "Perm","GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
-
-        def sort_key2(typ):
-            if typ == self.element_repr_type:
-                return -1
-            return ["GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
-
-#JP TEST
         output_strg = ""
-        for rep_type in sorted(self.representations, key=sort_key1):
-            output_strg = output_strg + "\n" + self.representation_line(rep_type)
-        flag = 0
-        for rep_type in sorted(self.representations, key=sort_key2):
-            if flag == 0:
-                output_strg = output_strg + "\n" + self.representation_line(rep_type,0)
+        flag = 0  # used when multiple matrix group represenations
+        for rep_type in sorted(self.representations, key=sort_key):
+            if rep_type in ["Lie","PC","Perm"]:
+                output_strg = output_strg + "\n" + self.representation_line(rep_type,flag)
+            elif flag == 0:
+                output_strg = output_strg + "\n" + self.representation_line(rep_type,flag)
                 flag =1
             else:
-                output_strg = output_strg + "\n" + self.representation_line(rep_type,1)
+                output_strg = output_strg + "\n" + self.representation_line(rep_type,flag)
         return output_strg
                                                                      
-#        line1 = "\n".join(self.representation_line(rep_type) for rep_type in sorted(self.representations, key=sort_key1))
-        
-#        line2 = "\n".join(self.representation_line(rep_type) for rep_type in sorted(self.representations, key=sort_key1))
-#        return "\n".join((line1,line2))
-
         
     def is_null(self):
         return self._data is None
