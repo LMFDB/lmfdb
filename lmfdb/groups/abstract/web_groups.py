@@ -1885,12 +1885,13 @@ class WebAbstractGroup(WebObj):
         flag = 0  # used when multiple matrix group represenations
         for rep_type in sorted(self.representations, key=sort_key):
             if rep_type in ["Lie","PC","Perm"]:
-                output_strg = output_strg + "\n" + self.representation_line(rep_type,flag)
+                inc_matrix = 0
             elif flag == 0:
-                output_strg = output_strg + "\n" + self.representation_line(rep_type,flag)
+                inc_matrix = 0
                 flag =1
             else:
-                output_strg = output_strg + "\n" + self.representation_line(rep_type,flag)
+                inc_matrix = 1
+            output_strg = output_strg + "\n" + self.representation_line(rep_type,inc_matrix)
         return output_strg
                                                                      
         
