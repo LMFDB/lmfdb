@@ -8,7 +8,8 @@ from flask import url_for
 from functools import reduce
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute,
+                      LaurentPolynomialRing, PowerSeriesRing, O)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -1543,6 +1544,38 @@ function switch_basis(btype) {
 
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
+
+    def q_exp_short(self, prec_max = 4):
+        #Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
+        if not self.has_exact_qexp:
+            return None
+        #Search for Fourier coefficients with n_max <= prec_max
+        terms = list(db.smf_qexp_short.search({"smf_label": self.label}))
+        prec_bound = max([x['nmax'] for x in terms]) + 1
+        prec_max = min(prec_bound, prec_max)
+        terms = [x for x in terms if x['nmax'] <= prec_max]
+        R = self._PrintRing
+        Rgens = self._Rgens
+        for x in terms:
+            #replace x[coeff] by element in R
+            assert len(x['coeff']) == len(Rgens)
+            v = R(0)
+            for i in range(len(x['coeff'])):
+                v += x['coeff'][i] * Rgens[i]
+            x['coeff'] = v
+        #construct power series ring
+        S = LaurentPolynomialRing(R, "q12")
+        q12 = S.gen()
+        T = PowerSeriesRing(S, ["q1", "q2"])
+        q1 = T.gen(0)
+        q2 = T.gen(1)
+        #right now, assuming scalar-valued form; will need take index into account in general
+        qexp = T(0)
+        for x in terms:
+            c = x['coeff'] * q12 ** x['n12']
+            qexp += c * q1 ** x['n1'] * q2 ** x['n2']
+        qexp += O(q1 ** prec_max) #this is O(q1,q2)^prec_max
+        return r'\(' + latex(qexp) + r'\)'
 
     # for now only displaying Lfunction of the trace form. Does that make sense?
     def trace_expansion(self, prec_max=10):
