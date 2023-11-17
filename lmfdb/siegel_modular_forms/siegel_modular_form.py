@@ -494,7 +494,7 @@ def check_valid_weight(weight, degree):
 @smf.route("/<int:degree>/")
 def by_url_degree(degree):
     # print("routed to by_url_degree")
-    if not POSINT_RE.match(str(degree)):
+    if not POSINT_RE.match(degree):
         try:
             return redirect(url_for_label(degree), code=301)
         except ValueError:
@@ -514,10 +514,7 @@ def by_url_family_label(degree, family):
     if not valid_family[0]:
         return abort(404, valid_family[1])
     label = str(degree)+"."+str(family)
-    # currently we do not have a family webpage
-    # return render_family_webpage(label)
-    info = to_dict(request.args, search_array=SMFSearchArray())
-    return newform_search(info)
+    return render_family_webpage(label)
 
 @smf.route("/<int:degree>/<family>/<int:level>/")
 def by_url_level(degree, family, level):
@@ -544,14 +541,11 @@ def by_url_full_space_label(degree, family, level, weight):
     if not valid_weight[0]:
         return abort(404, valid_weight[1])
     label = ".".join([str(w) for w in [degree, family, level, weight]])
-    # At the moment we do not have full space webpages
-    # return render_full_space_webpage(label)
-    info = to_dict(request.args, search_array=SMFSearchArray())
-    return newform_search(info)
+    return render_full_space_webpage(label)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>")
 def by_url_space_label(degree, family, level, weight, char_orbit_label):
-    # raise ValueError("routed to by_url_space_label")
+    # print("routed to by_url_space_label")
     valid_weight = check_valid_weight(weight, degree)
     if not valid_weight[0]:
         return abort(404, valid_weight[1])
