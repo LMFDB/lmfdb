@@ -976,7 +976,7 @@ newform_columns = SearchColumns([
              default=True),
     SpacerCol("atkin_lehner", contingent=display_AL, default=True),
     ColGroup("atkin_lehner", "mf.siegel.atkin-lehner", "A-L signs",
-             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
+             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])] if "atkin_lehner_eigenvals" in info["results"][0] else "",
              contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
     ProcessedCol("fricke_eigenval", "mf.siegel.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
