@@ -304,15 +304,15 @@ def decode_hecke_orbit(code):
     hecke_orbit_label = cremona_letter_code(code >> 52)
     return '.'.join([level, weight, char_orbit_label, hecke_orbit_label])
 
-
 def encode_hecke_orbit(label):
-    level, weight, char_orbit_label, hecke_orbit_label = label.split('.')
+    degree, family, level, weightk, weightj, char_orbit_label, hecke_orbit_label = label.split('.')
     level = int(level)
-    weight = int(weight)
+    weightk = int(weightk)
+    weightj = int(weightj)
+    print(char_orbit_label)
     char_orbit = class_to_int(char_orbit_label)
     hecke_orbit = class_to_int(hecke_orbit_label)
-    return level + (weight << 24) + (char_orbit << 36) + (hecke_orbit << 52)
-
+    return level + (weightk << 20) + (weightj << 28) + (char_orbit << 36) + (hecke_orbit << 52)
 
 def convert_newformlabel_from_conrey(newformlabel_conrey):
     """
