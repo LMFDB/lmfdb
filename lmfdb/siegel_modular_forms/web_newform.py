@@ -297,21 +297,24 @@ def valid_emb_label(label):
 
 
 def decode_hecke_orbit(code):
-    level = str(code % 2**24)
-    weight = str((code >> 24) % 2**12)
-    char_orbit_label = cremona_letter_code((code >> 36) % 2**16)
-    hecke_orbit_label = cremona_letter_code(code >> 52)
-    return '.'.join([level, weight, char_orbit_label, hecke_orbit_label])
-
+    degree = str(code % 2**8)
+    family = chr((code >> 8) % 2**8)
+    level = str((code >> 16) % 2**16)
+    weight_k = str((code >> 32) % 2**8)
+    weight_j = str((code >> 40) % 2**8)
+    char_orbit_label = cremona_letter_code((code >> 48) % 2**8)
+    hecke_orbit_label = cremona_letter_code(code >> 56)
+    return '.'.join([degree, family, level, weight_k, weight_j, char_orbit_label, hecke_orbit_label])
 
 def encode_hecke_orbit(label):
-    level, weight, char_orbit_label, hecke_orbit_label = label.split('.')
+    degree, family, level, weight_k, weight_j, char_orbit_label, hecke_orbit_label = label.split('.')
+    degree = int(degree)
     level = int(level)
-    weight = int(weight)
+    weight_k = int(weight_k)
+    weight_j = int(weight_j)
     char_orbit = class_to_int(char_orbit_label)
     hecke_orbit = class_to_int(hecke_orbit_label)
-    return level + (weight << 24) + (char_orbit << 36) + (hecke_orbit << 52)
-
+    return degree + (ord(family)<<8) + (level<<16) + (weight_k<<32) + (weight_j<<40) + (char_orbit<<48) + (hecke_orbit<<56)
 
 def convert_newformlabel_from_conrey(newformlabel_conrey):
     """
