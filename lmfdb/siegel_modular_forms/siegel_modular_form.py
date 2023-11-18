@@ -938,7 +938,8 @@ newform_columns = SearchColumns([
     MathCol("level", "mf.siegel.level", "Level"),
     MathCol("degree", "mf.siegel.degree", "Degree"),
     # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
-    MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
+    ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]),align="center"),
+    # MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
@@ -1434,42 +1435,8 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
-
-def projective_image_sort_key(im_type):
-    if im_type == 'A4':
-        return -3
-    elif im_type == 'S4':
-        return -2
-    elif im_type == 'A5':
-        return -1
-    elif im_type is None:
-        return 10000
-    else:
-        return int(im_type[1:])
-    
-def self_twist_type_formatter(x):
-    if x == 0:
-        return 'neither'
-    if x == 1:
-        return 'CM only'
-    if x == 2:
-        return 'RM only'
-    if x == 3:
-        return 'both'
-    return x # c = 'neither', 'CM only', 'RM only' or 'both'
-
 def rel_dim_formatter(x):
     return 'dim=%s&dim_type=rel' % range_formatter(x)
-
-def self_twist_type_query_formatter(x):
-    if x in [0, 'neither']:
-        return 'cm=no&rm=no'
-    elif x in [1, 'CM only']:
-        return 'cm=yes&rm=no'
-    elif x in [2, 'RM only']:
-        return 'cm=no&rm=yes'
-    elif x in [3, 'both']:
-        return 'cm=yes&rm=yes'
 
 def level_primes_formatter(x):
     subset = x.get('$containedin')
