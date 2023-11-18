@@ -937,7 +937,7 @@ newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
     MathCol("level", "mf.siegel.level", "Level"),
     MathCol("degree", "mf.siegel.degree", "Degree"),
-    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
+    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : '$(wt[0], wt[1])$' if wt[1] != 0 else wt[0],align="center"),
     ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]),align="center"),
     # MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
     MultiProcessedCol("character", "smf.character", "Char",
