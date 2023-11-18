@@ -1587,11 +1587,11 @@ function switch_basis(btype) {
         fourier_coefficient = []
         for qf_entry in db.smf_qexp_reduction.search({'index':{'$lt':num_disp}, 'is_minimal':True, 'level':self.level, 'family':self.family}, sort=['index']):
             qf = qf_entry['qf_orbit_rep']
-            coeff_entry = list(db.smf_qexp_coeffs.search({'qf_legendre':qf_entry['qf_legendre'], 'qf_tag':qf_entry['qf_tag'], 'hecke_orbit_code': encode_hecke_orbit(self.label)}))
+            coeff_entry = list(db.smf_qexp_coeffs.search({'qf_legendre':qf_entry['qf_legendre'], 'qf_tag':qf_entry['qf_tag'], 'hecke_orbit_code': self.hecke_orbit_code}))
             if not coeff_entry:
                 continue
             coeff = coeff_entry[0]['coeff']
-            fourier_coefficient.append([qf,coeff])
+            fourier_coefficient.append([qf,self._PrintRing(coeff)])
         return fourier_coefficient
 
     # for now only displaying Lfunction of the trace form. Does that make sense?
