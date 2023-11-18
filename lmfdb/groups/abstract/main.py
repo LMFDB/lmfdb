@@ -5,7 +5,6 @@ import re
 import time
 from collections import defaultdict, Counter
 from flask import (
-    Markup,
     make_response,
     redirect,
     render_template,
@@ -14,6 +13,7 @@ from flask import (
     url_for,
     abort,
 )
+from markupsafe import Markup
 #from six import BytesIO
 from string import ascii_lowercase
 from io import BytesIO
