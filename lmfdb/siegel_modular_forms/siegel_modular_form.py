@@ -1399,6 +1399,7 @@ space_columns = SearchColumns([
              learnmore=learnmore_list)
 def space_search(info, query):
     newspace_parse(info, query)
+    print(info)
     set_info_funcs(info)
 
 @smf.route("/Source")
@@ -1696,6 +1697,14 @@ class SMFSearchArray(SearchArray):
             name='dim',
             label='')
 
+        space_dim = TextBox(
+            name='cusp_dim',
+            knowl='',
+            label='Cusp Dim',
+            example='1',
+            example_span='1-5')
+            
+            
         coefficient_field = TextBox(
             name='nf_label',
             knowl='mf.siegel.coefficient_field',
@@ -1789,8 +1798,8 @@ class SMFSearchArray(SearchArray):
             [coefficient_ring_index, hecke_ring_generator_nbound, Nk2, dim, aut_type]
         ]
         self.space_array = [
-            [degree, family, level, weight, Nk2, dim],
-            [level_primes, character, char_primitive, char_order]
+            [degree, family, level, weight, Nk2],
+            [level_primes, character, char_primitive, char_order, space_dim]
         ]
 
         self.sd_array = [
