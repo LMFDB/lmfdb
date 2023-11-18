@@ -13,7 +13,7 @@ class CmfTest(LmfdbTest):
 
     def test_expression_divides(self):
         # checks search of conductors dividing 1000
-        self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000&search_type=List', '40.2.k.a')
+        self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000', '40.2.k.a')
 
     def test_browse_page(self):
         r"""
@@ -57,7 +57,7 @@ class CmfTest(LmfdbTest):
         assert "Source of classical modular form data" in data
 
     def test_badp(self):
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=100&search_type=List").get_data(as_text=True)
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=100").get_data(as_text=True)
         assert '273.1.o.a' in data
         assert '56.1.h.a' in data
         assert '14.2.a.a' in data
@@ -161,8 +161,8 @@ class CmfTest(LmfdbTest):
         assert "Level and weight too large" in page.get_data(as_text=True)
         assert " for trivial character." in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/100/2/z/a/', follow_redirects=True)
-        assert "Newform 100.2.z.a not found" in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-&search_type=List', follow_redirects=True)
+        assert "The newform 100.2.z.a is not in the database" in page.get_data(as_text=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-', follow_redirects=True)
         assert "No matches" in page.get_data(as_text=True)
         assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)

@@ -122,7 +122,7 @@ class UtilsTest(unittest2.TestCase):
         Checking utility: signtocolour
         """
         self.assertEqual(signtocolour(0), 'rgb(63,63,255)')
-        self.assertEqual(signtocolour(1+2j), 'rgb(197,0,184)')
+        self.assertEqual(signtocolour("1+2*I"), 'rgb(197,0,184)')
 
     def test_rgbtohex(self):
         r"""

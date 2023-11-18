@@ -2148,31 +2148,35 @@ table.boxes {
   table-layout: fixed;
   width: 100%; padding: 10;
   margin: 0px;
-  margin-left: 15px;
+  margin-top: 35px;
+  margin-left: 18px;
   font-size:1em;
   display:table;
   }
 table.boxes > tbody > tr > td {
-  padding: 0px 50px 50px 0px;
+  padding: 0px 35px 35px 0px;
   overflow: hidden;
   vertical-align: top
   }
 table.box {
   background: {{color.box_background}};
   width: 100%; height: 100%;
+  min-height: 175px;
   padding: 10;
   border-radius: 0px;
   font-size:1em;
   }
 table.box td.img {
   background: {{color.box_background_img}};
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
   border: 15;
-  padding-left: 5px;
-  padding-bottom: 0px;
-  padding-top: 5px;
-  padding-right: 5px;
+  padding-left: 7px;
+  padding-bottom: 2px;
+  padding-top: 7px;
+  padding-right: 7px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
   }
 table.box img {
   border: 15;
@@ -2190,16 +2194,20 @@ table td.title {
 table td.content {
   background: {{color.box_background_img}};
   font-size: 90%;
-  padding-left: 15px;
-  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-bottom: 2px;
   vertical-align: top;
+  border-bottom-right-radius: 10px;
+  }
+table td.content ul li {
+  padding: 3px 0px;
   }
 div.user {
   font-size: 90%;
   padding: 0px;
   }
 div.user ul li {
-  line-height: 80%;
+  line-height: 90%;
   }
 table.box td.content ul.list {
   margin: 0px;
@@ -2448,6 +2456,22 @@ span.activesubgp {
 #group-diagram-selected {
     color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
     background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+}
+
+div.sub_divider {
+  display: inline-block;
+  margin-right: 20px;
+}
+
+button.sub_active {
+  background: {{color.lf_an_button_bkg}};
+  border: 2px solid {{color.lf_an_button_brd}};
+  cursor: pointer;
+}
+
+button.sub_inactive {
+  background: {{color.lf_ar_button_bkg}};
+  border: 1px solid {{color.lf_ar_button_brd}};
 }
 
 #column-selector, #sort-selecter {

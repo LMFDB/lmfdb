@@ -9,7 +9,7 @@ from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
-    teXify_pol, search_wrap)
+    teXify_pol, search_wrap, Downloader)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
@@ -130,15 +130,14 @@ def url_for_label(label):
 
 bmf_columns = SearchColumns([
     ProcessedCol("field_label", "nf", "Base field",
-                 lambda fld: nf_display_knowl(fld, field_pretty(fld)),
-                 default=True),
+                 lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MultiProcessedCol("level", "mf.bianchi.level", "Level", ["field_label", "level_label"],
                       lambda fld, lvl: '<a href="{}">{}</a>'.format(
                           url_for("bmf.render_bmf_space_webpage",
                                   field_label=fld,
                                   level_label=lvl),
                           lvl),
-                      default=True), # teXify_pol(v['level_ideal'])
+                      download_col="level_label"),
     MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
                       lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
                           url_for("bmf.render_bmf_webpage",
@@ -146,23 +145,20 @@ bmf_columns = SearchColumns([
                                   level_label=lvl,
                                   label_suffix=suff),
                           short),
-                      default=True),
+                      download_col="short_label"),
     # See Issue #4170
-    #MathCol("dimension", "mf.bianchi.newform", "Dimension", default=True),
+    #MathCol("dimension", "mf.bianchi.newform", "Dimension"),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
                  lambda v: "$+1$" if v == 1 else ("$-1$" if v == -1 else ""),
-                 default=True, align="center"),
-    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, default=True, align="center"),
-    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, default=True, short_title="CM", align="center")])
-
-bmf_columns.dummy_download = True
-
+                 align="center"),
+    ProcessedCol("bc", "mf.bianchi.base_change", "Base change", bc_info, align="center"),
+    ProcessedCol("CM", "mf.bianchi.cm", "CM", cm_info, short_title="CM", align="center")])
 
 @search_wrap(table=db.bmf_forms,
              title='Bianchi modular form search results',
              err_title='Bianchi modular forms search input error',
              columns=bmf_columns,
-             shortcuts={'jump': bianchi_modular_form_jump},
+             shortcuts={'jump': bianchi_modular_form_jump, 'download': Downloader(db.bmf_forms)},
              bread=lambda:get_bread("Search results"),
              url_for_label=url_for_label,
              learnmore=learnmore_list,
@@ -698,7 +694,6 @@ def labels_page():
 
 class BMFSearchArray(SearchArray):
     noun = "form"
-    plural_noun = "forms"
     sorts = [("", "level norm", ['level_norm', 'label']),
              ("field", "field", ['field_deg', ('field_disc', -1), 'level_norm', 'label'])]
     jump_example = "2.0.4.1-65.2-a"

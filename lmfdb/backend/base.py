@@ -222,7 +222,7 @@ class PostgresBase():
         self.slow_cutoff = logging_options["slowcutoff"]
         self.logger = l = logging.getLogger(loggername)
         l.propagate = False
-        l.setLevel(logging.INFO)
+        l.setLevel(logging_options.get('loglevel', logging.INFO))
         fhandler = logging.FileHandler(logging_options["slowlogfile"])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
@@ -377,8 +377,14 @@ class PostgresBase():
 
         - ``tablename`` -- a string, the name of the table
         """
-        cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"), [tablename], silent=True)
+        cur = self._execute(SQL("SELECT 1 FROM pg_tables where tablename=%s"), [tablename], silent=True)
         return cur.fetchone() is not None
+
+    def _all_tablenames(self):
+        """
+        Return all (postgres) table names in the database
+        """
+        return [rec[0] for rec in self._execute(SQL("SELECT tablename FROM pg_tables ORDER BY tablename"), silent=True)]
 
     def _get_locks(self):
         return self._execute(SQL(
@@ -902,6 +908,21 @@ class PostgresBase():
 
                 return addid, cur.rowcount
 
+    def _get_tablespace(self):
+        # overridden in table and statstable
+        pass
+
+    def _tablespace_clause(self, tablespace=None):
+        """
+        A clause for use in CREATE statements
+        """
+        if tablespace is None:
+            tablespace = self._get_tablespace()
+        if tablespace is None:
+            return SQL("")
+        else:
+            return SQL(" TABLESPACE {0}").format(Identifier(tablespace))
+
     def _clone(self, table, tmp_table):
         """
         Utility function: creates a table with the same schema as the given one.
@@ -921,7 +942,7 @@ class PostgresBase():
                 "Run db.%s.cleanup_from_reload() if you want to delete it and proceed."
                 % (tmp_table, table)
             )
-        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
+        creator = SQL("CREATE TABLE {0} (LIKE {1}){2}").format(Identifier(tmp_table), Identifier(table), self._tablespace_clause())
         self._execute(creator)
 
     def _check_col_datatype(self, typ):
@@ -931,7 +952,9 @@ class PostgresBase():
 
     def _create_table(self, name, columns):
         """
-        Utility function: creates a table with the schema specified by ``columns``
+        Utility function: creates a table with the schema specified by ``columns``.
+
+        If self is a table, the new table will be in the same tablespace.
 
         INPUT:
 
@@ -943,7 +966,7 @@ class PostgresBase():
         for col, typ in columns:
             self._check_col_datatype(typ)
         table_col = SQL(", ").join(SQL("{0} %s" % typ).format(Identifier(col)) for col, typ in columns)
-        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
+        creator = SQL("CREATE TABLE {0} ({1}){2}").format(Identifier(name), table_col, self._tablespace_clause())
         self._execute(creator)
 
     def _create_table_from_header(self, filename, name, sep, addid=True):

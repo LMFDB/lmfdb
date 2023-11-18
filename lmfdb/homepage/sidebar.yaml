@@ -94,6 +94,10 @@
     - title: Shimura curves
       status: future
       colspan: onecolumn
+    - title: Modular curves
+      status: beta
+      url_for: "modcurve.index"
+      colspan: onecolumn
     - title: Higher genus families
       url_for:  "higher_genus_w_automorphisms.index"
       colspan: onecolumn

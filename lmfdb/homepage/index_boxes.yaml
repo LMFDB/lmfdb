@@ -1,53 +1,38 @@
 ---
 title: A database
 image: families
-content: <p>The LMFDB is an extensive database of mathematical objects arising in Number Theory.</p><p>Sample lists&#58; <a href="L/?degree=2">L-functions,</a> <a href="EllipticCurve/Q/?conductor=1-99">Elliptic curves,</a> <a href="zeros">Tables of zeros,</a>  <a href="NumberField/?degree=2">Number fields</a></p><p><b>Save the date</b>&#58; <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT 2023</a></p>
+content: <p>The LMFDB is a database of mathematical objects arising in number theory and arithmetic geometry that illustrates some of the mathematical connections predicted by the Langlands program.</p>
+  <p>Click a heading on the left to browse, or <a href="/random">go to a random page</a>.</p>
 control: 1
 links:
   - [ 0,0 ]
 ---
-title: Hall of fame
-content: <p><ul class="list"><li><a href="L/Riemann/">Riemann zeta function</a></li>
-    <li><a href="ModularForm/GL2/Q/holomorphic/1/12/a/a/">Ramanujan \(\Delta\) function</a> and <a href="L/ModularForm/GL2/Q/holomorphic/1/12/a/a/">its L-function </a></li>
-    <li><a href="Genus2Curve/Q/277/a/277/1">C277</a> and <a href="L/Genus2Curve/Q/277/a/">its L-function</a></li>
-    <li><a href="EllipticCurve/Q/5077/a/1">Gauss elliptic curve</a> and <a href="L/EllipticCurve/Q/5077.a/">its L-function </a></li>
-    <li><a href="L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer">Grand Canyon L-function</a></li>
-    </ul></p>
-image: plot
+title: Announcements
+content: <p>The first <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT</a> conference took place July 10-14, 2023 at <a href="https://icerm.brown.edu">ICERM</a>. Thanks to everyone who attended! Conference proceedings will be published soon.</p>
+  <p>Check out the recently updated <a href="/Groups/Abstract/">abstract groups</a> database [beta].</p>
+  <p>Check out the new <a href="/ModularCurve/Q/">modular curves</a> database [beta].</p>
+image: announcements
 control: 0
 links:
   - [ 0,0 ]
 ---
-title: Search and browse
-image: search2
-content: <p>Search for objects with specific properties,
-    or browse categories.</p><p>Browse&#58; <a href="L/">L-functions,</a> <a href="ModularForm/GL2/Q/holomorphic/">Modular forms,</a> <a href="EllipticCurve/Q/">Elliptic curves,</a>
-    <a href="NumberField/">Number fields</a><p><a href="random">See a random object from the database</a></p>
-control: 0
-links:
-  - [ 0,0 ]
----
-title: Visualize data
-image: sp_image
-content: <p>Explore individual plots or view distributions of various objects.</p><p>Examples&#58; <a href="L/degree4/MaassForm/">\(\GL(4)\) Level one Maass forms,</a> <a href="EllipticCurve/Q/102/c/">Isogeny graph of elliptic curve 102.c</a></p>
-control: 1
-links:
-  - [ 0,0 ]
----
-title: Explore and learn
+title: Learn more
 image: smalluniverse
-content: <p>The LMFDB makes visible the connections predicted by the Langlands program.
-     Knowls offer background information when you need it.</p><p><a href="universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="knowl" href="knowledge/">Knowledge</a></p>
+content: <p>Information is available regarding the <a href="/knowledge/show/rcs">source, reliability, and completeness</a> of the database.</p>
+  <p><a href="/knowledge/show/doc.knowl">Knowls</a> provide explanations when you need them.</p><p><a href="/intro">Overview</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/knowledge/">Knowledge</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/api/">Data</a></p>
 control: 0
 links:
   - [ 0,0 ]
 ---
-title: Code and open software
-image: compute
-content: <p>Download the data, download the code, or see how the data was generated.</p><p><a href="https://github.com/LMFDB/lmfdb">GitHub</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.sagemath.org/">SageMath</a> &nbsp;&nbsp;&nbsp;<a href="http://pari.math.u-bordeaux.fr/">Pari/GP</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://magma.maths.usyd.edu.au/magma/">Magma</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.python.org/">Python</a></p>
+title: Citations and acknowledgments
+image: citations
+content: <ul>
+    <li><a href="/citation">How to cite the LMFDB</a></li>
+    <li><a href="https://github.com/LMFDB/lmfdb">Source code repository</li>
+    <li><a href="/management">Editorial board</li>
+    <li><a href="/acknowledgment">Acknowledgments</li>
+  </ul>
 control: 0
 links:
   - [ 0,0 ]
 ...
-
-

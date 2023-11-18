@@ -16,7 +16,10 @@
   {% if not rep.is_surjective %}
   <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
   {% endif %}
-  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty | safe }}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty | safe }} {% if rep.image_abstract %}
+    $\cong$ {{ rep.image_abstract | safe }}
+  {% endif %}
+    </td></tr>
   {% if rep.frobenius_generators %}
   <tr><td>{{ KNOWL('modlgal.generating_primes', 'Generators') }}:<td>${{ rep.frobenius_generators }}$</td></tr>
   {% endif %}

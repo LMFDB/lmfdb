@@ -48,10 +48,10 @@ class Wrapper():
         SA = info.get("search_array")
         if sort is None and SA is not None and SA.sorts is not None:
             sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            sord = info.get('sort_order', '')
+            sop = info.get('sort_dir', '')
             for name, display, S in sorts:
-                sord = info.get('sort_order', '')
                 if name == sord:
-                    sop = info.get('sort_dir', '')
                     if sop == 'op':
                         return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
                     return S
@@ -62,7 +62,7 @@ class Wrapper():
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
-        except ValueError as err:
+        except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
@@ -148,7 +148,11 @@ class SearchWrapper(Wrapper):
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
-        info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        search_type = info.get("search_type", info.get("hst", ""))
+        if search_type == "List":
+            # Backward compatibility
+            search_type = ""
+        info["search_type"] = search_type
         info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -175,6 +179,11 @@ class SearchWrapper(Wrapper):
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
+        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
+        # These virtual columns won't be present in the database, so we just strip them out
+        # We have to do this here since we didn't have access to the table in __init__
+        if isinstance(proj, list):
+            proj = [col for col in proj if col in table.search_cols]
         if "result_count" in info:
             if one_per:
                 nres = table.count_distinct(one_per, query)

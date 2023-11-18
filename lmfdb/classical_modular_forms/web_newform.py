@@ -171,7 +171,7 @@ class WebNewform():
         self.texp = [0] + self.traces
         self.texp_prec = len(self.texp)
 
-        # self.char_conrey = self.conrey_indexes[0]
+        # self.char_conrey = self.conrey_index
         # self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = r"\(" + str(self.level) + r"\)." + self.char_orbit_label
 
@@ -211,13 +211,11 @@ class WebNewform():
                 for attr in hecke_cols:
                     setattr(self, attr, hecke_data.get(attr))
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-            # get data from char_dir_values
+            # compute values on generators for the Nebentypus
             self.char_conrey = self.embedding_label.split('.')[0]
-            char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, self.char_conrey)}, ['order', 'values_gens'])
-            if char_values is None:
-                raise ValueError("Invalid Conrey label")
-            self.hecke_ring_character_values = char_values['values_gens']  # [[i,[[1, m]]] for i, m in char_values['values_gens']]
-            self.hecke_ring_cyclotomic_generator = m = char_values['order']
+            chi = ConreyCharacter(self.level, int(self.char_conrey))
+            self.hecke_ring_character_values = chi.values_gens  # [[i,[[1, m]]] for i, m in char_values['values_gens']]
+            self.hecke_ring_cyclotomic_generator = m = chi.order
             self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         # sort by the generators
         if self.hecke_ring_character_values:
@@ -288,8 +286,8 @@ class WebNewform():
     # Breadcrumbs
     @property
     def bread(self):
-        kwds = dict(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label,
-                    hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label": self.char_orbit_label,
+                    "hecke_orbit": cremona_letter_code(self.hecke_orbit - 1)}
         if self.embedding_label is not None:
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
@@ -311,6 +309,10 @@ class WebNewform():
         self.qexp_converted = True
         return ret
 
+    @property
+    def conrey_orbit(self):
+        return ConreyCharacter(self.level,self.conrey_index).galois_orbit()
+
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
@@ -319,8 +321,8 @@ class WebNewform():
             label = base_label + [str(character), str(j + 1)]
             return '.'.join(label)
         if self.embedding_label is None:
-            return [make_label(character, j)
-                    for character in self.conrey_indexes
+            return [make_label(n, j)
+                    for n in self.conrey_orbit
                     for j in range(self.dim // self.char_degree)]
         else:
             character, j = map(int, self.embedding_label.split('.'))
@@ -373,10 +375,10 @@ class WebNewform():
         if self.weight <= 200:
             if (self.dim == 1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
-            if self.embedding_label is None and len(self.conrey_indexes) * self.rel_dim > 50:
+            if self.embedding_label is None and len(self.conrey_orbit) * self.rel_dim > 50:
                 res = [list(map(str, elt)) for elt in res]
-                # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
-                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' % (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
+                # properties_lfun(initialFriends, label, nf_url, conrey_orbit, rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' % (res, str(self.label), str(nf_url), self.conrey_orbit, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.embedding_labels:
                     lfun_url = '/L' + cmf_base + lfun_label.replace('.', '/')
@@ -404,9 +406,9 @@ class WebNewform():
         downloads.append(
                 ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
         downloads.append(
-                ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+                ('Code to PariGP', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
-                ('Code to Sage', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+                ('Code to SageMath', url_for(".cmf_code_download", label=self.label, download_type='sage')))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
@@ -506,7 +508,7 @@ class WebNewform():
                 self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
-                chars = [ConreyCharacter(self.level, char) for char in self.conrey_indexes]
+                chars = [ConreyCharacter(self.level, char) for char in self.conrey_orbit]
                 for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
@@ -539,12 +541,12 @@ class WebNewform():
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
-            nontriv = not (a == 'a')
+            nontriv = a != "a"
             from .main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv=nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv=nontriv), nontriv_text) )
-            raise ValueError("Newform %s not found" % label)
+            raise ValueError("The newform %s is not in the database (but it may be added in the future)" % label)
         return WebNewform(data, embedding_label=embedding_label)
 
     @property
@@ -812,9 +814,9 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_gen(self):
-        if self.field_poly_root_of_unity == 4:
-            return r'\(i = \sqrt{-1}\)'
-        elif (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
+        if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
+            if self.field_poly_root_of_unity == 4:
+                return r'\(i = \sqrt{-1}\)'
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
@@ -870,10 +872,10 @@ function switch_basis(btype) {
         # univariate polynomial rings don't support order,
         # we work around it by introducing a dummy variable
         """
-        if self.field_poly_root_of_unity == 4:
-            return PolynomialRing(QQ, 'i')
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
+            if m == 4:
+                return PolynomialRing(QQ, 'i')
             return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order='negdeglex')
         if self.single_generator:
             if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
@@ -1241,7 +1243,7 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:
             raise ValueError("Invalid embedding")
-        return str(self.rel_dim * self.conrey_indexes.index(c) + e)
+        return str(self.rel_dim * self.conrey_orbit.index(c) + e)
 
     def embedded_title(self, m):
         return "Embedded newform %s.%s"%(self.label, self.conrey_from_embedding(m))
@@ -1414,20 +1416,14 @@ function switch_basis(btype) {
         # read in code.yaml from current directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code-form.yaml")), Loader=yaml.FullLoader)
-        conrey_chi = ConreyCharacter(self.level, self.conrey_indexes[0])
+        conrey_chi = ConreyCharacter(self.level, self.conrey_index)
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
-        values_gens = db.char_dir_values.lookup(
-            "{}.{}".format(self.level, self.conrey_indexes[0]),
-            projection='values_gens'
-        )
-
-        vals = [int(v) for _, v in values_gens]
-        # this needs the value_gens from db.char_dir_values
+        vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
 
         data = { 'N': self.level,
                  'k': self.weight,
-                 'conrey_index': self.conrey_indexes[0],
+                 'conrey_index': self.conrey_index,
                  'sage_zeta_order': sage_zeta_order,
                  'sage_genvalues': sage_genvalues,
                }

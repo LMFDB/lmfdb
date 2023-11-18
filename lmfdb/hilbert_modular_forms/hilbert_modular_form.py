@@ -3,7 +3,7 @@ from flask import abort, render_template, url_for, request, redirect, make_respo
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, to_dict,
+    flash_error, to_dict, Downloader,
     parse_nf_string, parse_ints, parse_hmf_weight, parse_primes,
     teXify_pol, add_space_if_positive,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
@@ -16,7 +16,7 @@ from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, ListCol
 from lmfdb.api import datapage
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
@@ -136,24 +136,23 @@ hmf_columns = SearchColumns([
     MultiProcessedCol("label", "mf.hilbert.label", "Label",
                       ["field_label", "label", "short_label"],
                       lambda fld, label, short: '<a href="%s">%s</a>' % (url_for('hmf.render_hmf_webpage', field_label=fld, label=label), short),
-                      default=True),
-    ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld)), default=True),
-    MathCol("deg", "nf.degree", "Field degree"),
-    MathCol("disc", "nf.discriminant", "Field discriminant"),
-    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True, default=True),
-    MathCol("level_norm", "mf.level_norm", "Level norm"),
-    MathCol("weight", "mf.hilbert.weight_vector", "Weight"),
-    MathCol("dimension", "mf.hilbert.dimension", "Dimension", default=True),
-    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center"),
-    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center")])
-hmf_columns.dummy_download = True
+                      download_col="short_label"),
+    ProcessedCol("field_label", "nf", "Base field", lambda fld: nf_display_knowl(fld, field_pretty(fld))),
+    MathCol("deg", "nf.degree", "Field degree", default=False),
+    MathCol("disc", "nf.discriminant", "Field discriminant", default=False),
+    ProcessedCol("level_ideal", "mf.hilbert.level_norm", "Level", teXify_pol, mathmode=True),
+    MathCol("level_norm", "mf.level_norm", "Level norm", default=False),
+    ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True, default=False),
+    MathCol("dimension", "mf.hilbert.dimension", "Dimension"),
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
+    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
 
 @search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',
              err_title='Hilbert modular form search error',
              columns=hmf_columns,
              per_page=50,
-             shortcuts={'jump':hilbert_modular_form_jump},
+             shortcuts={'jump':hilbert_modular_form_jump, 'download': Downloader(db.hmf_forms)},
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
@@ -628,7 +627,6 @@ def statistics_by_degree(d):
 
 class HMFSearchArray(SearchArray):
     noun = "form"
-    plural_noun = "forms"
     sorts = [("", "base field", ['deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix']),
              ("level_norm", "level norm", ['level_norm', 'deg', 'disc', 'level_label', 'label_nsuffix']),
              ("dimension", "dimension", ['dimension', 'deg', 'disc', 'level_norm', 'level_label', 'label_nsuffix'])]
@@ -642,8 +640,8 @@ class HMFSearchArray(SearchArray):
             name='field_label',
             label='Base field',
             knowl='nf',
-            example='2.0.4.1',
-            example_span=r'either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example='2.2.5.1',
+            example_span=r'either a totally real field label, e.g. 2.2.5.1 for \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Qsqrt5',
             example_span_colspan=4)
 
         degree = TextBox(

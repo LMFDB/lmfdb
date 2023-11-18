@@ -61,11 +61,11 @@ class GroupsTest(LmfdbTest):
             print(f"No errors while running {n} tests ({N}.{imin} to {N}.{imax})!")
         return res
 
-    def all_abstract_groups(self, maxord=None, chunksize=1000):
+    def all_small_groups(self, maxord=None, chunksize=1000):
         inputs = []
         if maxord is None:
-            from lmfdb import db
-            maxord = db.gps_groups.max("order")
+            # We want to be able to use NrSmallGroups
+            maxord = 511
         for n in range(1, maxord+1):
             numgps = ZZ(libgap.NrSmallGroups(n))
             numchunks = ceil(numgps / chunksize)

@@ -1,6 +1,6 @@
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
-
+from .utilities import plural_form
 
 class TdElt():
     _wrap_type = 'td'
@@ -276,6 +276,7 @@ class SelectBox(SearchBox):
         short_label=None,
         advanced=False,
         example_col=False,
+        example_value=False,
         id=None,
         qfield=None,
         extra=[],
@@ -305,6 +306,7 @@ class SelectBox(SearchBox):
         if min_width is None:
             min_width = self._default_min_width
         self.min_width = min_width
+        self.example_value = example_value
 
     def _input(self, info):
         keys = self.extra + ['name="%s"' % self.name]
@@ -312,6 +314,8 @@ class SelectBox(SearchBox):
             keys.append('id="%s"' % self.id)
         if self.advanced:
             keys.append('class="advanced"')
+        if self.example_value and info is None:
+            info = {self.name:self.example}
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -377,6 +381,9 @@ class SneakyBox(SearchBox):
     """
 
 class SneakyTextBox(TextBox, SneakyBox):
+    pass
+
+class SneakySelectBox(SelectBox, SneakyBox):
     pass
 
 class SkipBox(TextBox):
@@ -524,6 +531,7 @@ class ColumnController(SelectBox):
                 # A ColGroup with columns that should be shown/hidden individually
                 use_rank = 1
                 break
+        allshown = True
         for col in C.columns_shown(info, use_rank):
             if col.short_title is None: # probably a spacer column:
                 continue
@@ -532,7 +540,9 @@ class ColumnController(SelectBox):
                 disp = "✓ " + title # The space is a unicode space the size of an emdash
             else:
                 disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
+                allshown = False
             options.append((col.name, "", disp))
+        options.append(("toggleall", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;" + ("hide all" if allshown else "show all")))
         # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
         options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
         return "        <select %s>\n%s\n        </select>" % (
@@ -666,9 +676,9 @@ class SearchArray(UniqueRepresentation):
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         if info is None:
-            return [("List", "List of %s" % self.plural_noun), ("Random", "Random %s" % self.noun)]
+            return [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
         else:
-            return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
+            return [("", "Search again"), ("Random", "Random %s" % self.noun)]
 
     def hidden(self, info):
         # Override this method to change the hidden inputs
@@ -726,7 +736,11 @@ class SearchArray(UniqueRepresentation):
 
     def _st(self, info):
         if info is not None:
-            return info.get("search_type", info.get("hst", "List"))
+            search_type = info.get("search_type", info.get("hst", ""))
+            if search_type == "List":
+                # Backward compatibility
+                search_type = ""
+            return search_type
 
     def dynstats_array(self, info):
         if self._st(info) == "DynStats":

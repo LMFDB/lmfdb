@@ -30,24 +30,26 @@ from lmfdb.utils import (
     proportioners,
     totaler,
     web_latex_factored_integer,
+    Downloader,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
+    SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol, RationalCol,
 )
 from lmfdb.api import datapage
 
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
 from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
-LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*")
+LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Mod-$\ell$ Galois representation labels', url_for(".labels_page"))]
+            (r'Mod-$\ell$ Galois representation labels', url_for(".labels_page"))]
 
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -130,22 +132,22 @@ def blankzeros(n):
 
 modlgal_columns = SearchColumns(
     [
-        LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label, default=True),
-        MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$", default=True),
-        MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension", default=True),
-        ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, default=True, align="center"),
-        SearchCol("top_slope_rational", "modlgal.top_slope", "Top slope", align="center", default=lambda info: info.get("top_slope")),
+        LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label),
+        MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$"),
+        MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension"),
+        ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, align="center"),
+        RationalCol("top_slope_rational", "modlgal.top_slope", "Top slope", lambda x: x, align="center", default=lambda info: info.get("top_slope")),
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
-                          image_pretty, default=True, align="center"),
-        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index"),
-        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order"),
-        CheckCol("is_surjective", "modlgal.is_surjective", "Surjective", default=True),
-        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible"),
-        CheckCol("is_solvable", "modlgal.is_solvable", "Solvable"),
-        LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center"),
-        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center"),
-        ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield, default=True),
-        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield),
+                          image_pretty, align="center", apply_download=False),
+        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index", default=False),
+        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order", default=False),
+        CheckCol("is_surjective", "modlgal.is_surjective", "Surjective"),
+        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
+        CheckCol("is_solvable", "modlgal.is_solvable", "Solvable", default=False),
+        LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center", default=False),
+        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center", default=False),
+        ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield),
+        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield, default=False),
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
              "is_surjective", "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial",
@@ -156,7 +158,7 @@ modlgal_columns = SearchColumns(
     table=db.modlgal_reps,
     title=r"Mod-$\ell$ Galois representation search results",
     err_title=r"Mod-$\ell$ Galois representations search input error",
-    shortcuts={"jump": modlgal_jump },
+    shortcuts={"jump": modlgal_jump, "download":Downloader(db.modlgal_reps)},
     columns=modlgal_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modlgal_label,
@@ -227,7 +229,7 @@ class ModLGalRepSearchArray(SearchArray):
         base_ring_characteristic = TextBox(
             name="base_ring_characteristic",
             knowl="modlgal.base_ring_characteristic",
-            label="Characteristic",
+            label=r"Characteristic $\ell$",
             example="2",
             example_span="2, 3, or 5")
         dimension = TextBox(
@@ -293,18 +295,18 @@ class ModLGalRepSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [conductor, codomain],
-            [conductor_primes, surjective],
-            [dimension, absolutely_irreducible],
-            [top_slope, solvable],
-            [base_ring_characteristic, image_index],
+            [base_ring_characteristic, codomain],
+            [dimension, surjective],
+            [conductor, absolutely_irreducible],
+            [conductor_primes, solvable],
+            [top_slope, image_index],
             [count, image_order],
         ]
 
         self.refine_array = [
-            [conductor, conductor_primes, dimension, top_slope],
-            [codomain, surjective, absolutely_irreducible, solvable],
-            [base_ring_characteristic, image_index, image_order]
+            [base_ring_characteristic, dimension, conductor, conductor_primes],
+            [codomain, solvable, surjective, absolutely_irreducible],
+            [top_slope, image_index, image_order]
         ]
 
     sort_knowl = "modlgal.sort_order"
@@ -314,6 +316,13 @@ class ModLGalRepSearchArray(SearchArray):
         ("characteristic", "characteristic", ["base_ring_characteristic", "dimension", "base_ring_order", "conductor", "num"]),
         ("image_index", "image index", ["image_index", "dimension", "base_ring_order", "conductor", "num"]),
     ]
+
+def groupdata(group):
+    parts = group.split('.')
+    return [int(z) for z in parts]
+
+def groupformatter(group):
+  return abstract_group_display_knowl(group)
 
 class ModLGalRep_stats(StatsDisplay):
     def __init__(self):
@@ -338,16 +347,34 @@ class ModLGalRep_stats(StatsDisplay):
 
     table = db.modlgal_reps
     baseurl_func = ".index"
+    sort_keys = {'image_abstract_group': groupdata}
     buckets = {'conductor': ['1-100', '101-500', '501-1000', '1001-5000', '5001-10000', '10001-'],
                'dimension': ['1', '2', '4'],
                }
     knowls = {'conductor': 'modlgal.conductor',
-              'dimension': 'modgal.dim',
+              'dimension': 'modlgal.dimension',
+              'image_abstract_group': 'modlgal.image'
               }
+    short_display = {'image_abstract_group': 'image'}
+    formatters = {'image_abstract_group': groupformatter}
     stat_list = [
         {'cols': ['conductor', 'dimension'],
          'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':2},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=2$',None)]},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':3},
+         'buckets': {'dimension': ['1', '2']},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=3$',None)]},
+        {'cols': ['dimension', 'image_abstract_group'],
+         'constraint': {'base_ring_order':5},
+         'buckets': {'dimension': ['1', '2']},
+         'totaler': totaler(),
+         'top_title': [('dimension', 'modlgal.dimension'),(' and ', None),('image','modlgal.image'),(r'for $\ell=5$',None)]},
     ]
 
 @modlgal_page.route("/Q/stats")

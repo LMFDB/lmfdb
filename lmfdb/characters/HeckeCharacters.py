@@ -76,8 +76,7 @@ class RayClassGroup(AbelianGroup_class):
         return self.exp(x.exponents())
 
     def iter_exponents(self):
-        for e in xmrange(self.invariants(), tuple):
-            yield e
+        yield from xmrange(self.invariants(), tuple)
 
     def iter_ideals(self):
         for e in self.iter_exponents():

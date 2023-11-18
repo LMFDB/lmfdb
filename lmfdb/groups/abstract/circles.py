@@ -641,4 +641,9 @@ def find_packing(ccdata):
         r0 = r1
         new_circles, R = arrange(annulus, R, r0)
         circles.extend(new_circles)
+    # SVG can't handle x and y coordinates that are large
+    if R > 10000000:
+        scale = RR(10000000) / R
+        R = RR(10000000)
+        circles = [(x*scale, y*scale, rad*scale, (r, g, b)) for (x, y, rad, (r, g, b)) in circles]
     return circles, R

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for, pol_to_html,
-    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset, raw_typeset_poly)
+    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,
+    raw_typeset_poly, pos_int_and_factor)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
@@ -165,15 +166,7 @@ class ArtinRepresentation():
         return self.central_character_as_artin_rep().label()
 
     def conductor_equation(self):
-        from lmfdb.utils import bigint_knowl
-        # Returns things of the type "1", "7", "49 = 7^{2}"
-        factors = self.factored_conductor()
-        if self.conductor() == 1:
-            return "1"
-        if len(factors) == 1 and factors[0][1] == 1:
-            return bigint_knowl(self.conductor(), sides=3)
-        else:
-            return bigint_knowl(self.conductor(), sides=3) + r"\(\medspace = " + self.factored_conductor_latex() + r"\)"
+        return pos_int_and_factor(self.conductor(), factor_base=self.bad_primes())
 
     def factored_conductor(self):
         return [(p, valuation(Integer(self.conductor()), p)) for p in self.bad_primes()]
@@ -219,10 +212,13 @@ class ArtinRepresentation():
     def GaloisConjugates(self):
         return self._data["GaloisConjugates"]
 
+    def ProjBoth(self):
+        return self._data['Proj_GAP'], self._data['Proj_nTj']
+
     def projective_group(self):
-        gapid = self._data['Proj_GAP']
-        if gapid[0]:
-            label = f"{gapid[0]}.{gapid[1]}"
+        groupid = self._data['Proj_GAP']
+        if groupid[0]:
+            label = f"{groupid[0]}.{groupid[1]}"
             if self._knowl_cache is None:
                 name = db.gps_groups.lookup(label, "tex_name")
             else:
@@ -232,8 +228,8 @@ class ArtinRepresentation():
         ntj = self._data['Proj_nTj']
         if ntj[1]:
             return transitive_group_display_knowl(f"{ntj[0]}T{ntj[1]}", cache=self._knowl_cache)
-        if gapid:
-            return f'Group({gapid[0]}.{gapid[1]})'
+        if groupid:
+            return f'Group({groupid[0]}.{groupid[1]})'
         return 'data not computed'
 
     def projective_field(self):
@@ -424,6 +420,9 @@ class ArtinRepresentation():
     def field_knowl(self):
         nfgg = self.number_field_galois_group()
         return formatfield(nfgg.polynomial())
+
+    def GaloisLabel(self):
+        return self._data['GaloisLabel']
 
     def group(self):
         n, t = [int(z) for z in self._data['GaloisLabel'].split("T")]

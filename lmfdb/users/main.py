@@ -8,8 +8,7 @@ from functools import wraps
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
-from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
-from distutils.version import StrictVersion
+from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 from lmfdb.utils import flash_error
 from markupsafe import Markup
 
@@ -25,8 +24,6 @@ allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 
 login_manager = LoginManager()
 
-# We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
-FLASK_LOGIN_LIMIT = '0.3.0'
 from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
@@ -64,10 +61,7 @@ def ctx_proc_userdata():
         userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
         userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
 
-        if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
-            userdata['user_is_authenticated'] = current_user.is_authenticated
-        else:
-            userdata['user_is_authenticated'] = current_user.is_authenticated()
+        userdata['user_is_authenticated'] = current_user.is_authenticated
 
         userdata['user_is_admin'] = current_user.is_admin()
         userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()

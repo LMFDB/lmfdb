@@ -8,12 +8,12 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error, display_knowl, search_wrap,
-    SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
+    SearchArray, TextBox, SelectBox, CountBox, YesNoBox, Downloader,
     StatsDisplay, totaler, proportioners, prop_int_pretty,
     parse_ints, parse_rational, parse_bool, clean_input, redirect_no_cache)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.sato_tate_groups import st_page
@@ -598,41 +598,40 @@ def search_by_label(label):
     return redirect(url_for('.by_label', label=rlabel), 301)
 
 st_columns = SearchColumns([
-    LinkCol("label", "st_group.label", "Label", lambda label: url_for('.by_label', label=label), default=True),
-    MathCol("weight", "st_group.weight", "Wt", default=True, short_title="weight"),
-    MathCol("degree", "st_group.degree", "Deg", default=True, short_title="degree"),
-    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="real dimension", default=True),
-    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", st0_pretty, short_title="identity component", mathmode=True, default=True, align="center"),
-    MathCol("pretty", "st_group.name", "Name", default=True),
-    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="components", default=True),
-    MathCol("trace_zero_density", "st_group.trace_zero_density", r"$\mathrm{Pr}[t\!=\!0]$", short_title="Pr[t=0]", default=True),
-    MathCol("second_trace_moment", "st_group.second_trace_moment", r"$\mathrm{E}[a_1^2]$", short_title="E[a_1^2]", default=True, align="right"),
-    MathCol("fourth_trace_moment", "st_group.fourth_trace_moment", r"$\mathrm{E}[a_1^4]$", short_title="E[a_1^4]", default=True, align="right"),
-    ProcessedCol("sixth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^6]$", lambda v: (r"$%s$"%v[0][7]) if v[0][0] == "a_1" and len(v[0]) > 7 else "", short_title="E[a_1^6]", align="right", orig="moments"),
-    ProcessedCol("eigth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^8]$", lambda v: (r"$%s$"%v[0][9]) if v[0][0] == "a_1" and len(v[0]) > 9 else "", short_title="E[a_1^8]", align="right", orig="moments"),
-    ProcessedCol("tenth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^{10}]$", lambda v: (r"$%s$"%v[0][11]) if v[0][0] == "a_1" and len(v[0]) > 11 else "", short_title="E[a_1^{10}]", align="right", orig="moments"),
-    ProcessedCol("twelfth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^{12}]$", lambda v: (r"$%s$"%v[0][11]) if v[0][0] == "a_1" and len(v[0]) > 13 else "", short_title="E[a_1^{12}]", align="right", orig="moments"),
-    MathCol("first_a2_moment", "st_group.first_a2_moment", r"$\mathrm{E}[a_2]$", short_title="E[a_2]", default=True),
-    ProcessedCol("second_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^2]$", lambda v: (r"$%s$"%v[1][3]) if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 3 else "", short_title="E[a_2^2]", align="right", orig="moments"),
-    ProcessedCol("third_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^3]$", lambda v: (r"$%s$"%v[1][4]) if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 4 else "", short_title="E[a_2^3]", align="right", orig="moments"),
-    ProcessedCol("fourth_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^4]$", lambda v: (r"$%s$"%v[1][5]) if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 5 else "", short_title="E[a_2^4]", align="right", orig="moments"),
-    ProcessedCol("fifth_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^5]$", lambda v: (r"$%s$"%v[1][6]) if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 6 else "", short_title="E[a_2^5]", align="right", orig="moments"),
-    ProcessedCol("sixth_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^6]$", lambda v: (r"$%s$"%v[1][7]) if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 7 else "", short_title="E[a_2^6]", align="right", orig="moments"),
-    ProcessedCol("second_a3_moment", "st_group.moments", r"$\mathrm{E}[a_3^2]$", lambda v: (r"$%s$"%v[2][3]) if len(v) > 2 and v[2][0] == "a_3" and len(v[2]) > 3 else "", short_title="E[a_3^2]", align="right", orig="moments"),
-    ProcessedCol("fourth_a3_moment", "st_group.moments", r"$\mathrm{E}[a_3^4]$", lambda v: (r"$%s$"%v[2][5]) if len(v) > 2 and v[2][0] == "a_3" and len(v[2]) > 5 else "", short_title="E[a_3^4]", align="right", orig="moments"),
-    ProcessedCol("sixth_a3_moment", "st_group.moments", r"$\mathrm{E}[a_3^6]$", lambda v: (r"$%s$"%v[2][7]) if len(v) > 2 and v[2][0] == "a_3" and len(v[2]) > 7 else "", short_title="E[a_3^6]", align="right", orig="moments"),
-    CheckCol("maximal", "st_group.supgroups", "Maximal"),
-    CheckCol("rational", "st_group.rational", "Rational"),
-    MathCol("character_diagonal", "st_group.moment_matrix", r"Diagonal", align="left"),
+    LinkCol("label", "st_group.label", "Label", lambda label: url_for('.by_label', label=label)),
+    MathCol("weight", "st_group.weight", "Wt", short_title="weight"),
+    MathCol("degree", "st_group.degree", "Deg", short_title="degree"),
+    MathCol("real_dimension", "st_group.real_dimension", r"$\mathrm{dim}_{\mathbb{R}}$", short_title="real dimension"),
+    ProcessedCol("identity_component", "st_group.identity_component", r"$\mathrm{G}^0$", st0_pretty, short_title="identity component", mathmode=True, align="center"),
+    MathCol("pretty", "st_group.name", "Name"),
+    MathCol("components", "st_group.component_group", r"$\mathrm{G}/\mathrm{G}^0$", short_title="components"),
+    RationalCol("trace_zero_density", "st_group.trace_zero_density", r"$\mathrm{Pr}[t\!=\!0]$", short_title="Pr[t=0]", mathmode=True, align="center"),
+    MathCol("second_trace_moment", "st_group.second_trace_moment", r"$\mathrm{E}[a_1^2]$", short_title="E[a_1^2]", align="right"),
+    MathCol("fourth_trace_moment", "st_group.fourth_trace_moment", r"$\mathrm{E}[a_1^4]$", short_title="E[a_1^4]", align="right"),
+    ProcessedCol("sixth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^6]$", lambda v: v[0][7] if v[0][0] == "a_1" and len(v[0]) > 7 else "", short_title="E[a_1^6]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("eigth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^8]$", lambda v: v[0][9] if v[0][0] == "a_1" and len(v[0]) > 9 else "", short_title="E[a_1^8]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("tenth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^{10}]$", lambda v: v[0][11] if v[0][0] == "a_1" and len(v[0]) > 11 else "", short_title="E[a_1^{10}]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("twelfth_trace_moment", "st_group.moments", r"$\mathrm{E}[a_1^{12}]$", lambda v: v[0][11] if v[0][0] == "a_1" and len(v[0]) > 13 else "", short_title="E[a_1^{12}]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    MathCol("first_a2_moment", "st_group.first_a2_moment", r"$\mathrm{E}[a_2]$", short_title="E[a_2]"),
+    ProcessedCol("second_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^2]$", lambda v: v[1][3] if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 3 else "", short_title="E[a_2^2]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("third_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^3]$", lambda v: v[1][4] if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 4 else "", short_title="E[a_2^3]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("fourth_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^4]$", lambda v: v[1][5] if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 5 else "", short_title="E[a_2^4]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("fifth_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^5]$", lambda v: v[1][6] if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 6 else "", short_title="E[a_2^5]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("sixth_a2_moment", "st_group.moments", r"$\mathrm{E}[a_2^6]$", lambda v: v[1][7] if len(v) > 1 and v[1][0] == "a_2" and len(v[1]) > 7 else "", short_title="E[a_2^6]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("second_a3_moment", "st_group.moments", r"$\mathrm{E}[a_3^2]$", lambda v: v[2][3] if len(v) > 2 and v[2][0] == "a_3" and len(v[2]) > 3 else "", short_title="E[a_3^2]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("fourth_a3_moment", "st_group.moments", r"$\mathrm{E}[a_3^4]$", lambda v: v[2][5] if len(v) > 2 and v[2][0] == "a_3" and len(v[2]) > 5 else "", short_title="E[a_3^4]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    ProcessedCol("sixth_a3_moment", "st_group.moments", r"$\mathrm{E}[a_3^6]$", lambda v: v[2][7] if len(v) > 2 and v[2][0] == "a_3" and len(v[2]) > 7 else "", short_title="E[a_3^6]", align="right", orig="moments", apply_download=True, mathmode=True, default=False),
+    CheckCol("maximal", "st_group.supgroups", "Maximal", default=False),
+    CheckCol("rational", "st_group.rational", "Rational", default=False),
+    MathCol("character_diagonal", "st_group.moment_matrix", r"Diagonal", align="left", default=False),
 
 ])
-st_columns.dummy_download = True
 
 @search_wrap(
     table=db.gps_st,
     title="Sato-Tate group search results",
     err_title="Sato-Tate group search input error",
-    shortcuts={"jump": lambda v: search_by_label(v['jump'])},
+    shortcuts={"jump": lambda v: search_by_label(v['jump']), "download": Downloader(db.gps_st)},
     columns=st_columns,
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
@@ -1039,7 +1038,6 @@ def labels_page():
 
 class STSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     sorts = [("", "weight", ["weight", "degree", "st0_label", "components", "component_group_number", "label"]),
              ("degree", "degree", ["degree", "weight", "st0_label", "components", "component_group_number", "label"]),
              ("real_dimension", "real dimension", ["real_dimension", "weight", "degree", "st0_label", "components", "component_group_number", "label"]),
