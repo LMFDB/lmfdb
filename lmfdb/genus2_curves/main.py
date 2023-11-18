@@ -39,7 +39,7 @@ from lmfdb.utils import (
     web_latex_factored_integer,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol
 from lmfdb.utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
@@ -194,7 +194,7 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=G2CSearchArray())
-    if len(info) > 1:
+    if request.args:
         return genus2_curve_search(info)
     info["stats"] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
@@ -562,60 +562,57 @@ def genus2_jump(info):
 class G2C_download(Downloader):
     table = db.g2c_curves
     title = "Genus 2 curves"
-    columns = "eqn"
-    column_wrappers = {"eqn": literal_eval}
-    data_format = ["[[f coeffs],[h coeffs]]"]
-    data_description = "defining the hyperelliptic curve y^2+h(x)y=f(x)."
-    function_body = {
-        "magma": [
-            "R<x>:=PolynomialRing(Rationals());",
-            "return [HyperellipticCurve(R![c:c in r[1]],R![c:c in r[2]]):r in data];",
-        ],
-        "sage": [
-            "R.<x>=PolynomialRing(QQ)",
-            "return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]",
-        ],
-        "gp": ["[apply(Polrev,c)|c<-data];"],
+    inclusions = {
+        "curve": (
+            ["eqn"],
+            {
+                "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
+                "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
+                "gp": 'curve = apply(Polrev, mapget(out, "eqn"))',
+            }
+        ),
     }
 
 g2c_columns = SearchColumns([
-    LinkCol("label", "g2c.label", "Label", url_for_curve_label, default=True),
-    ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, default=True, orig="label"),
-    ProcessedCol("cond", "g2c.conductor", "Conductor", lambda v: web_latex(factor(v)), align="center", default=True),
+    LinkCol("label", "g2c.label", "Label", url_for_curve_label),
+    ProcessedLinkCol("class", "g2c.isogeny_class", "Class", lambda v: url_for_isogeny_class_label(class_from_curve_label(v)), class_from_curve_label, orig="label", apply_download=class_from_curve_label),
+    ProcessedCol("cond", "g2c.conductor", "Conductor", lambda v: web_latex(factor(v)), align="center"),
     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["disc_sign", "abs_disc"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
-                      default=lambda info: info.get("abs_disc"), align="center"),
+                      default=lambda info: info.get("abs_disc"), align="center", apply_download=lambda s, a: s*a),
 
-    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*", default=True),
-    MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank"),
-    ProcessedCol("torsion_subgroup", "g2c.torsion", "Torsion",
+    MathCol("analytic_rank", "g2c.analytic_rank", "Rank*"),
+    MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank", default=False),
+    ListCol("torsion_subgroup", "g2c.torsion", "Torsion",
                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}",
-                 default=True, mathmode=True, align="center"),
+                 mathmode=True, align="center"),
     ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v),
-                 short_title="Qbar-end algebra", default=True, align="center"),
-    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center"),
-    CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type"),
-    ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center"),
-    ProcessedCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes", lambda ps: r",".join([str(t) for t in ps]),
-                 default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
-    CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple"),
-    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple"),
-    MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-automorphisms"),
-    MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-automorphisms"),
-    MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*"),
-    MathCol("num_rat_wpts", "g2c.num_rat_wpts", r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points"),
+                 short_title="Qbar-end algebra", align="center"),
+    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center", default=False),
+    CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type", default=False),
+    ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center", default=False),
+    ProcessedCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes",
+                    lambda tors: r",".join([str(t) for t in tors]),
+                    default=lambda info: info.get("nonmax_primes"),
+                    mathmode=True, align="center"),
+    CheckCol("is_simple_base", "ag.simple", r"$\Q$-simple", short_title="Q-simple", default=False),
+    CheckCol("is_simple_geom", "ag.geom_simple", r"\(\overline{\Q}\)-simple", short_title="Qbar-simple", default=False),
+    MathCol("aut_grp_tex", "g2c.aut_grp", r"\(\Aut(X)\)", short_title="Q-automorphisms", default=False),
+    MathCol("geom_aut_grp_tex", "g2c.geom_aut_grp", r"\(\Aut(X_{\overline{\Q}})\)", short_title="Qbar-automorphisms", default=False),
+    MathCol("num_rat_pts", "g2c.all_rational_points", r"$\Q$-points", short_title="Q-points*", default=False),
+    MathCol("num_rat_wpts", "g2c.num_rat_wpts", r"$\Q$-Weierstrass points", short_title="Q-Weierstrass points", default=False),
     ProcessedCol("modell_images", "g2c.galois_rep_modell_image", r"mod-$\ell$ images", lambda v: ", ".join([display_knowl('gsp4.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
                   short_title="mod-ℓ images", default=lambda info: info.get("galois_image"), align="center"),
-    CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable"),
-    CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*"),
-    MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*"),
-    ProcessedCol("tamagawa_product", "g2c.tamagawa", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
-    ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right"),
-    ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right"),
-    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right"),
-    ProcessedCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True),
-    ProcessedCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True),
-    ProcessedCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True),
-    ProcessedCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), default=True, mathmode=True)
+    CheckCol("locally_solvable", "g2c.locally_solvable", "Locally solvable", default=False),
+    CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*", default=False),
+    MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*", default=False),
+    ProcessedCol("tamagawa_product", "g2c.tamagawa", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", default=False),
+    ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right", default=False),
+    ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right", default=False),
+    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right", default=False),
+    ListCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True, default=False),
+    ListCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True, default=False),
+    ListCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True, default=False),
+    ListCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), mathmode=True)
 ])
 
 @search_wrap(

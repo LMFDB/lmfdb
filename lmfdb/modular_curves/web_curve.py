@@ -187,9 +187,8 @@ def formatted_model(m):
             m["equation"][1], m["equation"][0] = m["equation"]
         C = R3(m["equation"][0])
         F = R4(m["equation"][1])
-        if F.monomial_coefficient(w**2) != -1:
+        if F.monomial_coefficient(w**2).constant_coefficient() > 0:
             F *= -1
-        assert F.monomial_coefficient(w**2) == -1
         lines = [
             latex(elt)
             for elt in [
@@ -363,7 +362,7 @@ class WebModCurve(WebObj):
             tail.append(
                 (str(D[a]), url_for(".index_Q", **D))
             )
-        tail.append((self.label, " "))
+        tail.append((self.label, url_for(".by_label", label=self.label)))
         return get_bread(tail)
 
     @lazy_attribute

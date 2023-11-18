@@ -347,7 +347,7 @@
     <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq$ {{gp.cent_label()|safe}}</span></td>
     <td>{{gp.subgroups[gp.cent()].display_quotient("Z")|safe}}</td>
     {% elif gp.center_label %}
-    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">${{gp.special_subs_label(gp.center_label)}}$</td>
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">{{gp.special_subs_label(gp.center_label)}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -358,7 +358,7 @@
     <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq$ {{gp.subgroups[gp.comm()].knowl()|safe}}</span></td> {# match single quote for code highlighting purposes: ' #}
     <td>{{gp.subgroups[gp.comm()].display_quotient("G'", ab_invs=gp.smith_abelian_invariants)|safe}}</td>
      {% elif gp.commutator_label %}
-    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.comutator_label)}}">${{gp.special_subs_label(gp.commutator_label)}}$</td>
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.commutator_label)}}">{{gp.special_subs_label(gp.commutator_label)}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -369,7 +369,7 @@
     <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq$ {{gp.subgroups[gp.fratt()].knowl()|safe}}</span></td>
     <td>{{gp.subgroups[gp.fratt()].display_quotient("\\Phi")|safe}} </td>
      {% elif gp.frattini_label %}
-    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">${{gp.special_subs_label(gp.frattini_label)}}$</td>
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">{{gp.special_subs_label(gp.frattini_label)}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}

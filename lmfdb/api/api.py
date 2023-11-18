@@ -29,7 +29,7 @@ def quote_string(value):
 
 def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
-    attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
+    attrs = sorted([(key, quote_string(rec[key])) for key in rec if (id or key != 'id')])
     return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
 
 
@@ -96,6 +96,7 @@ def stats():
         dname, _ = split_db(tablename)
         dbSize[dname] += sizes['total_bytes']
         dbObjects[dname] += sizes['nrows']
+    tablespaces = db.tablespaces()
     for tablename, sizes in table_sizes.items():
         tsize = sizes['total_bytes']
         size += tsize
@@ -119,7 +120,9 @@ def stats():
                 'size': csize, 'avgObjSize':avg_size,
                 'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extras_bytes']),
                 'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
-                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts']}
+                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts'],
+                'tablespace': tablespaces.get(tablename, ""),
+            }
     dataSize = size - indexSize
     info['ntables'] = len(table_sizes)
     info['nobjects'] = nobjects
@@ -127,15 +130,15 @@ def stats():
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
     if info['sortby'] == 'name':
-        sortedkeys = sorted(list(stats))
+        sortedkeys = sorted(stats)
     elif info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
     elif info['sortby'] == 'objects':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
     else:
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 
@@ -280,7 +283,7 @@ def api_query(table, id=None):
         except KeyError as err:
             return apierror("No key %s in table %s", [err, table])
         except Exception as err:
-            return apierror(str(err))
+            return apierror(str(err).replace("%", "%%"))
 
     if single_object and not data:
         return apierror("no document with id %s found in table %s.", [id, table])

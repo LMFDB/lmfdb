@@ -213,7 +213,7 @@ class WebAbstractGroup(WebObj):
                 if libgap.SmallGroupsAvailable(n):
                     maxi = libgap.NrSmallGroups(n)
                     i = ZZ(m.group(2))
-                    if i <= maxi:
+                    if 0 < i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
         if isinstance(self._data, list):  # live abelian group
@@ -1109,7 +1109,7 @@ class WebAbstractGroup(WebObj):
                 if any(H.aut_label is None or H.diagramx is None for H in subs):
                     # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
-                return impose_limit(len(set(H.aut_label for H in subs)))
+                return impose_limit(len({H.aut_label for H in subs}))
             else:
                 if self.outer_equivalence or any(H.diagramx is None for H in subs):
                     # We don't know subgroups up to conjugacy or can't lay out subgroups
@@ -1490,7 +1490,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def tex_images(self):
-        all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
+        all_tex = list({H.subgroup_tex for H in self.subgroups.values()}) + ["?"]
         return {
             rec["label"]: rec["image"]
             for rec in db.gps_images.search({"label": {"$in": all_tex}}, ["label", "image"])
@@ -1995,8 +1995,11 @@ class WebAbstractGroup(WebObj):
 
     #first function is if we only know special subgroups as abstract groups
     def special_subs_label(self,label):
-        info=db.gps_groups.lucky({"label": label})
-        return info['tex_name']
+        info = db.gps_groups.lucky({"label": label})
+        if info is None:
+            return label
+        else:
+            return f"${info['tex_name']}$"
 
     def cent(self):
         return self.special_search("Z")
@@ -2159,7 +2162,7 @@ class LiveAbelianGroup():
 
     def Phiquotient(self):
         # Make all exponents by 1
-        snf1 = [prod([z for z in ZZ(n).prime_factors()]) for n in self.snf]
+        snf1 = [prod(list(ZZ(n).prime_factors())) for n in self.snf]
         return LiveAbelianGroup(snf1)
 
     def FittingSubgroup(self):
@@ -2483,7 +2486,7 @@ class WebAbstractSubgroup(WebObj):
         return list(db.gps_subgroups.search({"label": {"$in": labels}}))
 
     def autjugate_subgroups(self):
-        if self.amb.outer_equivalence == False and self.amb.complements_known == False and self.amb.subgroup_inclusions_known == False:
+        if self.amb.outer_equivalence is False and self.amb.complements_known is False and self.amb.subgroup_inclusions_known is False:
             return None  #trying to say subgroups not computed up to autjugacy
         else:
             return [

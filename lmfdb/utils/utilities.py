@@ -967,7 +967,7 @@ def datetime_to_timestamp_in_ms(dt):
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 
-class WebObj(object):
+class WebObj:
     def __init__(self, label, data=None):
         self.label = label
         if data is None:
@@ -989,7 +989,9 @@ class WebObj(object):
         return self._data is None
 
 def plural_form(noun):
-    return noun + "s"
+    if noun and noun[-1] != "s":
+        noun += "s"
+    return noun
 
 def pluralize(n, noun, omit_n=False):
     if n == 1:

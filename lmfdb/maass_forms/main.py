@@ -209,22 +209,22 @@ def parse_character(inp, query, qfield):
     query[conrey_index_field] = conrey_index
 
 maass_columns = SearchColumns([
-    MathCol("level", "mf.maass.mwf.level", "Level", default=True),
-    MathCol("weight", "mf.maass.mwf.weight", "Weight", default=True),
+    MathCol("level", "mf.maass.mwf.level", "Level"),
+    MathCol("weight", "mf.maass.mwf.weight", "Weight"),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
                       ["level", "conrey_index"],
                       character_link, short_title="character",
-                      default=True, align="center"),
+                      align="center", apply_download=False),
     MultiProcessedCol("spectral", "mf.maass.mwf.spectralparameter", "Spectral parameter",
                       ["maass_id", "spectral_parameter"],
                       lambda mid, param: '<a href="%s">%s</a>' % (url_for('.by_label', label=mid), param),
-                      default=True),
+                      download_col="spectral_parameter"),
     ProcessedCol("symmetry", "mf.maass.mwf.symmetry", "Symmetry",
                  symmetry_pretty,
-                 default=True, align="center"),
+                 align="center"),
     ProcessedCol("fricke_eigenvalue", "cmf.fricke", "Fricke",
                  fricke_pretty, short_title="Fricke",
-                 default=True, align="center")],
+                 align="center")],
     db_cols=["maass_id", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
 
 @search_wrap(

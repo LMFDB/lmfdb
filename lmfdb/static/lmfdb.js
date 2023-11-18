@@ -352,28 +352,21 @@ function increase_start_by_count_and_submit_form() {
 
 
 // callbacks for the search page to get exact count. Used in matches.html
-function get_count_of_results(download_limit) {
+function get_count_of_results() {
     var address = window.location.href;
     $("#result-count").html("computing...");
     $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
     address += "&result_count=1";
-    var callback = function(res) {
-        get_count_callback(res, download_limit);
-    }
-    $.ajax({url: address, success: callback});
+    $.ajax({url: address, success: get_count_callback});
 };
 
-function get_count_callback(res, download_limit) {
+function get_count_callback(res) {
     $('#result-count').html(res['nres']);
     $('#result-count2').html(res['nres']);
-    if (parseInt(res['nres'], 10) > download_limit) {
-        $("#download-msg").html("There are too many search results ("+res['nres']+") for downloading.");
-    } else {
-        $("#download-msg").html("");
-        $("#download-form").show();
-    }
+    $("#download-msg").html("");
+    $("#download-form").show();
 };
 
 /**
@@ -473,58 +466,88 @@ function simult_change(event) {
     $(".simult_select").each(function (i) { this.selectedIndex = event.target.selectedIndex;});
 };
 
+function control_column(S, i) {
+  var show = $("input[name=showcol]");
+  var shown_cols = show.val().split(".").filter(o=>o); // remove empty strings
+  var hide = $("input[name=hidecol]");
+  var hidden_cols = hide.val().split(".").filter(o=>o);
+  var label = S.options[i].text;
+  var label = label.slice(2, label.length);
+  var value = S.options[i].value;
+  $('.col-'+value).toggle();
+  // For column groups, have to adjust the width of the top column
+  $('th.col-'+value).each(function(i, obj) {
+    // We need to adjust the column width for any colgroup header containing this column.
+    // there should only be one in the list, but doing this more than once won't hurt.
+    var classes = $(this).attr('class').split(' ');
+    for (i = 0; i < classes.length; i++) {
+      if (classes[i].startsWith("colgroup-")) {
+        var colspan = $('th.'+classes[i]+':visible').length;
+        var header = $('.col-' + classes[i].slice(9));
+        if (colspan == 0) {
+          header.hide();
+        } else {
+          header.show();
+          header.prop("colSpan", $('th.'+classes[i]+':visible').length);
+        }
+      }
+    }
+  });
+  if ($('.col-'+value+':visible').length > 0) {
+    S.options[i].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
+    var i = hidden_cols.indexOf(value);
+    if (i == -1) {
+      shown_cols.push(value);
+      show.val(shown_cols.join("."));
+    } else {
+      hidden_cols.splice(i, 1);
+      hide.val(hidden_cols.join("."));
+    }
+  } else {
+    S.options[i].text = '  ' + label; // the spaces are unicode: an em-dash and a thinspace
+    var i = shown_cols.indexOf(value);
+    if (i == -1) {
+      hidden_cols.push(value);
+      hide.val(hidden_cols.join("."));
+    } else {
+      shown_cols.splice(i, 1);
+      show.val(shown_cols.join("."));
+    }
+  }
+};
+
+function all_are_selected(S) {
+  for (i = 1; i < S.options.length - 1; i++) {
+    if (S.options[i].text[0] != '✓') {
+      return false;
+    }
+  }
+  return true;
+}
+
 function control_columns(S) {
   if (S.selectedIndex == 0) {
     S.blur();
   } else {
-    var show = $("input[name=showcol]");
-    var shown_cols = show.val().split(".").filter(o=>o); // remove empty strings
-    var hide = $("input[name=hidecol]");
-    var hidden_cols = hide.val().split(".").filter(o=>o);
-    var label = S.options[S.selectedIndex].text;
-    label = label.slice(2, label.length);
-    $('.col-'+S.value).toggle();
-    // For column groups, have to adjust the width of the top column
-    $('th.col-'+S.value).each(function(i, obj) {
-      // We need to adjust the column width for any colgroup header containing this column.
-      // there should only be one in the list, but doing this more than once won't hurt.
-      var classes = $(this).attr('class').split(' ');
-      for (i = 0; i < classes.length; i++) {
-        if (classes[i].startsWith("colgroup-")) {
-          var colspan = $('th.'+classes[i]+':visible').length;
-          var header = $('.col-' + classes[i].slice(9));
-          if (colspan == 0) {
-            header.hide();
-          } else {
-            header.show();
-            header.prop("colSpan", $('th.'+classes[i]+':visible').length);
-          }
+    var allselected = all_are_selected(S);
+    if (S.value == 'toggleall') {
+      for (i = 1; i < S.options.length - 1; i++) {
+        if (allselected || S.options[i].text[0] != '✓') {
+          control_column(S, i);
         }
       }
-    })
-    if ($('.col-'+S.value+':visible').length > 0) {
-      S.options[S.selectedIndex].text = '✓ ' + label; // note that the space after the checkbox is unicode, the size of an en-dash
-      var i = hidden_cols.indexOf(S.value);
-      if (i == -1) {
-        shown_cols.push(S.value);
-        show.val(shown_cols.join("."));
-      } else {
-        hidden_cols.splice(i, 1);
-        hide.val(hidden_cols.join("."));
-      }
+      S.value = '';
     } else {
-      S.options[S.selectedIndex].text = '  ' + label; // the spaces are unicode: an em-dash and a thinspace
-      var i = shown_cols.indexOf(S.value);
-      if (i == -1) {
-        hidden_cols.push(S.value);
-        hide.val(hidden_cols.join("."));
-      } else {
-        shown_cols.splice(i, 1);
-        show.val(shown_cols.join("."));
-      }
+      control_column(S, S.selectedIndex);
+      S.value = '';
+    }
+    var toggler = S.options[S.options.length - 1];
+    if (all_are_selected(S)) {
+      toggler.text = toggler.text.slice(0, 6) + "hide all";
+    } else {
+      toggler.text = toggler.text.slice(0, 6) + "show all";
     }
   }
-  S.value = '';
 };
 
 function control_sort(S) {
@@ -541,16 +564,34 @@ function control_sort(S) {
     S.options[i].text = spaces + t.slice(2, t.length);
   }
   if (curdir == asc) {
-    console.log("Setting dir op");
     S.options[n].text = dec + label;
     $("input[name=sort_dir]").val('op');
   } else {
-    console.log("Setting dir std");
     S.options[n].text = asc + label;
     $("input[name=sort_dir]").val('');
   }
   $("input[name=sort_order]").val(S.value);
   S.selectedIndex = -1;
+};
+
+function update_download_url(link) {
+  // console.log("before modification", link.href);
+  var url = new URL(link.href);
+  var params = url.searchParams;
+  var keys = ["showcol", "hidecol", "sort_order", "sort_dir"];
+  for (var i = 0; i < keys.length; ++i) {
+    var newval = $("input[name="+keys[i]+"]").val();
+    if (newval.length == 0) {
+      params.delete(keys[i]);
+    } else {
+      params.set(keys[i], newval);
+    }
+  }
+  url.search = params.toString();
+  link.href = url.href;
+  console.log(link.href);
+  // console.log("after modification", link.href);
+  return true;
 };
 
 function blur_sort(S) {
@@ -559,7 +600,6 @@ function blur_sort(S) {
     t = S.options[i].text;
     if (t.slice(0, 1) != ' ') { // unicode space
       S.selectedIndex = i;
-      console.log("Blurring at ", i);
       break;
     }
   }
@@ -569,7 +609,6 @@ function resetStart()
 {
   // resets start if not changing search_type
   $('input[name=start]').val('')
-  // this will be cleaned by the cleanSubmit
 }
 
 
@@ -751,10 +790,21 @@ $(document).ready(function () {
     form => form.addEventListener('formdata',
     function(event) {
       let formData = event.formData;
+      let alldeleted = true;
       for (let [name, value] of Array.from(formData.entries())) {
         if (value === '' ||
-			(name === 'count' && value == 50))
-			formData.delete(name);
+	    (name === 'count' && value == 50)) {
+	  formData.delete(name);
+        } else {
+          alldeleted = false;
+        }
+      }
+      if (formData.has("hst") && formData.has("search_type") && formData.get("hst") == formData.get("search_type")) {
+        formData.delete("hst");
+      }
+      if (alldeleted) {
+        // Need at least one parameter to trigger search results.
+        formData.set('search_type', '');
       }
     })
   )

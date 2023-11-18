@@ -750,6 +750,8 @@ class Lfunction_Maass(Lfunction):
             title_end = ""  #" on $%s$" % (self.group)
 
         else:   # Generate from Maass form
+            if not is_debug_mode():
+                raise ValueError(f'Error constructing L-function for Maass form {self.maass_id}, as it is not in the database')
 
             # Create the Maass form
             self.mf = WebMaassForm.by_maass_id(self.maass_id)
@@ -854,6 +856,11 @@ class Lfunction_HMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.origin_label = args['label']
+
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for Hilbert modular form {self.origin_label}, as it is not in the database')
+
         self.number = int(args['number'])
         self.character= int(args['character'])
         if self.character != 0:
@@ -1025,6 +1032,11 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         # Load form (S) from database
         label = '%d_%s'%(self.weight,self.orbit)
+
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for Siegel modular form {label}, as it is not in the database')
+
         self.S = Sample('Sp4Z', label)
         if not self.S:
             raise KeyError("Siegel modular form Sp4Z.%s not found in database." % label)
@@ -1117,6 +1129,10 @@ class DedekindZeta(Lfunction):
         self.__dict__.update(args)
         self.origin_label = self.label
         self.__dict__.pop('label')
+
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing Dedekind zeta function for {self.origin_label}, as it is not in the database')
 
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.origin_label)
@@ -1237,6 +1253,10 @@ class ArtinLfunction(Lfunction):
         # Put the arguments into the object dictionary
         self.origin_label = args["label"]
 
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as it is not in the database')
+
         # Create the Artin representation
         try:
             self.artin = ArtinRepresentation(self.origin_label)
@@ -1254,11 +1274,6 @@ class ArtinLfunction(Lfunction):
         self.primitive = self.artin.primitive()
         self.degree = self.artin.dimension()
         self.level = self.artin.conductor()
-
-        # disable expensive L-functions, these should not be linked anywhere regardless
-        # this threshold comes from lmfdb/artin_representations/main.py
-        if not is_debug_mode() and self.level**self.degree > 729000000000000:
-            raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as the conductor/degree is too large.')
 
         self.level_factored = factor(self.level)
         self.mu_fe = self.artin.mu_fe()
@@ -1331,6 +1346,10 @@ class HypergeometricMotiveLfunction(Lfunction):
 
         # Put the arguments into the object dictionary
         self.origin_label = args["label"]
+
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for the hypergeometric motive {self.origin_label}, as it is not in the database')
 
         # Get the motive from the database
         self.motive = getHgmData(self.origin_label)
@@ -1419,6 +1438,12 @@ class SymmetricPowerLfunction(Lfunction):
         self.__dict__.update(args)
         self.m = int(self.power)
         self.origin_label = str(self.conductor) + '.' + self.isogeny
+
+        # disable L-functions on the fly in production
+        # FIXME: redirect for m = 1?
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for symmetric power {self.m} of {self.origin_label}, as it is not in the database')
+
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented "
                             + "only for elliptic curves over Q.")

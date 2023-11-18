@@ -70,8 +70,8 @@ def get_multiples_by_Lhash_and_trace_hash(Lhash, degree, trace_hash):
         # hence, self.degree = 2, self.type = CMF
         if degree == 2:
             # our only hope is to find the missing genus 2 curve with a CMF
-            for Lhash in set(elt['Lhash'] for elt in instances
-                             if elt['type'] == 'CMF'):
+            for Lhash in {elt['Lhash'] for elt in instances
+                             if elt['type'] == 'CMF'}:
                 other_trace_hash = db.lfunc_lfunctions.lucky(
                     {'Lhash': Lhash, 'degree': 4}, 'trace_hash')
                 if other_trace_hash is not None:

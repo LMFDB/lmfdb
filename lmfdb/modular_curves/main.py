@@ -88,7 +88,7 @@ def index():
 @modcurve_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=ModCurveSearchArray())
-    if len(info) > 1:
+    if request.args:
         return modcurve_search(info)
     title = r"Modular curves over $\Q$"
     info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
@@ -128,6 +128,8 @@ def modcurve_link(label):
 
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
+    if RSZB_LABEL_RE.fullmatch(label):
+        label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
@@ -293,48 +295,37 @@ def modcurve_jump(info):
         else:
             return redirect(url_for_modcurve_label(label))
 
-def modcurve_postprocess(res, info, query):
-    # Add in the number of models
-    num_models = Counter()
-    labels = [rec["label"] for rec in res]
-    for modcurve in db.modcurve_models.search({"modcurve":{"$in":labels}}, "modcurve"):
-        num_models[modcurve] += 1
-    for rec in res:
-        rec["models"] = num_models[rec["label"]]
-        if rec["genus"] == 0 and not rec["pointless"]: # P^1
-            rec["models"] += 1
-    return res
-
 def blankzeros(n):
     return "$%o$"%n if n else ""
 
 modcurve_columns = SearchColumns(
     [
-        LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-        SearchCol("RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
-        LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label"),
-        LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label"),
-        ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label"),
-        ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label"),
-        ProcessedCol("name", "modcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center", default=True),
-        MathCol("level", "modcurve.level", "Level", default=True),
-        MathCol("index", "modcurve.index", "Index", default=True),
-        MathCol("genus", "modcurve.genus", "Genus", default=True),
+        LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label),
+        SearchCol("RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
+        LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label", default=False),
+        LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label", default=False),
+        ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label", default=False),
+        ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label", default=False),
+        ProcessedCol("name", "modcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center"),
+        MathCol("level", "modcurve.level", "Level"),
+        MathCol("index", "modcurve.index", "Index"),
+        MathCol("genus", "modcurve.genus", "Genus"),
         ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality", default=True),
-        MathCol("cusps", "modcurve.cusps", "Cusps", default=True),
-        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps", default=True),
-        CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center", default=True),
-        ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True),
-        CheckCol("simple", "modcurve.simple", "Simple"),
-        CheckCol("squarefree", "av.squarefree", "Squarefree"),
-        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1"),
-        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center"),
-        ProcessedCol("models", "modcurve.models", "Models", blankzeros),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points"),
-        CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction"),
+        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
+        MathCol("cusps", "modcurve.cusps", "Cusps"),
+        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps"),
+        CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center"),
+        ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True, default=False),
+        CheckCol("simple", "modcurve.simple", "Simple", default=False),
+        CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
+        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
+        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
+        ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", default=False),
+        CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
+        ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "RSZBlabel", "CPlabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "pointless", "num_known_degree1_points"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -404,20 +395,16 @@ def parse_family(inp, query, qfield):
 
 class ModCurve_download(Downloader):
     table = db.gps_gl2zhat_fine
-    title = "Modular curves with provisional labels (RSZB labels are stable, LMFDB labels will change!)"
-    columns = ['RSZBlabel','level','generators']
-    data_format = ["RSZB label", "N=level", "generators=[[a1,b1,c1,d1],[a2,b2,c2,d2],...]]"]
-    data_description = "defining the projection of H to GL(2,Z/NZ) as a list of quadruples that are coefficients of 2x2 matrices that generate H"
-    function_body = {
-        "magma": [
-            "return [r[2] eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(r[2]))|[[c:c in g]:g in r[3]]>:r in data];"
-        ],
-        "sage": [
-            "return [GL(2,Integers(r[1])).subgroup(r[2]) for r in data]"
-        ],
-        "gp": [
-            "return([[Mod(Mat([a[1],a[2];a[3],a[4]]),r[2])|a<-r[3]]|r<-data])"
-        ]
+    title = "Modular curves"
+    inclusions = {
+        "subgroup": (
+            ["level", "generators"],
+            {
+                "magma": 'subgroup := out`level eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(out`level))|out`generators>;',
+                "sage": 'subgroup = GL(2, Integers(out["level"])).subgroup(out["generators"])',
+                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")]',
+            }
+        ),
     }
 
     def download_modular_curve_magma_str(self, label):
@@ -607,6 +594,7 @@ class ModCurve_download(Downloader):
                 return abort(404, "Label not found: %s" % label)
             return self._wrap(Json.dumps(data),
                               label,
+                              lang=lang,
                               title='Data for modular curve with label %s,'%label)
 
 @modcurve_page.route("/download_to_magma/<label>")
@@ -627,7 +615,6 @@ def modcurve_text_download(label):
     err_title="Modular curves search input error",
     shortcuts={"jump": modcurve_jump, "download": ModCurve_download()},
     columns=modcurve_columns,
-    postprocess=modcurve_postprocess,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modcurve_label,
 )
@@ -940,24 +927,24 @@ def low_degree_points():
     return rational_point_search(info)
 
 ratpoint_columns = SearchColumns([
-    LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label, default=True),
-    #SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label"),
-    ProcessedCol("curve_name", "modcurve.standard", "Name", name_to_latex),
-    MathCol("curve_genus", "modcurve.genus", "Genus", default=True),
-    MathCol("degree", "modcurve.point_degree", "Degree", default=True),
+    LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label),
+    #SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
+    ProcessedCol("curve_name", "modcurve.standard", "Name", name_to_latex, default=False),
+    MathCol("curve_genus", "modcurve.genus", "Genus"),
+    MathCol("degree", "modcurve.point_degree", "Degree"),
     ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
-                 lambda x: r"&#x2713;" if x == 4 else (r"" if x in [2,-1,-2,-3,-4] else r"<i>?</i>"), align="center",
-                 default=True),
+                 lambda x: r"&#x2713;" if x == 4 else (r"" if x in [2,-1,-2,-3,-4] else r"<i>?</i>"), align="center"),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
-                 short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
-    LinkCol("Elabel", "modcurve.elliptic_curve_of_point", "Elliptic curve", lambda Elabel: url_for_ECNF_label(Elabel) if "-" in Elabel else url_for_EC_label(Elabel), default=True),
-    ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
-    ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center", short_title="Q(j)"),
-    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, default=True),
-    FloatCol("j_height", "nf.weil_height", "$j$-height", default=True)])
+                 short_title="CM discriminant", mathmode=True, align="center", orig="cm"),
+    LinkCol("Elabel", "modcurve.elliptic_curve_of_point", "Elliptic curve", lambda Elabel: url_for_ECNF_label(Elabel) if "-" in Elabel else url_for_EC_label(Elabel)),
+    ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
+    ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), align="center", short_title="Q(j)"),
+    MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, download_col="jinv"),
+    FloatCol("j_height", "nf.weil_height", "$j$-height"),
+])
 
 def ratpoint_postprocess(res, info, query):
-    labels = list(set(rec["curve_label"] for rec in res))
+    labels = list({rec["curve_label"] for rec in res})
     RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat_fine.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
     for rec in res:
         rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
@@ -968,6 +955,7 @@ def ratpoint_postprocess(res, info, query):
     title="Modular curve low-degree point search results",
     err_title="Modular curves low-degree point search input error",
     columns=ratpoint_columns,
+    shortcuts={"download": Downloader(db.modcurve_points)},
     bread=lambda: get_bread("Low-degree point search results"),
     #postprocess=ratpoint_postprocess,
 )
@@ -1104,6 +1092,10 @@ class RatPointSearchArray(SearchArray):
         self.refine_array = [[curve, level, genus, degree, cm],
                              [residue_field, j_field, jinv, j_height, isolated],
                              [family, cusp]]
+
+    def search_types(self, info):
+        # There is no homepage for a point, so we disable the random link
+        return [("List", "Search again")]
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
