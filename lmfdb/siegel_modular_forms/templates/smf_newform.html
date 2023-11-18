@@ -307,6 +307,7 @@ function show_qexp(qstyle) {
 <table class="ntdata">
   <thead>
     <tr>
+      <th>Discriminant</th>
       <th>Quadratic form</th>
       <th>Coefficient</th>
     </tr>
@@ -340,6 +341,7 @@ function show_qexp(qstyle) {
   {% else %}
     <tr class="more nodisplay">
   {% endif %}
+      <td align="center"> \( {{ q[1]**2-4*q[0]*q[2] }} \) </td>
       <td align="center"> \( {{ q }} \) </td>
       <td align="center"> \( {{ val }} \) </td>
     </tr>
