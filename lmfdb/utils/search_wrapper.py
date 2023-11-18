@@ -48,10 +48,10 @@ class Wrapper():
         SA = info.get("search_array")
         if sort is None and SA is not None and SA.sorts is not None:
             sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            sord = info.get('sort_order', '')
+            sop = info.get('sort_dir', '')
             for name, display, S in sorts:
-                sord = info.get('sort_order', '')
                 if name == sord:
-                    sop = info.get('sort_dir', '')
                     if sop == 'op':
                         return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
                     return S
@@ -148,7 +148,11 @@ class SearchWrapper(Wrapper):
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
-        info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        search_type = info.get("search_type", info.get("hst", ""))
+        if search_type == "List":
+            # Backward compatibility
+            search_type = ""
+        info["search_type"] = search_type
         info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}

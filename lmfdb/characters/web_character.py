@@ -299,7 +299,7 @@ class WebDirichlet(WebCharObject):
         g = complex2str(g)
         x = Rational('%s/%s' % (val, mod))
         n = x.numerator()
-        n = str(n) + "r" if not n == 1 else "r"
+        n = str(n) + "r" if n != 1 else "r"
         d = x.denominator()
         Gtex = r'\Z/%s\Z' % mod
         chitex = self.char2tex(mod, num, tag=False)
@@ -681,9 +681,9 @@ class WebDBDirichlet(WebDirichlet):
             return
         upper_limit = min(31, self.order + 1)
         gal_orbit = gal_orbit[:upper_limit]
-        self.galoisorbit = list(
+        self.galoisorbit = [
             self._char_desc(num, prim=self.isprimitive) for num in gal_orbit
-        )
+        ]
 
     def _set_kernel_field_poly(self):
         if self.order <= 100:
@@ -1165,9 +1165,9 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
                 self.rowtruncate = True
             self.galorbnums = self.first_chi.galois_orbit(upper_limit)
             logger.info(f"[WebDBDirichletOrbit.populate] found galois orbit {self.galorbnums}")
-            self.galoisorbit = list(
+            self.galoisorbit = [
                 self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
-            )
+            ]
 
     def _set_kernel_field_poly(self, orbit_data):
         an_orbit_rep = int(orbit_data['first_label'].split(".")[1])

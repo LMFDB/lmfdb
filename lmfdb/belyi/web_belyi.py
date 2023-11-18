@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing, NumberField, factor
-from lmfdb.utils import names_and_urls, prop_int_pretty
+from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
+from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset,
+        web_latex, compress_expression)
 from flask import url_for
+import re
 
 from lmfdb import db
 
@@ -111,37 +112,46 @@ def make_map_latex(map_str, nu=None):
         phi_str = lc_str + "\\frac{%s}{%s}" % (num_str, den_str)
     return phi_str
 
-def make_plane_model_latex(crv_str, nu=None):
-    if "nu" not in crv_str:
-        R0 = QQ
-    else:
-        R0 = PolynomialRing(QQ, "nu")
-    R = PolynomialRing(R0, 2, "t,x")
-    f = R(crv_str)
-    #return teXify_pol(f)
-    return latex(f)+"=0"
+#def make_plane_model_latex(crv_str, nu=None):
+#    if "nu" not in crv_str:
+#        R0 = QQ
+#    else:
+#        R0 = PolynomialRing(QQ, "nu")
+#    R = PolynomialRing(R0, 2, "t,x")
+#    f = R(crv_str)
+#    #return teXify_pol(f)
+#    return latex(f)+"=0"
+#
+#def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
+#    R0 = PolynomialRing(QQ,"T")
+#    K = NumberField(R0(numfld_cs), "nu") # sage factors out constants, ruining integrality
+#    S0 = PolynomialRing(K,"x")
+#    S = PolynomialRing(S0,"t")
+#    t = S.gens()[0]
+#    f = S(crv_str)
+#    cs = f.coefficients()
+#    cs.reverse()
+#    mons = f.monomials()
+#    L = len(cs)
+#    f_str = ""
+#    for i in range(0,L-1):
+#        f_str += "%s%s" % (latex(factor(cs[i])), latex(t**(L-i-1)))
+#        if i != L-2:
+#            f_str += "+"
+#    if mons[-1] == 1:
+#        f_str += latex(factor(cs[-1]))
+#    else:
+#        f_str += latex(factor(cs[-1])) + latex(mons[-1])
+#    return f_str
 
-def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
-    R0 = PolynomialRing(QQ,"T")
-    K = NumberField(R0(numfld_cs), "nu") # sage factors out constants, ruining integrality
-    S0 = PolynomialRing(K,"x")
-    S = PolynomialRing(S0,"t")
-    t = S.gens()[0]
-    f = S(crv_str)
-    cs = f.coefficients()
-    cs.reverse()
-    mons = f.monomials()
-    L = len(cs)
-    f_str = ""
-    for i in range(0,L-1):
-        f_str += "%s%s" % (latex(factor(cs[i])), latex(t**(L-i-1)))
-        if i != L-2:
-            f_str += "+"
-    if mons[-1] == 1:
-        f_str += latex(factor(cs[-1]))
-    else:
-        f_str += latex(factor(cs[-1])) + latex(mons[-1])
-    return f_str
+def belyi_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    str = str.replace('nu',r'\nu')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return str
 
 ###############################################################################
 # Belyi map class definitions
@@ -253,17 +263,41 @@ class WebBelyiGalmap():
                 my_dict['embedding'] = embed_strs[i]
             data['embeddings_and_triples'].append(my_dict)
 
+        # Friends
+        self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
+        if galmap['label'] != galmap['primitivization']:
+            self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
+        self.friends.extend(names_and_urls(galmap['friends']))
+
+        curve_ref = ''
+        # add curve link, if in LMFDB
+        if 'curve_label' in galmap:
+            data['curve_label'] = galmap['curve_label']
+            for name, url in self.friends:
+                if "curve" in name.lower() and data['curve_label'] in name:
+                    data["curve_url"] = url
+
+            # curve reference
+            curve_ref = ', isomorphic to '
+            if galmap['g'] == 1:
+                curve_ref += 'elliptic'
+            if galmap['g'] == 2:
+                curve_ref += 'genus 2'
+            curve_ref += rf' curve with label <a href="{url}">{data["curve_label"]}</a>'
+
+        # curve equations
         crv_str = galmap["curve"]
         if crv_str == "PP1":
-            data["curve"] = r"\mathbb{P}^1"
+            data["curve"] = r"$\mathbb{P}^1$"
         else:
-            data["curve"] = make_curve_latex(crv_str, nu=self.embedding)
+            data["curve"] = raw_typeset(crv_str, r'$\displaystyle '+compress_expression(make_curve_latex(crv_str, nu=self.embedding))+'$', extra=curve_ref)
 
-        data["map"] = make_map_latex(galmap["map"], nu=self.embedding)
+        data["map"] = raw_typeset(galmap["map"], r'$\displaystyle '+compress_expression(make_map_latex(galmap["map"], nu=self.embedding))+'$')
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         # plane model
         if galmap.get("plane_model"):
-            data["plane_model"] = galmap["plane_model_latex"]
+            data["plane_model"] = raw_typeset(compress_expression(galmap["plane_model"])+'=0', r'$\displaystyle '+belyi_latex(galmap["plane_model"])+'=0$', extra=curve_ref)
+
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
 
@@ -283,19 +317,6 @@ class WebBelyiGalmap():
             ("Size", prop_int_pretty(data["orbit_size"])),
         ]
         self.properties = properties
-
-        # Friends
-        self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
-        if galmap['label'] != galmap['primitivization']:
-            self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
-        self.friends.extend(names_and_urls(galmap['friends']))
-
-        # add curve link, if in LMFDB
-        if 'curve_label' in galmap.keys():
-            data['curve_label'] = galmap['curve_label']
-            for name, url in self.friends:
-                if "curve" in name.lower() and data['curve_label'] in name:
-                    data["curve_url"] = url
 
         # Downloads
         data_label = data["label"]

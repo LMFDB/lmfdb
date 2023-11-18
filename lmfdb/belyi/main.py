@@ -160,8 +160,9 @@ def by_url_belyi_search_url(smthorlabel):
         split = split[:-1]
     if len(split) == 1:
         return by_url_belyi_search_group(group=split[0])
-    elif len(split) == 2:  # passport
-        sigma_spl = (split[1]).split('_')
+
+    sigma_spl = (split[1]).split('_')
+    if len(sigma_spl) == 3 and len(split) == 2: # passport
         return redirect(
             url_for(
                 ".by_url_belyi_passport_label",
@@ -172,8 +173,7 @@ def by_url_belyi_search_url(smthorlabel):
             ),
             301,
         )
-    elif len(split) == 3:  # galmap
-        sigma_spl = (split[1]).split('_')
+    elif len(sigma_spl) == 3 and len(split) == 3:  # galmap
         return redirect(
             url_for(
                 ".by_url_belyi_galmap_label",
@@ -413,18 +413,14 @@ def make_base_field(rec):
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
     title = "Belyi maps"
-    columns = "triples"
-    data_format = ["permutation_triples"]
-    data_description = ["where the permutation triples are in one line notation"]
-    function_body = {
-        "magma": [
-            "deg := #(data[1][1][1]);",
-            "return [[[Sym(deg) ! t: t in s]: s in triples]: triples in data];",
-        ],
-        "sage": [
-            "deg = len(data[0][0][0])",
-            "return [[map(SymmetricGroup(deg), s) for s in triples] for triples in data]",
-        ],
+    inclusions = {
+        "perms": (
+            ["deg", "triples"],
+            {
+                "magma": 'perms := [[Sym(deg) ! t : t in s] : s in out`triples];',
+                "sage": 'perms = [map(SymmetricGroup(deg), s) for s in out["triples"]]',
+            }
+        ),
     }
 
     # could use static method instead of adding self
@@ -605,7 +601,7 @@ class Belyi_download(Downloader):
         if data is None:
             return abort(404, f"Label not found: {label}")
         return self._wrap(Json.dumps(data),
-            label, title=f'Data for embedded Belyi map with label {label},')
+            label, lang=lang, title=f'Data for embedded Belyi map with label {label},')
 
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
@@ -644,14 +640,16 @@ def url_for_label(label):
 
 
 belyi_columns = SearchColumns([
-    LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label, default=True),
-    MathCol("deg", "belyi.degree", "Degree", default=True),
-    SearchCol("group", "belyi.group", "Group", default=True),
-    MathCol("abc", "belyi.abc", "abc", default=True, align="left", short_title="abc triple"),
-    MathCol("lambdas", "belyi.ramification_type", "Ramification type", default=True, align="left"),
-    MathCol("g", "belyi.genus", "Genus", default=True),
-    MathCol("orbit_size", "belyi.orbit_size", "Orbit Size", default=True),
-    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), default=True)])
+    LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label),
+    MathCol("deg", "belyi.degree", "Degree"),
+    SearchCol("group", "belyi.group", "Group"),
+    MathCol("abc", "belyi.abc", "abc", align="left", short_title="abc triple"),
+    MathCol("lambdas", "belyi.ramification_type", "Ramification type", align="left"),
+    MathCol("g", "belyi.genus", "Genus"),
+    MathCol("orbit_size", "belyi.orbit_size", "Orbit Size"),
+    MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), apply_download=False),
+    MathCol("triples", "belyi.permutation_triple", "Triples", align="left", default=False),
+])
 
 
 @search_wrap(

@@ -117,15 +117,15 @@ class AVTest(LmfdbTest):
         r"""
         Test downloading on search results page.
         """
-        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.get_data(as_text=True))
-        self.assertTrue("32*x^10" in response.get_data(as_text=True))
+        data = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D").get_data(as_text=True)
+        self.assertTrue("Each entry in the following data list" in data)
+        self.assertTrue("[1, -10, 50, -160, 360, -592, 720, -640, 400, -160, 32]" in data)
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.get_data(as_text=True))
-        self.assertTrue("32*x^10" in response.get_data(as_text=True))
+        self.assertTrue("Each entry in the following data list" in response.get_data(as_text=True))
+        self.assertTrue("[1, -10, 50, -160, 360, -592, 720, -640, 400, -160, 32]" in response.get_data(as_text=True))
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.get_data(as_text=True))
-        self.assertTrue("32*x^10" in response.get_data(as_text=True))
+        self.assertTrue("Each entry in the following data list" in response.get_data(as_text=True))
+        self.assertTrue("[1, -10, 50, -160, 360, -592, 720, -640, 400, -160, 32]" in response.get_data(as_text=True))
 
     def test_download_all(self):
         r"""

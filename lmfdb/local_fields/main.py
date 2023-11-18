@@ -17,7 +17,7 @@ from lmfdb.utils import (
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -273,44 +273,49 @@ def url_for_label(label):
 def local_field_jump(info):
     return redirect(url_for_label(info['jump']), 301)
 
+def unpack_slopes(slopes, t, u):
+    return eval_rational_list(slopes), t, u
+
 class LF_download(Downloader):
     table = db.lf_fields
     title = '$p$-adic fields'
-    columns = ['p', 'coeffs']
-    data_format = ['p', '[coeffs]']
-    data_description = 'defining the $p$-adic field over Qp by adjoining a root of f(x).'
-    function_body = {'magma':['Prec := 100; // Default precision of 100',
-                              'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
-                     'sage':['Prec = 100 # Default precision of 100',
-                             "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
-                     'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
+    inclusions = {
+        'field': (
+            ["p", "coeffs"],
+            {
+                "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
+                "gp": 'field = Polrev(mapget(out, "coeffs"))',
+            }
+        ),
+    }
 
 lf_columns = SearchColumns([
-    LinkCol("label", "lf.field.label", "Label", url_for_label, default=True),
-    MathCol("n", "lf.degree", "$n$", short_title="degree"),
-    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, default=True),
-    MathCol("p", "lf.qp", "$p$", default=True, short_title="prime"),
-    MathCol("e", "lf.ramification_index", "$e$", default=True, short_title="ramification index"),
-    MathCol("f", "lf.residue_field_degree", "$f$", default=True, short_title="residue field degree"),
-    MathCol("c", "lf.discriminant_exponent", "$c$", default=True, short_title="discriminant exponent"),
+    LinkCol("label", "lf.field.label", "Label", url_for_label),
+    MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs),
+    MathCol("p", "lf.qp", "$p$", short_title="prime"),
+    MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index"),
+    MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree"),
+    MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent"),
     MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                       ["n", "gal", "cache"],
                       lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
-                      default=True),
-    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree"),
-    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree"),
-    ProcessedCol("visible", "lf.visible_slopes", "Visible slopes",
+                      apply_download=lambda n, t, cache: [n, t]),
+    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
+    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
+    ListCol("visible", "lf.visible_slopes", "Visible slopes",
                     show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                       ["slopes", "t", "u"],
                       show_slope_content,
-                      default=True, mathmode=True),
+                      mathmode=True, apply_download=unpack_slopes),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])
 
 def lf_postprocess(res, info, query):
-    cache = knowl_cache(list(set(f"{rec['n']}T{rec['gal']}" for rec in res)))
+    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))
     for rec in res:
         rec["cache"] = cache
     return res

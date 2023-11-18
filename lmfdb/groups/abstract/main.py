@@ -5,7 +5,6 @@ import re
 import time
 from collections import defaultdict, Counter
 from flask import (
-    Markup,
     make_response,
     redirect,
     render_template,
@@ -14,6 +13,7 @@ from flask import (
     url_for,
     abort,
 )
+from markupsafe import Markup
 #from six import BytesIO
 from string import ascii_lowercase
 from io import BytesIO
@@ -520,8 +520,7 @@ def create_boolean_string(gp, type="normal"):
         "quasisimple",
         "almost_simple",
     ]
-    short_show = set(
-        [
+    short_show = {
             "cyclic",
             "abelian",
             "nonabelian",
@@ -530,8 +529,7 @@ def create_boolean_string(gp, type="normal"):
             "nab_simple",
             "nonsolvable",
             "nab_perfect",
-        ]
-    )
+        }
     short_string = type == "knowl"
 
     # Implications should give edges of a DAG, and should be listed in the group.properties_interdependencies knowl
@@ -589,9 +587,9 @@ def index():
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
         info["search_type"] = search_type = info.get(
-            "search_type", info.get("hst", "List")
+            "search_type", info.get("hst", "")
         )
-        if search_type in ["List", "Random"]:
+        if search_type in ["List", "", "Random"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
             info["search_array"] = SubgroupSearchArray()
@@ -879,8 +877,10 @@ def group_jump(info):
 #    )
 
 def show_factor(n):
-    if n is None:
+    if n is None or n == "":
         return ""
+    if n == 0:
+        return "$0$"
     return f"${latex(ZZ(n).factor())}$"
 
 def get_url(label):
@@ -907,15 +907,6 @@ def get_sub_url(label):
 class Group_download(Downloader):
     table = db.gps_groups
     title = "Abstract groups"
-    columns = "label"
-    column_wrappers = { "label" : lambda x : [int(a) for a in x.split(".")] }
-    data_format = ["[N,i]"]
-    data_description = "for the small group identifier N.i of the ith group of order N."
-    function_body = {
-        "magma": ['return [SmallGroup(r[1],r[2]) : r in data];',],
-        "sage": ['return [gap.SmallGroup(r) for r in data]',],
-        "oscar": ['return [small_group(r...) for r in data]',],
-    }
 
 def group_postprocess(res, info, query):
     # We want to get latex for all of the centers, central quotients, commutators and abelianizations in one query
@@ -931,45 +922,45 @@ def group_postprocess(res, info, query):
     return res
 
 group_columns = SearchColumns([
-    LinkCol("label", "group.label", "Label", get_url, default=True),
-    MathCol("tex_name", "group.name", "Name", default=True),
-    ProcessedCol("order", "group.order", "Order", show_factor, default=True, align="center"),
-    ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, default=True, align="center"),
-    MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class"),
-    MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length"),
-    MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length"),
-    MathCol("rank", "group.rank", "Rank"),
-    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", default=True, short_title="conjugacy classes"),
-    MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups"),
-    MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes"),
-    MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups"),
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    ProcessedCol("order", "group.order", "Order", show_factor, align="center"),
+    ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, align="center"),
+    MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class", default=False),
+    MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length", default=False),
+    MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length", default=False),
+    MathCol("rank", "group.rank", "Rank", default=False),
+    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", short_title="conjugacy classes"),
+    MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups", default=False),
+    MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes", default=False),
+    MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups", default=False),
     MultiProcessedCol("center_label", "group.center", "Center",
                       ["center_label", "tex_cache"],
                       display_url_cache,
-                      default=True),
+                      download_col="center_label"),
     MultiProcessedCol("central_quotient", "group.central_quotient_isolabel", "Central quotient",
                       ["central_quotient", "tex_cache"],
-                      display_url_cache),
+                      display_url_cache, download_col="central_quotient", default=False),
     MultiProcessedCol("commutator_label", "group.commutator_isolabel", "Commutator",
                       ["commutator_label", "tex_cache"],
-                      display_url_cache),
+                      display_url_cache, download_col="commutator_label", default=False),
     MultiProcessedCol("abelian_quotient", "group.abelianization_isolabel", "Abelianization",
-                      ["center_label", "smith_abelian_invariants"],
-                      display_url_invs),
+                      ["abelian_quotient", "smith_abelian_invariants"],
+                      display_url_invs, download_col="abelian_quotient", default=False),
     # TODO
     #MultiProcessedCol("schur_multiplier", "group.schur_multiplier", "Schur multiplier",
     #                  ["center_label", "smith_abelian_invariants"],
     #                  display_url_invs),
-    ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms"),
-    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, align="center", short_title="outer automorphisms"),
-    MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree"),
-    MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree"),
-    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree"),
-    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree"),
+    ProcessedCol("aut_order", "group.automorphism", r"$\card{\mathrm{Aut}(G)}$", show_factor, align="center", short_title="automorphisms", default=False),
+    ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, align="center", short_title="outer automorphisms", default=False),
+    MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree", default=False),
+    MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree", default=False),
+    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree", default=False),
+    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree", default=False),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
-                      default=True, align="center")])
+                      align="center")])
 
 @search_wrap(
     table=db.gps_groups,
@@ -1051,49 +1042,50 @@ def group_parse(info, query):
     parse_ints(info, query, "order_factorization_type")
 
 subgroup_columns = SearchColumns([
-    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, default=True, th_class=" border-right", td_class=" border-right"),
+    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
     ColGroup("subgroup_cols", None, "Subgroup", [
         MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
                           display_url,
-                          default=True, short_title="Sub. name"),
-        ProcessedCol("subgroup_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Sub. order"),
-        CheckCol("normal", "group.subgroup.normal", "norm", default=True, short_title="Sub. normal"),
-        CheckCol("characteristic", "group.characteristic_subgroup", "char", default=True, short_title="Sub. characteristic"),
-        CheckCol("cyclic", "group.cyclic", "cyc", default=True, short_title="Sub. cyclic"),
-        CheckCol("abelian", "group.abelian", "ab", default=True, short_title="Sub. abelian"),
-        CheckCol("solvable", "group.solvable", "solv", default=True, short_title="Sub. solvable"),
-        CheckCol("maximal", "group.maximal_subgroup", "max", default=True, short_title="Sub. maximal"),
-        CheckCol("perfect", "group.perfect", "perf", default=True, short_title="Sub. perfect"),
-        CheckCol("central", "group.central", "cent", default=True, short_title="Sub. central")],
-             default=True),
-    SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
+                          short_title="Sub. name", apply_download=False),
+        ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
+        CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
+        CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
+        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
+        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
+        CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable"),
+        CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
+        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
+        CheckCol("central", "group.central", "cent", short_title="Sub. central")]),
+    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
                           ["ambient", "ambient_tex"],
                           display_url,
-                          default=True, short_title="Ambient name"),
-        ProcessedCol("ambient_order", "group.order", "Order", show_factor, default=True, align="center", short_title="Ambient order")],
-             default=True),
-    SpacerCol("", default=True, th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
+                          short_title="Ambient name", apply_download=False),
+        ProcessedCol("ambient_order", "group.order", "Order", show_factor, align="center", short_title="Ambient order")]),
+    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
                           display_url,
-                          default=True, short_title="Quo. name"),
-        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", default=True, align="center", short_title="Quo. order"),
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", default=True, short_title="Quo. cyclic"),
-        CheckCol("quotient_abelian", "group.abelian", "ab", default=True, short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", default=True, short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", default=True, short_title="Quo. maximal")],
-             default=True)],
+                          short_title="Quo. name", apply_download=False),
+        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", short_title="Quo. cyclic"),
+        CheckCol("quotient_abelian", "group.abelian", "ab", short_title="Quo. abelian"),
+        CheckCol("quotient_solvable", "group.solvable", "solv", short_title="Quo. solvable"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal")])],
     tr_class=["bottom-align", ""])
+
+class Subgroup_download(Downloader):
+    table = db.gps_subgroups
 
 @search_wrap(
     table=db.gps_subgroups,
     title="Subgroup search results",
     err_title="Subgroup search input error",
     columns=subgroup_columns,
+    shortcuts={"download": Subgroup_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
     url_for_label=url_for_subgroup_label,
@@ -1221,21 +1213,21 @@ def render_abstract_group(label, data=None):
         title = f"Abstract group ${gp.tex_name}$"
 
         downloads = [
+            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
             ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
             ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
             ("Underlying data", url_for(".gp_data", label=label)),
         ]
 
         # "internal" friends
         sbgp_of_url = (
-            " /Groups/Abstract/?hst=Subgroups&subgroup=" + label + "&search_type=Subgroups"
+            " /Groups/Abstract/?subgroup=" + label + "&search_type=Subgroups"
         )
         sbgp_url = (
-            "/Groups/Abstract/?hst=Subgroups&ambient=" + label + "&search_type=Subgroups"
+            "/Groups/Abstract/?ambient=" + label + "&search_type=Subgroups"
         )
         quot_url = (
-            "/Groups/Abstract/?hst=Subgroups&quotient=" + label + "&search_type=Subgroups"
+            "/Groups/Abstract/?quotient=" + label + "&search_type=Subgroups"
         )
 
         friends = [
@@ -1278,13 +1270,13 @@ def render_abstract_group(label, data=None):
 
         if db.gps_st.count({"component_group": label}) > 0:
             st_url = (
-                "/SatoTateGroup/?hst=List&"
+                "/SatoTateGroup/?"
                 + 'include_irrational=yes&'
                 + 'component_group=%5B'
                 + str(gap_ints[0])
                 + "%2C"
                 + str(gap_ints[1])
-                + "%5D&search_type=List"
+                + "%5D"
             )
             friends += [("As the component group of a Sato-Tate group", st_url)]
 
@@ -1478,10 +1470,16 @@ def picture(label):
             flash_error("No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         # The user specifically requested the image, so we don't impose a limit on the number of conjugacy classes
-        svg_io = BytesIO()
-        svg_io.write(gp.image().encode("utf-8"))
-        svg_io.seek(0)
-        return send_file(svg_io, mimetype='image/svg+xml')
+        try:
+            img = gp.image()
+        except Exception:
+            flash_error("Error generating image for %s.", label)
+            return redirect(url_for(".index"))
+        else:
+            svg_io = BytesIO()
+            svg_io.write(img.encode("utf-8"))
+            svg_io.seek(0)
+            return send_file(svg_io, mimetype='image/svg+xml')
     else:
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))

@@ -286,8 +286,8 @@ class WebNewform():
     # Breadcrumbs
     @property
     def bread(self):
-        kwds = dict(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label,
-                    hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label": self.char_orbit_label,
+                    "hecke_orbit": cremona_letter_code(self.hecke_orbit - 1)}
         if self.embedding_label is not None:
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
@@ -406,9 +406,9 @@ class WebNewform():
         downloads.append(
                 ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
         downloads.append(
-                ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+                ('Code to PariGP', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
-                ('Code to Sage', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+                ('Code to SageMath', url_for(".cmf_code_download", label=self.label, download_type='sage')))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
@@ -541,7 +541,7 @@ class WebNewform():
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
-            nontriv = not (a == 'a')
+            nontriv = a != "a"
             from .main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv=nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
@@ -814,9 +814,9 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_gen(self):
-        if self.field_poly_root_of_unity == 4:
-            return r'\(i = \sqrt{-1}\)'
-        elif (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
+        if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
+            if self.field_poly_root_of_unity == 4:
+                return r'\(i = \sqrt{-1}\)'
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
@@ -872,10 +872,10 @@ function switch_basis(btype) {
         # univariate polynomial rings don't support order,
         # we work around it by introducing a dummy variable
         """
-        if self.field_poly_root_of_unity == 4:
-            return PolynomialRing(QQ, 'i')
         m = self.hecke_ring_cyclotomic_generator
         if m is not None and m != 0:
+            if m == 4:
+                return PolynomialRing(QQ, 'i')
             return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order='negdeglex')
         if self.single_generator:
             if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:

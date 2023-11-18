@@ -44,7 +44,8 @@ def aut_rep_type_sort_key(rep_type):
     elif rep_type == 'F':
         return 0
     else:
-        return int(rep_type[1:])
+        # return int(rep_type[1:])
+        return 1
 
 def family_str_to_char(str):
     return FAMILY_DICT[str]

@@ -110,6 +110,15 @@ app.jinja_env.add_extension('jinja2.ext.do')
 #  * meta_description, shortthanks, feedbackpage
 #  * DEBUG and BETA variables storing whether running in each mode
 
+# try:
+#     # In order to support running under gunicorn with gevent workers,
+#     # we try to patch psycopg2 to add an appropriate callback function
+#     from psycogreen.gevent import patch_psycopg
+#     patch_psycopg()
+# except Exception:
+#     app.logger.info("Exception in psycogreen; not running with gevent support")
+# else:
+#     app.logger.info("Gevent support enabled")
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -141,7 +150,17 @@ def ctx_proc_userdata():
     #vars['ALPHA'] = True # hardwired for alpha branch
 
     def modify_url(**replace):
-        urlparts = urlparse(request.url)
+        url = request.url
+        if url.startswith("https, "):
+            # Cocalc weirdness that lets them serve pages on https from within a project
+            url = url[7:]
+        urlparts = urlparse(url)
+        if "query_add" in replace:
+            assert "query" not in replace
+            if urlparts.query:
+                replace["query"] = replace.pop("query_add") + "&" + urlparts.query
+            else:
+                replace["query"] = replace.pop("query_add")
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
@@ -163,7 +182,7 @@ def ctx_proc_userdata():
 @app.context_processor
 def inject_sidebar():
     from .homepage import get_sidebar
-    return dict(sidebar=get_sidebar())
+    return {"sidebar": get_sidebar()}
 
 ##############################
 # Bottom link to google code #
@@ -249,10 +268,10 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
-@app.after_request
-def print_done(T):
-    app.logger.info(f"done with     = {request.url}")
-    return T
+# @app.after_request
+# def print_done(T):
+#     app.logger.info(f"done with     = {request.url}")
+#     return T
 
 @app.before_request
 def netloc_redirect():
@@ -265,7 +284,7 @@ def netloc_redirect():
     from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
-    app.logger.info(f"Requested url = {request.url}")
+    # app.logger.info(f"Requested url = {request.url}")
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
@@ -657,7 +676,7 @@ def add_colors():
         if color is None:
             from .utils.config import Configuration
             color = Configuration().get_color()
-    return dict(color=all_color_schemes[color].dict())
+    return {"color": all_color_schemes[color].dict()}
 
 
 @app.route("/style.css")

@@ -494,7 +494,7 @@ def check_valid_weight(weight, degree):
 @smf.route("/<int:degree>/")
 def by_url_degree(degree):
     # print("routed to by_url_degree")
-    if not POSINT_RE.match(degree):
+    if not POSINT_RE.match(str(degree)):
         try:
             return redirect(url_for_label(degree), code=301)
         except ValueError:
@@ -514,7 +514,10 @@ def by_url_family_label(degree, family):
     if not valid_family[0]:
         return abort(404, valid_family[1])
     label = str(degree)+"."+str(family)
-    return render_family_webpage(label)
+    # currently we do not have a family webpage
+    # return render_family_webpage(label)
+    info = to_dict(request.args, search_array=SMFSearchArray())
+    return newform_search(info)
 
 @smf.route("/<int:degree>/<family>/<int:level>/")
 def by_url_level(degree, family, level):
@@ -541,11 +544,14 @@ def by_url_full_space_label(degree, family, level, weight):
     if not valid_weight[0]:
         return abort(404, valid_weight[1])
     label = ".".join([str(w) for w in [degree, family, level, weight]])
-    return render_full_space_webpage(label)
+    # At the moment we do not have full space webpages
+    # return render_full_space_webpage(label)
+    info = to_dict(request.args, search_array=SMFSearchArray())
+    return newform_search(info)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>")
+@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
 def by_url_space_label(degree, family, level, weight, char_orbit_label):
-    # print("routed to by_url_space_label")
+    # raise ValueError("routed to by_url_space_label")
     valid_weight = check_valid_weight(weight, degree)
     if not valid_weight[0]:
         return abort(404, valid_weight[1])
@@ -931,8 +937,9 @@ newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
     MathCol("level", "mf.siegel.level", "Level"),
     MathCol("degree", "mf.siegel.degree", "Degree"),
-    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
-    MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
+    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : '$(wt[0], wt[1])$' if wt[1] != 0 else wt[0],align="center"),
+    ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]),align="center"),
+    # MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
@@ -970,7 +977,7 @@ newform_columns = SearchColumns([
              default=True),
     SpacerCol("atkin_lehner", contingent=display_AL, default=True),
     ColGroup("atkin_lehner", "mf.siegel.atkin-lehner", "A-L signs",
-             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
+             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])] if "atkin_lehner_eigenvals" in info["results"][0] else "",
              contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
     ProcessedCol("fricke_eigenval", "mf.siegel.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
@@ -1183,6 +1190,7 @@ def dimension_space_postprocess(res, info, query):
         (query.get('weight_parity') == 1 and query.get('char_parity') == -1)):
         raise ValueError("Inconsistent parity for character and weight")
     urlgen_info = dict(info)
+    #print(urlgen_info)
     urlgen_info['count'] = 50
     # Remove entries that are unused for dimension tables
     urlgen_info.pop('hidden_search_type', None)
@@ -1236,9 +1244,9 @@ def dimension_space_postprocess(res, info, query):
         N = space['level']
         k = tuple(space['weight'])
         dims = DimGrid.from_db(space)
-        if space.get('num_forms') is None:
-            dim_dict[g,F,N,k] = False
-        elif (g,F,N,k) not in dim_dict:
+       # if space.get('num_forms') is None:
+        #    dim_dict[g,F,N,k] = False
+        if (g,F,N,k) not in dim_dict:
             dim_dict[g,F,N,k] = dims
         elif dim_dict[g,F,N,k] is not False:
             dim_dict[g,F,N,k] += dims
@@ -1391,6 +1399,7 @@ space_columns = SearchColumns([
              learnmore=learnmore_list)
 def space_search(info, query):
     newspace_parse(info, query)
+    print(info)
     set_info_funcs(info)
 
 @smf.route("/Source")
@@ -1427,42 +1436,8 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
-
-def projective_image_sort_key(im_type):
-    if im_type == 'A4':
-        return -3
-    elif im_type == 'S4':
-        return -2
-    elif im_type == 'A5':
-        return -1
-    elif im_type is None:
-        return 10000
-    else:
-        return int(im_type[1:])
-    
-def self_twist_type_formatter(x):
-    if x == 0:
-        return 'neither'
-    if x == 1:
-        return 'CM only'
-    if x == 2:
-        return 'RM only'
-    if x == 3:
-        return 'both'
-    return x # c = 'neither', 'CM only', 'RM only' or 'both'
-
 def rel_dim_formatter(x):
     return 'dim=%s&dim_type=rel' % range_formatter(x)
-
-def self_twist_type_query_formatter(x):
-    if x in [0, 'neither']:
-        return 'cm=no&rm=no'
-    elif x in [1, 'CM only']:
-        return 'cm=yes&rm=no'
-    elif x in [2, 'RM only']:
-        return 'cm=no&rm=yes'
-    elif x in [3, 'both']:
-        return 'cm=yes&rm=yes'
 
 def level_primes_formatter(x):
     subset = x.get('$containedin')
@@ -1489,7 +1464,7 @@ class SMF_stats(StatsDisplay):
         #self.ndim = comma(db.mf_hecke_cc.count())
         # !!! WARNING : at the moment not too long, but we do not want to
         # retain this
-        self.ndim = sum([f['dim'] for f in db.smf_newforms.search()])
+        self.ndim = comma(sum([f['dim'] for f in db.smf_newforms.search()]))
         self.weight_knowl = display_knowl('mf.siegel.weight_k_j', title='weight')
         self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
@@ -1599,7 +1574,8 @@ class SMFSearchArray(SearchArray):
     for name, disp, sord in _sort:
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
-    _sort_spaces = _sort[:-3]
+    _sort_spaces = _sort[:-4]
+    _sort_spaces += [('cusp_dim', 'dim. cusp', ['cusp_dim','level'])]
     _sort_forms = [(name, disp, sord + ['dim', 'hecke_orbit']) for (name, disp, sord) in _sort]
     sorts = {'List': _sort_forms,
              'Traces': _sort_forms,
@@ -1722,6 +1698,14 @@ class SMFSearchArray(SearchArray):
             name='dim',
             label='')
 
+        space_dim = TextBox(
+            name='cusp_dim',
+            knowl='',
+            label='Cusp Dim',
+            example='1',
+            example_span='1-5')
+            
+            
         coefficient_field = TextBox(
             name='nf_label',
             knowl='mf.siegel.coefficient_field',
@@ -1815,8 +1799,8 @@ class SMFSearchArray(SearchArray):
             [coefficient_ring_index, hecke_ring_generator_nbound, Nk2, dim, aut_type]
         ]
         self.space_array = [
-            [degree, family, level, weight, Nk2, dim],
-            [level_primes, character, char_primitive, char_order]
+            [degree, family, level, weight, Nk2],
+            [level_primes, character, char_primitive, char_order, space_dim]
         ]
 
         self.sd_array = [

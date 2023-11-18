@@ -115,12 +115,19 @@ def web_latex(x, enclose=True):
 
 def compress_int(n, cutoff=15, sides=2):
     res = str(n)
-    if abs(n) >= 10**cutoff:
-        short = res[:sides + (1 if n < 0 else 0)] + r'\!\cdots\!' + res[-sides:]
+    minus_width = 1 if '-' in res else 0
+    if len(res) > cutoff+minus_width:
+        short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
         return short, True
     else:
         return res, False
 
+def compress_expression(expression, cutoff=15, sides=2):
+    r"""
+    Takes a string and any numbers (consecutive digits) longer than
+    cutoff gets replaced
+    """
+    return re.sub(r'\d+', lambda a: compress_int(str(a.group()),cutoff, sides)[0], expression)
 
 def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     short, shortened = compress_int(n, cutoff=cutoff, sides=sides)
@@ -809,7 +816,7 @@ def dispcyclomat(n, mat):
 
 
 def list_to_latex_matrix(li):
-    """
+    r"""
     Given a list of lists representing a matrix, output a latex representation
     of that matrix as a string.
 

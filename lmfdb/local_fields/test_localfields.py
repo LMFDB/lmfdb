@@ -11,7 +11,7 @@ class LocalFieldTest(LmfdbTest):
         assert '4 matches' in L.get_data(as_text=True)
 
     def test_search_f(self):
-        L = self.tc.get('/padicField/?n=6&p=2&f=3&search_type=List')
+        L = self.tc.get('/padicField/?n=6&p=2&f=3')
         dat = L.get_data(as_text=True)
         assert '2.6.4.1' not in dat
         assert '2.6.6.2' in dat

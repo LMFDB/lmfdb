@@ -748,7 +748,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     include *just* the string and not the response object.
     """
     # logger.debug("kwargs: %s", request.args)
-    kwargs = kwargs or dict(((k, v) for k, v in request.args.items()))
+    kwargs = kwargs or dict(request.args.items())
     # logger.debug("kwargs: %s" , kwargs)
     if timestamp is None:
         # fetch and convert the ms timestamp to datetime

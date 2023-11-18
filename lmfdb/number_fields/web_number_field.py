@@ -810,7 +810,7 @@ class WebNumberField:
         if not cg_list:
             invs = 'trivial'
         else:
-            invs = '$%s$'%str(cg_list)
+            invs = cg_list
         if in_search_results:
             invs += " " + self.short_grh_string()
         return invs
@@ -979,4 +979,4 @@ class WebNumberField:
             self.code['field'][lang] = self.code['field'][lang] % f
         for lang in self.code['class_number_formula']:
             self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
-        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        self.code['show'] = { lang:'' for lang in self.code['prompt'] }

@@ -284,8 +284,7 @@ class ColorScheme():
             if hasattr(subcls, 'code'):
                 yield subcls
             else:
-                for subsub in subcls.__allsubclasses__():
-                    yield subsub
+                yield from subcls.__allsubclasses__()
 
 
 class YellowKnowls(ColorScheme):

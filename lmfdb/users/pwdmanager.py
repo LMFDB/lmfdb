@@ -191,7 +191,7 @@ class PostgresUserTable(PostgresBase):
         #TODO: use identifiers
         selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
-        return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
+        return [dict(zip(["username","full_name"], rec)) for rec in cur]
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
@@ -247,7 +247,7 @@ class LmfdbUser(UserMixin):
         self._uid = uid
         self._authenticated = False
         self._dirty = False  # flag if we have to save
-        self._data = dict([(_, None) for _ in LmfdbUser.properties])
+        self._data = {_: None for _ in LmfdbUser.properties}
 
         self.exists = userdb.user_exists(uid)
         if self.exists:

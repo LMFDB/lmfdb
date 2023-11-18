@@ -115,12 +115,12 @@ class EllCurveTest(LmfdbTest):
 
     def test_galois_image_search(self):
         # This searches for an adelic image label '550.1200.37.?' which exists in ec_curvedata
-        L = self.tc.get('/EllipticCurve/Q/?galois_image=550.1200.37.%3F&search_type=List')
+        L = self.tc.get('/EllipticCurve/Q/?galois_image=550.1200.37.%3F')
         assert '121.d1' in L.get_data(as_text=True)
 
         # This searches for both adelic image label '550.1200.37.?' and ell-adic image
         # label 5.60.0.1, which exists in ec_curvedata
-        L = self.tc.get('/EllipticCurve/Q/?hst=List&cm=noCM&galois_image=550.1200.37.%3F%2C5.60.0.1&search_type=List')
+        L = self.tc.get('/EllipticCurve/Q/?cm=noCM&galois_image=550.1200.37.%3F%2C5.60.0.1')
         assert '3025.a2' in L.get_data(as_text=True)
 
     def test_isogeny_class(self):

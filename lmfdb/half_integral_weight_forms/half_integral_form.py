@@ -26,13 +26,13 @@ def half_integral_weight_form_render_webpage():
         return half_integral_weight_form_search(args)
 
 # hiwf_columns = SearchColumns([
-#    LinkCol("label", None, "Label", lambda label: url_for("hiwf.render_hiwf_webpage", label=label), default=True),
-#    MathCol("level", None, "Level", default=True),
-#    MathCol("weight", None, "Weight", default=True),
+#    LinkCol("label", None, "Label", lambda label: url_for("hiwf.render_hiwf_webpage", label=label)),
+#    MathCol("level", None, "Level"),
+#    MathCol("weight", None, "Weight"),
 #    ProcessedCol("character", None, "Character",
 #                 lambda char: r'<a href="Character/Dirichlet/%s">$\chi_{%s}(%s, \cdot)$</a>' % (char.replace(".", "/"), char.split(".")[0], char.split(".")[1]),
 #                 default=True),
-#    MathCol("dim", None, "Dimension", default=True)])
+#    MathCol("dim", None, "Dimension")])
 # hiwf_columns.dummy_download = True
 
 

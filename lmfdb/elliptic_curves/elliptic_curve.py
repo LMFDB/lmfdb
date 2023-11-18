@@ -99,8 +99,8 @@ def rational_elliptic_curves(err_args=None):
     counts = get_stats()
 
     conductor_list_endpoints = [1, 100, 1000, 10000, 100000, int(counts.max_N_Cremona) + 1]
-    conductor_list = dict([(r,r) for r in ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
-                                                                                            conductor_list_endpoints[1:])]])
+    conductor_list = {r: r for r in ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
+                                                                                            conductor_list_endpoints[1:])]}
     conductor_list[">{}".format(counts.max_N_Cremona)] = "{}-".format(counts.max_N_Cremona)
 
     rank_list = list(range(counts.max_rank + 1))
@@ -205,7 +205,7 @@ class ECstats(StatsDisplay):
     formatters = {'torsion_structure': latex_tor,
                   'sha': latex_sha}
 
-    query_formatters = {'torsion_structure': 'torsion_structure={}'.format,
+    query_formatters = {'torsion_structure': 'torsion={}'.format,
                         'sha': 'sha={}'.format}
 
     stat_list = [
@@ -398,14 +398,16 @@ modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + 
 class EC_download(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
-    columns = "ainvs"
-    data_format = ["[[a1, a2, a3, a4, a6] Weierstrass coefficients]"]
-    data_description = "defining the elliptic curve y^2 + a1xy + a3y = x^3 + a2x^2 + a4x + a6."
-    function_body = {
-        "magma": ["return [EllipticCurve([a:a in ai]):ai in data];",],
-        "sage": ["return [EllipticCurve(ai) for ai in data]",],
-        "gp": ["[ellinit(ai)|ai<-data];"],
-        "oscar": ["return [EllipticCurve(ai) for ai in data]",],
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"))',
+                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+            }
+        )
     }
 
 def make_modcurve_link(label):
@@ -414,34 +416,34 @@ def make_modcurve_link(label):
 
 ec_columns = SearchColumns([
     LinkCol("lmfdb_label", "ec.q.lmfdb_label", "Label", lambda label: url_for(".by_ec_label", label=label),
-             default=True, align="center", short_title="LMFDB curve label"),
+             align="center", short_title="LMFDB curve label"),
     MultiProcessedCol("cremona_label", "ec.q.cremona_label", "Cremona label",
                        ["Clabel", "conductor"],
                        lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
-                       align="center", short_title="Cremona curve label"),
+                       align="center", short_title="Cremona curve label", download_col="Clabel", default=False),
     LinkCol("lmfdb_iso", "ec.q.lmfdb_label", "Class", lambda label: url_for(".by_ec_label", label=label),
-             default=True, align="center", short_title="LMFDB class label"),
+             align="center", short_title="LMFDB class label"),
     MultiProcessedCol("cremona_iso", "ec.q.cremona_label", "Cremona class",
                        ["Ciso", "conductor"],
                        lambda label, conductor: '<a href="%s">%s</a>' % (url_for(".by_ec_label", label=label), label) if conductor < CREMONA_BOUND else " - ",
-                       align="center", short_title="Cremona class label"),
+                       align="center", short_title="Cremona class label", download_col="Ciso", default=False),
     MathCol("class_size", "ec.isogeny_class", "Class size", align="center", default=lambda info: info.get("class_size") or info.get("optimal") == "on"),
     MathCol("class_deg", "ec.isogeny_class_degree", "Class degree", align="center", default=lambda info: info.get("class_deg")),
-    ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
+    ProcessedCol("conductor", "ec.q.conductor", "Conductor", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
     MultiProcessedCol("disc", "ec.discriminant", "Discriminant", ["signD", "absD"], lambda s, a: web_latex_factored_integer(s*ZZ(a)),
-                       default=lambda info: info.get("discriminant"), align="center"),
-    MathCol("rank", "ec.rank", "Rank", default=True),
+                       default=lambda info: info.get("discriminant"), align="center", apply_download=lambda s, a: s*a),
+    MathCol("rank", "ec.rank", "Rank"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
     ProcessedCol("geom_end_alg", "ag.endomorphism_algebra", r"$\textrm{End}^0(E_{\overline\Q})$",
                   lambda v: r"$\Q$" if not v else r"$\Q(\sqrt{%d})$"%(integer_squarefree_part(v)),
-                  short_title="Qbar-end algebra", align="center", orig="cm"),
+                  short_title="Qbar-end algebra", align="center", orig="cm", default=False),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
-                  short_title="CM discriminant", mathmode=True, align="center", default=True, orig="cm"),
+                  short_title="CM discriminant", mathmode=True, align="center", orig="cm"),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
-                  short_title="Sato-Tate group", align="center", orig="cm"),
-    CheckCol("semistable", "ec.reduction", "Semistable"),
-    CheckCol("potential_good_reduction", "ec.reduction", "Potentially good"),
+                  short_title="Sato-Tate group", align="center", orig="cm", apply_download=lambda v:'1.2.A.1.1a' if v==0 else '1.2.B.2.1a', default=False),
+    CheckCol("semistable", "ec.reduction", "Semistable", default=False),
+    CheckCol("potential_good_reduction", "ec.reduction", "Potentially good", default=False),
     ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
                   default=lambda info: info.get("nonmax_primes"), short_title="nonmaximal primes", mathmode=True, align="center"),
     ProcessedCol("elladic_images", "ec.galois_rep_elladic_image", r"$\ell$-adic images", lambda v: ", ".join([display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v]),
@@ -451,23 +453,29 @@ ec_columns = SearchColumns([
     MathCol("adelic_level", "ec.galois_rep", "Adelic level", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
     MathCol("adelic_index", "ec.galois_rep", "Adelic index", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
     MathCol("adelic_genus", "ec.galois_rep", "Adelic genus", default=lambda info: info.get("adelic_level") or info.get("adelic_index") or info.get("adelic_genus")),
-    ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True),
-    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
+    ProcessedCol("regulator", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, default=False),
+    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш", default=False),
     ProcessedCol("sha_primes", "ec.analytic_sha_order", "Ш primes", lambda primes: ", ".join(str(p) for p in primes),
                   default=lambda info: info.get("sha_primes"), mathmode=True, align="center"),
     MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
              default=lambda info: info.get("num_int_pts"), align="center"),
-    MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center"),
+    MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center", default=False),
     ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)), short_title="Faltings height",
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
     ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
-                  short_title="j-invariant", align="center"),
-    MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left"),
-    ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, default=True, short_title="Weierstrass equation", align="left", orig="ainvs"),
+                  short_title="j-invariant", align="center", default=False),
+    MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
+    ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
 ])
 
+class ECDownloader(Downloader):
+    table = db.ec_curvedata
+    title = "Elliptic curves"
+    def modify_query(self, info, query):
+        if info.get("optimal") == "on":
+            query["__one_per__"] = "lmfdb_iso"
 
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
@@ -477,7 +485,7 @@ ec_columns = SearchColumns([
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':EC_download()},
+                        'download':ECDownloader()},
              bread=lambda:get_bread('Search results'))
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')

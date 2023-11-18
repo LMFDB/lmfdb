@@ -1,5 +1,5 @@
-from sage.all import (gcd, Mod, Integer, Integers, Rational, pari,
-                      DirichletGroup, CyclotomicField, euler_phi, lcm)
+from sage.all import (gcd, Mod, Integer, Integers, Rational, Rationals, PolynomialRing,
+                      pari,DirichletGroup, CyclotomicField, euler_phi, lcm)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
 from lmfdb.logger import make_logger
@@ -253,6 +253,8 @@ class ConreyCharacter():
 
     @cached_method
     def kernel_field_poly(self):
+        if self.order == 1:
+            return PolynomialRing(Rationals(),'x')([0,1])
         pol = self.G.galoissubcyclo(self.G.charker(self.chi_pari))
         if self.order <= 12:
             pol = pol.polredabs()

@@ -277,8 +277,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2&search_type=List", "6.1")
-        self.not_check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2&search_type=List", "10.1")
+        self.check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2", "6.1")
+        self.not_check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2", "10.1")
 
     #################################################################
     ##################### advanced searches #########################
@@ -290,8 +290,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?outer_group=4.2&search_type=List", "8.1")
-        self.not_check_args("/Groups/Abstract/?outer_group=4.2&search_type=List", "16.8")
+        self.check_args("/Groups/Abstract/?outer_group=4.2", "8.1")
+        self.not_check_args("/Groups/Abstract/?outer_group=4.2", "16.8")
 
     def test_outer_order_search(self):
         r"""
@@ -299,8 +299,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?outer_order=3&search_type=List", "14.1")
-        self.not_check_args("/Groups/Abstract/?outer_order=3&search_type=List", "18.3")
+        self.check_args("/Groups/Abstract/?outer_order=3", "14.1")
+        self.not_check_args("/Groups/Abstract/?outer_order=3", "18.3")
 
     def test_metabelian_search(self):
         r"""
@@ -308,10 +308,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?metabelian=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?metabelian=yes&search_type=List", "24.3")
-        self.check_args("/Groups/Abstract/?metabelian=no&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?metabelian=no&search_type=List", "13.1")
+        self.check_args("/Groups/Abstract/?metabelian=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?metabelian=yes", "24.3")
+        self.check_args("/Groups/Abstract/?metabelian=no", "24.3")
+        self.not_check_args("/Groups/Abstract/?metabelian=no", "13.1")
 
     def test_metacyclic_search(self):
         r"""
@@ -319,10 +319,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?metacyclic=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?metacyclic=yes&search_type=List", "12.3")
-        self.check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.3")
-        self.not_check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.2")
+        self.check_args("/Groups/Abstract/?metacyclic=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?metacyclic=yes", "12.3")
+        self.check_args("/Groups/Abstract/?metacyclic=no", "12.3")
+        self.not_check_args("/Groups/Abstract/?metacyclic=no", "12.2")
 
     def test_almost_simple_search(self):
         r"""
@@ -330,10 +330,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?almost_simple=yes&search_type=List", "60.5")
-        self.not_check_args("/Groups/Abstract/?almost_simple=yes&search_type=List", "8.3")
-        self.check_args("/Groups/Abstract/?almost_simple=no&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?almost_simple=no&search_type=List", "60.5")
+        self.check_args("/Groups/Abstract/?almost_simple=yes", "60.5")
+        self.not_check_args("/Groups/Abstract/?almost_simple=yes", "8.3")
+        self.check_args("/Groups/Abstract/?almost_simple=no", "1.1")
+        self.not_check_args("/Groups/Abstract/?almost_simple=no", "60.5")
 
     def test_quasisimple_search(self):
         r"""
@@ -341,10 +341,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?quasisimple=yes&search_type=List", "60.5")
-        self.not_check_args("/Groups/Abstract/?quasisimple=yes&search_type=List", "7.1")
-        self.check_args("/Groups/Abstract/?quasisimple=no&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?quasisimple=no&search_type=List", "60.5")
+        self.check_args("/Groups/Abstract/?quasisimple=yes", "60.5")
+        self.not_check_args("/Groups/Abstract/?quasisimple=yes", "7.1")
+        self.check_args("/Groups/Abstract/?quasisimple=no", "1.1")
+        self.not_check_args("/Groups/Abstract/?quasisimple=no", "60.5")
 
     def test_Agroup_search(self):
         r"""
@@ -352,10 +352,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?Agroup=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?Agroup=yes&search_type=List", "16.3")
-        self.check_args("/Groups/Abstract/?Agroup=no&search_type=List", "8.3")
-        self.not_check_args("/Groups/Abstract/?Agroup=no&search_type=List", "16.14")
+        self.check_args("/Groups/Abstract/?Agroup=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?Agroup=yes", "16.3")
+        self.check_args("/Groups/Abstract/?Agroup=no", "8.3")
+        self.not_check_args("/Groups/Abstract/?Agroup=no", "16.14")
 
     def test_Zgroup_search(self):
         r"""
@@ -363,10 +363,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?Zgroup=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?Zgroup=yes&search_type=List", "12.3")
-        self.check_args("/Groups/Abstract/?Zgroup=no&search_type=List", "4.2")
-        self.not_check_args("/Groups/Abstract/?Zgroup=no&search_type=List", "12.2")
+        self.check_args("/Groups/Abstract/?Zgroup=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?Zgroup=yes", "12.3")
+        self.check_args("/Groups/Abstract/?Zgroup=no", "4.2")
+        self.not_check_args("/Groups/Abstract/?Zgroup=no", "12.2")
 
     def test_derived_length_search(self):
         r"""
@@ -374,8 +374,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?derived_length=3&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?derived_length=3&search_type=List", "16.13")
+        self.check_args("/Groups/Abstract/?derived_length=3", "24.3")
+        self.not_check_args("/Groups/Abstract/?derived_length=3", "16.13")
 
     def test_frattini_label_search(self):
         r"""
@@ -383,8 +383,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?frattini_label=4.2&search_type=List", "16.2")
-        self.not_check_args("/Groups/Abstract/?frattini_label=4.2&search_type=List", "5.1")
+        self.check_args("/Groups/Abstract/?frattini_label=4.2", "16.2")
+        self.not_check_args("/Groups/Abstract/?frattini_label=4.2", "5.1")
 
     def test_supersolvable_search(self):
         r"""
@@ -392,10 +392,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?supersolvable=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?supersolvable=yes&search_type=List", "12.3")
-        self.check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.3")
-        self.not_check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.4")
+        self.check_args("/Groups/Abstract/?supersolvable=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?supersolvable=yes", "12.3")
+        self.check_args("/Groups/Abstract/?supersolvable=no", "12.3")
+        self.not_check_args("/Groups/Abstract/?supersolvable=no", "12.4")
 
     def test_monomial_search(self):
         r"""
@@ -403,10 +403,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?monomial=yes&search_type=List", "2.1")
-        self.not_check_args("/Groups/Abstract/?monomial=yes&search_type=List", "24.3")
-        self.check_args("/Groups/Abstract/?monomial=no&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?monomial=no&search_type=List", "16.10")
+        self.check_args("/Groups/Abstract/?monomial=yes", "2.1")
+        self.not_check_args("/Groups/Abstract/?monomial=yes", "24.3")
+        self.check_args("/Groups/Abstract/?monomial=no", "24.3")
+        self.not_check_args("/Groups/Abstract/?monomial=no", "16.10")
 
     def test_rational_search(self):
         r"""
@@ -414,10 +414,10 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?rational=yes&search_type=List", "2.1")
-        self.not_check_args("/Groups/Abstract/?rational=yes&search_type=List", "7.1")
-        self.check_args("/Groups/Abstract/?rational=no&search_type=List", "3.1")
-        self.not_check_args("/Groups/Abstract/?rational=no&search_type=List", "12.4")
+        self.check_args("/Groups/Abstract/?rational=yes", "2.1")
+        self.not_check_args("/Groups/Abstract/?rational=yes", "7.1")
+        self.check_args("/Groups/Abstract/?rational=no", "3.1")
+        self.not_check_args("/Groups/Abstract/?rational=no", "12.4")
 
     def test_rank_search(self):
         r"""
@@ -425,8 +425,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         if no_groups():
             return
-        self.check_args("/Groups/Abstract/?rank=3&search_type=List", "8.5")
-        self.not_check_args("/Groups/Abstract/?rank=3&search_type=List", "18.5")
+        self.check_args("/Groups/Abstract/?rank=3", "8.5")
+        self.not_check_args("/Groups/Abstract/?rank=3", "18.5")
 
     #################################################################
     ##################### subgroup searches #########################

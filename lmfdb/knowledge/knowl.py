@@ -50,8 +50,7 @@ defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
-common_words = set(
-    ['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'])
+common_words = {'and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'}
 
 # categories, level 0, never change this id
 #CAT_ID = 'categories'
@@ -110,7 +109,7 @@ def extract_typ(kid):
 
 
 def extract_links(content):
-    return sorted(set(x[2] for x in link_finder_re.findall(content) if x[2]))
+    return sorted({x[2] for x in link_finder_re.findall(content) if x[2]})
 
 
 def normalize_define(term):
@@ -122,7 +121,7 @@ def normalize_define(term):
 
 
 def extract_defines(content):
-    return sorted(set(x.strip() for x in defines_finder_re.findall(content)))
+    return sorted({x.strip() for x in defines_finder_re.findall(content)})
 
 # We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
@@ -145,7 +144,7 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            self.cached_titles = dict([(elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'])])
+            self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
         return self.cached_titles
 
     @property
@@ -180,7 +179,7 @@ class KnowlBackend(PostgresBase):
         if not beta:
             cur = self._execute(selecter, [ID, 1])
             if cur.rowcount > 0:
-                return {k:v for k,v in zip(fields, cur.fetchone())}
+                return dict(zip(fields, cur.fetchone()))
         cur = self._execute(selecter, [ID, -2 if allow_deleted else 0])
         if cur.rowcount > 0:
             return dict(zip(fields, cur.fetchone()))
@@ -462,7 +461,7 @@ class KnowlBackend(PostgresBase):
         """
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
         """
-        kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."]))
+        kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
 
         def filter_from_matches(pattern):
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
@@ -666,7 +665,7 @@ class KnowlBackend(PostgresBase):
         as in ``code_references``, and ``links`` is a list of purported knowl
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
-        all_kids = set(k['id'] for k in self.get_all_knowls(['id']))
+        all_kids = {k['id'] for k in self.get_all_knowls(['id'])}
         if sys.version_info[0] == 3:
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
         else:
@@ -854,9 +853,9 @@ class Knowl():
             #                          "status":0}]
             uids = [ elt['last_author'] for elt in self.edit_history]
             if uids:
-                full_names = dict([ (elt['username'], elt['full_name']) for elt in userdb.full_names(uids)])
+                full_names = {elt['username']: elt['full_name'] for elt in userdb.full_names(uids)}
             else:
-                full_names = dict({})
+                full_names = {}
             self.previous_review_spot = None
             for i, elt in enumerate(self.edit_history):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
