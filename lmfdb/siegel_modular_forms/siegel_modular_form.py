@@ -1496,7 +1496,7 @@ class SMF_stats(StatsDisplay):
         #self.ndim = comma(db.mf_hecke_cc.count())
         # !!! WARNING : at the moment not too long, but we do not want to
         # retain this
-        self.ndim = sum([f['dim'] for f in db.smf_newforms.search()])
+        self.ndim = comma(sum([f['dim'] for f in db.smf_newforms.search()]))
         self.weight_knowl = display_knowl('mf.siegel.weight_k_j', title='weight')
         self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
