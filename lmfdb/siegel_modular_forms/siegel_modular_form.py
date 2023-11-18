@@ -1607,7 +1607,8 @@ class SMFSearchArray(SearchArray):
     for name, disp, sord in _sort:
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
-    _sort_spaces = _sort[:-3]
+    _sort_spaces = _sort[:-4]
+    _sort_spaces += [('cusp_dim', 'dim. cusp', ['cusp_dim','level'])]
     _sort_forms = [(name, disp, sord + ['dim', 'hecke_orbit']) for (name, disp, sord) in _sort]
     sorts = {'List': _sort_forms,
              'Traces': _sort_forms,
