@@ -937,8 +937,9 @@ newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
     MathCol("level", "mf.siegel.level", "Level"),
     MathCol("degree", "mf.siegel.degree", "Degree"),
-    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]) if wt[1] != 0 else wt[0],align="center"),
-    MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
+    # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : '$(wt[0], wt[1])$' if wt[1] != 0 else wt[0],align="center"),
+    ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]),align="center"),
+    # MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
     MultiProcessedCol("character", "smf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
@@ -1398,6 +1399,7 @@ space_columns = SearchColumns([
              learnmore=learnmore_list)
 def space_search(info, query):
     newspace_parse(info, query)
+    print(info)
     set_info_funcs(info)
 
 @smf.route("/Source")
@@ -1434,42 +1436,8 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
-
-def projective_image_sort_key(im_type):
-    if im_type == 'A4':
-        return -3
-    elif im_type == 'S4':
-        return -2
-    elif im_type == 'A5':
-        return -1
-    elif im_type is None:
-        return 10000
-    else:
-        return int(im_type[1:])
-    
-def self_twist_type_formatter(x):
-    if x == 0:
-        return 'neither'
-    if x == 1:
-        return 'CM only'
-    if x == 2:
-        return 'RM only'
-    if x == 3:
-        return 'both'
-    return x # c = 'neither', 'CM only', 'RM only' or 'both'
-
 def rel_dim_formatter(x):
     return 'dim=%s&dim_type=rel' % range_formatter(x)
-
-def self_twist_type_query_formatter(x):
-    if x in [0, 'neither']:
-        return 'cm=no&rm=no'
-    elif x in [1, 'CM only']:
-        return 'cm=yes&rm=no'
-    elif x in [2, 'RM only']:
-        return 'cm=no&rm=yes'
-    elif x in [3, 'both']:
-        return 'cm=yes&rm=yes'
 
 def level_primes_formatter(x):
     subset = x.get('$containedin')
@@ -1496,7 +1464,7 @@ class SMF_stats(StatsDisplay):
         #self.ndim = comma(db.mf_hecke_cc.count())
         # !!! WARNING : at the moment not too long, but we do not want to
         # retain this
-        self.ndim = sum([f['dim'] for f in db.smf_newforms.search()])
+        self.ndim = comma(sum([f['dim'] for f in db.smf_newforms.search()]))
         self.weight_knowl = display_knowl('mf.siegel.weight_k_j', title='weight')
         self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
@@ -1606,7 +1574,8 @@ class SMFSearchArray(SearchArray):
     for name, disp, sord in _sort:
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
-    _sort_spaces = _sort[:-3]
+    _sort_spaces = _sort[:-4]
+    _sort_spaces += [('cusp_dim', 'dim. cusp', ['cusp_dim','level'])]
     _sort_forms = [(name, disp, sord + ['dim', 'hecke_orbit']) for (name, disp, sord) in _sort]
     sorts = {'List': _sort_forms,
              'Traces': _sort_forms,
@@ -1729,6 +1698,14 @@ class SMFSearchArray(SearchArray):
             name='dim',
             label='')
 
+        space_dim = TextBox(
+            name='cusp_dim',
+            knowl='',
+            label='Cusp Dim',
+            example='1',
+            example_span='1-5')
+            
+            
         coefficient_field = TextBox(
             name='nf_label',
             knowl='mf.siegel.coefficient_field',
@@ -1822,8 +1799,8 @@ class SMFSearchArray(SearchArray):
             [coefficient_ring_index, hecke_ring_generator_nbound, Nk2, dim, aut_type]
         ]
         self.space_array = [
-            [degree, family, level, weight, Nk2, dim],
-            [level_primes, character, char_primitive, char_order]
+            [degree, family, level, weight, Nk2],
+            [level_primes, character, char_primitive, char_order, space_dim]
         ]
 
         self.sd_array = [
