@@ -1547,6 +1547,24 @@ function switch_basis(btype) {
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 
+    def q_exp_coefficients(self, num_disp=10):
+        """
+        returns a list of q-expansion coefficients indexed by entries [a,b,c]
+        defining half-integral symmetric positive definite matrices.
+        INPUT:
+        - ``num_disp`` - an integer, the number of q-expansion coefficients to display.
+        """
+        fourier_coefficient = []
+        for qf_entry in db.smf_qexp_reduction.search({'index':{'$lt':num_disp}, 'is_minimal':True, 'level':self.level, 'family':self.family}, sort=['index']):
+            qf = qf_entry['qf_orbit_rep']
+            coeff_entry = list(db.smf_qexp_coeffs.search({'qf_legendre':qf_entry['qf_legendre'], 'qf_tag':qf_entry['qf_tag'], 'hecke_orbit_code': self.hecke_orbit_code}))
+            if not coeff_entry:
+                continue
+            coeff = coeff_entry[0]['coeff']
+            fourier_coefficient.append([qf,self._PrintRing(coeff)])
+        return fourier_coefficient
+
+
     # for now only displaying Lfunction of the trace form. Does that make sense?
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
