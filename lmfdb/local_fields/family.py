@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import euler_phi, lazy_attribute, point, line, frac, ceil, lcm, cartesian_product, ZZ, PolynomialRing, OrderedPartitions, srange
+from sage.all import euler_phi, lazy_attribute, point, line, frac, floor, lcm, cartesian_product, ZZ, PolynomialRing, OrderedPartitions, srange
 from lmfdb import db
 from lmfdb.utils import encode_plot
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
@@ -43,10 +43,10 @@ class pAdicSlopeFamily:
         self.p = p
         self.f = self.u = u
         self.t = t
-        self.c = heights[-1]
+        self.c = heights[-1] + n - 1
         self.bands = [((0, 1+h), (n, h), (0, 1+s), (n, s)) for (h, s) in zip(scaled_heights, slopes)]
         self.black = [(0, 1), (n, 0)]
-        self.green = [(n*frac(h), ceil(h), (n*frac(h)).valuation(p) == (w - i)) for (i, h) in enumerate(scaled_heights, 1)]
+        self.green = [(n*frac(h), 1 + floor(h), (n*frac(h)).valuation(p) == (w - i)) for (i, h) in enumerate(scaled_heights, 1)]
         self.blue = []
         self.red = []
         for i, (s, (u, v, solid)) in enumerate(zip(slopes, self.green), 1):
