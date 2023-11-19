@@ -3,7 +3,8 @@
 import os
 import re
 
-from flask import abort, render_template, request, url_for, redirect, send_file, make_response, Markup
+from flask import abort, render_template, request, url_for, redirect, send_file, make_response
+from markupsafe import Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, RealField, log
 from lmfdb import db
 from lmfdb.app import app
