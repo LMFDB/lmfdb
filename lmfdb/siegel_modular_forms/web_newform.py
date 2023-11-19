@@ -8,7 +8,8 @@ from flask import url_for
 from functools import reduce
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute,
+                      LaurentPolynomialRing, PowerSeriesRing, O)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
