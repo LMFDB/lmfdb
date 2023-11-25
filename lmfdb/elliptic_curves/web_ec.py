@@ -70,17 +70,20 @@ def cremona_label_to_lmfdb_label(clab):
 
 logger = make_logger("ec")
 
+# S_LABEL_RE assumes surjective determinant, but we need extended Slabels for EC/NF
+# This can be removed if/when we add modular curves with non-surjective determinant to the modular curves database
+S_EXT_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}\[(\d+)\]")
+
 def gl2_subgroup_data(label):
+    in_modcurve_db = True
     try:
         from lmfdb.modular_curves.main import LABEL_RE, RSZB_LABEL_RE, S_LABEL_RE
         if LABEL_RE.fullmatch(label):
             data = db.gps_gl2zhat_fine.lookup(label)
         elif RSZB_LABEL_RE.fullmatch(label):
             data = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label})
-        else:
+        elif S_LABEL_RE.fullmatch(label):
             r = S_LABEL_RE.fullmatch(label)
-            if r is None:
-                raise ValueError
             Slevel = int(r[1])
             if r[2] != "G":
                 data = data = db.gps_gl2zhat_fine.lucky({'Slabel':label,'level':Slevel})
@@ -92,6 +95,11 @@ def gl2_subgroup_data(label):
                 data['isogeny_orbits'] = [[Slevel,Slevel+1,1]]
                 data['orbits'] = [[Slevel,Slevel*Slevel-1,1]]
                 data['Slabel'] = label
+        elif S_EXT_LABEL_RE.fullmatch(label):
+            in_modcurve_db = False
+            data = data = db.gps_gl2zhat.lucky({'Slabel':label})
+        else:
+            return "Unrecognized GL(2,Zhat) subgroup label format %s" % label
         if data is None:
             raise ValueError
     except ValueError:
@@ -145,7 +153,8 @@ def gl2_subgroup_data(label):
         degs = [ell*(ell-1)**2*(ell+1)*ell**(4*i) // degs[i] for i in range(e)]
         info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%d for d in degs]))
     info += "</table>\n"
-    info += '<div align="right"><a href="%s">%s home page</a></div>' % (str(url_for("modcurve.by_label", label=data['label'])),data['label'])
+    if in_modcurve_db:
+        info += '<div align="right"><a href="%s">%s home page</a></div>' % (str(url_for("modcurve.by_label", label=data['label'])),data['label'])
     return info
 
 def weighted_proj_to_affine_point(P):
