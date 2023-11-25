@@ -97,14 +97,13 @@ def gl2_subgroup_data(label):
             raise ValueError
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
-
     def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = '<table>\n'
     if label != data['label']:
         info += row_wrap('Subgroup <b>%s</b> (%s)' % (label,data['label']), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     else:
-        info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
+        info += row_wrap('Subgroup %s' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
@@ -145,12 +144,8 @@ def gl2_subgroup_data(label):
         degs = [int(s.split('.')[1]) for s in data["reductions"]] + [data['index']]
         degs = [ell*(ell-1)**2*(ell+1)*ell**(4*i) // degs[i] for i in range(e)]
         info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%d for d in degs]))
-    if data['genus'] > 0:
-        info += row_wrap('Newforms', ''.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
-        info += row_wrap('Analytic rank', data['rank'])
-        if data['genus'] == 1 and data['model']:
-            info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('ec.by_ec_label',label=data['model']), data['model']))
     info += "</table>\n"
+    info += '<div align="right"><a href="%s">%s home page</a></div>' % (str(url_for("modcurve.by_label", label=data['label'])),data['label'])
     return info
 
 def weighted_proj_to_affine_point(P):
@@ -392,7 +387,6 @@ class WebEC():
             data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
             P = M.prime_divisors()
             data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))**2*prod([p**2-1 for p in P]) // self.adelic_index
-            print(data['adelic_image_size'])
         else:
             data['adelic_data'] = {}
 
