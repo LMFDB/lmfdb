@@ -10,7 +10,6 @@ from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, di
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
-from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 
