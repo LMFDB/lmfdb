@@ -72,26 +72,29 @@ def cremona_label_to_lmfdb_label(clab):
 logger = make_logger("ec")
 
 def gl2_subgroup_data(label):
-    Slevel = 0
     try:
-        data = db.gps_gl2zhat.lookup(label)
-        if data is None:
-            r = re.match(r"([1-9][0-9]*)([A-Z][a-z]*)",label)
+        from lmfdb.modular_curves.main import LABEL_RE, RSZB_LABEL_RE, S_LABEL_RE
+        if LABEL_RE.fullmatch(label):
+            data = db.gps_gl2zhat_fine.lookup(label)
+        elif RSZB_LABEL_RE.fullmatch(label):
+            data = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label})
+        else:
+            r = S_LABEL_RE.fullmatch(label)
             if r is None:
                 raise ValueError
             Slevel = int(r[1])
-            if r[2] == "G":
-                data = db.gps_gl2zhat.lucky({'level':1})
-                print(data)
+            if r[2] != "G":
+                data = data = db.gps_gl2zhat_fine.lucky({'Slabel':label,'level':Slevel})
+            else:
+                # hack to handle surjective mod-ell images where we the level of the image is 1 but we want to show data at level ell
+                data = db.gps_gl2zhat_fine.lucky({'level':1})
                 data['level'] = Slevel
                 data['generators'] = [[m.matrix()[0,0],m.matrix()[0,1],m.matrix()[1,0],m.matrix()[0,1]] for m in GL(2,Integers(Slevel)).generators()]
                 data['isogeny_orbits'] = [[Slevel,Slevel+1,1]]
                 data['orbits'] = [[Slevel,Slevel*Slevel-1,1]]
                 data['Slabel'] = label
-            else:
-                data = db.gps_gl2zhat.lucky({'Slabel':label,'level':Slevel})
-                if data is None:
-                    raise ValueError
+        if data is None:
+            raise ValueError
     except ValueError:
         return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
 
@@ -120,7 +123,7 @@ def gl2_subgroup_data(label):
         return f" (of which {r} are rational)"
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == data['label'] else "no")
+    info += row_wrap('Contains $-1$', "yes" if data['contains_negative_one'] else "no")
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
