@@ -335,7 +335,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
-        if self.simple:
+        if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
                 s = self.newforms[0].split(".")
