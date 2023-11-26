@@ -5,7 +5,6 @@ import re
 import time
 from collections import defaultdict, Counter
 from flask import (
-    Markup,
     make_response,
     redirect,
     render_template,
@@ -14,6 +13,7 @@ from flask import (
     url_for,
     abort,
 )
+from markupsafe import Markup
 #from six import BytesIO
 from string import ascii_lowercase
 from io import BytesIO
@@ -877,8 +877,10 @@ def group_jump(info):
 #    )
 
 def show_factor(n):
-    if n is None:
+    if n is None or n == "":
         return ""
+    if n == 0:
+        return "$0$"
     return f"${latex(ZZ(n).factor())}$"
 
 def get_url(label):
@@ -1468,10 +1470,16 @@ def picture(label):
             flash_error("No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         # The user specifically requested the image, so we don't impose a limit on the number of conjugacy classes
-        svg_io = BytesIO()
-        svg_io.write(gp.image().encode("utf-8"))
-        svg_io.seek(0)
-        return send_file(svg_io, mimetype='image/svg+xml')
+        try:
+            img = gp.image()
+        except Exception:
+            flash_error("Error generating image for %s.", label)
+            return redirect(url_for(".index"))
+        else:
+            svg_io = BytesIO()
+            svg_io.write(img.encode("utf-8"))
+            svg_io.seek(0)
+            return send_file(svg_io, mimetype='image/svg+xml')
     else:
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))
