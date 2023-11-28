@@ -451,6 +451,13 @@ class WebNumberField:
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
 
+    def minimal_sibling(self):
+        if 'is_minimal_sibling' in self._data:
+            if self._data['is_minimal_sibling']:
+                return 'This field is its own minimal sibling'
+            return formatfield(self._data['minimal_sibling'])
+        return na_text()
+
     # Is the polynomial polredabs'ed
     def is_reduced(self):
         if not self.haskey('reduced'):

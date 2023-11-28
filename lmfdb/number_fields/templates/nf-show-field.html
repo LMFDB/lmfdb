@@ -131,6 +131,8 @@ table.ntdata a {
             {{ info.cclasses | safe }}</tr>
             <tr><td>
             {{ info.character_table | safe }}</tr>
+            <tr><td>
+            {{KNOWL('nf.minimal_sibling', title='Minimal sibling')}}: {{ nf.minimal_sibling() | safe }}</tr>
           </table>
 
         <h2> {{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</h2>
