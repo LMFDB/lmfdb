@@ -1832,8 +1832,8 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
-    def representation_line(self, rep_type):
-        # TODO: Add links to searches for other representations when available
+    def representation_line(self, rep_type,inc_matrix):
+        # TODO: Add links to searches for other representations when available    Inc_matrix is 0 if first time a matrix group and 1 otherwise
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
@@ -1864,22 +1864,37 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
-            return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+            if inc_matrix == 0:
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+            else:
+                return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
 
     @lazy_attribute
     def stored_representations(self):
         if self.live():
             if self.solvable:
-                return self.representation_line("PC")
+                return self.representation_line("PC",0)
             return "data not computed"
             #raise NotImplementedError
 
         def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
-            return ["Lie", "PC", "Perm", "GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
-        return "\n".join(self.representation_line(rep_type) for rep_type in sorted(self.representations, key=sort_key))
-
+            return ["Lie", "PC", "Perm","GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
+        output_strg = ""
+        flag = 0  # used when multiple matrix group represenations
+        for rep_type in sorted(self.representations, key=sort_key):
+            if rep_type in ["Lie","PC","Perm"]:
+                inc_matrix = 0
+            elif flag == 0:
+                inc_matrix = 0
+                flag =1
+            else:
+                inc_matrix = 1
+            output_strg = output_strg + "\n" + self.representation_line(rep_type,inc_matrix)
+        return output_strg
+                                                                     
+        
     def is_null(self):
         return self._data is None
 
