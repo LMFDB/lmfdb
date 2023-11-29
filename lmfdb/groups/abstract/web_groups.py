@@ -1893,8 +1893,7 @@ class WebAbstractGroup(WebObj):
                 inc_matrix = 1
             output_strg = output_strg + "\n" + self.representation_line(rep_type,inc_matrix)
         return output_strg
-                                                                     
-        
+
     def is_null(self):
         return self._data is None
 
