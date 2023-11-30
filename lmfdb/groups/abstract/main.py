@@ -758,9 +758,8 @@ def char_table(label):
     return render_template(
         "character_table_page.html",
         gp=gp,
-        title="Character table for %s" % label,
-        bread=get_bread([("Character table", " ")]),
-        learnmore=learnmore_list(),
+        title="Character table for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
     )
 
 
