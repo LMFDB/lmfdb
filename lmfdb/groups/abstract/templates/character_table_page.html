@@ -2,6 +2,9 @@
 
 {% block body %}
 
+Return to the group page:  <a href="{{url_for("abstract.by_label", label=gp.label)}}">{{gp.label}}</a><br><br>
+
+
 {% include 'character_table.html' %}
 
 {% endblock %}
