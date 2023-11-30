@@ -1338,6 +1338,10 @@ class WebAbstractGroup(WebObj):
         return sorted(chrs, key=lambda x: x.counter)
 
     @lazy_attribute
+    def has_nontrivial_schur_character(self):
+        return any(chtr.schur_index > 1 for chtr in self.rational_characters)
+
+    @lazy_attribute
     def maximal_subgroup_of(self):
         # Could show up multiple times as non-conjugate maximal subgroups in the same ambient group
         # So we should eliminate duplicates from the following list
