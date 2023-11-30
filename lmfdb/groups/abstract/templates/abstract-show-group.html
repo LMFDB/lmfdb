@@ -162,7 +162,7 @@
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     {% if gp.rank %}
-      <td>${{gp.rank}}$</td>
+      <td>{{gp.rank}}</td>
     {% else %}
       <td>not computed</td>
     {% endif %}
@@ -170,7 +170,7 @@
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
   {% if gp.eulerian_function != None %}
-    <td>${{gp.eulerian_function}}$</td>
+    <td>{{gp.eulerian_function}}</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
 </table>
@@ -309,8 +309,8 @@
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
      {% if gp.commutator_count %}
-      <td>${{gp.commutator_count}}$</td>
-    {% elif gp.abelian %} <td>$0$</td>
+      <td>{{gp.commutator_count}}</td>
+    {% elif gp.abelian %} <td>0</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
   {% endif %}

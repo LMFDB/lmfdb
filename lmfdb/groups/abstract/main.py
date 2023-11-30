@@ -733,10 +733,9 @@ def auto_gens(label):
     return render_template(
         "auto_gens_page.html",
         gp=gp,
-        title="Generators of automorphism group for %s" % label,
-        bread=get_bread([("Automorphism group generators", " ")]),
-        learnmore=learnmore_list(),
-    )
+        title="Generators of automorphism group for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
+                        )
 
 
 @abstract_page.route("/sub/<label>")
