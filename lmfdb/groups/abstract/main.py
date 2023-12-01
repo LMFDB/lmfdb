@@ -313,8 +313,8 @@ def get_group_impl_display(gp):
     else:
         solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
     return {
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (nil_phrase)",
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} (solv_phrase)",
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} ({nilp_phrase})",
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} ({solv_phrase})",
     }
 
 
