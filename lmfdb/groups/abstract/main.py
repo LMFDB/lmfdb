@@ -260,12 +260,12 @@ def get_group_prop_display(gp):
     elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
         hyperelementaryp = f" for $p = {hyperelementaryp}$"
     nilp_class = getattr(gp, 'nilpotency_class', None)
-    if nilp_class:
+    if nilp_class is not None:
         nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
     else:
         nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
     solv_length = getattr(gp, 'derived_length', None)
-    if solv_length:
+    if solv_length is not None:
         solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
     else:
         solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
