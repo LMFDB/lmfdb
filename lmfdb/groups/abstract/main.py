@@ -1125,36 +1125,28 @@ def subgroup_search(info, query={}):
 
 #FIX THIS
 complex_char_columns = SearchColumns([
+    LinkCol("label", "group.label_complex_group_char", "Label", get_sub_url, th_class=" border-right", td_class=" border-ri
+ght"),
+    CheckCol("faithful", " group.representation.faithful", "Faithful")
+    MathCol("dim", "group.complex_char_deg", "Degree"),
+    MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor"),
 
-    LinkCol("passport_label", "dq.curve.highergenus.aut.label", "Refined passport label",
-	    lambda label: f"/HigherGenus/C/Aut/{label}"),
-    MathCol("genus", "ag.curve.genus", "Genus"),
-    MathCol("g0", "curve.highergenus.aut.quotientgenus", "Quotient genus", default=False),
-    ProcessedCol("group", "group.small_group_label", "Group", group_display, mathmode=True, align="center"),
-    MathCol("group_order", "group.order", "Group order"),
-    MathCol("dim", "curve.highergenus.aut.dimension", "Dimension"),
+
+
+
     ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
-    CheckCol("hyperelliptic", "ag.hyperelliptic_curve", "Hyperelliptic", unknown="", default=False),
-    CheckCol("cyclic_trigonal", "ag.cyclic_trigonal", "Cyclic trigonal", unknown="", default=False),
     ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", display_gen_vecs, mathmode=True, default=False)])
 hgcwa_columns.languages = ['gap', 'magma']
 
 
-    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
-    ColGroup("subgroup_cols", None, "Subgroup", [
+#    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
+#    ColGroup("subgroup_cols", None, "Subgroup", [
 	MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
                           display_url,
                           short_title="Sub. name", apply_download=False),
 	ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
-	CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
-        CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
-        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
-        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
-	CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable"),
-	CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
-        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
-        CheckCol("central", "group.central", "cent", short_title="Sub. central")]),
+
     SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)                                                                                              
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
