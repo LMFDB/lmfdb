@@ -259,14 +259,24 @@ def get_group_prop_display(gp):
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
     elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
         hyperelementaryp = f" for $p = {hyperelementaryp}$"
+    nilp_class = getattr(gp, 'nilpotency_class', None)
+    if nilp_class:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
+    else:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
+    solv_length = getattr(gp, 'derived_length', None)
+    if solv_length:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
+    else:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
         "nonabelian": display_knowl("group.abelian", "nonabelian"),
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} of class {getattr(gp, 'nilpotency_class', 'not computed')}",
+        "nilpotent": nilp_phrase,
         "supersolvable": display_knowl("group.supersolvable", "supersolvable"),
         "monomial": display_knowl("group.monomial", "monomial"),
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {getattr(gp, 'derived_length', 'not computed')}",
+        "solvable": solv_phrase,
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
         "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
         "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
@@ -292,9 +302,19 @@ def get_group_prop_display(gp):
 
 def get_group_impl_display(gp):
     # Mostly we display things the same in implication lists, but there are a few extra parentheses
+    nilp_class = getattr(gp, 'nilpotency_class', None)
+    if nilp_class:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
+    else:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
+    solv_length = getattr(gp, 'derived_length', None)
+    if solv_length:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
+    else:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
     return {
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {getattr(gp, 'nilpotency_class', 'not computed')})",
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {getattr(gp, 'derived_length', 'not computed')})",
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (nil_phrase)",
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} (solv_phrase)",
     }
 
 
