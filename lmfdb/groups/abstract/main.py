@@ -494,7 +494,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
     if {'ab_simple', 'nab_simple'} <= set(unknown):
         unknown.remove('ab_simple')
-        
+
     unknown = [overall_display[prop] for prop in unknown]
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
@@ -595,7 +595,7 @@ def create_boolean_string(gp, type="normal"):
     unknown = [prop for prop in overall_order if getattr(gp, prop, None) is None]
     if {'ab_simple', 'nab_simple'} <= set(unknown):
         unknown.remove('ab_simple')
-        
+
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
