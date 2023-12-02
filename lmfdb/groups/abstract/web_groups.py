@@ -278,7 +278,9 @@ class WebAbstractGroup(WebObj):
         return ZZ(self.G.Order())
     @lazy_attribute
     def exponent(self):
-        return ZZ(self.G.Exponent())
+        if self.G:
+            return ZZ(self.G.Exponent())
+        return None
 
     @lazy_attribute
     def cyclic(self):
@@ -1906,7 +1908,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.aut_group is None:
                 if self.aut_order is None:
-                    return r"$\textrm{not computed}$"
+                    return r"not computed"
                 else:
                     return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
@@ -2369,11 +2371,14 @@ class WebAbstractSubgroup(WebObj):
         return ", ".join(specials)
 
     def _lookup(self, label, data, Wtype):
+        if not label:
+            return None
         for rec in data:
-            if rec["label"] == label:
-                return Wtype(label, rec)
-            elif rec.get("short_label") == label:
-                return Wtype(rec["label"], rec)
+            if rec:
+                if rec["label"] == label:
+                    return Wtype(label, rec)
+                elif 'short_label' in rec and rec.get("short_label") == label:
+                    return Wtype(rec["label"], rec)
         # It's possible that the label refers to a small group that is not in the database
         # but that we can create dynamically
         return Wtype(label)
@@ -2400,6 +2405,16 @@ class WebAbstractSubgroup(WebObj):
     def sub(self):
         S = self._lookup(self.subgroup, self._full, WebAbstractGroup)
         # We set various properties from S for create_boolean_subgroup_string
+        if not S:
+            order = self.subgroup_order
+            #newgroup.order = order
+            #newgroup.pgroup = len(ZZ(order).abs().factor())==1
+            newgroup = WebAbstractGroup('nolabel',
+                data={'order': order, 'G': None, 'abelian': self.abelian,
+                      # What if aut_label is set?
+                      'aut_group': self.aut_label, 'aut_order': None,
+                      'pgroup':len(ZZ(order).abs().factor())==1})
+            return newgroup
         for prop in [
             "pgroup",
             "is_elementary",
