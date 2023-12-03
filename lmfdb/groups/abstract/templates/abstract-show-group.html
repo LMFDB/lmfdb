@@ -151,14 +151,34 @@
   <table>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
-    <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
+    {% if gp.irrC_degree == None %}
+      <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr>
+    {% elif gp.irrC_degree == -1 %}
+      <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>
+    {% else %}
+      <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr>
+    {% endif %}
+    {% if gp.linC_degree == None %}
+      <tr><td>  {{KNOWL('group.min_complex_rep_deg','Minimal degree of $\mathbb{C}$-rep')}}:</td><td>not computed</td></tr>
+    {% else %}
+      <tr><td>  {{KNOWL('group.min_complex_rep_deg','Minimal degree of $\mathbb{C}$-rep')}}:</td><td>{{gp.linC_degree}}</td></tr>
+    {% endif %}
     {% if gp.irrQ_degree == None %}
 <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
     {% elif gp.irrQ_degree == -1 %}
 <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
     <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+    {% if gp.linQ_degree == None %}
+      <tr><td>  {{KNOWL('group.min_rational_rep_deg','Minimal degree of $\mathbb{Q}$-rep')}}:</td><td>not computed</td></tr>
+    {% else %}
+      <tr><td>  {{KNOWL('group.min_rational_rep_deg','Minimal degree of $\mathbb{Q}$-rep')}}:</td><td>{{gp.linQ_degree}}</td></tr>
+    {% endif %}
+    {% if gp.linQ_dim == None %}
+      <tr><td>  {{KNOWL('group.min_rational_rep_deg','Minimal dimension of $\mathbb{Q}$-rep')}}:</td><td>not computed</td></tr>
+    {% else %}
+      <tr><td>  {{KNOWL('group.min_rational_rep_deg','Minimal dimension of $\mathbb{Q}$-rep')}}:</td><td>{{gp.linQ_dim}}</td></tr>
+    {% endif %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     {% if gp.rank %}
