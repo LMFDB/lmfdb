@@ -88,10 +88,12 @@ class WebCharObject():
 
     def to_dict(self):
         d = {}
+        logger.info('[DC] start collecting data for %s'%self.__class__.__name__)
         for k in self._keys:
             d[k] = getattr(self,k,None)
             if d[k] is None:
-                logger.debug('### key[%s] is None'%k)
+                logger.debug('[DC warning] ### key[%s] is None'%k)
+        logger.info('[DC] collected for %s'%self.__class__.__name__)
         return d
 
     @staticmethod
@@ -297,7 +299,7 @@ class WebDirichlet(WebCharObject):
         g = complex2str(g)
         x = Rational('%s/%s' % (val, mod))
         n = x.numerator()
-        n = str(n) + "r" if not n == 1 else "r"
+        n = str(n) + "r" if n != 1 else "r"
         d = x.denominator()
         Gtex = r'\Z/%s\Z' % mod
         chitex = self.char2tex(mod, num, tag=False)
@@ -399,10 +401,10 @@ class WebChar(WebCharObject):
     Class for presenting a character on a web page
     """
     _keys = [ 'title', 'codelangs', 'type',
-              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
-              'previous', 'next', 'conductor',
+              'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
               'inducing',
@@ -420,7 +422,7 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def order(self):
-        return self.chi.multiplicative_order()
+        return self.chi.order
 
     @lazy_attribute
     def codeorder(self):
@@ -576,7 +578,7 @@ class WebDBDirichlet(WebDirichlet):
 
     def _populate_from_db(self):
 
-        gal_orbit = self.chi.galois_orbit
+        gal_orbit = self.chi.galois_orbit()
         min_conrey_conj = gal_orbit[0]
 
         orbit_data = db.char_orbits.lucky(
@@ -677,11 +679,11 @@ class WebDBDirichlet(WebDirichlet):
         if self.modulus == 1:
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
-        upper_limit = min(200, self.order + 1)
+        upper_limit = min(31, self.order + 1)
         gal_orbit = gal_orbit[:upper_limit]
-        self.galoisorbit = list(
+        self.galoisorbit = [
             self._char_desc(num, prim=self.isprimitive) for num in gal_orbit
-        )
+        ]
 
     def _set_kernel_field_poly(self):
         if self.order <= 100:
@@ -697,9 +699,9 @@ class WebCharGroup(WebCharObject):
     self.G is the underlying group
     """
     headers = [ 'order', 'primitive']
-    _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
-            'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
-            'prevmod', 'next', 'nextmod', 'structure', 'structure_group_knowl', 'codestruct', 'order',
+    _keys = [ 'title', 'codelangs', 'type',
+            'modulus', 'modlabel', 'texname', 'codeinit',
+            'structure', 'structure_group_knowl', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties', 'friends', 'rowtruncate', 'coltruncate']
@@ -773,6 +775,7 @@ class WebCharGroup(WebCharObject):
         return r
 
     def _fill_contents(self):
+        logger.info(f"[DC] start filling content {self.__class__.__name__}, defined in WebCharGroup")
         for c in self.first_chars():
             self.add_row(c)
 
@@ -790,9 +793,11 @@ class WebCharGroup(WebCharObject):
 
     @lazy_attribute
     def contents(self):
+        logger.info("[DC] get _contents in WebCharGroup")
         if self._contents is None:
             self._contents = []
             self._fill_contents()
+            logger.info("[DC] done _fill_contents")
         return self._contents
 
 
@@ -807,7 +812,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
         is called once for each ancestor (I don't know why)
         """
         WebDirichlet._compute(self)
-        logger.debug('######## WebDirichletGroup Computed')
+        logger.debug('[DC] WebDirichletGroup Computed')
 
     @lazy_attribute
     def codeinit(self):
@@ -853,7 +858,13 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         WebDBDirichlet.__init__(self, **kwargs)
         self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
 
-    def add_row(self, c):
+    def _fill_contents(self):
+        logger.info(f"[DC] start filling content {self.__class__.__name__}, defined in WebDBDirichletGroup")
+
+        for c in self.first_chars():
+            self.add_row(c)
+
+    def add_row(self, num):
         """
         Add a row to _contents for display on the webpage.
         Each row of content takes the form::
@@ -866,15 +877,17 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         on self.groupelts, in order.
         """
         mod = self.modulus
-        num = c
-        prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
-        letter = orbit_label.split(".")[1]
-        self._contents.append((
-            self._char_desc(num, mod=mod, prim=prim),
-            (mod, letter, orbit_label),
-            (order, bool_string(prim)),
-            self._determine_values(valuepairs, order)
-        ))
+        try:
+            prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
+            letter = orbit_label.split(".")[1]
+            self._contents.append((
+                self._char_desc(num, mod=mod, prim=prim),
+                (mod, letter, orbit_label),
+                (order, bool_string(prim)),
+                self._determine_values(valuepairs, order)
+            ))
+        except Exception as e:
+            logger.error(f"[DC] error retrieving Dirichlet data ({mod},{num}): {e}")
 
     def char_dbdata(self, mod, num):
         """
@@ -888,21 +901,20 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         is_prim = chi.is_primitive()
         order = chi.order
         valuepairs = compute_values(chi, self.groupelts)
-
-        gal_orbit = chi.galois_orbit
-        min_conrey_conj = gal_orbit[0]
+        min_conrey_conj = chi.min_conrey_conj
 
         # This next db lookup takes ages, I don't know how to speed it up
         orbit_label = db.char_orbits.lucky(
             {'modulus': mod, 'first_label': "{}.{}".format(mod, min_conrey_conj)},
             projection='label'
         )
+        logger.debug(f"[DC DB query] modulus = {mod}, first_label = {mod},{min_conrey_conj} -> {orbit_label}")
 
         return is_prim, order, orbit_label, valuepairs
 
     def _compute(self):
         WebDirichlet._compute(self)
-        logger.debug("WebDBDirichletGroup Computed")
+        logger.debug("[DC] WebDBDirichletGroup Computed")
 
     def _char_desc(self, num, mod=None, prim=None):
         return (mod, num, self.char2tex(mod, num), prim)
@@ -924,10 +936,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     character orbits with modulus up to 100,000.
     """
     _keys = [ 'title', 'codelangs', 'type',
-              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
-              'previous', 'next', 'conductor',
+              'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
               'inducing',
@@ -1080,11 +1092,10 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     headers = ['Character']
 
     _keys = [ 'title', 'codelangs', 'type',
-              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol','headers',
-              'previous', 'next', 'conductor',
-              'condlabel', 'codecond',
+              'conductor', 'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
               'inducing','rowtruncate','ind_orbit_label',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
@@ -1152,10 +1163,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             upper_limit = min(self.maxrows + 1, self.degree + 1)
             if self.maxrows < self.degree + 1:
                 self.rowtruncate = True
-            self.galorbnums = self.first_chi.galois_orbit[:upper_limit]
-            self.galoisorbit = list(
+            self.galorbnums = self.first_chi.galois_orbit(upper_limit)
+            logger.info(f"[WebDBDirichletOrbit.populate] found galois orbit {self.galorbnums}")
+            self.galoisorbit = [
                 self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
-            )
+            ]
 
     def _set_kernel_field_poly(self, orbit_data):
         an_orbit_rep = int(orbit_data['first_label'].split(".")[1])
@@ -1193,12 +1205,15 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def contents(self):
+        logger.warning("[DC] getting content from WebDBDirichletOrbit")
         if self._contents is None:
             self._contents = []
             self._fill_contents()
         return self._contents
 
     def _fill_contents(self):
+        logger.info(f"[DC] start filling content {self.__class__.__name__}, defined in WebDBDirichletOrbit")
+        logger.info(f"[DC] galorbnums = {self.galorbnums}")
         for c in self.galorbnums:
             self.add_row(c)
 
@@ -1318,6 +1333,7 @@ class WebSmallDirichletGroup(WebDirichletGroup):
 
     @lazy_attribute
     def contents(self):
+        logger.warning("[DC] getting content from WebSmallDirichletGroup, no data")
         return None
 
     @lazy_attribute

@@ -178,11 +178,11 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def qs(self):
-        return sorted(set(q for g, q in self._counts))
+        return sorted({q for g, q in self._counts})
 
     @lazy_attribute
     def gs(self):
-        return sorted(set(g for g, q in self._counts))
+        return sorted({g for g, q in self._counts})
 
     @lazy_attribute
     def isogeny_knowl(self):

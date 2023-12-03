@@ -14,8 +14,7 @@ from lmfdb.backend.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
-from .main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
-from distutils.version import StrictVersion
+from .main import logger
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask_login import UserMixin, AnonymousUserMixin
@@ -192,7 +191,7 @@ class PostgresUserTable(PostgresBase):
         #TODO: use identifiers
         selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
-        return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
+        return [dict(zip(["username","full_name"], rec)) for rec in cur]
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
@@ -248,7 +247,7 @@ class LmfdbUser(UserMixin):
         self._uid = uid
         self._authenticated = False
         self._dirty = False  # flag if we have to save
-        self._data = dict([(_, None) for _ in LmfdbUser.properties])
+        self._data = {_: None for _ in LmfdbUser.properties}
 
         self.exists = userdb.user_exists(uid)
         if self.exists:
@@ -301,8 +300,6 @@ class LmfdbUser(UserMixin):
 
     def is_anonymous(self):
         """required by flask-login user class"""
-        if StrictVersion(FLASK_LOGIN_VERSION) < StrictVersion(FLASK_LOGIN_LIMIT):
-            return not self.is_authenticated()
         return not self.is_authenticated
 
     def is_admin(self):

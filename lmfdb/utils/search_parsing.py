@@ -443,7 +443,7 @@ def integer_options(arg, max_opts=None, contained_in=None):
             ans.add(int(interval))
         if max_opts is not None and len(ans) >= max_opts:
             raise ValueError("Too many options")
-    return sorted(list(ans))
+    return sorted(ans)
 
 def collapse_ors(parsed, query):
     # work around syntax for $or
@@ -1064,7 +1064,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
 
         galfield, nfield = qfield
         if nfield and nfield not in query:
-            nvals = list(set(s[0] for s in gcs))
+            nvals = list({s[0] for s in gcs})
             if len(nvals) == 1:
                 query[nfield] = nvals[0]
             else:

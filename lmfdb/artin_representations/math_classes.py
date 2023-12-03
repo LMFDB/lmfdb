@@ -212,6 +212,9 @@ class ArtinRepresentation():
     def GaloisConjugates(self):
         return self._data["GaloisConjugates"]
 
+    def ProjBoth(self):
+        return self._data['Proj_GAP'], self._data['Proj_nTj']
+
     def projective_group(self):
         groupid = self._data['Proj_GAP']
         if groupid[0]:
@@ -417,6 +420,9 @@ class ArtinRepresentation():
     def field_knowl(self):
         nfgg = self.number_field_galois_group()
         return formatfield(nfgg.polynomial())
+
+    def GaloisLabel(self):
+        return self._data['GaloisLabel']
 
     def group(self):
         n, t = [int(z) for z in self._data['GaloisLabel'].split("T")]

@@ -2,7 +2,7 @@ from lmfdb.tests import LmfdbTest
 
 def no_groups():
     from lmfdb import db
-    return db.gps_subgroups_test.count() == 0
+    return db.gps_subgroups.count() == 0
 
 class AbGpsTest(LmfdbTest):
     # All tests should pass
@@ -92,5 +92,4 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
             "gps_subgroups", "16.8.2.b1.a1",
             "gps_groups", "[28776, 16577, 5167]", # perm_gens
-            "[16582, 136, 5167, 40176]", # perm_gens
             "[[1, 1, 1]]"]) # faithful_reps

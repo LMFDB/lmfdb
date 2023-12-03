@@ -2,6 +2,7 @@ from lmfdb import db
 from lmfdb.utils import Downloader
 from flask import abort
 from lmfdb.backend.encoding import Json
+from .isog_class import AbvarFq_isoclass
 
 class AbvarFq_download(Downloader):
     table = db.av_fq_isog
@@ -26,3 +27,6 @@ class AbvarFq_download(Downloader):
                           label + '.curves',
                           lang=lang,
                           title='Curves in abelian variety isogeny class %s,'%(label))
+
+    def postprocess(self, rec, info, query):
+        return AbvarFq_isoclass(rec)

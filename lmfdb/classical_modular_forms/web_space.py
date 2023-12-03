@@ -98,7 +98,7 @@ def ALdim_table(al_dims, level, weight):
             continue
         b = list(reversed(ZZ(i).bits()))
         b = [0 for j in range(num_primes-len(b))] + b
-        row = list(map(lambda x:r'<td>\(%s\)</td>'%sign_char(x),b))
+        row = [r'<td>\(%s\)</td>'%sign_char(x) for x in b]
         sign = sum(b) % 2
         if num_primes > 1:
             row.append(r"<td class='right'>$%s$</td>"%sign_char(sign))
@@ -148,7 +148,10 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     e.g. 23.2.22 -> 23.2.b (because 23.b is the character orbit label of the Conrey character 23.22)
     """
     N, k, n = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
+    try:
+        return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
+    except AssertionError: # N and n not relatively prime
+        pass
 
 
 def trace_expansion_generic(space, prec_max=10):
@@ -213,7 +216,6 @@ class DimGrid():
 
 class WebNewformSpace():
     def __init__(self, data):
-        # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
         self.factored_level = web_latex_factored_integer(self.level, equals=True)
         self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
@@ -374,14 +376,7 @@ class WebGamma1Space():
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
-        self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces) if newspaces else DimGrid()
-        #self.mf_dim = sum(space['mf_dim'] for space in newspaces)
-        #self.eis_dim = sum(space['eis_dim'] for space in newspaces)
-        #self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
-        #self.eis_old_dim = self.eis_dim - self.eis_new_dim
-        #self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
-        self.new_dim = sum(space['dim'] for space in newspaces)
-        self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
+        self.dim_grid = DimGrid.from_db(data)
         self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
@@ -393,12 +388,12 @@ class WebGamma1Space():
                 self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
         self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
         self.properties = [('Label',self.label),]
-        if self.plot is not None and self.new_dim > 0:
+        if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
         self.properties +=[
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
-            ('Dimension',str(self.new_dim))
+            ('Dimension',str(self.dim))
         ]
         if self.num_spaces is not None:
             self.properties.append(('Nonzero newspaces',str(self.num_spaces)))

@@ -73,7 +73,7 @@ def group_names_pretty(label):
                 else:
                     invs.append(ZZ(pe))
             return abelian_gp_display(invs)
-        pretty = db.gps_groups_test.lookup(label, "tex_name")
+        pretty = db.gps_groups.lookup(label, "tex_name")
     else:
         pretty = label.tex_name
     if pretty:
@@ -96,14 +96,19 @@ def group_pretty_image(label):
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
+    if name and '?' in name:
+        name = None
     if not name:
         if pretty:
             if label in cache and "tex_name" in cache[label]:
                 name = cache[label]["tex_name"]
             else:
-                name = db.gps_groups_test.lookup(label, "tex_name")
+                name = db.gps_groups.lookup(label, "tex_name")
             if name is None:
-                name = f"Group {label}"
+                if label is None:
+                    name = '?'
+                else:
+                    name = f"Group {label}"
             else:
                 name = f"${name}$"
         else:
@@ -173,7 +178,7 @@ def abelian_get_elementary(snf):
 
 
 class WebAbstractGroup(WebObj):
-    table = db.gps_groups_test
+    table = db.gps_groups
 
     def __init__(self, label, data=None):
         self.source = "db" # can be overridden below by either GAP or LiveAbelian
@@ -208,7 +213,7 @@ class WebAbstractGroup(WebObj):
                 if libgap.SmallGroupsAvailable(n):
                     maxi = libgap.NrSmallGroups(n)
                     i = ZZ(m.group(2))
-                    if i <= maxi:
+                    if 0 < i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
         if isinstance(self._data, list):  # live abelian group
@@ -273,7 +278,9 @@ class WebAbstractGroup(WebObj):
         return ZZ(self.G.Order())
     @lazy_attribute
     def exponent(self):
-        return ZZ(self.G.Exponent())
+        if self.G:
+            return ZZ(self.G.Exponent())
+        return None
 
     @lazy_attribute
     def cyclic(self):
@@ -353,7 +360,7 @@ class WebAbstractGroup(WebObj):
     def transitive_degree(self):
         if isinstance(self.G, LiveAbelianGroup):
             return self.order
-        return "not computed"
+        return None # "not computed"
 
     @lazy_attribute
     def pgroup(self):
@@ -648,7 +655,7 @@ class WebAbstractGroup(WebObj):
                 label_for[name] = label
                 label_rev[label].append(name)
         subdata = {}
-        for rec in db.gps_groups_test.search({"label": {"$in": list(label_for.values())}}, ["label", "tex_name", "order"]):
+        for rec in db.gps_groups.search({"label": {"$in": list(label_for.values())}}, ["label", "tex_name", "order"]):
             for name in label_rev[rec["label"]]:
                 subdata[name] = WebAbstractGroup(rec["label"], data=rec)
                 subdata[name].G = gapH[name]
@@ -827,26 +834,28 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgp_paragraph(self):
+        charcolor = display_knowl('group.characteristic_subgroup', "Characteristic") + r' subgroups are shown in <span class="chargp">this color</span>.'
+        normalcolor = display_knowl('group.subgroup.normal', "Normal") + r' (but not characteristic) subgroups are shown in <span class="normgp">this color</span>.'
         if self.number_subgroups is None:
             if self.number_normal_subgroups is None:
                 return " "
             elif self.number_characteristic_subgroups is None:
-                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups."
+                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
             else:
                 ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
                 if self.number_characteristic_subgroups < self.number_normal_subgroups:
-                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>)."
+                    ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>).<p>"+charcolor+"  "+normalcolor
                 else:
-                    ret_str=ret_str+ " all characteristic. "
+                    ret_str=ret_str+ ", and all normal subgroups are characteristic.<p>"+charcolor
                 return ret_str
         elif self.number_normal_subgroups < self.number_subgroups:
             ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
         else:
             ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
-            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ "> """ + str(self.number_characteristic_subgroups) + """ characteristic</a>). """
+            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ ">""" + str(self.number_characteristic_subgroups) + """ characteristic</a>).<p>"""+charcolor+" "+normalcolor
         else:
-            ret_str = ret_str + ", all characteristic. "
+            ret_str = ret_str + ", and all normal subgroups are characteristic. <p>"+charcolor
         return ret_str
 
     @lazy_attribute
@@ -855,7 +864,7 @@ class WebAbstractGroup(WebObj):
             return None
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
-            for subdata in db.gps_subgroups_test.search({"ambient": self.label})
+            for subdata in db.gps_subgroups.search({"ambient": self.label})
         }
         if self.subgroup_inclusions_known:
             self.add_layers(subs)
@@ -974,11 +983,11 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal:
-                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += s.conjugacy_class_count
+                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
-                        by_order[d][None, None, None, None, None, None] = cnt - sum(by_order[d].values())
+                        by_order[d][None, None, None, None, None, None, self.order // d] = cnt - sum(by_order[d].values())
             return self._finalize_profile(by_order)
 
     @lazy_attribute
@@ -988,7 +997,7 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal and s.aut_label not in seen:
-                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex] += 1
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex,s.quotient_order] += 1
                     seen.add(s.aut_label)
             return self._finalize_profile(by_order)
 
@@ -998,16 +1007,25 @@ class WebAbstractGroup(WebObj):
             sep = ", "
             for tup in subs:
                 cnt, label, tex = tup[0], tup[1], tup[3]
+                if tex is None:
+                    tex = "?"
                 tup = list(tup[1:])
                 if len(tup) == 6:
                     sep = ", &nbsp;&nbsp;"
                 if label is None:
                     tup[0] = f"{order}.?"
-                # TODO: In the normal case, should we display the quotient somehow?
                 # TODO: Deal with the orders where all we know is a count from normal_counts
+                if len(tup) > 3:
+                    if tup[5] is None:
+                        ord_str = "unidentified group of order " + str(tup[6])
+                    else:
+                        if tup[3] and '?' in tup[5]:
+                            ord_str = tup[3]
+                        else:
+                            ord_str = rf'${tup[5]}$'
                 l.append(
                     abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
-                    + ("" if len(tup) == 3 else " ( $%s$ )" % (tup[5]))
+                    + ("" if len(tup) == 3 else " (%s)" % (ord_str))
                     + (" x " + str(cnt) if cnt > 1 else "")
                 )
             return sep.join(l)
@@ -1093,7 +1111,7 @@ class WebAbstractGroup(WebObj):
                 if any(H.aut_label is None or H.diagramx is None for H in subs):
                     # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
-                return impose_limit(len(set(H.aut_label for H in subs)))
+                return impose_limit(len({H.aut_label for H in subs}))
             else:
                 if self.outer_equivalence or any(H.diagramx is None for H in subs):
                     # We don't know subgroups up to conjugacy or can't lay out subgroups
@@ -1255,7 +1273,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_groups_cc_test.search({"group": self.label})
+            for ccdata in db.gps_groups_cc.search({"group": self.label})
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -1308,7 +1326,7 @@ class WebAbstractGroup(WebObj):
         # Should join with creps once we have images and join queries
         chrs = [
             WebAbstractCharacter(chardata["label"], chardata)
-            for chardata in db.gps_char_test.search({"group": self.label})
+            for chardata in db.gps_char.search({"group": self.label})
         ]
         return sorted(chrs, key=lambda x: x.counter)
 
@@ -1317,7 +1335,7 @@ class WebAbstractGroup(WebObj):
         # Should join with creps once we have images and join queries
         chrs = [
             WebAbstractRationalCharacter(chardata["label"], chardata)
-            for chardata in db.gps_qchar_test.search({"group": self.label})
+            for chardata in db.gps_qchar.search({"group": self.label})
         ]
         return sorted(chrs, key=lambda x: x.counter)
 
@@ -1327,7 +1345,7 @@ class WebAbstractGroup(WebObj):
         # So we should eliminate duplicates from the following list
         return [
             WebAbstractSupergroup(self, "sub", supdata["label"], supdata)
-            for supdata in db.gps_subgroups_test.search(
+            for supdata in db.gps_subgroups.search(
                 {"subgroup": self.label, "maximal": True},
                 sort=["ambient_order", "ambient"],
                 limit=10,
@@ -1340,7 +1358,7 @@ class WebAbstractGroup(WebObj):
         # So we should eliminate duplicates from the following list
         return [
             WebAbstractSupergroup(self, "quo", supdata["label"], supdata)
-            for supdata in db.gps_subgroups_test.search(
+            for supdata in db.gps_subgroups.search(
                 {"quotient": self.label, "minimal_normal": True},
                 sort=["ambient_order", "ambient"],
             )
@@ -1405,7 +1423,7 @@ class WebAbstractGroup(WebObj):
             cn_match= cn_re.match(A)
             if cn_match:
                 order = cn_match.group(1)
-                Agroup = db.gps_groups_test.lucky({'order':int(order), 'cyclic':True})
+                Agroup = db.gps_groups.lucky({'order':int(order), 'cyclic':True})
                 A = Agroup['label']
                 A = abstract_group_display_knowl(Agroup['label'])
             elif A=='S_3':
@@ -1456,7 +1474,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def as_aut_gp(self):
-        return [(rec['label'], fr"\Aut({rec['tex_name']})") for rec in db.gps_groups_test.search({"aut_group": self.label}, ["label", "tex_name"]) if rec['label'] != self.label]
+        return [(rec['label'], fr"\Aut({rec['tex_name']})") for rec in db.gps_groups.search({"aut_group": self.label}, ["label", "tex_name"]) if rec['label'] != self.label]
 
     # Figuring out the subgroup count for an autjugacy class might not be stored
     # directly.  We do them all at once.  If we only computed up to aut
@@ -1474,7 +1492,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def tex_images(self):
-        all_tex = list(set(H.subgroup_tex for H in self.subgroups.values())) + ["?"]
+        all_tex = list({H.subgroup_tex for H in self.subgroups.values()}) + ["?"]
         return {
             rec["label"]: rec["image"]
             for rec in db.gps_images.search({"label": {"$in": all_tex}}, ["label", "image"])
@@ -1724,6 +1742,12 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
+    def show_subgroup_flag(self):
+        if self.representations.get("Lie"):
+            if self.representations["Lie"][0]["family"][0] == "P": 	# Issue with projective Lie groups
+                return False
+        return True
+
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
@@ -1810,8 +1834,8 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
-    def representation_line(self, rep_type):
-        # TODO: Add links to searches for other representations when available
+    def representation_line(self, rep_type,inc_matrix):
+        # TODO: Add links to searches for other representations when available    Inc_matrix is 0 if first time a matrix group and 1 otherwise
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
@@ -1842,21 +1866,35 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
-            return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+            if inc_matrix == 0:
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+            else:
+                return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
 
     @lazy_attribute
     def stored_representations(self):
         if self.live():
             if self.solvable:
-                return self.representation_line("PC")
+                return self.representation_line("PC",0)
             return "data not computed"
             #raise NotImplementedError
 
         def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
-            return ["Lie", "PC", "Perm", "GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
-        return "\n".join(self.representation_line(rep_type) for rep_type in sorted(self.representations, key=sort_key))
+            return ["Lie", "PC", "Perm","GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
+        output_strg = ""
+        flag = 0  # used when multiple matrix group represenations
+        for rep_type in sorted(self.representations, key=sort_key):
+            if rep_type in ["Lie","PC","Perm"]:
+                inc_matrix = 0
+            elif flag == 0:
+                inc_matrix = 0
+                flag =1
+            else:
+                inc_matrix = 1
+            output_strg = output_strg + "\n" + self.representation_line(rep_type,inc_matrix)
+        return output_strg
 
     def is_null(self):
         return self._data is None
@@ -1870,7 +1908,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.aut_group is None:
                 if self.aut_order is None:
-                    return r"$\textrm{not computed}$"
+                    return r"not computed"
                 else:
                     return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
@@ -1882,6 +1920,14 @@ class WebAbstractGroup(WebObj):
     # TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
+
+    def aut_gens_flag(self): #issue with Lie type when family is projective
+        if self.aut_gens is None:
+            return False
+        elif self.element_repr_type == "Lie":
+            if self.representations["Lie"][0]["family"][0] == "P":
+                return False
+        return True
 
     # outer automorphism group
     def show_outer_group(self):
@@ -1903,13 +1949,13 @@ class WebAbstractGroup(WebObj):
 
     def perm_degree(self):
         if self.permutation_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.permutation_degree
 
     def trans_degree(self):
         if self.transitive_degree is None:
-            return r"$\textrm{not computed}$"
+            return r"not computed"
         else:
             return self.transitive_degree
 
@@ -1946,7 +1992,7 @@ class WebAbstractGroup(WebObj):
         CF = Counter(self.composition_factors)
         display = {
             rec["label"]: '$'+rec["tex_name"]+'$'
-            for rec in db.gps_groups_test.search(
+            for rec in db.gps_groups.search(
                 {"label": {"$in": list(set(CF))}}, ["label", "tex_name"]
             )
         }
@@ -1965,8 +2011,11 @@ class WebAbstractGroup(WebObj):
 
     #first function is if we only know special subgroups as abstract groups
     def special_subs_label(self,label):
-        info=db.gps_groups_test.lucky({"label": label})
-        return info['tex_name']
+        info = db.gps_groups.lucky({"label": label})
+        if info is None:
+            return label
+        else:
+            return f"${info['tex_name']}$"
 
     def cent(self):
         return self.special_search("Z")
@@ -1974,7 +2023,7 @@ class WebAbstractGroup(WebObj):
     def cent_label(self):
         cent = self.cent()
         if cent:
-            return self.subgroups[self.cent()].subgroup_tex
+            return self.subgroups[self.cent()].knowl()
         return None
 
     def cent_order_factor(self):
@@ -1993,7 +2042,7 @@ class WebAbstractGroup(WebObj):
     def comm_label(self):
         comm = self.comm()
         if comm:
-            return self.subgroups[comm].subgroup_tex
+            return self.subgroups[comm].knowl()
         return nc
 
     def abelian_quot(self):
@@ -2018,7 +2067,7 @@ class WebAbstractGroup(WebObj):
     def fratt_label(self):
         fratt = self.fratt()
         if fratt:
-            return self.subgroups[fratt].subgroup_tex
+            return self.subgroups[fratt].knowl()
         return None
 
     def gen_noun(self):
@@ -2037,13 +2086,13 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def max_sub_cnt(self):
-        return db.gps_subgroups_test.count_distinct(
+        return db.gps_subgroups.count_distinct(
             "ambient", {"subgroup": self.label, "maximal": True}, record=False
         )
 
     @lazy_attribute
     def max_quo_cnt(self):
-        return db.gps_subgroups_test.count_distinct(
+        return db.gps_subgroups.count_distinct(
             "ambient", {"quotient": self.label, "minimal_normal": True}, record=False
         )
 
@@ -2129,7 +2178,7 @@ class LiveAbelianGroup():
 
     def Phiquotient(self):
         # Make all exponents by 1
-        snf1 = [prod([z for z in ZZ(n).prime_factors()]) for n in self.snf]
+        snf1 = [prod(list(ZZ(n).prime_factors())) for n in self.snf]
         return LiveAbelianGroup(snf1)
 
     def FittingSubgroup(self):
@@ -2228,21 +2277,27 @@ class LiveAbelianGroup():
                     [Zmod(m) for m in self.snf]))
 
 class WebAbstractSubgroup(WebObj):
-    table = db.gps_subgroups_test
+    table = db.gps_subgroups
 
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         s = self.subgroup_tex
         if s is None:
             self.subgroup_tex = "?"
-            self.subgroup_tex_parened = "(?)"
+            self.subgroup_tex_parened = "?"
         else:
             self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
         if self._data.get("quotient"):
             q = self.quotient_tex
             if q is None:
-                self.quotient_tex = "?"
-                self.quotient_tex_parened = "(?)"
+                tryhard = db.gps_groups.lookup(self.quotient)
+                if tryhard and tryhard.tex_name:
+                    q = tryhard.tex_name
+                    self.quotient_tex = q
+                    self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+                else:
+                    self.quotient_tex = "?"
+                    self.quotient_tex_parened = "(?)"
             else:
                 self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
 
@@ -2316,11 +2371,14 @@ class WebAbstractSubgroup(WebObj):
         return ", ".join(specials)
 
     def _lookup(self, label, data, Wtype):
+        if not label:
+            return None
         for rec in data:
-            if rec["label"] == label:
-                return Wtype(label, rec)
-            elif rec.get("short_label") == label:
-                return Wtype(rec["label"], rec)
+            if rec:
+                if rec["label"] == label:
+                    return Wtype(label, rec)
+                elif 'short_label' in rec and rec.get("short_label") == label:
+                    return Wtype(rec["label"], rec)
         # It's possible that the label refers to a small group that is not in the database
         # but that we can create dynamically
         return Wtype(label)
@@ -2340,13 +2398,23 @@ class WebAbstractSubgroup(WebObj):
         if self.projective_image is not None:
             labels.append(self.projective_image)
         return list(
-            db.gps_groups_test.search({"label": {"$in": labels}})
+            db.gps_groups.search({"label": {"$in": labels}})
         )  # should maybe project and just retrieve needed cols
 
     @lazy_attribute
     def sub(self):
         S = self._lookup(self.subgroup, self._full, WebAbstractGroup)
         # We set various properties from S for create_boolean_subgroup_string
+        if not S:
+            order = self.subgroup_order
+            #newgroup.order = order
+            #newgroup.pgroup = len(ZZ(order).abs().factor())==1
+            newgroup = WebAbstractGroup('nolabel',
+                data={'order': order, 'G': None, 'abelian': self.abelian,
+                      # What if aut_label is set?
+                      'aut_group': self.aut_label, 'aut_order': None,
+                      'pgroup':len(ZZ(order).abs().factor())==1})
+            return newgroup
         for prop in [
             "pgroup",
             "is_elementary",
@@ -2397,7 +2465,10 @@ class WebAbstractSubgroup(WebObj):
 
     def quotient_knowl(self, paren=False):
         # assumes there is a quotient group
-        knowlname = self.quotient_tex_parened if paren else self.quotient_tex
+        if '?' in self.quotient_tex:
+            knowlname = WebAbstractGroup(self.quotient).tex_name
+        else:
+            knowlname = self.quotient_tex_parened if paren else self.quotient_tex
         return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
 
     def display_quotient(self, subname=None, ab_invs=None):
@@ -2441,10 +2512,10 @@ class WebAbstractSubgroup(WebObj):
         for llist in [self.complements, self.contained_in, self.contains]:
             if llist:
                 labels.extend([make_full(label) for label in llist])
-        return list(db.gps_subgroups_test.search({"label": {"$in": labels}}))
+        return list(db.gps_subgroups.search({"label": {"$in": labels}}))
 
     def autjugate_subgroups(self):
-        if self.amb.outer_equivalence == False and self.amb.complements_known == False and self.amb.subgroup_inclusions_known == False:
+        if self.amb.outer_equivalence is False and self.amb.complements_known is False and self.amb.subgroup_inclusions_known is False:
             return None  #trying to say subgroups not computed up to autjugacy
         else:
             return [
@@ -2533,11 +2604,11 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_groups_cc_test
+    table = db.gps_groups_cc
 
     def __init__(self, group, label, data=None):
         if data is None:
-            data = db.gps_groups_cc_test.lucky({"group": group, "label": label})
+            data = db.gps_groups_cc.lucky({"group": group, "label": label})
         WebObj.__init__(self, label, data)
 
     def display_knowl(self, name=None):
@@ -2568,7 +2639,7 @@ class WebAbstractAutjClass():
         self.order = classes[0].order
 
 class WebAbstractCharacter(WebObj):
-    table = db.gps_char_test
+    table = db.gps_char
 
     def type(self):
         if self.indicator == 0:
@@ -2584,7 +2655,7 @@ class WebAbstractCharacter(WebObj):
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cchar_data&args={label}">{name}</a>'
 
 class WebAbstractRationalCharacter(WebObj):
-    table = db.gps_qchar_test
+    table = db.gps_qchar
 
     def display_knowl(self, name=None):
         label = self.label
@@ -2596,7 +2667,7 @@ class WebAbstractRationalCharacter(WebObj):
         )
 
 class WebAbstractSupergroup(WebObj):
-    table = db.gps_subgroups_test
+    table = db.gps_subgroups
 
     def __init__(self, sub_or_quo, typ, label, data=None):
         self.sub_or_quo_gp = sub_or_quo

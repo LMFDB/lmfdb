@@ -63,7 +63,7 @@ def get_character_modulus(a, b, limit=7):
             G = [1]
         for chi_n in G:
             chi = ConreyCharacter(row, chi_n)
-            multorder = chi.multiplicative_order()
+            multorder = chi.order
             if multorder <= limit:
                 el = chi
                 col = multorder
@@ -71,8 +71,8 @@ def get_character_modulus(a, b, limit=7):
                 entry.append(el)
                 entries[(row, col)] = entry
     entries2 = {}
-    def out(chi): return (chi.number, chi.is_primitive,
-                       chi.multiplicative_order(), chi.is_even())
+    def out(chi): return (chi.number, chi.is_primitive(),
+                       chi.order, chi.is_even())
     for k, v in entries.items():
         l = []
         v = sorted(v, key=lambda x: x.number)

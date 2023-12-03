@@ -8,7 +8,7 @@ from sage.all import euler_phi, PolynomialRing, QQ, gcd
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
-    StatsDisplay, totaler, proportioners, comma, flash_warning)
+    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
@@ -147,7 +147,7 @@ class DirichSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('List', 'List of characters'),
+            ('', 'List of characters'),
             ('Random', 'Random character')])
 
 
@@ -175,11 +175,11 @@ def validate_label(label):
     elif re.match(r'^\d+\.[a-z]+\.\d+$', label):  # label has both orbit and number
         return True
     else:
-        raise ValueError(("It must be of the form modulus.number, or "
+        raise ValueError("It must be of the form modulus.number, or "
                           "modulus.letter, or modulus.letter.number, "
                           "with modulus and number positive natural numbers "
                           " and letter an alphabetic letter."
-                          ))
+                          )
 
 def jump(info):
     jump_box = info["jump"].strip()  # only called when this present
@@ -232,23 +232,21 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
             return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
 character_columns = SearchColumns([
-    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
-    MultiProcessedCol("conrey", "character.dirichlet.conrey'", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
-                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
-    MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
-    MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
-    MathCol("order", "character.dirichlet.order", "Order", default=True),
-    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
-    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
-
-character_columns.dummy_download = True
+    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), align="center"),
+    MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
+                      display_galois_orbit, align="center", short_title="Conrey labels", apply_download=False),
+    MathCol("modulus", "character.dirichlet.modulus", "Modulus"),
+    MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
+    MathCol("order", "character.dirichlet.order", "Order"),
+    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd"),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive")])
 
 @search_wrap(
     table=db.char_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
-    shortcuts={"jump": jump},
+    shortcuts={"jump": jump, "download": Downloader(db.char_orbits)},
     url_for_label=url_for_label,
     learnmore=learn,
     random_projection="label",
@@ -274,7 +272,7 @@ def render_DirichletNavigation():
             headers, entries, rows, cols = get_character_modulus(modulus_start, modulus_end, limit=8)
             info['entries'] = entries
             info['rows'] = list(range(modulus_start, modulus_end + 1))
-            info['cols'] = sorted(list({r[1] for r in entries}))
+            info['cols'] = sorted({r[1] for r in entries})
             return render_template("ModulusList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
@@ -282,8 +280,8 @@ def render_DirichletNavigation():
     if request.args:
         # hidden_search_type for prev/next buttons
         info = to_dict(request.args, search_array=DirichSearchArray())
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-        if search_type in ['List', 'Random']:
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        if search_type in ['List', '', 'Random']:
             return dirichlet_character_search(info)
         assert False
 
@@ -428,7 +426,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
             info['bread'] = bread([('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
             info['learnmore'] = learn()
-            info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
+            info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
             info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
             if 'gens' in info:
                 info['generators'] = ', '.join(r'<a href="%s">$\chi_{%s}(%s,\cdot)$' % (url_for(".render_Dirichletwebpage", modulus=modulus, number=g), modulus, g) for g in info['gens'])
@@ -446,7 +444,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                 info['show_orbit_label'] = True
                 info['downloads'] = [('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))]
                 info['learnmore'] = learn()
-                info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
+                info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
                 info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
                 info['bread'] = bread(
                     [('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
@@ -509,7 +507,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     info['bread'] = bread_crumbs
     info['learnmore'] = learn()
     info['downloads'] = downloads
-    info['code'] = dict([(k[4:], info[k]) for k in info if k[0:4] == "code"])
+    info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
     info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)

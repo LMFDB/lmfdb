@@ -19,9 +19,9 @@
 <p>
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(gp.order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(gp.exponent)}} </td></tr>
-    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}} {% if gp.aut_gens != None   %} (<a href="{{url_for('.auto_gens', label=gp.label)}}">generators</a>){% endif %}</td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(gp.order)|safe}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(gp.exponent)|safe}} </td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}} {% if not gp.live() and gp.aut_gens_flag() %} (<a href="{{url_for('.auto_gens', label=gp.label)}}">generators</a>){% endif %}</td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
      {% if not gp.live() %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
@@ -330,6 +330,7 @@
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
      {% if gp.commutator_count %}
       <td>${{gp.commutator_count}}$</td>
+    {% elif gp.abelian %} <td>$0$</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
   {% endif %}
@@ -357,16 +358,16 @@
 
 <p>{{gp.subgp_paragraph|safe}}</p>
 
-
+<h3>Special subgroups</h3>
 
 <table>
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
     {% if gp.cent() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
+    <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq$ {{gp.cent_label()|safe}}</span></td>
     <td>{{gp.subgroups[gp.cent()].display_quotient("Z")|safe}}</td>
     {% elif gp.center_label %}
-    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">${{gp.special_subs_label(gp.center_label)}}$</td>
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.center_label)}}">{{gp.special_subs_label(gp.center_label)}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -374,10 +375,10 @@
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
     {% if gp.comm() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span></td> {# match single quote for code highlighting purposes: ' #}
+    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq$ {{gp.subgroups[gp.comm()].knowl()|safe}}</span></td> {# match single quote for code highlighting purposes: ' #}
     <td>{{gp.subgroups[gp.comm()].display_quotient("G'", ab_invs=gp.smith_abelian_invariants)|safe}}</td>
      {% elif gp.commutator_label %}
-    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.comutator_label)}}">${{gp.special_subs_label(gp.commutator_label)}}$</td>
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.commutator_label)}}">{{gp.special_subs_label(gp.commutator_label)}}</td>
     {% else %}
     <td>not computed</td>
     {% endif %}
@@ -385,10 +386,10 @@
   <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
     {% if gp.fratt() %}
-    <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq$ {{gp.subgroups[gp.fratt()].knowl()|safe}}</span></td>
     <td>{{gp.subgroups[gp.fratt()].display_quotient("\\Phi")|safe}} </td>
      {% elif gp.frattini_label %}
-    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">${{gp.special_subs_label(gp.frattini_label)}}$</td>
+    <td>a subgroup isomorphic to <a href="{{url_for('.by_label', label=gp.frattini_label)}}">{{gp.special_subs_label(gp.frattini_label)}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}
@@ -396,7 +397,7 @@
  <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
     {% if gp.fitting %}
-    <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq$ {{gp.subgroups[gp.fitting].knowl()|safe}}</td>
     <td>{{gp.subgroups[gp.fitting].display_quotient("\\operatorname{Fit}")|safe}}</td>
     {% else %}
     <td> not computed</td>
@@ -405,7 +406,7 @@
   <tr>
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
     {% if gp.radical %}
-    <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq$ {{gp.subgroups[gp.radical].knowl()|safe}}</td>
     <td>{{gp.subgroups[gp.radical].display_quotient("R")|safe}}</td>
     {% else %}
     <td>not computed</td>
@@ -414,20 +415,18 @@
   <tr>
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
     {% if gp.socle %}
-    <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq$ {{gp.subgroups[gp.socle].knowl()|safe}}</td>
     <td>{{gp.subgroups[gp.socle].display_quotient("\\operatorname{soc}")|safe}}</td>
     {% else %}
     <td> not computed</td>
     {% endif %}
   </tr>
-  {% if gp.pgroup == 0 %}
     {% for p, subgp in gp.sylow_subgroups() %}
       <tr>
         <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}:</td>
-        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{ {{p}} } \simeq {{subgp.subgroup_tex}}$</span></td>
+        <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.short_label}}">$P_{ {{p}} } \simeq$ {{subgp.knowl()|safe}}</span></td>
       </tr>
     {% endfor %}
-  {% endif %}
 </table>
 
 
@@ -454,7 +453,7 @@
       <button class='sub_ sub_active' onclick="select_subgroup_mode(''); return false">up to conjugacy</button>
       <button class='sub_aut sub_inactive' onclick="select_subgroup_mode('aut'); return false">up to automorphism</button>
     </div>
-</div>
+  </div>
 
 {# Just header information for the diagrams #}
 
@@ -489,7 +488,7 @@
   </div>
 {% endif %}
 
-</div>
+</p>
 
 {# This is the setup string for the subgroup lattices #}
 <script type="text/javascript">
@@ -503,9 +502,11 @@
       <h4>{{sub_desc}}</h4>
       {{ sub_summary | safe }}
       {% if sub_profile %}
+      <table>
         {% for ordline in sub_profile %}
-          Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+	<tr><td>Order {{ordline[0]}}: {{ordline[1] | safe}}</td></tr>
         {% endfor %}
+      </table>
       {% endif %}
     </div>
   {% endfor %}
@@ -615,8 +616,12 @@
                                                                                                                              
        <p> The complex character table for this group is not computed. </p>
     
-   {% else %}      
-      {% if gp.number_conjugacy_classes <= 16 %}
+       {% elif gp.complex_characters_known == False %}
+
+      <p> The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not available for this group.    </p>
+
+       {% else %} 
+       {% if gp.number_conjugacy_classes <= 16 %}
 
       {% include 'character_table.html' %}
 

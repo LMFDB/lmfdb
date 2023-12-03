@@ -49,7 +49,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'raw_typeset', 'raw_typeset_poly', 'raw_typeset_poly_factor',
            'raw_typeset_qexp', 'raw_typeset_int', 'compress_poly_Q',
            'input_string_to_poly', 'dispZmat', 'dispcyclomat',
-           'pos_int_and_factor']
+           'compress_expression',
+           'pos_int_and_factor', 'compress_polynomial']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -114,6 +115,8 @@ from .web_display import (
     raw_typeset,
     raw_typeset_poly,
     compress_poly_Q,
+    compress_polynomial,
+    compress_expression,
     pos_int_and_factor,
     raw_typeset_poly_factor,
     raw_typeset_qexp,

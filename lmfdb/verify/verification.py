@@ -686,5 +686,5 @@ class TableChecker():
         """
         check that the uniqueness constraints are satisfied
         """
-        constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
+        constraints = {tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE'}
         return [constraint for constraint in self.uniqueness_constraints if tuple(sorted(constraint)) not in constraints]

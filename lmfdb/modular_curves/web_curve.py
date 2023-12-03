@@ -98,13 +98,13 @@ def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
     if cname[:4] == "Xs4(":
         cname = cname.upper()
-    elif cname in ["X1(2,2)", "Xpm1(2,2)", "Xsp(2)"]:
+    elif cname in ["X1(2,2)", "Xpm1(2,2)", "Xsp(2)", "Xsym(2)"]:
         cname = "X(2)"
     elif cname in ["X1(2)", "Xpm1(2)", "Xsp+(2)"]:
         cname = "X0(2)"
     elif cname == "Xpm1(3)":
         cname = "X0(3)"
-    elif cname == "Xns+(2)":
+    elif cname in ["Xns+(2)", "Xsym(1)"]:
         cname = "X(1)"
     elif cname == "Xpm1(4)":
         cname = "X0(4)"
@@ -126,12 +126,14 @@ def name_to_latex(name):
         name = name.replace("S4", "{S_4}")
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
+    elif "sym" in name:
+        name = name.replace('sym', r"{\mathrm{sym}}")
     if name[1] != "(":
         name = "X_" + name[1:]
     return f"${name}$"
 
 def factored_conductor(conductor):
-    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else "1"
+    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else ("1" if conductor == [] else r"?")
 
 def remove_leading_coeff(jfac):
     if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ',''):
@@ -140,6 +142,8 @@ def remove_leading_coeff(jfac):
         return str(jfac)
 
 def formatted_dims(dims, mults):
+    if dims is None:
+        return "not computed"
     if not dims:
         return ""
     # Collapse newforms with the same dimension
@@ -150,6 +154,8 @@ def formatted_dims(dims, mults):
     return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in zip(dims, mults)) + "$"
 
 def formatted_newforms(newforms, mults):
+    if newforms is None:
+        return "not computed"
     if not newforms:
         return ""
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
@@ -185,9 +191,8 @@ def formatted_model(m):
             m["equation"][1], m["equation"][0] = m["equation"]
         C = R3(m["equation"][0])
         F = R4(m["equation"][1])
-        if F.monomial_coefficient(w**2) != -1:
+        if F.monomial_coefficient(w**2).constant_coefficient() > 0:
             F *= -1
-        assert F.monomial_coefficient(w**2) == -1
         lines = [
             latex(elt)
             for elt in [
@@ -315,7 +320,7 @@ class WebModCurve(WebObj):
         ]
         if self.image is not None:
             props.append((None, self.image))
-        if hasattr(self,"rank"):
+        if hasattr(self,"rank") and self.rank is not None:
             props.append(("Analytic rank", str(self.rank)))
         props.extend([("Cusps", str(self.cusps)),
                       (r"$\Q$-cusps", str(self.rational_cusps))])
@@ -330,7 +335,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
-        if self.simple:
+        if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
                 s = self.newforms[0].split(".")
@@ -345,7 +350,7 @@ class WebModCurve(WebObj):
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
-        if self.genus > 0:
+        if self.genus > 0 and self.trace_hash is not None:
             for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
                 if r['newforms'] == self.newforms and r['label'] != self.label:
                     friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
@@ -361,7 +366,7 @@ class WebModCurve(WebObj):
             tail.append(
                 (str(D[a]), url_for(".index_Q", **D))
             )
-        tail.append((self.label, " "))
+        tail.append((self.label, url_for(".by_label", label=self.label)))
         return get_bread(tail)
 
     @lazy_attribute
@@ -636,7 +641,8 @@ class WebModCurve(WebObj):
             C["index"] // self.index if flip else self.index // C["index"], # relative index
             C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"], # relative degree
             C["genus"],
-            "" if C["rank"] is None else C["rank"],
+            "?" if C["rank"] is None else C["rank"],
+            "not computed" if C["dims"] is None or self.dims is None else
             (formatted_dims(*difference(C["dims"], self.dims,
                                         C["mults"], self.mults)) if flip else
              formatted_dims(*difference(self.dims, C["dims"],

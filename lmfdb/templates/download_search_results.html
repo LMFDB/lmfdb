@@ -1,36 +1,19 @@
 {% set lang_text = {'gp': 'Pari/GP', 'gap' : 'GAP', 'sage': 'SageMath', 'magma': 'Magma', 'oscar': 'Oscar'} %}
 {% if not languages %}
-  {% set languages = ['gp', 'sage', 'magma', 'oscar'] %}
-{% endif %}
-{% if 'download_limit' in info %}
-  {% set download_limit = info.download_limit %}
-{% else %}
-  {% set download_limit = 1000000 %}
+{% set languages = ['gp', 'sage', 'magma', 'oscar'] %}
 {% endif %}
 
 &nbsp;
-{% if info.number > download_limit %}
-  <span id="download-msg">
-    There are too many results 
-      (<span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>)
-    to download.
-  </span>
+{% if info.exact_count %}
+  <span id="download-form">
 {% else %}
-  {% if info.exact_count %}
-    <span id="download-form">
-  {% else %}
-    <span id="download-msg">
-      To download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">determine the number of results</a>.
-    </span>
-    <span id="download-form" style="display:none;">
-  {% endif %}
-  Download to &nbsp;
-    {% for lang in languages %}
-    {% if info.search_type %}
-    <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string))}}">{{lang_text[lang]}}</a>&nbsp;
-    {% else %}
-    <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string)+'&search_type='+info.search_type)}}">{{lang_text[lang]}}</a>&nbsp;
-    {% endif %}
-  {% endfor %}
+  <span id="download-msg">
+    To download results, <a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">determine the number of results</a>.
   </span>
+  <span id="download-form" style="display:none;">
 {% endif %}
+Download displayed columns to &nbsp;
+{% for lang in languages %}
+  <a class="like-button" href="{{modify_url(query_add='Submit='+lang+'&download=1&query='+(info.query|string))}}" onclick="return update_download_url(this);">{{lang_text[lang]}}</a>&nbsp;
+{% endfor %}
+</span>

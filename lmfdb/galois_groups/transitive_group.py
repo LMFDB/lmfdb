@@ -191,7 +191,7 @@ class WebGaloisGroup:
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         for lang in self.code['gg']:
             self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
-        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        self.code['show'] = { lang:'' for lang in self.code['prompt'] }
 
 ############  Misc Functions
 
@@ -592,9 +592,13 @@ def group_alias_table():
     ans += r'</tbody></table>'
     return ans
 
-def nt2abstract(n, t):
+def nt2abstract(n, t, output="pair"):
     res = db.gps_transitive.lookup('{}T{}'.format(n,t))
     if res and 'abstract_label' in res:
+        if output == "pair":
+            gapid = res['abstract_label'].split('.')
+            return [int(z) for z in gapid]
+        # Otherwise output abstract group label
         return res['abstract_label']
     raise NameError('Abstract group id not found')
 
@@ -854,13 +858,13 @@ aliases['GL(2,5)'] = [(24,1353)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]
-siblings = dict(
-    (elt["label"], [tuple(z[0]) for z in elt["siblings"]])
+siblings = {
+    elt["label"]: [tuple(z[0]) for z in elt["siblings"]]
     for elt in db.gps_transitive.search(
         {"label": {"$in": labels}}, ["label", "siblings"]
     )
-)
-for ky in aliases.keys():
+}
+for ky in aliases:
     nt = aliases[ky][0]
     label = "%sT%s"% nt
     aliases[ky] = siblings[label][:]

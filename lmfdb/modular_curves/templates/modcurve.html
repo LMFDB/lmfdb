@@ -14,7 +14,7 @@
   <tr><td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td><td> {{ curve.cusps_display }}</td><td style="width:20px;"></td><td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td><td>{{ curve.cusp_widths_display }}</td><td style="width:60px;"></td><td>{{ KNOWL("modcurve.cusp_orbits", "Cusp orbits") }}</td><td>{{ curve.cusp_orbits_display }}</td></tr>
   <tr><td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td> <td> ${{curve.nu2}}$ of order $2$ and ${{curve.nu3}}$ of order $3$ </td></tr>
   {% if curve.genus > 0 %}
-  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ curve.rank }}$ </td></tr>
+  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> {% if curve.rank is not none %} ${{ curve.rank }}$ {% else %} not computed {% endif %} </td></tr>
   {% endif %}
   <tr><td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td><td> ${{ curve.q_gonality if curve.q_gonality else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$ </td></tr>
   <tr><td>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}:</td><td> ${{ curve.qbar_gonality if curve.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$ </td></tr>
@@ -36,7 +36,7 @@
   <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse and Zureick-Brown (RZB) label') }}:</td><td><a href="http://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.RSZBlabel %}
-  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse, Sutherland, and Zureick-Brown (RSZB) label') }}:</td><td><a href="https://blue.lmfdb.xyz/ModularCurve/Q/{{curve.RSZBlabel}}">{{curve.RSZBlabel}}</a></td></tr>
+  <tr><td>{{ KNOWL('modcurve.other_labels', 'Rouse, Sutherland, and Zureick-Brown (RSZB) label') }}:</td><td><a href="/ModularCurve/Q/{{curve.RSZBlabel}}">{{curve.RSZBlabel}}</a></td></tr>
   {% endif %}
   {% if curve.Slabel %}
   <tr><td>{{ KNOWL('ec.galois_rep_modell_image', 'Sutherland (S) label') }}:</td><td>{{curve.Slabel}}</td></tr>
@@ -62,11 +62,25 @@
 </table>
 {% endif %}
 
-{% if curve.genus > 0 %}
+{% if curve.genus > 0 and curve.dims is not none %}
 <h2> {{ KNOWL('ag.jacobian', 'Jacobian') }} </h2>
 
 <table>
   <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
+  <tr>
+    <td>
+      {{ KNOWL('av.simple', 'Simple') }}:
+    </td>
+    <td>
+      {% if curve.simple %}
+        yes
+      {% elif curve.simple is not none %}
+        no
+      {% else %}
+        not computed
+      {% endif %}
+    </td>
+  </tr>
   <tr>
     <td>
       {{ KNOWL('av.squarefree', 'Squarefree') }}:
@@ -74,8 +88,10 @@
     <td>
       {% if curve.squarefree %}
         yes
-      {% else %}
+      {% elif curve.squarefree is not none %}
         no
+      {% else %}
+        not computed
       {% endif %}
     </td>
   </tr>
@@ -230,7 +246,7 @@ We are removing this section until we have more sources of non-rational points. 
 
 {% set modelisos = curve.formatted_modelisos %}
 {% if modelisos %}
-<h2> Maps betweeen models of this curve </h2>
+<h2> Maps between models of this curve </h2>
 {% for degree, domain_model_type, codomain_label, codomain_model_type, codomain_name, codomain_equation, coord_names, equations in modelisos %}
 <p>Birational map from {{ curve.model_type_str(domain_model_type) }} to {{ curve.model_type_str(codomain_model_type) }}:</p>
 <table valign="center">
@@ -365,7 +381,7 @@ We are removing this section until we have more sources of non-rational points. 
       <th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th>
       <th>{{ KNOWL('modcurve.genus','Genus') }}</th>
       <th>{{ KNOWL('modcurve.rank','Rank') }}</th>
-      {% if curve.genus > 0 %}
+      {% if curve.dims %}
       <th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th>
       {% endif %}
     </tr>
@@ -379,10 +395,12 @@ We are removing this section until we have more sources of non-rational points. 
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
+    {% if curve.dims %}
     {% if genus > 0 %}
     <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% elif curve.genus > 0 %}
     <td>full Jacobian</td>
+    {% endif %}
     {% endif %}
   </tr>
   {% endfor %}
@@ -401,7 +419,7 @@ We are removing this section until we have more sources of non-rational points. 
       <th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th>
       <th>{{ KNOWL('modcurve.genus','Genus') }}</th>
       <th>{{ KNOWL('modcurve.rank','Rank') }}</th>
-      {% if curve.genus > 0 %}
+      {% if curve.dims %}
       <th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th>
       {% endif %}
     </tr>
@@ -415,10 +433,12 @@ We are removing this section until we have more sources of non-rational points. 
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
     <td align="center">${{ rank }}$</td>
+    {% if curve.dims %}
     {% if genus > 0 %}
     <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% elif curve.genus > 0 %}
     <td>full Jacobian</td>
+    {% endif %}
     {% endif %}
   </tr>
   {% endfor %}
@@ -436,8 +456,8 @@ We are removing this section until we have more sources of non-rational points. 
       <th>{{ KNOWL('modcurve.relative_index', 'Index') }}</th>
       <th>{{ KNOWL('modcurve.modular_cover','Degree') }}</th>
       <th>{{ KNOWL('modcurve.genus','Genus') }}</th>
+      {% if curve.dims %}
       <th>{{ KNOWL('modcurve.rank','Rank') }}</th>
-      {% if curve.genus > 0 %}
       <th>{{ KNOWL('modcurve.modular_cover','Kernel decomposition') }}</th>
       {% endif %}
     </tr>
@@ -450,8 +470,8 @@ We are removing this section until we have more sources of non-rational points. 
     <td align="center">${{ index }}$</td>
     <td align="center">${{ degree }}$</td>
     <td align="center">${{ genus }}$</td>
+    {% if curve.dims %}
     <td align="center">${{ rank }}$</td>
-    {% if curve.genus > 0 %}
     <td><span>{{ kernel if kernel else "dimension zero" | safe }}</span></td>
     {% endif %}
   </tr>

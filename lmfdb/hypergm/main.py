@@ -13,11 +13,11 @@ from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
-    parse_restricted, integer_options, search_wrap,
+    parse_restricted, integer_options, search_wrap, Downloader,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex, integer_divisors)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.hypergm import hypergm_page
@@ -400,17 +400,25 @@ hgm_columns = SearchColumns([
                           url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
                           ab_label(A, B) if t is None else
                           make_abt_label(A, B, t)),
-                      default=True),
-    MathCol("A", None, "$A$", default=True, short_title="A"),
-    MathCol("B", None, "$B$", default=True, short_title="B"),
-    ProcessedCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
-    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
-    MathCol("degree", None, "Degree", default=True),
-    MathCol("weight", None, "Weight", default=True),
-    MathCol("famhodge", None, "Hodge", default=True)])
+                      download_col="label"),
+    MathCol("A", None, "$A$", short_title="A"),
+    MathCol("B", None, "$B$", short_title="B"),
+    RationalCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    MathCol("degree", None, "Degree"),
+    MathCol("weight", None, "Weight"),
+    MathCol("famhodge", None, "Hodge")])
 
-hgm_columns.dummy_download = True
 hgm_columns.db_cols = 1  # all cols, since the table varies
+
+class HGMDownload(Downloader):
+    table = db.hgm_motives # overridden if family search
+    def get_table(self, info):
+        search_type = info.get("search_type", info.get("hst", "Motive"))
+        if search_type in ["Family", "RandomFamily"]:
+            return db.hgm_families
+        else:
+            return db.hgm_motives
 
 
 @search_wrap(table=db.hgm_motives,  # overridden if family search
@@ -418,7 +426,7 @@ hgm_columns.db_cols = 1  # all cols, since the table varies
              err_title=r'Hypergeometric motive over $\Q$ search input error',
              columns=hgm_columns,
              per_page=50,
-             shortcuts={'jump': hgm_jump},
+             shortcuts={'jump': hgm_jump, 'download': HGMDownload()},
              url_for_label=url_for_label,
              bread=lambda: get_bread([("Search results", '')]),
              learnmore=learnmore_list)
@@ -450,7 +458,7 @@ def hgm_search(info, query):
     # Combine the parts of the query if there are A,B parts
     if queryab:
         queryabrev = {}
-        for k in queryab.keys():
+        for k in queryab:
             queryabrev[k+'rev'] = queryab[k]
         query['$or'] = [queryab, queryabrev]
 
@@ -603,7 +611,7 @@ def parse_pandt(info, family):
 
         try:
             if info.get('t'):
-                info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
+                info['ts'] = sorted(set(map(QQ, info.get('t').split(","))))
                 info['t'] = ",".join(map(str, info['ts']))
             else:
                 info['ts'] = None

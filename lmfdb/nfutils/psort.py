@@ -175,7 +175,7 @@ def prime_from_label(K, lab):
     make_keys(K,p)
     d = K.psort_dict[p]
     try:
-        return next((P for P in d if d[P][:2]==(n,j)))
+        return next(P for P in d if d[P][:2]==(n,j))
     except StopIteration:
         return 0
 
@@ -379,5 +379,4 @@ def ideals_iterator(K,minnorm=1,maxnorm=Infinity):
     r""" Return an iterator over all ideals of norm n up to maxnorm (sorted).
     """
     for n in srange(minnorm,maxnorm+1):
-        for I in ideals_of_norm(K,n):
-            yield I
+        yield from ideals_of_norm(K,n)
