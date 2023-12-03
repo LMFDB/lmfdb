@@ -168,7 +168,15 @@
     {% elif gp.irrQ_degree == -1 %}
 <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
-    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr>
+    {% endif %}
+    {% if gp.irrQ_dim == None %}
+<tr><td>  {{KNOWL('group.min_rational_irrep_dim','Minimal dimension of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
+    {% elif gp.irrQ_dim == -1 %}
+<tr><td>  {{KNOWL('group.min_rational_irrep_dim','Minimal dimension of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
+    {% else %}
+    <tr><td>  {{KNOWL('group.min_rational_irrep_dim','Minimal dimension of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_dim}}</td></tr>
+    {% endif %}
     {% if gp.linQ_degree == None %}
       <tr><td>  {{KNOWL('group.min_rational_rep_deg','Minimal degree of $\mathbb{Q}$-rep')}}:</td><td>not computed</td></tr>
     {% else %}
