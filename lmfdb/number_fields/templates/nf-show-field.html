@@ -194,6 +194,8 @@ table.ntdata a {
                 {% endfor %}
             {% endif %}
         {% endfor %}
+            <tr><td>
+            {{KNOWL('nf.minimal_sibling', title='Minimal sibling')}}: <td>{{ nf.minimal_sibling() | safe }}</tr>
         </table>
         </div>
         {% endif %}

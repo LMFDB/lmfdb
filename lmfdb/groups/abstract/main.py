@@ -182,7 +182,7 @@ def find_props(
     props = []
     noted = set()
     for prop in overall_order:
-        if not getattr(gp, prop) or prop in noted or prop not in show:
+        if not getattr(gp, prop, None) or prop in noted or prop not in show:
             continue
         noted.add(prop)
         impl = [B for B in implications.get(prop, []) if B not in noted]
@@ -229,18 +229,21 @@ group_prop_implications = {
 
 def get_group_prop_display(gp):
     # We want elementary and hyperelementary to display which primes, but only once
-    elementaryp = ",".join(str(p) for (p, e) in ZZ(gp.elementary).factor())
-    hyperelementaryp = ",".join(
-        str(p)
-        for (p, e) in ZZ(gp.hyperelementary).factor()
-        if not p.divides(gp.elementary)
-    )
+    elementaryp = ''
+    hyperelementaryp = ''
+    if hasattr(gp, 'elementary'):
+        elementaryp = ",".join(str(p) for (p, e) in ZZ(gp.elementary).factor())
+        hyperelementaryp = ",".join(
+            str(p)
+            for (p, e) in ZZ(gp.hyperelementary).factor()
+            if not p.divides(gp.elementary)
+        )
     if (
         gp.order == 1
     ):  # here it will be implied from cyclic, so both are in the implication list
         elementaryp = " (for every $p$)"
         hyperelementaryp = ""
-    elif gp.pgroup:  # We don't display p since there's only one in play
+    elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
         elementaryp = hyperelementaryp = ""
     elif gp.cyclic:  # both are in the implication list
         elementaryp = f" ($p = {elementaryp}$)"
@@ -248,22 +251,32 @@ def get_group_prop_display(gp):
             hyperelementaryp = ""
         else:
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif gp.is_elementary:  # Now elementary is a top level implication
+    elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
         elementaryp = f" for $p = {elementaryp}$"
-        if gp.elementary == gp.hyperelementary:
+        if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
             hyperelementaryp = ""
         else:
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif gp.hyperelementary:  # Now hyperelementary is a top level implication
+    elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
         hyperelementaryp = f" for $p = {hyperelementaryp}$"
+    nilp_class = getattr(gp, 'nilpotency_class', None)
+    if nilp_class is not None:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
+    else:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
+    solv_length = getattr(gp, 'derived_length', None)
+    if solv_length is not None:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
+    else:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
         "nonabelian": display_knowl("group.abelian", "nonabelian"),
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} of class {gp.nilpotency_class}",
+        "nilpotent": nilp_phrase,
         "supersolvable": display_knowl("group.supersolvable", "supersolvable"),
         "monomial": display_knowl("group.monomial", "monomial"),
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {gp.derived_length}",
+        "solvable": solv_phrase,
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
         "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
         "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
@@ -289,9 +302,19 @@ def get_group_prop_display(gp):
 
 def get_group_impl_display(gp):
     # Mostly we display things the same in implication lists, but there are a few extra parentheses
+    nilp_class = getattr(gp, 'nilpotency_class', None)
+    if nilp_class is not None:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
+    else:
+        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
+    solv_length = getattr(gp, 'derived_length', None)
+    if solv_length is not None:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
+    else:
+        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
     return {
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})",
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})",
+        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} ({nilp_phrase})",
+        "solvable": f"{display_knowl('group.solvable', 'solvable')} ({solv_phrase})",
     }
 
 
@@ -468,7 +491,11 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         main = f"The subgroup is {display_props(props)}."
     else:
         main = f"This subgroup is {display_props(props)}."
-    unknown = [overall_display[prop] for prop in overall_order if getattr(sgp, prop) is None]
+    unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
+    if {'ab_simple', 'nab_simple'} <= set(unknown):
+        unknown.remove('ab_simple')
+
+    unknown = [overall_display[prop] for prop in unknown]
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -478,6 +505,8 @@ def create_boolean_string(gp, type="normal"):
     # We totally order the properties in two ways: by the order that they should be listed overall,
     # and by the order they should be listed in implications
     # For the first order, it's important that A come before B whenever A => B
+    if not gp:
+        return "Properties have not been computed"
     overall_order = [
         "cyclic",
         "abelian",
@@ -563,7 +592,11 @@ def create_boolean_string(gp, type="normal"):
         main = f"{display_props(props)}."
     else:
         main = f"This group is {display_props(props)}."
-    unknown = [overall_display[prop] for prop in overall_order if getattr(gp, prop) is None]
+    unknown = [prop for prop in overall_order if getattr(gp, prop, None) is None]
+    if {'ab_simple', 'nab_simple'} <= set(unknown):
+        unknown.remove('ab_simple')
+
+    unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main

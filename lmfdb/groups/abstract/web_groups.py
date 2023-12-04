@@ -278,7 +278,9 @@ class WebAbstractGroup(WebObj):
         return ZZ(self.G.Order())
     @lazy_attribute
     def exponent(self):
-        return ZZ(self.G.Exponent())
+        if self.G:
+            return ZZ(self.G.Exponent())
+        return None
 
     @lazy_attribute
     def cyclic(self):
@@ -1832,8 +1834,8 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
-    def representation_line(self, rep_type):
-        # TODO: Add links to searches for other representations when available
+    def representation_line(self, rep_type,inc_matrix):
+        # TODO: Add links to searches for other representations when available    Inc_matrix is 0 if first time a matrix group and 1 otherwise
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
@@ -1864,21 +1866,35 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
-            return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+            if inc_matrix == 0:
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+            else:
+                return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
 
     @lazy_attribute
     def stored_representations(self):
         if self.live():
             if self.solvable:
-                return self.representation_line("PC")
+                return self.representation_line("PC",0)
             return "data not computed"
             #raise NotImplementedError
 
         def sort_key(typ):
             if typ == self.element_repr_type:
                 return -1
-            return ["Lie", "PC", "Perm", "GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
-        return "\n".join(self.representation_line(rep_type) for rep_type in sorted(self.representations, key=sort_key))
+            return ["Lie", "PC", "Perm","GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
+        output_strg = ""
+        flag = 0  # used when multiple matrix group represenations
+        for rep_type in sorted(self.representations, key=sort_key):
+            if rep_type in ["Lie","PC","Perm"]:
+                inc_matrix = 0
+            elif flag == 0:
+                inc_matrix = 0
+                flag =1
+            else:
+                inc_matrix = 1
+            output_strg = output_strg + "\n" + self.representation_line(rep_type,inc_matrix)
+        return output_strg
 
     def is_null(self):
         return self._data is None
@@ -1892,7 +1908,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.aut_group is None:
                 if self.aut_order is None:
-                    return r"$\textrm{not computed}$"
+                    return r"not computed"
                 else:
                     return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
@@ -2355,11 +2371,14 @@ class WebAbstractSubgroup(WebObj):
         return ", ".join(specials)
 
     def _lookup(self, label, data, Wtype):
+        if not label:
+            return None
         for rec in data:
-            if rec["label"] == label:
-                return Wtype(label, rec)
-            elif rec.get("short_label") == label:
-                return Wtype(rec["label"], rec)
+            if rec:
+                if rec["label"] == label:
+                    return Wtype(label, rec)
+                elif 'short_label' in rec and rec.get("short_label") == label:
+                    return Wtype(rec["label"], rec)
         # It's possible that the label refers to a small group that is not in the database
         # but that we can create dynamically
         return Wtype(label)
@@ -2386,6 +2405,16 @@ class WebAbstractSubgroup(WebObj):
     def sub(self):
         S = self._lookup(self.subgroup, self._full, WebAbstractGroup)
         # We set various properties from S for create_boolean_subgroup_string
+        if not S:
+            order = self.subgroup_order
+            #newgroup.order = order
+            #newgroup.pgroup = len(ZZ(order).abs().factor())==1
+            newgroup = WebAbstractGroup('nolabel',
+                data={'order': order, 'G': None, 'abelian': self.abelian,
+                      # What if aut_label is set?
+                      'aut_group': self.aut_label, 'aut_order': None,
+                      'pgroup':len(ZZ(order).abs().factor())==1})
+            return newgroup
         for prop in [
             "pgroup",
             "is_elementary",
