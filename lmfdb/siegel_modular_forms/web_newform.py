@@ -33,7 +33,7 @@ LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
-AUTOMORPHIC_TYPE = {'F' : 'Siegel-Eisentein',
+AUTOMORPHIC_TYPE = {'F' : 'Siegel-Eisenstein',
                     'Q' : 'Klingen-Eisenstein',
                     'Y' : 'Yoshida Lift',
                     'P' : 'Saito-Kurokawa Lift',
