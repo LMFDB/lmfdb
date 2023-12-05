@@ -868,7 +868,7 @@ class NFDownloader(Downloader):
             ["coeffs"],
             {
                 "sage": 'poly = ZZx(out["coeffs"])',
-                "magma": 'poly := ZZx!(out`coeffs)',
+                "magma": 'poly := ZZx!(out`coeffs);',
                 "gp": 'poly = Polrev(mapget(out, "coeffs"))',
             }
         ),
