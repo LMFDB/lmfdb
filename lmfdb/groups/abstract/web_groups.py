@@ -750,8 +750,8 @@ class WebAbstractGroup(WebObj):
         return ans
 
     def properties(self):
-        nilp_str = f"yes" if self.nilpotent else "no"
-        solv_str = f"yes" if self.solvable else "no"
+        nilp_str = "yes" if self.nilpotent else "no"
+        solv_str = "yes" if self.solvable else "no"
         props = [
             ("Label", self.label),
             ("Order", web_latex(factor(self.order))),
