@@ -20,7 +20,32 @@
         not computed
     {% endif %}
     </td></tr>
-    {% if seq.amb.show_subgroup_flag() %}<tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td> ${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>{% endif %}
+    {% if seq.amb.show_subgroup_flag() %}
+	<tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td>
+		${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>
+	{% endif %}
+	{% if seq.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
+    class:')}}</td>
+	  <td>
+	  {% if seq.sub.G %}
+	  ${{seq.sub.nilpotency_class}}$  
+	  {% else %}
+	  not computed
+	  {% endif %}
+</td></tr>
+	{% endif %}
+	{% if seq.solvable %}
+    <tr><td>{{KNOWL('group.derived_series', title='Solvable
+		length:')}}</td><td>
+		 {% if seq.sub.G %}
+		 ${{seq.sub.derived_length}}$
+		 {% else %}
+	  not computed
+	  {% endif %}
+	</td></tr>
+	{% endif %}
+	
   </table>
 </p>
 
@@ -50,7 +75,15 @@
       <td>{% if seq.amb.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
       <td>{% if seq.amb.abelian and not seq.amb.cyclic %}Abelian group {% endif %}${{seq.amb.presentation()}}$</td>
     </tr>
-#}
+	#}
+	{% if seq.amb.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
+    class:')}}</td><td>${{seq.amb.nilpotency_class}}$  </td></tr>
+	{% endif %}
+	{% if seq.amb.solvable %}
+    <tr><td>{{KNOWL('group.derived_series', title='Solvable
+	length:')}}</td><td>${{seq.amb.derived_length}}$  </td></tr>
+	{% endif %}
   </table>
 </p>
 
@@ -87,6 +120,28 @@
       not computed
     {% endif %}
     </td></tr>
+		{% if seq.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
+    class:')}}</td>
+	  <td>
+	  {% if seq.quo.G %}
+	  ${{seq.quo.nilpotency_class}}$  
+	  {% else %}
+	  not computed
+	  {% endif %}
+</td></tr>
+	{% endif %}
+	{% if seq.solvable %}
+    <tr><td>{{KNOWL('group.derived_series', title='Solvable
+		length:')}}</td><td>
+		 {% if seq.quo.G %}
+		 ${{seq.quo.derived_length}}$
+		 {% else %}
+	  not computed
+	  {% endif %}
+	</td></tr>
+	{% endif %}
+
   </table>
 </p>
 
