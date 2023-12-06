@@ -35,7 +35,7 @@
 	  {% endif %}
 </td></tr>
 	{% endif %}
-    <tr><td>{{KNOWL('group.derived_series', title='Solvable
+    <tr><td>{{KNOWL('group.derived_series', title='Derived
 		length:')}}</td><td>
 		 {% if seq.sub.G %}
 		 ${{seq.sub.derived_length}}$
@@ -78,7 +78,7 @@
     <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
     class:')}}</td><td>${{seq.amb.nilpotency_class}}$  </td></tr>
 	{% endif %}
-    <tr><td>{{KNOWL('group.derived_series', title='Solvable length:')}}</td><td>${{seq.amb.derived_length}}$  </td></tr>
+    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{seq.amb.derived_length}}$  </td></tr>
   </table>
 </p>
 
@@ -126,8 +126,7 @@
 	  {% endif %}
 </td></tr>
 	{% endif %}
-    <tr><td>{{KNOWL('group.derived_series', title='Solvable
-		length:')}}</td><td>
+    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>
 		 {% if seq.quo.G %}
 		 ${{seq.quo.derived_length}}$
 		 {% else %}
