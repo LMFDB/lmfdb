@@ -594,6 +594,9 @@ def index():
         elif search_type in ["Subgroups", "RandomSubgroup"]:
             info["search_array"] = SubgroupSearchArray()
             return subgroup_search(info)
+        elif search_type in ["ComplexCharacters"]:
+            info["search_array"] = ComplexCharSearchArray()
+            return complex_char_search(info)
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -904,6 +907,12 @@ def display_url_cache(label, cache):
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
+#This function takes in a char label and returns url for its group's char table
+def get_cchar_url(label):
+    splabel= label.split(".")
+    cclabel = ".".join((splabel[0],splabel[1]))
+    return url_for(".char_table", label=cclabel)
+
 class Group_download(Downloader):
     table = db.gps_groups
     title = "Abstract groups"
@@ -1125,47 +1134,22 @@ def subgroup_search(info, query={}):
 
 #FIX THIS
 complex_char_columns = SearchColumns([
-    LinkCol("label", "group.label_complex_group_char", "Label", get_sub_url, th_class=" border-right", td_class=" border-ri
-ght"),
-    CheckCol("faithful", " group.representation.faithful", "Faithful")
+    LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url, th_class=" border-right", td_class=" border-right"),
+    CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("dim", "group.complex_char_deg", "Degree"),
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor"),
+    LinkCol("group","group.name","Group",get_url)
+    ])
 
-
-
-
-    ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
-    ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", display_gen_vecs, mathmode=True, default=False)])
-hgcwa_columns.languages = ['gap', 'magma']
-
-
-#    LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
+  #  ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
+   # ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", display_gen_vecs, mathmode=True, default=False)]) hgcwa_columns.languages = ['gap', 'magma']
 #    ColGroup("subgroup_cols", None, "Subgroup", [
-	MultiProcessedCol("sub_name", "group.name", "Name",
-                          ["subgroup", "subgroup_tex"],
-                          display_url,
-                          short_title="Sub. name", apply_download=False),
-	ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
-
-    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)                                                                                              
-    ColGroup("ambient_cols", None, "Ambient", [
-        MultiProcessedCol("ambient_name", "group.name", "Name",
-                          ["ambient", "ambient_tex"],
-                          display_url,
-                          short_title="Ambient name", apply_download=False),
-        ProcessedCol("ambient_order", "group.order", "Order", show_factor, align="center", short_title="Ambient order")]),
-    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
-    ColGroup("quotient_cols", None, "Quotient", [
-        MultiProcessedCol("quotient_name", "group.name", "Name",
-                          ["quotient", "quotient_tex"],
-                          display_url,
-                          short_title="Quo. name", apply_download=False),
-        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", short_title="Quo. cyclic"),
-        CheckCol("quotient_abelian", "group.abelian", "ab", short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal")])],
-    tr_class=["bottom-align", ""])
+#	MultiProcessedCol("sub_name", "group.name", "Name",
+#                          ["subgroup", "subgroup_tex"],
+#                          display_url,
+#                          short_title="Sub. name", apply_download=False),
+#	ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
+#    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)                                                                                              
 
 class Complex_char_download(Downloader):
     table = db.gps_char
@@ -1178,18 +1162,18 @@ class Complex_char_download(Downloader):
     shortcuts={"download": Complex_char_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
+    #JP FIX BELOW
     url_for_label=url_for_subgroup_label,
 )
 
 def complex_char_search(info, query={}):
-    info["search_type"] = "Complex Characters"
+    info["search_type"] = "ComplexCharacters"
     parse_ints(info, query, "dim")
     parse_ints(info, query, "indicator")
     parse_ints(info, query, "cyclotomic_n")
     parse_bool(info, query, "faithful")
     parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "image", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "image", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
     #maybe regex to get q-character need to parse rational character label
@@ -2256,6 +2240,67 @@ class SubgroupSearchArray(SearchArray):
             return [("Subgroups", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]
         else:
             return [("Subgroups", "Search again"), ("RandomSubgroup", "Random subgroup")]
+
+#JP-clean up knowls
+class ComplexCharSearchArray(SearchArray):
+#    null_column_explanations = { # No need to display warnings for these                                                                           
+#        "quotient": False,
+#        "quotient_abelian": False,
+#        "quotient_solvable": False,
+#        "quotient_cyclic": False,
+#        "direct": False,
+#        "split": False,
+#    }
+    sorts = [("", "group", ['group', 'dim','cyclotomic_n']),
+             ("dim", "degree", ['dim', 'group','cyclotomic_n'])]
+    def __init__(self):
+        faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
+        dim = TextBox(
+            name="dim",
+            label="Degree",
+            knowl="group.representation.degree",
+            example="4",
+            example_span="4, or a range like 3..5"
+        )
+        indicator = TextBox(
+            name="indicator",
+            label="Schur-Frobenius indicator",
+            knowl="group.representation.schur_indicator",
+            example="128",
+        )
+        group = TextBox(
+            name="group",
+            label="Group name",
+            knowl="group.group_name",
+            example="128.207",
+        )
+        image = TextBox(
+            name="image",
+            label="Image",
+            knowl= "group.representation.image",
+            example="4.2",
+        )
+        kernel = TextBox(
+            name="kernel",
+            label="Kernel",
+            knowl= "group.representation.kernel",
+            example="2.1",
+        )
+        center = TextBox(
+            name="center",
+            label="Center",
+            knowl="group.representation.center",
+            example="2.1",
+        )
+        
+
+        self.refine_array = [
+            [dim, group, faithful],
+        ]
+
+
+
+        
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
     # Note that, when called by knowl_cache from transitive_group.py,
