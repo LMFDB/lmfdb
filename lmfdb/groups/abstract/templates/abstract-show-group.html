@@ -28,13 +28,9 @@
     {% endif %}
 	
 	{% if gp.nilpotent %}
-    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
-    class:')}}</td><td>${{gp.nilpotency_class}}$  </td></tr>
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td><td>${{gp.nilpotency_class}}$  </td></tr>
 	{% endif %}
-	{% if gp.solvable %}
-    <tr><td>{{KNOWL('group.derived_series', title='Solvable
-	length:')}}</td><td>${{gp.derived_length}}$  </td></tr>
-	{% endif %}
+    <tr><td>{{KNOWL('group.derived_series', title='Solvable length:')}}</td><td>${{gp.derived_length}}$  </td></tr>
   </table>
 </p>
 <p>
