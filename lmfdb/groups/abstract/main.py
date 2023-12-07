@@ -880,6 +880,13 @@ def show_factor(n):
         return "$0$"
     return f"${latex(ZZ(n).factor())}$"
 
+#for irrQ_degree and irrC_degree gives negative value as "-"
+def remove_negatives(n):
+    if n < 1:
+        return "-"
+    return n
+
+
 def get_url(label):
     return url_for(".by_label", label=label)
 
@@ -952,8 +959,8 @@ group_columns = SearchColumns([
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, align="center", short_title="outer automorphisms", default=False),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree", default=False),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree", default=False),
-    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree", default=False),
-    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree", default=False),
+    ProcessedCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", remove_negatives, short_title=r"$\C$-irrep degree", default=False, align="center"),
+    ProcessedCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", remove_negatives, short_title=r"$\Q$-irrep degree", default=False, align="center"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
