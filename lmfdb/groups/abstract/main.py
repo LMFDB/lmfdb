@@ -47,7 +47,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns, SearchCol,LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup, ProcessedLinkCol
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -752,7 +752,7 @@ def by_subgroup_label(label):
 
 
 @abstract_page.route("/char_table/<label>")
-def char_table(label):
+def char_table(label, special_label = ""):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
     if gp.is_null():
@@ -761,6 +761,7 @@ def char_table(label):
     return render_template(
         "character_table_page.html",
         gp=gp,
+        special_label = special_label,
         title="Character table for %s" % label,
         bread=get_bread([("Character table", " ")]),
         learnmore=learnmore_list(),
@@ -889,6 +890,18 @@ def show_factor(n):
 def get_url(label):
     return url_for(".by_label", label=label)
 
+
+def trans_gp(val):
+    if val == None:
+        return ""
+    return "T".join((str(val[0]),str(val[1])))
+
+def get_trans_url(label):
+    if label ==None:
+        return ""
+    return  f"/GaloisGroup/{trans_gp(label)}"
+
+
 def display_url(label, tex):
     if label is None:
         if tex is None:
@@ -907,11 +920,11 @@ def display_url_cache(label, cache):
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
-#This function takes in a char label and returns url for its group's char table
+#This function takes in a char label and returns url for its group's char table HIGHLIGHTING ONE
 def get_cchar_url(label):
     splabel= label.split(".")
     cclabel = ".".join((splabel[0],splabel[1]))
-    return url_for(".char_table", label=cclabel)
+    return url_for(".char_table", label=cclabel, special_label=label)
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -1132,13 +1145,33 @@ def subgroup_search(info, query={}):
 
 #JP HERE
 
-#FIX THIS
+def print_type(val):
+    if val == 0:
+        return "R"
+    elif val >0:
+        return "C"
+    return "S"
+
+def trans_gp(val):
+    if val == None:
+        return ""
+    return "T".join((str(val[0]),str(val[1])))
+
+    
+
+#FIX KNOWLS
 complex_char_columns = SearchColumns([
     LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url, th_class=" border-right", td_class=" border-right"),
-    CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("dim", "group.complex_char_deg", "Degree"),
-    MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor"),
-    LinkCol("group","group.name","Group",get_url)
+    ProcessedCol("indicator","group.representation.type","Type",print_type),
+    CheckCol("faithful", "group.representation.faithful", "Faithful"),
+    MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
+    SearchCol("q_character","group.representation.rational_character","$\Q$-character"),
+    LinkCol("group","group.name","Group",get_url),
+  #  LinkCol("image", "group.representation.image", "Image", get_url, default=False),
+    LinkCol("kernel", "group.representation.kernel", "Kernel", get_url, default=False),
+    LinkCol("center", "group.representation.center", "Center", get_url, default=False),
+    ProcessedLinkCol("nt","group.representation.center", "NT", get_trans_url, trans_gp)
     ])
 
   #  ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
@@ -1172,11 +1205,11 @@ def complex_char_search(info, query={}):
     parse_ints(info, query, "indicator")
     parse_ints(info, query, "cyclotomic_n")
     parse_bool(info, query, "faithful")
+    parse_bracketed_posints(info,query,"nt",split=False,keepbrackets=True, allow0=False)
     parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "image", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
-    #maybe regex to get q-character need to parse rational character label
     #maybe parse_list for nt and field.  ADD LATER
     # parse_bool(
     #    info, query, "sylow", process=lambda x: ({"$gt": 1} if x else {"$lte": 1})
@@ -2243,7 +2276,7 @@ class SubgroupSearchArray(SearchArray):
 
 #JP-clean up knowls
 class ComplexCharSearchArray(SearchArray):
-#    null_column_explanations = { # No need to display warnings for these                                                                           
+#    null_column_explanations = { # No need to display warnings for these
 #        "quotient": False,
 #        "quotient_abelian": False,
 #        "quotient_solvable": False,
@@ -2262,15 +2295,22 @@ class ComplexCharSearchArray(SearchArray):
             example="4",
             example_span="4, or a range like 3..5"
         )
+        conductor = TextBox(
+            name="cyclotomic_n",
+            label="Conductor",
+            knowl="group.representation.conductor",
+            example="4",
+            example_span="4, or a range like 3..5"
+        )
         indicator = TextBox(
             name="indicator",
-            label="Schur-Frobenius indicator",
-            knowl="group.representation.schur_indicator",
-            example="128",
+            label="Type",
+            knowl="group.representation.type",
+            example="R, C, or S",
         )
         group = TextBox(
             name="group",
-            label="Group name",
+            label="Group",
             knowl="group.group_name",
             example="128.207",
         )
@@ -2292,15 +2332,21 @@ class ComplexCharSearchArray(SearchArray):
             knowl="group.representation.center",
             example="2.1",
         )
-        
+        #JP FIX KNOWL
+        nt = TextBox(
+            name="nt",
+            label="Trans. Gp.",
+            knowl="group.representation.center",
+            example="[4,2]",
+        )
+
+
 
         self.refine_array = [
-            [dim, group, faithful],
+            [dim, indicator, faithful,conductor],
+            [group, kernel, center,nt]
         ]
 
-
-
-        
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
     # Note that, when called by knowl_cache from transitive_group.py,

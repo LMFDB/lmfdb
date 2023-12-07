@@ -27,13 +27,19 @@
   </tr>
   {% set dispv = gp.sparse_cyclotomic_to_latex %}
   {% for chtr in gp.characters %}
-    <tr>
+  
+     {% if chtr['label'] == special_label %}
+     <tr bgcolor="red">
+       {% else %}
+     <tr>
+       {% endif %}
       <td> {{ chtr.display_knowl() | safe }}</td>
       <td class="center">{{chtr.type()}}</td>
       {% set cond = chtr.cyclotomic_n %}
       {% for val in chtr['values'] %}
         <td class="right">${{ dispv(cond, val) }}$</td>
       {% endfor %}
-    </tr>
+  </tr>
+
   {% endfor %}
 </table>
