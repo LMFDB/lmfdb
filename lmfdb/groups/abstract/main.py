@@ -750,9 +750,8 @@ def by_subgroup_label(label):
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))
 
-
 @abstract_page.route("/char_table/<label>")
-def char_table(label, special_label = ""):
+def char_table(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
     if gp.is_null():
@@ -761,7 +760,25 @@ def char_table(label, special_label = ""):
     return render_template(
         "character_table_page.html",
         gp=gp,
-        special_label = special_label,
+        special_label=False,  #needed to highlight searched char in other cases
+        title="Character table for %s" % label,
+        bread=get_bread([("Character table", " ")]),
+        learnmore=learnmore_list(),
+    )
+    
+
+@abstract_page.route("/char_table/<label>/<special_label>")
+def char_table2(label, special_label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    return render_template(
+        "character_table_page.html",
+        gp=gp,
+        speclab = special_label,
+        special_label=True,
         title="Character table for %s" % label,
         bread=get_bread([("Character table", " ")]),
         learnmore=learnmore_list(),
@@ -921,10 +938,10 @@ def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
 #This function takes in a char label and returns url for its group's char table HIGHLIGHTING ONE
-def get_cchar_url(label):
-    splabel= label.split(".")
+def get_cchar_url(lab):
+    splabel= lab.split(".")
     cclabel = ".".join((splabel[0],splabel[1]))
-    return url_for(".char_table", label=cclabel, special_label=label)
+    return url_for(".char_table2", label=cclabel, special_label=lab)
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -1166,7 +1183,7 @@ complex_char_columns = SearchColumns([
     ProcessedCol("indicator","group.representation.type","Type",print_type),
     CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
-    SearchCol("q_character","group.representation.rational_character","$\Q$-character"),
+    SearchCol("q_character","group.representation.rational_character","$\Q$-character", default=False),
     LinkCol("group","group.name","Group",get_url),
   #  LinkCol("image", "group.representation.image", "Image", get_url, default=False),
     LinkCol("kernel", "group.representation.kernel", "Kernel", get_url, default=False),
@@ -1174,15 +1191,6 @@ complex_char_columns = SearchColumns([
     ProcessedLinkCol("nt","group.representation.center", "NT", get_trans_url, trans_gp)
     ])
 
-  #  ProcessedCol("signature", "curve.highergenus.aut.signature", "Signature", lambda sig: sign_display(ast.literal_eval(sig)), mathmode=True),
-   # ProcessedCol("gen_vectors", "curve.highergenus.aut.generatingvector", "Generating vectors", display_gen_vecs, mathmode=True, default=False)]) hgcwa_columns.languages = ['gap', 'magma']
-#    ColGroup("subgroup_cols", None, "Subgroup", [
-#	MultiProcessedCol("sub_name", "group.name", "Name",
-#                          ["subgroup", "subgroup_tex"],
-#                          display_url,
-#                          short_title="Sub. name", apply_download=False),
-#	ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
-#    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)                                                                                              
 
 class Complex_char_download(Downloader):
     table = db.gps_char

@@ -1,6 +1,11 @@
 
 {% set ccs = gp.conjugacy_classes %}
 
+
+{% if special_label %}
+The row representing character {{speclab}} is highighted below. <br><br>
+{% endif %}
+
 <table class="nowrap">
   <tr>
     <td></td><td></td>
@@ -26,9 +31,11 @@
     <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
   </tr>
   {% set dispv = gp.sparse_cyclotomic_to_latex %}
+
+  {% if special_label %}
   {% for chtr in gp.characters %}
   
-     {% if chtr['label'] == special_label %}
+     {% if chtr['label'] == speclab %}
      <tr bgcolor="red">
        {% else %}
      <tr>
@@ -39,7 +46,21 @@
       {% for val in chtr['values'] %}
         <td class="right">${{ dispv(cond, val) }}$</td>
       {% endfor %}
-  </tr>
+     </tr>
+     {% endfor %}
+     {% else %}
 
-  {% endfor %}
+     {% for chtr in gp.characters %}
+          <tr>
+      <td> {{ chtr.display_knowl() | safe }}</td>
+      <td class="center">{{chtr.type()}}</td>
+      {% set cond = chtr.cyclotomic_n %}
+      {% for val in chtr['values'] %}
+        <td class="right">${{ dispv(cond, val) }}$</td>
+      {% endfor %}
+     </tr>
+     {% endfor %}
+
+     {% endif %}
+     
 </table>
