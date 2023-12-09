@@ -17,7 +17,7 @@ def test_small_gps(sample_gp):
         print("Group orders match: " + str(sample_gp['order'] == libgap.Order(G)))
         #Confirm IsAbelian returns same value
         print("Groups abelian-ness match: " + str((sample_gp['abelian']) == bool(libgap.IsAbelian(G))))
-        #Confirm IsSimple returns same value   
+        #Confirm IsSimple returns same value
         print("Groups simple-ness match: " + str((sample_gp['simple']) == bool(libgap.IsSimple(G))))
         #Confirm IsPerfect returns same value
         print("Groups perfect-ness match: " + str((sample_gp['perfect']) == bool(libgap.IsPerfect(G))))
@@ -33,13 +33,11 @@ def test_small_gps(sample_gp):
             NormLat = libgap.NormalSubgroups(G)
             print ("Number of normal subgroups match: " + str(libgap.Size(NormLat) == sample_gp['number_normal_subgroups']))
 
-
         # check if minimal permutation  degrees match
         if sample_gp['permutation_degree']:
             minpermdeg_gap = libgap.MinimalFaithfulPermutationDegree(G)
             print("Minimal permutation degrees match: " + str(minpermdeg_gap == sample_gp['permutation_degree']))
 
-            
         # check order stats
         stupid_str = 'Set(ConjugacyClasses(SmallGroup(' +  id_nums[0]+ ',' + id_nums[1] + ")), z->Order(Representative(z))) "
         ords = libgap.eval(stupid_str)
@@ -48,7 +46,7 @@ def test_small_gps(sample_gp):
         ords_list = sample_gp['order_stats']
         for i in range(len(ords_list)):
             ordsLMFDB.append(ords_list[i][0])
-        print("Order set matches: " + str(ords == ordsLMFDB))    
+        print("Order set matches: " + str(ords == ordsLMFDB))
         #print(ords,ordsLMFDB)
 
         #check degrees
@@ -68,5 +66,5 @@ def test_small_gps(sample_gp):
 
 for i in range(10):
     x  = db.gps_groups_test.random({'order': {"$lte" :2000}})
-    sample_gp =db.gps_groups_test.lucky({'label': x})                                                                                    
+    sample_gp =db.gps_groups_test.lucky({'label': x})
     test_small_gps(sample_gp)
