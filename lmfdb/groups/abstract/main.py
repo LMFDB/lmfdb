@@ -1188,7 +1188,8 @@ complex_char_columns = SearchColumns([
   #  LinkCol("image", "group.representation.image", "Image", get_url, default=False),
     LinkCol("kernel", "group.representation.kernel", "Kernel", get_url, default=False),
     LinkCol("center", "group.representation.center", "Center", get_url, default=False),
-    ProcessedLinkCol("nt","group.representation.center", "NT", get_trans_url, trans_gp)
+    #    ProcessedLinkCol("nt","group.representation.center", "NT", get_trans_url, trans_gp),
+    ProcessedCol("nt","group.representation.center", "NT", trans_gp) 
     ])
 
 
