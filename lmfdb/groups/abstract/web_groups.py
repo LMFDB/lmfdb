@@ -1955,13 +1955,13 @@ class WebAbstractGroup(WebObj):
         if self.permutation_degree is None:
             return r"not computed"
         else:
-            return self.permutation_degree
+            return f"${self.permutation_degree}$"
 
     def trans_degree(self):
         if self.transitive_degree is None:
             return r"not computed"
         else:
-            return self.transitive_degree
+            return f"${self.transitive_degree}$"
 
     def live_composition_factors(self):
         from .main import url_for_label

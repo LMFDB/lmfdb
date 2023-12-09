@@ -151,18 +151,25 @@
   <table>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
-    <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
+    {% if gp.irrC_degree == None %}
+	  <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree
+		  of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> 
+    {% elif gp.irrC_degree == -1 %}
+      <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree
+		  of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>
+	 {% else %}
+	  <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>${{gp.irrC_degree}}$</td></tr>
+	{% endif %}
     {% if gp.irrQ_degree == None %}
-<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
+        <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
     {% elif gp.irrQ_degree == -1 %}
 <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
-    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>${{gp.irrQ_degree}}$</td></tr> {% endif %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     {% if gp.rank %}
-      <td>{{gp.rank}}</td>
+      <td>${{gp.rank}}$</td>
     {% else %}
       <td>not computed</td>
     {% endif %}
@@ -170,7 +177,7 @@
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
   {% if gp.eulerian_function != None %}
-    <td>{{gp.eulerian_function}}</td>
+    <td>${{gp.eulerian_function}}$</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
 </table>
@@ -309,8 +316,8 @@
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
      {% if gp.commutator_count %}
-      <td>{{gp.commutator_count}}</td>
-    {% elif gp.abelian %} <td>0</td>
+      <td>${{gp.commutator_count}}$</td>
+    {% elif gp.abelian %} <td>$0$</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
   {% endif %}
