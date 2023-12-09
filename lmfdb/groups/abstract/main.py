@@ -766,10 +766,9 @@ def auto_gens(label):
     return render_template(
         "auto_gens_page.html",
         gp=gp,
-        title="Generators of automorphism group for %s" % label,
-        bread=get_bread([("Automorphism group generators", " ")]),
-        learnmore=learnmore_list(),
-    )
+        title="Generators of automorphism group for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
+                        )
 
 
 @abstract_page.route("/sub/<label>")
@@ -791,9 +790,8 @@ def char_table(label):
     return render_template(
         "character_table_page.html",
         gp=gp,
-        title="Character table for %s" % label,
-        bread=get_bread([("Character table", " ")]),
-        learnmore=learnmore_list(),
+        title="Character table for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
     )
 
 
@@ -807,9 +805,8 @@ def Qchar_table(label):
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
-        title="Rational character table for %s" % label,
-        bread=get_bread([("Rational character table", " ")]),
-        learnmore=learnmore_list(),
+        title="Rational character table for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
     )
 
 def _subgroup_diagram(label, title, only, style):
@@ -916,6 +913,13 @@ def show_factor(n):
         return "$0$"
     return f"${latex(ZZ(n).factor())}$"
 
+#for irrQ_degree and irrC_degree gives negative value as "-"
+def remove_negatives(n):
+    if n < 1:
+        return "-"
+    return n
+
+
 def get_url(label):
     return url_for(".by_label", label=label)
 
@@ -988,8 +992,8 @@ group_columns = SearchColumns([
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, align="center", short_title="outer automorphisms", default=False),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree", default=False),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree", default=False),
-    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree", default=False),
-    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree", default=False),
+    ProcessedCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", remove_negatives, short_title=r"$\C$-irrep degree", default=False, align="center"),
+    ProcessedCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", remove_negatives, short_title=r"$\Q$-irrep degree", default=False, align="center"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,

@@ -842,7 +842,7 @@ class WebAbstractGroup(WebObj):
             elif self.number_characteristic_subgroups is None:
                 return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
             else:
-                ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
+                ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
                 if self.number_characteristic_subgroups < self.number_normal_subgroups:
                     ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>).<p>"+charcolor+"  "+normalcolor
                 else:
@@ -1338,6 +1338,10 @@ class WebAbstractGroup(WebObj):
             for chardata in db.gps_qchar.search({"group": self.label})
         ]
         return sorted(chrs, key=lambda x: x.counter)
+
+    @lazy_attribute
+    def has_nontrivial_schur_character(self):
+        return any(chtr.schur_index > 1 for chtr in self.rational_characters)
 
     @lazy_attribute
     def maximal_subgroup_of(self):
