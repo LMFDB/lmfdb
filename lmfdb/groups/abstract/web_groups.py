@@ -1863,7 +1863,7 @@ class WebAbstractGroup(WebObj):
             gens = fr"$\langle {gens} \rangle$"
             d = rdata["d"]
             if d >= 10:
-                gens = f"Degree {d}, {gens}"
+                gens = f"Degree ${d}$, {gens}"
             return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
         else:
             # Matrix group
