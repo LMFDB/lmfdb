@@ -26,13 +26,15 @@
      {% if not gp.live() %}
     <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
     {% endif %}
+	
+	{% if gp.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td><td>${{gp.nilpotency_class}}$  </td></tr>
+	{% endif %}
+    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{gp.derived_length}}$  </td></tr>
   </table>
 </p>
-
-
 <p>
   {{info.boolean_characteristics_string | safe}}
-
 </p>
 
 <h2>Group statistics</h2>
@@ -151,14 +153,21 @@
   <table>
     <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
     <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-    {% if gp.irrC_degree == None %} <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> {% elif gp.irrC_degree == -1 %}
-    <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>  {% else %}<tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>{{gp.irrC_degree}}</td></tr> {% endif %}
+    {% if gp.irrC_degree == None %}
+	  <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree
+		  of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> 
+    {% elif gp.irrC_degree == -1 %}
+      <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree
+		  of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>
+	 {% else %}
+	  <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>${{gp.irrC_degree}}$</td></tr>
+	{% endif %}
     {% if gp.irrQ_degree == None %}
-<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
+        <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
     {% elif gp.irrQ_degree == -1 %}
 <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
     {% else %}
-    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>{{gp.irrQ_degree}}</td></tr> {% endif %}
+    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>${{gp.irrQ_degree}}$</td></tr> {% endif %}
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     {% if gp.rank %}
@@ -584,6 +593,7 @@
 <p>
 
 
+
 {% if not gp.rational_characters and gp.number_conjugacy_classes == None %}
 
    <p> The character tables for this group have not been computed. </p>
@@ -591,6 +601,17 @@
 {% else %}  
 
    <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
+
+     {% if gp.number_divisions == gp.number_conjugacy_classes %}
+
+        <p>
+           Every character has rational values, so the {{KNOWL('group.complex_character_table','complex character table')}} is the same as the rational character table below.
+        </p>
+
+
+   {% else %}
+
+
 
    {% if gp.number_conjugacy_classes == None %}
                                                                                                                              
@@ -626,16 +647,9 @@
 
 {% endif %}
 
-      {% if gp.number_divisions == gp.number_conjugacy_classes %}
-
-        <p>
-           Every character has rational values, so the {{KNOWL('group.rational_character_table','rational character table')}} is the same as the complex character table.
-        </p>
 
 
-   {% else %}
-  
-
+{% endif %}
 
 <h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 
@@ -654,7 +668,6 @@
   <p>
     See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>.
   </p>
-{% endif %}
 {% endif %}
 {% endif %}
 {% endif %} {# gp.live() #}

@@ -174,7 +174,6 @@ def find_props(
     overall_order,
     impl_order,
     overall_display,
-    impl_display,
     implications,
     hence_str,
     show,
@@ -182,7 +181,7 @@ def find_props(
     props = []
     noted = set()
     for prop in overall_order:
-        if not getattr(gp, prop) or prop in noted or prop not in show:
+        if not getattr(gp, prop, None) or prop in noted or prop not in show:
             continue
         noted.add(prop)
         impl = [B for B in implications.get(prop, []) if B not in noted]
@@ -198,7 +197,7 @@ def find_props(
             cur += 1
         noted.update(impl)
         impl = [
-            impl_display.get(B, overall_display.get(B))
+            overall_display.get(B)
             for B in impl_order
             if B in impl and B in show
         ]
@@ -229,18 +228,21 @@ group_prop_implications = {
 
 def get_group_prop_display(gp):
     # We want elementary and hyperelementary to display which primes, but only once
-    elementaryp = ",".join(str(p) for (p, e) in ZZ(gp.elementary).factor())
-    hyperelementaryp = ",".join(
-        str(p)
-        for (p, e) in ZZ(gp.hyperelementary).factor()
-        if not p.divides(gp.elementary)
-    )
+    elementaryp = ''
+    hyperelementaryp = ''
+    if hasattr(gp, 'elementary'):
+        elementaryp = ",".join(str(p) for (p, e) in ZZ(gp.elementary).factor())
+        hyperelementaryp = ",".join(
+            str(p)
+            for (p, e) in ZZ(gp.hyperelementary).factor()
+            if not p.divides(gp.elementary)
+        )
     if (
         gp.order == 1
     ):  # here it will be implied from cyclic, so both are in the implication list
         elementaryp = " (for every $p$)"
         hyperelementaryp = ""
-    elif gp.pgroup:  # We don't display p since there's only one in play
+    elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
         elementaryp = hyperelementaryp = ""
     elif gp.cyclic:  # both are in the implication list
         elementaryp = f" ($p = {elementaryp}$)"
@@ -248,22 +250,22 @@ def get_group_prop_display(gp):
             hyperelementaryp = ""
         else:
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif gp.is_elementary:  # Now elementary is a top level implication
+    elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
         elementaryp = f" for $p = {elementaryp}$"
-        if gp.elementary == gp.hyperelementary:
+        if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
             hyperelementaryp = ""
         else:
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif gp.hyperelementary:  # Now hyperelementary is a top level implication
+    elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
         hyperelementaryp = f" for $p = {hyperelementaryp}$"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
         "nonabelian": display_knowl("group.abelian", "nonabelian"),
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} of class {gp.nilpotency_class}",
+        "nilpotent": display_knowl('group.nilpotent', 'nilpotent'),
         "supersolvable": display_knowl("group.supersolvable", "supersolvable"),
         "monomial": display_knowl("group.monomial", "monomial"),
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {gp.derived_length}",
+        "solvable": display_knowl("group.solvable", "solvable"),
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
         "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
         "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
@@ -285,15 +287,6 @@ def get_group_prop_display(gp):
     if gp.order == 1:
         overall_display["pgroup"] += " (for every $p$)"
     return overall_display
-
-
-def get_group_impl_display(gp):
-    # Mostly we display things the same in implication lists, but there are a few extra parentheses
-    return {
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} (of class {gp.nilpotency_class})",
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} (of {display_knowl('group.derived_series', 'length')} {gp.derived_length})",
-    }
-
 
 def create_boolean_subgroup_string(sgp, type="normal"):
     # We put direct and semidirect after normal since (hence normal) seems weird there, even if correct
@@ -446,9 +439,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     }
     if type == "normal":
         overall_display.update(get_group_prop_display(sgp.sub))
-        impl_display = get_group_impl_display(sgp.sub)
-    else:
-        impl_display = {}
 
     assert set(overall_display) == set(overall_order)
     hence_str = display_knowl(
@@ -459,7 +449,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         overall_order,
         impl_order,
         overall_display,
-        impl_display,
         implications,
         hence_str,
         show=overall_display,
@@ -468,7 +457,11 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         main = f"The subgroup is {display_props(props)}."
     else:
         main = f"This subgroup is {display_props(props)}."
-    unknown = [overall_display[prop] for prop in overall_order if getattr(sgp, prop) is None]
+    unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
+    if {'ab_simple', 'nab_simple'} <= set(unknown):
+        unknown.remove('ab_simple')
+
+    unknown = [overall_display[prop] for prop in unknown]
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -478,6 +471,8 @@ def create_boolean_string(gp, type="normal"):
     # We totally order the properties in two ways: by the order that they should be listed overall,
     # and by the order they should be listed in implications
     # For the first order, it's important that A come before B whenever A => B
+    if not gp:
+        return "Properties have not been computed"
     overall_order = [
         "cyclic",
         "abelian",
@@ -541,7 +536,6 @@ def create_boolean_string(gp, type="normal"):
             assert B in impl_order
 
     overall_display = get_group_prop_display(gp)
-    impl_display = get_group_impl_display(gp)
     assert set(overall_display) == set(overall_order)
 
     hence_str = display_knowl("group.properties_interdependencies", "hence")
@@ -550,7 +544,6 @@ def create_boolean_string(gp, type="normal"):
         overall_order,
         impl_order,
         overall_display,
-        impl_display,
         implications,
         hence_str,
         show=(short_show if short_string else overall_display),
@@ -563,7 +556,11 @@ def create_boolean_string(gp, type="normal"):
         main = f"{display_props(props)}."
     else:
         main = f"This group is {display_props(props)}."
-    unknown = [overall_display[prop] for prop in overall_order if getattr(gp, prop) is None]
+    unknown = [prop for prop in overall_order if getattr(gp, prop, None) is None]
+    if {'ab_simple', 'nab_simple'} <= set(unknown):
+        unknown.remove('ab_simple')
+
+    unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -736,10 +733,9 @@ def auto_gens(label):
     return render_template(
         "auto_gens_page.html",
         gp=gp,
-        title="Generators of automorphism group for %s" % label,
-        bread=get_bread([("Automorphism group generators", " ")]),
-        learnmore=learnmore_list(),
-    )
+        title="Generators of automorphism group for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
+                        )
 
 
 @abstract_page.route("/sub/<label>")
@@ -761,8 +757,8 @@ def char_table(label):
         "character_table_page.html",
         gp=gp,
         special_label=False,  #needed to highlight searched char in other cases
-        title="Character table for %s" % label,
-        bread=get_bread([("Character table", " ")]),
+        title="Character table for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
         learnmore=learnmore_list(),
     )
     
@@ -795,9 +791,8 @@ def Qchar_table(label):
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
-        title="Rational character table for %s" % label,
-        bread=get_bread([("Rational character table", " ")]),
-        learnmore=learnmore_list(),
+        title="Rational character table for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
     )
 
 def _subgroup_diagram(label, title, only, style):
@@ -904,6 +899,13 @@ def show_factor(n):
         return "$0$"
     return f"${latex(ZZ(n).factor())}$"
 
+#for irrQ_degree and irrC_degree gives negative value as "-"
+def remove_negatives(n):
+    if n < 1:
+        return "-"
+    return n
+
+
 def get_url(label):
     return url_for(".by_label", label=label)
 
@@ -994,8 +996,8 @@ group_columns = SearchColumns([
     ProcessedCol("outer_order", "group.outer_aut", r"$\card{\mathrm{Out}(G)}$", show_factor, align="center", short_title="outer automorphisms", default=False),
     MathCol("transitive_degree", "group.transitive_degree", "Tr. deg", short_title="transitive degree", default=False),
     MathCol("permutation_degree", "group.permutation_degree", "Perm. deg", short_title="permutation degree", default=False),
-    MathCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", short_title=r"$\C$-irrep degree", default=False),
-    MathCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", short_title=r"$\Q$-irrep degree", default=False),
+    ProcessedCol("irrC_degree", "group.min_complex_irrep_deg", r"$\C$-irrep deg", remove_negatives, short_title=r"$\C$-irrep degree", default=False, align="center"),
+    ProcessedCol("irrQ_degree", "group.min_rational_irrep_deg", r"$\Q$-irrep deg", remove_negatives, short_title=r"$\Q$-irrep degree", default=False, align="center"),
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,

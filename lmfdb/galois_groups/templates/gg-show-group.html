@@ -27,7 +27,6 @@ table.reptable td, table.reptable th {
       <td>{{ place_code('even') }}</td></tr>
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</td>
       <td>{{ place_code('primitive') }}</td></tr>
-      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</td>
       <td>{{ place_code('nilpotent') }}</td></tr>
       <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td>
       <td>{{ place_code('auts') }}</td></tr>
@@ -97,6 +96,7 @@ table.reptable td, table.reptable th {
       <td>{{place_code('abelian')}}</td></tr>
       <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</td>
       <td>{{place_code('solvable')}}</td></tr>
+      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</td>
       <tr><td>{{KNOWL('group.small_group_label','Label')}}:<td>&nbsp;&nbsp;<td>{{info.groupid | safe}}
       <td>{{place_code('id')}}</td></tr>
     </table>
