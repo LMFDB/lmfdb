@@ -750,8 +750,8 @@ class WebAbstractGroup(WebObj):
         return ans
 
     def properties(self):
-        nilp_str = f"yes, of class {self.nilpotency_class}" if self.nilpotent else "no"
-        solv_str = f"yes, of length {self.derived_length}" if self.solvable else "no"
+        nilp_str = "yes" if self.nilpotent else "no"
+        solv_str = "yes" if self.solvable else "no"
         props = [
             ("Label", self.label),
             ("Order", web_latex(factor(self.order))),
@@ -1863,7 +1863,7 @@ class WebAbstractGroup(WebObj):
             gens = fr"$\langle {gens} \rangle$"
             d = rdata["d"]
             if d >= 10:
-                gens = f"Degree {d}, {gens}"
+                gens = f"Degree ${d}$, {gens}"
             return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
         else:
             # Matrix group
@@ -1955,13 +1955,13 @@ class WebAbstractGroup(WebObj):
         if self.permutation_degree is None:
             return r"not computed"
         else:
-            return self.permutation_degree
+            return f"${self.permutation_degree}$"
 
     def trans_degree(self):
         if self.transitive_degree is None:
             return r"not computed"
         else:
-            return self.transitive_degree
+            return f"${self.transitive_degree}$"
 
     def live_composition_factors(self):
         from .main import url_for_label

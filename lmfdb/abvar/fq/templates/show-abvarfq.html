@@ -26,7 +26,7 @@
     <tr><td>{{KNOWL('av.fq.galois_group',title='Galois group')}}:</td><td>&nbsp;&nbsp;{{cl.display_galois_group()|safe}}</td></tr>
     {% endif %}
     {% if cl.jacobian_count is not none %}
-    <tr><td>{{KNOWL('av.fq.jacobian',title='Jacobians')}}:</td><td>&nbsp;&nbsp;{{cl.jacobian_count}}</td></tr>
+    <tr><td>{{KNOWL('av.fq.jacobian',title='Jacobians')}}:</td><td>&nbsp;&nbsp;${{cl.jacobian_count}}$</td></tr>
     {% endif %}
     {% if cl.size is not none %}
     <tr><td>{{KNOWL('av.fq.isogeny_class_size',title='Isomorphism classes')}}:</td><td>&nbsp;&nbsp;{{cl.size}}</td></tr>
