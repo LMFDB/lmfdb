@@ -37,6 +37,7 @@ from lmfdb.utils import (
     comma,
     proportioners,
     totaler,
+    key_for_numerically_sort
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
@@ -287,7 +288,7 @@ def modcurve_jump(info):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
         # Get list of all factors, lexicographically sorted
-        factors = sorted(sum(factors, []), key=lambda x:[int(i) for i in x.split(".")])
+        factors = sorted(sum(factors, []), key=key_for_numerically_sort)
         label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
