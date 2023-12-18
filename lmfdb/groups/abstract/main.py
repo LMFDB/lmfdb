@@ -47,7 +47,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup #, CheckProcessedCol
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -305,6 +305,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "is_sylow": ["is_hall", "nilpotent"],
         "nilpotent": ["solvable"],
     }
+    print(getattr(sgp,'normal'))
     if type == "normal":
         overall_order = [
             "thecenter",
@@ -401,12 +402,17 @@ def create_boolean_subgroup_string(sgp, type="normal"):
             "solvable",
             "is_hall",
         ]
+
+    if not getattr(sgp,'normal'):  #if gp isn't normal we don't store direct/semidirect
+        overall_order.remove('direct')
+        overall_order.remove('semidirect')
+
     for A, L in implications.items():
         for B in L:
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
-
+            
     overall_display = {
         "thecenter": display_knowl("group.center", "the center"),
         "thecommutator": display_knowl(
@@ -423,8 +429,8 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         ),
         "normal": display_knowl("group.subgroup.normal", "normal"),
         "maximal": display_knowl("group.maximal_subgroup", "maximal"),
-        "direct": f"a {display_knowl('group.direct_product', 'direct factor')}",
-        "semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}",
+#        "direct": f"a {display_knowl('group.direct_product', 'direct factor')}",
+#        "semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}",
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "stem": display_knowl("group.stem_extension", "stem"),
         "central": display_knowl("group.central", "central"),
@@ -437,6 +443,10 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "nab_perfect": display_knowl("group.perfect", "perfect"),
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
     }
+    if getattr(sgp,'normal'):  #if gp isn't normal we don't store direct/semidirect
+        norm_attr ={"direct": f"a {displa_knowl('group.direct_product', 'direct factor')}","semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}"}
+        overall_display.update(norm_attr)
+
     if type == "normal":
         overall_display.update(get_group_prop_display(sgp.sub))
 
@@ -455,6 +465,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     )
     if type == "normal":
         main = f"The subgroup is {display_props(props)}."
+#        unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
     else:
         main = f"This subgroup is {display_props(props)}."
     unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
@@ -884,6 +895,10 @@ def remove_negatives(n):
     return n
 
 
+#def non_norm_check( ):  #JP
+    
+
+
 def get_url(label):
     return url_for(".by_label", label=label)
 
@@ -1072,10 +1087,11 @@ subgroup_columns = SearchColumns([
                           display_url,
                           short_title="Quo. name", apply_download=False),
         ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", short_title="Quo. cyclic"),
-        CheckCol("quotient_abelian", "group.abelian", "ab", short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal")])],
+        #next columns are None if non-normal so we set unknown to "-" instead of "?"
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown = "-", short_title="Quo. cyclic"),
+        CheckCol("quotient_abelian", "group.abelian", "ab", unknown = "-", short_title="Quo. abelian"),
+        CheckCol("quotient_solvable", "group.solvable", "solv", unknown = "-", short_title="Quo. solvable"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown = "-", short_title="Quo. maximal")])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
@@ -2404,6 +2420,9 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
+        #GAP doesn't have groups of order 3^8 so if not in db, can't be live  
+        if label.startswith("6561.") and gp.source == "Missing":
+            return Markup("No additional information for this group of order 6561 is available.") 
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"

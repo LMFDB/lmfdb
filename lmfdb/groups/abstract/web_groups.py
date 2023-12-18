@@ -37,6 +37,7 @@ from lmfdb.utils import (
 )
 from .circles import find_packing
 
+
 nc = "not computed"
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
@@ -108,11 +109,11 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
                 if label is None:
                     name = '?'
                 else:
-                    name = f"Group {label}"
+                    name = f"Group {label}" 
             else:
                 name = f"${name}$"
         else:
-            name = f"Group {label}"
+            name = f"Group {label}" 
     if ambient is None:
         args = label
     else:
@@ -210,12 +211,15 @@ class WebAbstractGroup(WebObj):
             m = abstract_group_label_regex.fullmatch(label)
             if m is not None and m.group(2) is not None:
                 n = ZZ(m.group(1))
+                i = ZZ(m.group(2))
                 if libgap.SmallGroupsAvailable(n):
                     maxi = libgap.NrSmallGroups(n)
-                    i = ZZ(m.group(2))
                     if 0 < i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
+                else:   #issue with 3^8 being in Magma but not GAP db
+                    self._data = (n, i)
+                    self.source = "Missing" 
         if isinstance(self._data, list):  # live abelian group
             self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
             self.G = LiveAbelianGroup(self.snf)
@@ -1874,7 +1878,8 @@ class WebAbstractGroup(WebObj):
                 return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
             else:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
-
+        
+    #JP
     @lazy_attribute
     def stored_representations(self):
         if self.live():
@@ -1898,6 +1903,29 @@ class WebAbstractGroup(WebObj):
             else:
                 inc_matrix = 1
             output_strg = output_strg + "\n" + self.representation_line(rep_type,inc_matrix)
+        label =  self.label
+        #adding transitive groups
+        from .main import abstract_group_label_regex
+        from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
+        if abstract_group_label_regex.fullmatch(label):
+            x=db.gps_transitive.count({"abstract_label":label})
+            if x == 1:
+                trans_gps =db.gps_transitive.lucky({"abstract_label":label})
+                output_strg = output_strg + "\n" + f'<tr><td>{display_knowl("group.permutation_representation", "Transitive group")}: </td>'
+                output_strg = output_strg + '<td>' + transitive_group_display_knowl(trans_gps['label'],trans_gps['label']) + '</td></tr>'
+            elif x > 1:
+                trans_gps =db.gps_transitive.search({"abstract_label":label})
+                info= []
+                for gps in trans_gps:
+                    info.append(gps['label'])
+                output_strg = output_strg + "\n" + f'<tr><td>{display_knowl("group.permutation_representation", "Transitive group")}: </td>'
+                output_strg = output_strg + '<td>' + transitive_group_display_knowl(info[0],info[0]) + '</td>'
+                output_strg = output_strg + '<td>' + '<a href="/GaloisGroup/?gal=' + label + '">' +  'more representations</a></td></tr>'
+#                for gps in trans_gps:
+#                    tlabel=gps['label']
+                    #output_strg = output_strg + f'<td><a href="/GaloisGroup/' +tlabel +'">' + tlabel  + f'</a>'
+#                    output_strg = output_strg + '<td>' + transitive_group_display_knowl(tlabel,tlabel) + '</td>'
+#                output_strg=output_strg + f'</tr>' # "Transitive Group" + gps['label']
         return output_strg
 
     def is_null(self):
