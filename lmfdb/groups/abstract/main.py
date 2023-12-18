@@ -174,7 +174,6 @@ def find_props(
     overall_order,
     impl_order,
     overall_display,
-    impl_display,
     implications,
     hence_str,
     show,
@@ -198,7 +197,7 @@ def find_props(
             cur += 1
         noted.update(impl)
         impl = [
-            impl_display.get(B, overall_display.get(B))
+            overall_display.get(B)
             for B in impl_order
             if B in impl and B in show
         ]
@@ -259,24 +258,14 @@ def get_group_prop_display(gp):
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
     elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
         hyperelementaryp = f" for $p = {hyperelementaryp}$"
-    nilp_class = getattr(gp, 'nilpotency_class', None)
-    if nilp_class is not None:
-        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
-    else:
-        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
-    solv_length = getattr(gp, 'derived_length', None)
-    if solv_length is not None:
-        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
-    else:
-        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
         "nonabelian": display_knowl("group.abelian", "nonabelian"),
-        "nilpotent": nilp_phrase,
+        "nilpotent": display_knowl('group.nilpotent', 'nilpotent'),
         "supersolvable": display_knowl("group.supersolvable", "supersolvable"),
         "monomial": display_knowl("group.monomial", "monomial"),
-        "solvable": solv_phrase,
+        "solvable": display_knowl("group.solvable", "solvable"),
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
         "Zgroup": f"a {display_knowl('group.z_group', 'Z-group')}",
         "Agroup": f"an {display_knowl('group.a_group', 'A-group')}",
@@ -298,25 +287,6 @@ def get_group_prop_display(gp):
     if gp.order == 1:
         overall_display["pgroup"] += " (for every $p$)"
     return overall_display
-
-
-def get_group_impl_display(gp):
-    # Mostly we display things the same in implication lists, but there are a few extra parentheses
-    nilp_class = getattr(gp, 'nilpotency_class', None)
-    if nilp_class is not None:
-        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of class {nilp_class}"
-    else:
-        nilp_phrase = f"{display_knowl('group.nilpotent', 'nilpotent')} of uncomputed class"
-    solv_length = getattr(gp, 'derived_length', None)
-    if solv_length is not None:
-        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of {display_knowl('group.derived_series', 'length')} {solv_length}"
-    else:
-        solv_phrase = f"{display_knowl('group.solvable', 'solvable')} of uncomputed length"
-    return {
-        "nilpotent": f"{display_knowl('group.nilpotent', 'nilpotent')} ({nilp_phrase})",
-        "solvable": f"{display_knowl('group.solvable', 'solvable')} ({solv_phrase})",
-    }
-
 
 def create_boolean_subgroup_string(sgp, type="normal"):
     # We put direct and semidirect after normal since (hence normal) seems weird there, even if correct
@@ -469,9 +439,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     }
     if type == "normal":
         overall_display.update(get_group_prop_display(sgp.sub))
-        impl_display = get_group_impl_display(sgp.sub)
-    else:
-        impl_display = {}
 
     assert set(overall_display) == set(overall_order)
     hence_str = display_knowl(
@@ -482,7 +449,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         overall_order,
         impl_order,
         overall_display,
-        impl_display,
         implications,
         hence_str,
         show=overall_display,
@@ -570,7 +536,6 @@ def create_boolean_string(gp, type="normal"):
             assert B in impl_order
 
     overall_display = get_group_prop_display(gp)
-    impl_display = get_group_impl_display(gp)
     assert set(overall_display) == set(overall_order)
 
     hence_str = display_knowl("group.properties_interdependencies", "hence")
@@ -579,7 +544,6 @@ def create_boolean_string(gp, type="normal"):
         overall_order,
         impl_order,
         overall_display,
-        impl_display,
         implications,
         hence_str,
         show=(short_show if short_string else overall_display),
