@@ -833,7 +833,7 @@ class WebModCurve(WebObj):
     def rational_points_description(self):
         curve = self
         if curve.known_degree1_noncm_points or curve.pointless is False:
-            if curve.genus == 0 or (curve.genus == 1 and curve.rank is not None and curve.rank > 0):
+            if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
                     desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
@@ -842,7 +842,7 @@ class WebModCurve(WebObj):
                         pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
                     desc = r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
-            elif curve.genus > 1 or (curve.genus == 1 and (curve.rank is None or curve.rank == 0)):
+            elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     desc = 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational cusp"),
