@@ -1,4 +1,10 @@
 
+
+{% if special_label %}
+The row representing character {{speclab}} is highighted below. <br><br>
+{% endif %}
+
+
 <table class="nowrap">
   <tr>
     <td></td><td></td>
@@ -22,15 +28,41 @@
     </tr>
   {% endfor %}
 
+
+
+    
+    
   {% if gp.has_nontrivial_schur_character %}
     <tr><td></td><td>{{KNOWL('group.representation.schur_index', 'Schur')}}</td></tr>
   {% endif %}
+
+{% if special_label %}
   {% for chtr in gp.rational_characters %}
+
+     {% if chtr['label'] == speclab %}
+     <tr bgcolor="lightblue">
+       {% else %}
+     <tr>
+       {% endif %}
+      <td> {{ chtr.display_knowl() | safe }}</td><td class="center"> {% if chtr.schur_index != 1 %} {{chtr.schur_index}} {% endif %} </td>
+      {% for c in gp.conjugacy_class_divisions %}
+        <td class="right">${{ chtr.qvalues[c.classes.0.counter - 1] }}$</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+
+
+{% else %}
+       
+       {% for chtr in gp.rational_characters %}
     <tr>
       <td> {{ chtr.display_knowl() | safe }}</td><td class="center"> {% if chtr.schur_index != 1 %} {{chtr.schur_index}} {% endif %} </td> 
       {% for c in gp.conjugacy_class_divisions %}
         <td class="right">${{ chtr.qvalues[c.classes.0.counter - 1] }}$</td>
       {% endfor %}
     </tr>
-  {% endfor %}
+    {% endfor %}
+{% endif %}
+
+    
 </table>

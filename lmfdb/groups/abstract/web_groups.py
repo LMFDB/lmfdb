@@ -1668,6 +1668,7 @@ class WebAbstractGroup(WebObj):
                     s += var_name(i)
                 elif c != 0:
                     s += "%s^{%s}" % (var_name(i), c)
+            print("c and s", c, s)
             return s
         else:
             return self.pcgs.PcElementByExponents(vec)

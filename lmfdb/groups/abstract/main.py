@@ -155,6 +155,15 @@ def label_is_valid(lab):
     return abstract_group_label_regex.fullmatch(lab)
 
 
+#input string of complex character label and return rational character label
+def q_char(char):
+    l = len(char)-1
+    while char[l].isdigit():
+        char =char[:-1]
+        l -= 1
+    return char
+
+
 def get_bread(tail=[]):
     base = [("Groups", url_for(".index")), ("Abstract", url_for(".index"))]
     if not isinstance(tail, list):
@@ -759,7 +768,6 @@ def char_table(label):
         special_label=False,  #needed to highlight searched char in other cases
         title="Character table for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
-        learnmore=learnmore_list(),
     )
     
 
@@ -777,7 +785,6 @@ def char_table2(label, special_label):
         special_label=True,
         title="Character table for %s" % label,
         bread=get_bread([("Character table", " ")]),
-        learnmore=learnmore_list(),
     )
 
 
@@ -791,6 +798,24 @@ def Qchar_table(label):
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
+        title="Rational character table for $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
+    )
+
+
+
+@abstract_page.route("/Qchar_table/<label>/<special_label>")
+def Qchar_table2(label,special_label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    return render_template(
+        "rational_character_table_page.html",
+        gp=gp,
+        speclab = special_label,
+        special_label=True,
         title="Rational character table for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
     )
@@ -944,6 +969,15 @@ def get_cchar_url(lab):
     splabel= lab.split(".")
     cclabel = ".".join((splabel[0],splabel[1]))
     return url_for(".char_table2", label=cclabel, special_label=lab)
+
+#This function takes in a char label and returns url for its rational group's char table HIGHLIGHTING ONE
+def get_qchar_url(lab):
+    if lab[len(lab)-1].isdigit():
+        lab = q_char(lab)  #in case pass in complex char
+    splabel= lab.split(".")
+    cclabel = ".".join((splabel[0],splabel[1]))
+    return url_for(".Qchar_table2", label=cclabel, special_label=lab)
+
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -1185,8 +1219,9 @@ complex_char_columns = SearchColumns([
     ProcessedCol("indicator","group.representation.type","Type",print_type),
     CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
-    SearchCol("q_character","group.representation.rational_character","$\Q$-character", default=False),
+    ProcessedLinkCol("label","group.representation.rational_character","$\Q$-character", get_qchar_url, q_char),
     LinkCol("group","group.name","Group",get_url),
+#    MathCol("group_order", "group.order", "Group order", default=False),
   #  LinkCol("image", "group.representation.image", "Image", get_url, default=False),
     LinkCol("kernel", "group.representation.kernel", "Kernel", get_url, default=False),
     LinkCol("center", "group.representation.center", "Center", get_url, default=False),
@@ -1221,14 +1256,7 @@ def complex_char_search(info, query={}):
     parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "image", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
-    #maybe parse_list for nt and field.  ADD LATER
-    # parse_bool(
-    #    info, query, "sylow", process=lambda x: ({"$gt": 1} if x else {"$lte": 1})
-    # )
-    # parse_bool(
-    #     info, query, "hall", process=lambda x: ({"$gt": 1} if x else {"$lte": 1})
-    #  )
-    #   parse_bool(info, query, "nontrivproper", qfield="proper")
+ 
  
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
@@ -2295,8 +2323,8 @@ class ComplexCharSearchArray(SearchArray):
 #        "direct": False,
 #        "split": False,
 #    }
-    sorts = [("", "group", ['group', 'dim','cyclotomic_n']),
-             ("dim", "degree", ['dim', 'group','cyclotomic_n'])]
+    sorts = [("", "group", ['group_order','label', 'dim','cyclotomic_n']),
+             ("dim", "degree", ['dim', 'group_order','label','cyclotomic_n'])]
     def __init__(self):
         faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
         dim = TextBox(
