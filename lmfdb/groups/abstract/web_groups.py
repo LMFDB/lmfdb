@@ -1911,7 +1911,7 @@ class WebAbstractGroup(WebObj):
 
         def content_from_opts(test, opts, construction_type=None, display_opt=None, link_knowl=None, show_more_info=True):
             if test:
-                if opts is False:
+                if not opts:
                     return "<td>not computed</td>"
                 elif isinstance(opts, str):
                     return f"<td>{opts}</td>"
