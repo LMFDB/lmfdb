@@ -888,7 +888,9 @@ def show_factor(n):
 
 #for irrQ_degree and irrC_degree gives negative value as "-"
 def remove_negatives(n):
-    if n < 1:
+    if n is None:
+        return "?"
+    elif int(n) < 1:
         return "-"
     return n
 
