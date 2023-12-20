@@ -157,7 +157,7 @@ def product_sort_key(sub):
     for c in "SALwOQDC":
         # A rough preference order for groups S_n (and SL_n), A_n, GL_n, wreath products, OD_n, Q_n, D_n, and finally C_n
         v.append(-s.count(c))
-    return len(s), v
+    return s.count("?"), len(s), v
 
 def var_name(i):
     if i < 26:
@@ -2033,22 +2033,16 @@ class WebAbstractGroup(WebObj):
         else:
             skip_head = False
             for rep_type in sorted(self.representations, key=sort_key):
-                print(rep_type)
                 output_strg += "\n" + self.representation_line(rep_type, skip_head)
                 if rep_type.startswith("GL"):
                     # a matrix group, so we omit the "Matrix group" head in the future
                     skip_head = True
-            print("HERE 1")
             output_strg += show_reps("transitive")
             output_strg += show_reps("direct")
             output_strg += show_reps("semidirect")
             output_strg += show_reps("wreath")
-            print("HERE 5")
             output_strg += show_reps("nonsplit")
-            print("HERE 6")
-            
         output_strg += show_reps("aut")
-        
         return output_strg
 
     def is_null(self):
@@ -2439,20 +2433,20 @@ class WebAbstractSubgroup(WebObj):
         s = self.subgroup_tex
         if s is None:
             self.subgroup_tex = "?"
-            self.subgroup_tex_parened = "?"
+            self.subgroup_tex_parened = "(?)"
         else:
             self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
-        if self._data.get("quotient"):
+        if self.normal:
             q = self.quotient_tex
             if q is None:
-                tryhard = db.gps_groups.lookup(self.quotient)
-                if tryhard and tryhard.tex_name:
-                    q = tryhard.tex_name
-                    self.quotient_tex = q
-                    self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
-                else:
-                    self.quotient_tex = "?"
-                    self.quotient_tex_parened = "(?)"
+                self.quotient_tex = "?"
+                self.quotient_tex_parened = "(?)"
+                if self._data.get("quotient"):
+                    tryhard = db.gps_groups.lookup(self.quotient)
+                    if tryhard and tryhard["tex_name"]:
+                        q = tryhard["tex_name"]
+                        self.quotient_tex = q
+                        self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
             else:
                 self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
 

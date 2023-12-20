@@ -442,7 +442,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
     }
     if getattr(sgp,'normal'):  #if gp isn't normal we don't store direct/semidirect
-        norm_attr ={"direct": f"a {displa_knowl('group.direct_product', 'direct factor')}","semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}"}
+        norm_attr ={"direct": f"a {display_knowl('group.direct_product', 'direct factor')}","semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}"}
         overall_display.update(norm_attr)
 
     if type == "normal":
