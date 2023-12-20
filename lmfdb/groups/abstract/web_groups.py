@@ -1884,7 +1884,7 @@ class WebAbstractGroup(WebObj):
                     return ""
             else:
                 desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
-            reps = ",".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
+            reps = ", ".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
 #            pres = f"${self.presentation()}$"
@@ -2023,7 +2023,7 @@ class WebAbstractGroup(WebObj):
                 return rep_line(
                     "group.semidirect_product",
                     "Semidirect product",
-                    content_from_opts(self.semidirect_product,
+                    content_from_opts(self.semidirect_product and not self.abelian,
                                       self.semidirect_products,
                                       "semidirect product",
                                       display_semidirect,
