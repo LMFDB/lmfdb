@@ -179,7 +179,7 @@ def abelian_get_elementary(snf):
     return possiblep[0]
 
 
-def compress_perm(perms, cutoff = 200, sides = 80):
+def compress_perm(perms, cutoff = 150, sides = 70):
     if len(perms) < cutoff:
         return r'$\langle'+ perms + r'\rangle$'
     short_perm = r'$\langle'+ perms[:sides]
@@ -191,7 +191,7 @@ def compress_perm(perms, cutoff = 200, sides = 80):
 
 
 
-def compress_pres(pres, cutoff = 200, sides = 80):
+def compress_pres(pres, cutoff = 150, sides = 70):
     if len(pres) < cutoff:
         return f"${pres}$"
     short_pres = '${'+ pres[:sides]
@@ -201,7 +201,7 @@ def compress_pres(pres, cutoff = 200, sides = 80):
     if sides < len(pres)-1:  #finished because of "="
         short_pres = short_pres + r'= \!\cdots\! \rangle}$'
         return short_pres
-    else:  #finished because at so just return whole thing
+    else:  #just return whole thing if needed to go to end and ran out of "="
         return f"${pres}$"
 
 
@@ -1861,6 +1861,74 @@ class WebAbstractGroup(WebObj):
         relators = ", ".join(rel_powers + relators)
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
+
+
+#JP
+    def presentation_raw(self):
+        # We use knowledge of the form of the presentation to construct it manually.
+        gens = list(self.PCG.GeneratorsOfGroup())
+        pcgs = self.PCG.FamilyPcgs()
+        used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed                                                                   
+        rel_ords = [ZZ(p) for p in self.PCG.FamilyPcgs().RelativeOrders()]
+        assert len(gens) == len(rel_ords)
+        pure_powers = []
+        rel_powers = []
+        comm = []
+        relators = []
+
+        def print_elt(vec):
+            s = ""
+            e = 0
+            u = used[-1]
+            i = len(used) - 1
+            first_pass = True
+            for j, (c, p) in reversed(list(enumerate(zip(vec, rel_ords)))):
+                e *= p
+                e += c
+                if j == u:
+                    if e == 1:
+                        if first_pass:
+                            s = var_name(i)  + s  #JP add *
+                            first_pass = False
+                        else:
+                            s = var_name(i)+ '*' + s
+                        
+                    elif e > 1:
+                        if first_pass:
+                            s = "%s^%s" % (var_name(i), e) + s  #JP got rid of {} added *
+                            first_pass = False
+                        else:
+                            s = "%s^%s" % (var_name(i), e) + "*" + s
+                    i -= 1
+                    u = used[i]
+                    e = 0
+            return s
+
+        ngens = len(used)
+        for i in range(ngens):
+            a = used[i]
+            e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
+            ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
+            if all(x == 0 for x in ae):
+                pure_powers.append("%s^%s" % (var_name(i), e))  #JP got rid of {}
+            else:
+                rel_powers.append("%s^%s=%s" % (var_name(i), e, print_elt(ae)))  #JP got rid of {}
+            for j in range(i + 1, ngens):
+                b = used[j]
+                if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed                                             
+                    if not self.abelian:
+                        comm.append("[%s,%s]" % (var_name(i), var_name(j)))
+                else:
+                    v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed                                                               
+                    relators.append("%s^%s=%s" % (var_name(j), var_name(i), print_elt(v)))  #JP got rid of {}
+        show_gens = ", ".join(var_name(i) for i in range(len(used)))
+        if pure_powers or comm:
+            rel_powers = [",".join(pure_powers + comm)] + rel_powers  #JP comma here and got rid of =1
+        relators = ", ".join(rel_powers + relators)
+        return r"< %s | %s >" % (show_gens, relators)
+
+
+    
     @lazy_attribute
     def representations(self):
         # For live groups
@@ -1889,8 +1957,9 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "PC":
 #            pres = f"${self.presentation()}$"
             pres = self.presentation()
-#            print(self.presentation())  #JP
-            pres = raw_typeset(pres,compress_pres(pres))
+            pres_raw=self.presentation_raw()
+#            print(self.presentation_raw())  #JP
+            pres = raw_typeset(pres_raw,compress_pres(pres))
             if self.abelian and not self.cyclic:
              #   pres = f"Abelian group {pres}"
                 pres = "Abelian group " + pres   
