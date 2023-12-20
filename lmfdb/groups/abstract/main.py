@@ -112,12 +112,10 @@ def ctx_abstract_groups():
         "rchar_data": rchar_data,
         "cchar_data": cchar_data,
         "dyn_gen": dyn_gen,
-        "semidirect_expressions_knowl": semidirect_expressions_knowl,
         "semidirect_data": semidirect_data,
-        "nonsplit_expressions_knowl": nonsplit_expressions_knowl,
         "nonsplit_data": nonsplit_data,
-        "autgp_expressions_knowl": autgp_expressions_knowl,
         "aut_data": aut_data,
+        "trans_expr_data": trans_expr_data,
     }
 
 
@@ -1088,10 +1086,10 @@ subgroup_columns = SearchColumns([
                           short_title="Quo. name", apply_download=False),
         ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
         #next columns are None if non-normal so we set unknown to "-" instead of "?"
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown = "-", short_title="Quo. cyclic"),
-        CheckCol("quotient_abelian", "group.abelian", "ab", unknown = "-", short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", unknown = "-", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown = "-", short_title="Quo. maximal")])],
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic"),
+        CheckCol("quotient_abelian", "group.abelian", "ab", unknown="$-$", short_title="Quo. abelian"),
+        CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown="$-$", short_title="Quo. maximal")])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
@@ -1281,7 +1279,7 @@ def render_abstract_group(label, data=None):
             )
             friends += [("As the automorphism of a curve", auto_url)]
 
-        if abstract_group_label_regex.fullmatch(label) and db.gps_transitive.count({"abstract_label": label}) > 0:
+        if abstract_group_label_regex.fullmatch(label) and len(gp.transitive_friends) > 0:
             gal_gp_url =  "/GaloisGroup/?gal="+label
             friends += [("As a transitive group", gal_gp_url)]
 
@@ -2216,21 +2214,6 @@ def sub_display_knowl(label, name=None):
         name = f"Subgroup {label}"
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=sub_data">{name}</a>'
 
-def semidirect_expressions_knowl(label, name=None):
-    if not name:
-        name = f"Semidirect product expressions for {label}"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=semidirect_data">{name}</a>'
-
-def nonsplit_expressions_knowl(label, name=None):
-    if not name:
-        name = f"Nonsplit product expressions for {label}"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=nonsplit_data">{name}</a>'
-
-def autgp_expressions_knowl(label, name=None):
-    if not name:
-        name = f"Expressions for {label} as an automorphism group"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=aut_data">{name}</a>'
-
 def cc_data(gp, label, typ="complex"):
     if typ == "rational":
         wag = WebAbstractGroup(gp)
@@ -2546,6 +2529,15 @@ def nonsplit_data(label):
     ans += "</table>"
     return Markup(ans)
 
+def trans_expr_data(label):
+    tex_name = db.gps_groups.lookup(label, "tex_name")
+    ans = f"Transitive permutation representations of ${tex_name}$:<br />\n"
+    ans += f"<table>\n<tr><th>{display_knowl('gg.label', 'Label')}</th><th>{display_knowl('gg.parity', 'Parity')}</th><th>{display_knowl('gg.primitive', 'Primitive')}</th></tr>\n"
+    for rec in db.gps_transitive.search({"abstract_label":label}, ["label", "parity", "prim"]):
+        ans += f'<tr><td><a href="{url_for("galois_groups.by_label", label=rec["label"])}">{rec["label"]}</a></td><td class="center">${rec["parity"]}$</td><td class="center">{"&#x2713;" if rec["prim"] == 1 else ""}</td></tr>'
+    ans += "</table>"
+    return Markup(ans)
+
 def aut_data(label):
     gp = WebAbstractGroup(label)
     ans = f"${gp.tex_name}$ as an automorphism group:<br />\n"
@@ -2582,6 +2574,7 @@ flist = {
     "semidirect_data": semidirect_data,
     "nonsplit_data": nonsplit_data,
     "aut_data": aut_data,
+    "trans_expr_data": trans_expr_data,
 }
 
 
