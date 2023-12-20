@@ -34,6 +34,7 @@ from lmfdb.utils import (
     letters2num,
     WebObj,
     pos_int_and_factor,
+    bigexp_knowl,
 )
 from .circles import find_packing
 
@@ -1865,7 +1866,8 @@ class WebAbstractGroup(WebObj):
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
-            gens = fr"$\langle {gens} \rangle$"
+            gens = bigexp_knowl(gens)  #JP HERE
+#            gens = fr"$\langle {gens} \rangle$"
             d = rdata["d"]
             if d >= 10:
                 gens = f"Degree ${d}$, {gens}"
@@ -1878,13 +1880,13 @@ class WebAbstractGroup(WebObj):
             if skip_head:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
             else:
-                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="5">{gens}</td></tr>'
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>'
 
     @lazy_attribute
     def transitive_friends(self):
         return list(db.gps_transitive.search({"abstract_label":self.label}, "label"))
 
-    #JP
+    
     @lazy_attribute
     def stored_representations(self):
         from .main import abstract_group_label_regex
@@ -2031,17 +2033,22 @@ class WebAbstractGroup(WebObj):
         else:
             skip_head = False
             for rep_type in sorted(self.representations, key=sort_key):
+                print(rep_type)
                 output_strg += "\n" + self.representation_line(rep_type, skip_head)
                 if rep_type.startswith("GL"):
                     # a matrix group, so we omit the "Matrix group" head in the future
                     skip_head = True
+            print("HERE 1")
             output_strg += show_reps("transitive")
             output_strg += show_reps("direct")
             output_strg += show_reps("semidirect")
             output_strg += show_reps("wreath")
+            print("HERE 5")
             output_strg += show_reps("nonsplit")
+            print("HERE 6")
+            
         output_strg += show_reps("aut")
-
+        
         return output_strg
 
     def is_null(self):

@@ -891,12 +891,8 @@ def remove_negatives(n):
     if n is None:
         return "?"
     elif int(n) < 1:
-        return "-"
-    return n
-
-
-#def non_norm_check( ):  #JP
-    
+        return "$-$"
+    return f"${n}$"
 
 
 def get_url(label):
@@ -1086,7 +1082,7 @@ subgroup_columns = SearchColumns([
                           ["quotient", "quotient_tex"],
                           display_url,
                           short_title="Quo. name", apply_download=False),
-        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
+        ProcessedCol("quotient_order", "group.quotient_size", "Size", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. size"),
         #next columns are None if non-normal so we set unknown to "-" instead of "?"
         CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic"),
         CheckCol("quotient_abelian", "group.abelian", "ab", unknown="$-$", short_title="Quo. abelian"),
