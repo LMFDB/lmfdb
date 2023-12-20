@@ -34,7 +34,7 @@ from lmfdb.utils import (
     letters2num,
     WebObj,
     pos_int_and_factor,
-    bigexp_knowl,
+    raw_typeset,
 )
 from .circles import find_packing
 
@@ -177,6 +177,33 @@ def abelian_get_elementary(snf):
     if len(possiblep) > 1:
         return 1
     return possiblep[0]
+
+
+def compress_perm(perms, cutoff = 200, sides = 80):
+    if len(perms) < cutoff:
+        return r'$\langle'+ perms + r'\rangle$'
+    short_perm = r'$\langle'+ perms[:sides]
+    while perms[sides] != ")":  #JP
+        short_perm = short_perm + perms[sides]
+        sides += 1
+    short_perm = short_perm + r') \!\cdots\! \rangle$'
+    return short_perm
+
+
+
+def compress_pres(pres, cutoff = 200, sides = 80):
+    if len(pres) < cutoff:
+        return f"${pres}$"
+    short_pres = '${'+ pres[:sides]
+    while pres[sides] != "=" and sides < len(pres)-1: #JP
+        short_pres = short_pres + pres[sides]
+        sides += 1
+    if sides < len(pres)-1:  #finished because of "="
+        short_pres = short_pres + r'= \!\cdots\! \rangle}$'
+        return short_pres
+    else:  #finished because at so just return whole thing
+        return f"${pres}$"
+
 
 
 class WebAbstractGroup(WebObj):
@@ -1860,17 +1887,20 @@ class WebAbstractGroup(WebObj):
             reps = ",".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
-            pres = f"${self.presentation()}$"
+#            pres = f"${self.presentation()}$"
+            pres = self.presentation()
+#            print(self.presentation())  #JP
+            pres = raw_typeset(pres,compress_pres(pres))
             if self.abelian and not self.cyclic:
-                pres = f"Abelian group {pres}"
+             #   pres = f"Abelian group {pres}"
+                pres = "Abelian group " + pres   
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
-            gens = bigexp_knowl(gens)  #JP HERE
-#            gens = fr"$\langle {gens} \rangle$"
+            gens=raw_typeset(gens,compress_perm(gens))
             d = rdata["d"]
             if d >= 10:
-                gens = f"Degree ${d}$, {gens}"
+                gens=f"Degree ${d}$" + gens
             return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
         else:
             # Matrix group

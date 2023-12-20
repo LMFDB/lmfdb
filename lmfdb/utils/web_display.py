@@ -137,20 +137,20 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     else:
         return r'\(%s\)' % n
 
-def cut_perm_expression(res, cutoff=15, sides=2):
-    if len(res) > cutoff:
-        short = '$\langle'+ res[:sides] + r'\!\cdots\! \rangle$'
-        return short, True
-    else:
-        return res, False
+#def cut_perm_expression(res, cutoff=15, sides=2):
+#    if len(res) > cutoff:
+#        short = '$\langle'+ res[:sides] + r'\!\cdots\! \rangle$'
+#        return short, True
+#    else:
+#        return res, False
     
-def bigexp_knowl(n, cutoff=90, sides=50):
-    short, shortened = cut_perm_expression(n, cutoff=cutoff, sides=sides)
-    if shortened:
-        lng = r"<div style='word-break: break-all'>%s</div>" % n
-        return fr'<a title="[bigexp]" knowl="dynamic_show" kwargs="%s">%s</a>'%(lng, short)
-    else:
-        return fr'$\langle %s \rangle$' % n
+#def bigexp_knowl(n, cutoff=90, sides=50):
+#    short, shortened = cut_perm_expression(n, cutoff=cutoff, sides=sides)
+#    if shortened:
+#        lng = r"<div style='word-break: break-all'>%s</div>" % n
+#        return fr'<a title="[bigexp]" knowl="dynamic_show" kwargs="%s">%s</a>'%(lng, short)
+#    else:
+#        return fr'$\langle %s \rangle$' % n
 
 def too_big(L, threshold):
     r"""
