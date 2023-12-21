@@ -115,7 +115,7 @@ Running
    if code fails your browser will show useful debugging information.
    Without `--debug` what you see will be more like www.lmfdb.org.
 
- * Once the server is running, visit https://localhost:37777/
+ * Once the server is running, visit http://localhost:37777/
 
    You should now have a fully functional LMFDB site through this server.
 
