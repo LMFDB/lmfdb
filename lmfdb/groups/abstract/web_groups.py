@@ -1984,7 +1984,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def stored_representations(self):
         from .main import abstract_group_label_regex
-        from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
+ #       from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 
         def sort_key(typ):
             return ["Lie", "PC", "Perm", "GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
