@@ -180,10 +180,10 @@ def abelian_get_elementary(snf):
 
 
 def compress_perm(perms, cutoff = 150, sides = 70):
-    if len(perms) < cutoff:
+    if len(perms) < cutoff or sides >=cutoff:
         return r'$\langle'+ perms + r'\rangle$'
     short_perm = r'$\langle'+ perms[:sides]
-    while perms[sides] != ")":  #JP
+    while perms[sides] != ")":  # will always have ")" as long as sides < cutoff (see above)
         short_perm = short_perm + perms[sides]
         sides += 1
     short_perm = short_perm + r') \!\cdots\! \rangle$'
@@ -195,7 +195,7 @@ def compress_pres(pres, cutoff = 150, sides = 70):
     if len(pres) < cutoff:
         return f"${pres}$"
     short_pres = '${'+ pres[:sides]
-    while pres[sides] != "=" and sides < len(pres)-1: #JP
+    while pres[sides] != "=" and sides < len(pres)-1:
         short_pres = short_pres + pres[sides]
         sides += 1
     if sides < len(pres)-1:  #finished because of "="
@@ -1862,8 +1862,6 @@ class WebAbstractGroup(WebObj):
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
 
-
-#JP
     def presentation_raw(self):
         # We use knowledge of the form of the presentation to construct it manually.
         gens = list(self.PCG.GeneratorsOfGroup())
@@ -1888,14 +1886,14 @@ class WebAbstractGroup(WebObj):
                 if j == u:
                     if e == 1:
                         if first_pass:
-                            s = var_name(i)  + s  #JP add *
+                            s = var_name(i)  + s 
                             first_pass = False
                         else:
                             s = var_name(i)+ '*' + s
                         
                     elif e > 1:
                         if first_pass:
-                            s = "%s^%s" % (var_name(i), e) + s  #JP got rid of {} added *
+                            s = "%s^%s" % (var_name(i), e) + s 
                             first_pass = False
                         else:
                             s = "%s^%s" % (var_name(i), e) + "*" + s
@@ -1910,22 +1908,20 @@ class WebAbstractGroup(WebObj):
             e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
             ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
             if all(x == 0 for x in ae):
-                pure_powers.append("%s^%s" % (var_name(i), e))  #JP got rid of {}
+                pure_powers.append("%s^%s" % (var_name(i), e))  
             else:
-                #rel_powers.append("%s^%s=%s" % (var_name(i), e, print_elt(ae)))  #JP got rid of {}
                 rel_powers.append("%s*%s^-%s" % (print_elt(ae),var_name(i), e))
             for j in range(i + 1, ngens):
                 b = used[j]
-                if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed                                             
+                if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed
                     if not self.abelian:
                         comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
-                    v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed                                                               
-#                    relators.append("%s^%s=%s" % (var_name(j), var_name(i), print_elt(v)))  #JP got rid of {}
+                    v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
                     relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i))) 
         show_gens = ", ".join(var_name(i) for i in range(len(used)))
         if pure_powers or comm:
-            rel_powers = [",".join(pure_powers + comm)] + rel_powers  #JP comma here and got rid of =1
+            rel_powers = [",".join(pure_powers + comm)] + rel_powers 
         relators = ", ".join(rel_powers + relators)
         return r"< %s | %s >" % (show_gens, relators)
 
@@ -1957,13 +1953,10 @@ class WebAbstractGroup(WebObj):
             reps = ", ".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
-#            pres = f"${self.presentation()}$"
             pres = self.presentation()
             pres_raw=self.presentation_raw()
-#            print(self.presentation_raw())  #JP
             pres = raw_typeset(pres_raw,compress_pres(pres))
             if self.abelian and not self.cyclic:
-             #   pres = f"Abelian group {pres}"
                 pres = "Abelian group " + pres   
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
         elif rep_type == "Perm":
@@ -1994,8 +1987,6 @@ class WebAbstractGroup(WebObj):
         from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 
         def sort_key(typ):
-            if typ == self.element_repr_type:
-                return -1
             return ["Lie", "PC", "Perm", "GLZ", "GLFp", "GLFq", "GLZq", "GLZN"].index(typ)
 
         def truncate_opts(opts, display_opt, link_knowl, show_more_info=True):

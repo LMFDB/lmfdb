@@ -2532,7 +2532,7 @@ def trans_expr_data(label):
     ans = f"Transitive permutation representations of ${tex_name}$:<br />\n"
     ans += f"<table>\n<tr><th>{display_knowl('gg.label', 'Label')}</th><th>{display_knowl('gg.parity', 'Parity')}</th><th>{display_knowl('gg.primitive', 'Primitive')}</th></tr>\n"
     for rec in db.gps_transitive.search({"abstract_label":label}, ["label", "parity", "prim"]):
-        ans += f'<tr><td><a href="{url_for("galois_groups.by_label", label=rec["label"])}">{rec["label"]}</a></td><td class="center">${rec["parity"]}$</td><td class="center">{"yes" if rec["prim"] == 1 else "no"}</td></tr>' # it would be nice to use &#x2713; and &#x2717; (check and x), but if everything is no then it's confusing
+        ans += f'<tr><td><a href="{url_for("galois_groups.by_label", label=rec["label"])}">{rec["label"]}</a></td><td class="right">${rec["parity"]}$</td><td class="center">{"yes" if rec["prim"] == 1 else "no"}</td></tr>' # it would be nice to use &#x2713; and &#x2717; (check and x), but if everything is no then it's confusing
     ans += "</table>"
     return Markup(ans)
 
