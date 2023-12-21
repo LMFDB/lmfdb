@@ -1646,30 +1646,24 @@ class WebAbstractGroup(WebObj):
         vec = []
         if code < 0 or code >= self.order:
             raise ValueError
-#        for m in reversed(self.pcgs_relative_orders):
         for m in self.pcgs_relative_orders:
             c = code % m
-#            vec.insert(0, c)
             vec.append(c)
             code = code // m
-        print("vec:", vec)    
         if as_str:
             # Need to combine some generators
             w = []
             e = 0
-            for i, (c, m) in reversed(list(enumerate(zip(vec, self.pcgs_relative_orders)))):
-                print("i:",i," c:",c," m:",m)
+            for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
                 e += c
                 if i + 1 in self.gens_used:
                     w.append(e)
                     e = 0
                 else:
                     e *= m
-            print("w unreversed:", w)
             w.reverse()
             s = ""
             for i, c in enumerate(w):
-                print("i and c in w:", i, c)
                 if c == 1:
                     s += var_name(i)
                 elif c != 0:
