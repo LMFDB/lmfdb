@@ -3,8 +3,8 @@ prompt:
   magma:  'magma'
 
 logo:
-  gap: <img src = "http://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+  gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
 
 not-implemented:
   gap: |
