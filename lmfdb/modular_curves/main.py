@@ -228,7 +228,7 @@ def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
 def url_for_RZB_label(label):
-    return "http://users.wfu.edu/rouseja/2adic/" + label + ".html"
+    return "https://users.wfu.edu/rouseja/2adic/" + label + ".html"
 
 def url_for_CP_label(label):
     genus = CP_LABEL_GENUS_RE.fullmatch(label)[1]

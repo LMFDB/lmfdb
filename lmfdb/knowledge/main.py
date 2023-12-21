@@ -4,7 +4,7 @@
 #
 # This is more than just a web of entries in a wiki, because content is "transcluded".
 # Transclusion is an actual concept, you can read about it here:
-# http://en.wikipedia.org/wiki/Transclusion
+# https://en.wikipedia.org/wiki/Transclusion
 #
 # a "Knowl" (see knowl.py) is our base class for any bit of "knowledge". we might
 # subclass it into "theorem", "proof", "description", and much more if necessary
@@ -88,7 +88,7 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
-                       extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+                       extension_configs={'wikilinks': [('base_url', 'https://wiki.l-functions.org/')]})
 # priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)

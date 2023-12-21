@@ -1646,15 +1646,15 @@ class WebAbstractGroup(WebObj):
         vec = []
         if code < 0 or code >= self.order:
             raise ValueError
-        for m in reversed(self.pcgs_relative_orders):
+        for m in self.pcgs_relative_orders:
             c = code % m
-            vec.insert(0, c)
+            vec.append(c)
             code = code // m
         if as_str:
             # Need to combine some generators
             w = []
             e = 0
-            for i, (c, m) in reversed(list(enumerate(zip(vec, self.pcgs_relative_orders)))):
+            for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
                 e += c
                 if i + 1 in self.gens_used:
                     w.append(e)
@@ -2119,7 +2119,7 @@ class WebAbstractGroup(WebObj):
         else:
             R = 1
             circles = ""
-        return f'<img><svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
+        return f'<img><svg xmlns="https://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
 
     # The following attributes are used in create_boolean_string
     @property
