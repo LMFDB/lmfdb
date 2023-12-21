@@ -21,7 +21,7 @@ def parse_and_redirect():
     This gets called when the user submit some input in the data box of the
     following page:
 
-    https://127.0.0.1:37777/Permutations/
+    http://127.0.0.1:37777/Permutations/
 
     It then redirects to the appropriate permutation page.
     """
@@ -36,7 +36,7 @@ def show():
     r"""
     This gets called when an address of that kind gets loaded:
 
-    https://127.0.0.1:37777/Permutations/show?data=3.4.2.1
+    http://127.0.0.1:37777/Permutations/show?data=3.4.2.1
     """
     assert request.method == "GET", "request.method is assumed to be GET"
     data = str(request.args.get('data', ''))
@@ -56,7 +56,7 @@ def index():
     r"""
     This gets called when this address gets loaded:
 
-    https://127.0.0.1:37777/Permutations/
+    http://127.0.0.1:37777/Permutations/
     """
     bread = get_bread()
     return render_template("permutations-index.html", title="Permutations", bread=bread)
