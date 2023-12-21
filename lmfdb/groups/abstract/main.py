@@ -47,7 +47,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup #, CheckProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -427,8 +427,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         ),
         "normal": display_knowl("group.subgroup.normal", "normal"),
         "maximal": display_knowl("group.maximal_subgroup", "maximal"),
-#        "direct": f"a {display_knowl('group.direct_product', 'direct factor')}",
-#        "semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}",
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "stem": display_knowl("group.stem_extension", "stem"),
         "central": display_knowl("group.central", "central"),
