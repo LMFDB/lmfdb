@@ -329,8 +329,8 @@ and knowledge/main.py. Also, templates and static files specific to the module
 should be in their respective "templates" and "static" folders, e.g.
 /knowledge/templates/.
 
-[1] http://docs.python.org/tutorial/modules.html
-[2] http://flask.pocoo.org/docs/blueprints/
+[1] https://docs.python.org/tutorial/modules.html
+[2] https://flask.pocoo.org/docs/blueprints/
 
 
 Code Attribution
@@ -465,7 +465,7 @@ This is in the `hooks/post-receive` in the bare Git repo:
 ```
 #!/bin/sh
 # update the lmfdb-git-beta or -prod server depending on the branch
-# this is based on http://stackoverflow.com/a/13057643/54236
+# this is based on https://stackoverflow.com/a/13057643/54236
 
 restart() {
     echo "updating $1"
