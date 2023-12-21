@@ -125,7 +125,7 @@ def ctx_proc_userdata():
     # insert an empty info={} as default
     # set the body class to some default, blueprints should
     # overwrite it with their name, using @<blueprint_object>.context_processor
-    # see http://flask.pocoo.org/docs/api/?highlight=context_processor#flask.Blueprint.context_processor
+    # see https://flask.pocoo.org/docs/api/?highlight=context_processor#flask.Blueprint.context_processor
     vars = {'info': {}, 'body_class': ''}
 
     # insert the default bread crumb hierarchy
@@ -295,9 +295,9 @@ def netloc_redirect():
     elif (
         urlparts.netloc == "www.lmfdb.org"
         and request.headers.get("X-Forwarded-Proto", "http") != "https"
-        and request.url.startswith("http://")
+        and request.url.startswith("https://")
     ):
-        url = request.url.replace("http://", "https://", 1)
+        url = request.url.replace("https://", "https://", 1)
         return redirect(url, code=301)
     elif (
         urlparts.netloc == "www.lmfdb.org"

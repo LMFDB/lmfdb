@@ -30,8 +30,8 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
     xshift = extraSpace
 
     # Start of file and add coordinate system
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'"
+    ans = "<svg  xmlns='https://www.w3.org/2000/svg'"
+    ans += " xmlns:xlink='https://www.w3.org/1999/xlink'"
     ans += " height='{0}' width='{1}'>\n".format(height + 20, width + 20)
     ans += paintCSMaass(width, height, xMin, xMax, yMin, yMax,
                         xfactor, yfactor, ticlength, xshift)

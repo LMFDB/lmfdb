@@ -2,7 +2,7 @@
 ==============
 
 This is the code for the 
-[L-functions and modular forms database website](http://www.lmfdb.org/).
+[L-functions and modular forms database website](https://www.lmfdb.org/).
 
 Wiki
 ----
