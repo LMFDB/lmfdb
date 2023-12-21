@@ -1912,7 +1912,8 @@ class WebAbstractGroup(WebObj):
             if all(x == 0 for x in ae):
                 pure_powers.append("%s^%s" % (var_name(i), e))  #JP got rid of {}
             else:
-                rel_powers.append("%s^%s=%s" % (var_name(i), e, print_elt(ae)))  #JP got rid of {}
+                #rel_powers.append("%s^%s=%s" % (var_name(i), e, print_elt(ae)))  #JP got rid of {}
+                rel_powers.append("%s*%s^-%s" % (print_elt(ae),var_name(i), e))
             for j in range(i + 1, ngens):
                 b = used[j]
                 if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed                                             
@@ -1920,7 +1921,8 @@ class WebAbstractGroup(WebObj):
                         comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
                     v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed                                                               
-                    relators.append("%s^%s=%s" % (var_name(j), var_name(i), print_elt(v)))  #JP got rid of {}
+#                    relators.append("%s^%s=%s" % (var_name(j), var_name(i), print_elt(v)))  #JP got rid of {}
+                    relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i))) 
         show_gens = ", ".join(var_name(i) for i in range(len(used)))
         if pure_powers or comm:
             rel_powers = [",".join(pure_powers + comm)] + rel_powers  #JP comma here and got rid of =1
