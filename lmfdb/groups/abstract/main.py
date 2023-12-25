@@ -112,12 +112,10 @@ def ctx_abstract_groups():
         "rchar_data": rchar_data,
         "cchar_data": cchar_data,
         "dyn_gen": dyn_gen,
-        "semidirect_expressions_knowl": semidirect_expressions_knowl,
         "semidirect_data": semidirect_data,
-        "nonsplit_expressions_knowl": nonsplit_expressions_knowl,
         "nonsplit_data": nonsplit_data,
-        "autgp_expressions_knowl": autgp_expressions_knowl,
         "aut_data": aut_data,
+        "trans_expr_data": trans_expr_data,
     }
 
 
@@ -305,6 +303,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "is_sylow": ["is_hall", "nilpotent"],
         "nilpotent": ["solvable"],
     }
+    print(getattr(sgp,'normal'))
     if type == "normal":
         overall_order = [
             "thecenter",
@@ -401,12 +400,17 @@ def create_boolean_subgroup_string(sgp, type="normal"):
             "solvable",
             "is_hall",
         ]
+
+    if not getattr(sgp,'normal'):  #if gp isn't normal we don't store direct/semidirect
+        overall_order.remove('direct')
+        overall_order.remove('semidirect')
+
     for A, L in implications.items():
         for B in L:
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
-
+            
     overall_display = {
         "thecenter": display_knowl("group.center", "the center"),
         "thecommutator": display_knowl(
@@ -423,8 +427,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         ),
         "normal": display_knowl("group.subgroup.normal", "normal"),
         "maximal": display_knowl("group.maximal_subgroup", "maximal"),
-        "direct": f"a {display_knowl('group.direct_product', 'direct factor')}",
-        "semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}",
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "stem": display_knowl("group.stem_extension", "stem"),
         "central": display_knowl("group.central", "central"),
@@ -437,6 +439,10 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "nab_perfect": display_knowl("group.perfect", "perfect"),
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
     }
+    if getattr(sgp,'normal'):  #if gp isn't normal we don't store direct/semidirect
+        norm_attr ={"direct": f"a {display_knowl('group.direct_product', 'direct factor')}","semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}"}
+        overall_display.update(norm_attr)
+
     if type == "normal":
         overall_display.update(get_group_prop_display(sgp.sub))
 
@@ -455,6 +461,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     )
     if type == "normal":
         main = f"The subgroup is {display_props(props)}."
+#        unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
     else:
         main = f"This subgroup is {display_props(props)}."
     unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
@@ -882,8 +889,8 @@ def remove_negatives(n):
     if n is None or n == "":
         return "?"
     elif int(n) < 1:
-        return "-"
-    return n
+        return "$-$"
+    return f"${n}$"
 
 
 def get_url(label):
@@ -1073,11 +1080,12 @@ subgroup_columns = SearchColumns([
                           ["quotient", "quotient_tex"],
                           display_url,
                           short_title="Quo. name", apply_download=False),
-        ProcessedCol("quotient_order", "group.order", "Order", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. order"),
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", short_title="Quo. cyclic"),
-        CheckCol("quotient_abelian", "group.abelian", "ab", short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal")])],
+        ProcessedCol("quotient_order", "group.quotient_size", "Size", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. size"),
+        #next columns are None if non-normal so we set unknown to "-" instead of "?"
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic"),
+        CheckCol("quotient_abelian", "group.abelian", "ab", unknown="$-$", short_title="Quo. abelian"),
+        CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown="$-$", short_title="Quo. maximal")])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
@@ -1267,7 +1275,7 @@ def render_abstract_group(label, data=None):
             )
             friends += [("As the automorphism of a curve", auto_url)]
 
-        if abstract_group_label_regex.fullmatch(label) and db.gps_transitive.count({"abstract_label": label}) > 0:
+        if abstract_group_label_regex.fullmatch(label) and len(gp.transitive_friends) > 0:
             gal_gp_url =  "/GaloisGroup/?gal="+label
             friends += [("As a transitive group", gal_gp_url)]
 
@@ -2202,21 +2210,6 @@ def sub_display_knowl(label, name=None):
         name = f"Subgroup {label}"
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=sub_data">{name}</a>'
 
-def semidirect_expressions_knowl(label, name=None):
-    if not name:
-        name = f"Semidirect product expressions for {label}"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=semidirect_data">{name}</a>'
-
-def nonsplit_expressions_knowl(label, name=None):
-    if not name:
-        name = f"Nonsplit product expressions for {label}"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=nonsplit_data">{name}</a>'
-
-def autgp_expressions_knowl(label, name=None):
-    if not name:
-        name = f"Expressions for {label} as an automorphism group"
-    return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=aut_data">{name}</a>'
-
 def cc_data(gp, label, typ="complex"):
     if typ == "rational":
         wag = WebAbstractGroup(gp)
@@ -2406,6 +2399,9 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
+        #GAP doesn't have groups of order 3^8 so if not in db, can't be live  
+        if label.startswith("6561.") and gp.source == "Missing":
+            return Markup("No additional information for this group of order 6561 is available.") 
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"
@@ -2529,6 +2525,15 @@ def nonsplit_data(label):
     ans += "</table>"
     return Markup(ans)
 
+def trans_expr_data(label):
+    tex_name = db.gps_groups.lookup(label, "tex_name")
+    ans = f"Transitive permutation representations of ${tex_name}$:<br />\n"
+    ans += f"<table>\n<tr><th>{display_knowl('gg.label', 'Label')}</th><th>{display_knowl('gg.parity', 'Parity')}</th><th>{display_knowl('gg.primitive', 'Primitive')}</th></tr>\n"
+    for rec in db.gps_transitive.search({"abstract_label":label}, ["label", "parity", "prim"]):
+        ans += f'<tr><td><a href="{url_for("galois_groups.by_label", label=rec["label"])}">{rec["label"]}</a></td><td class="right">${rec["parity"]}$</td><td class="center">{"yes" if rec["prim"] == 1 else "no"}</td></tr>' # it would be nice to use &#x2713; and &#x2717; (check and x), but if everything is no then it's confusing
+    ans += "</table>"
+    return Markup(ans)
+
 def aut_data(label):
     gp = WebAbstractGroup(label)
     ans = f"${gp.tex_name}$ as an automorphism group:<br />\n"
@@ -2565,6 +2570,7 @@ flist = {
     "semidirect_data": semidirect_data,
     "nonsplit_data": nonsplit_data,
     "aut_data": aut_data,
+    "trans_expr_data": trans_expr_data,
 }
 
 
