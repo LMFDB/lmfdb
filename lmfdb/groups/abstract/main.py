@@ -410,7 +410,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
-            
+
     overall_display = {
         "thecenter": display_knowl("group.center", "the center"),
         "thecommutator": display_knowl(
@@ -2399,9 +2399,9 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        #GAP doesn't have groups of order 3^8 so if not in db, can't be live  
+        #GAP doesn't have groups of order 3^8 so if not in db, can't be live
         if label.startswith("6561.") and gp.source == "Missing":
-            return Markup("No additional information for this group of order 6561 is available.") 
+            return Markup("No additional information for this group of order 6561 is available.")
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"

@@ -110,11 +110,11 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
                 if label is None:
                     name = '?'
                 else:
-                    name = f"Group {label}" 
+                    name = f"Group {label}"
             else:
                 name = f"${name}$"
         else:
-            name = f"Group {label}" 
+            name = f"Group {label}"
     if ambient is None:
         args = label
     else:
@@ -179,7 +179,7 @@ def abelian_get_elementary(snf):
     return possiblep[0]
 
 
-def compress_perm(perms, cutoff = 150, sides = 70):
+def compress_perm(perms, cutoff=150, sides=70):
     if len(perms) < cutoff or sides >=cutoff:
         return r'$\langle'+ perms + r'\rangle$'
     short_perm = r'$\langle'+ perms[:sides]
@@ -190,8 +190,7 @@ def compress_perm(perms, cutoff = 150, sides = 70):
     return short_perm
 
 
-
-def compress_pres(pres, cutoff = 150, sides = 70):
+def compress_pres(pres, cutoff=150, sides=70):
     if len(pres) < cutoff:
         return f"${pres}$"
     short_pres = '${'+ pres[:sides]
@@ -203,7 +202,6 @@ def compress_pres(pres, cutoff = 150, sides = 70):
         return short_pres
     else:  #just return whole thing if needed to go to end and ran out of "="
         return f"${pres}$"
-
 
 
 class WebAbstractGroup(WebObj):
@@ -247,7 +245,7 @@ class WebAbstractGroup(WebObj):
                         self.source = "GAP"
                 else:   #issue with 3^8 being in Magma but not GAP db
                     self._data = (n, i)
-                    self.source = "Missing" 
+                    self.source = "Missing"
         if isinstance(self._data, list):  # live abelian group
             self.snf = primary_to_smith(self._data)  # existence is a marker that we were here
             self.G = LiveAbelianGroup(self.snf)
@@ -1861,12 +1859,11 @@ class WebAbstractGroup(WebObj):
         relators = ", ".join(rel_powers + relators)
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
-
     def presentation_raw(self):
         # We use knowledge of the form of the presentation to construct it manually.
         gens = list(self.PCG.GeneratorsOfGroup())
         pcgs = self.PCG.FamilyPcgs()
-        used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed                                                                   
+        used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed
         rel_ords = [ZZ(p) for p in self.PCG.FamilyPcgs().RelativeOrders()]
         assert len(gens) == len(rel_ords)
         pure_powers = []
@@ -1886,14 +1883,14 @@ class WebAbstractGroup(WebObj):
                 if j == u:
                     if e == 1:
                         if first_pass:
-                            s = var_name(i)  + s 
+                            s = var_name(i)  + s
                             first_pass = False
                         else:
                             s = var_name(i)+ '*' + s
-                        
+
                     elif e > 1:
                         if first_pass:
-                            s = "%s^%s" % (var_name(i), e) + s 
+                            s = "%s^%s" % (var_name(i), e) + s
                             first_pass = False
                         else:
                             s = "%s^%s" % (var_name(i), e) + "*" + s
@@ -1908,7 +1905,7 @@ class WebAbstractGroup(WebObj):
             e = prod(rel_ords[a:] if i == ngens - 1 else rel_ords[a: used[i + 1]])
             ae = pcgs.ExponentsOfPcElement(gens[a] ** e)
             if all(x == 0 for x in ae):
-                pure_powers.append("%s^%s" % (var_name(i), e))  
+                pure_powers.append("%s^%s" % (var_name(i), e))
             else:
                 rel_powers.append("%s*%s^-%s" % (print_elt(ae),var_name(i), e))
             for j in range(i + 1, ngens):
@@ -1918,15 +1915,13 @@ class WebAbstractGroup(WebObj):
                         comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
                     v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
-                    relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i))) 
+                    relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i)))
         show_gens = ", ".join(var_name(i) for i in range(len(used)))
         if pure_powers or comm:
-            rel_powers = [",".join(pure_powers + comm)] + rel_powers 
+            rel_powers = [",".join(pure_powers + comm)] + rel_powers
         relators = ", ".join(rel_powers + relators)
         return r"< %s | %s >" % (show_gens, relators)
 
-
-    
     @lazy_attribute
     def representations(self):
         # For live groups
@@ -1957,7 +1952,7 @@ class WebAbstractGroup(WebObj):
             pres_raw=self.presentation_raw()
             pres = raw_typeset(pres_raw,compress_pres(pres))
             if self.abelian and not self.cyclic:
-                pres = "Abelian group " + pres   
+                pres = "Abelian group " + pres
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -1980,7 +1975,6 @@ class WebAbstractGroup(WebObj):
     def transitive_friends(self):
         return list(db.gps_transitive.search({"abstract_label":self.label}, "label"))
 
-    
     @lazy_attribute
     def stored_representations(self):
         from .main import abstract_group_label_regex
