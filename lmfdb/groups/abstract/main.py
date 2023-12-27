@@ -586,6 +586,18 @@ def url_for_subgroup_label(label):
         return url_for(".random_abstract_subgroup")
     return url_for("abstract.by_subgroup_label", label=label)
 
+#label is group label special_label is complex character
+def url_for_chartable_label(label, special_label = None):
+    if special_label == None:
+        return url_for("abstract.char_table", label = label)
+    return url_for("abstract.char_table2", label = label, special_label=special_label)
+
+
+def url_for_qchartable_label(label, special_label = None):
+    if special_label == None:
+        return url_for("abstract.char_table", label = label)
+    return url_for("abstract.qchar_table2", label = label, special_label=special_label)
+
 
 @abstract_page.route("/")
 def index():
@@ -1202,9 +1214,9 @@ def subgroup_search(info, query={}):
 
 def print_type(val):
     if val == 0:
-        return "R"
-    elif val >0:
         return "C"
+    elif val >0:
+        return "R"
     return "S"
 
 def trans_gp(val):
@@ -1212,23 +1224,27 @@ def trans_gp(val):
         return ""
     return "T".join((str(val[0]),str(val[1])))
 
-    
+#input a string with C, R, S and replace with -1, 1, 0
+def indicator_type(strg):
+    strg = strg.replace("C","0")
+    strg = strg.replace("R","1")
+    strg = strg.replace("S","-1")
+    return strg
+
 
 #FIX KNOWLS
 complex_char_columns = SearchColumns([
     LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url, th_class=" border-right", td_class=" border-right"),
-    MathCol("dim", "group.complex_char_deg", "Degree"),
+    MathCol("dim", "group.representation.complex_char_deg", "Degree"),
     ProcessedCol("indicator","group.representation.type","Type",print_type),
     CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
     ProcessedLinkCol("label","group.representation.rational_character","$\Q$-character", get_qchar_url, q_char),
     LinkCol("group","group.name","Group",get_url),
-#    MathCol("group_order", "group.order", "Group order", default=False),
   #  LinkCol("image", "group.representation.image", "Image", get_url, default=False),
-    LinkCol("kernel", "group.representation.kernel", "Kernel", get_url, default=False),
-    LinkCol("center", "group.representation.center", "Center", get_url, default=False),
-    #    ProcessedLinkCol("nt","group.representation.center", "NT", get_trans_url, trans_gp),
-    ProcessedCol("nt","group.representation.center", "NT", trans_gp) 
+    LinkCol("kernel", "group.representation.kernel", "Kernel", get_sub_url, default=False),
+    LinkCol("center", "group.representation.center", "Center", get_sub_url, default=False),
+    ProcessedCol("nt","group.representation.min_perm_rep", "Min. Perm. Rep.", trans_gp) 
     ])
 
 
@@ -1243,12 +1259,14 @@ class Complex_char_download(Downloader):
     shortcuts={"download": Complex_char_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
-    #JP FIX BELOW
-    url_for_label=url_for_subgroup_label,
+    url_for_label=url_for_chartable_label,  #JP CHANGED
 )
 
 def complex_char_search(info, query={}):
     info["search_type"] = "ComplexCharacters"
+    print("HERE INFO: ", info, "\n")
+    if 'indicator' in info:
+        info['indicator'] = indicator_type(info['indicator'])
     parse_ints(info, query, "dim")
     parse_ints(info, query, "indicator")
     parse_ints(info, query, "cyclotomic_n")
@@ -2332,14 +2350,14 @@ class ComplexCharSearchArray(SearchArray):
         dim = TextBox(
             name="dim",
             label="Degree",
-            knowl="group.representation.degree",
-            example="4",
-            example_span="4, or a range like 3..5"
+            knowl="group.representation.complex_char_deg",
+            example="3",
+            example_span="3, or a range like 3..5"
         )
         conductor = TextBox(
             name="cyclotomic_n",
             label="Conductor",
-            knowl="group.representation.conductor",
+            knowl="group.representation.cyclotomic_n",
             example="4",
             example_span="4, or a range like 3..5"
         )
@@ -2347,41 +2365,38 @@ class ComplexCharSearchArray(SearchArray):
             name="indicator",
             label="Type",
             knowl="group.representation.type",
-            example="R, C, or S",
+            example="R, C, S, or -1, 0, 1",
         )
         group = TextBox(
             name="group",
             label="Group",
-            knowl="group.group_name",
+            knowl="group.name",
             example="128.207",
         )
         image = TextBox(
             name="image",
             label="Image",
             knowl= "group.representation.image",
-            example="4.2",
+            example="subgroup label?",
         )
         kernel = TextBox(
             name="kernel",
             label="Kernel",
             knowl= "group.representation.kernel",
-            example="2.1",
+            example="subgroup label?",
         )
         center = TextBox(
             name="center",
             label="Center",
             knowl="group.representation.center",
-            example="2.1",
+            example="subgroup label?",
         )
-        #JP FIX KNOWL
         nt = TextBox(
             name="nt",
-            label="Trans. Gp.",
-            knowl="group.representation.center",
+            label="Minimum Perm. Rep.",
+            knowl="group.representation.min_perm_rep",
             example="[4,2]",
         )
-
-
 
         self.refine_array = [
             [dim, indicator, faithful,conductor],
@@ -2509,6 +2524,8 @@ def rchar_data(label):
 def cchar_data(label):
     from lmfdb.number_fields.web_number_field import formatfield
     mychar = WebAbstractCharacter(label)
+    gplabs = label.split(".")
+    gplabel = ".".join((gplabs[0],gplabs[1]))   #JP HERE 
     ans = "<h3>Complex character {}</h3>".format(label)
     ans += "<br>Degree: {}".format(mychar.dim)
     if mychar.faithful:
@@ -2525,6 +2542,8 @@ def cchar_data(label):
     ans += "<br>Frobenius-Schur indicator: {}".format(mychar.indicator)
     ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
     ans += "<br>Field of character values: {}".format(formatfield(mychar.field))
+    #ans += "<br>Rational character: {}".format(q_char(label))
+    ans += f'<div align="right"><a href="{url_for("abstract.Qchar_table2", label=gplabel, special_label=q_char(label))}">{q_char(label)} rational character</a></div>'
     #if mychar._data.get("image"):
     #    imageknowl = (
     #        '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>'
