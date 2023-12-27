@@ -3,7 +3,7 @@
  *  (c) 2006 Dave Hoover <dave.hoover@gmail.com>
  *
  *  Ported from Graph::Layouter::Spring in
- *    http://search.cpan.org/~pasky/Graph-Layderer-0.02/
+ *    https://search.cpan.org/~pasky/Graph-Layderer-0.02/
  *  The algorithm is based on a spring-style layouter of a Java-based social
  *  network tracker PieSpy written by Paul Mutton E<lt>paul@jibble.orgE<gt>.
  *
@@ -11,7 +11,7 @@
  *  layout, John Jones.
  *
  *  Graph is freely distributable under the terms of an MIT-style license.
- *  For details, see the Graph web site: http://dev.buildpatternd.com/trac
+ *  For details, see the Graph web site: https://dev.buildpatternd.com/trac
  *
  /*--------------------------------------------------------------------------*/
 

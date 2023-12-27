@@ -14,14 +14,14 @@ Installation
 
  * Make sure you have a recent version of Sage installed (at least running on Python 3)
    and that `sage` is available from the commandline.  In particular see
-   [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
+   [Sage installation](https://doc.sagemath.org/html/en/installation/source.html).
    Also check that your version of Sage has ssl available by checking that
    `import ssl` works on its command line. If not, then the `pip install`
    commands below will fail. To remedy this, either install SSL globally on
    your system or have Sage build its own local version, as mentioned
-   [here](http://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
+   [here](https://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
    and
-   [here](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
+   [here](https://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
    respectively.
 
  * Install dependencies.  This requires you to have write access to the
@@ -281,13 +281,13 @@ LMFDB On Windows
 We do not recommend attempting to run LMFDB from within the Sage virtual image.
 For anyone who would like to attempt it, the following steps should theoretically work.
 
- * Download `VirtualBox` and the Sage appliance, following the instructions [here](http://wiki.sagemath.org/SageAppliance).
+ * Download `VirtualBox` and the Sage appliance, following the instructions [here](https://wiki.sagemath.org/SageAppliance).
 
  * The default Sage appliance does not have enough space to install LMFDB's prerequisites.  Moreover, the default
    file type (vmdk) installed by `VirtualBox` does not support resizing.  You will need to
    increase the available space by cloning into a vdi file, increasing the space and cloning back, following the
-   instructions [here](http://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file) and
-   [here](http://www.howtogeek.com/124622/how-to-enlarge-a-virtual-machines-disk-in-virtualbox-or-vmware/).  We had
+   instructions [here](https://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file) and
+   [here](https://www.howtogeek.com/124622/how-to-enlarge-a-virtual-machines-disk-in-virtualbox-or-vmware/).  We had
    trouble at this stage: make sure to keep the .ova file in case you screw up your virtual image.
 
  * The resulting disk image needs to be repartitioned to make the space available.  Unfortunately, the Sage appliance
@@ -299,7 +299,7 @@ For anyone who would like to attempt it, the following steps should theoreticall
    See Section 6.3.1 [here](https://www.virtualbox.org/manual/ch06.html).
 
  * Clone the LMFDB git repository into your host OS, and set up shared folders so that you can access
-   the LMFDB code from within the Sage appliance.  See the [Sage instructions](http://wiki.sagemath.org/SageAppliance) for how to share folders.
+   the LMFDB code from within the Sage appliance.  See the [Sage instructions](https://wiki.sagemath.org/SageAppliance) for how to share folders.
 
  * Now you need to run ssh-keygen within the Sage appliance and e-mail the result to Harald Schilly, Jonathan Bober or John Cremona (see above).
    Since copy-and-paste can be tricky from inside the virtual image, we suggest writing to a file shared by the host OS.
