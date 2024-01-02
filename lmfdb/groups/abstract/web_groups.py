@@ -1446,7 +1446,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def display_wreath_product(self):
-        if not self.wreath_product:
+        if not self.has_subgroups or not self.wreath_product:
             return None
         wpd = self.wreath_data
         from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
@@ -1478,6 +1478,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def semidirect_products(self):
+        if not self.has_subgroups:
+            return None
         semis = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
@@ -1493,6 +1495,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def nonsplit_products(self):
+        if not self.has_subgroups:
+            return None
         nonsplit = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
