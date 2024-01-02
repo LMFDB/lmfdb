@@ -874,3 +874,4 @@ def get_aliases():
         if nt not in aliases[ky]:
             aliases[ky].append(nt)
         aliases[ky].sort()
+    return aliases
