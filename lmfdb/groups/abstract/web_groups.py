@@ -1725,7 +1725,7 @@ class WebAbstractGroup(WebObj):
             fam = rep_data['family']
             if fam == "AGL" or fam == "ASL" or fam == "Spin":
                 d += 1 #for AGL and ASL the matrices are in GL(d+1,q)
-            elif fam == "CSU" or fam == "CU" or fam == "GU" or fam == "SU" or fam == "PSU":
+            elif fam == "CSU" or fam == "CU" or fam == "GU" or fam == "SU" or fam == "PSU" or fam == "PGU":
                 sq_flag = True #need q^2 instead of q
             elif fam == "SpinPlus":
                 d = 2**(d//2)  #d should always be even in these cases
@@ -1799,12 +1799,9 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
-    #JP CHECK HERE
     def show_subgroup_flag(self):
         if self.representations.get("Lie"):
-#            print("HERE AND order:", self.order < 2000, " and P:",self.representations["Lie"][0]["family"]a)
             if self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000: # Issue with projective Lie groups
-                print("GOT HERE")
                 return False
         return True
 
