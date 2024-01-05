@@ -1717,10 +1717,23 @@ class WebAbstractGroup(WebObj):
 
     def _matrix_coefficient_data(self, rep_type, as_str=False):
         rep_data = self.representations[rep_type]
+        sq_flag = False # used later for certain groups
         if rep_type == "Lie":
-            rep_type = "GLFq"
             rep_data = rep_data[0]
-        d = rep_data["d"]
+            d = rep_data["d"]
+            rep_type = "GLFq"
+            fam = rep_data['family']
+            if fam == "AGL" or fam == "ASL" or fam == "Spin":
+                d += 1 #for AGL and ASL the matrices are in GL(d+1,q)
+            elif fam == "CSU" or fam == "CU" or fam == "GU" or fam == "SU" or fam == "PSU":
+                sq_flag = True #need q^2 instead of q
+            elif fam == "SpinPlus":
+                d = 2**(d//2)  #d should always be even in these cases
+            elif fam == "SpinMinus":
+                d = 2**(d//2)  #d always even
+                sq_flag = True  #also need q^2 instead of q in this case
+        else:
+            d = rep_data["d"]
         k = 1
         if rep_type == "GLZ":
             N = rep_data["b"]
@@ -1736,6 +1749,8 @@ class WebAbstractGroup(WebObj):
             R = rf"\Z/{N}\Z" if as_str else Zmod(N)
         elif rep_type == "GLFq":
             q = ZZ(rep_data["q"])
+            if sq_flag:
+                q = q**2
             R = rf"\F_{{{q}}}" if as_str else GF(q)
             N, k = q.is_prime_power(get_data=True)
             if k == 1:
@@ -1743,7 +1758,7 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType = False):
         R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
 
@@ -1757,6 +1772,8 @@ class WebAbstractGroup(WebObj):
             L = [c - shift for c in L]
         x = matrix(R, d, d, L)
         if as_str:
+            if LieType and self.representations["Lie"][0]["family"][0] == "P":
+                return "\left[" + latex(x) + "\\right]"
             return latex(x)
         return x
 
@@ -1767,6 +1784,8 @@ class WebAbstractGroup(WebObj):
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
             return self.decode_as_pcgs(code, as_str=as_str)
+        elif rep_type == "Lie":  #check for projective families to add "[ ]"
+            return self.decode_as_matrix(code,rep_type=rep_type,as_str=as_str, LieType = True)
         else:
             return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str)
 
@@ -1780,9 +1799,12 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
+    #JP CHECK HERE
     def show_subgroup_flag(self):
         if self.representations.get("Lie"):
-            if self.representations["Lie"][0]["family"][0] == "P": 	# Issue with projective Lie groups
+#            print("HERE AND order:", self.order < 2000, " and P:",self.representations["Lie"][0]["family"]a)
+            if self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000: # Issue with projective Lie groups
+                print("GOT HERE")
                 return False
         return True
 
@@ -1941,14 +1963,7 @@ class WebAbstractGroup(WebObj):
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
-            if self.element_repr_type == "Lie":
-                # Omit first description since it's used in the latex name
-                desc = "Other groups of " + display_knowl("group.lie_type", "Lie type")
-                rdata = rdata[1:]
-                if not rdata:
-                    return ""
-            else:
-                desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
+            desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
@@ -2160,11 +2175,12 @@ class WebAbstractGroup(WebObj):
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
 
-    def aut_gens_flag(self): #issue with Lie type when family is projective
+
+    def aut_gens_flag(self): #issue with Lie type when family is projective, auto stored as permutations often
         if self.aut_gens is None:
             return False
         elif self.element_repr_type == "Lie":
-            if self.representations["Lie"][0]["family"][0] == "P":
+            if self.representations["Lie"][0]["family"][0] == "P": 
                 return False
         return True
 
