@@ -18,7 +18,7 @@ class WebCharacterTest(LmfdbTest):
 
 
 class DirichletSearchTest(LmfdbTest):
-    def nchars(self):
+    def test_nchars(self):
         from lmfdb import db
         nchars = db.char_orbits.sum_column('degree')
         assert nchars == 3039650754 # if this fails, one also needs to update DirichStats.__init__
