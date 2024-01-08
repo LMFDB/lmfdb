@@ -1178,7 +1178,7 @@ class NFSearchArray(SearchArray):
             example_span="[8,3], 8.3, C5 or 7T2")
         is_galois = YesNoBox(
             name="is_galois",
-            label="Is Galois",
+            label="Galois",
             knowl="nf.galois_group")
         regulator = TextBox(
             name="regulator",
