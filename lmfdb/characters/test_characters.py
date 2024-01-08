@@ -2,6 +2,9 @@
 from lmfdb.tests import LmfdbTest
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+from lmfdb.utils import comma
+
+
 
 
 class WebCharacterTest(LmfdbTest):
@@ -15,6 +18,12 @@ class WebCharacterTest(LmfdbTest):
 
 
 class DirichletSearchTest(LmfdbTest):
+    def nchars(self):
+        from lmfdb import db
+        nchars = db.char_orbits.sum_column('degree')
+        assert nchars == 3039650754
+        W = self.tc.get('/Character/Dirichlet/')
+        assert comma(nchars) in W.get_data(as_text=True)
 
     def test_order(self):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
