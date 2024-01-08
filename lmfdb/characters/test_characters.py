@@ -5,8 +5,6 @@ from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 from lmfdb.utils import comma
 
 
-
-
 class WebCharacterTest(LmfdbTest):
 
     def test_Dirichletmethods(self):
