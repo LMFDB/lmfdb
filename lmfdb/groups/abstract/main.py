@@ -731,17 +731,15 @@ def by_abelian_label(label):
 def auto_gens(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
-#    info['grp_reps_line'] = gp.representative_string(other_page = True) 
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if gp.aut_gens is None:
-        flash_error("The generators for the automorphism group of the group with label  %s have not been computed.", label)
+        flash_error("The generators for the automorphism group of the group with label %s have not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     return render_template(
         "auto_gens_page.html",
         gp=gp,
- #       info=info,
         title="Generators of automorphism group for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
                         )
@@ -764,7 +762,7 @@ def char_table(label):
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if not gp.complex_characters_known:
-        flash_error("The complex characters for the group with label  %s have not been computed.", label)
+        flash_error("The complex characters for the group with label %s have not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     return render_template(
         "character_table_page.html",
@@ -782,7 +780,7 @@ def Qchar_table(label):
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if not gp.rational_characters_known:
-        flash_error("The rational characters for the group with label  %s have not been computed.", label)
+        flash_error("The rational characters for the group with label %s have not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     return render_template(
         "rational_character_table_page.html",

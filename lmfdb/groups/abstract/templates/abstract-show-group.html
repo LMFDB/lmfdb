@@ -59,14 +59,14 @@
     </thead>
     <tbody>
       <tr>
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>Elements</td>
+        <td class="embedding-wrap sticky-col border-right">Elements</td>
         {% for c in (gp.order_stats | sort) %}
           <td>{{ c[1] }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.order }}</td>
       </tr>
       <tr>
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
+        <td class="embedding-wrap sticky-col border-right">{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
 	<!--"#E3F2FD" -->
         {% for c in gp.cc_statistics %}
           <td>{{ c[1] }} </td>
@@ -75,7 +75,7 @@
       </tr>
       {% if not gp.live() %}
       <tr>
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>{{KNOWL('group.division', 'Divisions')}}</td>
+        <td class="embedding-wrap sticky-col border-right">{{KNOWL('group.division', 'Divisions')}}</td>
         {% for c in gp.div_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -83,7 +83,7 @@
       </tr>
       {% if gp.aut_statistics != None %}
       <tr style="border-bottom:none;">
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+        <td class="embedding-wrap sticky-col border-right">{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
         {% for c in gp.aut_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -534,7 +534,7 @@
 
    <p> The character tables for this group have not been computed. </p>
 
-{% else %}  
+{% else %}
 
    <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
 
@@ -550,14 +550,14 @@
 
 
    {% if gp.number_conjugacy_classes == None %}
-                                                                                                                             
+
        <p> The complex character table for this group is not computed. </p>
-    
+
        {% elif gp.complex_characters_known == False %}
 
       <p> The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not available for this group.    </p>
 
-       {% else %} 
+       {% else %}
        {% if gp.number_conjugacy_classes <= 16 %}
 
       {% include 'character_table.html' %}
