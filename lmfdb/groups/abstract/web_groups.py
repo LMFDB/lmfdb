@@ -1723,15 +1723,15 @@ class WebAbstractGroup(WebObj):
             d = rep_data["d"]
             rep_type = "GLFq"
             fam = rep_data['family']
-            if fam == "AGL" or fam == "ASL" or fam == "Spin":
+            if fam in ["AGL", "ASL"]:
                 d += 1 #for AGL and ASL the matrices are in GL(d+1,q)
-            elif fam == "CSU" or fam == "CU" or fam == "GU" or fam == "SU" or fam == "PSU" or fam == "PGU":
-                sq_flag = True #need q^2 instead of q
-            elif fam == "SpinPlus":
-                d = 2**(d//2)  #d should always be even in these cases
+            elif fam in ["CSU", "CU", "GU", "SU", "PSU", "PGU"]:
+                sq_flag = True # need q^2 instead of q
+            elif fam in ["Spin", "SpinPlus"]:
+                d = 2**(d//2)  # d even for SpinPlus, odd for Spin
             elif fam == "SpinMinus":
-                d = 2**(d//2)  #d always even
-                sq_flag = True  #also need q^2 instead of q in this case
+                d = 2**(d//2)  # d even
+                sq_flag = True  # also need q^2 instead of q in this case
         else:
             d = rep_data["d"]
         k = 1
@@ -1758,7 +1758,7 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType = False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False):
         R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
 
@@ -1772,6 +1772,7 @@ class WebAbstractGroup(WebObj):
             L = [c - shift for c in L]
         x = matrix(R, d, d, L)
         if as_str:
+            # for projective families, we add "[ ]"
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
                 return "\left[" + latex(x) + "\\right]"
             return latex(x)
@@ -1784,10 +1785,8 @@ class WebAbstractGroup(WebObj):
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
             return self.decode_as_pcgs(code, as_str=as_str)
-        elif rep_type == "Lie":  #check for projective families to add "[ ]"
-            return self.decode_as_matrix(code,rep_type=rep_type,as_str=as_str, LieType = True)
         else:
-            return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str)
+            return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str, LieType=(rep_type=="Lie"))
 
     @lazy_attribute
     def pc_code(self):
@@ -2177,7 +2176,7 @@ class WebAbstractGroup(WebObj):
         if self.aut_gens is None:
             return False
         elif self.element_repr_type == "Lie":
-            if self.representations["Lie"][0]["family"][0] == "P": 
+            if self.representations["Lie"][0]["family"][0] == "P":
                 return False
         return True
 
