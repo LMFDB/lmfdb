@@ -2323,6 +2323,44 @@ class WebAbstractGroup(WebObj):
         else:
             return f"generating {self.rank}-tuples"
 
+        
+    def repr_strg(self,other_page = False):
+        #string to say where elements of group live
+        #other_page is if the description is not on main page for the group (eg. automorphism group generators)
+        rep_type = self.element_repr_type
+        if rep_type == "Lie":  #same whether from main page or not
+            rep_line = self.representations
+            if rep_line["Lie"][0]["family"][0] == "P":   # note about matrix parentheses
+                return "Elements of the group  are displayed as equivalence classes (represented by square brackets) of matrices  which are elements of the group  $\\" + rep_line["Lie"][0]["family"] + "(" + str(rep_line["Lie"][0]["d"]) +"," +  str(rep_line["Lie"][0]["q"]) +  ")$."
+            else:
+                return "Elements of the group  are displayed as matrices in the group $\\" + rep_line["Lie"][0]["family"] + "(" + str(rep_line["Lie"][0]["d"]) +"," +  str(rep_line["Lie"][0]["q"]) +  ")$."
+        elif rep_type == "Perm":
+            rep_str = "Elements of the group are displayed as permutations from the permutation group construction given"
+        elif rep_type == "PC":
+            rep_str =  "Elements of the group are displayed as words on the generators listed in the presentation given" 
+        elif rep_type == "GLFp":
+            rep_line = self.representations
+            rep_str =  "Elements of the group are displayed as matrices in the subgroup of $\\GL_{" + str(rep_line["GLFp"]["d"]) + "}(\\F_{" + str(rep_line["GLFp"]["p"]) + "})$ defined"
+        elif rep_type == "GLFq":
+            rep_line = self.representations
+            rep_str = "Elements of the group are displayed as matrices in the subgroup of $\\GL_{" + str(rep_line["GLFq"]["d"]) + "}(\\F_{" + str(rep_line["GLFq"]["q"]) + "})$ defined"
+        elif rep_type == "GLZN":
+            rep_line = self.representations
+            rep_str = "Elements of the group are displayed as matrices in the subgroup of $\\GL_{" + str(rep_line["GLZN"]["d"]) + "}(\\Z/{" + str(rep_line["GLZN"]["p"]) + "}\\Z)$ defined"
+        elif rep_type == "GLZq":
+            rep_line = self.representations
+            rep_str =  "Elements of the group are displayed as matrices in the subgroup of $\\GL_{" + str(rep_line["GLZq"]["d"]) + "}(\\Z/{" + str(rep_line["GLZq"]["q"]) + "}\\Z)$ defined"
+        elif rep_type == "GLZ":
+            rep_line = self.representations
+            rep_str = "Elements of the group are displayed as matrices in the subgroup of $\\GL_{" + str(rep_line["GLZ"]["d"]) + "}(\\Z)$ defined"
+        else: #if not any of these types 
+            return ""
+        if other_page:
+            return rep_str + " in the Construction section of this group's main page."
+        else:
+            return rep_str + " above."
+        return ""    
+ 
     @lazy_attribute
     def max_sub_cnt(self):
         return db.gps_subgroups.count_distinct(

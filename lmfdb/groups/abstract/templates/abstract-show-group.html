@@ -15,6 +15,13 @@
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
 
+{% if gp.live() %}
+<p>
+  This group is not stored in the database. However, basic information about the group, computed on the fly, is listed below.
+  </p>
+{% endif %}
+
+
 <h2> Group information</h2>
 <p>
   <table>
@@ -38,13 +45,12 @@
 
 <h2>Group statistics</h2>
 
-<p>
-
-{% if gp.order_stats != None %}
-  <table class="ntdata" style="margin-left:0;">
+<p> {% if gp.order_stats != None %}
+  <div class="table-scroll-wrapper">
+   <table class="ntdata" style="margin-left:0;">
     <thead>
       <tr>
-        <th>{{KNOWL('group.element_order', 'Order')}}</th>
+        <th class="embedding-wrap sticky-col border-right">{{KNOWL('group.element_order', 'Order')}}</th>
         {% for c in (gp.order_stats | sort) %}
           <th>{{ c[0] }} </th>
         {% endfor %}
@@ -53,14 +59,15 @@
     </thead>
     <tbody>
       <tr>
-        <td>Elements</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>Elements</td>
         {% for c in (gp.order_stats | sort) %}
           <td>{{ c[1] }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.order }}</td>
       </tr>
       <tr>
-        <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
+	<!--"#E3F2FD" -->
         {% for c in gp.cc_statistics %}
           <td>{{ c[1] }} </td>
         {% endfor %}
@@ -68,7 +75,7 @@
       </tr>
       {% if not gp.live() %}
       <tr>
-        <td>{{KNOWL('group.division', 'Divisions')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>{{KNOWL('group.division', 'Divisions')}}</td>
         {% for c in gp.div_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -76,7 +83,7 @@
       </tr>
       {% if gp.aut_statistics != None %}
       <tr style="border-bottom:none;">
-        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
         {% for c in gp.aut_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -85,7 +92,7 @@
       {% endif %}
       {% else %}
       <tr>
-        <td>{{KNOWL('group.division', 'Divisions')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>{{KNOWL('group.division', 'Divisions')}}</td>
           {% if gp.division_stats %}
             {% for c in gp.division_stats %}
               <td>{{ c[1] }}</td>
@@ -97,22 +104,24 @@
           {% endif %}
       </tr>
       <tr style="border-bottom:none;">
-        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
           <td colspan="{{gp.order_stats|length}}">data not computed</td>
           <td class="border-left"></td>
       </tr>
       {% endif %}
     </tbody>
   </table>
+  </div> 
   {% endif %}
 </p>
 
 {% if gp.live() or gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that do not have rational character tables #}
 
 <p>
+  <div class="table-scroll-wrapper"> 
   <table class="ntdata" style="margin-left:0;">
     <thead>
-      <tr><th>Dimension</th>
+      <tr><th class="embedding-wrap sticky-col border-right">Dimension</th>
         {% for d in (gp.rep_dims) %}
           <th>{{ d }} </th>
         {% endfor %}
@@ -121,7 +130,7 @@
     </thead>
     <tbody>
       <tr>
-        <td>{{KNOWL('group.representation.character', 'Irr. complex chars.')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>{{KNOWL('group.representation.character', 'Irr. complex chars.')}} &nbsp;</td>
         {% for n in gp.irrep_statistics %}
           <td>{{ n }} </td>
         {% endfor %}
@@ -129,7 +138,7 @@
       </tr>
       {% if not gp.live() %}
       <tr style="border-bottom:none;">
-        <td>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
+        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
         {% for n in gp.ratrep_statistics %}
           <td>{{ n }} </td>
         {% endfor %}
@@ -138,6 +147,7 @@
       {% endif %}
     </tbody>
   </table>
+  </div>
 </p>
 
 {% endif %}
@@ -146,7 +156,7 @@
 
 
  {% if not gp.live() %}
-<h3>Minimal Presentations</h3>
+<h2>Minimal Presentations</h2>
 
 <p>
   <table>
@@ -195,6 +205,9 @@
 <table class=nowrap>
   {{ gp.stored_representations | safe }}
 </table>
+<p>
+{{ gp.repr_strg() |  safe }}  <!--JP-->
+</p>
 
 {% else %}
 
@@ -214,6 +227,10 @@
   </tr>
   </tr>
 </table>
+
+{% if not gp.live() %}
+{{ gp.repr_strg() |  safe }}
+{% endif %}
 
 {% endif %} {# not live and abelian #}
 

@@ -731,12 +731,17 @@ def by_abelian_label(label):
 def auto_gens(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
+#    info['grp_reps_line'] = gp.representative_string(other_page = True) 
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if gp.aut_gens == None:
+        flash_error("The generators for the automorphism group of the group with label  %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "auto_gens_page.html",
         gp=gp,
+ #       info=info,
         title="Generators of automorphism group for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
                         )
@@ -758,6 +763,9 @@ def char_table(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if not gp.complex_characters_known:
+        flash_error("The complex characters for the group with label  %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -773,6 +781,9 @@ def Qchar_table(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if not gp.rational_characters_known:
+        flash_error("The rational characters for the group with label  %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
@@ -1194,6 +1205,10 @@ def diagram_js_string(gp, only=None):
 
 # Writes individual pages
 def render_abstract_group(label, data=None):
+    from lmfdb.app import add_colors #need color for table background color
+    even_color = add_colors()["color"]["col_main_ll"]
+    print(even_color)
+
     info = {}
     if data is None:
         label = clean_input(label)
@@ -1207,7 +1222,9 @@ def render_abstract_group(label, data=None):
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
     info['pos_int_and_factor'] = pos_int_and_factor
-
+    info['even_color'] = str(even_color)      # "#E3F2FD" in current color
+    info['odd_color'] = "white"
+    
     if gp.live():
         title = f"Abstract group {label}"
         friends = []
@@ -2223,6 +2240,7 @@ def cc_data(gp, label, typ="complex"):
             return "Data for conjugacy class {} missing.".format(label)
         classes = div.classes
         wacc = classes[0]
+        print("HERE IS WACC:", wacc)
         mult = len(classes)
         ans = "<h3>Rational conjugacy class {}</h3>".format(label)
         if mult > 1:
