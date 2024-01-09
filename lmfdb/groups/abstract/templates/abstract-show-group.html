@@ -47,10 +47,10 @@
 
 <p> {% if gp.order_stats != None %}
   <div class="table-scroll-wrapper">
-   <table class="ntdata" style="margin-left:0;">
+   <table class="ntdata onesticky" style="margin-left:0;">
     <thead>
       <tr>
-        <th class="embedding-wrap sticky-col border-right">{{KNOWL('group.element_order', 'Order')}}</th>
+        <th>{{KNOWL('group.element_order', 'Order')}}</th>
         {% for c in (gp.order_stats | sort) %}
           <th>{{ c[0] }} </th>
         {% endfor %}
@@ -59,14 +59,14 @@
     </thead>
     <tbody>
       <tr>
-        <td class="embedding-wrap sticky-col border-right">Elements</td>
+        <td>Elements</td>
         {% for c in (gp.order_stats | sort) %}
           <td>{{ c[1] }} </td>
         {% endfor %}
         <td class="border-left">{{ gp.order }}</td>
       </tr>
       <tr>
-        <td class="embedding-wrap sticky-col border-right">{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
+        <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
 	<!--"#E3F2FD" -->
         {% for c in gp.cc_statistics %}
           <td>{{ c[1] }} </td>
@@ -75,7 +75,7 @@
       </tr>
       {% if not gp.live() %}
       <tr>
-        <td class="embedding-wrap sticky-col border-right">{{KNOWL('group.division', 'Divisions')}}</td>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
         {% for c in gp.div_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -83,7 +83,7 @@
       </tr>
       {% if gp.aut_statistics != None %}
       <tr style="border-bottom:none;">
-        <td class="embedding-wrap sticky-col border-right">{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
         {% for c in gp.aut_statistics %}
           <td>{{ c[1] }}</td>
         {% endfor %}
@@ -92,7 +92,7 @@
       {% endif %}
       {% else %}
       <tr>
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>{{KNOWL('group.division', 'Divisions')}}</td>
+        <td>{{KNOWL('group.division', 'Divisions')}}</td>
           {% if gp.division_stats %}
             {% for c in gp.division_stats %}
               <td>{{ c[1] }}</td>
@@ -104,9 +104,9 @@
           {% endif %}
       </tr>
       <tr style="border-bottom:none;">
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
-          <td colspan="{{gp.order_stats|length}}">data not computed</td>
-          <td class="border-left"></td>
+        <td>{{KNOWL('group.autjugacy_class', 'Autjugacy classes')}}</td>
+        <td colspan="{{gp.order_stats|length}}">data not computed</td>
+        <td class="border-left"></td>
       </tr>
       {% endif %}
     </tbody>
@@ -119,9 +119,9 @@
 
 <p>
   <div class="table-scroll-wrapper"> 
-  <table class="ntdata" style="margin-left:0;">
+  <table class="ntdata onesticky" style="margin-left:0;">
     <thead>
-      <tr><th class="embedding-wrap sticky-col border-right">Dimension</th>
+      <tr><th>Dimension</th>
         {% for d in (gp.rep_dims) %}
           <th>{{ d }} </th>
         {% endfor %}
@@ -130,7 +130,7 @@
     </thead>
     <tbody>
       <tr>
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.odd_color}}>{{KNOWL('group.representation.character', 'Irr. complex chars.')}} &nbsp;</td>
+        <td>{{KNOWL('group.representation.character', 'Irr. complex chars.')}} &nbsp;</td>
         {% for n in gp.irrep_statistics %}
           <td>{{ n }} </td>
         {% endfor %}
@@ -138,7 +138,7 @@
       </tr>
       {% if not gp.live() %}
       <tr style="border-bottom:none;">
-        <td class="embedding-wrap sticky-col border-right" bgcolor={{info.even_color}}>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
+        <td>{{KNOWL('group.representation.rational_character', 'Irr. rational chars.')}}</td>
         {% for n in gp.ratrep_statistics %}
           <td>{{ n }} </td>
         {% endfor %}
