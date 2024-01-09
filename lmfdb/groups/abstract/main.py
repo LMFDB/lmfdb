@@ -735,7 +735,7 @@ def auto_gens(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-    if gp.aut_gens == None:
+    if gp.aut_gens is None:
         flash_error("The generators for the automorphism group of the group with label  %s have not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     return render_template(
