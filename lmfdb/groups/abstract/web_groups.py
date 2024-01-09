@@ -1774,7 +1774,7 @@ class WebAbstractGroup(WebObj):
         if as_str:
             # for projective families, we add "[ ]"
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
-                return "\left[" + latex(x) + "\\right]"
+                return r"\left[" + latex(x) + "\\right]"
             return latex(x)
         return x
 
@@ -2170,7 +2170,6 @@ class WebAbstractGroup(WebObj):
     # TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
-
 
     def aut_gens_flag(self): #issue with Lie type when family is projective, auto stored as permutations often
         if self.aut_gens is None:
