@@ -1207,7 +1207,6 @@ def diagram_js_string(gp, only=None):
 def render_abstract_group(label, data=None):
     from lmfdb.app import add_colors #need color for table background color
     even_color = add_colors()["color"]["col_main_ll"]
-    print(even_color)
 
     info = {}
     if data is None:
@@ -2240,7 +2239,6 @@ def cc_data(gp, label, typ="complex"):
             return "Data for conjugacy class {} missing.".format(label)
         classes = div.classes
         wacc = classes[0]
-        print("HERE IS WACC:", wacc)
         mult = len(classes)
         ans = "<h3>Rational conjugacy class {}</h3>".format(label)
         if mult > 1:
