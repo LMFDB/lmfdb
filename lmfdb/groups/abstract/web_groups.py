@@ -1722,7 +1722,7 @@ class WebAbstractGroup(WebObj):
             rep_data = rep_data[0]
         d = rep_data["d"]
         k = 1
-        if rep_type == "GLZ":
+        if rep_type == "GLZ":  #deal with whether integer or not
             N = rep_data["b"]
             R = r"\Z" if as_str else ZZ
         elif rep_type == "GLFp":
@@ -1744,7 +1744,17 @@ class WebAbstractGroup(WebObj):
         return R, N, k, d, rep_type
 
     def decode_as_matrix(self, code, rep_type, as_str=False):
-        R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
+        if rep_type =="GLZ" and type(code) != int:  #decimal here represents an integer representing b value
+            a,b =str(code).split(".")
+            code = int(a)
+            N = int(b)
+            k = 1
+            R = r"\Z" if as_str else ZZ
+            rep_data = self.representations[rep_type]
+            d = rep_data["d"]
+            print("N,d,code:", N,d,code)
+        else:
+            R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
 
         def pad(X, m):
