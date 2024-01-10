@@ -1715,7 +1715,8 @@ class WebAbstractGroup(WebObj):
             return str(x)
         return x
 
-    def _matrix_coefficient_data(self, rep_type, as_str=False):
+    def _matrix_coefficient_data(self, rep_type, as_str=False, GLZ_float = False):
+        # GLZ_float tells us the few cases where 
         rep_data = self.representations[rep_type]
         sq_flag = False # used later for certain groups
         if rep_type == "Lie":
@@ -1724,7 +1725,7 @@ class WebAbstractGroup(WebObj):
             rep_type = "GLFq"
             fam = rep_data['family']
             if fam in ["AGL", "ASL"]:
-                d += 1 #for AGL and ASL the matrices are in GL(d+1,q)
+                d += 1 # for AGL and ASL the matrices are in GL(d+1,q)
             elif fam in ["CSU", "CU", "GU", "SU", "PSU", "PGU"]:
                 sq_flag = True # need q^2 instead of q
             elif fam in ["Spin", "SpinPlus"]:
@@ -1735,7 +1736,7 @@ class WebAbstractGroup(WebObj):
         else:
             d = rep_data["d"]
         k = 1
-        if rep_type == "GLZ":  #deal with whether integer or not
+        if rep_type == "GLZ":  # deal with whether integer or not
             N = rep_data["b"]
             R = r"\Z" if as_str else ZZ
         elif rep_type == "GLFp":
@@ -1758,20 +1759,18 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False ):
         if rep_type =="GLZ" and type(code) != int:  #decimal here represents an integer representing b value
             a,b =str(code).split(".")
             code = int(a)
             N = int(b)
             k = 1
-            R = r"\Z" if as_str else ZZ
+            R = ZZ
             rep_data = self.representations[rep_type]
             d = rep_data["d"]
-            print("N,d,code:", N,d,code)
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
-
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
