@@ -197,10 +197,10 @@ def compress_pres(pres, cutoff=150, sides=70):
     while pres[sides] != "=" and sides < len(pres)-1:
         short_pres = short_pres + pres[sides]
         sides += 1
-    if sides < len(pres)-1:  #finished because of "="
+    if sides < len(pres)-1:  # finished because of "="
         short_pres = short_pres + r'= \!\cdots\! \rangle}$'
         return short_pres
-    else:  #just return whole thing if needed to go to end and ran out of "="
+    else:  # just return whole thing if needed to go to end and ran out of "="
         return f"${pres}$"
 
 
@@ -243,7 +243,7 @@ class WebAbstractGroup(WebObj):
                     if 0 < i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
-                else:   #issue with 3^8 being in Magma but not GAP db
+                else:   # issue with 3^8 being in Magma but not GAP db
                     self._data = (n, i)
                     self.source = "Missing"
         if isinstance(self._data, list):  # live abelian group
@@ -258,7 +258,7 @@ class WebAbstractGroup(WebObj):
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
-        #return not self.source == "db"
+        # return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
 
     @lazy_attribute
@@ -1714,8 +1714,7 @@ class WebAbstractGroup(WebObj):
             return str(x)
         return x
 
-    def _matrix_coefficient_data(self, rep_type, as_str=False, GLZ_float = False):
-        # GLZ_float tells us the few cases where 
+    def _matrix_coefficient_data(self, rep_type, as_str=False):
         rep_data = self.representations[rep_type]
         sq_flag = False # used later for certain groups
         if rep_type == "Lie":
@@ -1735,7 +1734,7 @@ class WebAbstractGroup(WebObj):
         else:
             d = rep_data["d"]
         k = 1
-        if rep_type == "GLZ":  # deal with whether integer or not
+        if rep_type == "GLZ":
             N = rep_data["b"]
             R = r"\Z" if as_str else ZZ
         elif rep_type == "GLFp":
@@ -1759,7 +1758,7 @@ class WebAbstractGroup(WebObj):
         return R, N, k, d, rep_type
 
     def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False ):
-        if rep_type =="GLZ" and type(code) != int:  #decimal here represents an integer representing b value
+        if rep_type =="GLZ" and type(code) != int:  # decimal here represents an integer encoding b
             a,b =str(code).split(".")
             code = int(a)
             N = int(b)
@@ -1770,6 +1769,7 @@ class WebAbstractGroup(WebObj):
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
+
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
