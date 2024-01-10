@@ -1203,8 +1203,6 @@ def diagram_js_string(gp, only=None):
 
 # Writes individual pages
 def render_abstract_group(label, data=None):
-    from lmfdb.app import add_colors #need color for table background color
-    even_color = add_colors()["color"]["col_main_ll"]
 
     info = {}
     if data is None:
@@ -1219,9 +1217,7 @@ def render_abstract_group(label, data=None):
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
     info['pos_int_and_factor'] = pos_int_and_factor
-    info['even_color'] = str(even_color)      # "#E3F2FD" in current color
-    info['odd_color'] = "white"
-    
+
     if gp.live():
         title = f"Abstract group {label}"
         friends = []

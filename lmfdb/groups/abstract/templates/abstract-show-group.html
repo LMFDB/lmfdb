@@ -67,7 +67,6 @@
       </tr>
       <tr>
         <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
-	<!--"#E3F2FD" -->
         {% for c in gp.cc_statistics %}
           <td>{{ c[1] }} </td>
         {% endfor %}
@@ -206,7 +205,7 @@
   {{ gp.stored_representations | safe }}
 </table>
 <p>
-{{ gp.repr_strg() |  safe }}  <!--JP-->
+{{ gp.repr_strg() |  safe }}
 </p>
 
 {% else %}
