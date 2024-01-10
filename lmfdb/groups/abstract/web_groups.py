@@ -2366,7 +2366,6 @@ class WebAbstractGroup(WebObj):
                 R = fr"\Z/{{{data['q']}}}\Z"
             else:
                 R = r"\Z"
-            d, q = data["d"], data["p"]
             return fr"Elements of the group are displayed as matrices in $\GL_{{{d}}}({R})$."
         else: # if not any of these types
             return ""
