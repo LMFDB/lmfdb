@@ -2144,6 +2144,8 @@ class WebAbstractGroup(WebObj):
             output_strg += show_reps("wreath")
             output_strg += show_reps("nonsplit")
         output_strg += show_reps("aut")
+        if output_strg == "":  #some live groups have no constructions
+            return "data not computed"
         return output_strg
 
     def is_null(self):

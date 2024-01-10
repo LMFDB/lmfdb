@@ -204,9 +204,12 @@
 <table class=nowrap>
   {{ gp.stored_representations | safe }}
 </table>
+
+{% if not gp.live() %}
 <p>
 {{ gp.repr_strg() |  safe }}
 </p>
+{% endif %}
 
 {% else %}
 
