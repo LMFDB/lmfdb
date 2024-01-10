@@ -2347,7 +2347,8 @@ class WebAbstractGroup(WebObj):
             else:
                 return fr"Elements of the group are displayed as matrices in $\{fam}({d},{q})$."
         elif rep_type == "Perm":
-            return "Elements of the group are displayed as permutations"
+            d = data["d"]
+            return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
             rep_str =  "Elements of the group are displayed as words in the generators from the presentation given"
             if other_page:
