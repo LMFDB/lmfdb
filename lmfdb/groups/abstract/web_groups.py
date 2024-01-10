@@ -810,8 +810,7 @@ class WebAbstractGroup(WebObj):
             else:
                 cent_order_factored = 0
             if cent_order_factored:
-                props.extend([(r"$\card{Z(G)}$",
-                    web_latex(cent_order_factored) if cent_order_factored else nc)])
+                props.extend([(r"$\card{Z(G)}$",web_latex(cent_order_factored) if cent_order_factored else nc)])
             elif self.center_label:
                 props.extend([(r"$\card{Z(G)}$", self.center_label.split(".")[0])])
             else:
@@ -2293,6 +2292,8 @@ class WebAbstractGroup(WebObj):
             if not cent:
                 return None
             ZGord = self.order // ZZ(cent.split(".")[0])
+        if ZGord == 1: # factor(1) causes problems
+            return 1
         return ZGord.factor()
 
     def comm(self):

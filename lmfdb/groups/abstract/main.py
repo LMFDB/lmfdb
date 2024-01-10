@@ -1414,9 +1414,6 @@ def shortsubinfo(ambient, short_label):
             '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>'
             % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
         )
-
-    # print ""
-    # print (ans)
     ans += "</table>"
     return ans
 
