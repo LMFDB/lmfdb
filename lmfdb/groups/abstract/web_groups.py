@@ -2363,7 +2363,7 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "PC":
             rep_str =  "Elements of the group are displayed as words in the generators from the presentation given"
             if other_page:
-                return rep_str + " in the Construction section of this group's <a href='%s'>main page</a>." % url_for(".by_label", self.label)
+                return rep_str + " in the Construction section of this group's <a href='%s'>main page</a>." % url_for(".by_label", label=self.label)
             else:
                 return rep_str + " above."
         elif rep_type in ["GLFp", "GLFq", "GLZN", "GLZq", "GLZ"]:
