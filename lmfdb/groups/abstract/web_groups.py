@@ -2144,6 +2144,8 @@ class WebAbstractGroup(WebObj):
             output_strg += show_reps("wreath")
             output_strg += show_reps("nonsplit")
         output_strg += show_reps("aut")
+        if output_strg == "":  #some live groups have no constructions
+            return "data not computed"
         return output_strg
 
     def is_null(self):
@@ -2333,6 +2335,42 @@ class WebAbstractGroup(WebObj):
             return "generating tuples"
         else:
             return f"generating {self.rank}-tuples"
+
+    def repr_strg(self, other_page=False):
+        # string to say where elements of group live
+        # other_page is if the description is not on main page for the group (eg. automorphism group generators)
+        rep_type = self.element_repr_type
+        data = self.representations.get(rep_type)
+        if rep_type == "Lie":  # same whether from main page or not
+            fam, d, q = data[0]["family"], data[0]["d"], data[0]["q"]
+            if fam[0] == "P":   # note about matrix parentheses
+                return fr"Elements of the group are displayed as equivalence classes (represented by square brackets) of matrices in $\{fam[1:]}({d},{q})$."
+            else:
+                return fr"Elements of the group are displayed as matrices in $\{fam}({d},{q})$."
+        elif rep_type == "Perm":
+            d = data["d"]
+            return f"Elements of the group are displayed as permutations of degree {d}."
+        elif rep_type == "PC":
+            rep_str =  "Elements of the group are displayed as words in the generators from the presentation given"
+            if other_page:
+                return rep_str + " in the Construction section of this group's <a href='%s'>main page</a>." % url_for(".by_label", self.label)
+            else:
+                return rep_str + " above."
+        elif rep_type in ["GLFp", "GLFq", "GLZN", "GLZq", "GLZ"]:
+            d = data["d"]
+            if rep_type == "GLFp":
+                R = fr"\F_{{{data['p']}}}"
+            elif rep_type == "GLFq":
+                R = fr"\F_{{{data['q']}}}"
+            elif rep_type == "GLZN":
+                R = fr"\Z/{{{data['p']}}}\Z"
+            elif rep_type == "GLZq":
+                R = fr"\Z/{{{data['q']}}}\Z"
+            else:
+                R = r"\Z"
+            return fr"Elements of the group are displayed as matrices in $\GL_{{{d}}}({R})$."
+        else: # if not any of these types
+            return ""
 
     @lazy_attribute
     def max_sub_cnt(self):

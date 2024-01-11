@@ -734,6 +734,9 @@ def auto_gens(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if gp.aut_gens is None:
+        flash_error("The generators for the automorphism group of the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "auto_gens_page.html",
         gp=gp,
@@ -758,6 +761,9 @@ def char_table(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if not gp.complex_characters_known:
+        flash_error("The complex characters for the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -773,6 +779,9 @@ def Qchar_table(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if not gp.rational_characters_known:
+        flash_error("The rational characters for the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
@@ -1194,6 +1203,7 @@ def diagram_js_string(gp, only=None):
 
 # Writes individual pages
 def render_abstract_group(label, data=None):
+
     info = {}
     if data is None:
         label = clean_input(label)
