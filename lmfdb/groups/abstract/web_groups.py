@@ -197,10 +197,10 @@ def compress_pres(pres, cutoff=150, sides=70):
     while pres[sides] != "=" and sides < len(pres)-1:
         short_pres = short_pres + pres[sides]
         sides += 1
-    if sides < len(pres)-1:  #finished because of "="
+    if sides < len(pres)-1:  # finished because of "="
         short_pres = short_pres + r'= \!\cdots\! \rangle}$'
         return short_pres
-    else:  #just return whole thing if needed to go to end and ran out of "="
+    else:  # just return whole thing if needed to go to end and ran out of "="
         return f"${pres}$"
 
 
@@ -243,7 +243,7 @@ class WebAbstractGroup(WebObj):
                     if 0 < i <= maxi:
                         self._data = (n, i)
                         self.source = "GAP"
-                else:   #issue with 3^8 being in Magma but not GAP db
+                else:   # issue with 3^8 being in Magma but not GAP db
                     self._data = (n, i)
                     self.source = "Missing"
         if isinstance(self._data, list):  # live abelian group
@@ -258,7 +258,7 @@ class WebAbstractGroup(WebObj):
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
-        #return not self.source == "db"
+        # return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
 
     @lazy_attribute
@@ -810,8 +810,7 @@ class WebAbstractGroup(WebObj):
             else:
                 cent_order_factored = 0
             if cent_order_factored:
-                props.extend([(r"$\card{Z(G)}$",
-                    web_latex(cent_order_factored) if cent_order_factored else nc)])
+                props.extend([(r"$\card{Z(G)}$",web_latex(cent_order_factored) if cent_order_factored else nc)])
             elif self.center_label:
                 props.extend([(r"$\card{Z(G)}$", self.center_label.split(".")[0])])
             else:
@@ -1724,7 +1723,7 @@ class WebAbstractGroup(WebObj):
             rep_type = "GLFq"
             fam = rep_data['family']
             if fam in ["AGL", "ASL"]:
-                d += 1 #for AGL and ASL the matrices are in GL(d+1,q)
+                d += 1 # for AGL and ASL the matrices are in GL(d+1,q)
             elif fam in ["CSU", "CU", "GU", "SU", "PSU", "PGU"]:
                 sq_flag = True # need q^2 instead of q
             elif fam in ["Spin", "SpinPlus"]:
@@ -1759,7 +1758,16 @@ class WebAbstractGroup(WebObj):
         return R, N, k, d, rep_type
 
     def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False):
-        R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
+        if rep_type == "GLZ" and type(code) != int:  # decimal here represents an integer encoding b
+            a, b = str(code).split(".")
+            code = int(a)
+            N = int(b)
+            k = 1
+            R = ZZ
+            rep_data = self.representations[rep_type]
+            d = rep_data["d"]
+        else:
+            R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
 
         def pad(X, m):
@@ -2286,6 +2294,8 @@ class WebAbstractGroup(WebObj):
             if not cent:
                 return None
             ZGord = self.order // ZZ(cent.split(".")[0])
+        if ZGord == 1: # factor(1) causes problems
+            return 1
         return ZGord.factor()
 
     def comm(self):
