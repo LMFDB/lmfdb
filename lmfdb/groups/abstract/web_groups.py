@@ -1757,9 +1757,9 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False ):
-        if rep_type =="GLZ" and type(code) != int:  # decimal here represents an integer encoding b
-            a,b =str(code).split(".")
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False):
+        if rep_type == "GLZ" and type(code) != int:  # decimal here represents an integer encoding b
+            a, b = str(code).split(".")
             code = int(a)
             N = int(b)
             k = 1
