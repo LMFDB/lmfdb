@@ -9,7 +9,7 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+from lmfdb.utils import (web_latex, coeff_to_poly,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
@@ -806,9 +806,6 @@ class WebNumberField:
         if D < 0:
             s = r'-\,'
         return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()), cutoff=30)
-
-    def web_poly(self):
-        return pol_to_html(str(coeff_to_poly(self.coeffs())))
 
     def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):
