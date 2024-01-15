@@ -403,7 +403,7 @@ class ModCurve_download(Downloader):
             {
                 "magma": 'subgroup := out`level eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(out`level))|out`generators>;',
                 "sage": 'subgroup = GL(2, Integers(out["level"])).subgroup(out["generators"])',
-                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")]',
+                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")];',
             }
         ),
     }
