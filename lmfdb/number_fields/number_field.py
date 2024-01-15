@@ -869,7 +869,7 @@ class NFDownloader(Downloader):
             {
                 "sage": 'poly = ZZx(out["coeffs"])',
                 "magma": 'poly := ZZx!(out`coeffs);',
-                "gp": 'poly = Polrev(mapget(out, "coeffs"))',
+                "gp": 'poly = Polrev(mapget(out, "coeffs"));',
             }
         ),
         "field": (
@@ -877,7 +877,7 @@ class NFDownloader(Downloader):
             {
                 "sage": 'field.<a> = NumberField(poly)',
                 "magma": 'field<a> := NumberField(poly);',
-                "gp": 'field = nfinit(poly)',
+                "gp": 'field = nfinit(poly);',
             }
         ),
     }
