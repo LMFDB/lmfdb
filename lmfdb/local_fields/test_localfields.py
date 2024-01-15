@@ -54,7 +54,7 @@ data = {[
 ["2.2.3.4", [10, 0, 1], 2, 2, 1, 3, [2, 1], [[3], 1, 1]]
 ]};
 
-create_record(row) = 
+create_record(row) =
 {
     out = Map(["label",row[1];"coeffs",row[2];"p",row[3];"e",row[4];"f",row[5];"c",row[6];"gal",row[7];"slopes",row[8]]);
     field = Polrev(mapget(out, "coeffs"));
