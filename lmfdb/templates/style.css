@@ -2472,6 +2472,13 @@ span.activesubgp {
     display: none;
 }
 
+#row_selector_shown {
+  display: none;
+}
+#download_row_count_input {
+  width: 75px;
+}
+
 span.chargp {
     color: {{color.col_main}};
 }
