@@ -2133,10 +2133,10 @@ class SubgroupSearchArray(SearchArray):
         #    name="stem",
         #    label="Stem",
         #    knowl="group.stem_extension")
-        hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall")
-        sylow = YesNoBox(
-            name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup"
-        )
+        #hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall")
+        #sylow = YesNoBox(
+        #    name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup"
+        #)
         subgroup = TextBox(
             name="subgroup",
             label="Subgroup label",
