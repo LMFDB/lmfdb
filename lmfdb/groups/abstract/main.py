@@ -2179,7 +2179,7 @@ class SubgroupSearchArray(SearchArray):
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
             [normal, characteristic, perfect, maximal, central, nontrivproper],
-            [ambient, ambient_order, direct, split, hall, sylow],
+            [ambient, ambient_order, direct, split],#, hall, sylow],
             [
                 quotient,
                 quotient_order,
