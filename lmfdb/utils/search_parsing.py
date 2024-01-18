@@ -1114,8 +1114,9 @@ def parse_inertia(inp, query, qfield, err_msg=None):
                 query[iner] = abstractid
         else:
             # Check for an alias, like D4
-            from lmfdb.galois_groups.transitive_group import aliases
+            import lmfdb.galois_groups.transitive_group
 
+            aliases = lmfdb.galois_groups.transitive_group.get_aliases()
             inp2 = inp.upper()
             if inp2 in aliases:
                 nt = aliases[inp2][0]

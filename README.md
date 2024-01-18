@@ -2,7 +2,7 @@
 ==============
 
 This is the code for the 
-[L-functions and modular forms database website](http://www.lmfdb.org/).
+[L-functions and modular forms database website](https://www.lmfdb.org/).
 
 Wiki
 ----
@@ -14,6 +14,7 @@ Development
 
 * [Getting Started](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md) -- cheat sheet for setting up lmfdb
 * [Development Guide](https://github.com/LMFDB/lmfdb/blob/master/Development.md) -- organizing development
+* [Style Guide](https://github.com/LMFDB/lmfdb/blob/master/StyleGuide.md) -- how things on LMFDB pages should be styled to give the web site a coherent look
 
 Guidelines
 ----------

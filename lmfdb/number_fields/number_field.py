@@ -869,7 +869,7 @@ class NFDownloader(Downloader):
             {
                 "sage": 'poly = ZZx(out["coeffs"])',
                 "magma": 'poly := ZZx!(out`coeffs);',
-                "gp": 'poly = Polrev(mapget(out, "coeffs"))',
+                "gp": 'poly = Polrev(mapget(out, "coeffs"));',
             }
         ),
         "field": (
@@ -877,7 +877,7 @@ class NFDownloader(Downloader):
             {
                 "sage": 'field.<a> = NumberField(poly)',
                 "magma": 'field<a> := NumberField(poly);',
-                "gp": 'field = nfinit(poly)',
+                "gp": 'field = nfinit(poly);',
             }
         ),
     }
@@ -917,6 +917,7 @@ def number_field_search(info, query):
     parse_posints(info,query,'index')
     parse_primes(info,query,'inessentialp',name='Inessential primes',
                  qfield='inessentialp', mode=info.get('inessential_quantifier'))
+    parse_bool(info,query,'is_minimal_sibling')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1165,6 +1166,10 @@ class NFSearchArray(SearchArray):
             name="cm_field",
             label="CM field",
             knowl="nf.cm_field")
+        is_minimal_sibling = YesNoBox(
+            name="is_minimal_sibling",
+            label="Minimal sibling",
+            knowl="nf.minimal_sibling")
         gal = TextBox(
             name="galois_group",
             label="Galois group",
@@ -1173,7 +1178,7 @@ class NFSearchArray(SearchArray):
             example_span="[8,3], 8.3, C5 or 7T2")
         is_galois = YesNoBox(
             name="is_galois",
-            label="Is Galois",
+            label="Galois",
             knowl="nf.galois_group")
         regulator = TextBox(
             name="regulator",
@@ -1255,10 +1260,10 @@ class NFSearchArray(SearchArray):
             [regulator, subfield],
             [completion, monogenic],
             [index, inessentialprimes],
-            [count]]
+            [count, is_minimal_sibling]]
 
         self.refine_array = [
             [degree, signature, class_number, class_group, cm_field],
             [num_ram, ram_primes, ur_primes, gal, is_galois],
             [discriminant, rd, regulator, subfield, completion],
-            [monogenic, index, inessentialprimes]]
+            [is_minimal_sibling, monogenic, index, inessentialprimes]]

@@ -325,7 +325,7 @@ def render_group_webpage(args):
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         data['nilpotency'] = '$%s$' % data['nilpotency']
         if data['nilpotency'] == '$-1$':
-            data['nilpotency'] += ' (not nilpotent)'
+            data['nilpotency'] = ' not nilpotent'
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
