@@ -758,6 +758,9 @@ def auto_gens(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if gp.live() or gp.aut_gens is None:
+        flash_error("The generators for the automorphism group of the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "auto_gens_page.html",
         gp=gp,
@@ -781,6 +784,12 @@ def char_table(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if gp.live():
+        flash_error("The complex characters for the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
+    if not gp.complex_characters_known:
+        flash_error("The complex characters for the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -814,6 +823,9 @@ def Qchar_table(label):
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
+    if not gp.rational_characters_known:
+        flash_error("The rational characters for the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
@@ -1349,6 +1361,7 @@ def diagram_js_string(gp, only=None):
 
 # Writes individual pages
 def render_abstract_group(label, data=None):
+
     info = {}
     if data is None:
         label = clean_input(label)
@@ -1569,9 +1582,6 @@ def shortsubinfo(ambient, short_label):
             '<tr><td></td><td style="text-align: right"><a href="%s">$%s$ abstract group homepage</a></td></tr>'
             % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
         )
-
-    # print ""
-    # print (ans)
     ans += "</table>"
     return ans
 
@@ -2278,10 +2288,10 @@ class SubgroupSearchArray(SearchArray):
         #    name="stem",
         #    label="Stem",
         #    knowl="group.stem_extension")
-        hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall")
-        sylow = YesNoBox(
-            name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup"
-        )
+        #hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall")
+        #sylow = YesNoBox(
+        #    name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup"
+        #)
         subgroup = TextBox(
             name="subgroup",
             label="Subgroup label",
@@ -2324,7 +2334,7 @@ class SubgroupSearchArray(SearchArray):
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
             [normal, characteristic, perfect, maximal, central, nontrivproper],
-            [ambient, ambient_order, direct, split, hall, sylow],
+            [ambient, ambient_order, direct, split],#, hall, sylow],
             [
                 quotient,
                 quotient_order,
@@ -2481,7 +2491,7 @@ def cc_data(gp, label, typ="complex"):
         else:
             gp_value = WebAbstractGroup(gp)
             if gp_value.representations.get("Lie"):
-                if gp_value.representations["Lie"][0]["family"][0] == "P":  #Problem with projective lie groups
+                if gp_value.representations["Lie"][0]["family"][0] == "P" and gp_value.order < 2000:  #Problem with projective lie groups of order <2000
                     pass
                 else:
                     repn = gp_value.decode(wacc.representative, as_str=True)

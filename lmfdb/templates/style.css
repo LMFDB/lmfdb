@@ -727,7 +727,7 @@ table.ntdata {
   margin-bottom: 15px;
 }
 table.ntdata thead th {
-  background: {{ color.table_ntdata_background }};
+  background-color: {{ color.table_ntdata_background }};
 }
 table.ntdata > thead {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
@@ -2276,6 +2276,38 @@ div.table-scroll-wrapper thead > tr:last-child > th {
     position: sticky; left: 0; top: 0;
     z-index:3;
 }
+
+/* Automate embedding-wrap, sticky-col and border-right for scrollable tables with one sticky header column */
+div.table-scroll-wrapper table.onesticky :is(th:first-child, td:first-child) {
+    margin: 0;
+    padding: 0;
+    position: -webkit-sticky; left: 0;
+    position: sticky; left: 0;
+    z-index:2;
+    background-clip: padding-box;
+}
+div.table-scroll-wrapper table.onesticky tr:nth-child(even) :is(th:first-child, td:first-child) {
+  background-color: {{color.table_ntdata_background_2}};
+}
+div.table-scroll-wrapper table.onesticky tr:nth-child(odd) :is(th:first-child, td:first-child) {
+  background-color: white;
+}
+div.table-scroll-wrapper table.onesticky thead > tr:last-child > th:first-child {
+  padding-bottom: 2px;
+  border-bottom: 2px solid {{ color.table_ntdata_border}};
+}
+
+/* :is doesn't work for pseudo-elements */
+div.table-scroll-wrapper table.onesticky th:first-child::after, div.table-scroll-wrapper table.onesticky td:first-child::after {
+    content:'';
+    position:absolute;
+    right: 0;
+    top: 0;
+    height:100%;
+    border-right: 2px solid {{ color.table_ntdata_border}};
+}
+
+
 table.nowrap td {
     white-space:nowrap;
 }
