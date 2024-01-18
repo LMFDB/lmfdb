@@ -2611,7 +2611,6 @@ class WebAbstractSubgroup(WebObj):
         else:
             self.sylow = self.hall = 0
 
-
     def spanclass(self):
         s = "subgp"
         if self.characteristic:
