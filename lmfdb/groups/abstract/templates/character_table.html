@@ -30,13 +30,14 @@ The row representing character {{speclab}} is highighted below. <br><br>
   <tr>
     <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
   </tr>
-  {% set dispv = gp.sparse_cyclotomic_to_latex %}
+  {% set dispv = info.dispv %}
+  {% set conv = info.conv %}
 
   {% if special_label %}
   {% for chtr in gp.characters %}
   
      {% if chtr['label'] == speclab %}
-     <tr bgcolor="lightblue">
+     <tr bgcolor= {{color}}>  
        {% else %}
      <tr>
        {% endif %}
@@ -44,7 +45,7 @@ The row representing character {{speclab}} is highighted below. <br><br>
       <td class="center">{{chtr.type()}}</td>
       {% set cond = chtr.cyclotomic_n %}
       {% for val in chtr['values'] %}
-        <td class="right">${{ dispv(cond, val) }}$</td>
+        <td class="right">{{ conv(dispv(cond, val)) | safe }}</td>
       {% endfor %}
      </tr>
      {% endfor %}
@@ -56,7 +57,7 @@ The row representing character {{speclab}} is highighted below. <br><br>
       <td class="center">{{chtr.type()}}</td>
       {% set cond = chtr.cyclotomic_n %}
       {% for val in chtr['values'] %}
-        <td class="right">${{ dispv(cond, val) }}$</td>
+      <td class="right">{{ conv(dispv(cond,val))|safe }}</td>
       {% endfor %}
      </tr>
      {% endfor %}

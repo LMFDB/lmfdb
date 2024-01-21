@@ -44,12 +44,14 @@ from lmfdb.utils import (
     pluralize,
     Downloader,
     pos_int_and_factor,
+    sparse_cyclotomic_to_latex
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol,LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup, ProcessedLinkCol
+from lmfdb.utils.search_columns import SearchColumns,LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup, ProcessedLinkCol
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
+from latex2mathml import converter
 from .web_groups import (
     WebAbstractCharacter,
     WebAbstractConjClass,
@@ -60,7 +62,8 @@ from .web_groups import (
     label_sortkey,
     primary_to_smith,
     abelian_gp_display,
-    abstract_group_display_knowl
+    abstract_group_display_knowl,
+#    field_knowl,
 )
 from .stats import GroupStats
 
@@ -162,6 +165,10 @@ def q_char(char):
     return char
 
 
+def convert_latex_mathml(latex_input):
+    return converter.convert(str(latex_input))
+
+
 def get_bread(tail=[]):
     base = [("Groups", url_for(".index")), ("Abstract", url_for(".index"))]
     if not isinstance(tail, list):
@@ -231,6 +238,8 @@ group_prop_implications = {
     "quasisimple": ["nab_perfect"],
     "nab_perfect": ["nonsolvable"],
 }
+
+
 
 
 def get_group_prop_display(gp):
@@ -790,9 +799,11 @@ def char_table(label):
     if not gp.complex_characters_known:
         flash_error("The complex characters for the group with label %s have not been computed.", label)
         return redirect(url_for(".by_label", label=label))
+    info = {'conv': convert_latex_mathml, 'dispv': sparse_cyclotomic_to_latex}
     return render_template(
         "character_table_page.html",
         gp=gp,
+        info = info,
         special_label=False,  #needed to highlight searched char in other cases
         title="Character table for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
@@ -801,16 +812,21 @@ def char_table(label):
 
 @abstract_page.route("/char_table/<label>/<special_label>")
 def char_table2(label, special_label):
+    from lmfdb.app import add_colors   #need color for special label
+    color = add_colors()["color"]["col_main_ll"]
     label = clean_input(label)
     gp = WebAbstractGroup(label)
+    info = {'conv' : convert_latex_mathml, 'dispv' : sparse_cyclotomic_to_latex}
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     return render_template(
         "character_table_page.html",
         gp=gp,
+        info = info,
         speclab = special_label,
         special_label=True,
+        color = str(color),
         title="Character table for %s" % label,
         bread=get_bread([("Character table", " ")]),
     )
@@ -820,6 +836,7 @@ def char_table2(label, special_label):
 def Qchar_table(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
+    info = {'conv' : convert_latex_mathml}
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
@@ -829,6 +846,7 @@ def Qchar_table(label):
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
+        info=info,
         title="Rational character table for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
     )
@@ -837,8 +855,11 @@ def Qchar_table(label):
 
 @abstract_page.route("/Qchar_table/<label>/<special_label>")
 def Qchar_table2(label,special_label):
+    from lmfdb.app import add_colors   #need color for special label
+    color = add_colors()["color"]["col_main_ll"]
     label = clean_input(label)
     gp = WebAbstractGroup(label)
+    info = {'conv' : convert_latex_mathml, 'dispv': sparse_cyclotomic_to_latex}
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
@@ -846,6 +867,8 @@ def Qchar_table2(label,special_label):
         "rational_character_table_page.html",
         gp=gp,
         speclab = special_label,
+        info = info,
+        color = str(color),
         special_label=True,
         title="Rational character table for $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
@@ -1010,6 +1033,13 @@ def get_qchar_url(lab):
     splabel= lab.split(".")
     cclabel = ".".join((splabel[0],splabel[1]))
     return url_for(".Qchar_table2", label=cclabel, special_label=lab)
+
+
+def field_knowl(fld):
+    from lmfdb.number_fields.web_number_field import WebNumberField
+    field = [int(n) for n in fld]
+    wnf = WebNumberField.from_coeffs(field)
+    return wnf.knowl()
 
 
 class Group_download(Downloader):
@@ -1229,20 +1259,12 @@ def subgroup_search(info, query={}):
     parse_regex_restricted(info, query, "ambient", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "quotient", regex=abstract_group_label_regex)
 
-
-#JP HERE
-
 def print_type(val):
     if val == 0:
         return "C"
     elif val >0:
         return "R"
     return "S"
-
-def trans_gp(val):
-    if val == None:
-        return ""
-    return "T".join((str(val[0]),str(val[1])))
 
 #input a string with C, R, S and replace with -1, 1, 0
 def indicator_type(strg):
@@ -1252,19 +1274,21 @@ def indicator_type(strg):
     return strg
 
 
-#FIX KNOWLS
 complex_char_columns = SearchColumns([
     LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url, th_class=" border-right", td_class=" border-right"),
     MathCol("dim", "group.representation.complex_char_deg", "Degree"),
     ProcessedCol("indicator","group.representation.type","Type",print_type),
     CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
-    ProcessedLinkCol("label","group.representation.rational_character","$\Q$-character", get_qchar_url, q_char),
+    ProcessedCol("field", "group.representation.cyclotomic_n", "Field of Traces", field_knowl),
+    ProcessedLinkCol("label","group.representation.rational_character",r"$\Q$-character", get_qchar_url, q_char),
     LinkCol("group","group.name","Group",get_url),
-  #  LinkCol("image", "group.representation.image", "Image", get_url, default=False),
-    LinkCol("kernel", "group.representation.kernel", "Kernel", get_sub_url, default=False),
-    LinkCol("center", "group.representation.center", "Center", get_sub_url, default=False),
-    ProcessedCol("nt","group.representation.min_perm_rep", "Min. Perm. Rep.", trans_gp) 
+    LinkCol("image_isoclass", "group.representation.image", "Image", get_url, default=False),
+    MathCol("image_order","group.representation.image","Image Order"),
+    MathCol("kernel_order", "group.representation.kernel", "Kernel Order"),
+    ProcessedCol("nt","group.representation.min_perm_rep", "Min. Perm. Rep.", trans_gp),
+    MathCol("center_order", "group.representation.center", "Center Order", default = False),
+    MathCol("center_index", "group.representation.center", "Center Index", default = False),
     ])
 
 
@@ -1273,29 +1297,32 @@ class Complex_char_download(Downloader):
 
 @search_wrap(
     table=db.gps_char,
-    title="Complex Character search results",
-    err_title="Complex Character search input error",
+    title="Complex character search results",
+    err_title="Complex character search input error",
     columns=complex_char_columns,
     shortcuts={"download": Complex_char_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
-    url_for_label=url_for_chartable_label,  #JP CHANGED
+    url_for_label=url_for_chartable_label, 
 )
 
 def complex_char_search(info, query={}):
     info["search_type"] = "ComplexCharacters"
-    print("HERE INFO: ", info, "\n")
     if 'indicator' in info:
         info['indicator'] = indicator_type(info['indicator'])
     parse_ints(info, query, "dim")
     parse_ints(info, query, "indicator")
     parse_ints(info, query, "cyclotomic_n")
     parse_bool(info, query, "faithful")
+    parse_ints(info, query, "image_order")
+    parse_ints(info, query, "center_order")
+    parse_ints(info, query, "center_index")
+    parse_ints(info, query, "kernel_order")
     parse_bracketed_posints(info,query,"nt",split=False,keepbrackets=True, allow0=False)
     parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "image", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
+#    parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, "image_isoclass", regex=abstract_group_label_regex)
+#    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
  
  
 def factor_latex(n):
@@ -1375,7 +1402,8 @@ def render_abstract_group(label, data=None):
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
     info['pos_int_and_factor'] = pos_int_and_factor
-
+    info['conv'] = convert_latex_mathml
+    info['dispv'] = sparse_cyclotomic_to_latex
     if gp.live():
         title = f"Abstract group {label}"
         friends = []
@@ -1408,13 +1436,20 @@ def render_abstract_group(label, data=None):
         quot_url = (
             "/Groups/Abstract/?quotient=" + label + "&search_type=Subgroups"
         )
-
         friends = [
             ("Subgroups", sbgp_url),
             ("Extensions", quot_url),
             ("Supergroups", sbgp_of_url),
         ]
 
+        if gp.complex_characters_known:
+            char_url = (
+                "/Groups/Abstract/?group=" + label + "&search_type=ComplexCharacters"
+                )
+            friends += [("Complex characters", char_url)]
+        
+
+        
         # "external" friends
         if gap_group_label_regex.fullmatch(label):
             gap_ints = [int(y) for y in label.split(".")]
@@ -2351,7 +2386,7 @@ class SubgroupSearchArray(SearchArray):
         else:
             return [("Subgroups", "Search again"), ("RandomSubgroup", "Random subgroup")]
 
-#JP-clean up knowls
+
 class ComplexCharSearchArray(SearchArray):
 #    null_column_explanations = { # No need to display warnings for these
 #        "quotient": False,
@@ -2361,8 +2396,8 @@ class ComplexCharSearchArray(SearchArray):
 #        "direct": False,
 #        "split": False,
 #    }
-    sorts = [("", "group", ['group_order','label', 'dim','cyclotomic_n']),
-             ("dim", "degree", ['dim', 'group_order','label','cyclotomic_n'])]
+    sorts = [("", "group", ['group_order','group_counter','label']),
+             ("dim", "degree", ['dim', 'group_order','group_counter','label'])]
     def __init__(self):
         faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
         dim = TextBox(
@@ -2391,23 +2426,38 @@ class ComplexCharSearchArray(SearchArray):
             knowl="group.name",
             example="128.207",
         )
-        image = TextBox(
-            name="image",
+        image_isoclass = TextBox(
+            name="image_isoclass",
             label="Image",
             knowl= "group.representation.image",
-            example="subgroup label?",
+            example="12.4",
         )
-        kernel = TextBox(
-            name="kernel",
-            label="Kernel",
+        image_order = TextBox(
+            name="image_order",
+            label="Image Order (Kernel Index)",
+            knowl= "group.representation.image",
+            example = "4",
+            example_span="4, or a range like 3..5",
+        )
+        kernel_order = TextBox(
+            name="kernel_order",
+            label="Kernel Order",
             knowl= "group.representation.kernel",
-            example="subgroup label?",
+            example="4, or a range like 3..5",
         )
-        center = TextBox(
-            name="center",
-            label="Center",
+        center_order = TextBox(
+            name="center_order",
+            label="Center Order",
             knowl="group.representation.center",
-            example="subgroup label?",
+            example="4",
+            example_span="4, or a range line 3..5",
+        )
+        center_index = TextBox(
+            name="center_index",
+            label="Center Index",
+            knowl="group.representation.center",
+            example="4",
+            example_span="4, or a range line 3..5",
         )
         nt = TextBox(
             name="nt",
@@ -2418,9 +2468,19 @@ class ComplexCharSearchArray(SearchArray):
 
         self.refine_array = [
             [dim, indicator, faithful,conductor],
-            [group, kernel, center,nt]
+            [group, image_isoclass, image_order, kernel_order],
+            [center_order, center_index, nt]
+            
         ]
+    def search_types(self, info):
+        if info is None:
+            return [("ComplexCharacters", "List of irreducible complex characters")]
+        else:
+            return [("ComplexCharacters", "Search again")]
 
+
+
+            
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
     # Note that, when called by knowl_cache from transitive_group.py,
@@ -2528,7 +2588,7 @@ def cchar_data(label):
     from lmfdb.number_fields.web_number_field import formatfield
     mychar = WebAbstractCharacter(label)
     gplabs = label.split(".")
-    gplabel = ".".join((gplabs[0],gplabs[1]))   #JP HERE 
+    gplabel = ".".join((gplabs[0],gplabs[1]))
     ans = "<h3>Complex character {}</h3>".format(label)
     ans += "<br>Degree: {}".format(mychar.dim)
     if mychar.faithful:
