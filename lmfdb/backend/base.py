@@ -252,7 +252,7 @@ class PostgresBase():
 
         - ``query`` -- an SQL Composable object, the SQL command to execute.
         - ``values`` -- values to substitute for %s in the query.  Quoting from the documentation
-            for psycopg2 (http://initd.org/psycopg/docs/usage.html#passing-parameters-to-sql-queries):
+            for psycopg2 (https://initd.org/psycopg/docs/usage.html#passing-parameters-to-sql-queries):
 
             Never, never, NEVER use Python string concatenation (+) or string parameters
             interpolation (%) to pass variables to a SQL query string. Not even at gunpoint.

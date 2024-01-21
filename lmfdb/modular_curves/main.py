@@ -37,6 +37,7 @@ from lmfdb.utils import (
     comma,
     proportioners,
     totaler,
+    key_for_numerically_sort
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
@@ -227,7 +228,7 @@ def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
 def url_for_RZB_label(label):
-    return "http://users.wfu.edu/rouseja/2adic/" + label + ".html"
+    return "https://users.wfu.edu/rouseja/2adic/" + label + ".html"
 
 def url_for_CP_label(label):
     genus = CP_LABEL_GENUS_RE.fullmatch(label)[1]
@@ -287,7 +288,7 @@ def modcurve_jump(info):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
         # Get list of all factors, lexicographically sorted
-        factors = sorted(sum(factors, []), key=lambda x:[int(i) for i in x.split(".")])
+        factors = sorted(sum(factors, []), key=key_for_numerically_sort)
         label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
@@ -402,7 +403,7 @@ class ModCurve_download(Downloader):
             {
                 "magma": 'subgroup := out`level eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(out`level))|out`generators>;',
                 "sage": 'subgroup = GL(2, Integers(out["level"])).subgroup(out["generators"])',
-                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")]',
+                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")];',
             }
         ),
     }

@@ -22,9 +22,12 @@
     </tr>
   {% endfor %}
 
+  {% if gp.has_nontrivial_schur_character %}
+    <tr><td></td><td>{{KNOWL('group.representation.schur_index', 'Schur')}}</td></tr>
+  {% endif %}
   {% for chtr in gp.rational_characters %}
     <tr>
-      <td> {{ chtr.display_knowl() | safe }}</td><td></td>
+      <td> {{ chtr.display_knowl() | safe }}</td><td class="center"> {% if chtr.schur_index != 1 %} {{chtr.schur_index}} {% endif %} </td> 
       {% for c in gp.conjugacy_class_divisions %}
         <td class="right">${{ chtr.qvalues[c.classes.0.counter - 1] }}$</td>
       {% endfor %}

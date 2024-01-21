@@ -833,7 +833,9 @@ class WebModCurve(WebObj):
     def rational_points_description(self):
         curve = self
         if curve.known_degree1_noncm_points or curve.pointless is False:
-            if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
+            if curve.genus == 1 and curve.rank is None:
+                desc = r'This modular curve is an elliptic curve, but the rank has not been computed'
+            elif curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
                     desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:

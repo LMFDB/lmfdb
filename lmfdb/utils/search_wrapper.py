@@ -3,6 +3,7 @@ from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
+from sage.misc.cachefunc import cached_function
 
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
@@ -317,7 +318,9 @@ class CountWrapper(Wrapper):
         )
         self.groupby = groupby
         if postprocess is None and overall is None:
-            overall = table.stats.column_counts(groupby)
+            @cached_function
+            def overall():
+                return table.stats.column_counts(groupby)
         self.overall = overall
 
     def __call__(self, info):
@@ -344,7 +347,7 @@ class CountWrapper(Wrapper):
                     for row in info["row_heads"]:
                         for col in info["col_heads"]:
                             if (row, col) not in res:
-                                if (row, col) in self.overall:
+                                if (row, col) in self.overall():
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None

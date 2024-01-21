@@ -1,14 +1,14 @@
 
-{% extends "base.html" %}
+{% extends "homepage.html" %}
 
-{% block body %}
+{% block content %}
 
-<br>
+
 
 <p>
-  &nbsp; Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns). <br>
+ Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns). <br>
 
-  {% if gp.element_repr_type == 'PC' %} &nbsp; The entries in the table are given as words on the generators in the presentation for this group.   {% endif %}
+{{gp.repr_strg(other_page=True) | safe}}<br>
 </p>
 
 
@@ -33,6 +33,16 @@
     </table>
 </p>
 
+{% endblock %}
 
 
+{# Hack to remove the sidebar and move main content over #}
+{% block sidebar %}
+<style>
+#main {
+  margin:  0px 0px 0px 0px;
+  padding: 0px 0px 0px 10px;
+  min-height:600px;
+}
+</style>
 {% endblock %}

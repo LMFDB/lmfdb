@@ -15,7 +15,7 @@ from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factoriz
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
-RZB_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+RZB_URL_PREFIX = "https://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
