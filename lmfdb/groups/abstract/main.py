@@ -1013,6 +1013,8 @@ def group_parse(info, query):
     parse_ints(info, query, "transitive_degree", "transitive_degree")
     parse_ints(info, query, "irrC_degree", "irrC_degree")
     parse_ints(info, query, "irrQ_degree", "irrQ_degree")
+    parse_ints(info, query, "linC_degree", "linC_degree")
+    parse_ints(info, query, "linQ_degree", "linQ_degree")
     parse_ints(info, query, "number_autjugacy_classes", "number_autjugacy_classes")
     parse_ints(info, query, "number_conjugacy_classes", "number_conjugacy_classes")
     parse_ints(info, query, "number_characteristic_subgroups", "number_characteristic_subgroups")
@@ -1848,15 +1850,31 @@ class GroupsSearchArray(SearchArray):
         irrC_degree = TextBox(
             name="irrC_degree",
             label=r"Minimal degree of $\C$-irrep",
-            knowl="group.min_complex_irrep_deg",
+            knowl="group.min_faithful_linear",
             example="3",
-            example_span="4, or a range like 3..5",
+            example_span="-1, 4, or a range like 3..5",
             advanced=True,
         )
         irrQ_degree = TextBox(
             name="irrQ_degree",
             label=r"Minimal degree of $\Q$-irrep",
-            knowl="group.min_rational_irrep_deg",
+            knowl="group.min_faithful_linear",
+            example="3",
+            example_span="-1, 4, or a range like 3..5",
+            advanced=True,
+        )
+        linC_degree = TextBox(
+            name="linC_degree",
+            label=r"Minimal degree of $\C$-rep",
+            knowl="group.min_faithful_linear",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True,
+        )
+        linQ_degree = TextBox(
+            name="linQ_degree",
+            label=r"Minimal degree of $\Q$-rep",
+            knowl="group.min_faithful_linear",
             example="3",
             example_span="4, or a range like 3..5",
             advanced=True,
@@ -2040,14 +2058,9 @@ class GroupsSearchArray(SearchArray):
             [simple, solvable],
             [transitive_degree, permutation_degree],
             [irrC_degree, irrQ_degree],
-            [
-                almost_simple,
-                derived_length,
-            ],
-            [
-                quasisimple,
-                supersolvable,
-            ],
+            [linC_degree, linQ_degree],
+            [almost_simple, derived_length],
+            [quasisimple, supersolvable],
             [outer_group, metabelian],
             [outer_order, metacyclic],
             [Agroup, monomial],
@@ -2067,7 +2080,7 @@ class GroupsSearchArray(SearchArray):
             [abelian, cyclic, solvable, simple],
             [perfect, direct_product, semidirect_product, wreath_product],
             [aut_group, aut_order, transitive_degree, permutation_degree],
-            [irrC_degree, irrQ_degree],
+            [irrC_degree, irrQ_degree, linC_degree, linQ_degree],
             [outer_group, outer_order, metabelian, metacyclic],
             [almost_simple, quasisimple, Agroup, Zgroup],
             [frattini_label, derived_length, rank, schur_multiplier],

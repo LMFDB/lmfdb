@@ -1373,6 +1373,38 @@ class WebAbstractGroup(WebObj):
         return any(chtr.schur_index > 1 for chtr in self.rational_characters)
 
     @lazy_attribute
+    def linear_degrees_table(self):
+        knowls = [("group.min_faithful_linear", "Irreducible"),
+                  ("group.min_faithful_linear", "Arbitrary")]
+        names = [["irrC_degree", "irrR_degree", "irrQ_dim"], ["linC_degree", "linR_degree", "linQ_dim"]]
+        data = [[getattr(self, c, None) for c in row] for row in names]
+        if all(all(c is None for c in row) for row in data):
+            return f"<p>{display_knowl('group.min_faithful_linear', 'Minimal degrees of linear representations')} for this group have not been computed</p>"
+        def display(c):
+            if c is None:
+                return "not computed"
+            elif c == -1:
+                return "none"
+            else:
+                return str(c)
+        table = "".join([f"  <tr>\n" +
+                         f"    <td>{display_knowl(knowl, disp)}</td>\n" +
+                         "".join([f"    <td>{display(c)}</td>\n" for c in row]) +
+                         f"  </tr>\n"
+                         for (knowl, disp), row in zip(knowls, data)])
+        table = fr"""<h3>{display_knowl('group.min_faithful_linear', 'Minimal degrees of faithful linear representations')}</h3>
+<table>
+  <tr>
+    <th></th>
+    <th>Over $\mathbb{{C}}$</th>
+    <th>Over $\mathbb{{R}}$</th>
+    <th>Over $\mathbb{{Q}}$</th>
+  </tr>
+{table}
+</table>"""
+        return table
+
+    @lazy_attribute
     def maximal_subgroup_of(self):
         # Could show up multiple times as non-conjugate maximal subgroups in the same ambient group
         # So we should eliminate duplicates from the following list
