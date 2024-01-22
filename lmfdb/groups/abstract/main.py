@@ -942,7 +942,7 @@ def trans_gp(val):
 def get_trans_url(label):
     if label is None:
         return ""
-    return get_url("galois_groups.by_label", label=trans_gp(label))
+    return url_for("galois_groups.by_label", label=trans_gp(label))
 
 def display_url(label, tex):
     if label is None:
@@ -1211,6 +1211,9 @@ def indicator_type(strg):
     strg = strg.replace("S","-1")
     return strg
 
+def char_to_sub(short_label, group):
+    full_label = f"{group}.{short_label}"
+    return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
 
 complex_char_columns = SearchColumns([
     LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url),
@@ -1223,8 +1226,10 @@ complex_char_columns = SearchColumns([
     LinkCol("group", "group.name", "Group", get_url),
     LinkCol("image_isoclass", "group.representation.image", "Image", get_url, default=False),
     MathCol("image_order", "group.representation.image", "Image Order"),
+    MultiProcessedCol("kernel", "group.representation.kernel", "Kernel", ["kernel", "group"], char_to_sub, download_col="kernel", default=False),
     MathCol("kernel_order", "group.representation.kernel", "Kernel Order"),
-    ProcessedCol("nt","group.representation.min_perm_rep", "Min. Perm. Rep.", trans_gp),
+    ProcessedLinkCol("nt", "group.representation.min_perm_rep", "Min. Perm. Rep.", get_trans_url, trans_gp),
+    MultiProcessedCol("center", "group.representation.center", "Center", ["center", "group"], char_to_sub, download_col="center", default=False),
     MathCol("center_order", "group.representation.center", "Center Order", default=False),
     MathCol("center_index", "group.representation.center", "Center Index", default=False),
 ])
