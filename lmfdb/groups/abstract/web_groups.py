@@ -1380,6 +1380,7 @@ class WebAbstractGroup(WebObj):
         data = [[getattr(self, c, None) for c in row] for row in names]
         if all(all(c is None for c in row) for row in data):
             return f"<p>{display_knowl('group.min_faithful_linear', 'Minimal degrees of linear representations')} for this group have not been computed</p>"
+
         def display(c):
             if c is None:
                 return "not computed"
@@ -1387,10 +1388,10 @@ class WebAbstractGroup(WebObj):
                 return "none"
             else:
                 return str(c)
-        table = "".join(['  <tr>\n' +
-                         f'    <td class="border-right">{display_knowl(knowl, disp)}</td>\n' +
-                         ''.join([f'    <td>{display(c)}</td>\n' for c in row]) +
-                         '  </tr>\n'
+        table = "".join(['  <tr>\n'
+                         + f'    <td class="border-right">{display_knowl(knowl, disp)}</td>\n'
+                         + ''.join([f'    <td>{display(c)}</td>\n' for c in row])
+                         + '  </tr>\n'
                          for (knowl, disp), row in zip(knowls, data)])
         table = fr"""<h3>{display_knowl('group.min_faithful_linear', 'Minimal degrees of faithful linear representations')}</h3>
 <table class="ntdata centered nobottom">
