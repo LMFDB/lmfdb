@@ -228,7 +228,7 @@ def url_for_modcurve_label(label):
     return url_for(".by_label", label=label)
 
 def url_for_RZB_label(label):
-    return "http://users.wfu.edu/rouseja/2adic/" + label + ".html"
+    return "https://users.wfu.edu/rouseja/2adic/" + label + ".html"
 
 def url_for_CP_label(label):
     genus = CP_LABEL_GENUS_RE.fullmatch(label)[1]
@@ -403,7 +403,7 @@ class ModCurve_download(Downloader):
             {
                 "magma": 'subgroup := out`level eq 1 select sub<GL(2,Integers())|> else sub<GL(2,Integers(out`level))|out`generators>;',
                 "sage": 'subgroup = GL(2, Integers(out["level"])).subgroup(out["generators"])',
-                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")]',
+                "gp": 'subgroup = [Mod(Mat([a[1],a[2];a[3],a[4]]),mapget(out, "level"))|a<-mapget(out, "generators")];',
             }
         ),
     }

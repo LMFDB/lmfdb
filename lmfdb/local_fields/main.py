@@ -285,7 +285,7 @@ class LF_download(Downloader):
             {
                 "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
                 "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
-                "gp": 'field = Polrev(mapget(out, "coeffs"))',
+                "gp": 'field = Polrev(mapget(out, "coeffs"));',
             }
         ),
     }

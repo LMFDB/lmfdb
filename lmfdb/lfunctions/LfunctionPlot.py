@@ -12,8 +12,8 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 
 
 def svgBegin():
-    return ("<svg  xmlns='http://www.w3.org/2000/svg'"
-            " xmlns:xlink='http://www.w3.org/1999/xlink'>\n")
+    return ("<svg  xmlns='https://www.w3.org/2000/svg'"
+            " xmlns:xlink='https://www.w3.org/1999/xlink'>\n")
 
 
 def svgEnd():
@@ -25,7 +25,7 @@ def svgEnd():
 
 # ============
 # url to add all degree-3, level-4 dots on one plot
-#   http://localhost:37777/L/browseGraph?group=GL3&level=4
+#   https://localhost:37777/L/browseGraph?group=GL3&level=4
 # =========
 
 
@@ -187,7 +187,7 @@ def getOneGraphHtml(gls):
             + str(graphInfo['width'])
             + "' height='" + str(graphInfo['height'])
             + "' type='image/svg+xml' "
-            + "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+            + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
@@ -438,7 +438,7 @@ def getOneGraphHtmlHolo(condmax):
         pic = (url_for('.browseGraphHoloNew', **{'condmax': condmax}), 1010, 600)
     logger.debug(pic[0])
     ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic
-           + "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+           + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)

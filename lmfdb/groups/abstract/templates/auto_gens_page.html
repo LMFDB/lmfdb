@@ -6,9 +6,9 @@
 
 
 <p>
-  &nbsp; Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns). <br>
+ Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns). <br>
 
-  {% if gp.element_repr_type == 'PC' %} &nbsp; The entries in the table are given as words on the generators in the presentation for this group.   {% endif %}
+{{gp.repr_strg(other_page=True) | safe}}<br>
 </p>
 
 

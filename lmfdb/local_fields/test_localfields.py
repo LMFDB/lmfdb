@@ -40,3 +40,23 @@ class LocalFieldTest(LmfdbTest):
     def test_underlying_data(self):
         page = self.tc.get('/padicField/11.6.4.2').get_data(as_text=True)
         assert 'Underlying data' in page and 'data/11.6.4.2' in page
+
+    def test_search_download(self):
+        page = self.tc.get('/padicField/?Submit=gp&download=1&query=%7B%27p%27%3A+2%2C+%27n%27%3A+2%7D&n=2&p=2').get_data(as_text=True)
+        assert '''columns = ["label", "coeffs", "p", "e", "f", "c", "gal", "slopes"];
+data = {[
+["2.2.0.1", [1, 1, 1], 2, 1, 2, 0, [2, 1], [[], 1, 2]],
+["2.2.2.1", [2, 2, 1], 2, 2, 1, 2, [2, 1], [[2], 1, 1]],
+["2.2.2.2", [6, 2, 1], 2, 2, 1, 2, [2, 1], [[2], 1, 1]],
+["2.2.3.1", [2, 4, 1], 2, 2, 1, 3, [2, 1], [[3], 1, 1]],
+["2.2.3.2", [10, 4, 1], 2, 2, 1, 3, [2, 1], [[3], 1, 1]],
+["2.2.3.3", [2, 0, 1], 2, 2, 1, 3, [2, 1], [[3], 1, 1]],
+["2.2.3.4", [10, 0, 1], 2, 2, 1, 3, [2, 1], [[3], 1, 1]]
+]};
+
+create_record(row) =
+{
+    out = Map(["label",row[1];"coeffs",row[2];"p",row[3];"e",row[4];"f",row[5];"c",row[6];"gal",row[7];"slopes",row[8]]);
+    field = Polrev(mapget(out, "coeffs"));
+    mapput(~out, "field", field);
+    return(out);''' in page
