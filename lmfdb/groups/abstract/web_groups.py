@@ -28,7 +28,6 @@ from sage.misc.cachefunc import cached_function, cached_method
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
-#    sparse_cyclotomic_to_latex,
     to_ordinal,
     web_latex,
     letters2num,
@@ -1701,7 +1700,6 @@ class WebAbstractGroup(WebObj):
                     s += var_name(i)
                 elif c != 0:
                     s += "%s^{%s}" % (var_name(i), c)
-            print("c and s", c, s)
             return s
         else:
             return self.pcgs.PcElementByExponents(vec)
@@ -2395,11 +2393,6 @@ class WebAbstractGroup(WebObj):
             "ambient", {"quotient": self.label, "minimal_normal": True}, record=False
         )
 
-#    @staticmethod
-#    def sparse_cyclotomic_to_latex(n, dat):
-        # The indirection is because we want to make this a staticmethod
-#        return sparse_cyclotomic_to_latex(n, dat)
-
     def image(self):
         if self.cc_stats is not None and self.number_conjugacy_classes <= 2000:
             circles = []
@@ -2964,7 +2957,6 @@ class WebAbstractCharacter(WebObj):
         if not name:
             name = label
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cchar_data&args={label}">{name}</a>'
-
 
 class WebAbstractRationalCharacter(WebObj):
     table = db.gps_qchar
