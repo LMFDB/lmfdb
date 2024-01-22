@@ -1387,19 +1387,21 @@ class WebAbstractGroup(WebObj):
                 return "none"
             else:
                 return str(c)
-        table = "".join([f"  <tr>\n" +
-                         f"    <td>{display_knowl(knowl, disp)}</td>\n" +
-                         "".join([f"    <td>{display(c)}</td>\n" for c in row]) +
-                         f"  </tr>\n"
+        table = "".join(['  <tr>\n' +
+                         f'    <td class="border-right">{display_knowl(knowl, disp)}</td>\n' +
+                         ''.join([f'    <td>{display(c)}</td>\n' for c in row]) +
+                         '  </tr>\n'
                          for (knowl, disp), row in zip(knowls, data)])
         table = fr"""<h3>{display_knowl('group.min_faithful_linear', 'Minimal degrees of faithful linear representations')}</h3>
-<table>
-  <tr>
-    <th></th>
-    <th>Over $\mathbb{{C}}$</th>
-    <th>Over $\mathbb{{R}}$</th>
-    <th>Over $\mathbb{{Q}}$</th>
-  </tr>
+<table class="ntdata centered nobottom">
+  <thead>
+    <tr>
+      <th class="border-right"></th>
+      <th>Over $\mathbb{{C}}$</th>
+      <th>Over $\mathbb{{R}}$</th>
+      <th>Over $\mathbb{{Q}}$</th>
+    </tr>
+  </thead>
 {table}
 </table>"""
         return table
