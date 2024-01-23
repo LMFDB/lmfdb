@@ -789,7 +789,7 @@ def char_table(label):
         return redirect(url_for(".by_label", label=label))
     if "char_highlight" in info and info["char_highlight"] not in [chtr.label for chtr in gp.characters]:
         flash_error(f"There is no character of {label} with label {info['char_highlight']}.")
-        return redirect(url_for(".by_label", label=label))
+        del info["char_highlight"]
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -812,7 +812,7 @@ def Qchar_table(label):
         return redirect(url_for(".by_label", label=label))
     if "char_highlight" in info and info["char_highlight"] not in [chtr.label for chtr in gp.rational_characters]:
         flash_error(f"There is no rational character of {label} with label {info['char_highlight']}.")
-        return redirect(url_for(".by_label", label=label))
+        del info["char_highlight"]
     return render_template(
         "rational_character_table_page.html",
         gp=gp,
