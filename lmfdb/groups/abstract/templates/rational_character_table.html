@@ -37,7 +37,7 @@
   {% endif %}
 
   {% for chtr in gp.rational_characters %}
-    {% if chtr['label'] == info.char_highlight %}
+    {% if chtr.label == info.char_highlight %}
       <tr class="highlighted">
     {% else %}
       <tr>

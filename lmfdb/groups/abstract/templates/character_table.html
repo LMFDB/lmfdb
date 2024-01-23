@@ -34,7 +34,7 @@
   {% set conv = info.conv %}
 
   {% for chtr in gp.characters %}
-    {% if chtr['label'] == info.char_highlight %}
+    {% if chtr.label == info.char_highlight %}
       <tr class="highlighted">
     {% else %}
       <tr>
@@ -42,7 +42,7 @@
     <td> {{ chtr.display_knowl() | safe }}</td>
     <td class="center">{{chtr.type()}}</td>
     {% set cond = chtr.cyclotomic_n %}
-    {% for val in chtr['values'] %}
+    {% for val in chtr.values %}
       <td class="right">{{ conv(dispv(cond, val)) | safe }}</td>
     {% endfor %}
     </tr>

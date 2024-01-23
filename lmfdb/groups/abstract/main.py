@@ -100,7 +100,6 @@ gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 abstract_group_label_regex = re.compile(r"^(\d+)\.((\d+)|[a-z]+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
-
 def yesno(val):
     return "yes" if val else "no"
 
@@ -788,6 +787,9 @@ def char_table(label):
     if not gp.complex_characters_known:
         flash_error("The complex characters for the group with label %s have not been computed.", label)
         return redirect(url_for(".by_label", label=label))
+    if "char_highlight" in info and info["char_highlight"] not in [chtr.label for chtr in gp.characters]:
+        flash_error(f"There is no character of {label} with label {info['char_highlight']}.")
+        return redirect(url_for(".by_label", label=label))
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -807,6 +809,9 @@ def Qchar_table(label):
         return redirect(url_for(".index"))
     if not gp.rational_characters_known:
         flash_error("The rational characters for the group with label %s have not been computed.", label)
+        return redirect(url_for(".by_label", label=label))
+    if "char_highlight" in info and info["char_highlight"] not in [chtr.label for chtr in gp.rational_characters]:
+        flash_error(f"There is no rational character of {label} with label {info['char_highlight']}.")
         return redirect(url_for(".by_label", label=label))
     return render_template(
         "rational_character_table_page.html",
