@@ -552,4 +552,21 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?minimal_normal=no&search_type=Subgroups", "2.1.1.a1.a1")
 
     def test_character_search(self):
-        
+        r"""
+        Check that complex character search works
+        """
+        self.check_args("/Groups/Abstract/?dim=3&search_type=ComplexCharacters", [
+            "21.1.3a2", # character of C7:C3
+            "4.0.2194.1", # character values for several characters of 39.1
+        ])
+        self.check_args("/Groups/Abstract/?dim=12&faithful=yes&search_type=ComplexCharacters", "384.592.12a1")
+        self.check_args("/Groups/Abstract/?dim=13&cyclotomic_n=39&search_type=ComplexCharacters", ["4563.a.13b18", "351.a1.a1"]) # character label, center
+        self.check_args("/Groups/Abstract/?image_isoclass=12.4&kernel_order=6&search_type=ComplexCharacters", "72.21.2d")
+        self.check_args("/Groups/Abstract/?faithful=yes&center_order=144&search_type=ComplexCharacters", "576.176.2c1")
+
+    def test_highlighted_character(self):
+        r"""
+        Check that character links work
+        """
+        self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highighted below.")
+        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a")
