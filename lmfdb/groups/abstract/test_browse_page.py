@@ -557,7 +557,7 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?dim=3&search_type=ComplexCharacters", [
             "21.1.3a2", # character of C7:C3
-            "4.0.2194.1", # character values for several characters of 39.1
+            "4.0.2197.1", # character values for several characters of 39.1
         ])
         self.check_args("/Groups/Abstract/?dim=12&faithful=yes&search_type=ComplexCharacters", "384.592.12a1")
         self.check_args("/Groups/Abstract/?dim=13&cyclotomic_n=39&search_type=ComplexCharacters", ["4563.a.13b18", "351.a1.a1"]) # character label, center
@@ -569,4 +569,4 @@ class AbGpsHomeTest(LmfdbTest):
         Check that character links work
         """
         self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highighted below.")
-        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a")
+        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highighted below.")

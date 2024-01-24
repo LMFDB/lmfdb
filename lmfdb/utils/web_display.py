@@ -848,7 +848,11 @@ def sparse_cyclotomic_to_mathml(n, dat):
     return f'<math display="inline"><mrow>{ans}</mrow></math>'
 
 def integer_to_mathml(n):
-    return f'<math display="inline"><mrow><mn>{n}</mn></mrow></math>'
+    if n >= 0:
+        n = f"<mn>{n}</mn>"
+    else:
+        n = f"<mo>&#x02212;</mo><mn>{-n}</mn>"
+    return f'<math display="inline"><mrow>{n}</mrow></math>'
 
 def dispZmat(mat):
     r""" Display a matrix with integer entries
