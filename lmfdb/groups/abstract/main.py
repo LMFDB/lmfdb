@@ -1265,7 +1265,7 @@ def complex_char_search(info, query={}):
     parse_ints(info, query, "center_order")
     parse_ints(info, query, "center_index")
     parse_ints(info, query, "kernel_order")
-    parse_bracketed_posints(info,query,"nt",split=False,keepbrackets=True, allow0=False)
+    #parse_bracketed_posints(info,query,"nt",split=False,keepbrackets=True, allow0=False)
     parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
 #    parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "image_isoclass", regex=abstract_group_label_regex)
@@ -2392,17 +2392,17 @@ class ComplexCharSearchArray(SearchArray):
             example="4",
             example_span="4, or a range line 3..5",
         )
-        nt = TextBox(
-            name="nt",
-            label="Minimum Perm. Rep.",
-            knowl="group.representation.min_perm_rep",
-            example="[4,2]",
-        )
+        #nt = TextBox(
+        #    name="nt",
+        #    label="Minimum Perm. Rep.",
+        #    knowl="group.representation.min_perm_rep",
+        #    example="[4,2]",
+        #)
 
         self.refine_array = [
             [dim, indicator, faithful,conductor],
             [group, image_isoclass, image_order, kernel_order],
-            [center_order, center_index, nt]
+            [center_order, center_index] #, nt]
 
         ]
     def search_types(self, info):
