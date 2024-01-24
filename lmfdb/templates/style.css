@@ -763,6 +763,9 @@ table.ntdata > thead > tr:first-child {
 table.ntdata > tbody > tr:last-child {
     border-bottom:  2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata.nobottom > tbody > tr:last-child {
+    border-bottom:  0px;
+}
 
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,
