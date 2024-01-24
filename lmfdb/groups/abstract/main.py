@@ -44,14 +44,14 @@ from lmfdb.utils import (
     pluralize,
     Downloader,
     pos_int_and_factor,
-    sparse_cyclotomic_to_latex
+    sparse_cyclotomic_to_mathml,
+    integer_to_mathml,
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns,LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup, ProcessedLinkCol
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
-from latex2mathml import converter
 from .web_groups import (
     WebAbstractCharacter,
     WebAbstractConjClass,
@@ -157,10 +157,6 @@ def label_is_valid(lab):
 #input string of complex character label and return rational character label
 def q_char(char):
     return char.rstrip(digits)
-
-
-def convert_latex_mathml(latex_input):
-    return converter.convert(str(latex_input))
 
 
 def get_bread(tail=[]):
@@ -775,8 +771,7 @@ def by_subgroup_label(label):
 def char_table(label):
     label = clean_input(label)
     info = to_dict(request.args,
-                   conv=convert_latex_mathml,
-                   dispv=sparse_cyclotomic_to_latex)
+                   dispv=sparse_cyclotomic_to_mathml)
     gp = WebAbstractGroup(label)
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
@@ -794,7 +789,7 @@ def char_table(label):
         "character_table_page.html",
         gp=gp,
         info=info,
-        title="Character table for $%s$" % gp.tex_name,
+        title=f"Character table for ${gp.tex_name}$",
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
     )
 
@@ -802,7 +797,7 @@ def char_table(label):
 @abstract_page.route("/Qchar_table/<label>")
 def Qchar_table(label):
     label = clean_input(label)
-    info = to_dict(request.args, conv=convert_latex_mathml)
+    info = to_dict(request.args, conv=integer_to_mathml)
     gp = WebAbstractGroup(label)
     if gp.is_null():
         flash_error("No group with label %s was found in the database.", label)
@@ -1362,8 +1357,8 @@ def render_abstract_group(label, data=None):
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
     info['pos_int_and_factor'] = pos_int_and_factor
-    info['conv'] = convert_latex_mathml
-    info['dispv'] = sparse_cyclotomic_to_latex
+    info['conv'] = integer_to_mathml
+    info['dispv'] = sparse_cyclotomic_to_mathml
     if gp.live():
         title = f"Abstract group {label}"
         friends = []

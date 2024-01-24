@@ -31,7 +31,6 @@
     <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
   </tr>
   {% set dispv = info.dispv %}
-  {% set conv = info.conv %}
 
   {% for chtr in gp.characters %}
     {% if chtr.label == info.char_highlight %}
@@ -43,7 +42,7 @@
     <td class="center">{{chtr.type()}}</td>
     {% set cond = chtr.cyclotomic_n %}
     {% for val in chtr.values %}
-      <td class="right">{{ conv(dispv(cond, val)) | safe }}</td>
+      <td class="right">{{ dispv(cond, val) | safe }}</td>
     {% endfor %}
     </tr>
   {% endfor %}

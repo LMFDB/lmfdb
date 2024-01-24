@@ -789,11 +789,66 @@ def sparse_cyclotomic_to_latex(n, dat):
             ans += '-'  + zpart
         else:
             ans += '{:+d}'.format(p[0])  + zpart
-    ans= re.compile(r'^\+').sub('', ans)
+    ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
 
+def sparse_cyclotomic_to_mathml(n, dat):
+    r"""
+    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
+    and return sum_{j=1}^k cj zeta_n^ej in mathml form as it is given
+    (converting to sage will rewrite the element in terms of a basis)
+    """
+    dat.sort(key=lambda p: p[1])
+    minus = "<mo>&#x02212;</mo>"
+    plus = "<mo>&#x0002B;</mo>"
+    zeta = "<mi>&#x003B6;</mi>"
+    if n < 10:
+        n = f"<mn>{n}</mn>"
+    else:
+        n = f"<mrow><mn>{n}</mn></mrow>"
+    def zetapow(k):
+        if k == 0:
+            return "<mn>1</mn>"
+        if k == 1:
+            return f"<msub>{zeta}{n}</msub>"
+        if 1 < k < 10:
+            return f"<msubsup>{zeta}{n}<mn>{k}</mn></msubsup>"
+        if k < 0:
+            return f"<msubsup>{zeta}{n}<mrow>{minus}<mn>{-k}</mn></mrow></msubsup>"
+        return f"<msubsup>{zeta}{n}<mrow><mn>{k}</mn></mrow></msubsup>"
+    ans = ''
+    for c, e in dat:
+        if c == 0:
+            continue
+        if e == 0:
+            if c == 1 or c == -1:
+                zpart = "<mn>1</mn>"
+            else:
+                zpart = ""
+        else:
+            zpart = zetapow(e)
+
+        # Now the coefficient
+        if c == 1:
+            ans += plus + zpart
+        elif c == -1:
+            ans += minus + zpart
+        elif c > 0:
+            ans += plus + f"<mn>{c}</mn>" + zpart
+        else:
+            ans += minus + f"<mn>{-c}</mn>" + zpart
+    if ans.startswith(plus):
+        ans = ans[len(plus):]
+    if not ans:
+        ans = "<mn>0</mn>"
+
+    # We omit xmlns="http://www.w3.org/1998/Math/MathML" since rendering seems to work without it, and we have a bunch of math tags
+    return f'<math display="inline"><mrow>{ans}</mrow></math>'
+
+def integer_to_mathml(n):
+    return f'<math display="inline"><mrow><mn>{n}</mn></mrow></math>'
 
 def dispZmat(mat):
     r""" Display a matrix with integer entries
