@@ -1233,7 +1233,7 @@ complex_char_columns = SearchColumns([
     MathCol("image_order", "group.representation.image", "Image Order"),
     MultiProcessedCol("kernel", "group.representation.kernel", "Kernel", ["kernel", "group"], char_to_sub, download_col="kernel", default=False),
     MathCol("kernel_order", "group.representation.kernel", "Kernel Order"),
-    ProcessedLinkCol("nt", "group.representation.min_perm_rep", "Min. Perm. Rep.", get_trans_url, trans_gp),
+    #ProcessedLinkCol("nt", "group.representation.min_perm_rep", "Min. Perm. Rep.", get_trans_url, trans_gp), # Data currently broken due to a bug on the computation code
     MultiProcessedCol("center", "group.representation.center", "Center", ["center", "group"], char_to_sub, download_col="center", default=False),
     MathCol("center_order", "group.representation.center", "Center Order", default=False),
     MathCol("center_index", "group.representation.center", "Center Index", default=False),
@@ -2497,8 +2497,11 @@ def rchar_data(label):
         ans += "<br>Not faithful"
     ans += "<br>Multiplicity: {}".format(mychar.multiplicity)
     ans += "<br>Schur index: {}".format(mychar.schur_index)
-    nt = mychar.nt
-    ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
+
+    # Currently the data for nt is broken due to a bug in the compute code
+    #nt = mychar.nt
+    #ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
+
     #if mychar._data.get("image"):
     #    txt = "Image"
     #    imageknowl = (
@@ -2529,9 +2532,11 @@ def cchar_data(label):
             ans += "<br>Not faithful with kernel {}".format(
                 sub_display_knowl(ker.label, "$" + ker.subgroup_tex + "$")
             )
-    nt = mychar.nt
+
+    # Currently the data for nt is broken due to a bug in the compute code
+    #nt = mychar.nt
     ans += "<br>Frobenius-Schur indicator: {}".format(mychar.indicator)
-    ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
+    #ans += "<br>Smallest container: {}T{}".format(nt[0], nt[1])
     ans += "<br>Field of character values: {}".format(formatfield(mychar.field))
     #ans += "<br>Rational character: {}".format(q_char(label))
     ans += f'<div align="right"><a href="{url_for("abstract.Qchar_table", label=gplabel, char_highlight=q_char(label))}">{q_char(label)} rational character</a></div>'
