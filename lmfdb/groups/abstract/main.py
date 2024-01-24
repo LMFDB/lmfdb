@@ -1228,8 +1228,8 @@ complex_char_columns = SearchColumns([
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
     ProcessedCol("field", "group.representation.cyclotomic_n", "Field of Traces", field_knowl),
     ProcessedLinkCol("label", "group.representation.rational_character", r"$\Q$-character", get_qchar_url, q_char),
-    LinkCol("group", "group.name", "Group", get_url),
-    LinkCol("image_isoclass", "group.representation.image", "Image", get_url, default=False),
+    MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col="group"),
+    MultiProcessedCol("image_isoclass", "group.representation.image", "Image", ["image_isoclass", "tex_cache"], display_url_cache, download_col="image_isoclass", default=False),
     MathCol("image_order", "group.representation.image", "Image Order"),
     MultiProcessedCol("kernel", "group.representation.kernel", "Kernel", ["kernel", "group"], char_to_sub, download_col="kernel", default=False),
     MathCol("kernel_order", "group.representation.kernel", "Kernel Order"),
@@ -1239,6 +1239,18 @@ complex_char_columns = SearchColumns([
     MathCol("center_index", "group.representation.center", "Center Index", default=False),
 ])
 
+
+def char_postprocess(res, info, query):
+    labels = set()
+    for rec in res:
+        for col in ["group", "image_isoclass"]:
+            label = rec.get(col)
+            if label is not None:
+                labels.add(label)
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    for rec in res:
+        rec["tex_cache"] = tex_cache
+    return res
 
 class Complex_char_download(Downloader):
     table = db.gps_char
@@ -1250,6 +1262,7 @@ class Complex_char_download(Downloader):
     columns=complex_char_columns,
     shortcuts={"download": Complex_char_download()},
     bread=lambda: get_bread([("Search Results", "")]),
+    postprocess=char_postprocess,
     learnmore=learnmore_list,
     url_for_label=url_for_chartable_label,
 )
