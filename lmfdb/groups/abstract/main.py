@@ -1048,7 +1048,7 @@ def group_parse(info, query):
     parse_bool(info, query, "wreath_product", "is wreath product")
     parse_bracketed_posints(info, query, "exponents_of_order", "exponents_of_order")
     parse_group_label_or_order(info, query, "center_label", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "aut_group", abstract_group_label_regex)
+    parse_regex_restricted(info, query, "aut_group", regex=abstract_group_label_regex)
     parse_group_label_or_order(info, query, "commutator_label", regex=abstract_group_label_regex)
     parse_group_label_or_order(
         info, query, "central_quotient", regex=abstract_group_label_regex
