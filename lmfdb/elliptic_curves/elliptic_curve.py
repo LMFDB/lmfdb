@@ -410,6 +410,16 @@ class EC_download(Downloader):
         )
     }
 
+def ec_postprocess(res, info, query):
+    labels = [rec["lmfdb_label"] for rec in res]
+    mwgens = {rec["lmfdb_label"]: rec["gens"] for rec in db.ec_mwbsd.search({"lmfdb_label":{"$in":labels}}, ["lmfdb_label", "gens"])}
+    for rec in res:
+        gens = mwgens.get(rec["lmfdb_label"])
+        if gens is not None:
+            gens = [(a/c, b/c) for (a,b,c) in gens]
+        rec["mwgens"] = gens
+    return res
+
 def make_modcurve_link(label):
     from lmfdb.modular_curves.main import modcurve_link
     return modcurve_link(label)
@@ -468,6 +478,7 @@ ec_columns = SearchColumns([
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
+    MathCol("mwgens", "ec.mordell_weil_group", "MW-generators", default=False),
 ])
 
 class ECDownloader(Downloader):
@@ -486,7 +497,8 @@ class ECDownloader(Downloader):
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':ECDownloader()},
-             bread=lambda:get_bread('Search results'))
+             bread=lambda:get_bread('Search results'),
+             postprocess=ec_postprocess)
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')
     parse_ints(info, query, 'conductor')
