@@ -1919,28 +1919,28 @@ class GroupsSearchArray(SearchArray):
             name="center_label",
             label="Center",
             knowl="group.center_isolabel",
-            example="4.2",
+            example="4.2, 8",
             example_span="4 or 4.2 (order or label)",
         )
         commutator_label = TextBox(
             name="commutator_label",
             label="Commutator",
             knowl="group.commutator_isolabel",
-            example="4.2",
+            example="4.2, 8",
             example_span="4 or 4.2 (order or label)",
         )
         abelian_quotient = TextBox(
             name="abelian_quotient",
             label="Abelianization",
             knowl="group.abelianization_isolabel",
-            example="4.2",
+            example="4.2, 8",
             example_span="4 or 4.2 (order or label)",
         )
         central_quotient = TextBox(
             name="central_quotient",
             label="Central quotient",
             knowl="group.central_quotient_isolabel",
-            example="4.2",
+            example="4.2, 8",
             example_span="4 or 4.2 (order or label)",
         )
         order_stats = TextBox(
