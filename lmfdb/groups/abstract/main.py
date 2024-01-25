@@ -2393,20 +2393,20 @@ class ComplexCharSearchArray(SearchArray):
         image_isoclass = TextBox(
             name="image_isoclass",
             label="Image",
-            knowl= "group.representation.image",
+            knowl="group.representation.image",
             example="12.4",
         )
         image_order = TextBox(
             name="image_order",
             label="Image Order (Kernel Index)",
-            knowl= "group.representation.image",
-            example = "4",
+            knowl="group.representation.image",
+            example="4",
             example_span="4, or a range like 3..5",
         )
         kernel_order = TextBox(
             name="kernel_order",
             label="Kernel Order",
-            knowl= "group.representation.kernel",
+            knowl="group.representation.kernel",
             example="4, or a range like 3..5",
         )
         center_order = TextBox(
