@@ -1228,7 +1228,7 @@ complex_char_columns = SearchColumns([
     CheckCol("faithful", "group.representation.faithful", "Faithful"),
     MathCol("cyclotomic_n", "group.representation.cyclotomic_n", "Conductor", default=False),
     ProcessedCol("field", "group.representation.cyclotomic_n", "Field of Traces", field_knowl),
-    ProcessedLinkCol("label", "group.representation.rational_character", r"$\Q$-character", get_qchar_url, q_char),
+    LinkCol("qchar", "group.representation.rational_character", r"$\Q$-character", get_qchar_url),
     MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col="group"),
     MultiProcessedCol("image_isoclass", "group.representation.image", "Image", ["image_isoclass", "tex_cache"], display_url_cache, download_col="image_isoclass", default=False),
     MathCol("image_order", "group.representation.image", "Image Order"),
@@ -1238,19 +1238,25 @@ complex_char_columns = SearchColumns([
     MultiProcessedCol("center", "group.representation.center", "Center", ["center", "group"], char_to_sub, download_col="center", default=False),
     MathCol("center_order", "group.representation.center", "Center Order", default=False),
     MathCol("center_index", "group.representation.center", "Center Index", default=False),
+    MathCol("schur_index", "group.representation.schur_index", "Schur Index", default=False),
 ])
 
 
 def char_postprocess(res, info, query):
     labels = set()
+    qchars = set()
     for rec in res:
         for col in ["group", "image_isoclass"]:
             label = rec.get(col)
             if label is not None:
                 labels.add(label)
+        rec["qchar"] = q_char(rec["label"])
+        qchars.add(rec["qchar"])
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    schur = {rec["label"]: rec["schur_index"] for rec in db.gps_qchar.search({"label":{"$in":list(qchars)}}, ["label", "schur_index"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
+        rec["schur_index"] = schur[rec["qchar"]]
     return res
 
 class Complex_char_download(Downloader):

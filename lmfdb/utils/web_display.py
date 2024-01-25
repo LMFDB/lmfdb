@@ -803,11 +803,13 @@ def sparse_cyclotomic_to_mathml(n, dat):
     dat.sort(key=lambda p: p[1])
     minus = "<mo>&#x02212;</mo>"
     plus = "<mo>&#x0002B;</mo>"
-    zeta = "<mi>&#x003B6;</mi>"
-    if n < 10:
-        n = f"<mn>{n}</mn>"
+    if n == 4:
+        zeta = "<mi>i</mi>"
+    elif n < 10: # will be wrapped in <msub> or <msubsup> below
+        zeta = f"<mi>&#x003B6;</mi><mn>{n}</mn>"
     else:
-        n = f"<mrow><mn>{n}</mn></mrow>"
+        zeta = f"<mi>&#x003B6;</mi><mrow><mn>{n}</mn></mrow>"
+
     def zetapow(k):
         if k == 0:
             return "<mn>1</mn>"
