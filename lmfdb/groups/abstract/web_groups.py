@@ -28,7 +28,6 @@ from sage.misc.cachefunc import cached_function, cached_method
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
-    sparse_cyclotomic_to_latex,
     to_ordinal,
     web_latex,
     letters2num,
@@ -1373,6 +1372,41 @@ class WebAbstractGroup(WebObj):
         return any(chtr.schur_index > 1 for chtr in self.rational_characters)
 
     @lazy_attribute
+    def linear_degrees_table(self):
+        knowls = [("group.min_faithful_linear", "Irreducible"),
+                  ("group.min_faithful_linear", "Arbitrary")]
+        names = [["irrC_degree", "irrR_degree", "irrQ_dim"], ["linC_degree", "linR_degree", "linQ_dim"]]
+        data = [[getattr(self, c, None) for c in row] for row in names]
+        if all(all(c is None for c in row) for row in data):
+            return f"<p>{display_knowl('group.min_faithful_linear', 'Minimal degrees of linear representations')} for this group have not been computed</p>"
+
+        def display(c):
+            if c is None:
+                return "not computed"
+            elif c == -1:
+                return "none"
+            else:
+                return str(c)
+        table = "".join(['  <tr>\n'
+                         + f'    <td class="border-right">{display_knowl(knowl, disp)}</td>\n'
+                         + ''.join([f'    <td>{display(c)}</td>\n' for c in row])
+                         + '  </tr>\n'
+                         for (knowl, disp), row in zip(knowls, data)])
+        table = fr"""<h3>{display_knowl('group.min_faithful_linear', 'Minimal degrees of faithful linear representations')}</h3>
+<table class="ntdata centered nobottom">
+  <thead>
+    <tr>
+      <th class="border-right"></th>
+      <th>Over $\mathbb{{C}}$</th>
+      <th>Over $\mathbb{{R}}$</th>
+      <th>Over $\mathbb{{Q}}$</th>
+    </tr>
+  </thead>
+{table}
+</table>"""
+        return table
+
+    @lazy_attribute
     def maximal_subgroup_of(self):
         # Could show up multiple times as non-conjugate maximal subgroups in the same ambient group
         # So we should eliminate duplicates from the following list
@@ -2394,11 +2428,6 @@ class WebAbstractGroup(WebObj):
             "ambient", {"quotient": self.label, "minimal_normal": True}, record=False
         )
 
-    @staticmethod
-    def sparse_cyclotomic_to_latex(n, dat):
-        # The indirection is because we want to make this a staticmethod
-        return sparse_cyclotomic_to_latex(n, dat)
-
     def image(self):
         if self.cc_stats is not None and self.number_conjugacy_classes <= 2000:
             circles = []
@@ -2598,6 +2627,18 @@ class WebAbstractSubgroup(WebObj):
                         self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
             else:
                 self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+        # Temp fix for a bug in sylow data
+        p, k = self.subgroup_order.is_prime_power(get_data=True)
+        if self.subgroup_order == 1:
+            self.sylow = self.hall = 1
+        elif self.subgroup_order.gcd(self.quotient_order) == 1:
+            self.hall = self.subgroup_order.radical()
+            if k > 0:
+                self.sylow = p
+            else:
+                self.sylow = p
+        else:
+            self.sylow = self.hall = 0
 
     def spanclass(self):
         s = "subgp"

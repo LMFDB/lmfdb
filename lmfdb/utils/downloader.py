@@ -43,6 +43,7 @@ class DownloadLanguage():
     false = 'false'
     offset = 0 # the offset for the first entry in a list; 0-based by default
     return_keyword = 'return '
+    return_finish = ''
 
     # Other required attributes in a subclass
     # name -- the name of the language, used when passing back and forth to strings
@@ -234,17 +235,19 @@ class GPLanguage(DownloadLanguage):
     file_suffix = '.gp'
     start_and_end = ['{[',']}']
     comment_prefix = '\\\\'
+    line_end = ';'
     none = 'null'
     true = '1'
     false = '0'
     offset = 1
-    return_keyword = ''
     make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
-    function_start = '{func_name}({func_args}) = \n{{\n' # Need double bracket since we're formatting these
+    function_start = '{func_name}({func_args}) =\n{{\n' # Need double bracket since we're formatting these
     function_end = '}\n'
+    return_keyword = 'return('
+    return_finish = ')'
 
     def record_assign(self, name, key, val):
-        return f'mapput(~{name}, "{key}", {val})'
+        return f'mapput(~{name}, "{key}", {val});'
 
 class GAPLanguage(DownloadLanguage):
     name = 'gap'
@@ -516,8 +519,8 @@ class Downloader():
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"local {', '.join(local_vars)};", f"out := rec({','.join(pairs)});"]
         elif lang.name == "gp":
-            pairs = [f"{col},row[{i+1}]" for i, col in enumerate(column_names)]
-            lines = [f"out = Map({','.join(pairs)})"]
+            pairs = [f'"{col}",row[{i+1}]' for i, col in enumerate(column_names)]
+            lines = [f"out = Map([{';'.join(pairs)}]);"]
         elif lang.name == "oscar":
             lines = ["out = Dict(zip(columns, row))"]
         else:
@@ -526,7 +529,7 @@ class Downloader():
             if all(col in column_names for col in require) and lang.name in bylang:
                 lines.append(bylang[lang.name])
                 lines.append(lang.record_assign("out", var, var))
-        lines.append(lang.return_keyword + "out" + lang.line_end)
+        lines.append(lang.return_keyword + "out" + lang.return_finish + lang.line_end)
         return "".join("    " + line + "\n" for line in lines)
 
     def makedata_code(self, lang):
@@ -542,7 +545,7 @@ class Downloader():
         elif lang.name == "gap":
             line = "return List(data, create_record);"
         elif lang.name == "gp":
-            line = "return [create_record(row) | row<-data];"
+            line = "return(apply(create_record, data));"
         elif lang.name == "oscar":
             line = "return [create_record(row) for row in data]"
         else:

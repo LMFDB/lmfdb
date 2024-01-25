@@ -404,7 +404,7 @@ class EC_download(Downloader):
             {
                 "sage": 'curve = EllipticCurve(out["ainvs"])',
                 "magma": 'curve := EllipticCurve(out`ainvs);',
-                "gp": 'curve = ellinit(mapget(out, "ainvs"))',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
                 "oscar": 'curve = EllipticCurve(out["ainvs"])',
             }
         )
