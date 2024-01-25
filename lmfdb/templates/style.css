@@ -2509,6 +2509,10 @@ button.sub_inactive {
   border: 1px solid {{color.lf_ar_button_brd}};
 }
 
+tr.highlighted, td.highlighted {
+  background-color: {{color.col_main_ll}};
+}
+
 #column-selector, #sort-selecter {
   scrollbar-width: none; /*For Firefox*/;
   -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
