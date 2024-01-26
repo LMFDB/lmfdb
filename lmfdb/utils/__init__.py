@@ -142,7 +142,7 @@ from .search_parsing import (
     parse_rational_to_list, parse_padicfields, parse_rats, parse_inertia,
     parse_bracketed_posints, parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
     parse_element_of, parse_not_element_of, parse_subset, parse_submultiset, parse_list,
-    parse_list_start, parse_string_start, parse_restricted, 
+    parse_list_start, parse_string_start, parse_restricted,
     parse_regex_restricted, parse_noop, parse_group_label_or_order,
     parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string, parse_newton_polygon,
     parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
