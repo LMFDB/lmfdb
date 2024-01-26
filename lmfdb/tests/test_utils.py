@@ -130,18 +130,6 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(rgbtohex('rgb(63,255,100)'), '#3fff64')
         self.assertEqual(rgbtohex('rbg(63,63,255)'), '#3f3fff')
 
-#    def test_pol_to_html(self):
-#        r"""
-#        Checking utility: pol_to_html
-#        """
-#        x = var('x')
-#        f1 = x**2 + 2*x + 1
-#        self.assertEqual(pol_to_html(f1),
-#                         '<i>x</i><sup>2</sup> + 2<i>x</i> + 1')
-#        f2 = 'x^3 + 1'
-#        self.assertEqual(pol_to_html(f2),
-#                         '<i>x</i><sup>3</sup> + 1')
-
     ################################################################################
     #  latex/math rendering utilities
     ################################################################################
