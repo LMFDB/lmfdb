@@ -1035,9 +1035,9 @@ def parse_bracketed_rats(
 @search_parser(clean_info=True, prep_plus=True)
 def parse_group_label_or_order(inp, query, qfield, regex):
     inps = inp.split(",")
-    inporders = [z for z in inps if re.fullmatch('\d+',z)]
+    inporders = [z for z in inps if re.fullmatch(r'\d+',z)]
     inporders = [{'$startswith': f'{z}.'} for z in inporders]
-    inplabels = [z for z in inps if not re.fullmatch('\d+',z)]
+    inplabels = [z for z in inps if not re.fullmatch(r'\d+',z)]
     if all(regex.fullmatch(z) for z in inplabels):
         if len(inplabels) == 1:
             labelquery = inplabels[0]
@@ -1052,7 +1052,6 @@ def parse_group_label_or_order(inp, query, qfield, regex):
             query[qfield] = {"$or": inporders}
     else:
         query[qfield] = labelquery
-
 
 
 def parse_gap_id(info, query, field="group", name="Group", qfield="group"):
