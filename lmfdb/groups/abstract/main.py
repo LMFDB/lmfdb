@@ -37,6 +37,7 @@ from lmfdb.utils import (
     parse_regex_restricted,
     parse_bracketed_posints,
     parse_noop,
+    parse_group_label_or_order,
     dispZmat,
     dispcyclomat,
     search_wrap,
@@ -1100,17 +1101,13 @@ def group_parse(info, query):
     parse_bool(info, query, "rational", "is rational")
     parse_bool(info, query, "wreath_product", "is wreath product")
     parse_bracketed_posints(info, query, "exponents_of_order", "exponents_of_order")
-    parse_regex_restricted(
-        info, query, "center_label", regex=abstract_group_label_regex
-    )
+    parse_group_label_or_order(info, query, "center_label", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "aut_group", regex=abstract_group_label_regex)
-    parse_regex_restricted(
-        info, query, "commutator_label", regex=abstract_group_label_regex
-    )
-    parse_regex_restricted(
+    parse_group_label_or_order(info, query, "commutator_label", regex=abstract_group_label_regex)
+    parse_group_label_or_order(
         info, query, "central_quotient", regex=abstract_group_label_regex
     )
-    parse_regex_restricted(
+    parse_group_label_or_order(
         info, query, "abelian_quotient", regex=abstract_group_label_regex
     )
     #parse_regex_restricted(
@@ -2069,29 +2066,29 @@ class GroupsSearchArray(SearchArray):
             name="center_label",
             label="Center",
             knowl="group.center_isolabel",
-            example="4.2",
-            example_span="4.2",
+            example="4.2, 8",
+            example_span="4 or 4.2 (order or label)",
         )
         commutator_label = TextBox(
             name="commutator_label",
             label="Commutator",
             knowl="group.commutator_isolabel",
-            example="4.2",
-            example_span="4.2",
+            example="4.2, 8",
+            example_span="4 or 4.2 (order or label)",
         )
         abelian_quotient = TextBox(
             name="abelian_quotient",
             label="Abelianization",
             knowl="group.abelianization_isolabel",
-            example="4.2",
-            example_span="4.2",
+            example="4.2, 8",
+            example_span="4 or 4.2 (order or label)",
         )
         central_quotient = TextBox(
             name="central_quotient",
             label="Central quotient",
             knowl="group.central_quotient_isolabel",
-            example="4.2",
-            example_span="4.2",
+            example="4.2, 8",
+            example_span="4 or 4.2 (order or label)",
         )
         order_stats = TextBox(
             name="order_stats",
