@@ -12,7 +12,7 @@
   </span>
   <span id="download-form" style="display:none;">
 {% endif %}
-Download displayed columns to &nbsp;
+Download displayed columns for <span id="row_selector_hidden"><a onclick="return show_row_selector();" href="#">all rows</a></span><span id="row_selector_shown"><input id="download_row_count_input" name="download_row_count" type="text" /> rows</span> to &nbsp;
 {% for lang in languages %}
   <a class="like-button" href="{{modify_url(query_add='Submit='+lang+'&download=1&query='+(info.query|string))}}" onclick="return update_download_url(this);">{{lang_text[lang]}}</a>&nbsp;
 {% endfor %}
