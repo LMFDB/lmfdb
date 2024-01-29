@@ -36,6 +36,7 @@ class DownloadLanguage():
     delim_start = '[' # These are default delimiters used when wrapping a list in the default to_lang function
     delim_end = ']' # If the needed delimiter depends on context, a language can override the delim method instead
     start_and_end = ['[',']'] # These are the delimiters used in a multiline list
+    iter_sep = ",\n" # These are used to separate rows
     make_data_comment = '' # A formattable comment describing how to call the make_data() function,
     #                        with placeholders `short_name` and `var_name`
     none = 'NULL'
@@ -67,7 +68,7 @@ class DownloadLanguage():
         """
         return ""
 
-    def delim(self, inp):
+    def delim(self, inp, level):
         """
         Returns the start and end delimiters appropriate for wrapping a list.
         A utility method used in ``to_lang``.
@@ -75,10 +76,22 @@ class DownloadLanguage():
         INPUT:
 
         - ``inp`` -- a python iterable
+        - ``level`` -- a nesting counter, starting at 1
         """
         # We allow the language to specify the delimiter based on the contents of inp
         # This allows magma to use sequences if the types are all the same
         return self.delim_start, self.delim_end
+
+    def sep(self, level):
+        """
+        Returns the separator used for a list.  Defaults to comma, but can be overridden as a tab for example.
+        A utility method used in ``to_lang``.
+
+        INPUT::
+
+        - ``level`` -- a nesting counter, starting at 1
+        """
+        return ", "
 
     def to_lang(self, inp, level=1):
         """
@@ -102,8 +115,8 @@ class DownloadLanguage():
             # not an iterable object
             return str(inp)
         else:
-            start, end = self.delim(inp)
-            return start + ", ".join(self.to_lang(c, level=level + 1) for c in it) + end
+            start, end = self.delim(inp, level)
+            return start + self.sep(level).join(self.to_lang(c, level=level + 1) for c in it) + end
 
     def to_lang_iter(self, inp):
         """
@@ -115,7 +128,7 @@ class DownloadLanguage():
         - ``inp`` -- an iterable python object (currently called with the output of itertools.chain)
         """
         start, end = self.start_and_end
-        sep = ',\n'
+        sep = self.iter_sep
         it = iter(inp)
         yield start + "\n"
         try:
@@ -179,7 +192,7 @@ class MagmaLanguage(DownloadLanguage):
     function_start = 'function {func_name}({func_args})\n'
     function_end = 'end function;\n'
 
-    def delim(self, inp):
+    def delim(self, inp, level):
         # Magma has several types corresponding to Python lists
         # We use Sequences if possible, and Lists if not
         if not inp:
@@ -284,6 +297,24 @@ class OscarLanguage(DownloadLanguage):
 class TextLanguage(DownloadLanguage):
     name = 'text'
     file_suffix = '.txt'
+    start_and_end = ["", "\n\n"]
+    iter_sep = "\n"
+
+    def assign_iter(self, name, inp):
+        # For text downloads, we just give the data
+        yield from inp
+
+    def delim(self, inp, level):
+        if level == 1:
+            return "", ""
+        else:
+            return "[", "]"
+
+    def sep(self, level):
+        if level == 1:
+            return "\t"
+        else:
+            return ", "
 
 class Downloader():
     """
@@ -666,7 +697,8 @@ class Downloader():
             if make_data_comment:
                 yield '\n' + c + ' ' + make_data_comment  + '\n'
             yield '\n\n'
-            yield lang.assign("columns", column_names)
+            if lang.name != "text":
+                yield lang.assign("columns", column_names)
 
             # This is where the actual contents are included, applying postprocess and col.download to each
             yield from lang.assign_iter("data", lang.to_lang_iter(
