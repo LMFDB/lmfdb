@@ -2805,7 +2805,10 @@ class WebAbstractSubgroup(WebObj):
     def quotient_knowl(self, paren=False):
         # assumes there is a quotient group
         if '?' in self.quotient_tex:
-            knowlname = WebAbstractGroup(self.quotient).tex_name
+            if self.quotient is None:
+                return "(?)"
+            else:
+                knowlname = WebAbstractGroup(self.quotient).tex_name
         else:
             knowlname = self.quotient_tex_parened if paren else self.quotient_tex
         return abstract_group_display_knowl(self.quotient, name=rf'${knowlname}$')
