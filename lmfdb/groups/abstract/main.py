@@ -978,7 +978,10 @@ def field_knowl(fld):
     from lmfdb.number_fields.web_number_field import WebNumberField
     field = [int(n) for n in fld]
     wnf = WebNumberField.from_coeffs(field)
-    return wnf.knowl()
+    if wnf.is_null():
+        return "Not computed"
+    else:
+        return wnf.knowl()
 
 
 class Group_download(Downloader):
