@@ -1100,8 +1100,8 @@ class RatPointSearchArray(SearchArray):
 
 class ShimCurve_stats(StatsDisplay):
     def __init__(self):
-        self.ncurves = comma(db.gps_gl2zhat_fine.count())
-        self.max_level = db.gps_gl2zhat_fine.max("level")
+        self.ncurves = comma(db.gps_shimura.count())
+        self.max_level = db.gps_shimura.max("level")
 
     @property
     def short_summary(self):
