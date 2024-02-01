@@ -8,14 +8,14 @@
 <h2> Browse </h2>
 
 <p>
-  By {{KNOWL('modcurve.standard', 'family')}}:
+  By {{KNOWL('shimcurve.standard', 'family')}}:
   {% for (fam, famname) in [("X0", "X_0(N)"), ("X1", "X_1(N)"), ("X", "X(N)"), ("Xsp", "X_{\\mathrm{sp}}(N)"), ("Xspplus", "X_{\\mathrm{sp}}^+(N)"), ("Xns", "X_{\\mathrm{ns}}(N)"), ("Xnsplus", "X_{\\mathrm{ns}}^+(N)"), ("XS4", "X_{S_4}(p)"), ("Xsym", "X_{\\mathrm{sym}}(N)")] %}
   <a href="?family={{fam}}">${{famname}}$</a>&nbsp;
   {% endfor %}
 </p>
 
 <p>
-  By {{KNOWL('modcurve.level', 'level')}}:
+  By {{KNOWL('shimcurve.level', 'level')}}:
   <a href="?level_type=prime">prime</a>&nbsp;
   <a href="?level_type=prime_power">prime power</a>&nbsp;
   <a href="?level_type=squarefree">squarefree</a>&nbsp;
@@ -24,20 +24,20 @@
   {% endfor %}
 </p>
 <p>
-  By {{KNOWL('modcurve.genus', 'genus')}}:
+  By {{KNOWL('shimcurve.genus', 'genus')}}:
   {% for rnge in info.genus_list %}
   <a href="?genus={{rnge}}&sort_order=genus">{{rnge}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
-  By {{KNOWL('modcurve.rank', 'rank')}}:
+  By {{KNOWL('shimcurve.rank', 'rank')}}:
   {% for rnge in info.rank_list %}
     <a href="?rank={{rnge}}&sort_order=rank">{{rnge}}</a>&nbsp;
   {% endfor %}
 </p>
 
 <p>
-  Some <a href="{{url_for('.interesting')}}">interesting modular curves</a> or a <a href={{url_for('.random_curve')}}>random curve</a>
+  Some <a href="{{url_for('.interesting')}}">interesting Shimura curves</a> or a <a href={{url_for('.random_curve')}}>random curve</a>
 </p>
 
 <p>
