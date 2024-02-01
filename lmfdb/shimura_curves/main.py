@@ -49,9 +49,9 @@ from lmfdb.backend.encoding import Json
 
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
-from lmfdb.modular_curves import modcurve_page
-from lmfdb.modular_curves.web_curve import (
-    WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
+from lmfdb.shimura_curves import shimcurve_page
+from lmfdb.shimura_curves.web_curve import (
+    WebShimCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
 
@@ -71,7 +71,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Modular curve labels', url_for(".labels_page"))]
+            ('Shimura curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -82,66 +82,66 @@ def learnmore_list_add(learnmore_label, learnmore_url):
     return learnmore_list() + [(learnmore_label, learnmore_url)]
 
 
-@modcurve_page.route("/")
+@shimcurve_page.route("/")
 def index():
     return redirect(url_for(".index_Q", **request.args))
 
-@modcurve_page.route("/Q/")
+@shimcurve_page.route("/Q/")
 def index_Q():
-    info = to_dict(request.args, search_array=ModCurveSearchArray())
+    info = to_dict(request.args, search_array=ShimCurveSearchArray())
     if request.args:
-        return modcurve_search(info)
-    title = r"Modular curves over $\Q$"
+        return shimcurve_search(info)
+    title = r"Shimura curves over $\Q$"
     info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
     info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
-    info["stats"] = ModCurve_stats()
+    info["stats"] = ShimCurve_stats()
     return render_template(
-        "modcurve_browse.html",
+        "shimcurve_browse.html",
         info=info,
         title=title,
         bread=get_bread(),
         learnmore=learnmore_list(),
     )
 
-@modcurve_page.route("/Q/random/")
+@shimcurve_page.route("/Q/random/")
 @redirect_no_cache
 def random_curve():
     label = db.gps_gl2zhat_fine.random()
-    return url_for_modcurve_label(label)
+    return url_for_shimcurve_label(label)
 
-@modcurve_page.route("/interesting")
+@shimcurve_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "modcurve",
+        "shimcurve",
         db.gps_gl2zhat_fine,
-        url_for_modcurve_label,
-        title="Some interesting modular curves",
+        url_for_shimcurve_label,
+        title="Some interesting Shimura curves",
         bread=get_bread("Interesting"),
         learnmore=learnmore_list(),
     )
 
-def modcurve_link(label):
+def shimcurve_link(label):
     if int(label.split(".")[0]) <= 70:
-        return '<a href=%s>%s</a>' % (url_for("modcurve.by_label", label=label), label)
+        return '<a href=%s>%s</a>' % (url_for("shimcurve.by_label", label=label), label)
     else:
         return label
 
-@modcurve_page.route("/Q/<label>/")
+@shimcurve_page.route("/Q/<label>/")
 def by_label(label):
     if RSZB_LABEL_RE.fullmatch(label):
         label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
-    curve = WebModCurve(label)
+    curve = WebShimCurve(label)
     if curve.is_null():
-        flash_error("There is no modular curve %s in the database", label)
+        flash_error("There is no Shimura curve %s in the database", label)
         return redirect(url_for(".index"))
     dojs, display_opts = diagram_js_string(curve)
-    learnmore_mcurve_pic = ('Picture description', url_for(".mcurve_picture_page"))
+    learnmore_mcurve_pic = ('Picture description', url_for(".scurve_picture_page"))
     return render_template(
-        "modcurve.html",
+        "shimcurve.html",
         curve=curve,
         dojs=dojs,
         zip=zip,
@@ -151,18 +151,18 @@ def by_label(label):
         bread=curve.bread,
         title=curve.title,
         downloads=curve.downloads,
-        KNOWL_ID=f"modcurve.{label}",
+        KNOWL_ID=f"shimcurve.{label}",
         learnmore=learnmore_list_add(*learnmore_mcurve_pic)
     )
 
-@modcurve_page.route("/Q/diagram/<label>")
+@shimcurve_page.route("/Q/diagram/<label>")
 def lat_diagram(label):
     if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
-    curve = WebModCurve(label)
+    curve = WebShimCurve(label)
     if curve.is_null():
-        flash_error("There is no modular curve %s in the database", label)
+        flash_error("There is no Shimura curve %s in the database", label)
         return redirect(url_for(".index"))
     dojs, display_opts = diagram_js_string(curve)
     info = {"dojs": dojs}
@@ -171,7 +171,7 @@ def lat_diagram(label):
         "lat_diagram_page.html",
         dojs=dojs,
         info=info,
-        title="Diagram of nearby modular curves for %s" % label,
+        title="Diagram of nearby Shimura curves for %s" % label,
         bread=get_bread("Subgroup diagram"),
         learnmore=learnmore_list(),
     )
@@ -210,21 +210,21 @@ def diagram_js_string(curve):
     graph, rank_lookup, num_layers = diagram_js(curve, curve.nearby_lattice, display_opts)
     return f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{curve.label}", {graph}, {rank_lookup}, {num_layers});', display_opts
 
-@modcurve_page.route("/Q/curveinfo/<label>")
+@shimcurve_page.route("/Q/curveinfo/<label>")
 def curveinfo(label):
     if not LABEL_RE.fullmatch(label):
         return ""
     level, index, genus = label.split(".")[:3]
 
-    ans = 'Information on the modular curve <a href="%s">%s</a><br>\n' % (url_for_modcurve_label(label), label)
+    ans = 'Information on the Shimura curve <a href="%s">%s</a><br>\n' % (url_for_shimcurve_label(label), label)
     ans += "<table>\n"
-    ans += f"<tr><td>{display_knowl('modcurve.level', 'Level')}</td><td>${level}$</td></tr>\n"
-    ans += f"<tr><td>{display_knowl('modcurve.index', 'Index')}</td><td>${index}$</td></tr>\n"
-    ans += f"<tr><td>{display_knowl('modcurve.genus', 'Genus')}</td><td>${genus}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('shimcurve.level', 'Level')}</td><td>${level}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('shimcurve.index', 'Index')}</td><td>${index}$</td></tr>\n"
+    ans += f"<tr><td>{display_knowl('shimcurve.genus', 'Genus')}</td><td>${genus}$</td></tr>\n"
     ans += "</table>"
     return ans
 
-def url_for_modcurve_label(label):
+def url_for_shimcurve_label(label):
     return url_for(".by_label", label=label)
 
 def url_for_RZB_label(label):
@@ -234,7 +234,7 @@ def url_for_CP_label(label):
     genus = CP_LABEL_GENUS_RE.fullmatch(label)[1]
     return "https://mathstats.uncg.edu/sites/pauli/congruence/csg" + genus + ".html#group" + label
 
-def modcurve_lmfdb_label(label):
+def shimcurve_lmfdb_label(label):
     if LABEL_RE.fullmatch(label):
         label_type = "label"
         lmfdb_label = label
@@ -261,22 +261,22 @@ def modcurve_lmfdb_label(label):
         lmfdb_label = None
     return lmfdb_label, label_type
 
-def modcurve_jump(info):
+def shimcurve_jump(info):
     labels = (info["jump"]).split("*")
     lmfdb_labels = []
     for label in labels:
-        lmfdb_label, label_type = modcurve_lmfdb_label(label)
+        lmfdb_label, label_type = shimcurve_lmfdb_label(label)
         if lmfdb_label is None:
-            flash_error("There is no modular curve in the database with %s %s", label_type, label)
+            flash_error("There is no Shimura curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
     lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.a.1"]
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
-        return redirect(url_for_modcurve_label(label))
+        return redirect(url_for_shimcurve_label(label))
     elif len(lmfdb_labels_not_X1) == 1:
         label = lmfdb_labels_not_X1[0]
-        return redirect(url_for_modcurve_label(label))
+        return redirect(url_for_shimcurve_label(label))
     else:
         # Get factorization for each label
         factors = list(db.gps_gl2zhat_fine.search({"label": {"$in": lmfdb_labels_not_X1}},
@@ -291,40 +291,40 @@ def modcurve_jump(info):
         factors = sorted(sum(factors, []), key=key_for_numerically_sort)
         label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
         if label is None:
-            flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
+            flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
         else:
-            return redirect(url_for_modcurve_label(label))
+            return redirect(url_for_shimcurve_label(label))
 
 def blankzeros(n):
     return "$%o$"%n if n else ""
 
-modcurve_columns = SearchColumns(
+shimcurve_columns = SearchColumns(
     [
-        LinkCol("label", "modcurve.label", "Label", url_for_modcurve_label),
-        SearchCol("RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
-        LinkCol("RZBlabel", "modcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label", default=False),
-        LinkCol("CPlabel", "modcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label", default=False),
-        ProcessedCol("SZlabel", "modcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label", default=False),
-        ProcessedCol("Slabel", "modcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label", default=False),
-        ProcessedCol("name", "modcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center"),
-        MathCol("level", "modcurve.level", "Level"),
-        MathCol("index", "modcurve.index", "Index"),
-        MathCol("genus", "modcurve.genus", "Genus"),
-        ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
-        MathCol("cusps", "modcurve.cusps", "Cusps"),
-        MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps"),
-        CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center"),
+        LinkCol("label", "shimcurve.label", "Label", url_for_shimcurve_label),
+        SearchCol("RSZBlabel", "shimcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
+        LinkCol("RZBlabel", "shimcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label", default=False),
+        LinkCol("CPlabel", "shimcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label", default=False),
+        ProcessedCol("SZlabel", "shimcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label", default=False),
+        ProcessedCol("Slabel", "shimcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label", default=False),
+        ProcessedCol("name", "shimcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center"),
+        MathCol("level", "shimcurve.level", "Level"),
+        MathCol("index", "shimcurve.index", "Index"),
+        MathCol("genus", "shimcurve.genus", "Genus"),
+        ProcessedCol("rank", "shimcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
+        ProcessedCol("q_gonality_bounds", "shimcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
+        MathCol("cusps", "shimcurve.cusps", "Cusps"),
+        MathCol("rational_cusps", "shimcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps"),
+        CheckCol("cm_discriminants", "shimcurve.cm_discriminants", "CM points", align="center"),
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True, default=False),
-        CheckCol("simple", "modcurve.simple", "Simple", default=False),
+        CheckCol("simple", "shimcurve.simple", "Simple", default=False),
         CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
-        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
-        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
-        ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", default=False),
-        CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
-        ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
+        CheckCol("contains_negative_one", "shimcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
+        MultiProcessedCol("dims", "shimcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
+        ProcessedCol("models", "shimcurve.models", "Models", blankzeros, default=False),
+        MathCol("num_known_degree1_points", "shimcurve.known_points", "$j$-points", default=False),
+        CheckCol("pointless", "shimcurve.local_obstruction", "Local obstruction", default=False),
+        ProcessedCol("generators", "shimcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
     db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
@@ -385,18 +385,18 @@ def parse_family(inp, query, qfield):
     #'tiebreaker',
     #'trace_hash',
     #'traces',
-# cols currently unused in modcurve_models
+# cols currently unused in shimcurve_models
     #'dont_display'
     #'gonality_bounds'
-    #'modcurve'
-# cols currently unused in modcurve_modelmaps
+    #'shimcurve'
+# cols currently unused in shimcurve_modelmaps
     #'domain_label',
     #'dont_display',
     #'factored'
 
-class ModCurve_download(Downloader):
+class ShimCurve_download(Downloader):
     table = db.gps_gl2zhat_fine
-    title = "Modular curves"
+    title = "Shimura curves"
     inclusions = {
         "subgroup": (
             ["level", "generators"],
@@ -408,12 +408,12 @@ class ModCurve_download(Downloader):
         ),
     }
 
-    def download_modular_curve_magma_str(self, label):
+    def download_shimura_curve_magma_str(self, label):
         s = ""
         rec = combined_data(label)
         if rec is None:
             return abort(404, "Label not found: %s" % label)
-        s += "// Magma code for modular curve with label %s\n\n" % label
+        s += "// Magma code for Shimura curve with label %s\n\n" % label
         if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
             s += "// Other names and/or labels\n"
             if rec['name']:
@@ -460,16 +460,16 @@ class ModCurve_download(Downloader):
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
         if rec['factorization'] != []:
-            s += "// Modular curve is a fiber product of the following curves"
+            s += "// Shimura curve is a fiber product of the following curves"
             s += "factors := %s\n" % [f.replace("'", "\"") for f in rec['factorization']]
         s += "// Groups containing given group, corresponding to curves covered by given curve\n"
         parents_mag = "%s" % rec['parents']
         parents_mag = parents_mag.replace("'", "\"")
         s += "covers := %s;\n" % parents_mag
 
-        s += "\n// Models for this modular curve, if computed\n"
-        models = list(db.modcurve_models.search(
-            {"modcurve": label, "model_type":{"$not":1}},
+        s += "\n// Models for this Shimura curve, if computed\n"
+        models = list(db.shimcurve_models.search(
+            {"shimcurve": label, "model_type":{"$not":1}},
             ["equation", "number_variables", "model_type", "smooth"]))
         if models:
             max_nb_variables = max([m["number_variables"] for m in models])
@@ -507,15 +507,15 @@ class ModCurve_download(Downloader):
             s += "];\n"
             model_id += 1
 
-        s += "\n// Maps from this modular curve, if computed\n"
-        maps = list(db.modcurve_modelmaps.search(
+        s += "\n// Maps from this Shimura curve, if computed\n"
+        maps = list(db.shimcurve_modelmaps.search(
             {"domain_label": label},
             ["domain_model_type", "codomain_label", "codomain_model_type",
              "coordinates", "leading_coefficients"]))
         codomain_labels = [m["codomain_label"] for m in maps]
-        codomain_models = list(db.modcurve_models.search(
-            {"modcurve": {"$in": codomain_labels}},
-            ["equation", "modcurve", "model_type"]))
+        codomain_models = list(db.shimcurve_models.search(
+            {"shimcurve": {"$in": codomain_labels}},
+            ["equation", "shimcurve", "model_type"]))
         map_id = 0
         if maps and is_P1: #variable t has not been introduced above
             s += "Pol<t> := PolynomialRing(Rationals());\n"
@@ -543,16 +543,16 @@ class ModCurve_download(Downloader):
             if m["codomain_label"] != "1.1.0.a.1":
                 has_codomain_equation = True
                 if m["codomain_model_type"] == 0:
-                    name += " to the canonical model of modular curve"
+                    name += " to the canonical model of Shimura curve"
                 elif m["codomain_model_type"] == 1:
                     has_codomain_equation = False
                     name += " to a modular curve isomorphic to P^1"
                 elif m["codomain_model_type"] == 2:
-                    name += " to the plane model of modular curve"
+                    name += " to the plane model of Shimura curve"
                 elif m["codomain_model_type"] == 5:
-                    name += " to the Weierstrass model of modular curve"
+                    name += " to the Weierstrass model of Shimura curve"
                 else:
-                    name += " to another model of modular curve"
+                    name += " to another model of Shimura curve"
                 name += " with label %s" % m["codomain_label"]
             s += "\n// %s\n" % name
             coord = m["coordinates"]
@@ -567,28 +567,28 @@ class ModCurve_download(Downloader):
                 s += "%s);\n" % coord[j]
             if has_codomain_equation:
                 s += "// Codomain equation:\n"
-                eq = [eq for eq in codomain_models if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
+                eq = [eq for eq in codomain_models if eq["shimcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
                 s += prefix + "codomain := " + "[%s];\n" % ",".join(eq["equation"])
             map_id += 1
         return s
 
-    def download_modular_curve_magma(self, label):
-        s = self.download_modular_curve_magma_str(label)
+    def download_shimura_curve_magma(self, label):
+        s = self.download_shimura_curve_magma_str(label)
         return self._wrap(s, label, lang="magma")
 
-    def download_modular_curve_sage(self, label):
-        s = self.download_modular_curve_magma_str(label)
+    def download_shimura_curve_sage(self, label):
+        s = self.download_shimura_curve_magma_str(label)
         s = s.replace(":=", "=")
         s = s.replace(";", "")
         s = s.replace("//", "#")
         s = s.replace("K<", "K.<")
         return self._wrap(s, label, lang="sage")
 
-    def download_modular_curve(self, label, lang):
+    def download_shimura_curve(self, label, lang):
         if lang == "magma":
-            return self.download_modular_curve_magma(label)
+            return self.download_shimura_curve_magma(label)
         elif lang == "sage":
-            return self.download_modular_curve_sage(label)
+            return self.download_shimura_curve_sage(label)
         elif lang == "text":
             data = combined_data(label)
             if data is None:
@@ -596,30 +596,30 @@ class ModCurve_download(Downloader):
             return self._wrap(Json.dumps(data),
                               label,
                               lang=lang,
-                              title='Data for modular curve with label %s,'%label)
+                              title='Data for Shimura curve with label %s,'%label)
 
-@modcurve_page.route("/download_to_magma/<label>")
-def modcurve_magma_download(label):
-    return ModCurve_download().download_modular_curve(label, lang="magma")
+@shimcurve_page.route("/download_to_magma/<label>")
+def shimcurve_magma_download(label):
+    return ShimCurve_download().download_shimura_curve(label, lang="magma")
 
-@modcurve_page.route("/download_to_sage/<label>")
-def modcurve_sage_download(label):
-    return ModCurve_download().download_modular_curve(label, lang="sage")
+@shimcurve_page.route("/download_to_sage/<label>")
+def shimcurve_sage_download(label):
+    return ShimCurve_download().download_Shimura_curve(label, lang="sage")
 
-@modcurve_page.route("/download_to_text/<label>")
-def modcurve_text_download(label):
-    return ModCurve_download().download_modular_curve(label, lang="text")
+@shimcurve_page.route("/download_to_text/<label>")
+def shimcurve_text_download(label):
+    return ShimCurve_download().download_shimura_curve(label, lang="text")
 
 @search_wrap(
     table=db.gps_gl2zhat_fine,
-    title="Modular curve search results",
-    err_title="Modular curves search input error",
-    shortcuts={"jump": modcurve_jump, "download": ModCurve_download()},
-    columns=modcurve_columns,
+    title="Shimura curve search results",
+    err_title="Shimura curves search input error",
+    shortcuts={"jump": shimcurve_jump, "download": ShimCurve_download()},
+    columns=shimcurve_columns,
     bread=lambda: get_bread("Search results"),
-    url_for_label=url_for_modcurve_label,
+    url_for_label=url_for_shimcurve_label,
 )
-def modcurve_search(info, query):
+def shimcurve_search(info, query):
     parse_ints(info, query, "level")
     if info.get('level_type'):
         if info['level_type'] == 'prime':
@@ -674,7 +674,7 @@ def modcurve_search(info, query):
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     if "covered_by" in info:
         # sort of hacky
-        lmfdb_label, label_type = modcurve_lmfdb_label(info["covered_by"])
+        lmfdb_label, label_type = shimcurve_lmfdb_label(info["covered_by"])
         if lmfdb_label is None:
             parents = None
         else:
@@ -686,18 +686,18 @@ def modcurve_search(info, query):
                 # coarse label
                 parents = db.gps_gl2zhat_fine.lookup(lmfdb_label, "parents")
         if parents is None:
-            msg = "%s not the label of a modular curve in the database"
+            msg = "%s not the label of a Shimura curve in the database"
             flash_error(msg, info["covered_by"])
             raise ValueError(msg % info["covered_by"])
         query["label"] = {"$in": parents}
 
 
-class ModCurveSearchArray(SearchArray):
+class ShimCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.a.1"
     jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
-    jump_knowl = "modcurve.search_input"
+    jump_knowl = "shimcurve.search_input"
 
     def __init__(self):
         level_quantifier = SelectBox(
@@ -711,7 +711,7 @@ class ModCurveSearchArray(SearchArray):
             min_width=85)
         level = TextBoxWithSelect(
             name="level",
-            knowl="modcurve.level",
+            knowl="shimcurve.level",
             label="Level",
             example="11",
             example_span="2, 11-23",
@@ -719,42 +719,42 @@ class ModCurveSearchArray(SearchArray):
         )
         index = TextBox(
             name="index",
-            knowl="modcurve.index",
+            knowl="shimcurve.index",
             label="Index",
             example="6",
             example_span="6, 12-100",
         )
         genus = TextBox(
             name="genus",
-            knowl="modcurve.genus",
+            knowl="shimcurve.genus",
             label="Genus",
             example="1",
             example_span="0, 2-3",
         )
         rank = TextBox(
             name="rank",
-            knowl="modcurve.rank",
+            knowl="shimcurve.rank",
             label="Rank",
             example="1",
             example_span="0, 2-3",
         )
         genus_minus_rank = TextBox(
             name="genus_minus_rank",
-            knowl="modcurve.genus_minus_rank",
+            knowl="shimcurve.genus_minus_rank",
             label="Genus-rank difference",
             example="0",
             example_span="0, 1",
         )
         cusps = TextBox(
             name="cusps",
-            knowl="modcurve.cusps",
+            knowl="shimcurve.cusps",
             label="Cusps",
             example="1",
             example_span="1, 4-8",
         )
         rational_cusps = TextBox(
             name="rational_cusps",
-            knowl="modcurve.cusps",
+            knowl="shimcurve.cusps",
             label=r"$\Q$-cusps",
             example="1",
             example_span="0, 4-8",
@@ -769,7 +769,7 @@ class ModCurveSearchArray(SearchArray):
             min_width=85)
         gonality = TextBoxWithSelect(
             name="q_gonality",
-            knowl="modcurve.gonality",
+            knowl="shimcurve.gonality",
             label=r"$\Q$-gonality",
             example="2",
             example_span="2, 3-6",
@@ -777,39 +777,39 @@ class ModCurveSearchArray(SearchArray):
         )
         nu2 = TextBox(
             name="nu2",
-            knowl="modcurve.elliptic_points",
+            knowl="shimcurve.elliptic_points",
             label="Elliptic points of order 2",
             example="1",
             example_span="1,3-5",
         )
         nu3 = TextBox(
             name="nu3",
-            knowl="modcurve.elliptic_points",
+            knowl="shimcurve.elliptic_points",
             label="Elliptic points of order 3",
             example="1",
             example_span="1,3-5",
         )
         factor = TextBox(
             name="factor",
-            knowl="modcurve.fiber_product",
+            knowl="shimcurve.fiber_product",
             label="Fiber product with",
             example="3.4.0.a.1",
         )
         covers = TextBox(
             name="covers",
-            knowl="modcurve.modular_cover",
+            knowl="shimcurve.modular_cover",
             label="Minimally covers",
             example="1.1.0.a.1",
         )
         covered_by = TextBox(
             name="covered_by",
-            knowl="modcurve.modular_cover",
+            knowl="shimcurve.modular_cover",
             label="Minimally covered by",
             example="6.12.0.a.1",
         )
         simple = YesNoBox(
             name="simple",
-            knowl="modcurve.simple",
+            knowl="shimcurve.simple",
             label="Simple",
             example_col=True,
         )
@@ -825,13 +825,13 @@ class ModCurveSearchArray(SearchArray):
         cm_discriminants = SelectBox(
             name="cm_discriminants",
             options=cm_opts,
-            knowl="modcurve.cm_discriminants",
+            knowl="shimcurve.cm_discriminants",
             label="CM points",
             example="yes, no, CM discriminant -3"
         )
         contains_negative_one = YesNoBox(
             name="contains_negative_one",
-            knowl="modcurve.contains_negative_one",
+            knowl="shimcurve.contains_negative_one",
             label="Contains $-I$",
             example="yes",
             example_col=True,
@@ -846,7 +846,7 @@ class ModCurveSearchArray(SearchArray):
             min_width=105)
         points = TextBoxWithSelect(
             name="points",
-            knowl="modcurve.known_points",
+            knowl="shimcurve.known_points",
             label="$j$-points",
             example="0, 3-5",
             select_box=points_type,
@@ -857,7 +857,7 @@ class ModCurveSearchArray(SearchArray):
                      ("yes", "Known obstruction"),
                      ("not_yes", "No known obstruction"),
                      ("no", "No obstruction")],
-            knowl="modcurve.local_obstruction",
+            knowl="shimcurve.local_obstruction",
             label="Obstructions")
         family = SelectBox(
             name="family",
@@ -875,12 +875,12 @@ class ModCurveSearchArray(SearchArray):
                      ("XS4", "XS4(N)"),
                      ("Xsym", "Xsym(N)"),
                      ("any", "any")],
-            knowl="modcurve.standard",
+            knowl="shimcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
         CPlabel = SneakyTextBox(
             name="CPlabel",
-            knowl="modcurve.other_labels",
+            knowl="shimcurve.other_labels",
             label="CP label",
             example="3B0",
         )
@@ -922,23 +922,23 @@ class ModCurveSearchArray(SearchArray):
         'name': False,
     }
 
-@modcurve_page.route("/Q/low_degree_points")
+@shimcurve_page.route("/Q/low_degree_points")
 def low_degree_points():
     info = to_dict(request.args, search_array=RatPointSearchArray())
     return rational_point_search(info)
 
 ratpoint_columns = SearchColumns([
-    LinkCol("curve_label", "modcurve.label", "Label", url_for_modcurve_label),
-    #SearchCol("curve_RSZBlabel", "modcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
-    ProcessedCol("curve_name", "modcurve.standard", "Name", name_to_latex, default=False),
-    MathCol("curve_genus", "modcurve.genus", "Genus"),
-    MathCol("degree", "modcurve.point_degree", "Degree"),
-    ProcessedCol("isolated", "modcurve.isolated_point", "Isolated",
+    LinkCol("curve_label", "shimcurve.label", "Label", url_for_shimcurve_label),
+    #SearchCol("curve_RSZBlabel", "shimcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
+    ProcessedCol("curve_name", "shimcurve.standard", "Name", name_to_latex, default=False),
+    MathCol("curve_genus", "shimcurve.genus", "Genus"),
+    MathCol("degree", "shimcurve.point_degree", "Degree"),
+    ProcessedCol("isolated", "shimcurve.isolated_point", "Isolated",
                  lambda x: r"&#x2713;" if x == 4 else (r"" if x in [2,-1,-2,-3,-4] else r"<i>?</i>"), align="center"),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                  short_title="CM discriminant", mathmode=True, align="center", orig="cm"),
-    LinkCol("Elabel", "modcurve.elliptic_curve_of_point", "Elliptic curve", lambda Elabel: url_for_ECNF_label(Elabel) if "-" in Elabel else url_for_EC_label(Elabel)),
-    ProcessedCol("residue_field", "modcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
+    LinkCol("Elabel", "shimcurve.elliptic_curve_of_point", "Elliptic curve", lambda Elabel: url_for_ECNF_label(Elabel) if "-" in Elabel else url_for_EC_label(Elabel)),
+    ProcessedCol("residue_field", "shimcurve.point_residue_field", "Residue field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
     ProcessedCol("j_field", "ec.j_invariant", r"$\Q(j)$", lambda field: nf_display_knowl(field, field_pretty(field)), align="center", short_title="Q(j)"),
     MultiProcessedCol("jinv", "ec.j_invariant", "$j$-invariant", ["jinv", "j_field", "jorig", "residue_field"], showj_nf, download_col="jinv"),
     FloatCol("j_height", "nf.weil_height", "$j$-height"),
@@ -952,11 +952,11 @@ def ratpoint_postprocess(res, info, query):
     return res
 
 @search_wrap(
-    table=db.modcurve_points,
-    title="Modular curve low-degree point search results",
-    err_title="Modular curves low-degree point search input error",
+    table=db.shimcurve_points,
+    title="Shimura curve low-degree point search results",
+    err_title="Shimura curves low-degree point search input error",
     columns=ratpoint_columns,
-    shortcuts={"download": Downloader(db.modcurve_points)},
+    shortcuts={"download": Downloader(db.shimcurve_points)},
     bread=lambda: get_bread("Low-degree point search results"),
     #postprocess=ratpoint_postprocess,
 )
@@ -1005,31 +1005,31 @@ class RatPointSearchArray(SearchArray):
     def __init__(self):
         curve = TextBox(
             name="curve",
-            knowl="modcurve.label",
+            knowl="shimcurve.label",
             label="Curve",
             example="11.12.1.1",
         )
         genus = TextBox(
             name="genus",
-            knowl="modcurve.genus",
+            knowl="shimcurve.genus",
             label="Genus",
             example="1-3",
         )
         level = TextBox(
             name="level",
-            knowl="modcurve.level",
+            knowl="shimcurve.level",
             label="Level",
             example="37"
         )
         degree = TextBox(
             name="degree",
-            knowl="modcurve.point_degree",
+            knowl="shimcurve.point_degree",
             label="Degree",
             example="2-4",
         )
         residue_field = TextBox(
             name="residue_field",
-            knowl="modcurve.point_residue_field",
+            knowl="shimcurve.point_residue_field",
             label="Residue field",
             example="2.0.4.1",
         )
@@ -1064,7 +1064,7 @@ class RatPointSearchArray(SearchArray):
         isolated = YesNoMaybeBox(
             "isolated",
             label="Isolated",
-            knowl="modcurve.isolated_point",
+            knowl="shimcurve.isolated_point",
         )
         family = SelectBox(
             name="family",
@@ -1082,13 +1082,13 @@ class RatPointSearchArray(SearchArray):
                      ("XS4", "XS4(N)"),
                      ("Xsym", "Xsym(N)"),
                      ("any", "any")],
-            knowl="modcurve.standard",
+            knowl="shimcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
         cusp = YesNoBox(
             "cusp",
             label="Cusp",
-            knowl="modcurve.cusps")
+            knowl="shimcurve.cusps")
 
         self.refine_array = [[curve, level, genus, degree, cm],
                              [residue_field, j_field, jinv, j_height, isolated],
@@ -1098,23 +1098,23 @@ class RatPointSearchArray(SearchArray):
         # There is no homepage for a point, so we disable the random link
         return [("List", "Search again")]
 
-class ModCurve_stats(StatsDisplay):
+class ShimCurve_stats(StatsDisplay):
     def __init__(self):
         self.ncurves = comma(db.gps_gl2zhat_fine.count())
         self.max_level = db.gps_gl2zhat_fine.max("level")
 
     @property
     def short_summary(self):
-        modcurve_knowl = display_knowl("modcurve", title="modular curves")
+        shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
         return (
-            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E$ over $\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E$ over $\Q$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
         )
 
     @property
     def summary(self):
-        modcurve_knowl = display_knowl("modcurve", title="modular curves")
+        shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
         return (
-            fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
         )
 
     table = db.gps_gl2zhat_fine
@@ -1124,10 +1124,10 @@ class ModCurve_stats(StatsDisplay):
                'rank': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
                'gonality': ['1', '2', '3', '4', '5-8', '9-'],
                }
-    knowls = {'level': 'modcurve.level',
-              'genus': 'modcurve.genus',
-              'rank': 'modcurve.rank',
-              'gonality': 'modcurve.gonality',
+    knowls = {'level': 'shimcurve.level',
+              'genus': 'shimcurve.genus',
+              'rank': 'shimcurve.rank',
+              'gonality': 'shimcurve.gonality',
               }
     stat_list = [
         {'cols': ['level', 'genus'],
@@ -1141,58 +1141,58 @@ class ModCurve_stats(StatsDisplay):
          'totaler': totaler()},
     ]
 
-@modcurve_page.route("/Q/stats")
+@shimcurve_page.route("/Q/stats")
 def statistics():
-    title = 'Modular curves: Statistics'
-    return render_template("display_stats.html", info=ModCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
+    title = 'Shimura curves: Statistics'
+    return render_template("display_stats.html", info=ShimCurve_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
 
-@modcurve_page.route("/ModularCurvePictures")
-def mcurve_picture_page():
-    t = r'Pictures for modular curves'
-    bread = get_bread("Modular Curve Picture")
+@shimcurve_page.route("/ShimuraCurvePictures")
+def scurve_picture_page():
+    t = r'Pictures for Shimura curves'
+    bread = get_bread("Shimura Curve Picture")
     return render_template(
         "single.html",
-        kid='portrait.modcurve',
+        kid='portrait.shimcurve',
         title=t,
         bread=bread,
         learnmore=learnmore_list()
     )
 
-@modcurve_page.route("/Source")
+@shimcurve_page.route("/Source")
 def how_computed_page():
-    t = r'Source and acknowledgments for modular curve data'
+    t = r'Source and acknowledgments for Shimura curve data'
     bread = get_bread('Source')
     return render_template("multi.html",
-                           kids=['rcs.source.modcurve',
-                           'rcs.ack.modcurve',
-                           'rcs.cite.modcurve'],
+                           kids=['rcs.source.shimcurve',
+                           'rcs.ack.shimcurve',
+                           'rcs.cite.shimcurve'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@modcurve_page.route("/Completeness")
+@shimcurve_page.route("/Completeness")
 def completeness_page():
-    t = r'Completeness of modular curve data'
+    t = r'Completeness of Shimura curve data'
     bread = get_bread('Completeness')
-    return render_template("single.html", kid='rcs.cande.modcurve',
+    return render_template("single.html", kid='rcs.cande.shimcurve',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@modcurve_page.route("/Reliability")
+@shimcurve_page.route("/Reliability")
 def reliability_page():
-    t = r'Reliability of modular curve data'
+    t = r'Reliability of Shimura curve data'
     bread = get_bread('Reliability')
-    return render_template("single.html", kid='rcs.rigor.modcurve',
+    return render_template("single.html", kid='rcs.rigor.shimcurve',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
-@modcurve_page.route("/Labels")
+@shimcurve_page.route("/Labels")
 def labels_page():
-    t = r'Labels for modular curves'
+    t = r'Labels for Shimura curves'
     bread = get_bread('Labels')
-    return render_template("single.html", kid='modcurve.label',
+    return render_template("single.html", kid='shimcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
-@modcurve_page.route("/data/<label>")
-def modcurve_data(label):
+@shimcurve_page.route("/data/<label>")
+def shimcurve_data(label):
     coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
-    bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
+    bread = get_bread([(label, url_for_shimcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     if label == coarse_label:
@@ -1200,4 +1200,4 @@ def modcurve_data(label):
     else:
         labels = [label, coarse_label]
     tables = ["gps_gl2zhat_fine" for lab in labels]
-    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread)
+    return datapage(labels, tables, title=f"Shimura curve data - {label}", bread=bread)

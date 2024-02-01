@@ -14,7 +14,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 def get_bread(tail=[]):
-    base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
+    base = [("Shimura curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -290,7 +290,7 @@ def difference(Ad, Bd, Am, Bm):
         return [], []
     return tuple(zip(*(sorted(C.items()))))
 
-def modcurve_link(label):
+def shimcurve_link(label):
     return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
 
 def combined_data(label):
@@ -303,10 +303,10 @@ def combined_data(label):
         data.update(coarse)
     return data
 
-class WebModCurve(WebObj):
+class WebShimCurve(WebObj):
     table = db.gps_gl2zhat_fine
 
-    # We have to modify _get_dbdata, since we need to also include information from the coarse modular curve
+    # We have to modify _get_dbdata, since we need to also include information from the coarse shimura curve
     def _get_dbdata(self):
         return combined_data(self.label)
 
@@ -328,7 +328,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def image(self):
-        img = db.modcurve_pictures.lookup(self.psl2label, "image")
+        img = db.shimcurve_pictures.lookup(self.psl2label, "image")
         if img:
             return f'<img src="{img}" width="200" height="200"/>'
 
@@ -353,7 +353,7 @@ class WebModCurve(WebObj):
         if self.genus > 0 and self.trace_hash is not None:
             for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
                 if r['newforms'] == self.newforms and r['label'] != self.label:
-                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
+                    friends.append(("Shimura curve " + (r['name'] if r['name'] else r['label']),url_for("shimcurve.by_label", label=r['label'])))
         return friends
 
     @lazy_attribute
@@ -378,7 +378,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def title(self):
-        return f"Modular curve {self.display_name}"
+        return f"Shimura curve {self.display_name}"
 
     @lazy_attribute
     def formatted_dims(self):
@@ -400,14 +400,14 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.coarse_label))
+            return r"no $\quad$ (see %s for the level structure with $-I$)"%(shimcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s"%(', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
+                return r"%s"%(', '.join([shimcurve_link(label) for label in qtwists if label != self.label]))
             else:
                 return r"none in database"
         else:
@@ -448,7 +448,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.modcurve_models.search({"modcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+        return list(db.shimcurve_models.search({"shimcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
 
     @lazy_attribute
     def formatted_models(self):
@@ -456,7 +456,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_count(self):
-        return db.modcurve_models.count({"modcurve": self.coarse_label})
+        return db.shimcurve_models.count({"shimcurve": self.coarse_label})
 
     @lazy_attribute
     def has_more_models(self):
@@ -466,7 +466,7 @@ class WebModCurve(WebObj):
     def modelmaps_to_display(self):
         # Ensure domain model and map have dont_display = False
         domain_types = [1] + [m["model_type"] for m in self.models_to_display]
-        return list(db.modcurve_modelmaps.search(
+        return list(db.shimcurve_modelmaps.search(
             {"domain_label": self.coarse_label,
              "dont_display": False,
              "domain_model_type":{"$in": domain_types}},
@@ -499,7 +499,7 @@ class WebModCurve(WebObj):
         if model_type == 0:
             return display_knowl('ag.canonical_model', 'Canonical model')
         elif model_type in [2, -2]:
-            return display_knowl('modcurve.plane_model', 'Plane model')
+            return display_knowl('shimcurve.plane_model', 'Plane model')
         elif model_type == 5:
             if self.genus == 1:
                 return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
@@ -508,13 +508,13 @@ class WebModCurve(WebObj):
         elif model_type == 7:
             return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
         elif model_type == 8:
-            return display_knowl('modcurve.embedded_model', 'Embedded model')
+            return display_knowl('shimcurve.embedded_model', 'Embedded model')
         return ""
 
     def model_type_domain(self, model_type):
         s = self.model_type_str(model_type)
         if s:
-            s = f"from the {s} of this modular curve"
+            s = f"from the {s} of this Shimura curve"
         return s
 
     def model_type_codomain(self, model_type):
@@ -580,15 +580,15 @@ class WebModCurve(WebObj):
                 {"label": {"$in": codomain_labels}},
                 ["label","name"]))
             # Do not display maps for which the codomain model has dont_display = False
-            image_eqs = list(db.modcurve_models.search(
-                {"modcurve": {"$in": codomain_labels},
+            image_eqs = list(db.shimcurve_models.search(
+                {"shimcurve": {"$in": codomain_labels},
                  "dont_display": False},
-                ["modcurve", "model_type", "equation"]))
+                ["shimcurve", "model_type", "equation"]))
             for m in maps:
                 codomain = [crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
                 codomain_name = codomain["name"]
                 image_eq = [model for model in image_eqs
-                            if model["modcurve"] == m["codomain_label"]
+                            if model["shimcurve"] == m["codomain_label"]
                             and model["model_type"] == m["codomain_model_type"]]
                 if len(image_eq) > 0:
                     codomain_equation = image_eq[0]["equation"]
@@ -603,7 +603,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def modelmaps_count(self):
-        return db.modcurve_modelmaps.count({"domain_label": self.coarse_label})
+        return db.shimcurve_modelmaps.count({"domain_label": self.coarse_label})
 
     @lazy_attribute
     def has_more_modelmaps(self):
@@ -672,19 +672,19 @@ class WebModCurve(WebObj):
         self.downloads = [
             (
                 "Code to Magma",
-                url_for(".modcurve_magma_download", label=self.label),
+                url_for(".shimcurve_magma_download", label=self.label),
             ),
             (
                 "Code to SageMath",
-                url_for(".modcurve_sage_download", label=self.label),
+                url_for(".shimcurve_sage_download", label=self.label),
             ),
             (
                 "All data to text",
-                url_for(".modcurve_text_download", label=self.label),
+                url_for(".shimcurve_text_download", label=self.label),
             ),
             (
                 'Underlying data',
-                url_for(".modcurve_data", label=self.label),
+                url_for(".shimcurve_data", label=self.label),
             )
 
         ]
@@ -693,15 +693,15 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def known_degree1_points(self):
-        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
+        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
 
     @lazy_attribute
     def known_degree1_noncm_points(self):
-        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
+        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
 
     @lazy_attribute
     def known_low_degree_points(self):
-        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
+        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
 
     @lazy_attribute
     def low_degree_cusps(self):
@@ -709,7 +709,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def db_points(self):
-        return list(db.modcurve_points.search(
+        return list(db.shimcurve_points.search(
             {"curve_label": self.coarse_label},
             sort=["degree", "j_height"],
             projection=["Elabel","cm","isolated","jinv","j_field","j_height",
@@ -834,67 +834,67 @@ class WebModCurve(WebObj):
         curve = self
         if curve.known_degree1_noncm_points or curve.pointless is False:
             if curve.genus == 1 and curve.rank is None:
-                desc = r'This modular curve is an elliptic curve, but the rank has not been computed'
+                desc = r'This Shimura curve is an elliptic curve, but the rank has not been computed'
             elif curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
-                    desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    desc = r'This Shimura curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
-                    desc = 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
+                    desc = 'This Shimura curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
-                    desc = r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    desc = r'This Shimura curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
-                    desc = 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
+                    desc = 'This Shimura curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational cusp"),
                         pluralize(len(curve.cm_discriminants), "rational CM point"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.rational_cusps and curve.cm_discriminants:
-                    desc = 'This modular curve has %s and %s, but no other known rational points.' % (
+                    desc = 'This Shimura curve has %s and %s, but no other known rational points.' % (
                         pluralize(curve.rational_cusps, "rational cusp"),
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
                 elif curve.rational_cusps and curve.known_degree1_noncm_points > 0:
-                    desc = 'This modular curve has rational points, including %s and <a href="%s">%s</a>.' % (
+                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational_cusp"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
-                    desc = 'This modular curve has rational points, including %s and <a href="%s">%s</a>, but no rational cusps.' % (
+                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>, but no rational cusps.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.rational_cusps:
-                    desc = 'This modular curve has %s but no known non-cuspidal rational points.' % (
+                    desc = 'This Shimura curve has %s but no known non-cuspidal rational points.' % (
                         pluralize(curve.rational_cusps, "rational cusp"))
                 elif curve.cm_discriminants:
-                    desc = 'This modular curve has %s but no rational cusps or other known rational points.' % (
+                    desc = 'This Shimura curve has %s but no rational cusps or other known rational points.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
                 elif curve.known_degree1_points > 0:
-                    desc = 'This modular curve has <a href="%s">%s</a> but no rational cusps or CM points.' % (
+                    desc = 'This Shimura curve has <a href="%s">%s</a> but no rational cusps or CM points.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
             if curve.obstructions == [0]:
-                desc = 'This modular curve has no real points, and therefore no rational points.'
+                desc = 'This Shimura curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
-                desc = fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+                desc = fr'This Shimura curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.obstructions:
-                desc = fr'This modular curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
+                desc = fr'This Shimura curve has no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
             elif curve.pointless is None:
                 if curve.genus <= 90:
                     pexp = "$p$ not dividing the level"
                 else:
                     pexp = "good $p < 8192$"
-                desc = fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
+                desc = fr'This Shimura curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
-                desc = "This modular curve has finitely many rational points, none of which are cusps."
+                desc = "This Shimura curve has finitely many rational points, none of which are cusps."
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
             if self.only_cuspidal():
-                desc += "  The following are the coordinates of the rational cusps on this modular curve."
+                desc += "  The following are the coordinates of the rational cusps on this Shimura curve."
             else:
-                desc += "  The following are the known rational points on this modular curve (one row per $j$-invariant)."
+                desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc
 
     def only_cuspidal(self, rational=True):
@@ -909,10 +909,10 @@ class WebModCurve(WebObj):
         noncusp = self.known_low_degree_points
         infinite = self.genus == 0 or (self.genus == 1 and self.rank > 0)
         if infinite:
-            gdesc = "this modular curve has genus 0" if self.genus == 0 else "the Jacobian of this modular curve is a positive rank elliptic curve"
+            gdesc = "this Shimura curve has genus 0" if self.genus == 0 else "the Jacobian of this Shimura curve is a positive rank elliptic curve"
             desc = f"Since {gdesc}, there are no {display_knowl('ag.isolated_point', 'isolated points')} of any degree.  It has "
         else:
-            desc = "This modular curve has "
+            desc = "This Shimura curve has "
         if noncusp or cusps:
             url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="no")
             if not noncusp:
@@ -935,9 +935,9 @@ class WebModCurve(WebObj):
             desc += "no stored points of degree at least 2."
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_nf_points:
             if noncusp:
-                desc += "</p><p>The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant):"
+                desc += "</p><p>The following are the known low degree points on this Shimura curve (one row per residue field and $j$-invariant):"
             elif cusps:
-                desc += "</p><p>The following are the cusps of degree between 2 and 6 on this modular curve (one row per residue field):"
+                desc += "</p><p>The following are the cusps of degree between 2 and 6 on this Shimura curve (one row per residue field):"
         return desc
 
     @lazy_attribute
@@ -977,7 +977,7 @@ class WebModCurve(WebObj):
             texlabels.append("%s_{%s}^{%s}" % (level, index, genus))
         texlabels = list(set(texlabels))
         texlabels.extend(names.values())
-        texlabels = {rec["label"]: rec["image"] for rec in db.modcurve_teximages.search({"label": {"$in": list(texlabels)}})}
+        texlabels = {rec["label"]: rec["image"] for rec in db.shimcurve_teximages.search({"label": {"$in": list(texlabels)}})}
         nodes, edges = [], []
         for lab, x in zip(self.lattice_labels, self.lattice_x):
             nodes.append(LatNode(lab, x))
