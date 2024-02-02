@@ -107,14 +107,14 @@ def index_Q():
 @shimcurve_page.route("/Q/random/")
 @redirect_no_cache
 def random_curve():
-    label = db.gps_gl2zhat_fine.random()
+    label = db.gps_shimura.random()
     return url_for_shimcurve_label(label)
 
 @shimcurve_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "shimcurve",
-        db.gps_gl2zhat_fine,
+        db.gps_shimura,
         url_for_shimcurve_label,
         title="Some interesting Shimura curves",
         bread=get_bread("Interesting"),
@@ -129,8 +129,6 @@ def shimcurve_link(label):
 
 @shimcurve_page.route("/Q/<label>/")
 def by_label(label):
-    if RSZB_LABEL_RE.fullmatch(label):
-        label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
@@ -238,24 +236,9 @@ def shimcurve_lmfdb_label(label):
     if LABEL_RE.fullmatch(label):
         label_type = "label"
         lmfdb_label = label
-    elif RSZB_LABEL_RE.fullmatch(label):
-        label_type = "RSZB label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RSZBlabel": label}, "label")
-    elif CP_LABEL_RE.fullmatch(label):
-        label_type = "CP label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"CPlabel": label}, "label")
-    elif SZ_LABEL_RE.fullmatch(label):
-        label_type = "SZ label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"SZlabel": label}, "label")
-    elif RZB_LABEL_RE.fullmatch(label):
-        label_type = "RZB label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RZBlabel": label}, "label")
-    elif S_LABEL_RE.fullmatch(label):
-        label_type = "S label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"Slabel": label}, "label")
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"name": canonicalize_name(label)}, "label")
+        lmfdb_label = db.gps_shimura.lucky({"name": canonicalize_name(label)}, "label")
     else:
         label_type = "label"
         lmfdb_label = None
@@ -279,7 +262,7 @@ def shimcurve_jump(info):
         return redirect(url_for_shimcurve_label(label))
     else:
         # Get factorization for each label
-        factors = list(db.gps_gl2zhat_fine.search({"label": {"$in": lmfdb_labels_not_X1}},
+        factors = list(db.gps_shimura.search({"label": {"$in": lmfdb_labels_not_X1}},
                                                   ["label","factorization"]))
         factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
                    for f in factors]
@@ -289,7 +272,7 @@ def shimcurve_jump(info):
             return redirect(url_for(".index"))
         # Get list of all factors, lexicographically sorted
         factors = sorted(sum(factors, []), key=key_for_numerically_sort)
-        label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
+        label = db.gps_shimura.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
@@ -313,8 +296,6 @@ shimcurve_columns = SearchColumns(
         MathCol("genus", "shimcurve.genus", "Genus"),
         ProcessedCol("rank", "shimcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
         ProcessedCol("q_gonality_bounds", "shimcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
-        MathCol("cusps", "shimcurve.cusps", "Cusps"),
-        MathCol("rational_cusps", "shimcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps"),
         CheckCol("cm_discriminants", "shimcurve.cm_discriminants", "CM points", align="center"),
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True, default=False),
         CheckCol("simple", "shimcurve.simple", "Simple", default=False),
@@ -326,7 +307,7 @@ shimcurve_columns = SearchColumns(
         CheckCol("pointless", "shimcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "shimcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -376,7 +357,6 @@ def parse_family(inp, query, qfield):
     #'psl2index',
     #'psl2level',
     #'qtwist',
-    #'rational_cusps',
     #'reductions',
     #'scalar_label',
     #'simple',
@@ -395,7 +375,7 @@ def parse_family(inp, query, qfield):
     #'factored'
 
 class ShimCurve_download(Downloader):
-    table = db.gps_gl2zhat_fine
+    table = db.gps_shimura
     title = "Shimura curves"
     inclusions = {
         "subgroup": (
@@ -453,10 +433,6 @@ class ShimCurve_download(Downloader):
             s += "// Exact gonality unknown, but contained in following interval\n"
             s += "gamma_int := %s;\n" % rec['q_gonality_bounds']
         s += "\n// Modular data\n"
-        s += "// Number of cusps\n"
-        s += "Ncusps := %s\n;" % rec['cusps']
-        s += "// Number of rational cusps\n"
-        s += "Nrat_cusps := %s\n;" % rec['cusps']
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
         if rec['factorization'] != []:
@@ -611,7 +587,7 @@ def shimcurve_text_download(label):
     return ShimCurve_download().download_shimura_curve(label, lang="text")
 
 @search_wrap(
-    table=db.gps_gl2zhat_fine,
+    table=db.gps_shimura,
     title="Shimura curve search results",
     err_title="Shimura curves search input error",
     shortcuts={"jump": shimcurve_jump, "download": ShimCurve_download()},
@@ -641,9 +617,7 @@ def shimcurve_search(info, query):
     parse_ints(info, query, "genus")
     parse_ints(info, query, "rank")
     parse_ints(info, query, "genus_minus_rank")
-    parse_ints(info, query, "cusps")
     parse_interval(info, query, "q_gonality", quantifier_type=info.get("gonality_type", "exactly"))
-    parse_ints(info, query, "rational_cusps")
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
     if not info.get("points_type"): # default, which is non-cuspidal
@@ -680,11 +654,11 @@ def shimcurve_search(info, query):
         else:
             if "-" in lmfdb_label:
                 # fine label
-                rec = db.gps_gl2zhat_fine.lookup(lmfdb_label, ["parents", "coarse_label"])
+                rec = db.gps_shimura.lookup(lmfdb_label, ["parents", "coarse_label"])
                 parents = [rec["coarse_label"]] + rec["parents"]
             else:
                 # coarse label
-                parents = db.gps_gl2zhat_fine.lookup(lmfdb_label, "parents")
+                parents = db.gps_shimura.lookup(lmfdb_label, "parents")
         if parents is None:
             msg = "%s not the label of a Shimura curve in the database"
             flash_error(msg, info["covered_by"])
@@ -694,8 +668,8 @@ def shimcurve_search(info, query):
 
 class ShimCurveSearchArray(SearchArray):
     noun = "curve"
-    jump_example = "13.78.3.a.1"
-    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
+    jump_example = "6.6.6.3.1"
+    jump_egspan = "e.g. 6.6.6.3.1, X(6), X(6,3), or X0(6,3)*X1(6,5) (fiber product over $X(6)$)"
     jump_prompt = "Label or name"
     jump_knowl = "shimcurve.search_input"
 
@@ -744,20 +718,6 @@ class ShimCurveSearchArray(SearchArray):
             label="Genus-rank difference",
             example="0",
             example_span="0, 1",
-        )
-        cusps = TextBox(
-            name="cusps",
-            knowl="shimcurve.cusps",
-            label="Cusps",
-            example="1",
-            example_span="1, 4-8",
-        )
-        rational_cusps = TextBox(
-            name="rational_cusps",
-            knowl="shimcurve.cusps",
-            label=r"$\Q$-cusps",
-            example="1",
-            example_span="0, 4-8",
         )
         gonality_quantifier = SelectBox(
             name="gonality_type",
@@ -839,8 +799,7 @@ class ShimCurveSearchArray(SearchArray):
         )
         points_type = SelectBox(
             name="points_type",
-            options=[('', 'non-cusp'),
-                     ('noncm', 'non-CM, non-cusp'),
+            options=[('noncm', 'non-CM'),
                      ('all', 'all'),
                      ],
             min_width=105)
@@ -862,22 +821,12 @@ class ShimCurveSearchArray(SearchArray):
         family = SelectBox(
             name="family",
             options=[("", ""),
-                     ("X0", "X0(N)"),
-                     ("X1", "X1(N)"),
-                     ("Xpm1", "X±1(N)"),
-                     ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "X±1(2,2N)"),
-                     ("Xsp", "Xsp(N)"),
-                     ("Xns", "Xns(N)"),
-                     ("Xspplus", "Xsp+(N)"),
-                     ("Xnsplus", "Xns+(N)"),
-                     ("XS4", "XS4(N)"),
-                     ("Xsym", "Xsym(N)"),
+                     ("XD", "X_D^*(1)"),
+                     ("XD0", "X_D^*(N)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
-            example="X0(N), Xsp(N)")
+            example="X_D^*(N)")
         CPlabel = SneakyTextBox(
             name="CPlabel",
             knowl="shimcurve.other_labels",
@@ -890,7 +839,6 @@ class ShimCurveSearchArray(SearchArray):
             [level, index],
             [genus, rank],
             [genus_minus_rank, gonality],
-            [cusps, rational_cusps],
             [nu2, nu3],
             [simple, squarefree],
             [cm_discriminants, factor],
@@ -902,7 +850,7 @@ class ShimCurveSearchArray(SearchArray):
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
-            [gonality, cusps, rational_cusps, nu2, nu3],
+            [gonality, nu2, nu3],
             [simple, squarefree, cm_discriminants, factor, covers],
             [covered_by, contains_negative_one, points, obstructions, family],
             [CPlabel],
@@ -946,9 +894,6 @@ ratpoint_columns = SearchColumns([
 
 def ratpoint_postprocess(res, info, query):
     labels = list({rec["curve_label"] for rec in res})
-    RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat_fine.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
-    for rec in res:
-        rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
     return res
 
 @search_wrap(
@@ -1085,14 +1030,11 @@ class RatPointSearchArray(SearchArray):
             knowl="shimcurve.standard",
             label="Family",
             example="X0(N), Xsp(N)")
-        cusp = YesNoBox(
-            "cusp",
-            label="Cusp",
-            knowl="shimcurve.cusps")
+        
 
         self.refine_array = [[curve, level, genus, degree, cm],
                              [residue_field, j_field, jinv, j_height, isolated],
-                             [family, cusp]]
+                             [family]]
 
     def search_types(self, info):
         # There is no homepage for a point, so we disable the random link
@@ -1107,17 +1049,17 @@ class ShimCurve_stats(StatsDisplay):
     def short_summary(self):
         shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
         return (
-            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfacs $A$ over $\Q$ with potential quaternionic multiplication.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A$ over $\Q$ with potential quaternionic multiplication.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
         )
 
     @property
     def summary(self):
         shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
         return (
-            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A/\Q$ with potential quaternionic multiplication.'
         )
 
-    table = db.gps_gl2zhat_fine
+    table = db.gps_shimura
     baseurl_func = ".index"
     buckets = {'level': ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
                'genus': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
@@ -1191,7 +1133,7 @@ def labels_page():
 
 @shimcurve_page.route("/data/<label>")
 def shimcurve_data(label):
-    coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
+    coarse_label = db.gps_shimura.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_shimcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
@@ -1199,5 +1141,5 @@ def shimcurve_data(label):
         labels = [label]
     else:
         labels = [label, coarse_label]
-    tables = ["gps_gl2zhat_fine" for lab in labels]
+    tables = ["gps_shimura" for lab in labels]
     return datapage(labels, tables, title=f"Shimura curve data - {label}", bread=bread)
