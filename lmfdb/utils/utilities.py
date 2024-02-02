@@ -625,21 +625,6 @@ def rgbtohex(rgb):
     b = int(b)
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
-def pol_to_html(p):
-    r"""
-    Convert polynomial p with variable x to html.
-
-    Example:
-    >>> pol_to_html("x^2 + 2*x + 1")
-    '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
-    """
-    s = str(p)
-    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
-    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
-    s = re.sub(r"\*", r"", s)
-    s = re.sub(r"x", r"<i>x</i>", s)
-    return s
-
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
 
@@ -993,7 +978,9 @@ def plural_form(noun):
         noun += "s"
     return noun
 
-def pluralize(n, noun, omit_n=False):
+def pluralize(n, noun, omit_n=False, denom=None):
+    if denom is not None:
+        return f"{n}/{denom} {plural_form(noun)}"
     if n == 1:
         if omit_n:
             return noun

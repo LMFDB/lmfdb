@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
-from lmfdb.utils import (url_for, pol_to_html,
+from lmfdb.utils import (url_for,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,
     raw_typeset_poly, pos_int_and_factor)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
@@ -748,9 +748,6 @@ class NumberFieldGaloisGroup():
 
     def polredabslatex(self):
         return self.polredabs()._latex_()
-
-    def polredabshtml(self):
-        return pol_to_html(self.polredabs())
 
     def label(self):
         if "label" in self._data:

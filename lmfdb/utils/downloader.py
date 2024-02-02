@@ -568,7 +568,7 @@ class Downloader():
         urlparts = urlparse(request.url)
         pieces = urlparts.query.split("&")
         # We omit the download-specific parts that were added in lmfdb/templates/download_search_results.html
-        omit = ["Submit=", "download=", "query="]
+        omit = ["Submit=", "download=", "query=", "download_row_count="]
         pieces = [piece for piece in pieces if not any(piece.startswith(bad) for bad in omit)]
         urlparts = urlparts._replace(query="&".join(pieces))
         url = urlunparse(urlparts)
@@ -601,12 +601,18 @@ class Downloader():
         # Determine the sort order
         sort, sort_desc = self.get_sort(info, query)
 
+        # The user can limit the number of results
+        try:
+            limit = int(info.get("download_row_count"))
+        except Exception:
+            limit = None
+
         # The number of results is needed in advance since we want to show it at the top
         # while the iterator won't be done
         num_results = table.count(query)
 
         # Actually issue the query, and store the result in an iterator
-        data = iter(table.search(query, projection=proj, sort=sort, one_per=one_per))
+        data = iter(table.search(query, projection=proj, sort=sort, one_per=one_per, limit=limit))
 
         # We get the first 50 results, in order to accommodate sections (like modular forms) where default and contingent columns rely on having access to info["results"]
         # We don't get all the results, since we want to support downloading millions of records, where this would time out.
@@ -643,9 +649,14 @@ class Downloader():
         def make_download():
             # We start with a string describing the query, the number of results and the sort order
             yield c + ' Search link: %s\n' % url
-            yield c + ' Query "%s" returned %s%s.\n\n' %(
+            if limit is None:
+                num_res_disp = pluralize(num_results, self.short_name)
+            else:
+                num_res_disp = pluralize(limit, self.short_name, denom=num_results)
+            yield c + ' Query "%s" %s %s%s.\n\n' %(
                 str(info.get('query')),
-                pluralize(num_results, self.short_name),
+                "returned" if limit is None else "was limited to",
+                num_res_disp,
                 "" if sort_desc is None else f", sorted by {sort_desc}")
 
             # We then describe the columns included, both in a comment and as a variable

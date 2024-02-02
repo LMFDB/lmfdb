@@ -901,8 +901,8 @@ def index():
             knowls.append(k)
 
     def first_char(k):
-        t = k['title']
-        if len(t) == 0 or t[0] not in string.ascii_letters:
+        t = k['title'].replace("$", "").replace("\\", "")
+        if len(t) == 0 or t[0] not in string.ascii_letters + string.digits:
             return "?"
         return t[0].upper()
 
@@ -913,11 +913,13 @@ def index():
         '''sort knowls, special chars at the end'''
         if cur_cat == "columns":
             return knowl['id']
-        title = knowl['title']
+        title = knowl['title'].replace("$", "").replace("\\", "")
         if title and title[0] in string.ascii_letters:
             return (0, title.lower())
-        else:
+        elif title and title[0] in string.digits:
             return (1, title.lower())
+        else:
+            return (2, title.lower())
 
     knowls = sorted(knowls, key=knowl_sort_key)
     from itertools import groupby

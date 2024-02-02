@@ -234,7 +234,7 @@ class WebAbstractGroup(WebObj):
             # Check if the label is for an order supported by GAP's SmallGroup
             from .main import abstract_group_label_regex
             m = abstract_group_label_regex.fullmatch(label)
-            if m is not None and m.group(2) is not None:
+            if m is not None and m.group(2) is not None and m.group(2).isdigit():
                 n = ZZ(m.group(1))
                 i = ZZ(m.group(2))
                 if libgap.SmallGroupsAvailable(n):
