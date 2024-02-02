@@ -55,17 +55,11 @@ from lmfdb.shimura_curves.web_curve import (
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
 
-coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
-fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
+coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+"
+fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+"
 LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
-RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
-CP_LABEL_RE = re.compile(r"\d+[A-Z]+\d+")
-CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z]+(\d+)")
-SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
-RZB_LABEL_RE = re.compile(r"X\d+")
-S_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
-NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|SYM)?\(\d+\)")
+NAME_RE = re.compile(r"XD_?(0|1)?\(\d+\)")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -305,9 +299,9 @@ shimcurve_columns = SearchColumns(
         ProcessedCol("models", "shimcurve.models", "Models", blankzeros, default=False),
         MathCol("num_known_degree1_points", "shimcurve.known_points", "$j$-points", default=False),
         CheckCol("pointless", "shimcurve.local_obstruction", "Local obstruction", default=False),
-        ProcessedCol("generators", "shimcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
+        ProcessedCol("generators", "shimcurve.level_structure", r"$N_{B^{\times}}(O) \ltimes \operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$ \langle %s+%si+%sj+%sk, \begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    db_cols=["label", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):

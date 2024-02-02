@@ -322,8 +322,6 @@ class WebShimCurve(WebObj):
             props.append((None, self.image))
         if hasattr(self,"rank") and self.rank is not None:
             props.append(("Analytic rank", str(self.rank)))
-        props.extend([("Cusps", str(self.cusps)),
-                      (r"$\Q$-cusps", str(self.rational_cusps))])
         return props
 
     @lazy_attribute
@@ -412,31 +410,6 @@ class WebShimCurve(WebObj):
                 return r"none in database"
         else:
             return "none"
-
-    @lazy_attribute
-    def cusps_display(self):
-        if self.cusps == 1:
-            return "$1$ (which is rational)"
-        elif self.rational_cusps == 0:
-            return f"${self.cusps}$ (none of which are rational)"
-        elif self.rational_cusps == 1:
-            return f"${self.cusps}$ (of which $1$ is rational)"
-        elif self.cusps == self.rational_cusps:
-            return f"${self.cusps}$ (all of which are rational)"
-        else:
-            return f"${self.cusps}$ (of which ${self.rational_cusps}$ are rational)"
-
-    @lazy_attribute
-    def cusp_widths_display(self):
-        if not self.cusp_widths:
-            return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_widths) + "$"
-
-    @lazy_attribute
-    def cusp_orbits_display(self):
-        if not self.cusp_orbits:
-            return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):
@@ -693,19 +666,15 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def known_degree1_points(self):
-        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
+        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": 1})
 
     @lazy_attribute
     def known_degree1_noncm_points(self):
-        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
+        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0})
 
     @lazy_attribute
     def known_low_degree_points(self):
-        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
-
-    @lazy_attribute
-    def low_degree_cusps(self):
-        return sum([n for (w,n) in self.cusp_orbits if 1 < w <= 6])
+        return db.shimcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}})
 
     @lazy_attribute
     def db_points(self):
@@ -841,38 +810,32 @@ class WebShimCurve(WebObj):
                 elif curve.known_degree1_points > 0:
                     desc = 'This Shimura curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
-                        pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
+                        pluralize(curve.known_degree1_points, "stored point"))
                 else:
                     desc = r'This Shimura curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
-                if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
+                if curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     desc = 'This Shimura curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
-                        pluralize(curve.rational_cusps, "rational cusp"),
                         pluralize(len(curve.cm_discriminants), "rational CM point"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
-                        pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
-                elif curve.rational_cusps and curve.cm_discriminants:
-                    desc = 'This Shimura curve has %s and %s, but no other known rational points.' % (
-                        pluralize(curve.rational_cusps, "rational cusp"),
-                        pluralize(len(curve.cm_discriminants), "rational CM point"))
-                elif curve.rational_cusps and curve.known_degree1_noncm_points > 0:
-                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>.' % (
-                        pluralize(curve.rational_cusps, "rational_cusp"),
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
-                        pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
-                elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
-                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>, but no rational cusps.' % (
-                        pluralize(len(curve.cm_discriminants), "rational CM point"),
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
-                        pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
-                elif curve.rational_cusps:
-                    desc = 'This Shimura curve has %s but no known non-cuspidal rational points.' % (
-                        pluralize(curve.rational_cusps, "rational cusp"))
+                        pluralize(curve.known_degree1_noncm_points, "known non-CM point"))
                 elif curve.cm_discriminants:
-                    desc = 'This Shimura curve has %s but no rational cusps or other known rational points.' % (
+                    desc = 'This Shimura curve has %s and %s, but no other known rational points.' % (
+                        pluralize(len(curve.cm_discriminants), "rational CM point"))
+                elif curve.known_degree1_noncm_points > 0:
+                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>.' % (
+                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
+                        pluralize(curve.known_degree1_noncm_points, "known non-CM point"))
+                elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
+                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>.' % (
+                        pluralize(len(curve.cm_discriminants), "rational CM point"),
+                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
+                        pluralize(curve.known_degree1_noncm_points, "known non-CM point"))
+                elif curve.cm_discriminants:
+                    desc = 'This Shimura curve has %s but no other known rational points.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
                 elif curve.known_degree1_points > 0:
-                    desc = 'This Shimura curve has <a href="%s">%s</a> but no rational cusps or CM points.' % (
+                    desc = 'This Shimura curve has <a href="%s">%s</a> but no rational CM points.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
@@ -889,23 +852,13 @@ class WebShimCurve(WebObj):
                     pexp = "good $p < 8192$"
                 desc = fr'This Shimura curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
-                desc = "This Shimura curve has finitely many rational points, none of which are cusps."
+                desc = "This Shimura curve has finitely many rational points."
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
-            if self.only_cuspidal():
-                desc += "  The following are the coordinates of the rational cusps on this Shimura curve."
-            else:
-                desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
+            desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc
-
-    def only_cuspidal(self, rational=True):
-        if rational:
-            return self.known_degree1_points == 0
-        else:
-            return self.known_low_degree_points == 0
 
     @lazy_attribute
     def low_degree_points_description(self):
-        cusps = self.low_degree_cusps
         noncusp = self.known_low_degree_points
         infinite = self.genus == 0 or (self.genus == 1 and self.rank > 0)
         if infinite:
@@ -913,7 +866,7 @@ class WebShimCurve(WebObj):
             desc = f"Since {gdesc}, there are no {display_knowl('ag.isolated_point', 'isolated points')} of any degree.  It has "
         else:
             desc = "This Shimura curve has "
-        if noncusp or cusps:
+        if noncusp:
             url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="no")
             if not noncusp:
                 link = "no"
@@ -921,23 +874,15 @@ class WebShimCurve(WebObj):
                 link = f'<a href="{url}">{noncusp}</a>'
             else:
                 link = str(noncusp)
-            desc += '%s stored non-cuspidal point%s of degree at least 2, ' % (link, "s" if (noncusp != 1) else "")
+            desc += '%s stored point%s of degree at least 2, ' % (link, "s" if (noncusp != 1) else "")
             url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="yes")
             desc += "and "
-            if not cusps:
-                link = "no"
-            elif infinite:
-                link = f'<a href="{url}">{cusps}</a>'
-            else:
-                link = str(cusps)
-            desc += '%s cuspidal point%s of degree between 2 and 6.' % (link, "s" if (cusps != 1) else "")
+            link = "no"
         else:
             desc += "no stored points of degree at least 2."
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_nf_points:
             if noncusp:
                 desc += "</p><p>The following are the known low degree points on this Shimura curve (one row per residue field and $j$-invariant):"
-            elif cusps:
-                desc += "</p><p>The following are the cusps of degree between 2 and 6 on this Shimura curve (one row per residue field):"
         return desc
 
     @lazy_attribute
