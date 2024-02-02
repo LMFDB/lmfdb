@@ -238,7 +238,7 @@ def shimcurve_lmfdb_label(label):
         lmfdb_label = label
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
-        lmfdb_label = db.gps_shimura.lucky({"name": canonicalize_name(label)}, "label")
+        lmfdb_label = db.gps_shimura_test.lucky({"name": canonicalize_name(label)}, "label")
     else:
         label_type = "label"
         lmfdb_label = None
@@ -262,7 +262,7 @@ def shimcurve_jump(info):
         return redirect(url_for_shimcurve_label(label))
     else:
         # Get factorization for each label
-        factors = list(db.gps_shimura.search({"label": {"$in": lmfdb_labels_not_X1}},
+        factors = list(db.gps_shimura_test.search({"label": {"$in": lmfdb_labels_not_X1}},
                                                   ["label","factorization"]))
         factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
                    for f in factors]
@@ -272,7 +272,7 @@ def shimcurve_jump(info):
             return redirect(url_for(".index"))
         # Get list of all factors, lexicographically sorted
         factors = sorted(sum(factors, []), key=key_for_numerically_sort)
-        label = db.gps_shimura.lucky({'factorization': factors}, "label")
+        label = db.gps_shimura_test.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
@@ -375,7 +375,7 @@ def parse_family(inp, query, qfield):
     #'factored'
 
 class ShimCurve_download(Downloader):
-    table = db.gps_shimura
+    table = db.gps_shimura_test
     title = "Shimura curves"
     inclusions = {
         "subgroup": (
@@ -587,7 +587,7 @@ def shimcurve_text_download(label):
     return ShimCurve_download().download_shimura_curve(label, lang="text")
 
 @search_wrap(
-    table=db.gps_shimura,
+    table=db.gps_shimura_test,
     title="Shimura curve search results",
     err_title="Shimura curves search input error",
     shortcuts={"jump": shimcurve_jump, "download": ShimCurve_download()},
@@ -654,11 +654,11 @@ def shimcurve_search(info, query):
         else:
             if "-" in lmfdb_label:
                 # fine label
-                rec = db.gps_shimura.lookup(lmfdb_label, ["parents", "coarse_label"])
+                rec = db.gps_shimura_test.lookup(lmfdb_label, ["parents", "coarse_label"])
                 parents = [rec["coarse_label"]] + rec["parents"]
             else:
                 # coarse label
-                parents = db.gps_shimura.lookup(lmfdb_label, "parents")
+                parents = db.gps_shimura_test.lookup(lmfdb_label, "parents")
         if parents is None:
             msg = "%s not the label of a Shimura curve in the database"
             flash_error(msg, info["covered_by"])
@@ -1042,8 +1042,8 @@ class RatPointSearchArray(SearchArray):
 
 class ShimCurve_stats(StatsDisplay):
     def __init__(self):
-        self.ncurves = comma(db.gps_shimura.count())
-        self.max_level = db.gps_shimura.max("level")
+        self.ncurves = comma(db.gps_shimura_test.count())
+        self.max_level = db.gps_shimura_test.max("level")
 
     @property
     def short_summary(self):
@@ -1059,7 +1059,7 @@ class ShimCurve_stats(StatsDisplay):
             fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A/\Q$ with potential quaternionic multiplication.'
         )
 
-    table = db.gps_shimura
+    table = db.gps_shimura_test
     baseurl_func = ".index"
     buckets = {'level': ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
                'genus': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
@@ -1133,7 +1133,7 @@ def labels_page():
 
 @shimcurve_page.route("/data/<label>")
 def shimcurve_data(label):
-    coarse_label = db.gps_shimura.lookup(label, "coarse_label")
+    coarse_label = db.gps_shimura_test.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_shimcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
@@ -1141,5 +1141,5 @@ def shimcurve_data(label):
         labels = [label]
     else:
         labels = [label, coarse_label]
-    tables = ["gps_shimura" for lab in labels]
+    tables = ["gps_shimura_test" for lab in labels]
     return datapage(labels, tables, title=f"Shimura curve data - {label}", bread=bread)
