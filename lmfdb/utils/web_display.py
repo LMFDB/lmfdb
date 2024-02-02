@@ -813,13 +813,16 @@ def sparse_cyclotomic_to_mathml(n, dat):
     def zetapow(k):
         if k == 0:
             return "<mn>1</mn>"
+        elif n == 4:
+            assert k == 1
+            return zeta
         if k == 1:
-            return f"<msub>{zeta}{n}</msub>"
+            return f"<msub>{zeta}</msub>"
         if 1 < k < 10:
-            return f"<msubsup>{zeta}{n}<mn>{k}</mn></msubsup>"
+            return f"<msubsup>{zeta}<mn>{k}</mn></msubsup>"
         if k < 0:
-            return f"<msubsup>{zeta}{n}<mrow>{minus}<mn>{-k}</mn></mrow></msubsup>"
-        return f"<msubsup>{zeta}{n}<mrow><mn>{k}</mn></mrow></msubsup>"
+            return f"<msubsup>{zeta}<mrow>{minus}<mn>{-k}</mn></mrow></msubsup>"
+        return f"<msubsup>{zeta}<mrow><mn>{k}</mn></mrow></msubsup>"
     ans = ''
     for c, e in dat:
         if c == 0:
