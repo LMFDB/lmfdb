@@ -3,7 +3,7 @@
 from collections import Counter
 from flask import url_for
 
-from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
+from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField, Integer, Rational
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -595,7 +595,22 @@ class WebShimCurve(WebObj):
             if (c != 0):
                 if (len(ret) > 0) and (c > 0):
                     ret += "+"
-                ret += "%s" %c
+                if type(c) in [Integer, int]:
+                    if (abs(c) != 1) or (i == 0):
+                        ret += r"%s" %c
+                    elif c == -1:
+                        ret += r"-"
+                elif type(c) == Rational:
+                    if c.denominator() == 1:
+                        ret += r"%s" %c
+                    else:
+                        num = c.numerator()
+                        if (num < 0):
+                            ret += r"-"
+                            num = -num
+                        ret += r"\frac{%s}{%s}" % (num, c.denominator())
+                else:
+                    raise TypeError("Quaternion coefficients must be rational numbers")
                 ret += basis[i]
         return ret
 
@@ -606,6 +621,22 @@ class WebShimCurve(WebObj):
         if not self.generators: # 2.6.0.a.1
             return "trivial subgroup"
         return ", ".join(r"$\left \langle" + WebShimCurve.show_quaternion(g[:4]) + "," + WebShimCurve.show_generator(g[4:]) + r" \right \rangle$" for g in self.generators)
+
+    def show_quat_alg(self):
+        return r"$ \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (self.i_square, self.j_square)
+
+    def show_rat_quaternion(nums, denom):
+        if denom == 1:
+            return WebShimCurve.show_quaternion(nums)
+        return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
+    
+    def show_order(self):
+        nums = self.gensOnumerators
+        denoms = self.gensOdenominators
+        # basis_coeffs = [[QQ(x) / QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
+        # return r"$ \left \langle" + ", ".join([WebShimCurve.show_quaternion(g) for g in basis_coeffs]) + r"\right \rangle $"
+        
+        return r"$ \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
 
     def show_subgroup(self):
         if self.Glabel:
