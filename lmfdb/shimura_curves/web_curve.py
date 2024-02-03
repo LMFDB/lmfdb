@@ -582,22 +582,30 @@ class WebShimCurve(WebObj):
     def has_more_modelmaps(self):
         return len(self.modelmaps_to_display) < self.modelmaps_count
 
-    def cyclic_isogeny_field_degree(self):
-        return min(r[1] for r in self.isogeny_orbits if r[0] == self.level)
-
-    def cyclic_torsion_field_degree(self):
-        return min(r[1] for r in self.orbits if r[0] == self.level)
-
     def full_torsion_field_degree(self):
         N = self.level
         P = integer_prime_divisors(N)
         GL2size = euler_phi(N) * N * (N // prod(P))**2 * prod(p**2 - 1 for p in P)
         return GL2size // self.index
 
+    def show_quaternion(g):
+        ret = r"";
+        basis = ["","i","j","k"]
+        for i,c in enumerate(g):
+            if (c != 0):
+                if (len(ret) > 0) and (c > 0):
+                    ret += "+"
+                ret += "%s" %c
+                ret += basis[i]
+        return ret
+
+    def show_generator(g):
+        return r"\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}" % tuple(g)
+    
     def show_generators(self):
         if not self.generators: # 2.6.0.a.1
             return "trivial subgroup"
-        return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
+        return ", ".join(r"$\left \langle" + WebShimCurve.show_quaternion(g[:4]) + "," + WebShimCurve.show_generator(g[4:]) + r" \right \rangle$" for g in self.generators)
 
     def show_subgroup(self):
         if self.Glabel:
@@ -606,13 +614,12 @@ class WebShimCurve(WebObj):
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
-        curves = self.table.search(query, ["label", "coarse_label", "level", "index", "psl2index", "genus", "name", "rank", "newforms", "dims", "mults"])
+        curves = self.table.search(query, ["label", "coarse_label", "level", "index", "genus", "name", "rank", "dims", "mults"])
         return [(
             C["label"],
             name_to_latex(C["name"]) if C.get("name") else C["label"],
             C["level"],
             C["index"] // self.index if flip else self.index // C["index"], # relative index
-            C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"], # relative degree
             C["genus"],
             "?" if C["rank"] is None else C["rank"],
             "not computed" if C["dims"] is None or self.dims is None else
