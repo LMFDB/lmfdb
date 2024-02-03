@@ -629,6 +629,15 @@ class WebShimCurve(WebObj):
         if denom == 1:
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
+    def show_mu(self):
+        nums = self.gensOnumerators
+        denoms = self.gensOdenominators
+        O_basis = [[QQ(x)/QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
+        coeffs = [[self.mu[i] * c for c in b] for i,b in enumerate(O_basis)]
+        sum_coeffs = [sum([x[i] for x in coeffs]) for i in range(len(coeffs[0]))]
+        denom = lcm([x.denominator() for x in sum_coeffs])
+        nums = [ZZ(denom*x) for x in sum_coeffs]
+        return WebShimCurve.show_rat_quaternion(nums, denom)
     
     def show_order(self):
         nums = self.gensOnumerators
