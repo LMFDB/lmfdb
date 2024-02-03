@@ -1008,22 +1008,12 @@ class RatPointSearchArray(SearchArray):
         family = SelectBox(
             name="family",
             options=[("", ""),
-                     ("X0", "X0(N)"),
-                     ("X1", "X1(N)"),
-                     ("Xpm1", "Xpm1(N)"),
-                     ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "Xpm1(2,2N)"),
-                     ("Xsp", "Xsp(N)"),
-                     ("Xns", "Xns(N)"),
-                     ("Xspplus", "Xsp+(N)"),
-                     ("Xnsplus", "Xns+(N)"),
-                     ("XS4", "XS4(N)"),
-                     ("Xsym", "Xsym(N)"),
+                     ("XD", "X(D)"),
+                     ("XD0", "X0(D,N)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
-            example="X0(N), Xsp(N)")
+            example="X(D), X0(D,N)")
         
 
         self.refine_array = [[curve, level, genus, degree, cm],
@@ -1036,7 +1026,9 @@ class RatPointSearchArray(SearchArray):
 
 class ShimCurve_stats(StatsDisplay):
     def __init__(self):
-        self.ncurves = comma(db.gps_shimura_test.count())
+        # !!! For some reason counting the empty query returns 0 ?
+        self.ncurves = comma(db.gps_shimura_test.count({'discB' : {'$gt' : 0}}))
+        # self.ncurves = comma(db.gps_shimura_test.count())
         self.max_level = db.gps_shimura_test.max("level")
 
     @property
