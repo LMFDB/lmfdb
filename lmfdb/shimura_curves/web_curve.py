@@ -594,7 +594,7 @@ class WebShimCurve(WebObj):
     def show_generators(self):
         if not self.generators: # 2.6.0.a.1
             return "trivial subgroup"
-        return ", ".join(r"$\left \langle" + WebShimCurve.show_quaternion(g[:4]) + "," + WebShimCurve.show_generator(g[4:]) + r" \right \rangle$" for g in self.generators)
+        return ", ".join(r"$\left \langle" + WebShimCurve.show_quaternion(g[:4]) + "," + self.show_order_elt(g[4:]) + r" \right \rangle$" for g in self.generators)
 
     def show_quat_alg(self):
         return r"$ \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (self.i_square, self.j_square)
@@ -603,15 +603,18 @@ class WebShimCurve(WebObj):
         if denom == 1:
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
-    def show_mu(self):
+    def show_order_elt(self, elt):
         nums = self.gensOnumerators
         denoms = self.gensOdenominators
         O_basis = [[QQ(x)/QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
-        coeffs = [[self.mu[i] * c for c in b] for i,b in enumerate(O_basis)]
+        coeffs = [[elt[i] * c for c in b] for i,b in enumerate(O_basis)]
         sum_coeffs = [sum([x[i] for x in coeffs]) for i in range(len(coeffs[0]))]
         denom = lcm([x.denominator() for x in sum_coeffs])
         nums = [ZZ(denom*x) for x in sum_coeffs]
         return WebShimCurve.show_rat_quaternion(nums, denom)
+    
+    def show_mu(self):
+        return self.show_order_elt(self.mu)
     
     def show_order(self):
         nums = self.gensOnumerators
