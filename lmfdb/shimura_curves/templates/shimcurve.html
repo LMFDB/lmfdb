@@ -30,7 +30,8 @@
   {% if curve.contains_negative_one %}
   <tr><td>{{ KNOWL('shimcurve.quadratic_refinements', 'Quadratic refinements') }}:</td><td> {{ curve.quadratic_refinements | safe }}</td></tr>
   {% endif %}
-  <tr><td>{{ KNOWL('shimcurve.level_structure', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td><td>${{ curve.full_torsion_field_degree() }}$</td></tr>
+  <tr><td>{{ KNOWL('shimcurve.endomorphism_galois_group', 'Endomorphism field Galois group') }}:</td><td> {{ '<a href="{}">{}</a>&nbsp;'.format(
+                    url_for("abstract.by_label", label=curve.galEnd), curve.galEnd) | safe }}</td></tr>
 </table>
 {% endif %}
 
@@ -38,7 +39,6 @@
 <h2> {{ KNOWL('ag.jacobian', 'Jacobian') }} </h2>
 
 <table>
-  <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ curve.factored_conductor }}$ </td></tr>
   <tr>
     <td>
       {{ KNOWL('av.simple', 'Simple') }}:
@@ -67,7 +67,6 @@
       {% endif %}
     </td>
   </tr>
-  <tr><td>{{ KNOWL('shimcurve.decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td></tr>
 </table>
 {% endif %}
 

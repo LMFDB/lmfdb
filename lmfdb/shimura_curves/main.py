@@ -279,11 +279,6 @@ def blankzeros(n):
 shimcurve_columns = SearchColumns(
     [
         LinkCol("label", "shimcurve.label", "Label", url_for_shimcurve_label),
-        SearchCol("RSZBlabel", "shimcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
-        LinkCol("RZBlabel", "shimcurve.other_labels", "RZB label", url_for_RZB_label, short_title="RZB label", default=False),
-        LinkCol("CPlabel", "shimcurve.other_labels", "CP label", url_for_CP_label, short_title="CP label", default=False),
-        ProcessedCol("SZlabel", "shimcurve.other_labels", "SZ label", lambda s: s if s else "", short_title="SZ label", default=False),
-        ProcessedCol("Slabel", "shimcurve.other_labels", "S label", lambda s: s if s else "", short_title="S label", default=False),
         ProcessedCol("name", "shimcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center"),
         MathCol("level", "shimcurve.level", "Level"),
         MathCol("index", "shimcurve.index", "Index"),
@@ -305,30 +300,16 @@ shimcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "any"]:
+    if inp not in ["XD", "XD0", "any"]:
         raise ValueError
-    inp = inp.replace("plus", "+")
     if inp == "any":
         query[qfield] = {"$like": "X%"}
-    elif inp == "X" or inp == "XS4": #add nothing
-        query[qfield] = {"$like": inp + "(%"}
-    elif inp == "Xns+" or inp == "Xns": #add X(1)
-        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)"]}]}
-    elif inp == "Xsp": #add X(1),X(2)
-        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
-    elif inp == "X2": # X_1(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
-    elif inp == "Xpm2": # X_{\pm1}(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
-    elif inp == "Xpm1": # Add X(1) and X0(N) for N=2,3,4,6
-        query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
-    elif inp == "X1":
-        query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
-    elif inp == "Xsym": # add X(1), X(2)
-        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
-    else: #add X(1),X0(2)
-        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
-
+    elif inp == "XD": #add nothing
+        query[qfield] = {"$like": "X%" + "(1)"}
+    elif inp == "XD0":
+        query[qfield] = {"$or":[{"$like": "X%(%", "$not": {"$like": "%,%"}}, {"$in":["X6(1)", "X6(2)"]}]}
+    else: #add XD(1),XD0(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X6(1)","X6(2)"]}]}
 
 # cols currently unused in individual page download
     #'cusp_orbits',
@@ -388,20 +369,10 @@ class ShimCurve_download(Downloader):
         if rec is None:
             return abort(404, "Label not found: %s" % label)
         s += "// Magma code for Shimura curve with label %s\n\n" % label
-        if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
+        if rec['name']:
             s += "// Other names and/or labels\n"
             if rec['name']:
                 s += "// Curve name: %s\n" % rec['name']
-            if rec['CPlabel']:
-                s += "// Cummins-Pauli label: %s\n" % rec['CPlabel']
-            if rec['RZBlabel']:
-                s += "// Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
-            if rec['RSZBlabel']:
-                s += "// Rouse-Sutherland-Zureick-Brown label: %s\n" % rec['RSZBlabel']
-            if rec['Slabel']:
-                s += "// Sutherland label: %s\n" % rec['Slabel']
-            if rec['SZlabel']:
-                s += "// Sutherland-Zywina label: %s\n" % rec['SZlabel']
         s += "\n// Group data\n"
         s += "level := %s;\n" % rec['level']
         s += "// Elements that, together with Gamma(level), generate the group\n"
@@ -637,7 +608,6 @@ def shimcurve_search(info, query):
             query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-7,-28]]}
         else:
             query["cm_discriminants"] = {"$contains": int(info["cm_discriminants"])}
-    parse_noop(info, query, "CPlabel")
     parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     if "covered_by" in info:
@@ -815,18 +785,13 @@ class ShimCurveSearchArray(SearchArray):
         family = SelectBox(
             name="family",
             options=[("", ""),
-                     ("XD", "X_D^*(1)"),
-                     ("XD0", "X_D^*(N)"),
+                     ("XD", "XD(1)"),
+                     ("XD0", "XD0(N)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
-            example="X_D^*(N)")
-        CPlabel = SneakyTextBox(
-            name="CPlabel",
-            knowl="shimcurve.other_labels",
-            label="CP label",
-            example="3B0",
-        )
+            example="XD0(N)")
+
         count = CountBox()
 
         self.browse_array = [
@@ -847,7 +812,6 @@ class ShimCurveSearchArray(SearchArray):
             [gonality, nu2, nu3],
             [simple, squarefree, cm_discriminants, factor, covers],
             [covered_by, contains_negative_one, points, obstructions, family],
-            [CPlabel],
         ]
 
     sorts = [
@@ -871,7 +835,6 @@ def low_degree_points():
 
 ratpoint_columns = SearchColumns([
     LinkCol("curve_label", "shimcurve.label", "Label", url_for_shimcurve_label),
-    #SearchCol("curve_RSZBlabel", "shimcurve.other_labels", "RSZB label", short_title="RSZB label", default=False),
     ProcessedCol("curve_name", "shimcurve.standard", "Name", name_to_latex, default=False),
     MathCol("curve_genus", "shimcurve.genus", "Genus"),
     MathCol("degree", "shimcurve.point_degree", "Degree"),
@@ -1008,12 +971,12 @@ class RatPointSearchArray(SearchArray):
         family = SelectBox(
             name="family",
             options=[("", ""),
-                     ("XD", "X(D)"),
-                     ("XD0", "X0(D,N)"),
+                     ("XD", "XD(1)"),
+                     ("XD0", "XD0(N)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
-            example="X(D), X0(D,N)")
+            example="XD(1), XD0(N)")
         
 
         self.refine_array = [[curve, level, genus, degree, cm],
@@ -1049,22 +1012,12 @@ class ShimCurve_stats(StatsDisplay):
     baseurl_func = ".index"
     buckets = {'level': ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
                'genus': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
-               'rank': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
-               'gonality': ['1', '2', '3', '4', '5-8', '9-'],
                }
     knowls = {'level': 'shimcurve.level',
               'genus': 'shimcurve.genus',
-              'rank': 'shimcurve.rank',
-              'gonality': 'shimcurve.gonality',
               }
     stat_list = [
         {'cols': ['level', 'genus'],
-         'proportioner': proportioners.per_row_total,
-         'totaler': totaler()},
-        {'cols': ['genus', 'rank'],
-         'proportioner': proportioners.per_row_total,
-         'totaler': totaler()},
-        {'cols': ['genus', 'q_gonality'],
          'proportioner': proportioners.per_row_total,
          'totaler': totaler()},
     ]

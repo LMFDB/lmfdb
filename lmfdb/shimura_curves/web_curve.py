@@ -95,39 +95,13 @@ def showj_nf(j, jfield, jorig, resfield):
     return '<a href="%s">%s</a>' % (url, s)
 
 def canonicalize_name(name):
-    cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
-    if cname[:4] == "Xs4(":
-        cname = cname.upper()
-    elif cname in ["X1(2,2)", "Xpm1(2,2)", "Xsp(2)", "Xsym(2)"]:
-        cname = "X(2)"
-    elif cname in ["X1(2)", "Xpm1(2)", "Xsp+(2)"]:
-        cname = "X0(2)"
-    elif cname == "Xpm1(3)":
-        cname = "X0(3)"
-    elif cname in ["Xns+(2)", "Xsym(1)"]:
-        cname = "X(1)"
-    elif cname == "Xpm1(4)":
-        cname = "X0(4)"
-    elif cname == "Xpm1(6)":
-        cname = "X0(6)"
+    cname = name
     return cname
 
 def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
-    if "+" in name:
-        name = name.replace("+", "^+")
-    if "ns" in name:
-        name = name.replace("ns", r"{\mathrm{ns}}")
-    elif "sp" in name:
-        name = name.replace("sp", r"{\mathrm{sp}}")
-    elif "S4" in name:
-        name = name.replace("S4", "{S_4}")
-    elif "pm1" in name:
-        name = name.replace("pm1", r"{\pm1}")
-    elif "sym" in name:
-        name = name.replace('sym', r"{\mathrm{sym}}")
     if name[1] != "(":
         name = "X_" + name[1:]
     return f"${name}$"
