@@ -624,9 +624,9 @@ class WebShimCurve(WebObj):
         
         return r"$ \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
 
-    def show_subgroup(self):
-        if self.Glabel:
-            return abstract_group_display_knowl(self.Glabel)
+    def show_galendgroup(self):
+        if self.galEnd:
+            return abstract_group_display_knowl(self.galEnd)
         return ""
 
     def _curvedata(self, query, flip=False):

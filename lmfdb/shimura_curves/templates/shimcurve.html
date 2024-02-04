@@ -34,8 +34,7 @@
   {% if curve.contains_negative_one %}
   <tr><td>{{ KNOWL('shimcurve.quadratic_refinements', 'Quadratic refinements') }}:</td><td> {{ curve.quadratic_refinements | safe }}</td></tr>
   {% endif %}
-  <tr><td>{{ KNOWL('shimcurve.endomorphism_galois_group', 'Endomorphism field Galois group') }}:</td><td> {{ '<a href="{}">{}</a>&nbsp;'.format(
-                    url_for("abstract.by_label", label=curve.galEnd), curve.galEnd) | safe }}</td></tr>
+  <tr><td>{{ KNOWL('shimcurve.endomorphism_galois_group', 'Endomorphism field Galois group') }}:</td><td> {{ curve.show_galendgroup() | safe }}</td></tr>
 </table>
 {% endif %}
 
