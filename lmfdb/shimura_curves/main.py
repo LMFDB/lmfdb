@@ -101,14 +101,14 @@ def index_Q():
 @shimcurve_page.route("/Q/random/")
 @redirect_no_cache
 def random_curve():
-    label = db.gps_shimura.random()
+    label = db.gps_shimura_test.random()
     return url_for_shimcurve_label(label)
 
 @shimcurve_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "shimcurve",
-        db.gps_shimura,
+        db.gps_shimura_test,
         url_for_shimcurve_label,
         title="Some interesting Shimura curves",
         bread=get_bread("Interesting"),
