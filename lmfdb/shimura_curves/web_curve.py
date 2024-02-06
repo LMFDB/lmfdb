@@ -607,8 +607,9 @@ class WebShimCurve(WebObj):
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
     def show_order_elt(self, elt):
-        nums = self.gensOnumerators
-        denoms = self.gensOdenominators
+        order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators'], ['gens_denominators'])
+        nums = order['gens_numerators']
+        denoms = order['gens_denominators']
         O_basis = [[QQ(x)/QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
         coeffs = [[elt[i] * c for c in b] for i,b in enumerate(O_basis)]
         sum_coeffs = [sum([x[i] for x in coeffs]) for i in range(len(coeffs[0]))]
@@ -617,14 +618,13 @@ class WebShimCurve(WebObj):
         return WebShimCurve.show_rat_quaternion(nums, denom)
     
     def show_mu(self):
+        mu = db.quaternion_polarizations.lookup(self.mu_label, 'mu')
         return self.show_order_elt(self.mu)
     
     def show_order(self):
-        nums = self.gensOnumerators
-        denoms = self.gensOdenominators
-        # basis_coeffs = [[QQ(x) / QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
-        # return r"$ \left \langle" + ", ".join([WebShimCurve.show_quaternion(g) for g in basis_coeffs]) + r"\right \rangle $"
-        
+        order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
+        nums = order['gens_numerators']
+        denoms = order['gens_denominators']  
         return r"$ \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
 
     def show_galendgroup(self):
@@ -632,6 +632,17 @@ class WebShimCurve(WebObj):
             return abstract_group_display_knowl(self.galEnd)
         return ""
 
+    def show_genus(self):
+        # !!! TODO !!! add nu4, nu6, condition 0 to ahow only if they exist
+        # add area of O^1 to have it relative to it.
+        genus_str = r"$ %s " % str(self.genus)
+        if self.nu2 is not None:
+            genus_str += r" = 1 + \frac{%s}{12} - \frac{%s}{4} - \frac{%s}{3}$" %(self.fuchsian_index, self.nu2, self.nu3)
+            return genus_str
+        genus_str += "$"
+        return genus_str
+
+    
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
         curves = self.table.search(query, ["label", "coarse_label", "level", "index", "genus", "name", "rank", "dims", "mults"])
