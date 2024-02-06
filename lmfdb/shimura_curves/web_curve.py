@@ -271,8 +271,9 @@ def combined_data(label):
     data = db.gps_shimura_test.lookup(label)
     if data is None:
         return
-    if not data["contains_negative_one"]:
-        coarse = db.gps_shimura_test.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
+    if not data["is_coarse"]:
+        coarse_label = data["mu_label"] + r"." + data["coarse_label"]
+        coarse = db.gps_shimura_test.lookup(coarse_label, ["parents", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
     return data
@@ -369,14 +370,14 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def coarse_description(self):
-        if self.contains_negative_one:
+        if self.is_coarse:
             return r"yes"
         else:
             return r"no $\quad$ (see %s for the level structure with $-I$)"%(shimcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
-        if self.contains_negative_one:
+        if self.is_coarse:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
                 return r"%s"%(', '.join([shimcurve_link(label) for label in qtwists if label != self.label]))
@@ -597,7 +598,9 @@ class WebShimCurve(WebObj):
         return ", ".join(r"$\left \langle" + WebShimCurve.show_quaternion(g[:4]) + "," + self.show_order_elt(g[4:]) + r" \right \rangle$" for g in self.generators)
 
     def show_quat_alg(self):
-        return r"$ \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (self.i_square, self.j_square)
+        order = db.quaternion_orders.lookup(self.order_label,
+                                            ['i_square', 'j_square'])
+        return r"$ \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (order['i_square'], order['j_square'])
 
     def show_rat_quaternion(nums, denom):
         if denom == 1:
