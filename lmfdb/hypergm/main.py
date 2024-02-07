@@ -173,8 +173,7 @@ def list2Cnstring(li):
     if not l2:
         return 'C_1'
     fa = [ZZ(a).factor() for a in l2]
-    eds = [[pp[0], pp[1]] for b in fa for pp in b]
-    eds.sort()
+    eds = sorted([[pp[0], pp[1]] for b in fa for pp in b])
     l2 = ['C_{%d}' % (a[0]**a[1]) for a in eds]
     return (r'\times ').join(l2)
 
