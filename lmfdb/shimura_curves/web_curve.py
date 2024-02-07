@@ -607,7 +607,7 @@ class WebShimCurve(WebObj):
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
     def show_order_elt(self, elt):
-        order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators'], ['gens_denominators'])
+        order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
         nums = order['gens_numerators']
         denoms = order['gens_denominators']
         O_basis = [[QQ(x)/QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
@@ -618,8 +618,10 @@ class WebShimCurve(WebObj):
         return WebShimCurve.show_rat_quaternion(nums, denom)
     
     def show_mu(self):
-        mu = db.quaternion_polarizations.lookup(self.mu_label, 'mu')
-        return self.show_order_elt(self.mu)
+        # mu = db.quaternion_polarizations.lookup(self.mu_label, 'mu')
+        # Until the above table is ready, we put a placeholder
+        mu = [2,-2,-3,1]
+        return self.show_order_elt(mu)
     
     def show_order(self):
         order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
@@ -637,9 +639,29 @@ class WebShimCurve(WebObj):
         # add area of O^1 to have it relative to it.
         genus_str = r"$ %s " % str(self.genus)
         if self.nu2 is not None:
-            genus_str += r" = 1 + \frac{%s}{12} - \frac{%s}{4} - \frac{%s}{3}$" %(self.fuchsian_index, self.nu2, self.nu3)
-            return genus_str
-        genus_str += "$"
+            # Until the polarization table is set up, we temporarily use the orders table
+            # mu = db.quaternion_polarizations.lookup(self.mu_label, ['area_numerator', 'area_denominator'])
+            order = db.quaternion_orders.lookup(self.order_label, ['area_numerator', 'area_denominator'])
+            # Once we have the area in the polarizations we shouldn't need to do this, this is just a temporary patch
+            index = self.fuchsian_index // 4
+            if index == 1:
+                genus_str += r" = 1 + \frac{%s}{%s}" % (order['area_numerator'], order['area_denominator'])
+            else:
+                genus_str += r" = 1 + %s \cdot \frac{%s}{%s}" % (index, order['area_numerator'], order['area_denominator'])
+            for ell_order in [2,3,4,6]:
+                nu = self.__dict__['nu' + str(ell_order)]
+                if nu != 0:
+                    ram = QQ(1/2) * (1 - 1/QQ(ell_order))
+                    num = ram.numerator()
+                    denom = ram.denominator()
+                    if num == 1:
+                        genus_str += r" - \frac{%s}{%s}" %(nu, denom)
+                    elif nu == 1:
+                        genus_str += r" - \frac{%s}{%s}" %(num, denom)
+                    else:
+                        genus_str += r" - %s \cdot \frac{%s}{%s}" %(nu, num, denom)
+            return genus_str + r"$"
+        genus_str += r"$"
         return genus_str
 
     
