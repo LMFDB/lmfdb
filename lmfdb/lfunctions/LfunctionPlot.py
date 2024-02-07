@@ -840,16 +840,17 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                         dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
                         signcolour = signtocolour(signfe)
                         appearanceinfo['edgecolor'] = signcolour
-                        orbitdescriptionlist = []
-                        for n in range(numberwithlabel):
-                            orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
+                        orbitdescriptionlist = [{'label': label,
+                                                 'number': n,
+                                                 'color': signcolour}
+                                                for n in range(numberwithlabel)]
                         urlinfo['space']['orbits'].append(orbitdescriptionlist)
                 # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
                 # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
                     ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
     ans += svgEnd()
-    return(ans)
+    return ans
 
 # =====================
 

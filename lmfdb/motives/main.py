@@ -11,8 +11,7 @@ HGM_credit = 'D. Roberts and J. Jones'
 
 def get_bread(breads=[]):
     bc = [("Motives", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 @motive_page.route("/")
