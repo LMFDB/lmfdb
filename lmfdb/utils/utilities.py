@@ -566,12 +566,7 @@ def splitcoeff(coeff):
     >>> splitcoeff("1 1 \n -1 2")
     [[1.0, 1.0], [-1.0, 2.0]]
     """
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-    return answer
+    return [pair2complex(s) for s in coeff.split("\n") if s]
 
 
 ################################################################################

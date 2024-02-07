@@ -173,19 +173,14 @@ def list2Cnstring(li):
     if not l2:
         return 'C_1'
     fa = [ZZ(a).factor() for a in l2]
-    eds = []
-    for b in fa:
-        for pp in b:
-            eds.append([pp[0], pp[1]])
+    eds = [[pp[0], pp[1]] for b in fa for pp in b]
     eds.sort()
-    l2 = ['C_{%d}'% (a[0]**a[1]) for a in eds]
+    l2 = ['C_{%d}' % (a[0]**a[1]) for a in eds]
     return (r'\times ').join(l2)
 
 
 def showlist(li):
-    if not li:
-        return r'[\ ]'
-    return li
+    return r'[\ ]' if not li else li
 
 
 def splitint(a, p):
@@ -216,8 +211,7 @@ def get_bread(breads=[]):
     bc = [("Motives", url_for("motives")),
           ("Hypergeometric", url_for(".index")),
           (r"$\Q$", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 

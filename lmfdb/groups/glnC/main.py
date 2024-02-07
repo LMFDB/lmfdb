@@ -44,8 +44,7 @@ def label_is_valid(lab):
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")), ("GLnC", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 

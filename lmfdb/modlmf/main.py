@@ -36,12 +36,11 @@ def my_latex(s):
     ss += ""
     return ss
 
-#breadcrumbs and links for data quality entries
+# breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
     bc = [("mod &#x2113; modular forms", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 def learnmore_list():
