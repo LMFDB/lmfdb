@@ -77,7 +77,7 @@ def crystal_image(crystal):
         response.headers['Content-Type'] = 'image/png'
 
         return response
-    except IOError:
+    except OSError:
         return "internal error rendering graph", 500
     finally:
         # Get rid of the temporary directory
