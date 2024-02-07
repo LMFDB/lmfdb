@@ -396,7 +396,8 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.shimcurve_models.search({"shimcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+        coarse_label = self.mu_label + r"." + self.coarse_label
+        return list(db.shimcurve_models.search({"shimcurve": coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
 
     @lazy_attribute
     def formatted_models(self):
@@ -404,7 +405,8 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def models_count(self):
-        return db.shimcurve_models.count({"shimcurve": self.coarse_label})
+        coarse_label = self.mu_label + r"." + self.coarse_label
+        return db.shimcurve_models.count({"shimcurve": coarse_label})
 
     @lazy_attribute
     def has_more_models(self):
