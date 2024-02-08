@@ -593,7 +593,7 @@ class WebShimCurve(WebObj):
 
     def show_generator(g):
         return r"\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}" % tuple(g)
-    
+
     def show_generators(self):
         if not self.generators: # 2.6.0.a.1
             return "trivial subgroup"
@@ -602,7 +602,7 @@ class WebShimCurve(WebObj):
     def show_quat_alg(self):
         order = db.quaternion_orders.lookup(self.order_label,
                                             ['i_square', 'j_square'])
-        return r"$ \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (order['i_square'], order['j_square'])
+        return r"$B\langle i,j\rangle = \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (order['i_square'], order['j_square'])
 
     def show_rat_quaternion(nums, denom):
         if denom == 1:
@@ -618,18 +618,18 @@ class WebShimCurve(WebObj):
         denom = lcm([x.denominator() for x in sum_coeffs])
         nums = [ZZ(denom*x) for x in sum_coeffs]
         return WebShimCurve.show_rat_quaternion(nums, denom)
-    
+
     def show_mu(self):
         # mu = db.quaternion_polarizations.lookup(self.mu_label, 'mu')
         # Until the above table is ready, we put a placeholder
         mu = [2,-2,-3,1]
         return self.show_order_elt(mu)
-    
+
     def show_order(self):
         order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
         nums = order['gens_numerators']
-        denoms = order['gens_denominators']  
-        return r"$ \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
+        denoms = order['gens_denominators']
+        return r"$O = \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
 
     def show_galendgroup(self):
         if self.galEnd:
@@ -668,7 +668,7 @@ class WebShimCurve(WebObj):
         genus_str += r"$"
         return genus_str
 
-    
+
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
         curves = self.table.search(query, ["label", "coarse_label", "level", "index", "genus", "name", "rank", "dims", "mults"])
@@ -918,7 +918,7 @@ class WebShimCurve(WebObj):
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 desc = "This Shimura curve has finitely many rational points."
         else:
-            desc = fr'Local obstructions for rational points on this curve are not known.'    
+            desc = fr'Local obstructions for rational points on this curve are not known.'
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
             desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc
