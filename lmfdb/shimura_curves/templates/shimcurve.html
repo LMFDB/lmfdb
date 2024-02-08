@@ -8,9 +8,9 @@
 
 <h2> {{ KNOWL('shimcurve.invariants', 'Invariants') }} </h2>
 <table>
-  <tr><td>{{ KNOWL("shimcurve.B", "$B \langle i,j \\rangle =$") }}</td><td>{{ curve.show_quat_alg() }}</td><td style="width:40px;"></td><td>{{ KNOWL("shimcurve.discB", "$\operatorname{disc}(B)$") }}:</td><td> ${{ curve.discB }}$ </td><td style="width:40px;"></td></tr>
-  <tr><td>{{ KNOWL("shimcurve.order", "Order") }}:</td><td><small> ${{ curve.show_order() }}$ </small></td><td style="width:40px;"></td><td style="width:100px;">{{ KNOWL("shimcurve.discO", "$\operatorname{discrd}(O)$") }}:</td><td> ${{ curve.discO }}$ </td><td style="width:40px;"></td></tr>
-  <tr><td>{{ KNOWL("shimcurve.polarization", "Polarization") }}:</td><td> ${{ curve.show_mu() }}$</td><td style="width:20px;"></td><td>{{KNOWL("shimcurve.nrdmu", "$\operatorname{deg}(\mu)$") }}:</td><td>${{ curve.deg_mu }}$</td></tr>
+  <tr><td>{{ KNOWL("shimcurve.quaternion_algebra", "Quaternion algebra") }}:</td><td>{{ curve.show_quat_alg() }}</td><td style="width:40px;"></td><td>{{ KNOWL("shimcurve.discb", "Discriminant of $B$") }}:</td><td> ${{ curve.discB }}$ </td><td style="width:40px;"></td></tr>
+  <tr><td>{{ KNOWL("shimcurve.order", "Order") }}:</td><td><small> ${{ curve.show_order() }}$ </small></td><td style="width:40px;"></td><td style="width:100px;">{{ KNOWL("shimcurve.disco", "Reduced discriminant of $O$") }}:</td><td> ${{ curve.discO }}$ </td><td style="width:40px;"></td></tr>
+  <tr><td>{{ KNOWL("shimcurve.polarization", "Polarization") }}:</td><td> ${{ curve.show_mu() }}$</td><td style="width:20px;"></td><td>{{KNOWL("shimcurve.nrdmu", "Polarization degree") }}:</td><td>${{ curve.deg_mu }}$</td></tr>
   <tr><td>{{ KNOWL("shimcurve.level", "Level") }}:</td><td> ${{ curve.level }}$ </td><td style="width:20px;"></td><td style="width:60px;"></td></tr>
   <tr><td>{{ KNOWL("shimcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td><td style="width:20px;"></td></tr>
   <tr><td>{{ KNOWL("shimcurve.genus", "Genus") }}:</td><td> {{ curve.show_genus() }}</td></tr>
@@ -185,7 +185,7 @@
 {% endif %}
 
 {#
-We are removing this section until we have more sources of non-rational points.  You can still search for them 
+We are removing this section until we have more sources of non-rational points.  You can still search for them
 
 <h2> {{ KNOWL('shimcurve.nonrational_point', 'Non-rational points') }}</h2>
 
