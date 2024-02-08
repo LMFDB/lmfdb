@@ -317,6 +317,9 @@ def bad_bots_list():
             "The Knowledge AI",
             "Wolfram",
             "petalbot",
+            "Bytespider",
+            "Sogou",
+            "MJ12bot",
         ]
     ]
 
