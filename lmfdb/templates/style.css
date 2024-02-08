@@ -763,6 +763,9 @@ table.ntdata > thead > tr:first-child {
 table.ntdata > tbody > tr:last-child {
     border-bottom:  2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata.nobottom > tbody > tr:last-child {
+    border-bottom:  0px;
+}
 
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,
@@ -2472,6 +2475,13 @@ span.activesubgp {
     display: none;
 }
 
+#row_selector_shown {
+  display: none;
+}
+#download_row_count_input {
+  width: 75px;
+}
+
 span.chargp {
     color: {{color.col_main}};
 }
@@ -2504,6 +2514,10 @@ button.sub_active {
 button.sub_inactive {
   background: {{color.lf_ar_button_bkg}};
   border: 1px solid {{color.lf_ar_button_brd}};
+}
+
+tr.highlighted, td.highlighted {
+  background-color: {{color.col_main_ll}};
 }
 
 #column-selector, #sort-selecter {

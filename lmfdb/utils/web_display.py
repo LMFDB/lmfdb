@@ -789,11 +789,75 @@ def sparse_cyclotomic_to_latex(n, dat):
             ans += '-'  + zpart
         else:
             ans += '{:+d}'.format(p[0])  + zpart
-    ans= re.compile(r'^\+').sub('', ans)
+    ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
 
+def sparse_cyclotomic_to_mathml(n, dat):
+    r"""
+    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
+    and return sum_{j=1}^k cj zeta_n^ej in mathml form as it is given
+    (converting to sage will rewrite the element in terms of a basis)
+    """
+    dat.sort(key=lambda p: p[1])
+    minus = "<mo>&#x02212;</mo>"
+    plus = "<mo>&#x0002B;</mo>"
+    if n == 4:
+        zeta = "<mi>i</mi>"
+    elif n < 10: # will be wrapped in <msub> or <msubsup> below
+        zeta = f"<mi>&#x003B6;</mi><mn>{n}</mn>"
+    else:
+        zeta = f"<mi>&#x003B6;</mi><mrow><mn>{n}</mn></mrow>"
+
+    def zetapow(k):
+        if k == 0:
+            return "<mn>1</mn>"
+        elif n == 4:
+            assert k == 1
+            return zeta
+        if k == 1:
+            return f"<msub>{zeta}</msub>"
+        if 1 < k < 10:
+            return f"<msubsup>{zeta}<mn>{k}</mn></msubsup>"
+        if k < 0:
+            return f"<msubsup>{zeta}<mrow>{minus}<mn>{-k}</mn></mrow></msubsup>"
+        return f"<msubsup>{zeta}<mrow><mn>{k}</mn></mrow></msubsup>"
+    ans = ''
+    for c, e in dat:
+        if c == 0:
+            continue
+        if e == 0:
+            if c == 1 or c == -1:
+                zpart = "<mn>1</mn>"
+            else:
+                zpart = ""
+        else:
+            zpart = zetapow(e)
+
+        # Now the coefficient
+        if c == 1:
+            ans += plus + zpart
+        elif c == -1:
+            ans += minus + zpart
+        elif c > 0:
+            ans += plus + f"<mn>{c}</mn>" + zpart
+        else:
+            ans += minus + f"<mn>{-c}</mn>" + zpart
+    if ans.startswith(plus):
+        ans = ans[len(plus):]
+    if not ans:
+        ans = "<mn>0</mn>"
+
+    # We omit xmlns="http://www.w3.org/1998/Math/MathML" since rendering seems to work without it, and we have a bunch of math tags
+    return f'<math display="inline"><mrow>{ans}</mrow></math>'
+
+def integer_to_mathml(n):
+    if n >= 0:
+        n = f"<mn>{n}</mn>"
+    else:
+        n = f"<mo>&#x02212;</mo><mn>{-n}</mn>"
+    return f'<math display="inline"><mrow>{n}</mrow></math>'
 
 def dispZmat(mat):
     r""" Display a matrix with integer entries
@@ -836,7 +900,5 @@ def dispZmat_from_list(a_list, dim):
     """
     num_entries = len(a_list)
     assert num_entries == dim ** 2
-    output = []
-    for i in range(0,dim**2,dim):
-        output.append(a_list[i:i+dim])
+    output = [a_list[i:i + dim] for i in range(0, dim**2, dim)]
     return matrix(output)

@@ -566,12 +566,7 @@ def splitcoeff(coeff):
     >>> splitcoeff("1 1 \n -1 2")
     [[1.0, 1.0], [-1.0, 2.0]]
     """
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-    return answer
+    return [pair2complex(s) for s in coeff.split("\n") if s]
 
 
 ################################################################################
@@ -625,21 +620,6 @@ def rgbtohex(rgb):
     b = int(b)
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
-def pol_to_html(p):
-    r"""
-    Convert polynomial p with variable x to html.
-
-    Example:
-    >>> pol_to_html("x^2 + 2*x + 1")
-    '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
-    """
-    s = str(p)
-    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
-    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
-    s = re.sub(r"\*", r"", s)
-    s = re.sub(r"x", r"<i>x</i>", s)
-    return s
-
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
 
@@ -677,9 +657,9 @@ def code_snippet_knowl(D, full=True):
         url += "#L%s" % lines[0]
     else:
         label = filename
-    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
+    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+    return '<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
 
 
 ################################################################################
@@ -993,7 +973,9 @@ def plural_form(noun):
         noun += "s"
     return noun
 
-def pluralize(n, noun, omit_n=False):
+def pluralize(n, noun, omit_n=False, denom=None):
+    if denom is not None:
+        return f"{n}/{denom} {plural_form(noun)}"
     if n == 1:
         if omit_n:
             return noun

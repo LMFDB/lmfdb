@@ -576,16 +576,22 @@ function control_sort(S) {
 
 function update_download_url(link) {
   // console.log("before modification", link.href);
+  var newval;
   var url = new URL(link.href);
   var params = url.searchParams;
   var keys = ["showcol", "hidecol", "sort_order", "sort_dir"];
   for (var i = 0; i < keys.length; ++i) {
-    var newval = $("input[name="+keys[i]+"]").val();
+    newval = $("input[name="+keys[i]+"]").val();
     if (newval.length == 0) {
       params.delete(keys[i]);
     } else {
       params.set(keys[i], newval);
     }
+  }
+  newval = $("input[name=download_row_count]").val();
+  console.log("newval", newval);
+  if (newval.length > 0) {
+    params.set("download_row_count", newval);
   }
   url.search = params.toString();
   link.href = url.href;
@@ -611,6 +617,12 @@ function resetStart()
   $('input[name=start]').val('')
 }
 
+function show_row_selector()
+{
+  $('#row_selector_hidden').hide();
+  $('#row_selector_shown').show();
+  return false;
+}
 
 /**
  * https://github.com/component/debounce

@@ -9,7 +9,7 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, prime_range, Re
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
+    web_latex, to_dict, coeff_to_poly, comma, format_percentage,
     flash_error, display_knowl, CountBox, Downloader, prop_int_pretty,
     SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox,
     SubsetBox, TextBoxWithSelect, parse_bool_unknown, parse_posints,
@@ -719,15 +719,6 @@ def render_field_webpage(args):
     except AttributeError:
         pass
     return render_template("nf-show-field.html", properties=properties, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, formatfield=formatfield, KNOWL_ID="nf.%s"%label)
-
-
-def format_coeffs2(coeffs):
-    return format_coeffs(string2list(coeffs))
-
-
-def format_coeffs(coeffs):
-    return pol_to_html(str(coeff_to_poly(coeffs)))
-#    return web_latex(coeff_to_poly(coeffs))
 
 #@nf_page.route("/")
 # def number_fields():

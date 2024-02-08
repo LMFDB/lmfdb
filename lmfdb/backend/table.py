@@ -991,14 +991,14 @@ class PostgresTable(PostgresBase):
         start = time.time()
         count = 0
         tot = self.count(query)
-        sep = kwds.get("sep", u"|")
+        sep = kwds.get("sep", "|")
         try:
             with datafile:
                 # write headers
-                datafile.write(sep.join(data_cols) + u"\n")
+                datafile.write(sep.join(data_cols) + "\n")
                 datafile.write(
                     sep.join(self.col_type.get(col) for col in data_cols)
-                    + u"\n\n"
+                    + "\n\n"
                 )
 
                 for rec in self.search(query, projection=projection, sort=[]):
@@ -1008,7 +1008,7 @@ class PostgresTable(PostgresBase):
                             tostr_func(processed.get(col), self.col_type[col])
                             for col in data_cols
                         )
-                        + u"\n"
+                        + "\n"
                     )
                     count += 1
                     if (count % progress_count) == 0:
@@ -1059,7 +1059,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
         """
         self._check_locks()
-        sep = kwds.get("sep", u"|")
+        sep = kwds.get("sep", "|")
         print("Updating %s from %s..." % (self.search_table, datafile))
         now = time.time()
         if label_col is None:
@@ -1541,7 +1541,7 @@ class PostgresTable(PostgresBase):
             self._id_ordered = True
             self._out_of_order = False
 
-    def _write_header_lines(self, F, cols, sep=u"|", include_id=True):
+    def _write_header_lines(self, F, cols, sep="|", include_id=True):
         """
         Writes the header lines to a file
         (row of column names, row of column types, blank line).
@@ -1672,7 +1672,7 @@ class PostgresTable(PostgresBase):
             If the search and extra files contain ids, they should be contiguous,
             starting at 1.
         """
-        sep = kwds.get("sep", u"|")
+        sep = kwds.get("sep", "|")
         suffix = "_tmp"
         if restat is None:
             restat = countsfile is None or statsfile is None
@@ -2075,7 +2075,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        sep = kwds.pop("sep", u"|")
+        sep = kwds.pop("sep", "|")
 
         search_cols = [col for col in self.search_cols if columns is None or col in columns]
         extra_cols = [col for col in self.extra_cols if columns is None or col in columns]
