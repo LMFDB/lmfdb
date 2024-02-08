@@ -645,11 +645,13 @@ class WebShimCurve(WebObj):
             # mu = db.quaternion_polarizations.lookup(self.mu_label, ['area_numerator', 'area_denominator'])
             order = db.quaternion_orders.lookup(self.order_label, ['area_numerator', 'area_denominator'])
             # Once we have the area in the polarizations we shouldn't need to do this, this is just a temporary patch
-            index = self.fuchsian_index // 4
+            area = order['area_numerator'] / QQ(order['area_denominator']);
+            area /= 4;
+            index = self.fuchsian_index
             if index == 1:
-                genus_str += r" = 1 + \frac{%s}{%s}" % (order['area_numerator'], order['area_denominator'])
+                genus_str += r" = 1 + \frac{%s}{%s}" % (area.numerator(), area.denominator())
             else:
-                genus_str += r" = 1 + %s \cdot \frac{%s}{%s}" % (index, order['area_numerator'], order['area_denominator'])
+                genus_str += r" = 1 + %s \cdot \frac{%s}{%s}" % (index, area.numerator(), area.denominator())
             for ell_order in [2,3,4,6]:
                 nu = self.__dict__['nu' + str(ell_order)]
                 if nu != 0:
@@ -900,7 +902,7 @@ class WebShimCurve(WebObj):
                     desc = 'This Shimura curve has <a href="%s">%s</a> but no rational CM points.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
-        else:
+        elif curve.obstructions is not None:
             if curve.obstructions == [0]:
                 desc = 'This Shimura curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
@@ -915,6 +917,8 @@ class WebShimCurve(WebObj):
                 desc = fr'This Shimura curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 desc = "This Shimura curve has finitely many rational points."
+        else:
+            desc = fr'Local obstructions for rational points on this curve are not known.'    
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
             desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc
