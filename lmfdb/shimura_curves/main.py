@@ -55,8 +55,8 @@ from lmfdb.shimura_curves.web_curve import (
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
 
-coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+"
-fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+"
+coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+\.[a-z]+\.\d+"
+fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+\.\d+\.[a-z]+\.\d+\.\d+"
 LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
 NAME_RE = re.compile(r"XD_?(0|1)?\(\d+\)")
