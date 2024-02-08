@@ -784,7 +784,7 @@ class PostgresBase():
                     print("Created file %s" % filename)
 
     def _check_header_lines(
-        self, F, table_name, columns_set, sep=u"|", prohibit_missing=True
+        self, F, table_name, columns_set, sep="|", prohibit_missing=True
     ):
         """
         Reads the header lines from a file (row of column names, row of column
@@ -864,7 +864,7 @@ class PostgresBase():
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
         kwds = dict(kwds)  # to not modify the dict kwds, with the pop
-        sep = kwds.pop("sep", u"|")
+        sep = kwds.pop("sep", "|")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -1088,7 +1088,7 @@ class PostgresBase():
                     )
                     done.add(i_target)  # not really needed
 
-    def _read_header_lines(self, F, sep=u"|"):
+    def _read_header_lines(self, F, sep="|"):
         """
         Reads the header lines from a file
         (row of column names, row of column types, blank line).

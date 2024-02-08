@@ -254,7 +254,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     This function does the actual rendering, for render and the template_filter
     render_knowl_in_template (ultimately for KNOWL_INC)
     """
-    render_me = u"""\
+    render_me = """\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
@@ -295,8 +295,7 @@ def body_class():
 
 def get_bread(breads=[]):
     bc = [("Knowledge", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 
@@ -410,7 +409,7 @@ def show(ID):
         caturl = url_for('.index', category=k.category)
     b = get_bread([(k.category, caturl), ('%s' % title, url_for('.show', ID=ID))])
 
-    return render_template(u"knowl-show.html",
+    return render_template("knowl-show.html",
                            title=title,
                            k=k,
                            cur_username=current_user.get_id(),
@@ -792,7 +791,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
     # authors = ', '.join(authors)
 
-    render_me = u"""\
+    render_me = """\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}

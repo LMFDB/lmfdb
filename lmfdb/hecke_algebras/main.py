@@ -16,12 +16,11 @@ from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 l_range = list(prime_range(14))
 
-#breadcrumbs and links for data quality entries
+# breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
     bc = [("HeckeAlgebra", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 def learnmore_list():

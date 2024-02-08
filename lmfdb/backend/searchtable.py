@@ -1363,7 +1363,7 @@ class PostgresSearchTable(PostgresTable):
             cur = self._execute(selecter, values, buffered=True)
             return self._search_iterator(cur, search_cols, extra_cols, projection, query=query, silent=silent)
 
-    def copy_to_example(self, searchfile, extrafile=None, id=None, sep=u"|", commit=True):
+    def copy_to_example(self, searchfile, extrafile=None, id=None, sep="|", commit=True):
         """
         This function writes files in the format used for copy_from and reload.
         It writes the header and a single random row.

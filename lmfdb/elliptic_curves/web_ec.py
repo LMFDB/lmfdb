@@ -709,7 +709,7 @@ class WebEC():
                 rtknowl = ['ec.nonsplit_multiplicative_reduction', 'ec.additive_reduction', 'ec.split_multiplicative_reduction'][1+red]
             p = str(p)
             pdata = iwdata[p]
-            if isinstance(pdata, type(u'?')):
+            if isinstance(pdata, str):
                 if not rtype:
                     if pdata=="o?":
                         rtype = "ord"

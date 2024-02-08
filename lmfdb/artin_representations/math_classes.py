@@ -572,9 +572,10 @@ class ArtinRepresentation():
             field = ComplexField()
             root_of_unity = exp((field.gen()) * 2 * field.pi() / int(self.character_field()))
             local_factor_processed_pols = [0]   # dummy to account for the shift in indices
-            for pol in local_factors:
-                local_factor_processed_pols.append(
-                    process_polynomial_over_algebraic_integer(pol, field, root_of_unity))
+            local_factor_processed_pols.extend(
+                process_polynomial_over_algebraic_integer(pol, field,
+                                                          root_of_unity)
+                for pol in local_factors)
 
             def tmp(conjugacy_class_index_start_1):
                 return local_factor_processed_pols[conjugacy_class_index_start_1]
