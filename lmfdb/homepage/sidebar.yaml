@@ -91,12 +91,13 @@
     - title: Genus 3 curves over $\F_{q}(t)$
       status: future
       colspan: onecolumn
-    - title: Shimura curves
-      status: future
-      colspan: onecolumn
     - title: Modular curves
       status: beta
       url_for: "modcurve.index"
+      colspan: onecolumn
+    - title: Shimura curves
+      status: beta
+      url_for: "shimcurve.index"
       colspan: onecolumn
     - title: Higher genus families
       url_for:  "higher_genus_w_automorphisms.index"
