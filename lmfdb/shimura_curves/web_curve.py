@@ -4,6 +4,7 @@ from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField, Integer, Rational
+
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
