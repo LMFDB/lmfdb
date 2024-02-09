@@ -610,7 +610,7 @@ class WebShimCurve(WebObj):
         if denom == 1:
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
-    
+
     def show_order_elt(self, elt):
         order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
         nums = order['gens_numerators']
@@ -630,13 +630,13 @@ class WebShimCurve(WebObj):
         order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
         nums = order['gens_numerators']
         denoms = order['gens_denominators']
-        return r"$O = \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
+        return r"$ " + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r" $"
 
     def show_group(self):
         if self.Glabel:
             return abstract_group_display_knowl(self.Glabel)
         return ""
-        
+
     def show_galendgroup(self):
         if self.galEnd:
             return abstract_group_display_knowl(self.galEnd)
