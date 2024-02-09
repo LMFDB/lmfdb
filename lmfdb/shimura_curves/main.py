@@ -55,11 +55,11 @@ from lmfdb.shimura_curves.web_curve import (
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
 
-coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+"
-fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+"
+coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+\.[a-z]+\.\d+"
+fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+\.\d+\.[a-z]+\.\d+\.\d+"
 LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
-NAME_RE = re.compile(r"XD_?(0|1)?\(\d+\)")
+NAME_RE = re.compile(r"X\(\d+(;|,)\d+\)")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -300,16 +300,20 @@ shimcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["XD", "XD0", "any"]:
+    if inp not in ["XD", "XDN", "XDstar", "XDNstar", "any"]:
         raise ValueError
     if inp == "any":
         query[qfield] = {"$like": "X%"}
     elif inp == "XD": #add nothing
-        query[qfield] = {"$like": "X%" + "(1)"}
-    elif inp == "XD0":
-        query[qfield] = {"$or":[{"$like": "X%(%", "$not": {"$like": "%,%"}}, {"$in":["X6(1)", "X6(2)"]}]}
-    else: #add XD(1),XD0(2)
-        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X6(1)","X6(2)"]}]}
+        query[qfield] = {"$like": "X" + "(%;1)"}
+    elif inp == "XDN":
+        query[qfield] = {"$or":[{"$like": "X(%;%)", "$not": {"$like": "%,%"}}, {"$in":["X(6;1)", "X(6;2)"]}]}
+    elif inp == "XDstar":
+        query[qfield] = {"$like": "X^*" + "(%;1)"}
+    elif inp == "XDNstar":
+        query[qfield] = {"$like": "X^*" + "(%;%)"}
+    else: #add X(6;1),X(6;2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(6;1)","X(6;2)"]}]}
 
 # cols currently unused in individual page download
     #'cusp_orbits',
@@ -632,8 +636,8 @@ def shimcurve_search(info, query):
 
 class ShimCurveSearchArray(SearchArray):
     noun = "curve"
-    jump_example = "6.6.6.3.1"
-    jump_egspan = "e.g. 6.6.6.3.1, X(6), X(6,3), or X0(6,3)*X1(6,5) (fiber product over $X(6)$)"
+    jump_example = "6.1.1.4.0.a.1"
+    jump_egspan = "e.g. 6.1.1.4.0.a.1, X(6;1), or X(6,1)"
     jump_prompt = "Label or name"
     jump_knowl = "shimcurve.search_input"
 
@@ -785,12 +789,14 @@ class ShimCurveSearchArray(SearchArray):
         family = SelectBox(
             name="family",
             options=[("", ""),
-                     ("XD", "XD(1)"),
-                     ("XD0", "XD0(N)"),
+                     ("XD", "X(D;1)"),
+                     ("XDN", "X(D;N)"),
+                     ("XDstar", "X^*(D;1)"),
+                     ("XDNstar", "X^*(D;N)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
-            example="XD0(N)")
+            example="X(D;N)")
 
         count = CountBox()
 
@@ -971,12 +977,14 @@ class RatPointSearchArray(SearchArray):
         family = SelectBox(
             name="family",
             options=[("", ""),
-                     ("XD", "XD(1)"),
-                     ("XD0", "XD0(N)"),
+                     ("XD", "X(D;1)"),
+                     ("XDN", "X(D;N)"),
+                     ("XDstar", "X^*(D;1)"),
+                     ("XDNstar", "X^*(D;N)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
-            example="XD(1), XD0(N)")
+            example="X(D;1), X(D;N)")
         
 
         self.refine_array = [[curve, level, genus, degree, cm],

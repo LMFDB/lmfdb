@@ -96,14 +96,15 @@ def showj_nf(j, jfield, jorig, resfield):
 
 def canonicalize_name(name):
     cname = name
+    cname = name.replace(",", ";")
+    if cname[:2] == "X*":
+        cname = "X^*" + cname[2:]
     return cname
 
 def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
-    if name[1] != "(":
-        name = "X_" + name[1:]
     return f"${name}$"
 
 def factored_conductor(conductor):
@@ -271,8 +272,9 @@ def combined_data(label):
     data = db.gps_shimura_test.lookup(label)
     if data is None:
         return
-    if not data["contains_negative_one"]:
-        coarse = db.gps_shimura_test.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
+    if not data["is_coarse"]:
+        coarse_label = data["mu_label"] + r"." + data["coarse_label"]
+        coarse = db.gps_shimura_test.lookup(coarse_label, ["parents", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
     return data
@@ -369,14 +371,14 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def coarse_description(self):
-        if self.contains_negative_one:
+        if self.is_coarse:
             return r"yes"
         else:
             return r"no $\quad$ (see %s for the level structure with $-I$)"%(shimcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
-        if self.contains_negative_one:
+        if self.is_coarse:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
                 return r"%s"%(', '.join([shimcurve_link(label) for label in qtwists if label != self.label]))
@@ -395,7 +397,8 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.shimcurve_models.search({"shimcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+        coarse_label = self.mu_label + r"." + self.coarse_label
+        return list(db.shimcurve_models.search({"shimcurve": coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
 
     @lazy_attribute
     def formatted_models(self):
@@ -403,7 +406,8 @@ class WebShimCurve(WebObj):
 
     @lazy_attribute
     def models_count(self):
-        return db.shimcurve_models.count({"shimcurve": self.coarse_label})
+        coarse_label = self.mu_label + r"." + self.coarse_label
+        return db.shimcurve_models.count({"shimcurve": coarse_label})
 
     @lazy_attribute
     def has_more_models(self):
@@ -590,44 +594,81 @@ class WebShimCurve(WebObj):
 
     def show_generator(g):
         return r"\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}" % tuple(g)
-    
+
     def show_generators(self):
         if not self.generators: # 2.6.0.a.1
             return "trivial subgroup"
         return ", ".join(r"$\left \langle" + WebShimCurve.show_quaternion(g[:4]) + "," + self.show_order_elt(g[4:]) + r" \right \rangle$" for g in self.generators)
 
     def show_quat_alg(self):
-        return r"$ \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (self.i_square, self.j_square)
+        order = db.quaternion_orders.lookup(self.order_label,
+                                            ['i_square', 'j_square'])
+        return r"$B\langle i,j\rangle = \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (order['i_square'], order['j_square'])
 
     def show_rat_quaternion(nums, denom):
         if denom == 1:
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
     def show_order_elt(self, elt):
-        nums = self.gensOnumerators
-        denoms = self.gensOdenominators
+        order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
+        nums = order['gens_numerators']
+        denoms = order['gens_denominators']
         O_basis = [[QQ(x)/QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
         coeffs = [[elt[i] * c for c in b] for i,b in enumerate(O_basis)]
         sum_coeffs = [sum([x[i] for x in coeffs]) for i in range(len(coeffs[0]))]
         denom = lcm([x.denominator() for x in sum_coeffs])
         nums = [ZZ(denom*x) for x in sum_coeffs]
         return WebShimCurve.show_rat_quaternion(nums, denom)
-    
+
     def show_mu(self):
-        return self.show_order_elt(self.mu)
-    
+        # mu = db.quaternion_polarizations.lookup(self.mu_label, 'mu')
+        # Until the above table is ready, we put a placeholder
+        mu = [2,-2,-3,1]
+        return self.show_order_elt(mu)
+
     def show_order(self):
-        nums = self.gensOnumerators
-        denoms = self.gensOdenominators
-        # basis_coeffs = [[QQ(x) / QQ(denoms[i]) for x in nums[i]] for i in range(len(nums))]
-        # return r"$ \left \langle" + ", ".join([WebShimCurve.show_quaternion(g) for g in basis_coeffs]) + r"\right \rangle $"
-        
-        return r"$ \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
+        order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
+        nums = order['gens_numerators']
+        denoms = order['gens_denominators']
+        return r"$O = \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
 
     def show_galendgroup(self):
         if self.galEnd:
             return abstract_group_display_knowl(self.galEnd)
         return ""
+
+    def show_genus(self):
+        # !!! TODO !!! add nu4, nu6, condition 0 to ahow only if they exist
+        # add area of O^1 to have it relative to it.
+        genus_str = r"$ %s " % str(self.genus)
+        if self.nu2 is not None:
+            # Until the polarization table is set up, we temporarily use the orders table
+            # mu = db.quaternion_polarizations.lookup(self.mu_label, ['area_numerator', 'area_denominator'])
+            order = db.quaternion_orders.lookup(self.order_label, ['area_numerator', 'area_denominator'])
+            # Once we have the area in the polarizations we shouldn't need to do this, this is just a temporary patch
+            area = order['area_numerator'] / QQ(order['area_denominator']);
+            area /= 4;
+            index = self.fuchsian_index
+            if index == 1:
+                genus_str += r" = 1 + \frac{%s}{%s}" % (area.numerator(), area.denominator())
+            else:
+                genus_str += r" = 1 + %s \cdot \frac{%s}{%s}" % (index, area.numerator(), area.denominator())
+            for ell_order in [2,3,4,6]:
+                nu = self.__dict__['nu' + str(ell_order)]
+                if nu != 0:
+                    ram = QQ(1/2) * (1 - 1/QQ(ell_order))
+                    num = ram.numerator()
+                    denom = ram.denominator()
+                    if num == 1:
+                        genus_str += r" - \frac{%s}{%s}" %(nu, denom)
+                    elif nu == 1:
+                        genus_str += r" - \frac{%s}{%s}" %(num, denom)
+                    else:
+                        genus_str += r" - %s \cdot \frac{%s}{%s}" %(nu, num, denom)
+            return genus_str + r"$"
+        genus_str += r"$"
+        return genus_str
+
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
@@ -862,7 +903,7 @@ class WebShimCurve(WebObj):
                     desc = 'This Shimura curve has <a href="%s">%s</a> but no rational CM points.' % (
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
-        else:
+        elif curve.obstructions is not None:
             if curve.obstructions == [0]:
                 desc = 'This Shimura curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
@@ -877,6 +918,8 @@ class WebShimCurve(WebObj):
                 desc = fr'This Shimura curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 desc = "This Shimura curve has finitely many rational points."
+        else:
+            desc = fr'Local obstructions for rational points on this curve are not known.'
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
             desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc
