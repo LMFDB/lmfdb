@@ -604,7 +604,7 @@ class WebShimCurve(WebObj):
     def show_quat_alg(self):
         order = db.quaternion_orders.lookup(self.order_label,
                                             ['i_square', 'j_square'])
-        return r"$B\langle i,j\rangle = \left ( \frac{%s, %s}{\mathbb{Q}} \right )$" % (order['i_square'], order['j_square'])
+        return r"$B = \displaystyle{\left ( \frac{%s, %s}{\mathbb{Q}} \right)}$" % (order['i_square'], order['j_square'])
 
     def show_rat_quaternion(nums, denom):
         if denom == 1:
