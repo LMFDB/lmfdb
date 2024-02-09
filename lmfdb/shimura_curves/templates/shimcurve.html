@@ -26,11 +26,13 @@
 
 <table>
   <tr><td>{{ KNOWL('shimcurve.level_structure', '$\Aut_{\mu}(O) \ltimes (O/%sO)^{\\times}$-generators'%(curve.level)) }}:</td><td><small>{{ curve.show_generators()}}</small></td></tr>
+  <tr><td>{{ KNOWL('shimcurve.level_structure', '$H \le \Aut_{\mu}(O) \ltimes (O/%sO)^{\\times}$'%(curve.level)) }}:</td><td>{{ curve.show_group()  | safe }}</td></tr>
   <tr><td>{{ KNOWL('shimcurve.is_coarse', 'Is coarse') }}:</td><td> {{ curve.coarse_description | safe }}</td></tr>
-  {% if curve.contains_negative_one %}
+  {% if curve.is_coarse %}
   <tr><td>{{ KNOWL('shimcurve.quadratic_refinements', 'Quadratic refinements') }}:</td><td> {{ curve.quadratic_refinements | safe }}</td></tr>
   {% endif %}
   <tr><td>{{ KNOWL('shimcurve.endomorphism_galois_group', 'Endomorphism field Galois group') }}:</td><td> {{ curve.show_galendgroup() | safe }}</td></tr>
+  <tr><td>{{ KNOWL('shimcurve.torsion_subgroup', 'Torsion subgroup') }}:</td><td> {{ curve.show_torsion() | safe }}</td></tr>
 </table>
 {% endif %}
 

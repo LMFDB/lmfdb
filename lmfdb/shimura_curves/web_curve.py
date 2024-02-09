@@ -610,6 +610,7 @@ class WebShimCurve(WebObj):
         if denom == 1:
             return WebShimCurve.show_quaternion(nums)
         return r"\frac{" + WebShimCurve.show_quaternion(nums)+ (r"}{%s}" % denom)
+    
     def show_order_elt(self, elt):
         order = db.quaternion_orders.lookup(self.order_label, ['gens_numerators', 'gens_denominators'])
         nums = order['gens_numerators']
@@ -633,14 +634,17 @@ class WebShimCurve(WebObj):
         denoms = order['gens_denominators']
         return r"$O = \left \langle" + ", ".join([WebShimCurve.show_rat_quaternion(coeffs, denoms[i]) for i,coeffs in enumerate(nums)]) + r"\right \rangle $"
 
+    def show_group(self):
+        if self.Glabel:
+            return abstract_group_display_knowl(self.Glabel)
+        return ""
+        
     def show_galendgroup(self):
         if self.galEnd:
             return abstract_group_display_knowl(self.galEnd)
         return ""
 
     def show_genus(self):
-        # !!! TODO !!! add nu4, nu6, condition 0 to ahow only if they exist
-        # add area of O^1 to have it relative to it.
         genus_str = r"$ %s " % str(self.genus)
         if self.nu2 is not None:
             # Until the polarization table is set up, we temporarily use the orders table
@@ -670,6 +674,10 @@ class WebShimCurve(WebObj):
         genus_str += r"$"
         return genus_str
 
+    def show_torsion(self):
+        if self.torsion:
+            return r"$"+"\oplus".join(["\Z / %s \Z" % t for t in self.torsion]) + "$"
+        return ""
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
@@ -747,7 +755,7 @@ class WebShimCurve(WebObj):
         return list(db.shimcurve_points.search(
             {"curve_label": self.coarse_label},
             sort=["degree", "j_height"],
-            projection=["Elabel","cm","isolated","jinv","j_field","j_height",
+            projection=["Clabel","cm","isolated","jinv","j_field","j_height",
                         "jorig","residue_field","degree","coordinates"]))
 
     @lazy_attribute
@@ -814,8 +822,8 @@ class WebShimCurve(WebObj):
                 continue
             coordstr = self.get_coordstr(rec)
             pts.append(
-                (rec["Elabel"],
-                 url_for_EC_label(rec["Elabel"]) if rec["Elabel"] else "",
+                (rec["Clabel"],
+                 url_for_EC_label(rec["Clabel"]) if rec["Clabel"] else "",
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
                  r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj(rec["jinv"]),
                  showj_fac(rec["jinv"]),
@@ -832,8 +840,8 @@ class WebShimCurve(WebObj):
                 continue
             coordstr = self.get_coordstr(rec)
             pts.append(
-                (rec["Elabel"],
-                 url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
+                (rec["Clabel"],
+                 url_for_ECNF_label(rec["Clabel"]) if rec["Clabel"] else "",
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
                  "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else ""),
                  r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
