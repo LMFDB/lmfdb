@@ -642,6 +642,20 @@ class WebShimCurve(WebObj):
             return abstract_group_display_knowl(self.galEnd)
         return ""
 
+    def show_elliptic_points(self):
+        nus = { 2 : self.nu2, 3: self.nu3, 4 : self.nu4, 6 : self.nu6}
+        ell_str = r""
+        idx = 0
+        for e in nus:
+            if nus[e] > 0:
+                if idx > 0:
+                    ell_str += r", "
+                ell_str += r"${{%s}}$ of order $%s$" % (nus[e], e)
+                idx += 1
+        if len(ell_str) == 0:
+            return "None"
+        return ell_str    
+    
     def show_genus(self):
         genus_str = r"$ %s " % str(self.genus)
         if self.nu2 is not None:
