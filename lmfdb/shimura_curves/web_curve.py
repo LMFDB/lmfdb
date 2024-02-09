@@ -96,14 +96,15 @@ def showj_nf(j, jfield, jorig, resfield):
 
 def canonicalize_name(name):
     cname = name
+    cname = name.replace(",", ";")
+    if cname[:2] == "X*":
+        cname = "X^*" + cname[2:]
     return cname
 
 def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
-    if name[1] != "(":
-        name = "X_" + name[1:]
     return f"${name}$"
 
 def factored_conductor(conductor):
