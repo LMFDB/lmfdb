@@ -52,8 +52,7 @@ def learnmore_list_remove(matchstring):
 
 def get_bread(breads=[]):
     bc = [("Galois groups", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 

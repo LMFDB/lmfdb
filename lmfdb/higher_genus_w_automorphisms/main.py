@@ -790,11 +790,11 @@ def render_family(args):
         else:
             downloads = [
                 ('Code to GAP', None),
-                (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
-                (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap')),
+                ('\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
+                ('\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap')),
                 ('Code to Magma', None),
-                (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
-                (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
+                ('\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
+                ('\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
             ]
         downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
         return render_template("hgcwa-show-family.html",
@@ -999,11 +999,11 @@ def render_passport(args):
         else:
             downloads = [
                 ('Code to GAP', None),
-                (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
-                (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap')),
+                ('\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
+                ('\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap')),
                 ('Code to Magma', None),
-                (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
-                (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
+                ('\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
+                ('\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
             ]
         downloads.append(('Underlying data', url_for(".hgcwa_data", label=label)))
 

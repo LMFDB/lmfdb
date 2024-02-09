@@ -900,7 +900,5 @@ def dispZmat_from_list(a_list, dim):
     """
     num_entries = len(a_list)
     assert num_entries == dim ** 2
-    output = []
-    for i in range(0,dim**2,dim):
-        output.append(a_list[i:i+dim])
+    output = [a_list[i:i + dim] for i in range(0, dim**2, dim)]
     return matrix(output)
