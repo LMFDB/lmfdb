@@ -674,6 +674,10 @@ class WebShimCurve(WebObj):
         genus_str += r"$"
         return genus_str
 
+    def show_torsion(self):
+        if self.torsion:
+            return r"$"+"\oplus".join(["\Z / %s \Z" % t for t in self.torsion]) + "$"
+        return ""
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
