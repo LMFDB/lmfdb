@@ -623,9 +623,7 @@ class WebShimCurve(WebObj):
         return WebShimCurve.show_rat_quaternion(nums, denom)
 
     def show_mu(self):
-        # mu = db.quaternion_polarizations.lookup(self.mu_label, 'mu')
-        # Until the above table is ready, we put a placeholder
-        mu = [2,-2,-3,1]
+        mu = db.quaternion_orders_polarized.lookup(self.mu_label, 'mu')
         return self.show_order_elt(mu)
 
     def show_order(self):
@@ -647,12 +645,9 @@ class WebShimCurve(WebObj):
     def show_genus(self):
         genus_str = r"$ %s " % str(self.genus)
         if self.nu2 is not None:
-            # Until the polarization table is set up, we temporarily use the orders table
-            # mu = db.quaternion_polarizations.lookup(self.mu_label, ['area_numerator', 'area_denominator'])
             order = db.quaternion_orders.lookup(self.order_label, ['area_numerator', 'area_denominator'])
-            # Once we have the area in the polarizations we shouldn't need to do this, this is just a temporary patch
             area = order['area_numerator'] / QQ(order['area_denominator']);
-            area /= 4;
+            area /= db.quaternion_orders_polarized.lookup(self.mu_label, 'AutmuO_size');
             index = self.fuchsian_index
             if index == 1:
                 genus_str += r" = 1 + \frac{%s}{%s}" % (area.numerator(), area.denominator())
