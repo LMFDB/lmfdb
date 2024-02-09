@@ -8,7 +8,7 @@
 
 <h2> {{ KNOWL('shimcurve.invariants', 'Invariants') }} </h2>
 <table>
-  <tr><td>{{ KNOWL("shimcurve.quaternion_algebra", "Quaternion algebra") }}:</td><td>{{ curve.show_quat_alg() }}</td><td style="width:200px;"></td><td>{{ KNOWL("shimcurve.discb", "Discriminant of $B$") }}:</td><td> ${{ curve.discB }}$ </td><td style="width:40px;"></td></tr>
+  <tr><td>{{ KNOWL("shimcurve.quaternion_algebra", "Quaternion algebra") }}:</td><td>{{ curve.show_quat_alg() }}</td><td style="width:40px;"></td><td style="width:200px;">{{ KNOWL("shimcurve.discb", "Discriminant of $B$") }}:</td><td> ${{ curve.discB }}$ </td><td style="width:40px;"></td></tr>
   <tr><td>$\Z$-basis of {{ KNOWL("shimcurve.order", "order") }} $O$:</td><td><small> {{ curve.show_order() }} </small></td><td style="width:200px;"></td><td style="width:100px;">{{ KNOWL("shimcurve.disco", "Reduced discriminant of $O$") }}:</td><td> ${{ curve.discO }}$ </td><td style="width:40px;"></td></tr>
   <tr><td>{{ KNOWL("shimcurve.polarized_order", "Polarization") }}:</td><td> $\mu = {{ curve.show_mu() }}$</td><td style="width:20px;"></td><td>{{KNOWL("shimcurve.nrdmu", "Polarization degree") }}:</td><td>${{ curve.deg_mu }}$</td></tr>
   <tr><td>{{ KNOWL("shimcurve.level", "Level") }}:</td><td> ${{ curve.level }}$ </td><td style="width:20px;"></td><td style="width:60px;"></td></tr>
