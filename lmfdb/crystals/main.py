@@ -8,8 +8,7 @@ from lmfdb.crystals import crystals_page, logger
 
 def get_bread(breads=[]):
     bc = [("Crystals", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 
@@ -77,7 +76,7 @@ def crystal_image(crystal):
         response.headers['Content-Type'] = 'image/png'
 
         return response
-    except IOError:
+    except OSError:
         return "internal error rendering graph", 500
     finally:
         # Get rid of the temporary directory

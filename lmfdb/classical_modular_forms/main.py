@@ -5,7 +5,7 @@ import os
 import yaml
 
 from flask import render_template, url_for, redirect, abort, request, make_response
-from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime
+from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime, lazy_attribute
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
@@ -167,9 +167,9 @@ def index():
     info = to_dict(request.args, search_array=CMFSearchArray())
     if len(request.args) > 0:
         # hidden_search_type for prev/next buttons
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
 
-        if search_type in ['List', 'Random']:
+        if search_type in ['List', '', 'Random']:
             return newform_search(info)
         elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
@@ -809,28 +809,32 @@ def newspace_parse(info, query):
             query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
-    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
+    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right")
 
 def _AL_col(i, p):
-    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
+    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True)
 
 newform_columns = SearchColumns([
-    LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
-    MathCol("level", "cmf.level", "Level"),
-    MathCol("weight", "cmf.weight", "Weight"),
+    LinkCol("label", "cmf.label", "Label", url_for_label),
+    MathCol("level", "cmf.level", "Level", default=False),
+    MathCol("weight", "cmf.weight", "Weight", default=False),
     MultiProcessedCol("character", "cmf.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
-                      short_title="character"),
+                      short_title="character",
+                      apply_download=False,
+                      default=False),
     MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
                       ["char_conductor", "prim_orbit_index"],
                       lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
-                      short_title="primitive character"),
-    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
-    MathCol("dim", "cmf.dimension", "Dim", default=True, align="right", short_title="dimension"),
-    MathCol("relative_dim", "cmf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
-    MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
+                      short_title="primitive character",
+                      apply_download=False,
+                      default=False),
+    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order", default=False),
+    MathCol("dim", "cmf.dimension", "Dim", align="right", short_title="dimension"),
+    MathCol("relative_dim", "cmf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension", default=False),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", align="center", short_title="analytic conductor"),
+    MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, download_col="nf_label"),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
                  lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
                  contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
@@ -840,32 +844,32 @@ newform_columns = SearchColumns([
                       ["is_cm", "cm_discs"],
                       lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
                       short_title="CM",
-                      default=True),
+                      download_col="cm_discs"),
     MultiProcessedCol("rm", "cmf.self_twist", "RM",
                       ["is_rm", "rm_discs"],
                       lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
                       contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                       short_title="RM",
-                      default=True),
-    CheckCol("is_self_dual", "cmf.selfdual", "Self-dual"),
-    MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists"),
-    MathCol("analytic_rank", "cmf.analytic_rank", "Rank*"),
+                      download_col="rm_discs"),
+    CheckCol("is_self_dual", "cmf.selfdual", "Self-dual", default=False),
+    MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists", default=False),
+    MathCol("analytic_rank", "cmf.analytic_rank", "Rank*", default=False),
     ColGroup("traces", "cmf.trace_form", "Traces",
              [_trace_col(i) for i in range(4)],
-             default=True),
-    SpacerCol("atkin_lehner", contingent=display_AL, default=True),
+             download_col="trace_display"), # download_col needed since ColGroup by default passes control to subcolumns, which create a bigint knowl in this case
+    SpacerCol("atkin_lehner", contingent=display_AL),
     ColGroup("atkin_lehner", "cmf.atkin-lehner", "A-L signs",
              lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
-             contingent=display_AL, default=True, orig=["atkin_lehner_eigenvals"]),
+             contingent=display_AL, orig=["atkin_lehner_eigenvals"], download_col="atkin_lehner_eigenvals"),
     ProcessedCol("fricke_eigenval", "cmf.fricke", "Fricke sign",
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
     ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
-                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center"),
-    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group"),
+                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center", default=False),
+    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group", default=False),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
-                      default=True)],
+                      download_col="qexp_display")],
     ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
@@ -939,7 +943,6 @@ def set_Trn(info, query, limit=1000):
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
-    info['download_limit'] = limit
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,
@@ -1110,7 +1113,7 @@ def dimension_form_postprocess(res, info, query):
 
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
-        info_copy['search_type'] = 'List'
+        info_copy.pop('search_type', None)
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
@@ -1178,15 +1181,15 @@ def dimension_space_search(info, query):
     query['__sort__'] = []
 
 space_columns = SearchColumns([
-    LinkCol("label", "cmf.label", "Label", url_for_label, default=True),
-    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", default=True, short_title="analytic conductor", align="left"),
+    LinkCol("label", "cmf.label", "Label", url_for_label),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", short_title="analytic conductor", align="left"),
     MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
                       lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
-                      short_title="character", default=True),
-    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension", default=True),
-    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+                      short_title="character"),
+    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order"),
+    MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension"),
+    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.mf_newspaces,
              title='Newspace search results',
@@ -1299,32 +1302,42 @@ class CMF_stats(StatsDisplay):
     Class for creating and displaying statistics for classical modular forms
     """
     def __init__(self):
-        self.nforms = comma(db.mf_newforms.count())
-        self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
-        self.ndim = comma(db.mf_hecke_cc.count())
-        #self.weight_knowl = display_knowl('cmf.weight', title='weight')
-        #self.level_knowl = display_knowl('cmf.level', title='level')
         self.newform_knowl = display_knowl('cmf.newform', title='newforms')
         self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
-    @property
+    @lazy_attribute
+    def nforms(self):
+        return comma(db.mf_newforms.count())
+
+    @lazy_attribute
+    def nspaces(self):
+        return comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
+
+    @lazy_attribute
+    def ndim(self):
+        return comma(db.mf_hecke_cc.count())
+
+    @lazy_attribute
     def short_summary(self):
         return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
 
-    @property
+    @lazy_attribute
     def summary(self):
         return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+
+    @lazy_attribute
+    def buckets(self):
+        return {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
+                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
+                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
+                'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
 
     extent_knowl = 'cmf.statistics_extent'
     table = db.mf_newforms
     baseurl_func = ".index"
-    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
-               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
-               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
-               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
     knowls = {'level': 'cmf.level',
@@ -1436,7 +1449,7 @@ class CMFSearchArray(SearchArray):
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
     _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
-    sorts = {'List': _sort_forms,
+    sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces,
              'SpaceTraces': _sort_spaces}
@@ -1720,17 +1733,17 @@ class CMFSearchArray(SearchArray):
     def main_array(self, info):
         if info is None:
             return self.browse_array
-        search_type = info.get('search_type', info.get('hst', 'List'))
+        search_type = info.get('search_type', info.get('hst', ''))
         if search_type in ['Spaces', 'SpaceTraces']:
             return self.space_array
         elif search_type == 'SpaceDimensions':
             return self.sd_array
         else:
-            # search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
+            # search_type in ['List', '', 'Dimensions', 'Traces', 'DynStats']:
             return self.refine_array
 
     def search_types(self, info):
-        basic = [('List', 'List of forms'),
+        basic = [('', 'List of forms'),
                  ('Dimensions', 'Dimension table'),
                  ('Traces', 'Traces table'),
                  ('Random', 'Random form')]
@@ -1741,7 +1754,7 @@ class CMFSearchArray(SearchArray):
         if info is None:
             return basic
         st = self._st(info)
-        if st in ["List", "Dimensions", "Traces"]:
+        if st in ["List", "", "Dimensions", "Traces"]:
             return self._search_again(info, basic)
         elif st == "SpaceDimensions":
             return self._search_again(info, spaces)

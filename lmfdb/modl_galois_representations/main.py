@@ -30,10 +30,11 @@ from lmfdb.utils import (
     proportioners,
     totaler,
     web_latex_factored_integer,
+    Downloader,
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
+    SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol, RationalCol,
 )
 from lmfdb.api import datapage
 
@@ -131,22 +132,22 @@ def blankzeros(n):
 
 modlgal_columns = SearchColumns(
     [
-        LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label, default=True),
-        MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$", default=True),
-        MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension", default=True),
-        ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, default=True, align="center"),
-        SearchCol("top_slope_rational", "modlgal.top_slope", "Top slope", align="center", default=lambda info: info.get("top_slope")),
+        LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label),
+        MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$"),
+        MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension"),
+        ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, align="center"),
+        RationalCol("top_slope_rational", "modlgal.top_slope", "Top slope", lambda x: x, align="center", default=lambda info: info.get("top_slope")),
         MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
-                          image_pretty, default=True, align="center"),
-        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index"),
-        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order"),
-        CheckCol("is_surjective", "modlgal.is_surjective", "Surjective", default=True),
-        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible"),
-        CheckCol("is_solvable", "modlgal.is_solvable", "Solvable"),
-        LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center"),
-        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center"),
-        ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield, default=True),
-        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield),
+                          image_pretty, align="center", apply_download=False),
+        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index", default=False),
+        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order", default=False),
+        CheckCol("is_surjective", "modlgal.is_surjective", "Surjective"),
+        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
+        CheckCol("is_solvable", "modlgal.is_solvable", "Solvable", default=False),
+        LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center", default=False),
+        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center", default=False),
+        ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield),
+        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield, default=False),
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
              "is_surjective", "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial",
@@ -157,7 +158,7 @@ modlgal_columns = SearchColumns(
     table=db.modlgal_reps,
     title=r"Mod-$\ell$ Galois representation search results",
     err_title=r"Mod-$\ell$ Galois representations search input error",
-    shortcuts={"jump": modlgal_jump },
+    shortcuts={"jump": modlgal_jump, "download":Downloader(db.modlgal_reps)},
     columns=modlgal_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modlgal_label,

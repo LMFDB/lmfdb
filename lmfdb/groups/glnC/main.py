@@ -44,8 +44,7 @@ def label_is_valid(lab):
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")), ("GLnC", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 
@@ -111,10 +110,10 @@ def get_url(label):
 
 
 glnC_columns = SearchColumns([
-    LinkCol("label", "group.label", "Label", get_url, default=True),
-    MathCol("tex_name", "group.name", "Name", default=True),
-    MathCol("order", "group.order", "Order", default=True),
-    MathCol("dim", "group.dimension", "Dimension", default=True)],
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    MathCol("order", "group.order", "Order"),
+    MathCol("dim", "group.dimension", "Dimension")],
     db_cols=["label", "group", "order", "dim"])
 
 

@@ -8,7 +8,7 @@ from sage.all import euler_phi, PolynomialRing, QQ, gcd
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
-    StatsDisplay, totaler, proportioners, comma, flash_warning)
+    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
@@ -147,7 +147,7 @@ class DirichSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('List', 'List of characters'),
+            ('', 'List of characters'),
             ('Random', 'Random character')])
 
 
@@ -232,23 +232,21 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
             return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
 character_columns = SearchColumns([
-    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), default=True, align="center"),
+    LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
-                      display_galois_orbit, default=True, align="center", short_title="Conrey labels"),
-    MathCol("modulus", "character.dirichlet.modulus", "Modulus", default=True),
-    MathCol("conductor", "character.dirichlet.conductor", "Conductor", default=True),
-    MathCol("order", "character.dirichlet.order", "Order", default=True),
-    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd", default=True),
-    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive", default=True)])
-
-character_columns.dummy_download = True
+                      display_galois_orbit, align="center", short_title="Conrey labels", apply_download=False),
+    MathCol("modulus", "character.dirichlet.modulus", "Modulus"),
+    MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
+    MathCol("order", "character.dirichlet.order", "Order"),
+    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd"),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive")])
 
 @search_wrap(
     table=db.char_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
-    shortcuts={"jump": jump},
+    shortcuts={"jump": jump, "download": Downloader(db.char_orbits)},
     url_for_label=url_for_label,
     learnmore=learn,
     random_projection="label",
@@ -282,8 +280,8 @@ def render_DirichletNavigation():
     if request.args:
         # hidden_search_type for prev/next buttons
         info = to_dict(request.args, search_array=DirichSearchArray())
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-        if search_type in ['List', 'Random']:
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        if search_type in ['List', '', 'Random']:
             return dirichlet_character_search(info)
         assert False
 
@@ -736,7 +734,7 @@ class DirichStats(StatsDisplay):
                   "is_real": yesno}
 
     def __init__(self):
-        self.nchars = db.char_orbits.sum_column('degree')
+        self.nchars = 3039650754 # db.char_orbits.sum_column('degree')
         self.norbits = db.char_orbits.count()
         self.maxmod = db.char_orbits.max("modulus")
 

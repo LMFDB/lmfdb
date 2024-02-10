@@ -2,7 +2,7 @@ prompt:
     magma:  'magma'
 
 logo:
-    magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+    magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
 
 gg:
     magma: G := TransitiveGroup(%s, %s);

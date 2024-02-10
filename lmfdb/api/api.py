@@ -29,7 +29,7 @@ def quote_string(value):
 
 def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
-    attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
+    attrs = sorted([(key, quote_string(rec[key])) for key in rec if (id or key != 'id')])
     return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
 
 
@@ -283,7 +283,7 @@ def api_query(table, id=None):
         except KeyError as err:
             return apierror("No key %s in table %s", [err, table])
         except Exception as err:
-            return apierror(str(err))
+            return apierror(str(err).replace("%", "%%"))
 
     if single_object and not data:
         return apierror("no document with id %s found in table %s.", [id, table])

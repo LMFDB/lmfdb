@@ -1,6 +1,11 @@
 
 {% set ccs = gp.conjugacy_classes %}
 
+
+{% if info.char_highlight %}
+  <p>The row representing the character {{info.char_highlight}} is highighted below.</p>
+{% endif %}
+
 <table class="nowrap">
   <tr>
     <td></td><td></td>
@@ -25,15 +30,20 @@
   <tr>
     <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
   </tr>
-  {% set dispv = gp.sparse_cyclotomic_to_latex %}
+  {% set dispv = info.dispv %}
+
   {% for chtr in gp.characters %}
-    <tr>
-      <td> {{ chtr.display_knowl() | safe }}</td>
-      <td class="center">{{chtr.type()}}</td>
-      {% set cond = chtr.cyclotomic_n %}
-      {% for val in chtr['values'] %}
-        <td class="right">${{ dispv(cond, val) }}$</td>
-      {% endfor %}
+    {% if chtr.label == info.char_highlight %}
+      <tr class="highlighted">
+    {% else %}
+      <tr>
+    {% endif %}
+    <td> {{ chtr.display_knowl() | safe }}</td>
+    <td class="center">{{chtr.type()}}</td>
+    {% set cond = chtr.cyclotomic_n %}
+    {% for val in chtr.values %}
+      <td class="right">{{ dispv(cond, val) | safe }}</td>
+    {% endfor %}
     </tr>
   {% endfor %}
 </table>

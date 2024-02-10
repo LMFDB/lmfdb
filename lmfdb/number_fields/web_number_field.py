@@ -9,7 +9,7 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+from lmfdb.utils import (web_latex, coeff_to_poly,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
@@ -451,6 +451,13 @@ class WebNumberField:
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
 
+    def minimal_sibling(self):
+        if 'is_minimal_sibling' in self._data:
+            if self._data['is_minimal_sibling']:
+                return 'This field is its own minimal sibling'
+            return formatfield(self._data['minimal_sibling'], show_poly=True)
+        return na_text()
+
     # Is the polynomial polredabs'ed
     def is_reduced(self):
         if not self.haskey('reduced'):
@@ -800,9 +807,6 @@ class WebNumberField:
             s = r'-\,'
         return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()), cutoff=30)
 
-    def web_poly(self):
-        return pol_to_html(str(coeff_to_poly(self.coeffs())))
-
     def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):
             return "n/a" if in_search_results else na_text()
@@ -810,7 +814,7 @@ class WebNumberField:
         if not cg_list:
             invs = 'trivial'
         else:
-            invs = '$%s$'%str(cg_list)
+            invs = cg_list
         if in_search_results:
             invs += " " + self.short_grh_string()
         return invs
@@ -979,4 +983,4 @@ class WebNumberField:
             self.code['field'][lang] = self.code['field'][lang] % f
         for lang in self.code['class_number_formula']:
             self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
-        self.code['show'] = { lang:'' for lang in self.code['prompt'].keys() }
+        self.code['show'] = { lang:'' for lang in self.code['prompt'] }

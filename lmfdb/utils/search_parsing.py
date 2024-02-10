@@ -1034,6 +1034,29 @@ def parse_bracketed_rats(
             else:
                 query[qfield] = inp[1:-1]
 
+# see SearchParser.__call__ for actual arguments when calling
+@search_parser(clean_info=True, prep_plus=True)
+def parse_group_label_or_order(inp, query, qfield, regex):
+    inps = inp.split(",")
+    inporders = [z for z in inps if re.fullmatch(r'\d+',z)]
+    inporders = [{'$startswith': f'{z}.'} for z in inporders]
+    inplabels = [z for z in inps if not re.fullmatch(r'\d+',z)]
+    if all(regex.fullmatch(z) for z in inplabels):
+        if len(inplabels) == 1:
+            labelquery = inplabels[0]
+        else:
+            labelquery = {"$in": inplabels}
+    else:
+        raise SearchParsingError("Group label(s) do not match the required form")
+    if inporders:
+        if inplabels:
+            query[qfield] = {"$or": inporders +[labelquery]}
+        else:
+            query[qfield] = {"$or": inporders}
+    else:
+        query[qfield] = labelquery
+
+
 def parse_gap_id(info, query, field="group", name="Group", qfield="group"):
     parse_bracketed_posints(
         info,
@@ -1117,8 +1140,9 @@ def parse_inertia(inp, query, qfield, err_msg=None):
                 query[iner] = abstractid
         else:
             # Check for an alias, like D4
-            from lmfdb.galois_groups.transitive_group import aliases
+            import lmfdb.galois_groups.transitive_group
 
+            aliases = lmfdb.galois_groups.transitive_group.get_aliases()
             inp2 = inp.upper()
             if inp2 in aliases:
                 nt = aliases[inp2][0]

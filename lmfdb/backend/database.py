@@ -1073,7 +1073,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if not os.path.isdir(data_folder):
             raise ValueError("The path {} is not a directory".format(data_folder))
-        sep = kwds.get("sep", u"|")
+        sep = kwds.get("sep", "|")
         with DelayCommit(self, commit, silence=True):
             file_list = []
             tablenames = []

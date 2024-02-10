@@ -406,9 +406,9 @@ class WebNewform():
         downloads.append(
                 ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
         downloads.append(
-                ('Code to Pari', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+                ('Code to PariGP', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
-                ('Code to Sage', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+                ('Code to SageMath', url_for(".cmf_code_download", label=self.label, download_type='sage')))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
@@ -541,7 +541,7 @@ class WebNewform():
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
-            nontriv = not (a == 'a')
+            nontriv = a != "a"
             from .main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv=nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"

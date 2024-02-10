@@ -133,7 +133,7 @@ def name_to_latex(name):
     return f"${name}$"
 
 def factored_conductor(conductor):
-    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else "1"
+    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else ("1" if conductor == [] else r"?")
 
 def remove_leading_coeff(jfac):
     if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ',''):
@@ -142,6 +142,8 @@ def remove_leading_coeff(jfac):
         return str(jfac)
 
 def formatted_dims(dims, mults):
+    if dims is None:
+        return "not computed"
     if not dims:
         return ""
     # Collapse newforms with the same dimension
@@ -152,6 +154,8 @@ def formatted_dims(dims, mults):
     return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in zip(dims, mults)) + "$"
 
 def formatted_newforms(newforms, mults):
+    if newforms is None:
+        return "not computed"
     if not newforms:
         return ""
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
@@ -316,7 +320,7 @@ class WebModCurve(WebObj):
         ]
         if self.image is not None:
             props.append((None, self.image))
-        if hasattr(self,"rank"):
+        if hasattr(self,"rank") and self.rank is not None:
             props.append(("Analytic rank", str(self.rank)))
         props.extend([("Cusps", str(self.cusps)),
                       (r"$\Q$-cusps", str(self.rational_cusps))])
@@ -331,7 +335,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         friends = []
-        if self.simple:
+        if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
                 s = self.newforms[0].split(".")
@@ -346,7 +350,7 @@ class WebModCurve(WebObj):
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
-        if self.genus > 0:
+        if self.genus > 0 and self.trace_hash is not None:
             for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
                 if r['newforms'] == self.newforms and r['label'] != self.label:
                     friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
@@ -637,7 +641,8 @@ class WebModCurve(WebObj):
             C["index"] // self.index if flip else self.index // C["index"], # relative index
             C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"], # relative degree
             C["genus"],
-            "" if C["rank"] is None else C["rank"],
+            "?" if C["rank"] is None else C["rank"],
+            "not computed" if C["dims"] is None or self.dims is None else
             (formatted_dims(*difference(C["dims"], self.dims,
                                         C["mults"], self.mults)) if flip else
              formatted_dims(*difference(self.dims, C["dims"],
@@ -828,7 +833,9 @@ class WebModCurve(WebObj):
     def rational_points_description(self):
         curve = self
         if curve.known_degree1_noncm_points or curve.pointless is False:
-            if curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
+            if curve.genus == 1 and curve.rank is None:
+                desc = r'This modular curve is an elliptic curve, but the rank has not been computed'
+            elif curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
                     desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
