@@ -320,29 +320,18 @@ def bad_bots_list():
             "Bytespider",
             "Sogou",
             "MJ12bot",
-        ]
-    ]
-
-
-@cached_function
-def very_bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
             "Amazonbot",
         ]
     ]
 
 
+
 @app.before_request
 def badbot():
     ua = request.user_agent.string.lower()
-    for elt in very_bad_bots_list():
-        if elt in ua:
-            return render_template("404.html", title='Too many requests'), 429
     for elt in bad_bots_list():
         if elt in ua:
-            time.sleep(10)
+            return render_template("404.html", title='Too many requests'), 429
 
 
 def timestamp():
