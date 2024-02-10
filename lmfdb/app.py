@@ -325,7 +325,6 @@ def bad_bots_list():
     ]
 
 
-
 @app.before_request
 def badbot():
     ua = request.user_agent.string.lower()
