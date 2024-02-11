@@ -2201,7 +2201,6 @@ class WebAbstractGroup(WebObj):
 
     # automorphism group
     def show_aut_group(self):
-        print("HERE!!!", self.aut_group, self.aut_order)
         try:
             if self.aut_group is None:
                 if self.aut_order is None:

@@ -1360,14 +1360,11 @@ def render_abstract_group(label, data=None):
     if data is None:
         label = clean_input(label)
         gp = WebAbstractGroup(label)
-    if gp.is_null() or gp.source == "Missing": #groups of order 6561 are not in GAP but are labeled in Magma
-            flash_error("No group with label %s was found in the database.", label)
-            return redirect(url_for(".index"))
     elif isinstance(data, list): # abelian group
         gp = WebAbstractGroup(label, data=data)
-#    if gp.is_null():
-#        flash_error("No group with label %s was found in the database.", label)
-#        return redirect(url_for(".index"))
+    if gp.is_null() or gp.source == "Missing": #groups of order 6561 are not in GAP but are labeled in Magma
+        flash_error("No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
     # check if it fails to be a potential label even
 
     info["boolean_characteristics_string"] = create_boolean_string(gp)
