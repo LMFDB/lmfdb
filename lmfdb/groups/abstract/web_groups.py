@@ -257,7 +257,7 @@ class WebAbstractGroup(WebObj):
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
-        return self._data is not None and not isinstance(self._data, dict)  
+        return self._data is not None and not isinstance(self._data, dict)
 
     @lazy_attribute
     def G(self):
