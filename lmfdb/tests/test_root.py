@@ -59,7 +59,7 @@ class RootTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert not ("Undefined control sequence" in res.get_data(as_text=True)), "rule %s failed" % rule
+                    assert "Undefined control sequence" not in res.get_data(as_text=True), "rule %s failed" % rule
                 except KeyError:
                     pass
 
