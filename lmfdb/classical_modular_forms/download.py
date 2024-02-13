@@ -311,7 +311,7 @@ class CMF_download(Downloader):
         if lang == 'gp':
             lang = 'pari'
         Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
-        if not lang in Fullname:
+        if lang not in Fullname:
             abort(404,"Invalid code language specified: " + lang)
         data = db.mf_newforms.lookup(label)
         if data is None:
