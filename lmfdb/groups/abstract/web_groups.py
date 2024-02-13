@@ -1462,7 +1462,7 @@ class WebAbstractGroup(WebObj):
                         break
             # What if the subgroup doesn't have information?
             for c in C:
-                if not c in sort_key:
+                if c not in sort_key:
                     cgroup = WebAbstractGroup(c)
                     sort_key[c] = (
                         not cgroup.abelian,

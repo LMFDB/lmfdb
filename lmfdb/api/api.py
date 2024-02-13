@@ -74,11 +74,11 @@ def stats():
     info={}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
-    if not info['minsize'] in info['minsizes']:
+    if info['minsize'] not in info['minsizes']:
         info['minsizes'] = '1'
     info['groupby'] = 'db' if request.args.get('groupby','').strip().lower() == 'db' else ''
     info['sortby'] = request.args.get('sortby','size').strip().lower()
-    if not info['sortby'] in ['size', 'objects', 'name']:
+    if info['sortby'] not in ['size', 'objects', 'name']:
         info['sortby'] = 'size'
     nobjects = size = dataSize = indexSize = 0
     dbSize = defaultdict(int)

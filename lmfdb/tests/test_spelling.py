@@ -19,7 +19,7 @@ class SpellingTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert not ("zeroes" in res.get_data(as_text=True)), "rule %s failed " % rule
+                    assert "zeroes" not in res.get_data(as_text=True), "rule %s failed " % rule
                 except KeyError:
                     pass
 
