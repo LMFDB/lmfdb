@@ -257,7 +257,6 @@ class WebAbstractGroup(WebObj):
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
-        # return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
 
     @lazy_attribute
@@ -286,7 +285,10 @@ class WebAbstractGroup(WebObj):
         if self.order == 1 or self.element_repr_type == "PC":  # trvial
             return self.PCG
         else:
-            gens = [self.decode(g) for g in self.representations[self.element_repr_type]["gens"]]
+            if self.element_repr_type == "Lie":   #need to take first entry of Lie type
+                gens = [self.decode(g) for g in self.representations[self.element_repr_type][0]["gens"]]
+            else:
+                gens = [self.decode(g) for g in self.representations[self.element_repr_type]["gens"]]
             return libgap.Group(gens)
 
     @lazy_attribute
@@ -1460,7 +1462,7 @@ class WebAbstractGroup(WebObj):
                         break
             # What if the subgroup doesn't have information?
             for c in C:
-                if not c in sort_key:
+                if c not in sort_key:
                     cgroup = WebAbstractGroup(c)
                     sort_key[c] = (
                         not cgroup.abelian,
@@ -2206,8 +2208,11 @@ class WebAbstractGroup(WebObj):
                 else:
                     return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
-                url = url_for(".by_label", label=self.aut_group)
-                return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
+                if self.aut_order is None:
+                    return r"not computed"
+                else:
+                    url = url_for(".by_label", label=self.aut_group)
+                    return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
         except AssertionError:  # timed out
             return r"$\textrm{Computation timed out}$"
 

@@ -289,7 +289,7 @@ def ppower_norm_ideals(K,p,f):
     make_keys(K,p)
     if not hasattr(K,'ppower_dict'):
         K.ppower_dict = {}
-    if not (p,f) in K.ppower_dict:
+    if (p,f) not in K.ppower_dict:
         PP = K.primes_dict[p]
         # These vectors are sorted, first by unweighted weight (sum of
         # values) then lexicographically with the reverse ordering on Z:

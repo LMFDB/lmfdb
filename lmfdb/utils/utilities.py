@@ -973,8 +973,10 @@ def plural_form(noun):
         noun += "s"
     return noun
 
-def pluralize(n, noun, omit_n=False, denom=None):
+def pluralize(n, noun, omit_n=False, denom=None, offset=0):
     if denom is not None:
+        if offset != 0:
+            return f"{n}/{denom} {plural_form(noun)} (starting at row {offset+1})"
         return f"{n}/{denom} {plural_form(noun)}"
     if n == 1:
         if omit_n:

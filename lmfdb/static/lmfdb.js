@@ -590,9 +590,11 @@ function update_download_url(link) {
   }
   newval = $("input[name=download_row_count]").val();
   console.log("newval", newval);
-  if (newval.length > 0) {
+  if (newval.length > 0 && newval != "all") {
     params.set("download_row_count", newval);
   }
+  newval = $('#downlang-select').find(":selected").val();
+  params.set("Submit", newval);
   url.search = params.toString();
   link.href = url.href;
   console.log(link.href);
