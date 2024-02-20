@@ -467,6 +467,7 @@ def render_field_webpage(args):
         data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
     data['rd'] = r'\(%s\)' % fixed_prec(nf.rd(),2)
+    data['grd'] = nf.grd()
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -830,6 +831,7 @@ nf_columns = SearchColumns([
     DiscriminantCol("disc", "nf.disc", "Discriminant", ['disc_sign', 'disc_abs'], func=None, align="left"),
     MathCol("num_ram", "nf.ramified_primes", "Ram. prime count", short_title="ramified prime count", default=False),
     MathCol("rd", "nf.root_discriminant", "Root discriminant", default=False),
+    MathCol("grd", "nf.galois_root_discriminant", "Galois root discriminant", default=False),
     CheckCol("cm", "nf.cm_field", "CM field", default=False),
     CheckCol("is_galois", "nf.galois_group", "Galois", default=False),
     CheckMaybeCol("monogenic", "nf.monogenic", "Monogenic", default=False),
@@ -838,7 +840,7 @@ nf_columns = SearchColumns([
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center", default=False),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True, default=False),
     MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False)],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "monogenic", "num_ram"])
+    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -1120,6 +1122,7 @@ class NFSearchArray(SearchArray):
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
+             ("grd", "Galois root discriminant", ['grd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("disc", "absolute discriminant", ['disc_abs', 'disc_sign', 'degree', 'iso_number']),
              ("num_ram", "ramified prime count", ['num_ram', 'disc_abs', 'disc_sign', 'degree', 'iso_number']),
              ("h", "class number", ['class_number', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
@@ -1151,6 +1154,12 @@ class NFSearchArray(SearchArray):
             name="rd",
             label="Root discriminant",
             knowl="nf.root_discriminant",
+            example="1..4.3",
+            example_span="a range such as 1..4.3 or 3-10")
+        grd = TextBox(
+            name="grd",
+            label="Galois root discriminant",
+            knowl="nf.galois_root_discriminant",
             example="1..4.3",
             example_span="a range such as 1..4.3 or 3-10")
         cm_field = YesNoBox(
@@ -1245,16 +1254,17 @@ class NFSearchArray(SearchArray):
             [degree, signature],
             [discriminant, rd],
             [gal, is_galois],
+            [num_ram, grd],
             [class_number, class_group],
-            [num_ram, cm_field],
             [ram_primes, ur_primes],
-            [regulator, subfield],
-            [completion, monogenic],
+            [regulator, cm_field],
+            [completion, subfield],
             [index, inessentialprimes],
-            [count, is_minimal_sibling]]
+            [monogenic, is_minimal_sibling],
+            [count]]
 
         self.refine_array = [
             [degree, signature, class_number, class_group, cm_field],
             [num_ram, ram_primes, ur_primes, gal, is_galois],
-            [discriminant, rd, regulator, subfield, completion],
-            [is_minimal_sibling, monogenic, index, inessentialprimes]]
+            [discriminant, rd, grd, regulator, subfield],
+            [completion, is_minimal_sibling, monogenic, index, inessentialprimes]]
