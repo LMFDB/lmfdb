@@ -772,9 +772,9 @@ def _parse_subset(inp, query, qfield, mode, radical, product, cardinality):
         #        raise SearchParsingError("Cannot specify containment and equality simultaneously")
         #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
         # else:
-        if radical is not None and not(radical in query):
+        if radical is not None and radical not in query:
             query[radical] = {'$lte': product(inp)}
-        if cardinality is not None and not(cardinality in query):
+        if cardinality is not None and cardinality not in query:
             query[cardinality] = {'$lte': len(inp)}
         add_condition("$containedin")
     elif mode == "include" or not mode:  # include is the default

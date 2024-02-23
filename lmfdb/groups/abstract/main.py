@@ -745,7 +745,7 @@ def by_abelian_label(label):
 def auto_gens(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
-    if gp.is_null():
+    if gp.is_null() or gp.source == "Missing":  # latter is for groups in Magma but not GAP db
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if gp.live() or gp.aut_gens is None:
@@ -774,7 +774,7 @@ def char_table(label):
     info = to_dict(request.args,
                    dispv=sparse_cyclotomic_to_mathml)
     gp = WebAbstractGroup(label)
-    if gp.is_null():
+    if gp.is_null() or gp.source == "Missing":  # latter is for groups not in GAP but in Magma db
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if gp.live():
@@ -800,7 +800,7 @@ def Qchar_table(label):
     label = clean_input(label)
     info = to_dict(request.args, conv=integer_to_mathml)
     gp = WebAbstractGroup(label)
-    if gp.is_null():
+    if gp.is_null() or gp.source == "Missing": # latter is for groups not in GAP but in Magma db
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if not gp.rational_characters_known:
@@ -821,7 +821,7 @@ def Qchar_table(label):
 def _subgroup_diagram(label, title, only, style):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
-    if gp.is_null():
+    if gp.is_null() or gp.source == "Missing":  # latter is for groups in Magma but not in GAP db
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     dojs, display_opts = diagram_js_string(gp, only=only)
@@ -1362,7 +1362,7 @@ def render_abstract_group(label, data=None):
         gp = WebAbstractGroup(label)
     elif isinstance(data, list): # abelian group
         gp = WebAbstractGroup(label, data=data)
-    if gp.is_null():
+    if gp.is_null() or gp.source == "Missing": #groups of order 6561 are not in GAP but are labeled in Magma
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     # check if it fails to be a potential label even
@@ -1640,7 +1640,7 @@ def picture(label):
     if label_is_valid(label):
         label = clean_input(label)
         gp = WebAbstractGroup(label)
-        if gp.is_null():
+        if gp.is_null() or gp.source == "Missing": # latter is for groups in Magma but not GAP db
             flash_error("No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         # The user specifically requested the image, so we don't impose a limit on the number of conjugacy classes
