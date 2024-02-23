@@ -111,7 +111,7 @@ class BelyiTest(LmfdbTest):
         self.not_check_args("/Belyi/?hst=Passports&g=2", "1T1-1_1_1")
 
     def test_max_orbit_size_search_passports(self):
-        self.check_args("/Belyi/?hst=Passports&maxdegbf=10", "7T7-6.1_5.2_4.2.1")
+        self.check_args("/Belyi/?hst=Passports&maxdegbf=10", "7T7-6.1_3.3.1_5.2")
         self.not_check_args("/Belyi/?hst=Passports&maxdegbf=10", "1T1-1_1_1")
 
     def test_pass_size_search_passports(self):

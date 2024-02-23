@@ -769,7 +769,7 @@ def passport_search(info, query={}):
             # 7T6-7_4.2.1_4.2.1
             query["primitivization"] = info["primitivization"]
         else:
-            raise ValueError("%s is not a valid Belyi map label" % primitivization)
+            raise ValueError("%s is not a valid Belyi map label" % info["primitivization"])
    
 
 ################################################################################
@@ -1036,9 +1036,10 @@ class PassportSearchArray(SearchArray):
             knowl="belyi.primitivization",
             example="2T1-2_2_1.1",
             example_span="2T1-2_2_1.1")
-        count = CountBox()
-
-#TODO fix positioning
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [maxdegbf], [pass_size], [geomtype], [is_primitive], [primitivization], [count]]
 
         self.refine_array = [[deg, group, abc, abc_list], [g, maxdegbf, pass_size, geomtype], [is_primitive, primitivization]]
+
+    def search_types(self, info):
+        # Note: info will never be None, since this isn't      accessible on the browse page
+        return [("Passports", "Search again"), ("RandomPassport", "Random passport")]
+
