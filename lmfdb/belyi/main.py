@@ -724,8 +724,9 @@ passport_columns = SearchColumns([
     MathCol("abc", "belyi.abc", "abc", align="left", short_title="abc triple"),
     MathCol("lambdas", "belyi.ramification_type", "Ramification type", align="left"),
     MathCol("g", "belyi.genus", "Genus"),
-    MathCol("num_orbits", "belyi.num_orbits", "Number of Galois orbits"),
     MathCol("pass_size", "belyi.pass_size", "Passport size"),
+    MathCol("num_orbits", "belyi.num_orbits", "Number of Galois orbits"),
+    MathCol("maxdegbf", "belyi.orbit_size", "Max orbit size"),
     MathCol("triples", "belyi.permutation_triple", "Triples", align="left", default=False),
     LinkCol("primitivization", "belyi.primitivization", "Primitivization", url_for_belyi_passport_label, default=False)
 ])
