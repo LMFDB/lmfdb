@@ -380,7 +380,7 @@ class WebGamma1Space():
         self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
-        if len(newspaces) == len(self.newspace_dims):
+        if len(newspaces) == len([dim for dim in self.newspace_dims if dim != 0]):
             for space in newspaces:
                 if space.get('num_forms') is None:
                     self.decomp.append((space, None))
