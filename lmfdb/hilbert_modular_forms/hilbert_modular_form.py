@@ -410,7 +410,6 @@ def render_hmf_webpage(**args):
             info['field_label'],
             info['label'])
     Lfun = get_lfunction_by_url(url)
-    print(Lfun)
     if Lfun:
         instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'],
                                                           Lfun['degree'],
