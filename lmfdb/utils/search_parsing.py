@@ -129,7 +129,7 @@ class SearchParser():
             if self.error_is_safe:
                 flash_error(f"<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. {err}.", inp, name)
             else:
-                if err.trim_msg_error:
+                if hasattr(err, "trim_msg_error") and err.trim_msg_error:
                     flash_error("%s", str(err))
                 else:
                     flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
