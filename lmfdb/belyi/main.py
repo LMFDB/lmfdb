@@ -518,6 +518,8 @@ class Belyi_download(Downloader):
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
             s += "phi := %s;\n" % rec["map"]
+        else:
+            raise NotImplementedError("Magma downloads not implemented for genus > 2")
         if rec.get("plane_model"):
             s += "\n"
             s += "// Plane model\n"
@@ -528,8 +530,6 @@ class Belyi_download(Downloader):
             s += "KX_plane<t,u> := FunctionField(X_plane);\n"
             s += "a := %s;\n" % rec['plane_constant']
             s += "phi_plane := (1/a)*t;"
-        else:
-            raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
 
     def download_galmap_sage(self, label, lang="sage"):
@@ -593,7 +593,7 @@ class Belyi_download(Downloader):
             s += "a = %s\n" % rec['plane_constant']
             s += "phi_plane = (1/a)*t"
         else:
-            raise NotImplementedError("for genus > 2")
+            raise NotImplementedError("Sage downloads not implemented for genus > 2")
         return self._wrap(s, label, lang=lang)
 
     def download_galmap_text(self, label, lang="text"):
@@ -606,13 +606,20 @@ class Belyi_download(Downloader):
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
 def belyi_galmap_magma_download(label):
-    return Belyi_download().download_galmap_magma(label)
+    try:
+        return Belyi_download().download_galmap_magma(label)
+    except NotImplementedError as err:
+        flash_error("%s", err)
+        return redirect(url_for_belyi_galmap_label(label))
 
 
 @belyi_page.route("/download_galmap_to_sage/<label>")
 def belyi_galmap_sage_download(label):
-    return Belyi_download().download_galmap_sage(label)
-
+    try:
+        return Belyi_download().download_galmap_sage(label)
+    except NotImplementedError as err:
+        flash_error("%s", err)
+        return redirect(url_for_belyi_galmap_label(label))
 
 @belyi_page.route("/download_galmap_to_text/<label>")
 def belyi_galmap_text_download(label):
