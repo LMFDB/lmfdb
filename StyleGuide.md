@@ -1,7 +1,7 @@
 # Style guide
 
 Below, we describe several styling conventions for the LMFDB. See also the
-[Developer's Guide](https://github.com/LMFDB/lmfdb/blob/master/Development.md)
+[Developer's Guide](https://github.com/LMFDB/lmfdb/blob/main/Development.md)
 contains other conventions and information for the development process.
 
 ## General style conventions
