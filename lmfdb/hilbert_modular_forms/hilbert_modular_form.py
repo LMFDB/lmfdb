@@ -410,6 +410,7 @@ def render_hmf_webpage(**args):
             info['field_label'],
             info['label'])
     Lfun = get_lfunction_by_url(url)
+    print(Lfun)
     if Lfun:
         instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'],
                                                           Lfun['degree'],
@@ -422,13 +423,7 @@ def render_hmf_webpage(**args):
                             url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
 
     else:
-        # if there is no instance
-        # old code
-        if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
-            info['friends'] = [('L-function',
-                                url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
-        else:
-            info['friends'] = [('L-function not available', "")]
+        info['friends'] = [('L-function not available', "")]
 
         if data['dimension'] == 1:   # Try to attach associated elliptic curve
             lab = split_class_label(info['label'])
