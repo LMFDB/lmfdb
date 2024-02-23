@@ -301,7 +301,6 @@ def belyi_passport_from_belyi_galmap_label(label):
 
 
 # either a passport label or a galmap label
-# TODO: update for new labels
 # Note: this function is not currently used anywhere
 @cached_function
 def split_label(label):
@@ -643,7 +642,6 @@ def belyi_data(label):
 def url_for_label(label):
     return url_for(".by_url_belyi_search_url", smthorlabel=label)
 
-
 belyi_columns = SearchColumns([
     LinkCol("label", "belyi.label", "Label", url_for_belyi_galmap_label),
     MathCol("deg", "belyi.degree", "Degree"),
@@ -654,8 +652,8 @@ belyi_columns = SearchColumns([
     MathCol("orbit_size", "belyi.orbit_size", "Orbit Size"),
     MultiProcessedCol("field", "belyi.base_field", "Base field", ["base_field_label", "base_field"], lambda label, disp: field_display_gen(label, disp, truncate=16), apply_download=False),
     MathCol("triples", "belyi.permutation_triple", "Triples", align="left", default=False),
+    LinkCol("primitivization", "belyi.primitivization", "Primitivization", url_for_belyi_galmap_label, default=False)
 ])
-
 
 # galmap search
 
@@ -719,12 +717,25 @@ def belyi_search(info, query):
         else:
             raise ValueError("%s is not a valid Belyi map label" % primitivization)
 
+passport_columns = SearchColumns([
+    LinkCol("plabel", "belyi.passport_label", "Label", url_for_belyi_passport_label),
+    MathCol("deg", "belyi.degree", "Degree"),
+    SearchCol("group", "belyi.group", "Group"),
+    MathCol("abc", "belyi.abc", "abc", align="left", short_title="abc triple"),
+    MathCol("lambdas", "belyi.ramification_type", "Ramification type", align="left"),
+    MathCol("g", "belyi.genus", "Genus"),
+    MathCol("num_orbits", "belyi.num_orbits", "Number of Galois orbits"),
+    MathCol("pass_size", "belyi.pass_size", "Passport size"),
+    MathCol("triples", "belyi.permutation_triple", "Triples", align="left", default=False),
+    LinkCol("primitivization", "belyi.primitivization", "Primitivization", url_for_belyi_passport_label, default=False)
+])
+
 # passport search
 @search_wrap(
 table=db.belyi_passports,
 title="Passport search results",
 err_title="Passport search input error",
-columns=passport_columns, # TODO: define passport_columns
+columns=passport_columns,
 #shortcuts={"download": Subgroup_download()}, #TODO
 bread=lambda: get_bread([("Search Results", "")]),
 learnmore=learnmore_list,
@@ -959,9 +970,9 @@ class BelyiSearchArray(SearchArray):
         self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive, primitivization]]
 
 class PassportSearchArray(SearchArray):
-    sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
-             ("g", "genus", ['g', 'deg', 'group_num', 'label']),
-             ("pass_size", "passport size", ['pass_size', 'deg', 'group_num', 'g', 'label'])]
+    sorts = [("", "degree", ['deg', 'group_num', 'g', 'plabel']),
+             ("g", "genus", ['g', 'deg', 'group_num', 'plabel']),
+             ("pass_size", "passport size", ['pass_size', 'deg', 'group_num', 'g', 'plabel'])]
     jump_example = "4T5-4_4_3.1"
     jump_egspan = "e.g. 4T5-4_4_3.1"
     jump_knowl = "belyi.search_input"
@@ -1029,4 +1040,4 @@ class PassportSearchArray(SearchArray):
 #TODO fix positioning
         self.browse_array = [[deg], [group], [abc], [abc_list], [g], [maxdegbf], [pass_size], [geomtype], [is_primitive], [primitivization], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, maxdegbf, pass_size], [geomtype, is_primitive, primitivization]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, maxdegbf, pass_size, geomtype], [is_primitive, primitivization]]
