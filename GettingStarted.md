@@ -2,7 +2,7 @@ Installation
 ============
 
  * To develop and contribute new code, see below on
-   [Sharing Your Work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#code-development-and-sharing-your-work).
+   [Sharing Your Work](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#code-development-and-sharing-your-work).
    If you **only** want to run a copy of the site, move into a new directory and
    type
 
@@ -210,17 +210,17 @@ Code development and sharing your work
     git remote add upstream git@github.com:LMFDB/lmfdb.git
     ```
  * To run LMFDB, go through the rest of the instructions in
-   [Installation](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#installation) and
-   [Running](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+   [Installation](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#installation) and
+   [Running](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#running).
 
  * You should make a new branch if you want to work on a new feature.
    The following command creates a new branch named `new_feature` and
-   switches to that branch, after first switching to the master branch
+   switches to that branch, after first switching to the main branch
    and making sure that it is up-to-date:
 
    ```
-   git checkout master
-   git pull upstream master
+   git checkout main
+   git pull upstream main
    git checkout -b new_feature
    ```
 
@@ -237,7 +237,7 @@ Code development and sharing your work
 
  * You should make sure from time to time that you pull the latest
    changes from the official LMFDB repository.  There are three
-   branches upstream to be aware of: `web`, `dev` and `master`:
+   branches upstream to be aware of: `web`, `dev` and `main`:
 
    - `web` is changed rarely and contains the code currently running at
      [www.lmfdb.org](www.lmfdb.org)
@@ -245,34 +245,34 @@ Code development and sharing your work
    - `dev` is changed more often and contains the code currently running at
      [beta.lmfdb.org](beta.lmfdb.org)
 
-   - `master` is the development branch.
+   - `main` is the development branch.
 
-   Normal developers only need to be aware of the master
+   Normal developers only need to be aware of the main
    (=development) branch.
 
- * To pull in the most recent changes there to your own master
+ * To pull in the most recent changes there to your own main
    branch locally and update your github repository too:
 
     ```
-    git checkout master
-    git pull upstream master
-    git push origin master
+    git checkout main
+    git pull upstream main
+    git push origin main
     ```
 
- * To rebase your current working branch on the latest master:
+ * To rebase your current working branch on the latest main:
 
    ```
-   git pull --rebase upstream master
+   git pull --rebase upstream main
    ```
 
  * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb)
    that you have some new code!
    You should also issue a pull request at github
    (from your feature branch `new_feature`) at the same time.  Make
-   sure that your pull request is to the lmfdb `master` branch,
+   sure that your pull request is to the lmfdb `main` branch,
    whatever your own development or feature branch is called.
    Others will review your code, and release managers will
-   (eventually, if all is well) merge it into the master branch.
+   (eventually, if all is well) merge it into the main branch.
 
 
 LMFDB On Windows

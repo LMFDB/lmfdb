@@ -639,7 +639,7 @@ def code_snippet_knowl(D, full=True):
     lines = D.get('lines')
     code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
     if is_debug_mode():
-        branch = "master"
+        branch = "main"
     elif is_beta():
         branch = "dev"
     else:
