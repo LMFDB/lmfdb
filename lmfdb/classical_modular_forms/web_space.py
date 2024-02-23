@@ -372,7 +372,7 @@ class WebGamma1Space():
         self.num_spaces = data.get('num_spaces')
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
-        # by default we sort on char_orbit_index
+        # By default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
@@ -380,12 +380,35 @@ class WebGamma1Space():
         self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
-        for space in newspaces:
-            if space.get('num_forms') is None:
-                self.decomp.append((space, None))
-                self.has_uncomputed_char = True
-            else:
-                self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
+        if len(newspaces) == len(self.newspace_dims):
+            for space in newspaces:
+                if space.get('num_forms') is None:
+                    self.decomp.append((space, None))
+                    self.has_uncomputed_char = True
+                else:
+                    self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
+        else:
+            char_orbits = list(db.char_orbits.search({'modulus':level}))
+            newspaces_by_label = {str(level) + '.' + ns['char_orbit_label'] : ns for ns in newspaces} # to match the full character orbit label
+            newspace_dims_by_label = {char_orbits[i]['label'] : self.newspace_dims[i] for i in range(len(char_orbits))} # This relies on the fact that newspaces are sorted by char_orbit_index, which is the default at the time of writing.
+            for char in char_orbits:
+                if char['label'] in newspaces_by_label:
+                    space = newspaces_by_label[char['label']]
+                    if space.get('num_forms') is None:
+                        self.decomp.append((space, None))
+                        self.has_uncomputed_char = True
+                    else:
+                        self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
+                elif newspace_dims_by_label[char['label']] != 0:
+                    space = {}
+                    space['level'] = level
+                    space['conrey_index'] = int(char['first_label'].split('.')[1])
+                    space['char_orbit_label'] = char['label'].split('.')[-1]
+                    space['char_degree'] = char['degree']
+                    space['dim'] = newspace_dims_by_label[char['label']]
+                    space['in_mf_newspaces_db'] = False # This is used in self.decomposition(), to avoid making a hyperlink to a non-existant newspace page.
+                    self.decomp.append((space, None))
+                    self.has_uncomputed_char = True
         self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.dim > 0:
@@ -495,7 +518,10 @@ class WebGamma1Space():
             chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
-            link = self._link(space['level'], space['char_orbit_label'])
+            if space.get('in_mf_newspaces_db', True):
+                link = self._link(space['level'], space['char_orbit_label'])
+            else:
+                link = "{N}.{k}.{i}".format(N=space['level'], k=self.weight, i=space['char_orbit_label']) # Not actually a link
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
             elif not forms:
