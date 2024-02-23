@@ -1,7 +1,7 @@
 name: Format python code
 on:
   push:
-    branches: [ 'master' ]
+    branches: [ 'main' ]
 jobs:
   autopep8:
     runs-on: ubuntu-latest
