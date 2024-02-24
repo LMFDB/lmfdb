@@ -1231,6 +1231,7 @@ class NFSearchArray(SearchArray):
         monogenic = YesNoMaybeBox(
             name="monogenic",
             label="Monogenic",
+            example_col=True,
             knowl="nf.monogenic")
         index = TextBox(
             name="index",
