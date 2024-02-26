@@ -477,6 +477,28 @@ class WebNumberField:
     def rd(self):
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
 
+    def grd(self):
+        if 'grd' not in self._data:
+            return 'not computed'
+        if self.degree() == 1:
+            return '$1$'
+        ramps = self._data['ramps']
+        exps = self._data['galois_disc_exponents']
+        grd = self._data['grd']
+        grd = str(grd)
+        galord = int(self.gg().order())
+        exps = [str(QQ(z/galord)) for z in exps]
+        exact = '$'
+        for j in range(len(ramps)):
+            exact += str(ramps[j])
+            if exps[j] != '1':
+                exact += f'^{{{exps[j]}}}'
+            else:
+                if j != len(ramps)-1:
+                    exact += r'\cdot '
+        return exact+r'\approx '+grd+'$'
+
+
     # Return a nice string for the Galois group
     def galois_string(self, cache=None):
         if not self.haskey('galois_label'):
