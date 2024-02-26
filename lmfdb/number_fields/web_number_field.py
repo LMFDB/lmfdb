@@ -498,7 +498,6 @@ class WebNumberField:
                     exact += r'\cdot '
         return exact+r'\approx '+grd+'$'
 
-
     # Return a nice string for the Galois group
     def galois_string(self, cache=None):
         if not self.haskey('galois_label'):
