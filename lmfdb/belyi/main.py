@@ -726,7 +726,7 @@ def primitivization_search(info, query, search_type):
 )
 def belyi_search(info, query):
     common_parse(info, query)
-    primitiviation_search(info, query, search_type="Belyi map")
+    primitivization_search(info, query, search_type="galmap")
     parse_ints(info, query, "orbit_size", "orbit_size")
 
 passport_columns = SearchColumns([
@@ -878,81 +878,81 @@ def labels_page():
     )
 
 class BelyiCommonSearchArray(SearchArray):
-    sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
-             ("g", "genus", ['g', 'deg', 'group_num', 'label']),
-             # ("field", "base field", ['base_field_label', 'deg', 'group_num', 'g', 'label']),
-             ("orbit_size", "orbit size", ['orbit_size', 'deg', 'group_num', 'g', 'label'])]
     jump_knowl = "belyi.search_input"
     jump_label = "Label"
 
     def __init__(self):
-        deg = TextBox(
+        self.deg = TextBox(
             name="deg",
             label="Degree",
             knowl="belyi.degree",
             example="5",
             example_span="4, 5-6")
-        group = TextBox(
+        self.group = TextBox(
             name="group",
             label="Group",
             knowl="belyi.group",
             example="4T5")
-        abc = TextBox(
+        self.abc = TextBox(
             name="abc",
             label="Orders",
             knowl="belyi.orders",
             example="5",
             example_span="4, 5-6")
-        abc_list = TextBox(
+        self.abc_list = TextBox(
             name="abc_list",
             label=r"\([a,b,c]\) triple",
             knowl="belyi.abc",
             example="[4,4,3]")
-        g = TextBox(
+        self.g = TextBox(
             name="g",
             label="Genus",
             knowl="belyi.genus",
             example="1",
             example_span="1, 0-2")
-        pass_size = TextBox(
+        self.pass_size = TextBox(
             name="pass_size",
             label="Passport size",
             knowl="belyi.pass_size",
             example="2",
             example_span="2, 5-6")
-        geomtype = SelectBox(
+        self.geomtype = SelectBox(
             name="geomtype",
             label="Geometry type",
             knowl="belyi.geometry_type",
             options=[("", "")] + list(geometry_types_dict.items()))
-        is_primitive = YesNoBox(
+        self.is_primitive = YesNoBox(
             name="is_primitive",
             label="Primitive",
             knowl="belyi.primitive",
             example="yes")
-        count = CountBox()
+        self.count = CountBox()
 
 
-class BelyiSearchArray(SearchArray):
+class BelyiSearchArray(BelyiCommonSearchArray):
     noun = "map"
+    sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
+             ("g", "genus", ['g', 'deg', 'group_num', 'label']),
+             ("orbit_size", "orbit size", ['orbit_size', 'deg', 'group_num', 'g', 'label'])]
+
     jump_example = "4T5-4_4_3.1-a"
     jump_egspan = "e.g. 4T5-4_4_3.1-a"
 
     def __init__(self):
         BelyiCommonSearchArray.__init__(self)
-        orbit_size = TextBox(
+        self.orbit_size = TextBox(
             name="orbit_size",
             label="Orbit size",
             knowl="belyi.orbit_size",
             example="2",
             example_span="2, 5-6")
-        primitivization = TextBox(
+        self.primitivization = TextBox(
             name="primitivization",
             label="Primitivization",
             knowl="belyi.primitivization",
             example="2T1-2_2_1.1-a",
             example_span="2T1-2_2_1.1-a")
-        field = TextBox(
+        self.field = TextBox(
             name="field",
             label="Base field",
             knowl="belyi.base_field",
@@ -960,33 +960,35 @@ class BelyiSearchArray(SearchArray):
             example_span="2.2.5.1 or Qsqrt5")
 
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [field], [geomtype], [is_primitive], [primitivization], [count]]
+        self.browse_array = [[self.deg], [self.group], [self.abc], [self.abc_list], [self.g], [self.orbit_size], [self.pass_size], [self.field], [self.geomtype], [self.is_primitive], [self.primitivization], [self.count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive, primitivization]]
+        self.refine_array = [[self.deg, self.group, self.abc, self.abc_list], [self.g, self.orbit_size, self.pass_size, self.field], [self.geomtype, self.is_primitive, self.primitivization]]
 
-class PassportSearchArray(SearchArray):
+class PassportSearchArray(BelyiCommonSearchArray):
     noun = "passport"
+    sorts = [("", "degree", ['deg', 'group_num', 'g', 'plabel']),
              ("g", "genus", ['g', 'deg', 'group_num', 'plabel']),
-             ("pass_size", "passport size", ['pass_size', 'deg', 'group_num', 'g', 'plabel'])]
+             ("orbit_size", "orbit size", ['orbit_size', 'deg', 'group_num', 'g', 'plabel'])]
+
     jump_example = "4T5-4_4_3.1"
     jump_egspan = "e.g. 4T5-4_4_3.1"
 
     def __init__(self):
         BelyiCommonSearchArray.__init__(self)
-        maxdegbf = TextBox(
+        self.maxdegbf = TextBox(
             name="maxdegbf",
             label="Maximum orbit size",
             knowl="belyi.orbit_size",
             example="2",
             example_span="2, 5-6")
-        primitivization = TextBox(
+        self.primitivization = TextBox(
             name="primitivization",
             label="Primitivization",
             knowl="belyi.primitivization",
             example="2T1-2_2_1.1",
             example_span="2T1-2_2_1.1")
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, maxdegbf, pass_size, geomtype], [is_primitive, primitivization]]
+        self.refine_array = [[self.deg, self.group, self.abc, self.abc_list], [self.g, self.maxdegbf, self.pass_size, self.geomtype], [self.is_primitive, self.primitivization]]
 
     def search_types(self, info):
         # Note: info will never be None, since this isn't accessible on the browse page
