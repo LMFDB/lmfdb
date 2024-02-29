@@ -677,17 +677,7 @@ def query_convert_abc_list(query):
         query.pop("abc_list")
     return query
 
-@search_wrap(
-    table=db.belyi_galmaps,
-    title="Belyi map search results",
-    err_title="Belyi map search input error",
-    columns=belyi_columns,
-    shortcuts={"jump": belyi_jump, "download": Belyi_download()},
-    url_for_label=url_for_label,
-    bread=lambda: get_bread("Search results"),
-    learnmore=learnmore_list,
-)
-def belyi_search(info, query):
+def common_parse(info, query):
     parse_bracketed_posints(info, query, "abc_list", "a, b, c", maxlength=3)
     query = query_convert_abc_list(query)
 
@@ -700,22 +690,44 @@ def belyi_search(info, query):
 
     parse_ints(info, query, "g", "g")
     parse_ints(info, query, "deg", "deg")
-    parse_ints(info, query, "orbit_size", "orbit_size")
     parse_ints(info, query, "pass_size", "pass_size")
     parse_nf_string(info, query, 'field', name="base number field", qfield='base_field_label')
-    # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-    for fld in ["geomtype", "group"]:
-        if info.get(fld):
-            query[fld] = info[fld]
-
     parse_bool(info, query, "is_primitive", name="is_primitive")
+    for fld in ["geomtype", "group"]:
+            if info.get(fld):
+                query[fld] = info[fld]
+
+def primitivization_search(info, query, search_type):
+    if search_type == "galmap":
+        re_str = GALMAP_RE
+        err_name = "Belyi map"
+    elif search_type == "passport":
+        re_str = PASSPORT_RE
+        err_name = "passport"
+    else:
+        ValueError("Invalid search type")
     if info.get("primitivization"):
         primitivization = info["primitivization"]
-        if re.match(GALMAP_RE, primitivization):
-            # 7T6-7_4.2.1_4.2.1-b
+        if re.match(re_str, primitivization):
+            # 7T6-7_4.2.1_4.2.1-b or 7T6-7_4.2.1_4.2.1
             query["primitivization"] = primitivization
         else:
-            raise ValueError("%s is not a valid Belyi map label" % primitivization)
+            raise ValueError("%s is not a valid %s label" % (primitivization, err_name))
+
+@search_wrap(
+    table=db.belyi_galmaps,
+    title="Belyi map search results",
+    err_title="Belyi map search input error",
+    columns=belyi_columns,
+    shortcuts={"jump": belyi_jump, "download": Belyi_download()},
+    url_for_label=url_for_label,
+    bread=lambda: get_bread("Search results"),
+    learnmore=learnmore_list,
+)
+def belyi_search(info, query):
+    common_parse(info, query)
+    primitiviation_search(info, query, search_type="Belyi map")
+    parse_ints(info, query, "orbit_size", "orbit_size")
 
 passport_columns = SearchColumns([
     LinkCol("plabel", "belyi.passport_label", "Label", url_for_belyi_passport_label),
@@ -743,34 +755,10 @@ learnmore=learnmore_list,
 url_for_label=url_for_belyi_passport_label,
 )
 def passport_search(info, query={}):
-    parse_bracketed_posints(info, query, "abc_list", "a, b, c", maxlength=3)
-    query = query_convert_abc_list(query)
-    # a naive hack
-    if info.get("abc"):
-        for elt in ["a_s", "b_s", "c_s"]:
-            info_hack = {}
-            info_hack[elt] = info["abc"]
-            parse_ints(info_hack, query, elt)
-
-    parse_ints(info, query, "g", "g")
-    parse_ints(info, query, "deg", "deg")
+    common_parse(info, query)
+    primitivization_search(info, query, search_type = "passport")
     parse_ints(info, query, "maxdegbf", "maxdegbf")
-    parse_ints(info, query, "pass_size", "pass_size")
     parse_ints(info, query, "num_orbits", "num_orbits")
-    parse_nf_string(info, query, 'field', name="base number field", qfield='base_field_label')
-    # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-    for fld in ["geomtype", "group"]:
-        if info.get(fld):
-            query[fld] = info[fld]
-
-    parse_bool(info, query, "is_primitive", name="is_primitive")
-    if info.get("primitivization"):
-        if re.match(PASSPORT_RE, info["primitivization"]):
-            # 7T6-7_4.2.1_4.2.1
-            query["primitivization"] = info["primitivization"]
-        else:
-            raise ValueError("%s is not a valid Belyi map label" % info["primitivization"])
-   
 
 ################################################################################
 # Statistics
@@ -889,15 +877,11 @@ def labels_page():
         learnmore=learnmore_list_remove("labels"),
     )
 
-
-class BelyiSearchArray(SearchArray):
-    noun = "map"
+class BelyiCommonSearchArray(SearchArray):
     sorts = [("", "degree", ['deg', 'group_num', 'g', 'label']),
              ("g", "genus", ['g', 'deg', 'group_num', 'label']),
              # ("field", "base field", ['base_field_label', 'deg', 'group_num', 'g', 'label']),
              ("orbit_size", "orbit size", ['orbit_size', 'deg', 'group_num', 'g', 'label'])]
-    jump_example = "4T5-4_4_3.1-a"
-    jump_egspan = "e.g. 4T5-4_4_3.1-a"
     jump_knowl = "belyi.search_input"
     jump_label = "Label"
 
@@ -936,12 +920,6 @@ class BelyiSearchArray(SearchArray):
             knowl="belyi.pass_size",
             example="2",
             example_span="2, 5-6")
-        orbit_size = TextBox(
-            name="orbit_size",
-            label="Orbit size",
-            knowl="belyi.orbit_size",
-            example="2",
-            example_span="2, 5-6")
         geomtype = SelectBox(
             name="geomtype",
             label="Geometry type",
@@ -952,6 +930,22 @@ class BelyiSearchArray(SearchArray):
             label="Primitive",
             knowl="belyi.primitive",
             example="yes")
+        count = CountBox()
+
+
+class BelyiSearchArray(SearchArray):
+    noun = "map"
+    jump_example = "4T5-4_4_3.1-a"
+    jump_egspan = "e.g. 4T5-4_4_3.1-a"
+
+    def __init__(self):
+        BelyiCommonSearchArray.__init__(self)
+        orbit_size = TextBox(
+            name="orbit_size",
+            label="Orbit size",
+            knowl="belyi.orbit_size",
+            example="2",
+            example_span="2, 5-6")
         primitivization = TextBox(
             name="primitivization",
             label="Primitivization",
@@ -964,72 +958,27 @@ class BelyiSearchArray(SearchArray):
             knowl="belyi.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
-        count = CountBox()
+
 
         self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [field], [geomtype], [is_primitive], [primitivization], [count]]
 
         self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive, primitivization]]
 
 class PassportSearchArray(SearchArray):
-    sorts = [("", "degree", ['deg', 'group_num', 'g', 'plabel']),
+    noun = "passport"
              ("g", "genus", ['g', 'deg', 'group_num', 'plabel']),
              ("pass_size", "passport size", ['pass_size', 'deg', 'group_num', 'g', 'plabel'])]
     jump_example = "4T5-4_4_3.1"
     jump_egspan = "e.g. 4T5-4_4_3.1"
-    jump_knowl = "belyi.search_input"
-    jump_label = "Label"
 
     def __init__(self):
-        deg = TextBox(
-            name="deg",
-            label="Degree",
-            knowl="belyi.degree",
-            example="5",
-            example_span="4, 5-6")
-        group = TextBox(
-            name="group",
-            label="Group",
-            knowl="belyi.group",
-            example="4T5")
-        abc = TextBox(
-            name="abc",
-            label="Orders",
-            knowl="belyi.orders",
-            example="5",
-            example_span="4, 5-6")
-        abc_list = TextBox(
-            name="abc_list",
-            label=r"\([a,b,c]\) triple",
-            knowl="belyi.abc",
-            example="[4,4,3]")
-        g = TextBox(
-            name="g",
-            label="Genus",
-            knowl="belyi.genus",
-            example="1",
-            example_span="1, 0-2")
-        pass_size = TextBox(
-            name="pass_size",
-            label="Passport size",
-            knowl="belyi.pass_size",
-            example="2",
-            example_span="2, 5-6")
+        BelyiCommonSearchArray.__init__(self)
         maxdegbf = TextBox(
             name="maxdegbf",
             label="Maximum orbit size",
             knowl="belyi.orbit_size",
             example="2",
             example_span="2, 5-6")
-        geomtype = SelectBox(
-            name="geomtype",
-            label="Geometry type",
-            knowl="belyi.geometry_type",
-            options=[("", "")] + list(geometry_types_dict.items()))
-        is_primitive = YesNoBox(
-            name="is_primitive",
-            label="Primitive",
-            knowl="belyi.primitive",
-            example="yes")
         primitivization = TextBox(
             name="primitivization",
             label="Primitivization",
@@ -1040,6 +989,6 @@ class PassportSearchArray(SearchArray):
         self.refine_array = [[deg, group, abc, abc_list], [g, maxdegbf, pass_size, geomtype], [is_primitive, primitivization]]
 
     def search_types(self, info):
-        # Note: info will never be None, since this isn't      accessible on the browse page
+        # Note: info will never be None, since this isn't accessible on the browse page
         return [("Passports", "Search again"), ("RandomPassport", "Random passport")]
 
