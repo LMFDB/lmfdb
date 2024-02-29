@@ -679,7 +679,7 @@ def query_convert_abc_list(query):
 
 def common_parse(info, query):
     parse_bracketed_posints(info, query, "abc_list", "a, b, c", maxlength=3)
-    query = query_convert_abc_list(query)
+    query_convert_abc_list(query)
 
     # a naive hack
     if info.get("abc"):

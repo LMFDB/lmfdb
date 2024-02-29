@@ -19,7 +19,6 @@ def genus2_lookup_equation(rec):
     lab, _ = genus2_lookup_equation_polys(str([f,h]))
     if lab:
         return lab
-    return None
 
 def genus1_lookup_equation_QQ(rec):
     assert rec['g'] == 1
