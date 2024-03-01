@@ -1492,3 +1492,7 @@ class PostgresSearchTable(PostgresTable):
         - ``record`` -- (default True) whether to record the number of results in the stats table.
         """
         return self.stats.count_distinct(col, query, record=record)
+
+    def sum(self, col):
+        print("wakka wakka")
+        return self.stats.sum(col)

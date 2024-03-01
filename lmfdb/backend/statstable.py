@@ -753,6 +753,41 @@ class PostgresStatsTable(PostgresBase):
                 self._record_extreme(col, ccols, cvals, m, kind="min")
         return m
 
+    def _slow_sum(self, col):
+        inserter = SQL("SELECT SUM({0}) FROM {1}")
+        inserter = inserter.format(Identifier(col), Identifier(self.search_table))
+        cur = self._execute(inserter)
+        if cur.rowcount:
+            return cur.fetchone()[0]
+
+    def _record_sum(self, col, m):
+        inserter = SQL(
+                "INSERT INTO {0} "
+                "(cols, value) "
+                "VALUES (%s, %s)"
+            )
+        self._execute(
+            inserter.format(Identifier(self.stats)),
+            [Json([col]), m],
+        )
+
+    def _quick_sum(self, col):
+        values = [Json([col])]
+        selecter = SQL(
+            "SELECT value FROM {0} WHERE cols = %s AND threshold IS NULL"
+        ).format(Identifier(self.stats))
+        cur = self._execute(selecter, values)
+        if cur.rowcount:
+            return cur.fetchone()[0]        
+
+    def sum(self, col, record=True):
+        m = self._quick_sum(col)
+        if m is None:
+            m = self._slow_sum(col)
+            if record:
+                self._record_sum(col, m)
+        return m
+
     def _bucket_iterator(self, buckets, constraint):
         """
         Utility function for adding buckets to a constraint
