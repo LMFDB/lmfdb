@@ -89,7 +89,7 @@ class BelyiTest(LmfdbTest):
         self.check_args("/Belyi/?primitivization=2T1-2_2_1.1-a", "4T1-4_4_1.1.1.1-a")
         self.not_check_args("/Belyi/?primitivization=2T1-2_2_1.1-a", "1T1-1_1_1-a")
 
-    # for passports 
+    # for passports
 
     def test_deg_range_passports(self):
         self.check_args("/Belyi/?hst=Passports&deg=2-7", "5T3-4.1_4.1_2.2.1")
@@ -133,7 +133,6 @@ class BelyiTest(LmfdbTest):
     def test_primitivization_search_passports(self):
         self.check_args("/Belyi/?hst=Passports&primitivization=2T1-2_2_1.1", "4T1-4_4_1.1.1.1")
         self.not_check_args("/Belyi/?hst=Passports&primitivization=2T1-2_2_1.1", "1T1-1_1_1")
-
 
     # downloads
 
