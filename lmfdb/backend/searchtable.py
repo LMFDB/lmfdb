@@ -1494,5 +1494,4 @@ class PostgresSearchTable(PostgresTable):
         return self.stats.count_distinct(col, query, record=record)
 
     def sum(self, col):
-        print("wakka wakka")
         return self.stats.sum(col)
