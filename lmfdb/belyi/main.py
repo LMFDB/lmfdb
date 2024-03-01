@@ -763,7 +763,7 @@ url_for_label=url_for_belyi_passport_label,
 )
 def passport_search(info, query={}):
     common_parse(info, query)
-    primitivization_search(info, query, search_type = "passport")
+    primitivization_search(info, query, search_type="passport")
     parse_ints(info, query, "maxdegbf", "maxdegbf")
     parse_ints(info, query, "num_orbits", "num_orbits")
 
@@ -966,7 +966,6 @@ class BelyiSearchArray(BelyiCommonSearchArray):
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
 
-
         self.browse_array = [[self.deg], [self.group], [self.abc], [self.abc_list], [self.g], [self.orbit_size], [self.pass_size], [self.field], [self.geomtype], [self.is_primitive], [self.primitivization], [self.count]]
 
         self.refine_array = [[self.deg, self.group, self.abc, self.abc_list], [self.g, self.orbit_size, self.pass_size, self.field], [self.geomtype, self.is_primitive, self.primitivization]]
@@ -1000,4 +999,3 @@ class PassportSearchArray(BelyiCommonSearchArray):
     def search_types(self, info):
         # Note: info will never be None, since this isn't accessible on the browse page
         return [("Passports", "Search again"), ("RandomPassport", "Random passport")]
-
