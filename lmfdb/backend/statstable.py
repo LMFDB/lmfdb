@@ -754,6 +754,13 @@ class PostgresStatsTable(PostgresBase):
         return m
 
     def _slow_sum(self, col):
+        """
+        Compute the sum of a column
+
+        INPUT:
+
+        - ``col`` -- the column
+        """
         inserter = SQL("SELECT SUM({0}) FROM {1}")
         inserter = inserter.format(Identifier(col), Identifier(self.search_table))
         cur = self._execute(inserter)
@@ -761,6 +768,14 @@ class PostgresStatsTable(PostgresBase):
             return cur.fetchone()[0]
 
     def _record_sum(self, col, m):
+        """
+        Cache the sum
+
+        INPUT:
+
+        - ``col`` -- the column
+        - ``m``   -- the value to store as sum
+        """
         inserter = SQL(
                 "INSERT INTO {0} "
                 "(cols, value) "
@@ -772,6 +787,9 @@ class PostgresStatsTable(PostgresBase):
         )
 
     def _quick_sum(self, col):
+        """
+        This just looks up the sum; returns None if it hasn't been computed
+        """
         values = [Json([col])]
         selecter = SQL(
             "SELECT value FROM {0} WHERE cols = %s AND threshold IS NULL"
@@ -781,6 +799,9 @@ class PostgresStatsTable(PostgresBase):
             return cur.fetchone()[0]        
 
     def sum(self, col, record=True):
+        """
+        Look up sum; if it exists return it, otherwise compute it, store it, and return
+        """
         m = self._quick_sum(col)
         if m is None:
             m = self._slow_sum(col)
