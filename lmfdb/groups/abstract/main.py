@@ -294,6 +294,8 @@ def get_group_prop_display(gp):
     return overall_display
 
 def create_boolean_subgroup_string(sgp, type="normal"):
+#    if sgp.sub.label == "nolabel":
+#        return "BLAH"
     # We put direct and semidirect after normal since (hence normal) seems weird there, even if correct
     implications = {
         "thecenter": ["characteristic", "central"],
@@ -548,7 +550,6 @@ def create_boolean_string(gp, type="normal"):
             assert A in overall_order and B in overall_order
             assert overall_order.index(A) < overall_order.index(B)
             assert B in impl_order
-
     overall_display = get_group_prop_display(gp)
     assert set(overall_display) == set(overall_order)
 
