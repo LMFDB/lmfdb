@@ -734,7 +734,7 @@ class DirichStats(StatsDisplay):
                   "is_real": yesno}
 
     def __init__(self):
-        self.nchars = db.char_orbits.sum('degree') # 3039650754
+        self.nchars = db.char_orbits.sum('degree')
         self.norbits = db.char_orbits.count()
         self.maxmod = db.char_orbits.max("modulus")
 

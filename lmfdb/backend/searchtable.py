@@ -1493,5 +1493,13 @@ class PostgresSearchTable(PostgresTable):
         """
         return self.stats.count_distinct(col, query, record=record)
 
-    def sum(self, col):
-        return self.stats.sum(col)
+    def sum(self, col, constraint={}):
+        """
+        The sum of a given column.
+
+        INPUT:
+
+        - ``col`` -- the name of the column
+        - ``constraint`` -- a query dictionary constraining which rows are considered
+        """
+        return self.stats.sum(col, constraint)
