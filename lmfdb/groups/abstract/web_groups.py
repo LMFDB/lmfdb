@@ -2752,7 +2752,7 @@ class WebAbstractSubgroup(WebObj):
         if not S:
             order = self.subgroup_order
             newgroup = WebAbstractGroup('nolabel',
-                data={'order': order, 'G': None, 'abelian': self.abelian,'cyclic': self.cyclic,  
+                data={'order': order, 'G': None, 'abelian': self.abelian,'cyclic': self.cyclic,
                       # What if aut_label is set?
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor())==1})
