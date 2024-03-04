@@ -2563,4 +2563,3 @@ class PostgresTable(PostgresBase):
         """
         updater = SQL("UPDATE meta_tables SET important = %s WHERE name = %s")
         self._execute(updater, [importance, self.search_table])
-
