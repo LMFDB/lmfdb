@@ -521,7 +521,7 @@ class WebGamma1Space():
                     space['char_orbit_label'] = char['label'].split('.')[-1]
                     space['char_degree'] = char['degree']
                     space['dim'] = newspace_dims_by_label[char['label']]
-                    space['in_mf_newspaces_db'] = (space['char_orbit_label'] != 'a') # This is used in self.decomposition(), to avoid making a hyperlink to a non-existant newspace page.
+                    space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a') # This is used in self.decomposition()
                     self.decomp.append((space, None))
                     self.has_uncomputed_char = True
         self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
@@ -633,7 +633,7 @@ class WebGamma1Space():
             chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
-            if space.get('in_mf_newspaces_db', True):
+            if space.get('generate_link', True):
                 link = self._link(space['level'], space['char_orbit_label'])
             else:
                 link = "{N}.{k}.{i}".format(N=space['level'], k=self.weight, i=space['char_orbit_label']) # Not actually a link
