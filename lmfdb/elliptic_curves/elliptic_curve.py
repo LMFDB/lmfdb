@@ -195,7 +195,7 @@ class ECstats(StatsDisplay):
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
-              'sha': 'ec.q.analytic_sha_order',
+              'sha': 'ec.analytic_sha_order',
               'torsion_structure': 'ec.torsion_order'}
 
     top_titles = {'rank': 'rank',
