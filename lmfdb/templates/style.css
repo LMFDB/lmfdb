@@ -565,7 +565,7 @@ input, textarea {
 }
 /* TODO: above? */
 
-button, select, a.like-button {
+button, select, a.like-button, .file-upload {
   padding: 3px 6px;
   border-radius: 4px;
   cursor: pointer;
@@ -573,11 +573,15 @@ button, select, a.like-button {
   min-width: 75px;
 }
 
-button, a.like-button {
+input[type=file] {
+  display: none;
+}
+
+button, a.like-button, .file-upload {
   background: {{color.button_background}};
 }
 
-a.like-button {
+a.like-button, .file-upload {
   color: {{color.black}};
   font-size: 11px;
   padding: 6px 16px 3px 16px;
@@ -2612,10 +2616,6 @@ span.raw-tset-container:hover > span.raw-tset-copy-btn {
   cursor: pointer;
 }
 
-
-
-
-
-
-
-
+div.upload_section {
+  margin-bottom: 60px;
+}

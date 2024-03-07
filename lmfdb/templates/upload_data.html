@@ -1,0 +1,54 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>Policies on uploads, encourage users to contact us if they have algorithms that apply more generally.</p>
+
+{% for section in uploader.sections %}
+
+  <h1>{{section.title}}</h1>
+
+  <p>{{section.intro}}</p>
+
+  <div class="upload_section">
+    <form method="post">
+      <table>
+        <tr>
+          {% for box in section.inputs %}
+            <td>{{KNOWL(box.knowl, box.label)}}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          {% for box in section.inputs %}
+            <td>{{box.html() | safe}}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td><button type="submit" name="submit" value="{{section.name}}">Upload</button></td>
+        </tr>
+      </table>
+    </form>
+    {% if section.offer_csv %}
+      <p>
+        To upload multiple records, provide a CSV file following <a href="{{section.csv_template_url}}">this template</a>.
+      </p>
+      <form method="post" enctype="multipart/form-data">
+        <table>
+          <tr>
+            <td>
+              <label class="file-upload">
+                <input type="file" name="{{section.name}}_csv" />
+                Add File
+                {# TODO: There's currently no indication that a file has been successfully added #}
+              </label>
+            </td>
+            <td>
+              <button type="submit" name="submit" value="{{section.name}}_file">Upload</button>
+            </td>
+          </tr>
+        </table>
+      </form>
+    {% endif %}
+  </div>
+{% endfor %}
+
+{% endblock %}
