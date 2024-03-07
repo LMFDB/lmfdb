@@ -235,10 +235,10 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             # Aurel's code will adjust and remove extra when needed.
             #q = primes_resort[len(hecke_eigenvalues)]
             #while primes_resort[len(hecke_eigenvalues)] == q:
-            #    # Remove all with same norm 
+            #    # Remove all with same norm
             #    leftout += 1
             #    hecke_eigenvalues = hecke_eigenvalues[:-1]
-            
+
         if leftout > 0:
             print("Left out", leftout)
 
@@ -365,7 +365,7 @@ def attach_new_label(f):
 
 def parseALstring(s):
     # Drop first char bracket
-    #in [[4,2,1/2*w^3-2*w],-1],[[191,191,-w^3-2*w^2+5*w+7],-1]] 
+    #in [[4,2,1/2*w^3-2*w],-1],[[191,191,-w^3-2*w^2+5*w+7],-1]]
     #out ['[[4', '2', '1/2*w^3-2*w]', '-1]', '[[191', '191', '-w^3-2*w^2+5*w+7]', '-1]]']
     if s == '[]':
         return []
@@ -380,7 +380,7 @@ def parseALstring(s):
 
 
 def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=True):
-    ''' 
+    '''
     put in docstring!
     '''
     if ferrors is None:
@@ -403,7 +403,7 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
 
         for line in infile:
             # sample line - 4.4.1600.1-25.1-a:[25,5,w^2-3]:no:yes:[[[25,5,w^2-3],1]]:done:[[25,5,w^2-3],-1]
-            line_keys = ['label', 'level_ideal','is_CM','is_base_change','AL_eigenvalues','AL_eigenvalues_fixed'] 
+            line_keys = ['label', 'level_ideal','is_CM','is_base_change','AL_eigenvalues','AL_eigenvalues_fixed']
             data = line.split(':')
             label = data[0]
             f = hmf_forms.find_one({'label':label})
@@ -412,7 +412,7 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
             assert f['field_label'] == field_label
             f['AL_eigenvalues'] = parseALstring(data[line_keys.index('AL_eigenvalues')])
             enter_keys = ['is_CM','is_base_change','AL_eigenvalues_fixed']
-            for k in enter_keys:  
+            for k in enter_keys:
                 f[k] = data[line_keys.index(k)]
             # need to fix some aps:  data[-1]
             # adjust f['hecke_eigenvalues']
@@ -425,7 +425,7 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
                         print('?????   ', ap, label)
                     assert ap in {'1', '-1'}
                     if clean_primes.index(pp) < len(f['hecke_eigenvalues']):
-                        try: 
+                        try:
                             assert f['hecke_eigenvalues'][clean_primes.index(pp)] in {'0','1','-1'}
                         except AssertionError:
                             print(f['hecke_eigenvalues'][clean_primes.index(pp)])
@@ -436,7 +436,7 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
                         print('!!! a_pp not corrected since not many stored !!!')
             if not test:
                 print(label)
-                hmf_forms.save(f)  
+                hmf_forms.save(f)
             else:
                 print(f)
 
