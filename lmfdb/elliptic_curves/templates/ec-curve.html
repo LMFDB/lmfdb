@@ -271,10 +271,10 @@ white-space: pre in order to keep line breaks! #}
         	  {% if data.mwbsd.sha > 1 %}
           	  = {{data.mwbsd.sha2}}
             {% endif %}
-            {% if data.rank > 1 %}
-              ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
-            {% else %}
+            {% if data.mwbsd.sha_is_exact %}
               ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
+            {% else %}
+              ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
             {% endif %}
           {% endif %}
         </td>
