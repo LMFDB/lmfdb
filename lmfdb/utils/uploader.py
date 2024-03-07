@@ -14,6 +14,7 @@ Validation occurs in several stages, with the progression indicated by status co
 import os
 import re
 import csv
+import io
 import codecs
 import tempfile
 from datetime import datetime
@@ -353,33 +354,104 @@ class Uploader():
             bread=self.bread,
             learnmore=self.learnmore)
 
-    def review(self):
-        if current_user.is_admin():
-            if request.method == "POST":
-                submit = request.form.get("submit", "")
-                try:
-                    n = 0
-                    approving = submit.endswith("_approve")
-                    if approving:
-                        pass
-                except Exception as err:
-                    flash_error(str(err))
-                else:
-                    if approving:
-                        flash("Successfully approved {n} submissions")
-                    else:
-                        flash("Successfully rejected {n} submissions")
-            else:
-                return render_template(
-                    "review_uploads.html",
-                    uploader=self,
-                    title="Review uploads")
+    def review(self, info, reviewer, userid):
+        """
+        Change status on a set of data uploads
+
+        INPUT:
+
+        - ``info`` -- the contents of the review form from user-upload.html
+        - ``reviewer`` -- whether the current user is allowed to review knowls
+        - ``userid`` -- the username of the current user
+        """
+        if info["submit"] == "approve":
+            new_status = 2
+            desc = "approved"
+        elif info["submit"] == "reject":
+            new_status = -2
+            desc = "rejected"
+        elif info["submit"] == "withdraw":
+            new_status = -5
+            desc = "withdrawn"
         else:
-            flash_error("You must be an admin to review data uploads")
-            return redirect(url_for("index"))
+            new_status = -10
+        comment = info.get("comment", "").strip()
+        if (reviewer and new_status != -10) or new_status == -5:
+            # Modification allowed
+            ids = [int(x[7:]) for x in info if x.startswith("select_") and x[7:].isdigit()]
+            if ids:
+                if new_status == -5 and not all(rec["submitter"] == userid and (0 <= rec["status"] < 3) for rec in db.data_uploads.search({"id":{"$in":ids}}, "submitter")):
+                    flash_error("You can only withdraw your own uploads, and only before final processing")
+                elif new_status in [2, -2] and not all(status == 1 for status in db.data_uploads.search({"id":{"$in":ids}}, "status")):
+                    flash_error("You must select only rows that need review")
+                else:
+                    t0 = datetime.utcnow()
+                    payload = {"status": new_status, "reviewed": t0, "updated": t0}
+                    if comment:
+                        payload["comment"] = comment
+                    db.data_uploads.update({"id":{"$in":ids}}, payload)
+                    flash_info(f"{pluralize(len(ids), 'upload')} successfully {desc}")
+        else:
+            flash_error("Invalid submit value (you may not have sufficient permissions)")
+
+    def show_uploads(self, info, reviewing, user_shown):
+        """
+        Return a set of data uploads to display for a user
+
+        INPUT:
+
+        - ``info`` -- the arguments passed in from user-uploads.html, either via GET or POST, including data on which statuses should be shown
+        - ``reviewing`` -- whether the user is reviewing (this affects defaults for which statuses to show)
+        - ``user_shown`` -- a username, or empty to show all usernames
+
+        OUTPUT:
+
+        - A dictionary indexed by section name, with values the uploads in that section satisfying the requested constraints
+        """
+        statuses = [
+            (-5, "Withdrawn", False),
+            (-4, "Unexpected error", True),
+            (-3, "Processing failed", not reviewing),
+            (-2, "Negatively reviewed", not reviewing),
+            (-1, "Verification failed", not reviewing),
+            (0, "Verification pending", not reviewing),
+            (1, "Needs review", True),
+            (2, "Processing pending", not reviewing),
+            (3, "Upload pending", not reviewing),
+            (4, "Upload finished", False),
+        ]
+        if "submit" in info:
+            # The user had a chance to change the selection boxes, so we use the provided values for which statuses to display
+            for i, (a,b,c) in enumerate(statuses):
+                statuses[i] = (a, b, info.get(str(a)) == "on")
+
+        # Construct the query, specifying a submitter and/or upload status
+        results = {}
+        has_unexpected = False
+        if any(c for (a,b,c) in statuses):
+            query = {}
+            query["section"] = {"$in": list(self.section_lookup)}
+            query["status"] = {"$in": [int(a) for (a,b,c) in statuses if c]}
+            if user_shown:
+                query["submitter"] = user_shown
+
+            for rec in db.data_uploads.search(query, ["id", "section", "status", "submitter", "data", "updated", "comment"]):
+                section = rec["section"]
+                if section not in results:
+                    results[section] = []
+                has_unexpected = has_unexpected or (rec["status"] == -4)
+                data = rec.pop("data")
+                data.update(rec)
+                results[section].append(data)
+        if not has_unexpected and "submit" not in info:
+            # By default we prefer to just show Needs Review, since that will prevent the "Status" column from being shown
+            # But we want to show Unexpected Errors if they exist
+            # So if we didn't see an unexpected error we turn off that checkbox
+            statuses[1] = (-4, "Unexpected error", False)
+        return results, statuses
 
     def needs_review(self):
-        n = db.data_uploads.count({"section":{"$in":[section.name for section in self.sections]}, "status": 0})
+        n = db.data_uploads.stats._slow_count({"section":{"$in":[section.name for section in self.sections]}, "status": 0}, record=False)
         if n:
             return str(n)
         else:

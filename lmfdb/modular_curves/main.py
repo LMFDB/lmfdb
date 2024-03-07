@@ -5,7 +5,6 @@ from collections import Counter
 from lmfdb import db
 
 from flask import render_template, url_for, request, redirect, abort
-from werkzeug.utils import secure_filename
 
 from sage.all import ZZ, QQ, lazy_attribute, NumberField
 

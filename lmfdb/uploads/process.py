@@ -7,6 +7,7 @@ This script is used to convert perform additional verification on uploads before
 import os
 import sys
 import tempfile
+from collections import defaultdict
 from datetime import datetime
 here = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(here, "data")

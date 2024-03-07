@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import wraps
 from lmfdb.app import app
 from lmfdb.logger import make_logger
-from flask import render_template, request, Blueprint, url_for, make_response, redirect
+from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 from lmfdb.utils import flash_error, flash_info, to_dict, pluralize
 from lmfdb.utils.uploader import Uploader
@@ -351,82 +351,22 @@ class Reviewer(Uploader):
 @login_page.route("/uploads", methods=["GET", "POST"])
 @login_required
 def review_uploads():
-    from collections import defaultdict
+    uploader = Reviewer()
     reviewer = current_user.is_knowl_reviewer()
     if request.method == "POST":
         info = to_dict(request.form)
-        if info["submit"] == "approve":
-            new_status = 2
-            desc = "approved"
-        elif info["submit"] == "reject":
-            new_status = -2
-            desc = "rejected"
-        elif info["submit"] == "withdraw":
-            new_status = -5
-            desc = "withdrawn"
-        else:
-            new_status = -10
-        comment = info.get("comment", "").strip()
-        if (reviewer and new_status != -10) or new_status == -5:
-            # Modification allowed
-            ids = [int(x[7:]) for x in info if x.startswith("select_") and x[7:].isdigit()]
-            if ids:
-                if new_status == -5 and not all(rec["submitter"] == current_user.id and (0 <= rec["status"] < 3) for rec in db.data_uploads.search({"id":{"$in":ids}}, "submitter")):
-                    flash_error("You can only withdraw your own uploads, and only before final processing")
-                elif new_status in [2, -2] and not all(status == 1 for status in db.data_uploads.search({"id":{"$in":ids}}, "status")):
-                    flash_error("Not all ids selected need review")
-                else:
-                    t0 = datetime.utcnow()
-                    payload = {"status": new_status, "reviewed": t0, "updated": t0}
-                    if comment:
-                        payload["comment"] = comment
-                    db.data_uploads.update({"id":{"$in":ids}}, payload)
-                    flash_info(f"{pluralize(len(ids), 'upload')} successfully {desc}")
-        else:
-            flash_error("Invalid submit value")
+        uploader.review(info, reviewer, current_user.id)
     else:
         info = to_dict(request.args)
 
     user_shown = info.get("user_shown", "" if reviewer else current_user.id)
     reviewing = (reviewer and not user_shown)
-
-    statuses = [
-        (-5, "Withdrawn", False),
-        (-4, "Unexpected error", not reviewing),
-        (-3, "Processing failed", not reviewing),
-        (-2, "Negatively reviewed", not reviewing),
-        (-1, "Verification failed", not reviewing),
-        (0, "Verification pending", not reviewing),
-        (1, "Needs review", True),
-        (2, "Processing pending", not reviewing),
-        (3, "Upload pending", not reviewing),
-        (4, "Upload finished", False),
-    ]
-    if "submit" in info:
-        # The user had a chance to change the selection boxes, so we use the provided values for which statuses to display
-        for i, (a,b,c) in enumerate(statuses):
-            statuses[i] = (a, b, info.get(str(a)) == "on")
-
-    # Construct the query, specifying a submitter and/or upload status
-    results = {}
-    if any(c for (a,b,c) in statuses):
-        query = {}
-        query["status"] = {"$in": [int(a) for (a,b,c) in statuses if c]}
-        if user_shown:
-            query["submitter"] = user_shown
-
-        for rec in db.data_uploads.search(query, ["id", "section", "status", "submitter", "data", "updated", "comment"]):
-            section = rec["section"]
-            if section not in results:
-                results[section] = []
-            data = rec.pop("data")
-            data.update(rec)
-            results[section].append(data)
+    results, statuses = uploader.show_uploads(info, reviewing, user_shown)
 
     return render_template(
         "user-uploads.html",
         title="Review data uploads",
-        uploader=Reviewer(),
+        uploader=uploader,
         statuses=statuses,
         results=results,
         user_shown=user_shown,
