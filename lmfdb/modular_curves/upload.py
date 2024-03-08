@@ -1,5 +1,6 @@
 
 import re
+from datetime import datetime
 from flask import url_for
 from sage.all import ZZ, QQ, lazy_attribute, NumberField
 from lmfdb import db
@@ -8,9 +9,10 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import get_bread, learnmore_list, COARSE_LABEL_RE, FINE_LABEL_RE, modcurve_link
 
+VARORDER = "xyzwtuvrsabcdefghiklmnopqj"
 
 class ModelTypeBox(USelectBox):
-    def __init__(self, name, label):
+    def __init__(self, name, label, no_empty=True):
         USelectBox.__init__(
             self, name, label, "upload.modcurve.model_type",
             [("", ""),
@@ -20,11 +22,11 @@ class ModelTypeBox(USelectBox):
              ("5", "Weierstrass"),
              ("7", "Geometric Weierstrass"),
              ("8", "Embedded")],
-            no_empty=True, integer=True)
+            no_empty=no_empty, integer=True)
 
-jre = re.compile(r"\d+(/\d+)?(,\d+(/\d+)?)*")
-jpat = jre.pattern
+jpat = r"\d+(/\d+)?(,\d+(/\d+)?)*"
 coordre = re.compile(fr"{jpat}(:{jpat})*(;{jpat}(:{jpat})*)")
+jre = re.compile(f"oo|{jpat}")
 class Points(UploadSection):
     name = "modcurve_points"
     title = "Upload rational points on modular curves"
@@ -55,7 +57,7 @@ class Points(UploadSection):
         g = ZZ(rec["curve"].split(".")[2])
         if g == 0:
             raise ValueError("Adding points on genus zero curves not supported")
-        if rec["jorig"].count(",") != n-1:
+        if rec["jorig"] != "oo" and rec["jorig"].count(",") != n-1:
             raise ValueError(f"j-coordinate {rec['jorig']} has degree {rec['jorig'].count(',')+1} but residue field has degree {n}")
 
         # Check that each coordinate satisfies the equations for the model, and combine model_type and coordinates into the right format
@@ -77,7 +79,7 @@ class Points(UploadSection):
             vars = "xyzw"
         else:
             # Embedded or canonical
-            vars = "xyzwtuvrsabcdefghiklmnopqj"[:d]
+            vars = VARORDER[:d]
         S = QQ[list(vars)]
         try:
             equation = [S(g) for g in equation]
@@ -102,7 +104,45 @@ class Points(UploadSection):
             for g in equation:
                 if g.subs(dict(zip(vars, coords))) != 0:
                     raise ValueError(f"{pt} does not satisfy equation {str(g).replace(' ','')}=0")
+        # TODO: Check that we don't already have this point
         return rec
+
+    def verify(self, rec):
+        # TODO: Call out to magma to create the model, the given point, the other preimages of the same j-invariants, etc
+        pass
+
+    def process(self, rec):
+        curve = rec["curve"]
+        jorig = rec["jorig"]
+        resfield = rec["residue_field"]
+        coords = rec["coordinates"].split(";")
+        isolated = rec["isolated"] # TODO: improve this when we can say more
+        data = {
+            "curve_label": curve,
+            "residue_field": resfield,
+            "degree": ZZ(resfield.split(".")[0]),
+            "coordinates": {rec["model_type"]: coords},
+            "cardinality": len(coords), # TODO: Is this right?  What if we're on a non-smooth model?
+            "cusp": (jorig == "oo"),
+            "quo_info": None, # This is intended for AL-quotients and not currently used
+            "isolated": rec["isolated"],
+        }
+        curvecols = ["level", "index", "genus", "name"]
+        cdata = db.gps_gl2zhat_fine.lookup(curve, curvecols)
+        for col, val in cdata.items():
+            data["curve_" + col] = val
+        if resfield == "1.1.1.1":
+            data["j_field"] = "1.1.1.1"
+            data["jinv"] = jorig
+            data["jorig"] = None
+        else:
+            # TODO: compute data["j_field"], data["jinv"], data["jorig"]
+            pass
+        # TODO: compute data["j_height"]
+        # TODO: compute data["Elabel"], data["ainvs"], data["conductor_norm"]
+        # TODO: compute data["cm"]; there should be good code for this in Sage
+        # BIG TODO: Propogate this point to other modular curves (both up and down, including fine models)
+        return [("modcurve_points", True, data)]
 
     @lazy_attribute
     def csv_template_url(self):
@@ -115,7 +155,7 @@ def points_csv():
 class PointCompleteness(UploadSection):
     name = "modcurve_completeness"
     title = "Rational point completeness"
-    intro = "If the LMFDB's list of points for a modular curve is proven complete in some reference, enter it here."
+    intro = "If the LMFDB's list of rational points for a modular curve is proven complete in some reference, enter it here."
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
               UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link, cols=30, rows=3),
               ]
@@ -126,6 +166,14 @@ class PointCompleteness(UploadSection):
         # We split the text area into one upload per line
         return [{"reference": rec["reference"], "curves": x} for x in rec["curves"]]
 
+    def verify(self, rec):
+        # We don't do anything; the verification is completely on the editor checking the reference
+        # In the far distant future this could be a Lean proof. :-D
+        pass
+
+    def process(self, rec):
+        return [("gps_gl2zhat_fine", False, {"label": rec["curves"], "all_degree1_points_known": True})]
+
 class GonalityBounds(UploadSection):
     name = "modcurve_gonality"
     title = "Gonality bounds"
@@ -134,7 +182,15 @@ class GonalityBounds(UploadSection):
               UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
               UTextBox("q_gonality", r"$\mathbb{Q}$-gonality", "upload.modcurve.q_gonality", remove_spaces=True, natural_or_range=True),
               UTextBox("qbar_gonality", r"$\bar{\mathbb{Q}}$-gonality", "upload.modcurve.qbar_gonality", remove_spaces=True, natural_or_range=True),
+              ModelTypeBox("gonal_model", "Gonal model", no_empty=False),
+              UTextBox("gonal_map", "Gonal map", "upload.modular.gonal_map")
               ]
+
+    def __init__(self, *args, **kwds):
+        # We need to delay processing until a single step in order to propagate everything at once
+        # This list will get populated when process() is called, and used when final_process() is called
+        self.delayed = []
+        super().__init__(*args, **kwds)
 
     def validate(self, rec):
         rec = super().validate(rec)
@@ -155,10 +211,40 @@ class GonalityBounds(UploadSection):
             raise ValueError(f"Q-gonality bounds for {rec['curve']} inconsistent with current bounds {cur['q_gonality_bounds']}")
         if not (cur["qbar_gonality_bounds"][0] <= qbar_low <= qbar_high <= cur["qbar_gonality_bounds"][1]):
             raise ValueError(f"Qbar-gonality bounds for {rec['curve']} inconsistent with current bounds {cur['qbar_gonality_bounds']}")
+
+        # TODO: If gonal map specified, we should ensure that it has the right format for a map from the specified model to P1
         return rec
 
     def verify(self, rec):
+        # TODO: If gonal map specified, we should confirm that its degree matches the provided upper gonality bound
+        # We don't do anything further here, since propogation is expensive and we want to wait until the processing stage
         pass
+
+    def process(self, rec):
+        self.delayed.append((rec["id"], rec["data"]))
+        return []
+
+    def final_process(self, ids, F, by_table, cols):
+        # ids as input needs to be overwritten; we will reconstruct it below as we do actual work.
+        lines = []
+
+        try:
+            # TODO: do the actual work here
+            pass
+        except Exception as err:
+            status = -3
+            comment = str(err).replace("\n", "    ")
+        else:
+            status = 3
+            comment = ""
+        timestamp = datetime.utcnow().isoformat()
+        ids = {upid: (status, timestamp, comment) for (upid, data) in self.delayed}
+
+        # If other columns are added later, it's important that these be sorted (see lmfdb/uploads/process.py)
+        columns = sorted(['label', 'q_gonality', 'q_gonality_bounds', 'qbar_gonality', 'qbar_gonality_bounds'])
+        by_table["gps_gl2zhat_fine", False] = ["|".join(line[col] for col in columns) for line in lines]
+        cols["gps_gl2zhat_fine", False] = set(columns)
+        super().final_process(ids, F)
 
     @lazy_attribute
     def csv_template_url(self):
@@ -191,6 +277,8 @@ class Models(UploadSection):
             raise ValueError("Defining map from another curve only allowed if birational")
         if rec["model_type"] == 1:
             raise ValueError("P1 models are not stored in the database")
+        if db.modcurve_models.exists({"modcurve":rec["curve"], "model_type": rec["model_type"]}):
+            raise ValueError(f"Model of type {rec['model_type']} already exists for {rec['curve']}")
         N, i, g, _ = rec["curve"].split(".", 3)
         N, i, g = ZZ(N), ZZ(i), ZZ(g)
         oN, oi, og, _ = rec["other_curve"].split(".", 3)
@@ -201,8 +289,60 @@ class Models(UploadSection):
             raise ValueError("Level of other curve not a divisor; map not possible")
         if i % oi != 0:
             raise ValueError("Index of other curve not a divisor; map not possible")
-        # More extensive checks need to be done in Magma in a validation stage
+        if rec["other_model_type"] == 1:
+            if og != 0:
+                raise ValueError(f"Other curve {rec['other_curve']} does not have genus 0")
+            if db.gps_gl2zhat_fine.lookup(rec["other_curve"], "pointless") is not False:
+                raise ValueError("Other curve {rec['other_curve']} is not P1")
+        elif not db.modcurve_models.exists({"modcurve":rec["other_curve"], "model_type": rec["other_model_type"]}):
+            raise ValueError(f"Other model of type {rec['other_model_type']} for {rec['other_curve']} must exist")
+        eq = rec["equation"]
+        if eq != eq.lower():
+            raise ValueError(f"All variables must be lower case (using variable order {VARORDER}")
+        break_found = False
+        for i, ch in enumerate(VARORDER):
+            if break_found and ch in eq:
+                raise ValueError(f"Not in variable order {VARORDER}: {ch} out of order")
+            if not break_found and ch not in eq:
+                break_found = True
+                num_vars = i + 1
+        if not break_found:
+            num_vars = 26
+        R = QQ[list(VARORDER[:num_vars])]
+        for f in eq.split("="):
+            f = R(f) # may raise an error
+        rec["number_variables"] = num_vars
+        rec["degree"] = i // oi
         return rec
+
+    def verify(self, rec):
+        # TODO: Check that the map actually defines a valid map between the given models, of the right degree
+        # TODO: Use point counts to check plausibility of model for the given GL2Zhat-subgroup
+        pass
+
+    def process(self, rec):
+        modeldata = {
+            "modcurve": rec["curve"],
+            "number_variables": rec["number_variables"],
+            "model_type": rec["model_type"],
+            "smooth": None if rec["model_type"] == 2 else True, # TODO: determine if smooth (only needed for plane model)
+            "dont_display": False,
+            "equation": rec["equation"].replace(" ", "").split("=")
+        }
+        mapdata = {"degree": rec["degree"], "dont_display": False}
+        if rec["maps"] == "to":
+            mapdata["domain_label"] = rec["curve"]
+            mapdata["domain_model_type"] = rec["model_type"]
+            mapdata["codomain_label"] = rec["other_curve"]
+            mapdata["codomain_model_type"] = rec["other_model_type"]
+        else:
+            mapdata["domain_label"] = rec["other_curve"]
+            mapdata["domain_model_type"] = rec["other_model_type"]
+            mapdata["codomain_label"] = rec["curve"]
+            mapdata["codomain_model_type"] = rec["model_type"]
+        mapdata["coordinates"] = rec["map_coordinates"]
+        # TODO: Set factored and leading coefficients
+        return [("modcurve_models", True, modeldata), ("modcurve_modelamps", True, mapdata)]
 
     @lazy_attribute
     def csv_template_url(self):
@@ -255,7 +395,7 @@ class UniversalEC(UploadSection):
             vars = "xyz" if pointless else "xy" # TODO: should we be using t as a coordinate here or xy?
         else:
             numvars = db.modcurve_models.lucky({"modcurve": rec["curve"], "model_type": rec["model_type"]}, "number_variables")
-            vars = "xyzwtuvrsabcdefghiklmnopqj"[:numvars]
+            vars = VARORDER[:numvars]
         S = QQ[list(vars)].fraction_field()
         for f in rec["universal_ec"].split(","):
             try:
@@ -263,6 +403,14 @@ class UniversalEC(UploadSection):
             except Exception:
                 raise ValueError(f"Invalid format (must be in Q({','.join(vars)})): {f}")
         return rec
+
+    def verify(self, rec):
+        # TODO: We should do some random tests to ensure that specializations have the right Galois image
+        # If we ever get spot on, done.  If not, compute minimum upper bound in lattice....
+        pass
+
+    def process(self, rec):
+        return [("gps_gl2zhat_fine", False, {"label": rec["curve"], "universal_ec": rec["universal_ec"].split(","), "universal_ec_model_type": rec["model_type"]})]
 
     @lazy_attribute
     def csv_template_url(self):

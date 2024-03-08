@@ -23,7 +23,8 @@ def process_all():
     os.makedirs("data", exist_ok=True)
     by_table = defaultdict(list)
     cols = {}
-    ids = []
+    status_update = defaultdict(dict)
+    sections = set()
     reviewer = Reviewer()
     # TODO: it might be better to isolate each verification in its own process to insulate against timeouts
     # This would prevent sharing some computations, like the poset of modular curves, between different uploads
@@ -32,8 +33,9 @@ def process_all():
         types = ["bigint", "smallint", "timestamp without time zone", "timestamp without time zone", "text"]
         _ = F.write("|".join(columns) + "\n" + "|".join(types) + "\n\n")
         for rec in db.data_uploads.search({"status":2}, ["data", "id", "section"]):
+            section = reviewer.section_lookup[rec["section"]]
             try:
-                section = reviewer.section_lookup[rec["section"]]
+                sections.add(section)
                 for table, newrow, line in section.process(rec["data"]):
                     if (table, newrow) in cols:
                         if cols[table, newrow] != set(line):
@@ -45,13 +47,21 @@ def process_all():
                     by_table[table, newrow].append(line)
             except Exception as err:
                 status = -3
-                comment = str(err)
+                comment = str(err).replace("\n", "    ")
             else:
                 status = 3
                 comment = ""
                 ids.append(rec["id"])
             timestamp = datetime.utcnow().isoformat()
-            _ = F.write(f"{rec['id']}|{status}|{timestamp}|{timestamp}|{comment}\n")
+            status_update[rec["section"]][rec["id"]] = (status, timestamp, comment)
+
+        # There are some sections (like gonality propogation) that want to do more
+        # processing after all inputs are known.  By default, we use this function
+        # just to write status_update to F
+        for section_name, ids in status_update.items():
+            section = reviewer.section_lookup[rec["section"]]
+            section.final_process(ids, F, by_table, cols)
+
         F.close()
         db.data_uploads.update_from_file(F.name, "id")
         db.data_uploads.cleanup_from_reload()

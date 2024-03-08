@@ -29,7 +29,7 @@ def verify_all():
                 section.verify(rec["data"])
             except Exception as err:
                 status = -1
-                comment = str(err)
+                comment = str(err).replace("\n", "    ")
             else:
                 status = 1
                 comment = ""

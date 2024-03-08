@@ -197,6 +197,10 @@ class UpdatedBox(UploadBox):
     def display(self, value):
         return '{d:%b} {d.day}, {d.hour}:{d.minute:02}'.format(d=value)
 
+class CommentBox(UploadBox):
+    def __init__(self):
+        super().__init__("comment", "Comment", "upload.comment")
+
 class UploadSection():
     version = 0 # Increment if there is a data format change
     # Override the following in subclass, or set in __init__
@@ -249,8 +253,43 @@ class UploadSection():
 
         - ``rec`` -- the data uploaded and stored in the ``data`` column in the
           ``data_uploads`` table.
+
+        OUTPUT:
+
+        A list of triples ``(table, newrow, line)``, where
+
+        - ``table`` is the name of a database table,
+        - ``newrow`` is a boolean: whether this line should be added as a new row
+            (versus updating an existing row)
+        - ``line`` -- a dictionary with columns as keys and values that can be accepted
+            by copy_dumps.  IMPORTANT: the set of columns must depend only on the
+            pair ``(table, newrow)``.
         """
         raise NotImplementedError(f"process method not implemented for {self.name}")
+
+    def final_process(self, ids, F, by_table=None, cols=None):
+        """
+        Record the new statuses to file; called after all uploads have been processed in lmfdb/uploads/process.py.  Included for some sections to override so that they can do additional work at this stage.
+
+        INPUT:
+
+        - ``ids`` -- a dictionary with keys the ids from the data_uploads table that are being processed
+            by this section, and value the triple ``(status, timestamp, comment)`` determined after
+            the return of the process method on this upload row.
+        - ``F`` -- an open file handle, used to write updates to the data_uploads table, with columns
+            ["id", "status", "processed", "updated", "comment"]
+
+        The later arguments are not used by default (they are present since GonalityBounds needs to update
+        these dictionaries)
+        - ``by_table`` -- a dictionary, with keys (table, newrow) and values a list of lines,
+            as output by the process method.
+        - ``cols`` -- a dictionary with keys (table, newrow) and values the set of columns for that pair
+        """
+        # Default behavior: just write the contents of ids to F.
+        # The other inputs are only present for non-default behavior;
+        # see GonalityBounds in modular_curves/upload.py
+        for upid, (status, timestamp, comment) in ids.values():
+            _ = F.write(f"{upid}|{status}|{timestamp}|{timestamp}|{comment}\n")
 
     @lazy_attribute
     def header(self):
@@ -304,7 +343,7 @@ class UploadSection():
 
     def review_cols(self, user_shown, statuses):
         # By default, we include the status (if there is more than one status) and submitter at the beginning and the timestamp when the upload was most recently changed at the end.
-        cols = self.inputs + [UpdatedBox()]
+        cols = self.inputs + [UpdatedBox(), CommentBox()]
         if user_shown != current_user.id:
             cols.insert(0, SubmitterBox())
         if len([x for x in statuses if x[2]]) != 1:
@@ -374,7 +413,7 @@ class Uploader():
             desc = "withdrawn"
         else:
             new_status = -10
-        comment = info.get("comment", "").strip()
+        comment = info.get("comment", "").strip().replace("\n", "    ")
         if (reviewer and new_status != -10) or new_status == -5:
             # Modification allowed
             ids = [int(x[7:]) for x in info if x.startswith("select_") and x[7:].isdigit()]
