@@ -344,7 +344,7 @@ class Reviewer(Uploader):
     This uploader is used to collect UploadSection objects from different sections of the LMFDB that use them.
     """
     def __init__(self):
-        from lmfdb.modular_curves.main import Points, PointCompleteness, GonalityBounds, Models, UniversalEC
+        from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC
         super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC()])
 
 @login_page.route("/uploads", methods=["GET", "POST"])
