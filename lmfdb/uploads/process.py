@@ -51,7 +51,6 @@ def process_all():
             else:
                 status = 3
                 comment = ""
-                ids.append(rec["id"])
             timestamp = datetime.utcnow().isoformat()
             status_update[rec["section"]][rec["id"]] = (status, timestamp, comment)
 
@@ -91,6 +90,6 @@ def process_all():
     #    payload = {"status": -4, "comment": str(err)}
     #else:
     #    payload = {"status": 4}
-    #db.data_uploads.update({"id": {"$in": ids}}, payload)
+    #db.data_uploads.update({"id": {"$in": sum(status_update.values(), [])}}, payload)
 
 process_all()

@@ -17,6 +17,7 @@ from lmfdb.users.main import Reviewer
 
 
 def verify_all():
+    raise NotImplementedError("This script has been disabled until the verify methods in modular curves are complete")
     reviewer = Reviewer()
     # TODO: it would be better to isolate each verification in its own process to insulate against timeouts
     with tempfile.NamedTemporaryFile("w", delete=False) as F:

@@ -125,7 +125,7 @@ class Points(UploadSection):
             "cardinality": len(coords), # TODO: Is this right?  What if we're on a non-smooth model?
             "cusp": (jorig == "oo"),
             "quo_info": None, # This is intended for AL-quotients and not currently used
-            "isolated": rec["isolated"],
+            "isolated": isolated,
         }
         curvecols = ["level", "index", "genus", "name"]
         cdata = db.gps_gl2zhat_fine.lookup(curve, curvecols)
