@@ -4,13 +4,12 @@
 # author: harald schilly <harald.schilly@univie.ac.at>
 
 import flask
-from datetime import datetime
 from functools import wraps
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
-from lmfdb.utils import flash_error, flash_info, to_dict, pluralize
+from lmfdb.utils import flash_error, to_dict
 from lmfdb.utils.uploader import Uploader
 from markupsafe import Markup
 
