@@ -620,6 +620,7 @@ class WebEC():
             mwbsd['reg']  = self.regulator
             mwbsd['sha']  = self.sha
             mwbsd['sha2'] = latex_sha(self.sha)
+            mwbsd['sha_is_exact'] = self.rank==0 # see Issue #5872
             for num in ['reg', 'special_value', 'real_period', 'area']:
                 mwbsd[num]  = RR(mwbsd[num])
         except AttributeError:
