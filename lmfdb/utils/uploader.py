@@ -79,8 +79,7 @@ class UploadBox():
             return f"${value}$"
         linker = getattr(self, "label_linker", None)
         if linker:
-            url = linker(value)
-            return f'<a href="{url}">{value}</a>'
+            return linker(value)
 
         # default is to just display the provided value as is.
         return value
