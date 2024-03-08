@@ -69,16 +69,18 @@ def process_all():
             for line in lines:
                 _ = F.write(line + "\n")
         uploads.append((table, newrows, fname))
-    try:
-        for table, newrows, fname in uploads:
-            if newrows:
-                db[table].copy_from(fname)
-            else:
-                db[table].update_from_file(fname)
-    except Exception as err:
-        payload = {"status": -4, "comment": str(err)}
-    else:
-        payload = {"status": 4}
-    db.data_uploads.update({"id": {"$in": ids}}, payload)
+
+    # For now we turn off the automatic uploading, for safety's sake as we work out bugs in the uploading code
+    #try:
+    #    for table, newrows, fname in uploads:
+    #        if newrows:
+    #            db[table].copy_from(fname)
+    #        else:
+    #            db[table].update_from_file(fname)
+    #except Exception as err:
+    #    payload = {"status": -4, "comment": str(err)}
+    #else:
+    #    payload = {"status": 4}
+    #db.data_uploads.update({"id": {"$in": ids}}, payload)
 
 process_all()
