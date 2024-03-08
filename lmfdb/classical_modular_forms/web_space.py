@@ -312,7 +312,7 @@ def make_newspace_data(level, char_data, subspace_data=None, k=2):
                 entry['weight'] = k
                 subspaces.append(entry)
     data['subspaces'] = subspaces
-    
+
     return data
 
 
