@@ -1492,3 +1492,14 @@ class PostgresSearchTable(PostgresTable):
         - ``record`` -- (default True) whether to record the number of results in the stats table.
         """
         return self.stats.count_distinct(col, query, record=record)
+
+    def sum(self, col, constraint={}):
+        """
+        The sum of a given column.
+
+        INPUT:
+
+        - ``col`` -- the name of the column
+        - ``constraint`` -- a query dictionary constraining which rows are considered
+        """
+        return self.stats.sum(col, constraint)

@@ -3,8 +3,9 @@
 # See templates/space.html for how functions are called
 
 from lmfdb import db
-from sage.all import ZZ
-from sage.databases.cremona import cremona_letter_code
+from sage.all import ZZ, prod, gp
+from sage.modular.dims import sturm_bound
+from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
@@ -214,6 +215,107 @@ class DimGrid():
                      'old':data['eis_dim']-data['eis_new_dim']}}
         return DimGrid(grid)
 
+
+def new_lambda(r,s,p):
+    # Formula worked out by Kevin Buzzard in http://wwwf.imperial.ac.uk/~buzzard/maths/research/notes/dimension_of_spaces_of_eisenstein_series.pdf, with one obvious typo corrected (2*s==r, p>2 case)
+    assert r > 0 and s <= r
+    if 2*s > r:
+        if r == s:
+            return 2
+        if r-s == 1:
+            return 2*p-4
+        return 2*(p-1)**2 * p**(r-s-2)
+    if 2*s == r:
+        if p == 2:
+            return 0
+        if s == 1:
+            return p-3
+        return (p-2)*(p-1)*p**(s-2)
+    if (r%2) != 0:
+        return 0
+    return p-2 if r == 2 else (p-1)**2 * p**(r/2 - 2)
+
+
+def QDimensionNewEisensteinForms(chi, k):
+    # The Q-dimension of the new subspace of E_k(N,chi), the space of Eisenstein series of weight k, level N, and character chi, where N is the modulus of chi.
+    from sage.all import prod
+    assert k > 0, "The weight k must be a positive integer"
+    if ((k%2) == 1) != (chi['parity'] == -1):
+        return 0
+    N = ZZ(chi['modulus'])
+    M = ZZ(chi['conductor'])
+    if N == 1:
+        return 1 if k > 2 else 0
+    D = prod([new_lambda(N.valuation(p), M.valuation(p), p) for p in N.prime_divisors()])
+    if (k == 2) and (chi['order'] == 1) and N.is_prime():
+        D += 1
+    # As noted by Buzzard, to handle the weight 1 case, one simply divides by 2
+    if k == 1:
+        assert (D%2) == 0
+        D /= 2
+    return D*chi['degree']
+
+
+def make_newspace_data(level, char_data, subspace_data=None, k=2):
+    # Makes the data needed for creating newspace pages in cases without a corresponding entry in mf_newspaces
+    data = {}
+    data['has_mf_newspaces_entry'] = False
+    data['Nk2'] = level * k**2
+    data['char_conductor'] = char_data['conductor']
+    data['char_degree'] = char_data['degree']
+    data['char_is_real'] = char_data['is_real']
+    data['char_orbit_index'] = char_data['orbit_index']
+    data['char_orbit_label'] = char_data['label'].split('.')[-1]
+    data['char_order'] = char_data['order']
+    data['char_parity'] = char_data['parity']
+    data['conrey_index'] = int(char_data['first_label'].split('.')[-1])
+    data['cusp_dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (level, k, data['conrey_index'], level))) * char_data['degree'] # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
+    data['dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (level, k, data['conrey_index'], level))) * char_data['degree'] # mfdim returns the dimension over Q(chi), not over Q
+    data['eis_dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 3)' % (level, k, data['conrey_index'], level))) * char_data['degree']
+    data['eis_new_dim'] = QDimensionNewEisensteinForms(char_data, k)
+    data['label'] = str(level) + '.' + str(k) + '.' + data['char_orbit_label']
+    data['level'] = level
+    data['level_is_prime'] = ZZ(level).is_prime()
+    data['level_is_prime_power'] = ZZ(level).is_prime_power()
+    data['level_is_square'] = ZZ(level).is_square()
+    data['level_is_squarefree'] = ZZ(level).is_squarefree()
+    data['level_primes'] = ZZ(level).prime_divisors()
+    data['level_radical'] = prod(data['level_primes'])
+    data['mf_dim'] = data['cusp_dim'] + data['eis_dim']
+    data['mf_new_dim'] = data['dim'] + data['eis_new_dim']
+    data['prim_orbit_index'] = class_to_int(char_data['primitive_label'].split('.')[-1])
+    data['relative_dim'] = data['dim']/data['char_degree']
+    data['sturm_bound'] = sturm_bound(level, k)
+    data['weight'] = k
+    data['weight_parity'] = (-1)**k
+
+    # If subspace_data is the data from a mf_gamma1_subspaces query, this mimics enough of the data from a mf_subspaces query to generate the oldspace decomposition on a newspace page
+    subspaces = []
+    if subspace_data:
+        sub_level_list = [subspace['sub_level'] for subspace in subspace_data if (subspace['sub_level'] % char_data['conductor'] == 0)]
+        sub_chars = list(db.char_orbits.search({'modulus':{'$in':sub_level_list}, 'primitive_label':char_data['primitive_label']}))
+        sub_chars = {char['modulus'] : char for char in sub_chars}
+        for subspace in subspace_data:
+            if (subspace['sub_level'] % char_data['conductor']) == 0:
+                entry = {}
+                entry['char_orbit_index'] = char_data['orbit_index']
+                entry['char_orbit_label'] = char_data['label'].split('.')[-1]
+                entry['conrey_index'] = int(char_data['first_label'].split('.')[-1])
+                entry['label'] = str(level) + '.' + str(k) + '.' + entry['char_orbit_label']
+                entry['level'] = level
+                entry['sub_char_orbit_index'] = sub_chars[subspace['sub_level']]['orbit_index']
+                entry['sub_char_orbit_label'] = sub_chars[subspace['sub_level']]['label'].split('.')[-1]
+                entry['sub_conrey_index'] = int(sub_chars[subspace['sub_level']]['first_label'].split('.')[-1])
+                entry['sub_level'] = subspace['sub_level']
+                entry['sub_label'] = str(entry['sub_level']) + '.' + str(k) + '.' + entry['sub_char_orbit_label']
+                entry['sub_mult'] = subspace['sub_mult']
+                entry['weight'] = k
+                subspaces.append(entry)
+    data['subspaces'] = subspaces
+
+    return data
+
+
 class WebNewformSpace():
     def __init__(self, data):
         self.__dict__.update(data)
@@ -226,7 +328,11 @@ class WebNewformSpace():
         self.char_conrey = self.conrey_index
         self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_index', 'sub_mult'])
+        oldspaces = list(db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_index', 'sub_mult']))
+        if not oldspaces:
+            oldspaces = data.get('subspaces',[])
+            if oldspaces:
+                oldspaces = [old for old in oldspaces if old['sub_level'] != self.level]
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
@@ -259,7 +365,7 @@ class WebNewformSpace():
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('.download_newspace', label=self.label)),
-            ('Underlying data', url_for('.mf_data', label=self.label)),
+            ('Underlying data', url_for('.mf_data', label=self.label)) if self.__dict__.get('has_mf_newspaces_entry', True) else ('No underlying data', None),
         ]
 
         if self.conrey_index == 1:
@@ -288,7 +394,16 @@ class WebNewformSpace():
             raise ValueError("Invalid modular forms space label %s." % label)
         data = db.mf_newspaces.lookup(label)
         if data is None:
-            raise ValueError("Space %s not found" % label)
+            weight = int(label.split('.')[1])
+            if (weight != 2) or (label.split('.')[-1] == 'a'):
+                raise ValueError("Space %s not found" % label)
+            level = int(label.split('.')[0])
+            char_label = str(level) + '.' + label.split('.')[-1]
+            char_data = db.char_orbits.lucky({'modulus':level, 'label':char_label})
+            if not char_data:
+                raise ValueError("Space %s not found" % label)
+            subspace_data = list(db.mf_gamma1_subspaces.search({'level':level, 'weight':weight}, ['sub_level','sub_mult']))
+            data = make_newspace_data(level, char_data, subspace_data=subspace_data)
         return WebNewformSpace(data)
 
     @property
@@ -372,7 +487,7 @@ class WebGamma1Space():
         self.num_spaces = data.get('num_spaces')
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
-        # by default we sort on char_orbit_index
+        # By default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
@@ -380,12 +495,35 @@ class WebGamma1Space():
         self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
-        for space in newspaces:
-            if space.get('num_forms') is None:
-                self.decomp.append((space, None))
-                self.has_uncomputed_char = True
-            else:
-                self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
+        if len(newspaces) == len([dim for dim in self.newspace_dims if dim != 0]):
+            for space in newspaces:
+                if space.get('num_forms') is None:
+                    self.decomp.append((space, None))
+                    self.has_uncomputed_char = True
+                else:
+                    self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
+        else:
+            char_orbits = list(db.char_orbits.search({'modulus':level}))
+            newspaces_by_label = {str(level) + '.' + ns['char_orbit_label'] : ns for ns in newspaces} # to match the full character orbit label
+            newspace_dims_by_label = {char_orbits[i]['label'] : self.newspace_dims[i] for i in range(len(char_orbits))} # This relies on the fact that newspaces are sorted by char_orbit_index, which is the default at the time of writing.
+            for char in char_orbits:
+                if char['label'] in newspaces_by_label:
+                    space = newspaces_by_label[char['label']]
+                    if space.get('num_forms') is None:
+                        self.decomp.append((space, None))
+                        self.has_uncomputed_char = True
+                    else:
+                        self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
+                elif newspace_dims_by_label[char['label']] != 0:
+                    space = {}
+                    space['level'] = level
+                    space['conrey_index'] = int(char['first_label'].split('.')[1])
+                    space['char_orbit_label'] = char['label'].split('.')[-1]
+                    space['char_degree'] = char['degree']
+                    space['dim'] = newspace_dims_by_label[char['label']]
+                    space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a') # This is used in self.decomposition()
+                    self.decomp.append((space, None))
+                    self.has_uncomputed_char = True
         self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.dim > 0:
@@ -495,7 +633,10 @@ class WebGamma1Space():
             chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
-            link = self._link(space['level'], space['char_orbit_label'])
+            if space.get('generate_link', True):
+                link = self._link(space['level'], space['char_orbit_label'])
+            else:
+                link = "{N}.{k}.{i}".format(N=space['level'], k=self.weight, i=space['char_orbit_label']) # Not actually a link
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
             elif not forms:

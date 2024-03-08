@@ -4,7 +4,7 @@ on:
   push:
     branches: [ '**' ]
   pull_request:
-    branches: [ master, dev, web ]
+    branches: [ main, dev, web ]
 
 jobs:
   matrix_prep:
