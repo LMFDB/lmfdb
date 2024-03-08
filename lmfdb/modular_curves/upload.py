@@ -1,8 +1,10 @@
 
 import re
 from flask import url_for
-from sage.all import lazy_attribute
+from sage.all import ZZ, QQ, lazy_attribute, NumberField
+from lmfdb import db
 from lmfdb.utils.uploader import UTextBox, UTextArea, UReferenceBox, USelectBox, UploadSection, Uploader
+from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import get_bread, learnmore_list, COARSE_LABEL_RE, FINE_LABEL_RE, modcurve_link
 
