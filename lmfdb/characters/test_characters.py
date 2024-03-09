@@ -135,7 +135,6 @@ class DirichletCharactersTest(LmfdbTest):
         # Tests for URL behaviour of characters
 
         W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
-        #import pdb; pdb.set_trace()
         assert bool_string(True) in W.get_data(as_text=True)
         assert r"The URL has been duly corrected." in W.get_data(as_text=True)
 
