@@ -882,6 +882,13 @@ def group_jump(info):
     # by abelian label
     if jump.startswith("ab/") and AB_LABEL_RE.fullmatch(jump[3:]):
         return redirect(url_for(".by_abelian_label", label=jump[3:]))
+    from lmfdb.galois_groups.transitive_group import Tfinder
+    if Tfinder.fullmatch(jump):
+        label = db.gps_transitive.lookup(jump, "abstract_label")
+        if label is None:
+            flash_error(f"Transitive group {jump} is not in the database")
+            return redirect(url_for(".index"))
+        return redirect(url_for(".by_label", label=label))
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
@@ -901,8 +908,9 @@ def group_jump(info):
             if lab:
                 return redirect(url_for(".by_label", label=lab))
             else:
-                raise RuntimeError("The group %s has not yet been added to the database." % jump)
-    raise ValueError("%s is not a valid name for a group; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
+                flash_error("The group %s has not yet been added to the database." % jump)
+    flash_error("%s is not a valid name for a group; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
+    return redirect(url_for(".index"))
 
 #def group_download(info):
 #    t = "Stub"
@@ -1822,7 +1830,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), C3:C4, C2*A5 or C16.D4"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5 or C16.D4"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
