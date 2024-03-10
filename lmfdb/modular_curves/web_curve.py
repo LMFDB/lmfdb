@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 from collections import Counter
 from flask import url_for
 
@@ -12,6 +13,12 @@ from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
+
+coarse_label_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)"
+fine_label_re = r"(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)"
+LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
+FINE_LABEL_RE = re.compile(fine_label_re)
+COARSE_LABEL_RE = re.compile(coarse_label_re)
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -291,7 +298,7 @@ def difference(Ad, Bd, Am, Bm):
     return tuple(zip(*(sorted(C.items()))))
 
 def modcurve_link(label):
-    return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
+    return '<a href="%s">%s</a>'%(url_for("modcurve.by_label",label=label),label)
 
 def combined_data(label):
     data = db.gps_gl2zhat_fine.lookup(label)
@@ -302,6 +309,12 @@ def combined_data(label):
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
     return data
+
+def learnmore_list():
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Modular curve labels', url_for(".labels_page"))]
 
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_fine
