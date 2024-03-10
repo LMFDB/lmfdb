@@ -577,6 +577,10 @@ input[type=file] {
   display: none;
 }
 
+span.fileup {
+  margin-left: 10px;
+}
+
 button, a.like-button, .file-upload {
   background: {{color.button_background}};
 }

@@ -35,11 +35,13 @@
         <table>
           <tr>
             <td>
+              {#See https://stackoverflow.com/questions/572768/styling-an-input-type-file-button for discussion.#}
               <label class="file-upload">
-                <input type="file" name="{{section.name}}_csv" />
+                <input type="file" id="{{section.name}}_fileup" name="{{section.name}}_csv" />
                 Add File
-                {# TODO: There's currently no indication that a file has been successfully added #}
               </label>
+              <span id="{{section.name}}_fileup_span" class="fileup">No file selected</span>
+
             </td>
             <td>
               <button type="submit" name="submit" value="{{section.name}}_file">Upload</button>
@@ -50,5 +52,14 @@
     {% endif %}
   </div>
 {% endfor %}
+
+<script type="text/javascript">
+  $('input[type=file]').bind('change', function() {
+    var thisid = $(this).attr('id');
+    var fileName = '';
+    fileName = $(this).val().split("\\").pop(); // the path is weird, so we only show the filename itself
+    $('#'+thisid+'_span').html(fileName);
+  })
+</script>
 
 {% endblock %}
