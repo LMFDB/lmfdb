@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import url_for
 from sage.all import ZZ, QQ, lazy_attribute, NumberField
 from lmfdb import db
+from lmfdb.utils import display_knowl
 from lmfdb.utils.uploader import UTextBox, UTextArea, UReferenceBox, USelectBox, UploadSection, Uploader
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.modular_curves import modcurve_page
@@ -159,12 +160,6 @@ class PointCompleteness(UploadSection):
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
               UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link, cols=30, rows=3),
               ]
-    offer_csv = False
-
-    def parse_form(self, form):
-        rec = super().parse_form(form)[0]
-        # We split the text area into one upload per line
-        return [{"reference": rec["reference"], "curves": x} for x in rec["curves"]]
 
     def verify(self, rec):
         # We don't do anything; the verification is completely on the editor checking the reference
@@ -416,6 +411,28 @@ class UniversalEC(UploadSection):
     def csv_template_url(self):
         return url_for(".universal_ec_csv")
 
+class MultiKnowl(UploadSection):
+    name = "modcurve_multi_knowl"
+    title = "Additional Information on Multiple Curves"
+    intro = f"While {display_knowl('doc.knowl.annotation_guidelines', 'annotations')} provide a convenient way to add information to the top or bottom of a single object's homepage, they are not as well adapted to including specialized information on a family of objects (such as $X_1(N)$).  You can use this form to link a knowl to a list of modular forms, so that it is included at the bottom of each object's homepage."
+    inputs = [UTextBox("knowl", "Knowl", "upload.multi_knowl", label_linker=display_knowl),
+              UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link, cols=30, rows=3),
+              ]
+    offer_csv = False
+
+    def parse_form(self, form):
+        rec = super().parse_form(form)[0]
+        # We split the text area into one upload per line
+        return [{"knowl": rec["knowl"], "curves": x} for x in rec["curves"]]
+
+    def verify(self, rec):
+        # We don't do anything; the verification is completely on the editor checking that the knowl makes sense to associate to this set of modular curves
+        pass
+
+    def process(self, rec):
+        # We don't do anything; the modular curve pages use the data_uploads table to find the appropriate knowls to include.
+        return []
+
 @modcurve_page.route("/Q/upload/universal_ec.csv")
 def universal_ec_csv():
     return UniversalEC().csv_template()
@@ -424,7 +441,7 @@ class ModularCurveUploader(Uploader):
     title = "Upload modular curve data"
 
     def __init__(self):
-        super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC()])
+        super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
 
     @property
     def bread(self):
