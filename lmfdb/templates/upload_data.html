@@ -1,7 +1,17 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>Policies on uploads, encourage users to contact us if they have algorithms that apply more generally.</p>
+<p>
+  This page allows logged in users to upload data for use in the LMFDB.  If you need an account, please <a href="{{url_for('contact')}}">contact us</a>.
+</p>
+
+<p>
+  By using this form, you consent to the information you submit appearing publicly on the LMFDB.
+</p>
+
+<p>
+  This page is not intended for uploading large quantities of data.  If you have more than 100 entries you want to add, or an algorithm that can be run on large number of curves in the database, please contact us about using a different mechanism.
+</p>
 
 {% for section in uploader.sections %}
 
