@@ -168,14 +168,18 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model_html(self, m):
+#this is only for curves with models
+#but not curves with self.has_more_models
+#and also not for genus 0 cuves with points
+#we need to somehow give this info 
     eqn_threshold = 3 #this displays threshold - 1 lines to start
     lines, nb_var, typ, smooth = formatted_model_data(m)
-    def title_of_model(lines, nb_var, typ, smooth):
+    def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
             title =  display_knowl('ag.canonical_model', 'Canonical model') +\
              r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,) 
             if len(lines) > eqn_threshold:
-                title +=" defined by %d equations" % (len(lines) - 1,)
+                title += " defined by %d equations" % (len(lines) - 1,)
             return title
         elif typ == 2:
             #smooth is true, false, or none
@@ -196,13 +200,41 @@ def formatted_model_html(self, m):
                 return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model') +\
                 " Weierstrass model"
         elif typ == 7:
-            reutrn display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')+\
+            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')+\
             " Geometric Weierstrass model"
         elif typ == 8:
             return display_knowl('modcurve.embedded_model', 'Embedded model') +\
              r" Embedded model in $\mathbb{P}^{%d}$" % (nb_var-1,)
-
-
+    def equation_of_model(lines, typ):
+        table = '<table valign="center">'+\
+        '<tr>'+\
+        f'<td> $ {lines[0]} $ </td>' +\
+        '<td style="padding: 5px 0px;">$=$</td>'+\
+        f'<td> $ {lines[1]} $</td>' +\
+        '</tr>'
+        if typ == 2 or typ == 5:
+            pass
+        elif typ == 0 or typ == 8:
+            table += '<tr>'+\
+            '<td> </td>'+\
+            '<td style="padding: 5px 0px;">$=$</td>'+\
+            f'<td> ${lines[2]}$ </td>' +\
+            '</tr>'
+            for line in lines[3:]:
+                table +='<td style="padding: 5px 0px;">$=$</td>' +\
+                f'<td> ${line}$</td>' +\
+                '</tr>'
+        elif typ == 7:
+            table += '<tr>' +\
+            f'<td> ${lines[2]}$</td>' +\
+            '<td style="padding: 5px 0px;">$=$</td>' +\
+            f'<td> ${lines[3]}$</td>' +\
+            '</tr>'
+        return table + '</table>'
+    title = title_of_model(self, lines, nb_var, typ, smooth)
+    table = equation_of_model(lines, typ)
+    print("yo")
+    return "<p>" + title + "</p>" + "\n" + table
 
 
 def formatted_model_data(m):
@@ -503,7 +535,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def formatted_models(self):
-        return [formatted_model(m) for m in self.models_to_display]
+        return [formatted_model_html(self, m) for m in self.models_to_display]
 
     @lazy_attribute
     def models_count(self):

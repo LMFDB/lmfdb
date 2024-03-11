@@ -179,82 +179,8 @@
 {% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
   <h2> {{ KNOWL('modcurve.model', 'Models') }} </h2>
   {% if models %}
-    <script>
-      function show_model_lines(mstyle) {
-        $('tr.longmodel').hide();
-        $('tr.showmodel').hide();
-        $('tr.'+mstyle).show();
-      }
-    </script>
-    {% for lines, nb_var, type, smooth in models %}
-      {% if type == 0 %} 
-        <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{ {{nb_var-1}} }$: </p>
-      {% elif type == 2 %}
-        <p> {%  if smooth == True %}
-              {{ KNOWL('modcurve.plane_model', 'Smooth plane model') }}:
-            {% elif smooth == False %}
-              {{ KNOWL('modcurve.plane_model', 'Singular plane model') }}:
-            {% else %}
-              {{ KNOWL('modcurve.plane_model', 'Plane model') }}:
-            {% endif %}
-        </p>
-      {% elif type == 5 %}
-        <p> {% if curve.genus == 1 %}
-              {{ KNOWL('ec.weierstrass_coeffs', 'Weierstrass model') }}:
-            {% else %}
-              {{ KNOWL('ag.hyperelliptic_curve', 'Weierstrass model') }}:
-            {% endif %}
-        </p>
-      {% elif type == 7 %}
-        <p> {{ KNOWL('ag.hyperelliptic_curve', 'Geometric Weierstrass model') }}: </p>
-      {% elif type == 8 %}
-        <p> {{ KNOWL('modcurve.embedded_model', 'Embedded model') }} in $\mathbb{P}^{ {{nb_var-1}} } $: </p>
-      {% endif %}
-      <table valign="center">
-        <tr>
-          <td> $ {{ lines[0] }}$ </td>
-          <td style="padding: 5px 0px;">$=$</td>
-          <td> $ {{ lines[1] }}$</td>
-        </tr>
-        {% if type == 7 %}
-          <tr>
-            <td> ${{ lines[2] }}$</td>
-            <td style="padding: 5px 0px;">$=$</td>
-            <td> ${{ lines[3] }}$</td>
-          </tr>
-        {% elif lines|length < 7 %}
-          {% for line in lines[2:] %}
-            <tr>
-              <td> </td>
-              <td style="padding: 5px 0px;">$=$</td>
-              <td> ${{ line }}$</td>
-            </tr>
-          {% endfor %}
-        {% else %}
-          <tr>
-            <td> </td>
-            <td style="padding: 5px 0px;">$=$</td>
-            <td> ${{ lines[2] }}$ </td>
-          </tr>
-          {% for line in lines[3:] %}
-            <tr class="longmodel" style="display: none;">
-              <td> </td>
-              <td style="padding: 5px 0px;">$=$</td>
-              <td> ${{ line }}$</td>
-            </tr>
-          {% endfor %}
-          <tr class="showmodel">
-            <td> </td>
-            <td> </td>
-            <td><a onclick="show_model_lines('longmodel'); return false;">Show {{ (lines|length) - 3 }} more</a> equations</td>
-          </tr>
-          <tr class="longmodel" style="display: none;">
-            <td> </td>
-            <td> </td>
-            <td><a onclick="show_model_lines('showmodel'); return false;">Hide {{ (lines|length) - 3 }}</a> equations</td>
-          </tr>
-        {% endif %}
-      </table>
+    {% for m in models %}
+      {{ m | safe }}
     {% endfor %}
   {% elif curve.genus == 0 and not curve.pointless %}
     <p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
