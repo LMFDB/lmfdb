@@ -268,31 +268,31 @@ We are removing this section until we have more sources of non-rational points. 
 {% for degree, domain_model_type, codomain_label, codomain_model_type, codomain_name, codomain_equation, coord_names, equations in modelmaps %}
 <p>
   {% if codomain_label == "1.1.0.a.1" and codomain_model_type == 4 %}
-  where the projective coordinates $(E_4:E_6)$ of weights $4$ and $6$ are as follows
+    where the projective coordinates $(E_4:E_6)$ of weights $4$ and $6$ are as follows
   {% else %}
-  {% if codomain_label == "1.1.0.a.1" and codomain_model_type == 1 %}
-  {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}
-  {% else %}
-  Map
+    {% if codomain_label == "1.1.0.a.1" and codomain_model_type == 1 %}
+      {{ KNOWL('modcurve.j_invariant_map', '$j$-invariant map') }}
+    {% else %}
+    Map
   {% endif %}
   of degree {{degree}} {{ curve.model_type_domain(domain_model_type) }} to {{ curve.model_type_codomain(codomain_model_type) }} the modular curve
   {% if codomain_name %}
-  <a href="{{url_for('.by_label', label=codomain_label)}}">{{name_to_latex(codomain_name)}}  </a>
+    <a href="{{url_for('.by_label', label=codomain_label)}}">{{name_to_latex(codomain_name)}}  </a>
   {% else %}
-  <a href="{{url_for('.by_label', label=codomain_label)}}">{{codomain_label}}</a>
+    <a href="{{url_for('.by_label', label=codomain_label)}}">{{codomain_label}}</a>
   {% endif %}
-  {% if codomain_model_type == 1 and codomain_label != "1.1.0.a.1" %}
-  isomorphic to $P^1$
-  {% endif %}
+    {% if codomain_model_type == 1 and codomain_label != "1.1.0.a.1" %}
+      isomorphic to $P^1$
+    {% endif %}
   {% endif %}
   : </p>
 <table valign="center">
-  {% for coord, eq in zip(coord_names,equations) %}
-  <tr>
-    <td> $\displaystyle {{ coord }}$ </td>
-    <td style="padding: 5px 0px;">$=$</td>
-    <td> $\displaystyle {{ eq }}$</td>
-  </tr>
+  {% for coord, eq in zip(coord_names, equations) %}
+    <tr>
+      <td> $\displaystyle {{ coord }}$ </td>
+      <td style="padding: 5px 0px;">$=$</td>
+      <td> $\displaystyle {{ eq }}$</td>
+    </tr>
   {% endfor %}
 </table>
 {% if codomain_model_type in [0,2] %}
