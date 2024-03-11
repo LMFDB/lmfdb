@@ -167,7 +167,45 @@ def formatted_newforms(newforms, mults):
         return ""
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
-def formatted_model(m):
+def formatted_model_html(self, m):
+    eqn_threshold = 3 #this displays threshold - 1 lines to start
+    lines, nb_var, typ, smooth = formatted_model_data(m)
+    def title_of_model(lines, nb_var, typ, smooth):
+        if typ == 0:
+            title =  display_knowl('ag.canonical_model', 'Canonical model') +\
+             r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,) 
+            if len(lines) > eqn_threshold:
+                title +=" defined by %d equations" % (len(lines) - 1,)
+            return title
+        elif typ == 2:
+            #smooth is true, false, or none
+            if smooth == True: 
+                return display_knowl('modcurve.plane_model', 'Smooth plane model')+\
+                " Smooth plane model"
+            elif smooth == False:
+                return display_knowl('modcurve.plane_model', 'Singular plane model') +\
+                " Singular plane model"
+            else:
+                return display_knowl('modcurve.plane_model', 'Plane model')+\
+                    " Plane model"
+        elif typ == 5:
+            if self.genus == 1:
+                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model') +\
+                " Weierstrass model"
+            else:
+                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model') +\
+                " Weierstrass model"
+        elif typ == 7:
+            reutrn display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')+\
+            " Geometric Weierstrass model"
+        elif typ == 8:
+            return display_knowl('modcurve.embedded_model', 'Embedded model') +\
+             r" Embedded model in $\mathbb{P}^{%d}$" % (nb_var-1,)
+
+
+
+
+def formatted_model_data(m):
     if m["model_type"] == 5:
         assert m["number_variables"] == 3
         R1 = PolynomialRing(QQ, "x")

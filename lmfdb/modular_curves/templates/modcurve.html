@@ -187,7 +187,7 @@
       }
     </script>
     {% for lines, nb_var, type, smooth in models %}
-      {% if type == 0 %}
+      {% if type == 0 %} 
         <p> {{ KNOWL('ag.canonical_model', 'Canonical model') }} in $\mathbb{P}^{ {{nb_var-1}} }$: </p>
       {% elif type == 2 %}
         <p> {%  if smooth == True %}
