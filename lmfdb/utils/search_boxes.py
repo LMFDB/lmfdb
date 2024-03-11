@@ -238,7 +238,7 @@ class TextBox(SearchBox):
                 keys.append('style="width: %spx"' % self.short_width)
             if self.name in info:
                 keys.append('value="%s"' % info[self.name])
-        return '<input type="text" ' + " ".join(keys) + "/>"
+        return '<input ' + " ".join(keys) + "/>"
 
 class SelectBox(SearchBox):
     """
