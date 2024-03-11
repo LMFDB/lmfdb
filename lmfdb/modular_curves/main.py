@@ -53,12 +53,10 @@ from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
+    learnmore_list, LABEL_RE
 )
+from lmfdb.modular_curves.upload import ModularCurveUploader
 
-coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
-fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
-LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
-FINE_LABEL_RE = re.compile(fine_label_re)
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]+\d+")
 CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z]+(\d+)")
@@ -66,12 +64,6 @@ SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+[a-z]*")
 S_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
 NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|SYM)?\(\d+\)")
-
-def learnmore_list():
-    return [('Source and acknowledgments', url_for(".how_computed_page")),
-            ('Completeness of the data', url_for(".completeness_page")),
-            ('Reliability of the data', url_for(".reliability_page")),
-            ('Modular curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -225,7 +217,7 @@ def curveinfo(label):
     return ans
 
 def url_for_modcurve_label(label):
-    return url_for(".by_label", label=label)
+    return url_for("modcurve.by_label", label=label)
 
 def url_for_RZB_label(label):
     return "https://users.wfu.edu/rouseja/2adic/" + label + ".html"
@@ -295,6 +287,18 @@ def modcurve_jump(info):
             return redirect(url_for(".index"))
         else:
             return redirect(url_for_modcurve_label(label))
+
+@modcurve_page.route("/Q/upload/", methods=['GET', 'POST'])
+def upload_data():
+    return ModularCurveUploader().render()
+
+@modcurve_page.route("/Q/review/", methods=['GET', 'POST'])
+def review_data():
+    return ModularCurveUploader().review()
+
+@modcurve_page.route("/Q/needs_review/")
+def needs_review():
+    return ModularCurveUploader().needs_review()
 
 def blankzeros(n):
     return "$%o$"%n if n else ""
