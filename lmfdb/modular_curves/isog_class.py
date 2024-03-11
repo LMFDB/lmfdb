@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part, letters2num
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
 from lmfdb.modular_curves import modcurve_logger
 from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
+from sage.databases.cremona import cremona_letter_code, class_to_int
+
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, lazy_attribute
 
 class ModCurveIsog_class():
     """
@@ -36,7 +38,7 @@ class ModCurveIsog_class():
                 return "Invalid label"
             
             N, i, g, iso = label.split(".")
-            iso_num = letters2num(iso)
+            iso_num = class_to_int(iso)
             data = db.gps_gl2zhat_fine.lucky({"coarse_level" : N,
                                               "coarse_index" : i,
                                               "genus" : g,
@@ -91,6 +93,8 @@ class ModCurveIsog_class():
                 self.SZlabel = True
             if c['Slabel'] is not None:
                 self.Slabel = True
+            if c['name'] is not None:
+                self.name = True
 
         self.properties = [('Label', self.coarse_class),
                            ('Number of curves', prop_int_pretty(ncurves))
@@ -100,8 +104,8 @@ class ModCurveIsog_class():
 
         self.title = "Isogney class of modular curves with LMFDB label " + self.coarse_label
         
-        if ncurves>1:
-            self.properties += [('Graph', ''),(None, self.graph_link)]
+        #if ncurves>1:
+        #    self.properties += [('Graph', ''),(None, self.graph_link)]
 
         self.downloads = [
             (
@@ -125,3 +129,9 @@ class ModCurveIsog_class():
 
         self.bread = [('Modular curves', url_for("modcurve.index")),
                       ('%s' % self.coarse_label, ' ')]
+
+    @lazy_attribute
+    def newform_level(self):
+        if self.newforms is None:
+            return 1
+        return lcm([int(f.split('.')[0]) for f in self.newforms])
