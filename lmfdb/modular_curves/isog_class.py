@@ -2,13 +2,13 @@
 from flask import url_for
 from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
 from lmfdb.modular_curves import modcurve_logger
-from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE
+from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE, WebModCurve
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, lazy_attribute
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, lazy_attribute, lcm
 
 class ModCurveIsog_class():
     """
@@ -22,6 +22,7 @@ class ModCurveIsog_class():
         """
         modcurve_logger.debug("Constructing an instance of ModCurveIsog_class")
         self.__dict__.update(dbdata)
+        self.web_curve = WebModCurve(self.label)
         self.make_class()
         
     @staticmethod
@@ -129,9 +130,3 @@ class ModCurveIsog_class():
 
         self.bread = [('Modular curves', url_for("modcurve.index")),
                       ('%s' % self.coarse_label, ' ')]
-
-    @lazy_attribute
-    def newform_level(self):
-        if self.newforms is None:
-            return 1
-        return lcm([int(f.split('.')[0]) for f in self.newforms])
