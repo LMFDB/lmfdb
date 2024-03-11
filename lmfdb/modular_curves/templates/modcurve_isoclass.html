@@ -1,0 +1,70 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{{ place_code('class') }}
+
+<style type="text/css">
+#isogeny_class_table th, #isogeny_class_table td {
+padding : 4px;
+text-align: center;
+}
+</style>
+
+<h2>Modular curves in class {{iso_class.coarse_class}}</h2>
+{{ place_code('curves') }}
+<table id = "isogeny_class_table">
+  <tr>
+    <th>{{ KNOWL('modcurve.label', title='LMFDB label')}}</th>
+    {% if iso_class.CPlabel %}
+    <th>{{ KNOWL('modcurve.other_labels', title='Cummins and Pauli (CP) label') }}</th>
+    {% endif %}
+    {% if iso_class.SZlabel %}
+    <th>{{ KNOWL('modcurve.other_labels', title='Sutherland  and Zywina (SZ) label') }}</th>
+    {% endif %}
+    {% if iso_class.RZBlabel %}
+    <th>{{ KNOWL('modcurve.other_labels', title='Rouse and Zureick-Brown (RZB) label') }}</th>
+    {% endif %}
+    {% if iso_class.RSZBlabel %}
+    <th>{{ KNOWL('modcurve.other_labels', title='Rouse, Sutherland, and Zureick-Brown (RSZB) label') }}</th>
+    {% endif %}
+    {% if iso_class.Slabel %}
+    <th>{{ KNOWL('modcurve.other_labels', title='Sutherland (S) label') }}</th>
+    {% endif %}
+  </tr>
+  
+  {% for curve in iso_class.curves %}
+  <td class="center"><a href="/ModularCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
+  {% if iso_class.CPlabel %}
+  <td class="center">
+  {% if curve.CPlabel %}
+  <a href="https://mathstats.uncg.edu/sites/pauli/congruence/csg{{curve.genus}}.html#group{{curve.CPlabel}}">{{curve.CPlabel}}</a>
+  {% endif %}
+  </td>
+  {% endif %}
+  {% if iso_class.RZBlabel %}
+  <td class="center">
+  {% if curve.RZBlabel %}
+  <a href="https://users.wfu.edu/rouseja/2adic/{{curve.RZBlabel}}.html">{{curve.RZBlabel}}</a>
+  {% endif %}
+  </td>
+  {% endif %}
+  {% if iso_class.RSZBlabel %}
+  <td class="center">
+  {% if curve.RSZBlabel %}
+  <a href="/ModularCurve/Q/{{curve.RSZBlabel}}">{{curve.RSZBlabel}}</a>
+  {% endif %}
+  </td>
+  {% endif %}
+  {% if iso_class.Slabel %}
+  <td class="center">
+  {% if curve.Slabel %}
+  {{curve.Slabel}}
+  {% endif %}
+  </td>
+  {% endif %}
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
+
