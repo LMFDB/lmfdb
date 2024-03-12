@@ -18,7 +18,7 @@ class ModCrvTest(LmfdbTest):
         assert "25.30.0.a.1" in L.get_data(as_text=True)
         L = self.tc.get("/ModularCurve/Q/?level_type=squarefree&level=49-150")
         assert "51.6.0.a.1" in L.get_data(as_text=True)
-             
+
     def test_level_search(self):
         L = self.tc.get("/ModularCurve/Q/?level=13")
         assert "13.14.0.a.1" in L.get_data(as_text=True)
@@ -36,35 +36,35 @@ class ModCrvTest(LmfdbTest):
     def test_index_range(self):
         L = self.tc.get("/ModularCurve/Q/?index=100-1000")
         assert "6.144.1-6.b.1.1" in L.get_data(as_text=True)
-        
+
     def test_index_search(self):
         L = self.tc.get("/ModularCurve/Q/?index=42")
         assert "7.42.1.a.1" in L.get_data(as_text=True)
-    
+
     def test_genus_range(self):
         L = self.tc.get("/ModularCurve/Q/?genus=10-1000")
         assert "9.648.10-9.a.1.2" in L.get_data(as_text=True)
-        
+
     def test_genus_search(self):
         L = self.tc.get("/ModularCurve/Q/?genus=25")
         assert "12.576.25.a.1" in L.get_data(as_text=True)
-    
+
     def test_rank_range(self):
         L = self.tc.get("/ModularCurve/Q/?rank=20-200")
         assert "13.1092.50.d.1" in L.get_data(as_text=True)
-        
+
     def test_rank_search(self):
         L = self.tc.get("/ModularCurve/Q/?rank=10")
         assert "16.768.41.q.1" in L.get_data(as_text=True)
-    
+
     def test_genus_minus_rank_range(self):
         L = self.tc.get("/ModularCurve/Q/?genus_minus_rank=2-5")
         assert "7.168.3.a.1" in L.get_data(as_text=True)
-        
+
     def test_genus_minus_rank_search(self):
         L = self.tc.get("/ModularCurve/Q/?genus_minus_rank=30")
         assert "15.720.37.h.1" in L.get_data(as_text=True)
-    
+
     def test_Q_gonality_search(self):
         L = self.tc.get("/ModularCurve/Q/?q_gonality=4")
         assert "8.192.3-8.d.1.1" in L.get_data(as_text=True)
@@ -76,17 +76,17 @@ class ModCrvTest(LmfdbTest):
         assert "1.1.0.a.1" in L.get_data(as_text=True)
         L = self.tc.get("/ModularCurve/Q/?gonality_type=atmost&q_gonality=3-4")
         assert "is not a valid input for" in L.get_data(as_text=True)
-    
+
     def test_cusps_range(self):
         L = self.tc.get("/ModularCurve/Q/?cusps=48-60")
         assert "11.660.26.a.1" in L.get_data(as_text=True)
         L = self.tc.get("/ModularCurve/Q/?rational_cusps=100-1000")
         assert "211.22260.1751.by.1" in L.get_data(as_text=True)
-        
+
     def test_cusps_search(self):
         L = self.tc.get("/ModularCurve/Q/?cusps=6")
         assert "4.24.0.a.1" in L.get_data(as_text=True)
-        
+
     def test_rational_CM_points_search(self):
         L = self.tc.get("/ModularCurve/Q/?cm_discriminants=yes")
         assert "3.3.0.a.1" in L.get_data(as_text=True)
@@ -95,26 +95,26 @@ class ModCrvTest(LmfdbTest):
         # Fails due to slow query
         # L = self.tc.get("/ModularCurve/Q/?cm_discriminants=-27")
         # assert "6.8.0-3.a.1.1" in L.get_data(as_text=True)
-        
+
     def test_elliptic_points_order_2_search(self):
         L = self.tc.get("/ModularCurve/Q/?nu2=2")
         assert "4.6.0.e.1" in L.get_data(as_text=True)
-    
+
     def test_elliptic_points_order_3_search(self):
         L = self.tc.get("/ModularCurve/Q/?nu3=10")
         assert "25.100.4.a.1" in L.get_data(as_text=True)
-    
+
     def test_SL2_level(self):
         L = self.tc.get("/ModularCurve/Q/252.432.10-126.dk.1.10",follow_redirects=True)
         assert (
-            "$\SL_2$-level" in L.get_data(as_text=True)
+            r"$\SL_2$-level" in L.get_data(as_text=True)
             and "$36$" in L.get_data(as_text=True)
             )
 
     def test_PSL2_index(self):
         L = self.tc.get("/ModularCurve/Q/60.1152.25-60.dh.4.24",follow_redirects=True)
         assert (
-            "$\PSL_2$-index" in L.get_data(as_text=True)
+            r"$\PSL_2$-index" in L.get_data(as_text=True)
             and "$576$" in L.get_data(as_text=True)
             )
 
@@ -122,7 +122,7 @@ class ModCrvTest(LmfdbTest):
         L = self.tc.get("/ModularCurve/Q/252.432.10-126.dk.1.10",follow_redirects=True)
         assert (
             "Cusp widths" in L.get_data(as_text=True)
-            and "$6^{9}\cdot18^{9}$" in L.get_data(as_text=True)
+            and r"$6^{9}\cdot18^{9}$" in L.get_data(as_text=True)
             )
 
     def test_newform_level(self):
@@ -136,6 +136,5 @@ class ModCrvTest(LmfdbTest):
         L = self.tc.get("/ModularCurve/Q/60.8640.313-60.eqq.1.4",follow_redirects=True)
         assert (
             "Cusp orbits" in L.get_data(as_text=True)
-            and "$8^{6}\cdot16^{3}$" in L.get_data(as_text=True)
+            and r"$8^{6}\cdot16^{3}$" in L.get_data(as_text=True)
             )
-        
