@@ -39,7 +39,7 @@ class ModCurveIsog_class():
                 return "Invalid label"
             
             N, i, g, iso = label.split(".")
-            iso_num = class_to_int(iso)
+            iso_num = class_to_int(iso)+1
             data = db.gps_gl2zhat_fine.lucky({"coarse_level" : N,
                                               "coarse_index" : i,
                                               "genus" : g,
@@ -99,15 +99,16 @@ class ModCurveIsog_class():
                 self.name = True
 
         self.properties = [('Label', self.coarse_class),
-                           ('Number of curves', prop_int_pretty(ncurves))
+                           ('Number of curves', prop_int_pretty(ncurves)),
+                           ('Level',  prop_int_pretty(self.coarse_level)),
+                           ('Index',  prop_int_pretty(self.coarse_index)),
+                           ('Genus',  prop_int_pretty(self.genus)),
+                           ('Cusps',  prop_int_pretty(self.cusps))
                            ]
         
-        self.friends = []
+        self.friends = self.web_curve.friends
 
         self.title = "Isogney class of modular curves with LMFDB label " + self.coarse_label
-        
-        #if ncurves>1:
-        #    self.properties += [('Graph', ''),(None, self.graph_link)]
 
         self.downloads = [
             (
