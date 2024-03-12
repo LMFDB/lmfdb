@@ -335,4 +335,3 @@ class ModCrvTest(LmfdbTest):
             url = '/ModularCurve/Q/?family=' + family
             L = self.tc.get(url)
             assert crv in L.get_data(as_text=True)
-
