@@ -1199,9 +1199,17 @@ def modcurve_data(label):
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-    if label == coarse_label:
-        labels = [label]
-    else:
-        labels = [label, coarse_label]
-    tables = ["gps_gl2zhat_fine" for lab in labels]
-    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread)
+
+    label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
+    if label != coarse_label:
+        label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label")])
+    # modcurve_models
+    label_tables_cols.append((coarse_label, "modcurve_models", "domain_label"))
+    # modcurve_modelmaps
+    label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
+    # modcurve_points
+    label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
+
+    labels, tables, label_cols = [elt[0] for elt in label_tables_cols]
+
+    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread, label_cols=label_cols)
