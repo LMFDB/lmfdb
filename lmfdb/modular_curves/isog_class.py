@@ -21,7 +21,7 @@ class ModCurveIsog_class():
         self.__dict__.update(dbdata)
         self.web_curve = WebModCurve(self.label)
         self.make_class()
-        
+
     @staticmethod
     def by_label(label):
         """
@@ -34,7 +34,7 @@ class ModCurveIsog_class():
             # !!! Right now only handling coarse labels, add support for fine labels
             if not ISO_CLASS_RE.fullmatch(label):
                 return "Invalid label"
-            
+
             N, i, g, iso = label.split(".")
             iso_num = class_to_int(iso)+1
             data = db.gps_gl2zhat_fine.lucky({"coarse_level" : N,
@@ -44,7 +44,7 @@ class ModCurveIsog_class():
             if data is None:
                 return "Class not found"
             data['label_type'] = 'LMFDB'
-            
+
         except AttributeError:
             try:
                 if not ISO_CLASS_RE.fullmatch(label):
@@ -69,10 +69,8 @@ class ModCurveIsog_class():
                  'coarse_class_num' : self.coarse_class_num,
                  'contains_negative_one' : True}
 
-        self.query = query
-        
         self.class_size = ncurves = db.gps_gl2zhat_fine.count(query)
-        
+
         # Create a list of the curves in the class from the database
         number_key = 'coarse_num'
         self.curves = []
@@ -99,15 +97,20 @@ class ModCurveIsog_class():
 
         self.properties = [('Label', self.coarse_class),
                            ('Number of curves', prop_int_pretty(ncurves)),
-                           ('Level',  prop_int_pretty(self.coarse_level)),
-                           ('Index',  prop_int_pretty(self.coarse_index)),
-                           ('Genus',  prop_int_pretty(self.genus)),
-                           ('Cusps',  prop_int_pretty(self.cusps))
+                           ('Level', prop_int_pretty(self.coarse_level)),
+                           ('Index', prop_int_pretty(self.coarse_index)),
+                           ('Genus', prop_int_pretty(self.genus)),
+                           ('Cusps', prop_int_pretty(self.cusps))
                            ]
+<<<<<<< HEAD
         if self.genus > 0 and self.dims:
             self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
         
         self.friends = self.web_curve.friends[1:]
+=======
+
+        self.friends = self.web_curve.friends
+>>>>>>> 0b927ee64b1053a98e40094387e0578162791f37
 
         self.title = "Modular isogeny class with LMFDB label " + self.coarse_class
         base_query = url_for("modcurve.index")

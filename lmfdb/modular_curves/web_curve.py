@@ -354,16 +354,22 @@ class WebModCurve(WebObj):
         friends = [("Modular isogeny class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
         if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
-            if self.genus == 1:
-                s = self.newforms[0].split(".")
-                label = s[0] + "." + s[3]
-                friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
-            if self.genus == 2:
-                g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
-                if g2c_url:
-                    s = g2c_url.split("/")
-                    label = s[2] + "." + s[3]
-                    friends.append(("Isogeny class " + label, url_for("g2c.by_label", label=label)))
+            if self.curve_label:
+                assert self.genus in [1,2]
+                route = "ec.by_ec_label" if self.genus == 1 else "g2c.by_label"
+                name = ("Elliptic" if self.genus ==1 else "Genus 2") + " curve " + self.curve_label
+                friends.append((name, url_for(route, label=self.curve_label)))
+            else: # the best we can do is to point to the isogeny class
+                if self.genus == 1:
+                    s = self.newforms[0].split(".")
+                    label = s[0] + "." + s[3]
+                    friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
+                if self.genus == 2:
+                    g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
+                    if g2c_url:
+                        s = g2c_url.split("/")
+                        label = s[2] + "." + s[3]
+                        friends.append(("Isogeny class " + label, url_for("g2c.by_label", label=label)))
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))

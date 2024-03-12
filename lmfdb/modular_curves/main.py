@@ -477,7 +477,7 @@ class ModCurve_download(Downloader):
         s += "// Number of cusps\n"
         s += "Ncusps := %s\n;" % rec['cusps']
         s += "// Number of rational cusps\n"
-        s += "Nrat_cusps := %s\n;" % rec['cusps']
+        s += "Nrat_cusps := %s\n;" % rec['rational_cusps']
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
         if rec['factorization'] != []:
@@ -538,9 +538,9 @@ class ModCurve_download(Downloader):
             {"modcurve": {"$in": codomain_labels}},
             ["equation", "modcurve", "model_type"]))
         map_id = 0
-        if maps and is_P1: #variable t has not been introduced above
-            s += "Pol<t> := PolynomialRing(Rationals());\n"
-
+        #if maps and is_P1: #variable t has not been introduced above
+        #     s += "Pol<t> := PolynomialRing(Rationals());\n"
+        #This was using t twice when the genus was large enough that t was used above. Even when t is not defined above, t is not used below.
         for m in maps:
             prefix = "map_%s_" % map_id
             has_codomain_equation = False
@@ -618,7 +618,7 @@ class ModCurve_download(Downloader):
                               label,
                               lang=lang,
                               title='Data for modular curve with label %s,'%label)
-        
+
 @modcurve_page.route("/download_to_magma/<label>")
 def modcurve_magma_download(label):
     return ModCurve_download().download_modular_curve(label, lang="magma")
@@ -1240,6 +1240,7 @@ def labels_page():
     return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+# !! TODO - overlapping code between the two options coming from different merges
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
     coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
@@ -1250,15 +1251,29 @@ def modcurve_data(label):
         N, i, g, iso = label.split(".")
         iso_num = class_to_int(iso)+1
         labels = db.gps_gl2zhat_fine.search({"coarse_level" : N,
-                                          "coarse_index" : i,
-                                          "genus" : g,
-                                          "coarse_class_num" : iso_num},
-                                           "label")
+                                             "coarse_index" : i,
+                                             "genus" : g,
+                                             "coarse_class_num" : iso_num,
+                                             "contains_negative_one" : "yes"},
+                                            "label")
         labels = [lab for lab in labels]
+        label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
+        # modcurve_models
+        label_tables_cols += [(label, "modcurve_models", "modcurve") for label in labels]
+        # modcurve_modelmaps
+        label_tables_cols += [(label, "modcurve_modelmaps", "domain_label") for label in labels]
+        # modcurve_points
+        label_tables_cols += [(label, "modcurve_points", "curve_label") for label in labels]
     else:
-        if label == coarse_label:
-            labels = [label]
-        else:
-            labels = [label, coarse_label]
-    tables = ["gps_gl2zhat_fine" for lab in labels]
-    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread)
+        label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
+        if label != coarse_label:
+            label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
+        # modcurve_models
+        label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
+        # modcurve_modelmaps
+        label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
+        # modcurve_points
+        label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
+        
+    labels, tables, label_cols = map(list, zip(*label_tables_cols)) # transpose
+    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread, label_cols=label_cols)

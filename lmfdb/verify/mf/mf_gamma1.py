@@ -5,7 +5,7 @@ from sage.all import (
 
 from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker, check_analytic_conductor
-from .verification import overall, slow, fast, accumulate_failures
+from ..verification import overall, slow, fast, accumulate_failures
 
 @cached_function
 def sturm_bound1(level, weight):
