@@ -5,7 +5,7 @@ from lmfdb.modular_curves import modcurve_logger
 from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE, WebModCurve
 from lmfdb import db
 
-from sage.databases.cremona import class_to_int
+from sage.databases.cremona import class_to_int, cremona_letter_code
 
 class ModCurveIsog_class():
     """
@@ -105,7 +105,7 @@ class ModCurveIsog_class():
         
         self.friends = self.web_curve.friends
 
-        self.title = "Isogney class of modular curves with LMFDB label " + self.coarse_label
+        self.title = "Modular isogeny class with LMFDB label " + self.coarse_class
 
         self.downloads = [
             (
@@ -127,5 +127,13 @@ class ModCurveIsog_class():
 
         ]
 
-        self.bread = [('Modular curves', url_for("modcurve.index")),
-                      ('%s' % self.coarse_label, ' ')]
+        base_query = url_for("modcurve.index")
+        level_query =  base_query + '?level=%s' % self.coarse_level
+        index_query = level_query + '&index=%s' % self.coarse_index
+        genus_query = index_query + '&genus=%s' % self.genus
+        self.bread = [('Modular curves', base_query),
+                      (r'$\Q$', base_query),
+                      ('%s' % self.coarse_level, level_query),
+                      ('%s' % self.coarse_index, index_query),
+                      ('%s' % self.genus, genus_query),
+                      ('%s' % cremona_letter_code(self.coarse_class_num-1), ' ')]
