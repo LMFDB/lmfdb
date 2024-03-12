@@ -84,8 +84,7 @@ class ModCrvTest(LmfdbTest):
         assert "211.22260.1751.by.1" in L.get_data(as_text=True)
         
     def test_cusps_search(self):
-        L = self.tc.get("/ModularCurve/Q/?        L = self.tc.get("/ModularCurve/Q/?cusps=6")
-cusps=6")
+        L = self.tc.get("/ModularCurve/Q/?cusps=6")
         assert "4.24.0.a.1" in L.get_data(as_text=True)
         
     def test_rational_CM_points_search(self):
@@ -123,7 +122,7 @@ cusps=6")
         L = self.tc.get("/ModularCurve/Q/252.432.10-126.dk.1.10",follow_redirects=True)
         assert (
             "Cusp widths" in L.get_data(as_text=True)
-            and "$16^{128}\\cdot32^{192}\\cdot64^{128}\\cdot128^{128}\\cdot256^{64}$" in L.get_data(as_text=True)
+            and "$6^{9}\cdot18^{9}$" in L.get_data(as_text=True)
             )
 
     def test_newform_level(self):
