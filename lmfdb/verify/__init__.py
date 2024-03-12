@@ -15,11 +15,11 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 _prefix = 'lmfdb.verify.'
 
 for dirpath, dirs, filenames in os.walk(_curdir):
-    filenames = [f for f in filenames if not f[0] == '_']
-    filenames = [f for f in filenames if f[-2:] == 'py']  # this filters out any table names that end up in log files
-    dirs[:] = [d for d in dirs if not d[0] == '_']
+    filenames = [f for f in filenames if f[0] != '_']
+    filenames = [f for f in filenames if os.path.split(f)[1] == 'py']  # this filters out any table names that end up in log files
+    dirs[:] = [d for d in dirs if d[0] != '_']
     for f in filenames:
-        tablename = f.split('.')[0]
+        tablename = os.path.split(f)[0]
         if tablename in database.db.tablenames:
             other_thing = os.path.basename(os.path.normpath(dirpath)) + '.'
             verifier = getattr(importlib.import_module(_prefix + other_thing + tablename), tablename)
