@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
+from lmfdb.utils import prop_int_pretty
 from lmfdb.modular_curves import modcurve_logger
 from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE, WebModCurve
-from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.databases.cremona import cremona_letter_code, class_to_int
-
-from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, lazy_attribute, lcm
+from sage.databases.cremona import class_to_int
 
 class ModCurveIsog_class():
     """
@@ -78,7 +75,7 @@ class ModCurveIsog_class():
         number_key = 'coarse_num'
         self.curves = []
         for i in range(ncurves):
-            query.update({'coarse_num' : i+1})
+            query.update({number_key : i+1})
             self.curves.append(db.gps_gl2zhat_fine.lucky(query))
             
         for c in self.curves:
