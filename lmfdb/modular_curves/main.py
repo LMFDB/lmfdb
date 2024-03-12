@@ -475,7 +475,7 @@ class ModCurve_download(Downloader):
         s += "// Number of cusps\n"
         s += "Ncusps := %s\n;" % rec['cusps']
         s += "// Number of rational cusps\n"
-        s += "Nrat_cusps := %s\n;" % rec['cusps']
+        s += "Nrat_cusps := %s\n;" % rec['rational_cusps']
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
         if rec['factorization'] != []:
@@ -536,9 +536,9 @@ class ModCurve_download(Downloader):
             {"modcurve": {"$in": codomain_labels}},
             ["equation", "modcurve", "model_type"]))
         map_id = 0
-        if maps and is_P1: #variable t has not been introduced above
-            s += "Pol<t> := PolynomialRing(Rationals());\n"
-
+        #if maps and is_P1: #variable t has not been introduced above
+        #     s += "Pol<t> := PolynomialRing(Rationals());\n"
+        #This was using t twice when the genus was large enough that t was used above. Even when t is not defined above, t is not used below.
         for m in maps:
             prefix = "map_%s_" % map_id
             has_codomain_equation = False
