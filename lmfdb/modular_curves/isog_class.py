@@ -68,6 +68,8 @@ class ModCurveIsog_class():
                  'genus' : self.genus,
                  'coarse_class_num' : self.coarse_class_num,
                  'contains_negative_one' : True}
+
+        self.query = query
         
         self.class_size = ncurves = db.gps_gl2zhat_fine.count(query)
         
@@ -77,7 +79,7 @@ class ModCurveIsog_class():
         for i in range(ncurves):
             query.update({number_key : i+1})
             self.curves.append(db.gps_gl2zhat_fine.lucky(query))
-            
+
         for c in self.curves:
             c['web_curve'] = WebModCurve(c['label'])
             c['curve_url_lmfdb'] = modcurve_link(c['label'])
@@ -108,34 +110,36 @@ class ModCurveIsog_class():
         self.friends = self.web_curve.friends[1:]
 
         self.title = "Modular isogeny class with LMFDB label " + self.coarse_class
+        base_query = url_for("modcurve.index")
+        level_query = '?level=%s' % self.coarse_level
+        index_query = level_query + '&index=%s' % self.coarse_index
+        genus_query = index_query + '&genus=%s' % self.genus
+
+        self_query = genus_query + '&coarse_class_num=%s' % self.coarse_class_num
+        curves_query = self_query + '&contains_negative_one=yes'
 
         self.downloads = [
             (
-                "Code to Magma",
-                url_for(".modcurve_magma_download", label=self.label),
+                "Code to magma",
+                url_for(".modcurve_isogeny_magma_download") + curves_query
             ),
             (
-                "Code to SageMath",
-                url_for(".modcurve_sage_download", label=self.label),
+                "Code to sage",
+                url_for(".modcurve_isogeny_sage_download") + curves_query
             ),
             (
                 "All data to text",
-                url_for(".modcurve_text_download", label=self.label),
+                url_for(".modcurve_isogeny_text_download") + curves_query
             ),
             (
                 'Underlying data',
-                url_for(".modcurve_data", label=self.label),
+                url_for(".modcurve_data", label=self.coarse_class),
             )
-
         ]
 
-        base_query = url_for("modcurve.index")
-        level_query =  base_query + '?level=%s' % self.coarse_level
-        index_query = level_query + '&index=%s' % self.coarse_index
-        genus_query = index_query + '&genus=%s' % self.genus
         self.bread = [('Modular curves', base_query),
                       (r'$\Q$', base_query),
-                      ('%s' % self.coarse_level, level_query),
-                      ('%s' % self.coarse_index, index_query),
-                      ('%s' % self.genus, genus_query),
-                      ('%s' % cremona_letter_code(self.coarse_class_num-1), ' ')]
+                      ('%s' % self.coarse_level, base_query + level_query),
+                      ('%s' % self.coarse_index, base_query + index_query),
+                      ('%s' % self.genus, base_query + genus_query),
+                      ('%s' % cremona_letter_code(self.coarse_class_num-1), base_query + self_query)]
