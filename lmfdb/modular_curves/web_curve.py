@@ -16,9 +16,11 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 coarse_label_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)"
 fine_label_re = r"(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)"
+iso_class_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)"
 LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
 COARSE_LABEL_RE = re.compile(coarse_label_re)
+ISO_CLASS_RE = re.compile(f"{iso_class_re}")
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -347,7 +349,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        friends = []
+        friends = [("Isogeny class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
         if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.genus == 1:
