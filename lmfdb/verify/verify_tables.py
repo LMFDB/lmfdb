@@ -27,7 +27,14 @@ def directory(path):
 
 def find_validated_tables():
     curdir = os.path.dirname(os.path.abspath(__file__))
-    return [tablename for tablename in db.tablenames if os.path.exists(os.path.join(curdir, tablename + '.py'))]
+    validated_tables = []
+
+    for _, _, filenames in os.walk(curdir):
+        for f in filenames:
+            root_name = os.path.splitext(f)[0]
+            if root_name in db.tablenames:
+                validated_tables.append(root_name)
+    return validated_tables
 
 if __name__ == '__main__':
     validated_tables = find_validated_tables()

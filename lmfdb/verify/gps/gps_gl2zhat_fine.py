@@ -1,6 +1,6 @@
 
 from lmfdb.lmfdb_database import db
-from .verification import TableChecker, overall
+from ..verification import TableChecker, overall
 
 class gps_gl2zhat_fine(TableChecker):
     table = db.gps_gl2zhat_fine

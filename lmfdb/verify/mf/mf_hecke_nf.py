@@ -3,7 +3,7 @@ from sage.all import prime_pi, mod, euler_phi, prime_range
 
 from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker
-from .verification import overall, slow, integer_types
+from ..verification import overall, slow, integer_types
 
 class mf_hecke_nf(MfChecker):
     table = db.mf_hecke_nf
