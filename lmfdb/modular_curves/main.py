@@ -1202,14 +1202,15 @@ def modcurve_data(label):
 
     label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
     if label != coarse_label:
-        label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label")])
+        label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
     # modcurve_models
-    label_tables_cols.append((coarse_label, "modcurve_models", "domain_label"))
+    label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
     # modcurve_modelmaps
     label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
     # modcurve_points
     label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
 
-    labels, tables, label_cols = [elt[0] for elt in label_tables_cols]
+    print(label_tables_cols)
+    labels, tables, label_cols = map(list, zip(*label_tables_cols)) # transpose
 
     return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread, label_cols=label_cols)
