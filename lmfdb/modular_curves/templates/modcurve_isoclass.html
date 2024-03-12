@@ -59,6 +59,13 @@ text-align: center;
   {% endif %}
   </td>
   {% endif %}
+  {% if iso_class.SZlabel %}
+  <td class="center">
+  {% if curve.SZlabel %}
+  {{curve.SZlabel}}
+  {% endif %}
+  </td>
+  {% endif %}
   {% if iso_class.RZBlabel %}
   <td class="center">
   {% if curve.RZBlabel %}
