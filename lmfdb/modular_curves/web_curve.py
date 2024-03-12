@@ -14,6 +14,8 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
+from sage.databases.cremona import cremona_letter_code
+
 coarse_label_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)"
 fine_label_re = r"(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)"
 iso_class_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)"
@@ -349,7 +351,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        friends = [("Isogeny class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+        friends = [("Modular isogeny class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
         if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.curve_label:
@@ -387,7 +389,17 @@ class WebModCurve(WebObj):
             tail.append(
                 (str(D[a]), url_for(".index_Q", **D))
             )
-        tail.append((self.label, url_for(".by_label", label=self.label)))
+        if not self.contains_negative_one:
+            D["level"] = self.coarse_level
+            D["index"] = self.coarse_index
+            D["contains_negative_one"] = "yes"
+            tail.append(
+                (str(D["level"]), url_for(".index_Q", **D))
+            )
+        tail.append((cremona_letter_code(self.coarse_class_num-1), url_for(".by_label", label=self.coarse_class))),
+        tail.append((self.coarse_num, url_for(".by_label", label=self.coarse_label)))
+        if not self.contains_negative_one:
+            tail.append((self.fine_num, url_for(".by_label", label=self.label)))
         return get_bread(tail)
 
     @lazy_attribute
