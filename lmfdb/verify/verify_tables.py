@@ -31,7 +31,7 @@ def find_validated_tables():
 
     for _, _, filenames in os.walk(curdir):
         for f in filenames:
-            root_name = os.path.split(f)[0]
+            root_name = os.path.splitext(f)[0]
             if root_name in db.tablenames:
                 validated_tables.append(root_name)
     return validated_tables
