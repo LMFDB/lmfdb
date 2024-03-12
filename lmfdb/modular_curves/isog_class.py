@@ -82,6 +82,7 @@ class ModCurveIsog_class():
             self.curves.append(db.gps_gl2zhat_fine.lucky(query))
             
         for c in self.curves:
+            c['web_curve'] = WebModCurve(c['label'])
             c['curve_url_lmfdb'] = modcurve_link(c['label'])
             c['curve_label'] = c['label']
             if c['CPlabel'] is not None:

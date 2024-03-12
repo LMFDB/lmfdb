@@ -33,9 +33,11 @@ text-align: center;
     <th>{{ KNOWL('modcurve.other_labels', title='RSZB label') }}</th>
     {% endif %}
     {% if iso_class.Slabel %}
-    <th>{{ KNOWL('modcurve.other_labels', title='S label') }}</th>
+    <th>{{ KNOWL('ec.galois_rep_modell_image', title='S label') }}</th>
     {% endif %}
-    <th>{{KNOWL('modcurve.rational_cusps', title='Rational cusps') }}</th>
+    <th>{{KNOWL('modcurve.cusp_widths', title = 'Cusp widths') }}</th>
+    <th>{{KNOWL('modcurve.cusp_orbits', title = 'Cusp orbits') }}</th>
+    <th>{{KNOWL('modcurve.cusps', title='Rational cusps') }}</th>
     <th>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}</th>
     <th>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}</th>
     <th>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}</th>
@@ -78,10 +80,12 @@ text-align: center;
   {% endif %}
   </td>
   {% endif %}
+  <td class="center">{{ curve.web_curve.cusp_widths_display }}</td>
+  <td class="center">{{ curve.web_curve.cusp_orbits_display }}</td>
   <td class="center">{{ curve.rational_cusps }}</td>
   <td class="center">${{ curve.q_gonality if curve.q_gonality else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$</td>
   <td class="center">${{ curve.qbar_gonality if curve.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$</td>
-  <td class="center">{{ "yes" if curve.cm_discriminants else "none" }}</td>
+  <td class="center"> {{ "yes $\quad(D =$ $%s$)"%(curve.web_curve.cm_discriminant_list) if curve.cm_discriminants else "none" }}</td>
 </tr>
 
 {% endfor %}
