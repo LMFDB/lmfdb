@@ -616,7 +616,7 @@ class ModCurve_download(Downloader):
                               label,
                               lang=lang,
                               title='Data for modular curve with label %s,'%label)
-        
+
 @modcurve_page.route("/download_to_magma/<label>")
 def modcurve_magma_download(label):
     return ModCurve_download().download_modular_curve(label, lang="magma")
