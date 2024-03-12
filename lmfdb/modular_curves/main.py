@@ -1258,12 +1258,6 @@ def modcurve_data(label):
                                             "label")
         labels = [lab for lab in labels]
         label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
-        # modcurve_models
-        label_tables_cols += [(label, "modcurve_models", "modcurve") for label in labels]
-        # modcurve_modelmaps
-        label_tables_cols += [(label, "modcurve_modelmaps", "domain_label") for label in labels]
-        # modcurve_points
-        label_tables_cols += [(label, "modcurve_points", "curve_label") for label in labels]
     else:
         label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
         if label != coarse_label:
