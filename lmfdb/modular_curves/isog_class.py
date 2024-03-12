@@ -102,10 +102,10 @@ class ModCurveIsog_class():
                            ('Genus', prop_int_pretty(self.genus)),
                            ('Cusps', prop_int_pretty(self.cusps))
                            ]
-        
+
         if self.genus > 0 and self.dims:
             self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
-        
+
         self.friends = self.web_curve.friends[1:]
 
         self.title = "Modular isogeny class with LMFDB label " + self.coarse_class
