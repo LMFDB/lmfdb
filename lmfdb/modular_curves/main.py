@@ -53,9 +53,10 @@ from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
-    learnmore_list, LABEL_RE
+    learnmore_list, LABEL_RE, ISO_CLASS_RE
 )
 from lmfdb.modular_curves.upload import ModularCurveUploader
+from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]+\d+")
@@ -124,8 +125,22 @@ def by_label(label):
     if RSZB_LABEL_RE.fullmatch(label):
         label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
-        flash_error("Invalid label %s", label)
-        return redirect(url_for(".index"))
+        if not ISO_CLASS_RE.fullmatch(label):
+            flash_error("Invalid label %s", label)
+            return redirect(url_for(".index"))
+        iso_class = ModCurveIsog_class.by_label(label)
+        return render_template("modcurve_isoclass.html",
+                               iso_class=iso_class,
+                               zip=zip,
+                               name_to_latex=name_to_latex,
+                               properties=iso_class.properties,
+                               friends=iso_class.friends,
+                               bread=iso_class.bread,
+                               title=iso_class.title,
+                               downloads=iso_class.downloads,
+                               KNOWL_ID=f"modcurve.{label}",
+                               learnmore=learnmore_list()
+        )
     curve = WebModCurve(label)
     if curve.is_null():
         flash_error("There is no modular curve %s in the database", label)
