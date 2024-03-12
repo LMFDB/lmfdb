@@ -648,7 +648,7 @@ def modcurve_isogeny_download(request, lang):
     info["columns"] = modcurve_columns
     info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
     return ModCurve_download()(info)
-    
+
 @modcurve_page.route("/download_isogeny_to_magma/")
 def modcurve_isogeny_magma_download():
     return modcurve_isogeny_download(request, lang="magma")
@@ -656,7 +656,7 @@ def modcurve_isogeny_magma_download():
 @modcurve_page.route("/download_isogeny_to_sage/")
 def modcurve_isogeny_sage_download():
     return modcurve_isogeny_download(request, lang="sage")
-    
+
 @modcurve_page.route("/download_isogeny_to_text/")
 def modcurve_isogeny_text_download():
     return modcurve_isogeny_download(request, lang="text")
@@ -1268,6 +1268,6 @@ def modcurve_data(label):
         label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
         # modcurve_points
         label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
-        
+
     labels, tables, label_cols = map(list, zip(*label_tables_cols)) # transpose
     return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread, label_cols=label_cols)
