@@ -264,6 +264,10 @@ class ModCrvTest(LmfdbTest):
             and "Embedded model" in L.get_data(as_text=True)
         )
 
+    def test_low_degree_points_search(self):
+        L = self.tc.get("/ModularCurve/Q/low_degree_points?cusp=no")
+        assert "31752.f1" in L.get_data(as_text=True)
+
     def test_obstructions_search(self):
         L = self.tc.get("/ModularCurve/Q/?has_obstruction=yes")
         assert "3.6.0.a.1" in L.get_data(as_text=True)
