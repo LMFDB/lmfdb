@@ -107,11 +107,6 @@
     {
         "files": "lmfdb/modular_curves/test_modular_curves.py",
         "folders": "modular_curves",
-        "server": "proddb"
-    },
-    {
-        "files": "lmfdb/modular_curves/test_modular_curves.py",
-        "folders": "modular_curves",
         "server": "devmirror"
     }
 ]
