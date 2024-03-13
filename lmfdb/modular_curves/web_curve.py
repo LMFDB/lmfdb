@@ -301,7 +301,6 @@ def formatted_model_data(m):
         #    lines = ["0"] + [l for l in lines if l != "0"]
         # variable order is xyzwtuvrsabcdefghiklmnopqj
         R = PolynomialRing(ZZ, list("xyzwtuvrsabcdefghiklmnopqj"), order = "lex")
-        n = m["number_variables"] 
         eqns = [R(m["equation"][i]) for i in range(len(m["equation"]))]
         lines = ["0"] + [compress_multipolynomial(e).lower() for e in eqns] 
 
