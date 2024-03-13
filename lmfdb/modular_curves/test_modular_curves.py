@@ -309,6 +309,7 @@ class ModCrvTest(LmfdbTest):
     def test_minimally_covered_by_search(self):
         L = self.tc.get("/ModularCurve/Q/?covered_by=16.48.3.a.2")
         assert "8.24.1.b.1" in L.get_data(as_text=True)
+        # Fails due to slow query
         # L = self.tc.get("/ModularCurve/Q/?covered_by=9A11")
         # assert "not the label of a modular curve in the database" in L.get_data(as_text=True)
 
@@ -372,7 +373,7 @@ class ModCrvTest(LmfdbTest):
             ('60.34560.1297-60.bwg.1.1','60.34560.1297-60.bwg.1.1'),
             ('XSP(3)','3.12.0.a.1'),
             ('Xsp%2B%2811%29','11.66.2.a.1'),
-            ('32.1536.41.1175','32.1536.41-32.bz.3.6'),
+            ('32.1536.41.1175','32.1536.41-32.bz.3.6'), 
             ('7B.6.2','7.24.0.b.1'),
             ('4E0-8b','8.12.0.a.1'),
             ('banana','Error: There is no modular curve in the database')
@@ -380,3 +381,125 @@ class ModCrvTest(LmfdbTest):
         for j,l in jump_set:
             L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
             assert l in L.get_data(as_text=True)
+
+    def test_related_objects(self):
+        for url, friends in [
+            (
+                "/ModularCurve/Q/48.4608.161-48.duj.4.7",
+                (
+                    'L-function not available',
+                    'Modular curve 48.2304.161.duj.1',
+                    'Modular curve 48.2304.161.duj.2',
+                    'Modular curve 48.2304.161.duj.3',
+                    'Modular curve 48.2304.161.duj.4',
+                    'Modular curve 48.2304.161.duj.5',
+                    'Modular curve 48.2304.161.duj.6',
+                    'Modular curve 48.2304.161.duj.7',
+                    'Modular curve 48.2304.161.duj.8',
+                    'Modular curve 48.2304.161.dut.1',
+                    'Modular curve 48.2304.161.dut.2',
+                    'Modular curve 48.2304.161.dut.3',
+                    'Modular curve 48.2304.161.dut.4',
+                    'Modular curve 48.2304.161.dut.5',
+                    'Modular curve 48.2304.161.dut.6',
+                    'Modular curve 48.2304.161.dut.7',
+                    'Modular curve 48.2304.161.dut.8'
+                )
+            ),
+            (
+                "/ModularCurve/Q/60.2880.97-60.bol.1.8",
+                (
+                    'L-function not available',
+                    'Modular curve 60.1440.97.bog.1',
+                    'Modular curve 60.1440.97.bol.1'
+                )
+            )
+            ]:
+            data = self.tc.get(url,follow_redirects=True).get_data(as_text=True)
+            for friend in friends:
+                assert friend in data
+
+    def test_download(self):
+        self.tc.get("/ModularCurve/download_to_magma/60.11520.409-60.bwm.1.10")
+        self.tc.get("/ModularCurve/download_to_sage/60.11520.409-60.bwm.1.10")
+        self.tc.get("/ModularCurve/download_to_text/60.11520.409-60.bwm.1.10")
+
+    def test_underlying_data(self):
+        data = self.tc.get("/ModularCurve/data/56.4032.139-56.fq.1.17",follow_redirects=True).get_data(as_text=True)
+        assert(
+            'CPlabel' in data and
+            'Glabel' in data and
+            'RSZBlabel' in data and
+            'RZBlabel' in data and
+            'SZlabel' in data and
+            'Slabel' in data and
+            'all_degree1_points_known' in data and
+            'bad_primes' in data and
+            'canonical_conjugator' in data and
+            'canonical_generators' in data and
+            'cm_discriminants' in data and
+            'coarse_class' in data and
+            'coarse_class_num' in data and
+            'coarse_index' in data and
+            'coarse_label' in data and
+            'coarse_level' in data and
+            'coarse_num' in data and
+            'conductor' in data and
+            'contains_negative_one' in data and
+            'curve_label' in data and
+            'cusp_orbits' in data and
+            'cusp_widths' in data and
+            'cusps' in data and
+            'determinant_label' in data and
+            'dims' in data and
+            'factorization' in data and
+            'fine_num' in data and
+            'generators' in data and
+            'genus' in data and
+            'genus_minus_rank' in data and
+            'has_obstruction' in data and
+            'index' in data and
+            'isogeny_orbits' in data and
+            'kummer_orbits' in data and
+            'label' in data and
+            'lattice_labels' in data and
+            'lattice_x' in data and
+            'level' in data and
+            'level_is_squarefree' in data and
+            'level_radical' in data and
+            'log_conductor' in data and
+            'models' in data and
+            'mults' in data and
+            'name' in data and
+            'newforms' in data and
+            'nu2' in data and
+            'nu3' in data and
+            'num_bad_primes' in data and
+            'num_known_degree1_noncm_points' in data and
+            'num_known_degree1_noncusp_points' in data and
+            'num_known_degree1_points' in data and
+            'obstructions' in data and
+            'orbits' in data and
+            'parents' in data and
+            'parents_conj' in data and
+            'pointless' in data and
+            'power' in data and
+            'psl2index' in data and
+            'psl2label' in data and
+            '56.2016.139.b.1' in data and
+            'psl2level' in data and
+            'q_gonality' in data and
+            'q_gonality_bounds' in data and
+            'qbar_gonality' in data and
+            'qbar_gonality_bounds' in data and
+            'rank' in data and
+            'rational_cusps' in data and
+            'reductions' in data and
+            'scalar_label' in data and
+            'simple' in data and
+            'sl2label' in data and
+            'sl2level' in data and
+            'squarefree' in data and
+            'trace_hash' in data and
+            'traces' in data
+        )
