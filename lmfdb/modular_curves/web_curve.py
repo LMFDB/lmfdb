@@ -296,13 +296,14 @@ def formatted_model_data(m):
 
     else:
         # lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
-        lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]] 
         # if len(lines)>2: #display as 0 = ...
         #    lines = ["0"] + [l for l in lines if l != "0"]
         # variable order is xyzwtuvrsabcdefghiklmnopqj
         R = PolynomialRing(ZZ, list("xyzwtuvrsabcdefghiklmnopqj"), order = "lex")
         n = m["number_variables"] 
         eqns = [compress_multipolynomial(R(m["equation"][i])) for i in range(len(m["equation"]))]
+        lines = ["0"] + [e.lower() for e in eqns] 
+
     return (eqns, lines, m["number_variables"], m["model_type"], m["smooth"])
 
 
