@@ -152,7 +152,6 @@ class ModCrvTest(LmfdbTest):
             and "Rouse, Sutherland, and Zureick-Brown (RSZB) label" in L.get_data(as_text=True)
             and "48.576.21.26699"in L.get_data(as_text=True)
         )
-        
 
     def test_GL2ZNZ_gens(self):
         L = self.tc.get("/ModularCurve/Q/240.288.8-48.jt.2.31",follow_redirects=True)
@@ -373,7 +372,7 @@ class ModCrvTest(LmfdbTest):
             ('60.34560.1297-60.bwg.1.1','60.34560.1297-60.bwg.1.1'),
             ('XSP(3)','3.12.0.a.1'),
             ('Xsp%2B%2811%29','11.66.2.a.1'),
-            ('32.1536.41.1175','32.1536.41-32.bz.3.6'), 
+            ('32.1536.41.1175','32.1536.41-32.bz.3.6'),
             ('7B.6.2','7.24.0.b.1'),
             ('4E0-8b','8.12.0.a.1'),
             ('banana','Error: There is no modular curve in the database')
