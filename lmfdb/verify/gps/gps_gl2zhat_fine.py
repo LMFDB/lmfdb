@@ -1,6 +1,31 @@
 
 from lmfdb.lmfdb_database import db
-from ..verification import TableChecker, overall
+from sage.all import valuation
+from ..verification import TableChecker, overall, slow
+
+# Helper functions for this module
+
+def bkm_const(p,d):
+    # This is the B_0(p,d) constant
+    if p == 2:
+        return 8 + 2 * valuation(d,p)
+    elif p == 3:
+        return 5 + 2 * valuation(d,p)
+    elif (p >= 5) and ((2*d)%(p-1) == 0):
+        return 4 + 2 * valuation(d,p)
+    else:
+        return 2
+
+def bkm_bounds(p, dims, mults):
+
+    # The Brumer-Kramer-Martin bound for an abelian variety
+    # that is isogenous to a product of abelian varieties
+    # of GL(2)-type
+
+    if p == 2:
+        return sum([m * d * (bkm_const(p,d) + 1) for d,m in zip(dims, mults)])
+    else:
+        return sum([m * d * bkm_const(p,d) for d,m in zip(dims, mults)])
 
 class gps_gl2zhat_fine(TableChecker):
     table = db.gps_gl2zhat_fine
@@ -22,3 +47,16 @@ class gps_gl2zhat_fine(TableChecker):
     @overall
     def check_genus_equals_total_newform_dim(self):
         return self.check_array_dotproduct("dims", "mults", "genus", {"newforms": {"$exists": True}})
+
+    @slow(ratio=1, constraint={'conductor':{'$exists':True}, 'contains_negative_one': True },
+          projection=['conductor', 'newforms', 'mults', 'dims'])
+    def check_conductor(self, rec):
+        """
+        Check conductor exponents satisfy the Brumer-Kramer-Martin bounds
+        """
+        for p, cond_exp in rec['conductor']:
+            cond_exp_bound_this_p = bkm_bounds(p, rec['dims'], rec['mults'])
+            if cond_exp > cond_exp_bound_this_p:
+                return False
+
+        return True
