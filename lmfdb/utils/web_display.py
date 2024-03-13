@@ -410,7 +410,7 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     return A
 
 
-def compress_multipolynomial(poly, threshold=100, reverse=True):
+def compress_multipolynomial(poly, threshold=100, decreasing=True):
     R = poly.parent().base_ring()
     if poly == 0:
         return '0'
@@ -418,8 +418,8 @@ def compress_multipolynomial(poly, threshold=100, reverse=True):
     minus = r" - "
     cdots = r" + \cdots "
 
-    monomials = poly.monomials()
-    if not reverse:
+    monomials = sorted(poly.monomials())
+    if decreasing:
         monomials.reverse()
     coefficients = [R(poly.coefficient(m)) for m in monomials]
     # figure out how much space the first and last coefficient take
@@ -473,7 +473,7 @@ def compress_multipolynomial(poly, threshold=100, reverse=True):
     return tset
 
 def compress_polynomial(poly, threshold, decreasing=True):
-    return compress_multipolynomial(poly, threshold, reverse=not decreasing)
+    return compress_multipolynomial(poly, threshold, decreasing=decreasing)
 
 def raw_typeset_int(n, cutoff=80, sides=3, extra=''):
     """
