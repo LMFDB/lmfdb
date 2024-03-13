@@ -92,6 +92,11 @@ class ModCrvTest(LmfdbTest):
         assert "3.3.0.a.1" in L.get_data(as_text=True)
         L = self.tc.get("/ModularCurve/Q/?cm_discriminants=no")
         assert "4.24.0.b.1" in L.get_data(as_text=True)
+        L = self.tc.get("/ModularCurve/Q/?cm_discriminants=-4%2C-16")
+        assert "2.3.0.a.1" in L.get_data(as_text=True)
+        L = self.tc.get("/ModularCurve/Q/?cm_discriminants=-3")
+        assert "3.6.0.b.1" in L.get_data(as_text=True)
+
         # Fails due to slow query
         # L = self.tc.get("/ModularCurve/Q/?cm_discriminants=-27")
         # assert "6.8.0-3.a.1.1" in L.get_data(as_text=True)
@@ -248,6 +253,16 @@ class ModCrvTest(LmfdbTest):
             and "Embedded model" in L.get_data(as_text=True)
             and r"$(1:1:0:0:0)$, $(0:0:0:-1:1)$, $(0:0:1:1:0)$, $(0:0:1/2:1:0)$" in L.get_data(as_text=True)
         )
+        L = self.tc.get("/ModularCurve/Q/37.38.2.a.1",follow_redirects=True)
+        assert (
+            "Elliptic curve" in L.get_data(as_text=True)
+            and "CM" in L.get_data(as_text=True)
+            and "$j$-invariant" in L.get_data(as_text=True)
+            and "$j$-height" in L.get_data(as_text=True)
+            and "Plane model" in L.get_data(as_text=True)
+            and "Weierstrass model" in L.get_data(as_text=True)
+            and "Embedded model" in L.get_data(as_text=True)
+        )
 
     def test_obstructions_search(self):
         L = self.tc.get("/ModularCurve/Q/?has_obstruction=yes")
@@ -294,6 +309,8 @@ class ModCrvTest(LmfdbTest):
     def test_minimally_covered_by_search(self):
         L = self.tc.get("/ModularCurve/Q/?covered_by=16.48.3.a.2")
         assert "8.24.1.b.1" in L.get_data(as_text=True)
+        # L = self.tc.get("/ModularCurve/Q/?covered_by=9A11")
+        # assert "not the label of a modular curve in the database" in L.get_data(as_text=True)
 
     def test_minimally_covered_by(self):
         L = self.tc.get("/ModularCurve/Q/40.2304.65-40.mm.4.13",follow_redirects=True)
@@ -336,3 +353,30 @@ class ModCrvTest(LmfdbTest):
             L = self.tc.get(url)
             assert crv in L.get_data(as_text=True)
 
+    def test_image(self):
+        L = self.tc.get("/ModularCurve/Q/280.288.17.cdv.1", follow_redirects=True)
+        assert "image/png" in L.get_data(as_text=True)
+        assert "Picture description" in L.get_data(as_text=True)
+
+    def test_interesting(self):
+        L = self.tc.get("/ModularCurve/interesting")
+        assert "Fermat quartic" in L.get_data(as_text=True)
+
+    def test_random(self):
+        for _ in range(5):
+            L = self.tc.get("/ModularCurve/Q/random", follow_redirects=True)
+            assert "Label" in L.get_data(as_text=True)
+
+    def test_jump(self):
+        jump_set = [
+            ('60.34560.1297-60.bwg.1.1','60.34560.1297-60.bwg.1.1'),
+            ('XSP(3)','3.12.0.a.1'),
+            ('Xsp%2B%2811%29','11.66.2.a.1'),
+            ('32.1536.41.1175','32.1536.41-32.bz.3.6'),
+            ('7B.6.2','7.24.0.b.1'),
+            ('4E0-8b','8.12.0.a.1'),
+            ('banana','Error: There is no modular curve in the database')
+        ]
+        for j,l in jump_set:
+            L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
+            assert l in L.get_data(as_text=True)

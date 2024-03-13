@@ -58,6 +58,8 @@ from lmfdb.modular_curves.web_curve import (
 from lmfdb.modular_curves.upload import ModularCurveUploader
 from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
+from sage.databases.cremona import class_to_int
+
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]+\d+")
 CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z]+(\d+)")
@@ -628,6 +630,36 @@ def modcurve_sage_download(label):
 @modcurve_page.route("/download_to_text/<label>")
 def modcurve_text_download(label):
     return ModCurve_download().download_modular_curve(label, lang="text")
+
+# !!! TODO : currently there is a lot of overlapping with code creating the isogeny class. Should solve this more generally by refactoring the search and download
+def modcurve_isogeny_download(request, lang):
+    query_dict = to_dict(request.args)
+    print("query_dict", query_dict)
+    ncurves = db.gps_gl2zhat_fine.count(query_dict)
+    info = {}
+    info["Submit"] = lang
+    info["query"] = str(query_dict)
+    print("info query = ", info["query"])
+    info["results"] = []
+    for i in range(ncurves):
+            query_dict.update({'coarse_num' : i+1})
+            info["results"].append(db.gps_gl2zhat_fine.lucky(query_dict))
+    info["search_table"] = db.gps_gl2zhat_fine
+    info["columns"] = modcurve_columns
+    info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
+    return ModCurve_download()(info)
+
+@modcurve_page.route("/download_isogeny_to_magma/")
+def modcurve_isogeny_magma_download():
+    return modcurve_isogeny_download(request, lang="magma")
+
+@modcurve_page.route("/download_isogeny_to_sage/")
+def modcurve_isogeny_sage_download():
+    return modcurve_isogeny_download(request, lang="sage")
+
+@modcurve_page.route("/download_isogeny_to_text/")
+def modcurve_isogeny_text_download():
+    return modcurve_isogeny_download(request, lang="text")
 
 @search_wrap(
     table=db.gps_gl2zhat_fine,
@@ -1208,24 +1240,34 @@ def labels_page():
     return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+# !! TODO - overlapping code between the two options coming from different merges
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
     coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
-        return abort(404)
+        if not ISO_CLASS_RE.fullmatch(label):
+            return abort(404)
+        N, i, g, iso = label.split(".")
+        iso_num = class_to_int(iso)+1
+        labels = db.gps_gl2zhat_fine.search({"coarse_level" : N,
+                                             "coarse_index" : i,
+                                             "genus" : g,
+                                             "coarse_class_num" : iso_num,
+                                             "contains_negative_one" : "yes"},
+                                            "label")
+        labels = [lab for lab in labels]
+        label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
+    else:
+        label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
+        if label != coarse_label:
+            label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
+        # modcurve_models
+        label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
+        # modcurve_modelmaps
+        label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
+        # modcurve_points
+        label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
 
-    label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
-    if label != coarse_label:
-        label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
-    # modcurve_models
-    label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
-    # modcurve_modelmaps
-    label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
-    # modcurve_points
-    label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
-
-    print(label_tables_cols)
     labels, tables, label_cols = map(list, zip(*label_tables_cols)) # transpose
-
     return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread, label_cols=label_cols)
