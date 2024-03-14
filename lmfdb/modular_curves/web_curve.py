@@ -169,6 +169,7 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model_html(self, m):
+    print("foobar")
 #this is only for curves with models
 #but not curves with self.has_more_models
 #and also not for genus 0 cuves with points
@@ -300,9 +301,8 @@ def formatted_model_data(m):
         #    lines = ["0"] + [l for l in lines if l != "0"]
         # variable order is xyzwtuvrsabcdefghiklmnopqj
         R = PolynomialRing(ZZ, list("xyzwtuvrsabcdefghiklmnopqj"), order = "lex")
-        n = m["number_variables"] 
-        eqns = [compress_multipolynomial(R(m["equation"][i])) for i in range(len(m["equation"]))]
-        lines = ["0"] + [e.lower() for e in eqns] 
+        eqns = [R(m["equation"][i]) for i in range(len(m["equation"]))]
+        lines = ["0"] + [compress_multipolynomial(e).lower() for e in eqns] 
 
     return (eqns, lines, m["number_variables"], m["model_type"], m["smooth"])
 
