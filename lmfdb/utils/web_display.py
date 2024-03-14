@@ -419,7 +419,7 @@ def compress_multipolynomial(poly, threshold=100, decreasing=True):
     monomials = sorted(poly.monomials())
     if decreasing:
         monomials.reverse()
-    coefficients = [R(poly.coefficient(m)) for m in monomials]
+    coefficients = [poly.monomial_coefficient(m) for m in monomials]
     # figure out how much space the first and last coefficient take
 
     last_coeff = coefficients[-1]
