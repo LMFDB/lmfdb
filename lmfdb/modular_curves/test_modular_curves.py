@@ -391,6 +391,7 @@ class ModCrvTest(LmfdbTest):
             (
                 "/ModularCurve/Q/48.4608.161-48.duj.4.7",
                 (
+                    'Modular isogeny class 48.2304.161.duj',
                     'L-function not available',
                     'Modular curve 48.2304.161.duj.1',
                     'Modular curve 48.2304.161.duj.2',
@@ -413,6 +414,7 @@ class ModCrvTest(LmfdbTest):
             (
                 "/ModularCurve/Q/60.2880.97-60.bol.1.8",
                 (
+                    'Modular isogeny class 60.1440.97.bol',
                     'L-function not available',
                     'Modular curve 60.1440.97.bog.1',
                     'Modular curve 60.1440.97.bol.1'
