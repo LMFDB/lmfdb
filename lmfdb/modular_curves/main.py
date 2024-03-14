@@ -55,6 +55,7 @@ from lmfdb.modular_curves.web_curve import (
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
     learnmore_list, LABEL_RE, ISO_CLASS_RE
 )
+from lmfdb.modular_curves.family import ModCurveFamily
 from lmfdb.modular_curves.upload import ModularCurveUploader
 from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
@@ -162,6 +163,26 @@ def by_label(label):
         downloads=curve.downloads,
         KNOWL_ID=f"modcurve.{label}",
         learnmore=learnmore_list_add(*learnmore_mcurve_pic)
+    )
+
+@modcurve_page.route("/Q/family/<name>")
+def family_page(name):
+    try:
+        family = ModCurveFamily(name)
+    except ValueError:
+        flash_error(f"There is no family with name {name}")
+        return redirect(url_for(".index"))
+    return render_template(
+        "modcurve_family.html",
+        family=family,
+        properties=family.properties,
+        bread=family.bread,
+        title=family.title,
+        learnmore=learnmore_list(),
+
+        # For strict handling
+        titletag="",
+        ALPHA="",
     )
 
 @modcurve_page.route("/Q/diagram/<label>")
