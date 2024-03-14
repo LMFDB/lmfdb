@@ -1,7 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>{{ family.moduli_description }}</p>
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
 <table>
   <tr>
@@ -21,7 +20,7 @@
     <tr>
       <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td>
       {# TODO : Figure out how to modify this #}
-      <td> ${{ family.genus }} = 1 + \frac{ i(\Gamma_H) }{12} - \frac{ \nu_2(\Gamma_H) }{4} - \frac{ \nu_3(\Gamma_H) }{3} - \frac{ \nu_\infty(\Gamma_H) }{2}$</td>
+      <td> ${{ family.genus }} = 1 + \frac{ {{ family.psl2index }} }{12} - \frac{ {{ family.nu2 }} }{4} - \frac{ {{ family.nu3 }} }{3} - \frac{ {{ family.cusps }} }{2}$</td>
     </tr>
     <tr>
       <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
@@ -34,6 +33,9 @@
     <tr>
       <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td>
       <td> {{ family.elliptic_points }} </td>
+    </tr>
+    <tr>
+      <td>{{ "Moduli description:" }}</td><td>{{ family.moduli_description }}</td>
     </tr>
     {# What should go here?
   {% if family.genus > 0 %}
@@ -64,4 +66,5 @@
   </tr>
   #}
 </table>
+
 {% endblock %}
