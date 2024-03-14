@@ -509,3 +509,18 @@ class ModCrvTest(LmfdbTest):
             and 'trace_hash' in data
             and 'traces' in data
         )
+
+    def test_isogeny_class(self):
+        data = self.tc.get("/ModularCurve/Q/40.720.49.df", follow_redirects=True).get_data(as_text=True)
+        assert(
+            'Cusp widths' in data and
+            'Cusp orbits' in data and
+            'Level' in data and
+            'Elliptic points' in data and
+            'Number of curves' in data and
+            'Genus' in data and
+            '120.144.5.egv.2' in data and
+            r'$2^{4}\cdot4^{2}$' in data and
+            '20.2.a.a' in data and
+            '40.720.49.1139' in data    
+        )
