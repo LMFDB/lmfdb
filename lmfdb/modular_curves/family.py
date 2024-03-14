@@ -29,6 +29,7 @@ class X0N(ModCurveFamily_base):
     cusps = "N/2"
     rational_cusps = "1"
     moduli_description = r"$X_0(N)$ is the modular curve $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{pmatrix} \ast & \ast \\ 0 & \ast \end{pmatrix} \subset \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,C)$, where $E$ is an elliptic curve over $k$, and $C$ is a $\Gal_k$-stable cyclic subgroup of $E[N](\overline{k})$ of order $N$ that is the kernel of a rational isogeny $E\to E'$ of degree $N$."
+    genus_formula = r"The genus of $X_0(N)$ is blah"
 
     @lazy_attribute
     def cusps_display(self):
@@ -60,8 +61,8 @@ class X1N(ModCurveFamily_base):
     nu3 = "0"
     cusps = "N/2"
     rational_cusps = "1"
-    moduli_description = r"$X_0(N)$ is the modular curve $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{pmatrix} \ast & \ast \\ 0 & \ast \end{pmatrix} \subset \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,C)$, where $E$ is an elliptic curve over $k$, and $C$ is a $\Gal_k$-stable cyclic subgroup of $E[N](\overline{k})$ of order $N$ that is the kernel of a rational isogeny $E\to E'$ of degree $N$."
-
+    moduli_description = r"$X_1(N)$ is the modular curve $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{pmatrix} 1 & * \\ 0 & * \end{pmatrix} < \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,P)$, where $E$ is an elliptic curve over $k$, and $P \in EN$ is a point of exact order $N$."
+    genus_formula = r"The genus of $X_1(N)$ is blah"
 
     @lazy_attribute
     def cusps_display(self):
