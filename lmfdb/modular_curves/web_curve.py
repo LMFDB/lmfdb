@@ -289,9 +289,8 @@ def formatted_model_data(m):
 
         assert m["number_variables"] == 3
         assert len(m["equation"]) == 1
-        R3 = PolynomialRing(ZZ, 3, "x,y,z", order ="lex")
-        #lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]] 
-        eqns = [R3(m["equation"][0])]
+        fqq = PolynomialRing(QQ, 3, "x,y,z", order ="lex")(m["equation"][0])
+        eqns = [(fqq*fqq.denominator()).change_ring(ZZ)]
         f = compress_multipolynomial(eqns[0])
         lines = ["0"] + [f.lower()]
 

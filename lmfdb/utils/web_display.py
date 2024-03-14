@@ -410,6 +410,7 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
 
 def compress_multipolynomial(poly, threshold=100, decreasing=True):
     R = poly.parent().base_ring()
+    assert R is ZZ
     if poly == 0:
         return '0'
     plus = r" + "
