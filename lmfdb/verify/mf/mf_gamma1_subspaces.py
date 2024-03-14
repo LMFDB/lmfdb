@@ -1,7 +1,7 @@
 
 from lmfdb import db
 from .mf import SubspacesChecker
-from .verification import overall
+from ..verification import overall
 
 class mf_gamma1_subspaces(SubspacesChecker):
     table = db.mf_gamma1_subspaces
