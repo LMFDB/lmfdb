@@ -169,7 +169,6 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model_html(self, m):
-    print("foobar")
 #this is only for curves with models
 #but not curves with self.has_more_models
 #and also not for genus 0 cuves with points
