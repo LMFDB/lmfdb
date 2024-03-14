@@ -176,19 +176,19 @@ def formatted_model_html(self, m):
 #this is only for curves with models
 #but not curves with self.has_more_models
 #and also not for genus 0 cuves with points
-#we need to somehow give this info 
+#we need to somehow give this info
     eqn_threshold = 3 #this displays threshold - 1 lines to start
     eqns, lines, nb_var, typ, smooth = formatted_model_data(m)
     def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
             title =  display_knowl('ag.canonical_model', 'Canonical model') +\
-             r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,) 
+             r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
             if len(lines) > eqn_threshold:
                 title += " defined by %d equations" % (len(lines) - 1,)
             return title
         elif typ == 2:
             #smooth is true, false, or none
-            if smooth == True: 
+            if smooth == True:
                 return display_knowl('modcurve.plane_model', 'Smooth plane model')+\
                 " Smooth plane model"
             elif smooth == False:
@@ -230,7 +230,7 @@ def formatted_model_html(self, m):
                     table += '<tr><td></td><td style="padding: 5px 0px;">$=$</td>' +\
                     f'<td> ${line}$</td>' +\
                     '</tr>'
-                table += '<tr><td></td><td style="padding: 5px 0px;">$=$</td><td>$\cdots$</td> </tr>'
+                table += r'<tr><td></td><td style="padding: 5px 0px;">$=$</td><td>$\cdots$</td> </tr>'
         elif typ == 7: #geometric weierstrass, 2 eqns
             table += '<tr>' +\
             f'<td> ${lines[2]}$</td>' +\
@@ -240,7 +240,7 @@ def formatted_model_html(self, m):
         return table + '</table>'
     title = title_of_model(self, lines, nb_var, typ, smooth)
     table = equation_of_model(lines, typ)
-    table = raw_typeset(eqns,table) 
+    table = raw_typeset(eqns,table)
     return "<p>" + title + "</p>" + "\n" + table
 
 
@@ -270,7 +270,7 @@ def formatted_model_data(m):
     elif m["model_type"] == 7: #geometric weierstrass
         assert m["number_variables"] == 4
         assert len(m["equation"]) == 2
-        R3 = PolynomialRing(ZZ, 3, "x,y,z", order = "lex")
+        R3 = PolynomialRing(ZZ, 3, "x,y,z", order="lex")
         R4 = PolynomialRing(R3, "w")
         w = R4.gen()
         if "w^2" not in m["equation"][1]:
@@ -292,7 +292,7 @@ def formatted_model_data(m):
 
         assert m["number_variables"] == 3
         assert len(m["equation"]) == 1
-        fqq = PolynomialRing(QQ, 3, "x,y,z", order ="lex")(m["equation"][0])
+        fqq = PolynomialRing(QQ, 3, "x,y,z", order="lex")(m["equation"][0])
         eqns = [(fqq*fqq.denominator()).change_ring(ZZ)]
         f = compress_multipolynomial(eqns[0])
         lines = ["0"] + [f.lower()]
@@ -302,9 +302,9 @@ def formatted_model_data(m):
         # if len(lines)>2: #display as 0 = ...
         #    lines = ["0"] + [l for l in lines if l != "0"]
         # variable order is xyzwtuvrsabcdefghiklmnopqj
-        R = PolynomialRing(ZZ, list("xyzwtuvrsabcdefghiklmnopqj"), order = "lex")
+        R = PolynomialRing(ZZ, list("xyzwtuvrsabcdefghiklmnopqj"), order="lex")
         eqns = [R(m["equation"][i]) for i in range(len(m["equation"]))]
-        lines = ["0"] + [compress_multipolynomial(e).lower() for e in eqns] 
+        lines = ["0"] + [compress_multipolynomial(e).lower() for e in eqns]
 
     return (eqns, lines, m["number_variables"], m["model_type"], m["smooth"])
 

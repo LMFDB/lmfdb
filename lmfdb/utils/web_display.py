@@ -444,7 +444,6 @@ def compress_multipolynomial(poly, threshold=100, decreasing=True):
             tset += cdots
             break
 
-
         short, shortened = compress_int(abs(c))
         if shortened and tset:
             tset += cdots
