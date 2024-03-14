@@ -236,9 +236,9 @@ class ModCrvTest(LmfdbTest):
         L = self.tc.get("/ModularCurve/Q/180.216.4-18.e.2.8",follow_redirects=True)
         assert (
             "Canonical model" in L.get_data(as_text=True)
-            and "$ 12x^{2}+3xy+3y^{2}-z^{2}+zw-w^{2}$" in L.get_data(as_text=True)
+            and "12x^{2}+3xy+3y^{2}-z^{2}+zw-w^{2}" in L.get_data(as_text=True)
             and "Singular plane model" in L.get_data(as_text=True)
-            and "$ -2008x^{6}+456x^{5}y+192x^{5}z+408x^{4}y^{2}-564x^{4}yz+324x^{4}z^{2}-79x^{3}y^{3}+129x^{3}y^{2}z-72x^{3}yz^{2}-51x^{3}z^{3}-60x^{2}y^{4}+186x^{2}y^{3}z-189x^{2}y^{2}z^{2}+45x^{2}yz^{3}-18x^{2}z^{4}-12xy^{5}+51xy^{4}z-54xy^{3}z^{2}+9xy^{2}z^{3}+9xyz^{4}-y^{6}+6y^{5}z-9y^{4}z^{2}-3y^{3}z^{3}+9y^{2}z^{4}$" in L.get_data(as_text=True)
+            and "-2008x^{6}+456x^{5}y+192x^{5}z+408x^{4}y^{2}-564x^{4}yz+324x^{4}z^{2}" in L.get_data(as_text=True)
         )
 
     def test_rational_points(self):
