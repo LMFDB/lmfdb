@@ -25,7 +25,7 @@ class X0N(ModCurveFamily_base):
     sl2level = "N"
     index = "N+1"
     psl2index = "N^2+1"
-    genus = "1/N"
+    genus = "1 + "
     nu2 = "0"
     nu3 = "0"
     cusps = "N/2"
