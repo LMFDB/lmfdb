@@ -5,7 +5,7 @@ from lmfdb.modular_curves.web_curve import get_bread
 def ModCurveFamily(name):
     if name == "X0N":
         return X0N()
-    else if name == "X1N":
+    elif name == "X1N":
         return X1N()
     raise ValueError("Invalid name")
 
