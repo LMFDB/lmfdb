@@ -2,7 +2,6 @@
 {% block content %}
 
 <p>{{ family.moduli_description }}</p>
-<p>{{ family.genus_formula }}</p>
 
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
 <table>
@@ -22,6 +21,9 @@
     </tr>
   #}
     <tr>
+      <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td>{{ family.genus_formula }}</td>
+    </tr>
+    <tr>
       <td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:<td>${{ family.psl2index }}$</td></tr>
   {#  <tr>
       <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td>
@@ -40,14 +42,6 @@
     <tr>
       <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
       <td> {{ family.cusps_display }}</td><td style="width:20px;"></td>
-    </tr>
-    <tr>
-      <td>Hyperelliptic curves:</td>
-      <td>{{ family.hypell_description|safe }}</td>
-    </tr>
-    <tr>
-      <td>Bielliptic curves:</td>
-      <td>{{ family.biell_description|safe }}</td>
     </tr>
         {# <tr>
       <td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td>
@@ -90,6 +84,10 @@
   </tr>
   #}
 </table>
+
+<p>Hyperelliptic curves: {{ family.hypell_description|safe }}</p>
+<p>Bielliptic curves: {{ family.biell_description|safe }}</p>
+
 
 
 {{ info.columns.above_results | safe }}
