@@ -6,47 +6,54 @@
 
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
 <table>
-  <tr>
-    <td>{{ KNOWL("modcurve.level", "Level") }}:</td>
-    <td> $N$ </td><td style="width:20px;"></td> 
-    <td>{{ KNOWL("modcurve.sl2level", "$\SL_2$-level") }}:</td>
-    <td>${{ family.sl2level }}$</td><td style="width:60px;"></td>
+  {# <tr> #}
+  {#   <td>{{ KNOWL("modcurve.level", "Level") }}:</td> #}
+  {#   <td> $N$ </td><td style="width:20px;"></td> #}
+  {#   <td>{{ KNOWL("modcurve.sl2level", "$\SL_2$-level") }}:</td> #}
+  {#   <td>${{ family.sl2level }}$</td><td style="width:60px;"></td> #}
     {# Unclear what should happen here.
     {% if family.genus > 0 %}
       <td>{{ KNOWL("modcurve.newform_level", "Newform level:") }}</td>
       <td>${{ family.newform_level }}$</td>
       {% endif %}</tr>
     #}
-    <tr>
+ {#  <tr>
       <td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ family.index }}$ </td><td style="width:30px;"></td>
     </tr>
+  #}
     <tr>
       <td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:<td>${{ family.psl2index }}$</td></tr>
-    <tr>
+  {#  <tr>
       <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td>
-      {# TODO : Figure out how to modify this #}
-      {#  <td> ${{ family.genus }} = 1 + \frac{ {{ family.psl2index }} }{12} - \frac{ {{ family.nu2 }} }{4} - \frac{ {{ family.nu3 }} }{3} - \frac{ {{ family.cusps }} }{2}$</td> #}
+      <td> ${{ family.genus }} = 1 + \frac{ {{ family.psl2index }} }{12} - \frac{ {{ family.nu2 }} }{4} - \frac{ {{ family.nu3 }} }{3} - \frac{ {{ family.cusps }} }{2}$</td>
       <td> ${{ family.genus }} = 1 + \frac{i\Gamma_0(N)}{12} - \frac{\nu_2(\Gamma_0(N))}{4} - \frac{\nu_3(\Gamma_0(N))}{3} - \frac{\nu_\infty(\Gamma_0(N))}{2}$</td>
     </tr>
+    #}
     <tr>
-      <td> {{ "nu2" }}:</td><td>{{ family.nu2 }}</td>
+      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 2:</td>
+      <td>{{ family.nu2 }}</td>
     </tr>
     <tr>
-      <td> {{ "nu3" }}:</td><td>{{ family.nu3 }}</td>
+      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 3:</td>
+      <td>{{ family.nu3 }}</td>
     </tr>
     <tr>
       <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
       <td> {{ family.cusps_display }}</td><td style="width:20px;"></td>
+    </tr>
+    {# <tr>
       <td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td>
       <td>{{ family.cusp_widths_display }}</td><td style="width:60px;"></td>
       <td>{{ KNOWL("modcurve.cusp_orbits", "Cusp orbits") }}</td>
       <td>{{ family.cusp_orbits_display }}</td>
     </tr>
-    <tr>
+    #}
+  {#  <tr>
       <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td>
       <td> {{ family.elliptic_points }} </td>
     </tr>
-    {# What should go here?
+  #}  
+  {# What should go here?
   {% if family.genus > 0 %}
       <tr>
         <td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td>
@@ -63,11 +70,11 @@
     <td>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}:</td>
     <td> ${{ family.qbar_gonality if family.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$ </td>
   </tr>
-  #}
   <tr>
     <td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td>
     <td> ${{ family.rational_cusps }}$ </td>
   </tr>
+  #}
   {# This might be possible, but let's comment it out for now.
   <tr>
     <td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td>
