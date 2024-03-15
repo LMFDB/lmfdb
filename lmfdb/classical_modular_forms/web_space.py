@@ -256,7 +256,7 @@ def QDimensionNewEisensteinForms(chi, k):
     return D*chi['degree']
 
 
-def make_newspace_data(level, char_data, subspace_data=None, k=2):
+def make_newspace_data(level, char_data, k=2):
     # Makes the data needed for creating newspace pages in cases without a corresponding entry in mf_newspaces
     data = {}
     data['has_mf_newspaces_entry'] = False
@@ -283,38 +283,41 @@ def make_newspace_data(level, char_data, subspace_data=None, k=2):
     data['level_radical'] = prod(data['level_primes'])
     data['mf_dim'] = data['cusp_dim'] + data['eis_dim']
     data['mf_new_dim'] = data['dim'] + data['eis_new_dim']
-    data['prim_orbit_index'] = class_to_int(char_data['primitive_label'].split('.')[-1])
+    data['prim_orbit_index'] = class_to_int(char_data['primitive_label'].split('.')[-1]) + 1
+    # To justify the +1 above compare e.g.
+    # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
+    # https://www.lmfdb.org/Character/Dirichlet/data/3333.dn 'primitive_label': '1111.bx' and cremona.class_to_int('bx') == 49
     data['relative_dim'] = data['dim']/data['char_degree']
     data['sturm_bound'] = sturm_bound(level, k)
     data['weight'] = k
     data['weight_parity'] = (-1)**k
-
-    # If subspace_data is the data from a mf_gamma1_subspaces query, this mimics enough of the data from a mf_subspaces query to generate the oldspace decomposition on a newspace page
-    subspaces = []
-    if subspace_data:
-        sub_level_list = [subspace['sub_level'] for subspace in subspace_data if (subspace['sub_level'] % char_data['conductor'] == 0)]
-        sub_chars = list(db.char_orbits.search({'modulus':{'$in':sub_level_list}, 'primitive_label':char_data['primitive_label']}))
-        sub_chars = {char['modulus'] : char for char in sub_chars}
-        for subspace in subspace_data:
-            if (subspace['sub_level'] % char_data['conductor']) == 0:
-                entry = {}
-                entry['char_orbit_index'] = char_data['orbit_index']
-                entry['char_orbit_label'] = char_data['label'].split('.')[-1]
-                entry['conrey_index'] = int(char_data['first_label'].split('.')[-1])
-                entry['label'] = str(level) + '.' + str(k) + '.' + entry['char_orbit_label']
-                entry['level'] = level
-                entry['sub_char_orbit_index'] = sub_chars[subspace['sub_level']]['orbit_index']
-                entry['sub_char_orbit_label'] = sub_chars[subspace['sub_level']]['label'].split('.')[-1]
-                entry['sub_conrey_index'] = int(sub_chars[subspace['sub_level']]['first_label'].split('.')[-1])
-                entry['sub_level'] = subspace['sub_level']
-                entry['sub_label'] = str(entry['sub_level']) + '.' + str(k) + '.' + entry['sub_char_orbit_label']
-                entry['sub_mult'] = subspace['sub_mult']
-                entry['weight'] = k
-                subspaces.append(entry)
-    data['subspaces'] = subspaces
-
     return data
 
+def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
+    # This creates enough of data to generate the oldspace decomposition on a newspace page
+    level = int(newspace_label.split('.')[0])
+    weight = int(newspace_label.split('.')[1])  
+    prim_orbit_label = str(char_conductor) + '.' + cremona_letter_code(prim_orbit_index - 1)
+    # To justify the -1 above compare e.g.
+    # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
+    # https://www.lmfdb.org/Character/Dirichlet/data/3333.dn 'primitive_label': '1111.bx' and cremona.class_to_int('bx') == 49
+    sub_level_list = [sub_level for sub_level in ZZ(level).divisors() if (sub_level % char_conductor == 0) and sub_level != level]
+    sub_chars = list(db.char_orbits.search({'modulus':{'$in':sub_level_list}, 'primitive_label':prim_orbit_label}))
+    sub_chars = {char['modulus'] : char for char in sub_chars}
+    
+    oldspaces = []
+    for sub_level in sub_level_list:
+        entry = {}
+        entry['sub_level'] = sub_level
+        entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit_index']
+        entry['sub_conrey_index'] = int(sub_chars[sub_level]['first_label'].split('.')[-1])
+        entry['sub_mult'] = len(ZZ(level/sub_level).divisors())
+        if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
+            # only include subspaces with cusp forms
+            # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
+            oldspaces.append(entry)
+    
+    return oldspaces
 
 class WebNewformSpace():
     def __init__(self, data):
@@ -328,11 +331,7 @@ class WebNewformSpace():
         self.char_conrey = self.conrey_index
         self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = list(db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_index', 'sub_mult']))
-        if not oldspaces:
-            oldspaces = data.get('subspaces',[])
-            if oldspaces:
-                oldspaces = [old for old in oldspaces if old['sub_level'] != self.level]
+        oldspaces = make_oldspace_data(self.label, self.char_conductor, self.prim_orbit_index)
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
@@ -402,8 +401,7 @@ class WebNewformSpace():
             char_data = db.char_orbits.lucky({'modulus':level, 'label':char_label})
             if not char_data:
                 raise ValueError("Space %s not found" % label)
-            subspace_data = list(db.mf_gamma1_subspaces.search({'level':level, 'weight':weight}, ['sub_level','sub_mult']))
-            data = make_newspace_data(level, char_data, subspace_data=subspace_data)
+            data = make_newspace_data(level, char_data)
         return WebNewformSpace(data)
 
     @property
@@ -490,7 +488,8 @@ class WebGamma1Space():
         # By default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
-        self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
+        self.oldspaces = [(old['sub_level'], old['sub_mult']) for old in oldspaces]
+        self.oldspaces.sort()
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
@@ -521,7 +520,9 @@ class WebGamma1Space():
                     space['char_orbit_label'] = char['label'].split('.')[-1]
                     space['char_degree'] = char['degree']
                     space['dim'] = newspace_dims_by_label[char['label']]
-                    space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a') # This is used in self.decomposition()
+                    space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a')
+                    # generate_link is used in self.decomposition() as a marker of pages which can be generated dynamically.
+                    # len(newspaces) == len([dim for dim in self.newspace_dims if dim != 0]) when there is an associated database entry, so the line above doesn't come up in those cases.
                     self.decomp.append((space, None))
                     self.has_uncomputed_char = True
         self.plot = db.mf_gamma1_portraits.lookup(self.label, projection="portrait")
