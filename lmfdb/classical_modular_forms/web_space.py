@@ -293,7 +293,6 @@ def make_newspace_data(level, char_data, k=2):
     data['weight_parity'] = (-1)**k
     return data
 
-
 def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     # This creates enough of data to generate the oldspace decomposition on a newspace page
     level = int(newspace_label.split('.')[0])
@@ -321,7 +320,6 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
             oldspaces.append(entry)
     
     return oldspaces
-
 
 class WebNewformSpace():
     def __init__(self, data):

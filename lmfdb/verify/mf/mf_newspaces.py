@@ -6,7 +6,7 @@ from sage.all import (
 
 from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker, check_analytic_conductor
-from .verification import overall, overall_long, fast, slow, accumulate_failures
+from ..verification import overall, overall_long, fast, slow, accumulate_failures
 
 
 @cached_function
