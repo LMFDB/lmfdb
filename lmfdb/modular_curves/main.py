@@ -244,7 +244,7 @@ def url_for_CP_label(label):
     return "https://mathstats.uncg.edu/sites/pauli/congruence/csg" + genus + ".html#group" + label
 
 def modcurve_lmfdb_label(label):
-    if LABEL_RE.fullmatch(label):
+    if LABEL_RE.fullmatch(label) or ISO_CLASS_RE.fullmatch(label):
         label_type = "label"
         lmfdb_label = label
     elif RSZB_LABEL_RE.fullmatch(label):
@@ -746,7 +746,7 @@ def modcurve_search(info, query):
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.a.1"
-    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
+    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.a, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
