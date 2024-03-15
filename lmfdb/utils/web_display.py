@@ -56,7 +56,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     </span>
     <span class="raw-tset-toggle" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
-        class="tset-icon"
+        class="tset-icon">
     </span>
 </span>"""
     return out
@@ -368,7 +368,6 @@ def web_latex_split_on_pm(x):
     return A
     # return web_latex_split_on(x)
 
-
 def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     r"""
     Convert input into a latex string, with splits into separate latex strings
@@ -409,35 +408,39 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     A = A.replace(r'+\) \(O', r'+O')
     return A
 
-
-def compress_polynomial(poly, threshold, decreasing=True):
+def compress_multipolynomial(poly, threshold=100, decreasing=True):
+    R = poly.parent().base_ring()
+    assert R is ZZ
     if poly == 0:
         return '0'
     plus = r" + "
     minus = r" - "
-    var = poly.parent().gen()
-
-    d = 0 if decreasing else poly.degree()
-    assert poly[d] != 0 or decreasing
-    while poly[d]  == 0: # we only enter the loop if decreasing=True
-        d += 1
-    lastc = poly[d]
     cdots = r" + \cdots "
-    tsetend = plus if lastc > 0 else minus
-    short, shortened = compress_int(abs(lastc))
-    if abs(lastc) != 1 or d == 0:
-        tsetend += short
 
+    monomials = sorted(poly.monomials())
+    if decreasing:
+        monomials.reverse()
+    coefficients = [poly.monomial_coefficient(m) for m in monomials]
+    # figure out how much space the first and last coefficient take
+
+    last_coeff = coefficients[-1]
+    last_monomial = monomials[-1]
+    # tsetend is the typeset code coming from the last term
+    tsetend = plus if last_coeff > 0 else minus
+    if abs(last_coeff) != 1 or last_monomial == 1:
+        short, shortened = compress_int(abs(last_coeff))
+        tsetend += short
     monomial_length = 0
-    if d > 0:
-        monomial = latex(var**d)
+    if last_monomial != 1:
+        monomial = latex(last_monomial)
         tsetend += monomial
         monomial_length += len(monomial)
 
     tset = ""
-    for n in (reversed(range(d + 1, poly.degree() + 1)) if decreasing else range(d)):
-        c = poly[n]
-        if tset and len(tset) + len(tsetend) - monomial_length > threshold:
+    for c, m in zip(coefficients[:-1], monomials[:-1]):
+        #if tset and len(tset) + len(tsetend) - monomial_length > threshold:
+        if tset and len(tset) + len(tsetend) > threshold:
+
             tset += cdots
             break
 
@@ -457,10 +460,11 @@ def compress_polynomial(poly, threshold, decreasing=True):
         if abs(c) != 1:
             tset += compress_int(abs(c))[0] + " "
 
-        if n >= 1:
-            monomial = latex(var**n)
-        else:
+        if m == 1:
             monomial = "1" if abs(c) == 1 else ""
+        else:
+            monomial = latex(m)
+
         monomial_length += len(monomial)
         tset += monomial
 
@@ -469,13 +473,15 @@ def compress_polynomial(poly, threshold, decreasing=True):
         tset = tset[len(plus):]
     return tset
 
+def compress_polynomial(poly, threshold, decreasing=True):
+    return compress_multipolynomial(poly, threshold, decreasing=decreasing)
+
 def raw_typeset_int(n, cutoff=80, sides=3, extra=''):
     """
     Raw/typeset for integers with configurable parameters
     """
     compv, compb = compress_int(n, cutoff=cutoff, sides=sides)
     return raw_typeset(n, rf'\({compv}\)', extra=extra, compressed=compb)
-
 
 def raw_typeset_poly(coeffs,
                      denominator=1,

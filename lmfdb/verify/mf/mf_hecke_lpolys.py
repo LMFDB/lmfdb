@@ -3,7 +3,7 @@ from sage.all import prime_range
 
 from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker
-from .verification import overall, overall_long, accumulate_failures
+from ..verification import overall, overall_long, accumulate_failures
 
 class mf_hecke_lpolys(MfChecker):
     table = db.mf_hecke_lpolys
