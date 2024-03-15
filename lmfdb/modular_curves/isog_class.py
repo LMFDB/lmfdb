@@ -103,8 +103,10 @@ class ModCurveIsog_class():
                            ('Cusps', prop_int_pretty(self.cusps))
                            ]
 
-        if self.genus > 0 and self.dims:
+        if self.conductor is not None:
             self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
+        if self.rank is not None:
+            self.properties.append(('Analytic rank', str(self.rank)))
 
         self.friends = self.web_curve.friends[1:]
 

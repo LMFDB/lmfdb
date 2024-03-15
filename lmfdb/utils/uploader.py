@@ -47,7 +47,7 @@ class UploadBox():
                 a, b = value.split("-")
                 if a and a.isdigit() and b and b.isdigit():
                     return value
-            raise ValueError(r"{self.name} must be a positive integer or range like 2-4; '{value}' is invalid")
+            raise ValueError(rf"{self.name} must be a positive integer or range like 2-4; '{value}' is invalid")
         table = getattr(self, "label_for", None)
         if table:
             if db[table].label_exists(value):
@@ -117,7 +117,7 @@ class USelectBox(UploadBox):
         super().__init__(name, label, knowl, **kwds)
 
     def html(self):
-        keys = ['name="{self.name}"']
+        keys = [f'name="{self.name}"']
         if hasattr(self, "width"):
             keys.append(f'style="width: {self.width}px"')
         opts = []

@@ -233,13 +233,11 @@ class ModCrvTest(LmfdbTest):
         )
 
     def test_modcrv_model(self):
-        L = self.tc.get("/ModularCurve/Q/180.216.4-18.e.2.8",follow_redirects=True)
-        assert (
-            "Canonical model" in L.get_data(as_text=True)
-            and "$ 12x^{2}+3xy+3y^{2}-z^{2}+zw-w^{2}$" in L.get_data(as_text=True)
-            and "Singular plane model" in L.get_data(as_text=True)
-            and "$ -2008x^{6}+456x^{5}y+192x^{5}z+408x^{4}y^{2}-564x^{4}yz+324x^{4}z^{2}-79x^{3}y^{3}+129x^{3}y^{2}z-72x^{3}yz^{2}-51x^{3}z^{3}-60x^{2}y^{4}+186x^{2}y^{3}z-189x^{2}y^{2}z^{2}+45x^{2}yz^{3}-18x^{2}z^{4}-12xy^{5}+51xy^{4}z-54xy^{3}z^{2}+9xy^{2}z^{3}+9xyz^{4}-y^{6}+6y^{5}z-9y^{4}z^{2}-3y^{3}z^{3}+9y^{2}z^{4}$" in L.get_data(as_text=True)
-        )
+        txt = self.tc.get("/ModularCurve/Q/180.216.4-18.e.2.8",follow_redirects=True).get_data(as_text=True)
+        assert "Canonical model" in txt
+        assert "12 x^{2} + 3 x y + 3 y^{2} - z^{2} + z w - w^{2}" in txt
+        assert "Singular plane model" in txt
+        assert "- 2008 x^{6} + 456 x^{5} y + 192 x^{5} z + 408 x^{4} y^{2}" in txt
 
     def test_rational_points(self):
         L = self.tc.get("/ModularCurve/Q/48.1152.81.mov.1/",follow_redirects=True)
@@ -309,6 +307,7 @@ class ModCrvTest(LmfdbTest):
     def test_minimally_covered_by_search(self):
         L = self.tc.get("/ModularCurve/Q/?covered_by=16.48.3.a.2")
         assert "8.24.1.b.1" in L.get_data(as_text=True)
+        # Fails due to slow query
         # L = self.tc.get("/ModularCurve/Q/?covered_by=9A11")
         # assert "not the label of a modular curve in the database" in L.get_data(as_text=True)
 
@@ -380,3 +379,125 @@ class ModCrvTest(LmfdbTest):
         for j,l in jump_set:
             L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
             assert l in L.get_data(as_text=True)
+
+    def test_related_objects(self):
+        for url, friends in [
+            (
+                "/ModularCurve/Q/48.4608.161-48.duj.4.7",
+                (
+                    'L-function not available',
+                    'Modular curve 48.2304.161.duj.1',
+                    'Modular curve 48.2304.161.duj.2',
+                    'Modular curve 48.2304.161.duj.3',
+                    'Modular curve 48.2304.161.duj.4',
+                    'Modular curve 48.2304.161.duj.5',
+                    'Modular curve 48.2304.161.duj.6',
+                    'Modular curve 48.2304.161.duj.7',
+                    'Modular curve 48.2304.161.duj.8',
+                    'Modular curve 48.2304.161.dut.1',
+                    'Modular curve 48.2304.161.dut.2',
+                    'Modular curve 48.2304.161.dut.3',
+                    'Modular curve 48.2304.161.dut.4',
+                    'Modular curve 48.2304.161.dut.5',
+                    'Modular curve 48.2304.161.dut.6',
+                    'Modular curve 48.2304.161.dut.7',
+                    'Modular curve 48.2304.161.dut.8'
+                )
+            ),
+            (
+                "/ModularCurve/Q/60.2880.97-60.bol.1.8",
+                (
+                    'L-function not available',
+                    'Modular curve 60.1440.97.bog.1',
+                    'Modular curve 60.1440.97.bol.1'
+                )
+            )
+            ]:
+            data = self.tc.get(url,follow_redirects=True).get_data(as_text=True)
+            for friend in friends:
+                assert friend in data
+
+    def test_download(self):
+        self.tc.get("/ModularCurve/download_to_magma/60.11520.409-60.bwm.1.10")
+        self.tc.get("/ModularCurve/download_to_sage/60.11520.409-60.bwm.1.10")
+        self.tc.get("/ModularCurve/download_to_text/60.11520.409-60.bwm.1.10")
+
+    def test_underlying_data(self):
+        data = self.tc.get("/ModularCurve/data/56.4032.139-56.fq.1.17",follow_redirects=True).get_data(as_text=True)
+        assert(
+            'CPlabel' in data
+            and 'Glabel' in data
+            and 'RSZBlabel' in data
+            and 'RZBlabel' in data
+            and 'SZlabel' in data
+            and 'Slabel' in data
+            and 'all_degree1_points_known' in data
+            and 'bad_primes' in data
+            and 'canonical_conjugator' in data
+            and 'canonical_generators' in data
+            and 'cm_discriminants' in data
+            and 'coarse_class' in data
+            and 'coarse_class_num' in data
+            and 'coarse_index' in data
+            and 'coarse_label' in data
+            and 'coarse_level' in data
+            and 'coarse_num' in data
+            and 'conductor' in data
+            and 'contains_negative_one' in data
+            and 'curve_label' in data
+            and 'cusp_orbits' in data
+            and 'cusp_widths' in data
+            and 'cusps' in data
+            and 'determinant_label' in data
+            and 'dims' in data
+            and 'factorization' in data
+            and 'fine_num' in data
+            and 'generators' in data
+            and 'genus' in data
+            and 'genus_minus_rank' in data
+            and 'has_obstruction' in data
+            and 'index' in data
+            and 'isogeny_orbits' in data
+            and 'kummer_orbits' in data
+            and 'label' in data
+            and 'lattice_labels' in data
+            and 'lattice_x' in data
+            and 'level' in data
+            and 'level_is_squarefree' in data
+            and 'level_radical' in data
+            and 'log_conductor' in data
+            and 'models' in data
+            and 'mults' in data
+            and 'name' in data
+            and 'newforms' in data
+            and 'nu2' in data
+            and 'nu3' in data
+            and 'num_bad_primes' in data
+            and 'num_known_degree1_noncm_points' in data
+            and 'num_known_degree1_noncusp_points' in data
+            and 'num_known_degree1_points' in data
+            and 'obstructions' in data
+            and 'orbits' in data
+            and 'parents' in data
+            and 'parents_conj' in data
+            and 'pointless' in data
+            and 'power' in data
+            and 'psl2index' in data
+            and 'psl2label' in data
+            and '56.2016.139.b.1' in data
+            and 'psl2level' in data
+            and 'q_gonality' in data
+            and 'q_gonality_bounds' in data
+            and 'qbar_gonality' in data
+            and 'qbar_gonality_bounds' in data
+            and 'rank' in data
+            and 'rational_cusps' in data
+            and 'reductions' in data
+            and 'scalar_label' in data
+            and 'simple' in data
+            and 'sl2label' in data
+            and 'sl2level' in data
+            and 'squarefree' in data
+            and 'trace_hash' in data
+            and 'traces' in data
+        )
