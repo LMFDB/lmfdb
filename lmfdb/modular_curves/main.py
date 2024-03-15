@@ -172,6 +172,17 @@ def family_page(name):
     except ValueError:
         flash_error(f"There is no family with name {name}")
         return redirect(url_for(".index"))
+    info = to_dict(request.args)
+    if 'start' not in info:
+        info["start"] = 0
+    else:
+        info["start"] = int(info["start"])
+    info["columns"] = modcurve_columns
+    info["family"] = "X0"
+    query = {}
+    parse_family(info, query, 'family', qfield = 'name')
+    info["results"] = db.gps_gl2zhat_fine.search(query, limit = 50, offset = info["start"], info = info)
+    info["count"] = 50
     return render_template(
         "modcurve_family.html",
         family=family,
@@ -179,6 +190,7 @@ def family_page(name):
         bread=family.bread,
         title=family.title,
         learnmore=learnmore_list(),
+	info = info,
 
         # For strict handling
         titletag="",

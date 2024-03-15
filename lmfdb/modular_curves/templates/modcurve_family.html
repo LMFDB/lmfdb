@@ -89,4 +89,24 @@
   #}
 </table>
 
+
+{{ info.columns.above_results | safe }}
+{% if info.columns.languages %}
+{% set languages = info.columns.languages %}
+{% endif %}
+
+{% include 'matches.html' %}
+
+{% include 'search_results_table.html' %}
+
+{% include 'forward_back.html' %}
+{% if info.columns.dummy_download %}
+  {% include 'dummy_download_search_results.html' %}
+{% else %}
+  {% include 'download_search_results.html' %}
+{% endif %}
+{{ info.columns.below_download | safe }}
+{% include 'debug_info.html' %}
+
+
 {% endblock %}
