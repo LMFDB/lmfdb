@@ -30,11 +30,11 @@
     </tr>
     #}
     <tr>
-      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 2:</td>
+      <td>{{ KNOWL("modcurve.nu2", "Elliptic points") }} of order 2:</td>
       <td>{{ family.nu2 }}</td>
     </tr>
     <tr>
-      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 3:</td>
+      <td>{{ KNOWL("modcurve.nu3", "Elliptic points") }} of order 3:</td>
       <td>{{ family.nu3 }}</td>
     </tr>
     <tr>
@@ -42,10 +42,12 @@
       <td> {{ family.cusps_display }}</td><td style="width:20px;"></td>
     </tr>
     <tr>
-      <td><a href="{{family.hypell_level}}">Table of hyperelliptic curves</a></td>
+      <td>Hyperelliptic curves:</td>
+      <td>{{ family.hypell_description|safe }}</td>
     </tr>
     <tr>
-      <td><a href="{{family.biell_level}}">Table of bielliptic curves</a></td>
+      <td>Bielliptic curves:</td>
+      <td>{{ family.biell_description|safe }}</td>
     </tr>
         {# <tr>
       <td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td>
