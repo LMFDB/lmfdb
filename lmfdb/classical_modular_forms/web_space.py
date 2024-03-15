@@ -296,7 +296,7 @@ def make_newspace_data(level, char_data, k=2):
 def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     # This creates enough of data to generate the oldspace decomposition on a newspace page
     level = int(newspace_label.split('.')[0])
-    weight = int(newspace_label.split('.')[1])  
+    weight = int(newspace_label.split('.')[1])
     prim_orbit_label = str(char_conductor) + '.' + cremona_letter_code(prim_orbit_index - 1)
     # To justify the -1 above compare e.g.
     # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
@@ -304,7 +304,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     sub_level_list = [sub_level for sub_level in ZZ(level).divisors() if (sub_level % char_conductor == 0) and sub_level != level]
     sub_chars = list(db.char_orbits.search({'modulus':{'$in':sub_level_list}, 'primitive_label':prim_orbit_label}))
     sub_chars = {char['modulus'] : char for char in sub_chars}
-    
+
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -316,7 +316,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
             # only include subspaces with cusp forms
             # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
             oldspaces.append(entry)
-    
+
     return oldspaces
 
 class WebNewformSpace():
