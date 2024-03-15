@@ -296,9 +296,7 @@ def make_newspace_data(level, char_data, k=2):
 def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     # This creates enough of data to generate the oldspace decomposition on a newspace page
     level = int(newspace_label.split('.')[0])
-    weight = int(newspace_label.split('.')[1])
-    char_orbit_label = newspace_label.split('.')[2]
-    
+    weight = int(newspace_label.split('.')[1])  
     prim_orbit_label = str(char_conductor) + '.' + cremona_letter_code(prim_orbit_index - 1)
     # To justify the -1 above compare e.g.
     # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
