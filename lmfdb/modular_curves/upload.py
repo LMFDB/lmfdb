@@ -25,8 +25,8 @@ class ModelTypeBox(USelectBox):
              ("8", "Embedded")],
             no_empty=no_empty, integer=True)
 
-jpat = r"\d+(/\d+)?(,\d+(/\d+)?)*"
-coordre = re.compile(fr"{jpat}(:{jpat})*(;{jpat}(:{jpat})*)")
+jpat = r"-?\d+(/\d+)?(,-?\d+(/\d+)?)*"
+coordre = re.compile(fr"{jpat}(:{jpat})*(;{jpat}(:{jpat})*)*")
 jre = re.compile(f"oo|{jpat}")
 class Points(UploadSection):
     name = "modcurve_points"
