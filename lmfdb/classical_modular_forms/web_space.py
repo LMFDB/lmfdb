@@ -314,7 +314,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit_index']
         entry['sub_conrey_index'] = int(sub_chars[sub_level]['first_label'].split('.')[-1])
         entry['sub_mult'] = len(ZZ(level/sub_level).divisors())
-        if (sub_level >= 23) or (int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0):
+        if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
             # only include subspaces with cusp forms
             # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
             oldspaces.append(entry)
