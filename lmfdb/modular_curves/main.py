@@ -631,8 +631,8 @@ def modcurve_sage_download(label):
 def modcurve_text_download(label):
     return ModCurve_download().download_modular_curve(label, lang="text")
 
-# !!! TODO : currently there is a lot of overlapping with code creating the isogeny class. Should solve this more generally by refactoring the search and download
-def modcurve_isogeny_download(request, lang):
+# !!! TODO : currently there is a lot of overlapping with code creating the Gassmann class. Should solve this more generally by refactoring the search and download
+def modcurve_Gassmann_download(request, lang):
     query_dict = to_dict(request.args)
     print("query_dict", query_dict)
     ncurves = db.gps_gl2zhat_fine.count(query_dict)
@@ -649,17 +649,17 @@ def modcurve_isogeny_download(request, lang):
     info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
     return ModCurve_download()(info)
 
-@modcurve_page.route("/download_isogeny_to_magma/")
-def modcurve_isogeny_magma_download():
-    return modcurve_isogeny_download(request, lang="magma")
+@modcurve_page.route("/download_Gassmann_to_magma/")
+def modcurve_Gassmann_magma_download():
+    return modcurve_Gassmann_download(request, lang="magma")
 
-@modcurve_page.route("/download_isogeny_to_sage/")
-def modcurve_isogeny_sage_download():
-    return modcurve_isogeny_download(request, lang="sage")
+@modcurve_page.route("/download_Gassmann_to_sage/")
+def modcurve_Gassmann_sage_download():
+    return modcurve_Gassmann_download(request, lang="sage")
 
-@modcurve_page.route("/download_isogeny_to_text/")
-def modcurve_isogeny_text_download():
-    return modcurve_isogeny_download(request, lang="text")
+@modcurve_page.route("/download_Gassmann_to_text/")
+def modcurve_Gassmann_text_download():
+    return modcurve_Gassmann_download(request, lang="text")
 
 @search_wrap(
     table=db.gps_gl2zhat_fine,
