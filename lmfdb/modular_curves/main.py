@@ -186,7 +186,6 @@ def family_page(name):
     return render_template(
         "modcurve_family.html",
         family=family,
-        properties=family.properties,
         bread=family.bread,
         title=family.title,
         learnmore=learnmore_list(),
