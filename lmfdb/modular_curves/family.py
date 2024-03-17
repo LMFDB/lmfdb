@@ -32,7 +32,9 @@ class ModCurveFamily_base():
     def title(self):
         return f"Modular curve family ${self.name}$"
 
+
 class X0N(ModCurveFamily_base):
+    famname = "X0"
     name = "X_0(N)"
     sl2level = "N"
     index = "N+1"
@@ -72,6 +74,7 @@ class X0N(ModCurveFamily_base):
                 ("Genus", str(self.genus))]
 
 class X1N(ModCurveFamily_base):
+    famname = "X1"
     name = "X_1(N)"
     sl2level = "N"
     index = "N+1"
@@ -108,6 +111,7 @@ class X1N(ModCurveFamily_base):
 
 
 class XN(ModCurveFamily_base):
+    famname = "X"
     name = "X(N)"
     sl2level = "N"
     index = "N+1"
@@ -143,6 +147,7 @@ class XN(ModCurveFamily_base):
 
 
 class XspN(ModCurveFamily_base):
+    famname = "Xsp"
     name = "X_{\mathrm{sp}}(N)"
     sl2level = "N"
     index = "N+1"
@@ -178,6 +183,7 @@ class XspN(ModCurveFamily_base):
 
 
 class XspplusN(ModCurveFamily_base):
+    famname = "Xspplus"
     name = "X_{\mathrm{sp}}^+(N)"
     sl2level = "N"
     index = "N+1"
@@ -213,6 +219,7 @@ class XspplusN(ModCurveFamily_base):
 
 
 class XnsN(ModCurveFamily_base):
+    famname = "Xns"
     name = "X_{\mathrm{ns}}(N)"
     sl2level = "N"
     index = "N+1"
@@ -248,6 +255,7 @@ class XnsN(ModCurveFamily_base):
 
 
 class XnsplusN(ModCurveFamily_base):
+    famname = "Xnsplus"
     name = "X_{\mathrm{ns}}^+(N)"
     sl2level = "N"
     index = "N+1"
@@ -283,6 +291,7 @@ class XnsplusN(ModCurveFamily_base):
 
 
 class XS4p(ModCurveFamily_base):
+    famname = "XS4"
     name = "X_{S_4}(p)"
     sl2level = "N"
     index = "N+1"
@@ -318,6 +327,7 @@ class XS4p(ModCurveFamily_base):
 
 
 class XsymN(ModCurveFamily_base):
+    famname = "Xsym"
     name = "X_{\mathrm{sym}}(N)"
     sl2level = "N"
     index = "N+1"

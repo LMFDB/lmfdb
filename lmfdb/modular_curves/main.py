@@ -178,7 +178,7 @@ def family_page(name):
     else:
         info["start"] = int(info["start"])
     info["columns"] = modcurve_columns
-    info["family"] = "X0"
+    info["family"] = family.famname
     query = {}
     parse_family(info, query, 'family', qfield = 'name')
     info["results"] = db.gps_gl2zhat_fine.search(query, limit = 50, offset = info["start"], info = info)
