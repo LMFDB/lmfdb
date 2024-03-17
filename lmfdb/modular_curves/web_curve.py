@@ -5,7 +5,7 @@ from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
-from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl, raw_typeset
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl, raw_typeset, prop_int_pretty
 from lmfdb.utils.web_display import compress_multipolynomial
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
@@ -420,16 +420,16 @@ class WebModCurve(WebObj):
     def properties(self):
         props = [
             ("Label", self.label),
-            ("Level", str(self.level)),
-            ("Index", str(self.index)),
-            ("Genus", str(self.genus)),
+            ("Level", prop_int_pretty(self.level)),
+            ("Index", prop_int_pretty(self.index)),
+            ("Genus", prop_int_pretty(self.genus)),
         ]
         if self.image is not None:
             props.append((None, self.image))
         if hasattr(self,"rank") and self.rank is not None:
-            props.append(("Analytic rank", str(self.rank)))
-        props.extend([("Cusps", str(self.cusps)),
-                      (r"$\Q$-cusps", str(self.rational_cusps))])
+            props.append(("Analytic rank", prop_int_pretty(self.rank)))
+        props.extend([("Cusps", prop_int_pretty(self.cusps)),
+                      (r"$\Q$-cusps", prop_int_pretty(self.rational_cusps))])
         return props
 
     @lazy_attribute

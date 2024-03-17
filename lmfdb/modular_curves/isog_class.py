@@ -106,7 +106,7 @@ class ModCurveIsog_class():
         if self.conductor is not None:
             self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
         if self.rank is not None:
-            self.properties.append(('Analytic rank', str(self.rank)))
+            self.properties.append(('Analytic rank', prop_int_pretty(self.rank)))
 
         self.friends = self.web_curve.friends[1:]
 
