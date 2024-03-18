@@ -474,7 +474,7 @@ ec_columns = SearchColumns([
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
     ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
                   short_title="j-invariant", align="center", default=False),
-    FloatCol("abc_quality", "ec.q.abc_quality", "ABC-quality", prec=5, default=False),
+    FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
     FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
@@ -1146,7 +1146,7 @@ class ECSearchArray(SearchArray):
              ("adelic_index", "adelic index", ["adelic_index", "adelic_level", "adelic_genus"]),
              ("adelic_genus", "adelic genus", ["adelic_genus", "adelic_level", "adelic_index"]),
              ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("abc_quality", "ABC-quality", ["abc_quality", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("abc_quality", "$abc$ quality", ["abc_quality", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"])]
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
@@ -1330,7 +1330,7 @@ class ECSearchArray(SearchArray):
             advanced=True)
         abc_quality = TextBox(
             name="abc_quality",
-            label="ABC-quality",
+            label="$abc$ quality",
             knowl="ec.q.abc_quality",
             example="1.5-",
             advanced=True)
