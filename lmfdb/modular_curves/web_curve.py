@@ -440,7 +440,10 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        friends = [("Gassmann class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+        if self.coarse_label == self.label:
+            friends = [("Gassmann class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+        else:
+            friends = []
         if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.curve_label:
