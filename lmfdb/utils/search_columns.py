@@ -258,6 +258,9 @@ class FloatCol(MathCol):
 
     def get(self, rec):
         val = self._get(rec)
+        if val == "":
+            # null value
+            return ""
         # We mix string processing directives so that we can use variable precision
         return f"%.{self.prec}f" % val
 

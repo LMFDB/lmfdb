@@ -140,6 +140,8 @@ def name_to_latex(name):
         name = name.replace("pm1", r"{\pm1}")
     elif "sym" in name:
         name = name.replace('sym', r"{\mathrm{sym}}")
+    elif "arith" in name:
+        name = name.replace('arith', r"{\mathrm{arith}}")
     if name[1] != "(":
         name = "X_" + name[1:]
     return f"${name}$"
@@ -440,7 +442,10 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        friends = [("Gassmann class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+        if self.coarse_label == self.label:
+            friends = [("Gassmann class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+        else:
+            friends = []
         if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
             if self.curve_label:
