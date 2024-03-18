@@ -847,7 +847,7 @@ def nf_postprocess(res, info, query):
     cache = knowl_cache(list(set(galois_labels)))
     for rec in res:
         wnf = WebNumberField.from_data(rec)
-        rec["poly"] = '$'+compress_polynomial(wnf.poly(),30)+'$'
+        rec["poly"] = '$'+compress_polynomial(wnf.poly().change_ring(ZZ), 30)+'$'
         rec["disc"] = wnf.disc_factored_latex()
         rec["galois"] = wnf.galois_string(cache=cache)
         rec["class_group_desc"] = wnf.class_group_invariants()

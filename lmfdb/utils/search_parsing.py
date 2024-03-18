@@ -1766,6 +1766,10 @@ def parse_interval(inp, query, qfield, quantifier_type, bounds_field=None, split
         query[bounds_field + ".2"] = {"$lte": parse_singleton(inp)}
     elif quantifier_type == "atleast":
         query[bounds_field + ".1"] = {"$gte": parse_singleton(inp)}
+    elif quantifier_type == "inexactly":
+        x = parse_singleton(inp)
+        collapse_ors(["$or", [{bounds_field + ".1": {"$lte":x}, bounds_field + ".2": {"$gt":x}},
+                              {bounds_field + ".1": {"$lt":x}, bounds_field + ".2": {"$gte":x}}]], query)
     else:
         X = str_to_intervals(inp, split_minus, parse_singleton)
         if quantifier_type == "exactly":

@@ -9,7 +9,7 @@ from sage.databases.cremona import class_to_int, cremona_letter_code
 
 class ModCurveIsog_class():
     """
-    Class for an isogeny class of modular curves over Q
+    Class for a Gassmann class of modular curves over Q
     """
     def __init__(self, dbdata):
         """
@@ -25,7 +25,7 @@ class ModCurveIsog_class():
     @staticmethod
     def by_label(label):
         """
-        Searches for a specific modular curve isogeny class in the
+        Searches for a specific modular curve Gassmann class in the
         curves collection by its label, which can be either a curve
         label (e.g. "11.12.1.a.1") or a class label (e.g. "11.12.1.a") in
         LMFDB format.
@@ -49,7 +49,7 @@ class ModCurveIsog_class():
             try:
                 if not ISO_CLASS_RE.fullmatch(label):
                     return "Invalid label"
-                # !!! Do we have other labels for which the label remembers the isogeny class?
+                # !!! Do we have other labels for which the label remembers the Gassmann class?
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -58,8 +58,8 @@ class ModCurveIsog_class():
         return "Class not found" # caller must catch this and raise an error
 
     def make_class(self):
-        # Extract the size of the isogeny class from the database
-        # !!! Do we want to add a table for the isogeny classes?
+        # Extract the size of the Gassmann class from the database
+        # !!! Do we want to add a table for the Gassmann classes?
         # classdata = db.ec_classdata.lucky({'lmfdb_iso': self.lmfdb_iso})
         # self.class_size = ncurves = classdata['class_size']
 
@@ -103,12 +103,14 @@ class ModCurveIsog_class():
                            ('Cusps', prop_int_pretty(self.cusps))
                            ]
 
-        if self.genus > 0 and self.dims:
+        if self.conductor is not None:
             self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
+        if self.rank is not None:
+            self.properties.append(('Analytic rank', prop_int_pretty(self.rank)))
 
         self.friends = self.web_curve.friends[1:]
 
-        self.title = "Modular isogeny class with LMFDB label " + self.coarse_class
+        self.title = "Gassmann class with LMFDB label " + self.coarse_class
         base_query = url_for("modcurve.index")
         level_query = '?level=%s' % self.coarse_level
         index_query = level_query + '&index=%s' % self.coarse_index
@@ -120,15 +122,15 @@ class ModCurveIsog_class():
         self.downloads = [
             (
                 "Code to magma",
-                url_for(".modcurve_isogeny_magma_download") + curves_query
+                url_for(".modcurve_Gassmann_magma_download") + curves_query
             ),
             (
                 "Code to sage",
-                url_for(".modcurve_isogeny_sage_download") + curves_query
+                url_for(".modcurve_Gassmann_sage_download") + curves_query
             ),
             (
                 "All data to text",
-                url_for(".modcurve_isogeny_text_download") + curves_query
+                url_for(".modcurve_Gassmann_text_download") + curves_query
             ),
             (
                 'Underlying data',

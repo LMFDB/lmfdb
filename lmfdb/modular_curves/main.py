@@ -244,7 +244,7 @@ def url_for_CP_label(label):
     return "https://mathstats.uncg.edu/sites/pauli/congruence/csg" + genus + ".html#group" + label
 
 def modcurve_lmfdb_label(label):
-    if LABEL_RE.fullmatch(label):
+    if LABEL_RE.fullmatch(label) or ISO_CLASS_RE.fullmatch(label):
         label_type = "label"
         lmfdb_label = label
     elif RSZB_LABEL_RE.fullmatch(label):
@@ -631,8 +631,8 @@ def modcurve_sage_download(label):
 def modcurve_text_download(label):
     return ModCurve_download().download_modular_curve(label, lang="text")
 
-# !!! TODO : currently there is a lot of overlapping with code creating the isogeny class. Should solve this more generally by refactoring the search and download
-def modcurve_isogeny_download(request, lang):
+# !!! TODO : currently there is a lot of overlapping with code creating the Gassmann class. Should solve this more generally by refactoring the search and download
+def modcurve_Gassmann_download(request, lang):
     query_dict = to_dict(request.args)
     print("query_dict", query_dict)
     ncurves = db.gps_gl2zhat_fine.count(query_dict)
@@ -649,17 +649,17 @@ def modcurve_isogeny_download(request, lang):
     info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
     return ModCurve_download()(info)
 
-@modcurve_page.route("/download_isogeny_to_magma/")
-def modcurve_isogeny_magma_download():
-    return modcurve_isogeny_download(request, lang="magma")
+@modcurve_page.route("/download_Gassmann_to_magma/")
+def modcurve_Gassmann_magma_download():
+    return modcurve_Gassmann_download(request, lang="magma")
 
-@modcurve_page.route("/download_isogeny_to_sage/")
-def modcurve_isogeny_sage_download():
-    return modcurve_isogeny_download(request, lang="sage")
+@modcurve_page.route("/download_Gassmann_to_sage/")
+def modcurve_Gassmann_sage_download():
+    return modcurve_Gassmann_download(request, lang="sage")
 
-@modcurve_page.route("/download_isogeny_to_text/")
-def modcurve_isogeny_text_download():
-    return modcurve_isogeny_download(request, lang="text")
+@modcurve_page.route("/download_Gassmann_to_text/")
+def modcurve_Gassmann_text_download():
+    return modcurve_Gassmann_download(request, lang="text")
 
 @search_wrap(
     table=db.gps_gl2zhat_fine,
@@ -746,7 +746,7 @@ def modcurve_search(info, query):
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.a.1"
-    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
+    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.a, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
@@ -816,8 +816,10 @@ class ModCurveSearchArray(SearchArray):
                      ('possibly', 'possibly'),
                      ('atleast', 'at least'),
                      ('atmost', 'at most'),
+                     ('inexactly', 'inexactly'),
                      ],
-            min_width=85)
+            min_width=86,
+        )
         gonality = TextBoxWithSelect(
             name="q_gonality",
             knowl="modcurve.gonality",
@@ -891,14 +893,15 @@ class ModCurveSearchArray(SearchArray):
         points_type = SelectBox(
             name="points_type",
             options=[('', 'non-cusp'),
-                     ('noncm', 'non-CM, non-cusp'),
+                     ('noncm', 'non-CM/cusp'),
                      ('all', 'all'),
                      ],
-            min_width=105)
+            min_width=114,
+        )
         points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="$j$-points",
+            label="Points",
             example="0, 3-5",
             select_box=points_type,
         )
