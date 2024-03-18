@@ -3,23 +3,23 @@ from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb.modular_curves.web_curve import get_bread
 
 def ModCurveFamily(name):
-    if name == "X0N":
+    if name == "X0":
         return X0N()
-    elif name == "X1N":
+    elif name == "X1":
         return X1N()
-    elif name == "XN":
+    elif name == "X":
         return XN()
-    elif name == "XspN":
+    elif name == "Xsp":
         return XspN()
-    elif name == "XspplusN":
+    elif name == "Xspplus":
         return XspplusN()
-    elif name == "XnsN":
+    elif name == "Xns":
         return XnsN()
-    elif name == "XnsplusN":
+    elif name == "Xnsplus":
         return XnsplusN()
-    elif name == "XS4p":
+    elif name == "XS4":
         return XS4p()
-    elif name == "XsymN":
+    elif name == "Xsym":
         return XsymN()
     raise ValueError("Invalid name")
 

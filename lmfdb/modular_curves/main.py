@@ -10,6 +10,7 @@ from sage.all import ZZ
 
 from lmfdb.utils import (
     SearchArray,
+    EmbeddedSearchArray,
     TextBox,
     TextBoxWithSelect,
     SelectBox,
@@ -21,6 +22,7 @@ from lmfdb.utils import (
     display_knowl,
     flash_error,
     search_wrap,
+    embed_wrap,
     to_dict,
     parse_ints,
     parse_noop,
@@ -163,38 +165,6 @@ def by_label(label):
         downloads=curve.downloads,
         KNOWL_ID=f"modcurve.{label}",
         learnmore=learnmore_list_add(*learnmore_mcurve_pic)
-    )
-
-@modcurve_page.route("/Q/family/<name>")
-def family_page(name):
-    try:
-        family = ModCurveFamily(name)
-    except ValueError:
-        flash_error(f"There is no family with name {name}")
-        return redirect(url_for(".index"))
-    info = to_dict(request.args)
-    if 'start' not in info:
-        info["start"] = 0
-    else:
-        info["start"] = int(info["start"])
-    info["columns"] = modcurve_columns
-    info["family"] = "X0"
-    query = {}
-    parse_family(info, query, 'family', qfield = 'name')
-    info["results"] = db.gps_gl2zhat_fine.search(query, limit = 50, offset = info["start"], info = info)
-    info["count"] = 50
-    return render_template(
-        "modcurve_family.html",
-        family=family,
-        properties=family.properties,
-        bread=family.bread,
-        title=family.title,
-        learnmore=learnmore_list(),
-	info = info,
-
-        # For strict handling
-        titletag="",
-        ALPHA="",
     )
 
 @modcurve_page.route("/Q/diagram/<label>")
@@ -775,7 +745,13 @@ def modcurve_search(info, query):
             raise ValueError(msg % info["covered_by"])
         query["label"] = {"$in": parents}
 
+modcurve_sorts = [
+    ("", "level", ["level", "index", "genus", "label"]),
+    ("index", "index", ["index", "level", "genus", "label"]),
+    ("genus", "genus", ["genus", "level", "index", "label"]),
+    ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
 
+]
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.a.1"
@@ -992,12 +968,7 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
-    sorts = [
-        ("", "level", ["level", "index", "genus", "label"]),
-        ("index", "index", ["index", "level", "genus", "label"]),
-        ("genus", "genus", ["genus", "level", "index", "label"]),
-        ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
-    ]
+    sorts = modcurve_sorts
     null_column_explanations = {
         'simple': False,
         'squarefree': False,
@@ -1005,6 +976,37 @@ class ModCurveSearchArray(SearchArray):
         'genus_minus_rank': False,
         'name': False,
     }
+
+class FamilySearchArray(EmbeddedSearchArray):
+    sorts = modcurve_sorts
+
+@modcurve_page.route("/Q/family/<name>")
+def family_page(name):
+    info = to_dict(request.args, search_array=FamilySearchArray(), name=name)
+    try:
+        info["family"] = family = ModCurveFamily(name)
+    except ValueError:
+        flash_error(f"There is no family with name {name}")
+        return redirect(url_for(".index_Q"))
+    info["title"] = family.title
+    info["bread"] = family.bread
+    info["properties"] = family.properties
+    return render_family(info)
+
+@embed_wrap(
+    table=db.gps_gl2zhat_fine,
+    template="modcurve_family.html",
+    err_title="Modular curve family error",
+    columns=modcurve_columns,
+    learnmore=learnmore_list,
+    # Each of the following arguments is set here so that it overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in family_page() before calling render_family)
+    bread=lambda:None,
+    properties=lambda:None,
+    family=lambda:None,
+)
+def render_family(info, query):
+    parse_family(info, query, 'name')
 
 @modcurve_page.route("/Q/low_degree_points")
 def low_degree_points():
