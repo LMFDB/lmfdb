@@ -990,7 +990,7 @@ def family_page(name):
         return redirect(url_for(".index_Q"))
     info["title"] = family.title
     info["bread"] = family.bread
-    info["properties"] = family.properties
+   # info["properties"] = family.properties
     return render_family(info)
 
 @embed_wrap(
