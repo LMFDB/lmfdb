@@ -346,7 +346,7 @@ class ModCrvTest(LmfdbTest):
             ('Xspplus','3.6.0.b.1'),
             ('Xnsplus','3.3.0.a.1'),
             ('XS4','5.5.0.a.1'),
-            ('Xsym','4.48.0-4.b.1.1'),
+            ('Xarith','4.48.0-4.b.1.1'),
             ('any','1.1.0.a.1')
         ]
         for (family,crv) in family_set:
