@@ -87,6 +87,10 @@ class X1N(ModCurveFamily_base):
     rational_cusps = "1"
     moduli_description = r"$X_1(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{pmatrix} 1 & * \\ 0 & * \end{pmatrix} < \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,P)$, where $E$ is an elliptic curve over $k$, and $P \in E[N](\overline{k})$ is a point of exact order $N$."
     genus_formula = r"$g = \begin{cases} 0, & \text{ if } N = 1,\ldots,5, \\ 1 + \frac{N^2}{24} \prod_{p|N, \text{ prime}} \big( 1 - p^{-2}\big) - \frac{1}{4} \sum_{d|N, d>0} \varphi(d)\varphi(N/d), & N \geq 5. \end{cases}$"
+    hypell_level = "?level=13%2C16%2C18&family=X1"
+    biell_level = "?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1"
+    hypell_description = r'(source) showed that there are only 3 hyperelliptic curves. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=13%2C16%2C18&family=X1">following table</a>] for the full list.'
+    biell_description = r'(source) showed that there are only 8 bielliptic curves. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1">following table</a>] for the full list.'
 
     @lazy_attribute
     def cusps_display(self):
