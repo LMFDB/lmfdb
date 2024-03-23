@@ -128,6 +128,10 @@ class XN(ModCurveFamily_base):
     rational_cusps = r"\nu_\infty = \begin{cases} 1, & \text{ if } N = 1, \\ i/2, & \text{ if } N > 1. \end{cases}"
     moduli_description = r"$X(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of the trivial subgroup of $\GL_2(\Z/N\Z)$. As a moduli space it parameterizes triples $(E,P,Q)$, where $E$ is an elliptic curve over $k$, and $P,Q \in E(k)$ form a basis for $E[N](\overline{k})$. There are other {display_knowl('modcurve.xn','variants')}. The {display_knowl('modcurve.canonical_field', 'canonical field of definition')} of $X(N)$ is $\Q(\zeta_N)$, which means that the database of modular curves $X_H/\Q$ only includes $X(N)$ for $N\le 2$."
     genus_formula = r"$g = \begin{cases} 0, & \text{ if } N = 1,2, \\ 1 + \frac{N^2 (N-6)}{24} \prod_{p|N, \text{ prime}} \big( 1 - p^{-2}\big), & N \geq 3. \end{cases}$"
+    biell_level = "?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1"
+    hypell_description = r"For $N\geq 7$, there are no hyperelliptic curves (source)."
+    biell_description = r"For $N\geq 7$, there are only 2 bielliptic curves, when $N=7$ and $8$ (source)."
+
 
     @lazy_attribute
     def cusps_display(self):
