@@ -354,7 +354,7 @@ modcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "Xarith", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -374,6 +374,8 @@ def parse_family(inp, query, qfield):
     elif inp == "X1":
         query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
     elif inp == "Xsym": # add X(1), X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
+    elif inp == "Xarith": 
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
