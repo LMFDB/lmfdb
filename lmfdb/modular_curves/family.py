@@ -333,7 +333,7 @@ class XS4p(ModCurveFamily_base):
 
 class XarithN(ModCurveFamily_base):
     famname = "Xarith"
-    name = "X_{\textup{arith}}(N)"
+    name = "X_{\mathrm{arith}}(N)"
     sl2level = "N"
     index = "N+1"
     psl2index = "N^2+1"
