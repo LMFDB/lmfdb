@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones, Edgar Costa
 
@@ -61,7 +60,7 @@ def dogapthing(m1):
     else:
         # Fix multiple backslashes
         m1[2] = re.sub(r'\\+', r'\\', m1[2])
-        m1[2] = '$%s$'% m1[2]
+        m1[2] = '$%s$' % m1[2]
     return m1
 
 
@@ -92,8 +91,8 @@ def normalize_family(label):
     aas = '.'.join(str(u) for u in a)
     bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0] > a[0]:
-        return 'A%s_B%s' % (aas, bs)
-    return 'A%s_B%s' % (bs, aas)
+        return f'A{aas}_B{bs}'
+    return f'A{bs}_B{aas}'
 
 
 def normalize_motive(label):
@@ -103,10 +102,8 @@ def normalize_motive(label):
     aas = '.'.join(str(u) for u in a)
     bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0] > a[0]:
-        return 'A%s_B%s_t%s%s.%s' % (aas, bs,
-                                     m.group(5), m.group(6), m.group(7))
-    return 'A%s_B%s_t%s%s.%s' % (bs, aas,
-                                 m.group(5), m.group(7), m.group(6))
+        return f'A{aas}_B{bs}_t{m.group(5)}{m.group(6)}.{m.group(7)}'
+    return f'A{bs}_B{aas}_t{m.group(5)}{m.group(7)}.{m.group(6)}'
 
 # Convert cyclotomic indices to gamma data
 
@@ -121,7 +118,7 @@ def incdict(d, v):
 
 
 def subdict(d, v):
-    if d[v]>1:
+    if d[v] > 1:
         d[v] -= 1
     else:
         del d[v]
@@ -145,26 +142,23 @@ def ab2gammas(A, B):
             if d in ab[wh]:
                 subdict(ab[wh], d)
             else:
-                incdict(ab[1-wh], d)
-    gamma[1] = [-1*z for z in gamma[1]]
-    gamma = sorted(gamma[1]+gamma[0])
-    return gamma
-
-# Convert cyclotomic indices to rational numbers
+                incdict(ab[1 - wh], d)
+    gamma[1] = [-1 * z for z in gamma[1]]
+    return sorted(gamma[1] + gamma[0])
 
 
-def cyc_to_QZ(A):
-    alpha = []
-    for Ai in A:
-        alpha.extend([QQ(k)/Ai for k in range(1, Ai+1) if gcd(k, Ai) == 1])
-    alpha.sort()
-    return alpha
+def cyc_to_QZ(A) -> list:
+    """
+    Convert cyclotomic indices to rational numbers.
+    """
+    return sorted(QQ(k) / Ai for Ai in A for k in range(1, Ai + 1)
+                  if gcd(k, Ai) == 1)
 
 # A and B are lists, tn and td are num/den for t
 
 
 def ab_label(A, B):
-    return "A%s_B%s" % ('.'.join(str(c) for c in A),
+    return "A{}_B{}".format('.'.join(str(c) for c in A),
                         '.'.join(str(c) for c in B))
 
 
@@ -179,7 +173,7 @@ def list2Cnstring(li):
 
 
 def showlist(li):
-    return r'[\ ]' if not li else li
+    return li if li else r'[\ ]'
 
 
 def splitint(a, p):
@@ -188,22 +182,22 @@ def splitint(a, p):
     j = valuation(a, p)
     if j == 0:
         return str(a)
-    a = a/p**j
+    a = a / p**j
     if a == 1:
         return latex(ZZ(p**j).factor())
-    return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
+    return str(a) + r'\cdot' + latex(ZZ(p**j).factor())
 
 
 def make_abt_label(A, B, t):
     AB_str = ab_label(A, B)
     t = QQ(t)
-    t_str = "_t%s.%s" % (t.numerator(), t.denominator())
+    t_str = f"_t{t.numerator()}.{t.denominator()}"
     return AB_str + t_str
 
 
 def make_t_label(t):
     tsage = QQ(t)
-    return "t%s.%s" % (tsage.numerator(), tsage.denominator())
+    return f"t{tsage.numerator()}.{tsage.denominator()}"
 
 
 def get_bread(breads=[]):
@@ -259,28 +253,28 @@ def factor_out_p(val, p):
 def poly_with_factored_coeffs(c, p):
     c = [factor_out_p(b, p) for b in c]
     out = ''
-    for j in range(len(c)):
-        xpow = 'x^{'+ str(j) +'}'
+    for j, cj in enumerate(c):
+        xpow = 'x^{' + str(j) + '}'
         if j == 0:
             xpow = ''
-        elif j==1:
+        elif j == 1:
             xpow = 'x'
-        if c[j] != '0':
-            if c[j] == '+1':
+        if cj != '0':
+            if cj == '+1':
                 if j == 0:
                     out += '+1'
                 else:
                     out += '+' + xpow
-            elif c[j] == '-1':
+            elif cj == '-1':
                 if j == 0:
                     out += '-1'
                 else:
                     out += '-' + xpow
             else:
                 if j == 0:
-                    out += c[j]
+                    out += cj
                 else:
-                    out += c[j] + xpow
+                    out += cj + xpow
     if out[0] == '+':
         out = out[1:]
     return out
@@ -388,7 +382,7 @@ def url_for_label(label):
 hgm_columns = SearchColumns([
     MultiProcessedCol("label", None, "Label",
                       ["A", "B", "t"],
-                      lambda A, B, t: '<a href="%s">%s</a>' % (
+                      lambda A, B, t: '<a href="{}">{}</a>'.format(
                           url_for('.by_family_label', label=ab_label(A, B)) if t is None else
                           url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
                           ab_label(A, B) if t is None else
@@ -404,8 +398,10 @@ hgm_columns = SearchColumns([
 
 hgm_columns.db_cols = 1  # all cols, since the table varies
 
+
 class HGMDownload(Downloader):
-    table = db.hgm_motives # overridden if family search
+    table = db.hgm_motives  # overridden if family search
+
     def get_table(self, info):
         search_type = info.get("search_type", info.get("hst", "Motive"))
         if search_type in ["Family", "RandomFamily"]:
@@ -436,23 +432,23 @@ def hgm_search(info, query):
         parse_bracketed_posints(info, queryab, param, split=True,
                                 keepbrackets=True,
                                 listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Ap', qfield='A' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Bp', qfield='B' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
     # Combine the parts of the query if there are A,B parts
     if queryab:
         queryabrev = {}
         for k in queryab:
-            queryabrev[k+'rev'] = queryab[k]
+            queryabrev[k + 'rev'] = queryab[k]
         query['$or'] = [queryab, queryabrev]
 
     # generic, irreducible not in DB yet
@@ -499,11 +495,8 @@ def render_hgm_webpage(label):
         d1 = re.sub(r'\s', '', d1)
         d1 = re.sub(r'(.)\(', r'\1*(', d1)
         R = PolynomialRing(ZZ, 't')
-        if det[1]=='':
-            d2 = R(1)
-        else:
-            d2 = R(d1)
-        det = d2(QQ(data['t']))*det[0]
+        d2 = R(1) if not det[1] else R(d1)
+        det = d2(QQ(data['t'])) * det[0]
     t = latex(QQ(data['t']))
     typee = 'Orthogonal'
     if data['weight'] % 2 and not data['degree'] % 2:
@@ -528,7 +521,7 @@ def render_hgm_webpage(label):
     # Now add factorization of conductor
     Cond = ZZ(data['cond'])
     if not (Cond.abs().is_prime() or Cond == 1):
-        data['cond'] = "%s=%s" % (str(Cond), factorint(data['cond']))
+        data['cond'] = "{}={}".format(str(Cond), factorint(data['cond']))
 
     info.update({
                 'A': A,
@@ -551,16 +544,16 @@ def render_hgm_webpage(label):
                 'locinfo': locinfo
                 })
     AB_data, t_data = data["label"].split("_t")
-    friends = [("Motive family "+AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
-    friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t'+t_data)))
+    friends = [("Motive family " + AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
+    friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t' + t_data)))
 #    if rffriend != '':
 #        friends.append(('Discriminant root field', rffriend))
     downloads = [("Underlying data", url_for(".hgm_data", label=data["label"]))]
 
-    AB = 'A = '+str(A)+', B = '+str(B)
+    AB = 'A = ' + str(A) + ', B = ' + str(B)
     t_data = str(QQ(data['t']))
 
-    bread = get_bread([('family '+str(AB), url_for(".by_family_label", label=AB_data)), ('t = '+t_data, ' ')])
+    bread = get_bread([('family ' + str(AB), url_for(".by_family_label", label=AB_data)), ('t = ' + t_data, ' ')])
     return render_template(
         "hgm-show-motive.html",
         title=title,
@@ -637,9 +630,7 @@ def render_hgm_family_webpage(label):
 
 
 def show_slopes(sl):
-    if str(sl) == "[]":
-        return "None"
-    return(sl)
+    return None if str(sl) == "[]" else sl
 
 
 @hypergm_page.route("/random_family")
@@ -652,7 +643,7 @@ def random_family():
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
-    return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
+    return redirect(url_for(".by_label", label=s[0], t='t' + s[1]))
 
 
 @hypergm_page.route("/interesting_families")
