@@ -348,7 +348,8 @@ class ModCrvTest(LmfdbTest):
             (
                 "/ModularCurve/Q/48.4608.161-48.duj.4.7",
                 (
-                    'Modular isogeny class 48.2304.161.duj',
+                    # Currently, isogeny/gassmann class links are not available on individual curve pages.
+                    # 'Modular isogeny class 48.2304.161.duj',
                     'L-function not available',
                     'Modular curve 48.2304.161.duj.1',
                     'Modular curve 48.2304.161.duj.2',
