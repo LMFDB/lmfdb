@@ -1,7 +1,7 @@
 {% extends 'embedded_results.html' %}
 {% block embedding_content %}
 
-<p>{{ family.moduli_description }}</p>
+<p>{{ family.moduli_description | safe }}</p>
 
 <h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
 <table>
