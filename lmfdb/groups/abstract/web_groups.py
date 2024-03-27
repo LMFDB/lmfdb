@@ -1733,7 +1733,7 @@ class WebAbstractGroup(WebObj):
         # take an element of a pcgs in GAP and make our string form
         if elt=='':
             return ''
-        return pcgs_expos_to_str(self, self.pcgs.ExponentsOfPcElement(elt))
+        return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt))
 
     
     def decode_as_pcgs(self, code, as_str=False):
@@ -1747,7 +1747,7 @@ class WebAbstractGroup(WebObj):
             code = code // m
         if as_str:
             # Need to combine some generators
-            return pcgs_expos_to_str(self, vec)
+            return self.pcgs_expos_to_str(vec)
         else:
             return self.pcgs.PcElementByExponents(vec)
 
@@ -2255,10 +2255,10 @@ class WebAbstractGroup(WebObj):
     def aut_gens_flag(self): #issue with Lie type when family is projective, auto stored as permutations often
         if self.aut_gens is None:
             return False
-        elif self.element_repr_type == "Lie":
+        if self.element_repr_type == "Lie":
             if self.representations["Lie"][0]["family"][0] == "P":
                 return False
-        elif self.element_repr_type in ["GLZN", "GLZq", "Lie", "GLFq", "GLFq"]:
+        if self.element_repr_type in ["GLZN", "GLZq", "Lie", "GLFq", "GLFp"]:
             return False
         return True
 
