@@ -1710,6 +1710,32 @@ class WebAbstractGroup(WebObj):
     def pcgs_relative_orders(self):
         return [ZZ(c) for c in self.pcgs.RelativeOrders()]
 
+    def pcgs_expos_to_str(self, vec):
+        w = []
+        e = 0
+        for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
+            e += c
+            if i + 1 in self.gens_used:
+                w.append(e)
+                e = 0
+            else:
+                e *= m
+        w.reverse()
+        s = ""
+        for i, c in enumerate(w):
+            if c == 1:
+                s += var_name(i)
+            elif c != 0:
+                s += "%s^{%s}" % (var_name(i), c)
+        return s
+        
+    def pcgs_as_str(self, elt):
+        # take an element of a pcgs in GAP and make our string form
+        if elt=='':
+            return ''
+        return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt))
+
+    
     def decode_as_pcgs(self, code, as_str=False):
         # Decode an element
         vec = []
@@ -1721,23 +1747,7 @@ class WebAbstractGroup(WebObj):
             code = code // m
         if as_str:
             # Need to combine some generators
-            w = []
-            e = 0
-            for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
-                e += c
-                if i + 1 in self.gens_used:
-                    w.append(e)
-                    e = 0
-                else:
-                    e *= m
-            w.reverse()
-            s = ""
-            for i, c in enumerate(w):
-                if c == 1:
-                    s += var_name(i)
-                elif c != 0:
-                    s += "%s^{%s}" % (var_name(i), c)
-            return s
+            return self.pcgs_expos_to_str(vec)
         else:
             return self.pcgs.PcElementByExponents(vec)
 
@@ -1805,7 +1815,6 @@ class WebAbstractGroup(WebObj):
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
-
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
@@ -1996,6 +2005,29 @@ class WebAbstractGroup(WebObj):
     def auto_gens_list(self):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
+
+    def auto_gens_data(self):
+        gens = self.aut_gens
+        gens = [ [ self.decode(gen) for gen in z ] for z in gens]
+        auts = [libgap.GroupHomomorphismByImagesNC(self.G,self.G,gens[0],z) for z in gens]
+        orders = [z.Order() for z in auts]
+        def myisinner(a):
+            if a.IsInnerAutomorphism():
+                return a.ConjugatorOfConjugatorIsomorphism()
+            return ''
+        inners = [myisinner(z) for z in auts]
+        rep_type = self.element_repr_type
+        if rep_type == "PC":
+            inners = [self.pcgs_as_str(z) for z in inners]
+        elif rep_type == "Perm":
+            inners = [str(z) for z in inners]
+        else:
+            if self.element_repr_type=="GLFq":
+                R, N, k, d, rep_type = self._matrix_coefficient_data(self.element_repr_type)
+                inners = [matrix(R,d,d,[[z for z in zz] for zz in z3]) if z3 != '' else '' for z3 in inners]
+            inners = [latex(matrix(z)) if z != '' else '' for z in inners]
+        return {'orders': orders, 'inners': inners}
+
 
     def representation_line(self, rep_type, skip_head=False):
         # TODO: Add links to searches for other representations when available
@@ -2223,9 +2255,11 @@ class WebAbstractGroup(WebObj):
     def aut_gens_flag(self): #issue with Lie type when family is projective, auto stored as permutations often
         if self.aut_gens is None:
             return False
-        elif self.element_repr_type == "Lie":
+        if self.element_repr_type == "Lie":
             if self.representations["Lie"][0]["family"][0] == "P":
                 return False
+        if self.element_repr_type in ["GLZN", "GLZq", "Lie", "GLFq", "GLFp"]:
+            return False
         return True
 
     # outer automorphism group
