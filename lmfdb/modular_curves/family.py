@@ -46,7 +46,7 @@ class X0N(ModCurveFamily_base):
     cusps = r"$\nu_\infty = \sum_{d|N, d>0} \varphi((d,N/d))$"
     rational_cusps = "1"
     moduli_description = fr"$X_0(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{{pmatrix}} \ast & \ast \\ 0 & \ast \end{{pmatrix}} \subset \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,C)$, where $E$ is an elliptic curve over $k$, and $C$ is a $\Gal_k$-stable cyclic subgroup of $E[N](\overline{{k}})$ of order $N$ that is the kernel of a rational isogeny $E\to E'$ of degree $N$."
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_level = "?level=22%2C+23%2C+26%2C+28%2C+29%2C+30%2C+31%2C+33%2C+35%2C+37%2C+39%2C+40%2C+41%2C+46%2C+47%2C+48%2C+50%2C+59%2C+71&family=X0"
     biell_level = "?level=22%2C+26%2C+28%2C+30%2C+33%2C+34%2C+35%2C+37%2C+38%2C+39%2C+40%2C+42%2C+43%2C+44%2C+45%2C+48%2C+50%2C+51%2C+53%2C+54%2C+55%2C+56%2C+60%2C+61%2C+62%2C+63%2C+64%2C+65%2C+69%2C+72%2C+75%2C+79%2C+81%2C+83%2C+89%2C+92%2C+94%2C+95%2C+101%2C+119%2C+131&family=X0"
     biell_nonhypell_level = "?level=34%2C+38%2C+42%2C+43%2C+44%2C+45%2C+51%2C+53%2C+54%2C+55%2C+56%2C+60%2C+61%2C+62%2C+63%2C+64%2C+65%2C+69%2C+72%2C+75%2C+79%2C+81%2C+83%2C+89%2C+92%2C+94%2C+95%2C+102%2C+119%2C+131&family=X0"
@@ -86,7 +86,7 @@ class X1N(ModCurveFamily_base):
     cusps = r"$\nu_\infty = \begin{cases} 1, & \text{ if } N =1, \\ 2, & \text{ if } N = 2, \\ 3, & \text{ if } N = 4, \\ \frac{1}{2} \sum_{d|N,d>0} \varphi(d)\varphi(N/d), & \text{ otherwise.} \end{cases}$"
     rational_cusps = "1"
     moduli_description = fr"$X_1(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{{pmatrix}} 1 & * \\ 0 & * \end{{pmatrix}} < \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,P)$, where $E$ is an elliptic curve over $k$, and $P \in E[N](\overline{{k}})$ is a point of exact order $N$."
-    genus_formula = r"$g = \begin{cases} 0, & \text{ if } N = 1,\ldots,5, \\ 1 + \frac{N^2}{24} \prod_{p|N, \text{ prime}} \big( 1 - p^{-2}\big) - \frac{1}{4} \sum_{d|N, d>0} \varphi(d)\varphi(N/d), & N \geq 5. \end{cases}$"
+    genus_formula = r"$$g = \begin{cases} 0, & \text{ if } N = 1,\ldots,5, \\ 1 + \frac{N^2}{24} \prod_{p|N, \text{ prime}} \big( 1 - p^{-2}\big) - \frac{1}{4} \sum_{d|N, d>0} \varphi(d)\varphi(N/d), & N \geq 5. \end{cases}$$"
     hypell_level = "?level=13%2C16%2C18&family=X1"
     biell_level = "?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1"
     hypell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=1138196">MR:1138196</a>] showed that there are only 3 hyperelliptic curves. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=13%2C16%2C18&family=X1">following table</a>] for the full list.'
@@ -127,7 +127,7 @@ class XN(ModCurveFamily_base):
     cusps = r"$\nu_\infty = \begin{cases} 1, & \text{ if } N = 1, \\ i/2, & \text{ if } N > 1. \end{cases}$"
     rational_cusps = r"\nu_\infty = \begin{cases} 1, & \text{ if } N = 1, \\ i/2, & \text{ if } N > 1. \end{cases}"
     moduli_description = fr"$X(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of the trivial subgroup of $\GL_2(\Z/N\Z)$. As a moduli space it parameterizes triples $(E,P,Q)$, where $E$ is an elliptic curve over $k$, and $P,Q \in E(k)$ form a basis for $E[N](\overline{{k}})$. There are other {display_knowl('modcurve.xn','variants')}. The {display_knowl('modcurve.canonical_field', 'canonical field of definition')} of $X(N)$ is $\Q(\zeta_N)$, which means that the database of modular curves $X_H/\Q$ only includes $X(N)$ for $N\le 2$."
-    genus_formula = r"$g = \begin{cases} 0, & \text{ if } N = 1,2, \\ 1 + \frac{N^2 (N-6)}{24} \prod_{p|N, \text{ prime}} \big( 1 - p^{-2}\big), & N \geq 3. \end{cases}$"
+    genus_formula = r"$$g = \begin{cases} 0, & \text{ if } N = 1,2, \\ 1 + \frac{N^2 (N-6)}{24} \prod_{p|N, \text{ prime}} \big( 1 - p^{-2}\big), & N \geq 3. \end{cases}$$"
     hypell_description = "None."
     biell_description = "None."
 
@@ -165,7 +165,7 @@ class XspN(ModCurveFamily_base):
     cusps = "N/2"
     rational_cusps = "1"
     moduli_description = fr"$X_{{\text{{sp}}}}(N)$ is the {display_knowl('modcurve','modular curve')} for the subgroup $H\le \GL_2(\widehat\Z)$ given by the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} $\begin{{pmatrix}} * & 0\\ 0& * \end{{pmatrix}}$ that is split at every prime dividing $N$. As a moduli space it parameterizes triples $(E,C,D)$ where $E$ is an elliptic curve over $k$, and $C$ and $D$ are $\Gal_k$-stable cyclic subgroups such that $E[N](\overline{{k}})\simeq C \oplus D$."
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
 
     @lazy_attribute
     def cusps_display(self):
@@ -201,7 +201,7 @@ class XspplusN(ModCurveFamily_base):
     cusps = "N/2"
     rational_cusps = "1"
     moduli_description = fr"$X_{{\text{{sp}}}}^+(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of an {display_knowl('gl2.cartan', 'extended Cartan subgroup')} $\begin{{pmatrix}} * & 0 \\ 0 & * \end{{pmatrix}} \cup \begin{{pmatrix}} 0 & * \\ * & 0 \end{{pmatrix}}\subseteq \GL_2(\Z/N\Z)$ that is split at every prime dividing $N$. As a moduli space it parameterizes pairs $(E,\{{C,D\}})$ where $E$ is an elliptic curve over $k$, and $\{{C,D\}}$ is a $\Gal_k$-stable pair of cyclic subgroups such that $E[N](\overline{{k}})\simeq C \oplus D$. (Neither $C$ nor $D$ need be $\Gal_k$-stable.)"
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
 
     @lazy_attribute
     def cusps_display(self):
@@ -230,14 +230,14 @@ class XnsN(ModCurveFamily_base):
     name = "X_{\mathrm{ns}}(N)"
     sl2level = "N"
     index = "N+1"
-    psl2index = "N^2+1"
+    psl2index = r"i = (N-6)\cdot \varphi(N)"
     genus = "g"
-    nu2 = "0"
-    nu3 = "0"
-    cusps = "N/2"
+    nu2 = r"$\nu_2 = \begin{cases}2^{\omega(N)} & \text{if } p \equiv 3 \bmod 4 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
+    nu3 = r"$\nu_3 = \begin{cases}2^{\omega(N)} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
+    cusps = r"$\nu_\infty = 0$"
     rational_cusps = "1"
     moduli_description = fr"$X_{{\text{{ns}}}}(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} of $\GL_2(\Z/N\Z)$ that is nonsplit at every prime dividing $N$."
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
 
     @lazy_attribute
     def cusps_display(self):
@@ -266,14 +266,14 @@ class XnsplusN(ModCurveFamily_base):
     name = "X_{\mathrm{ns}}^+(N)"
     sl2level = "N"
     index = "N+1"
-    psl2index = "N^2+1"
+    psl2index = r"i = (N-6)\cdot \varphi(N) \cdot 2^{-\omega(N)}"
     genus = "g"
-    nu2 = "0"
-    nu3 = "0"
-    cusps = "N/2"
-    rational_cusps = "1"
+    nu2 = r"$\nu_2 = N \cdot 2^{-\omega(N)} \cdot \prod_{p\mid N} \begin{cases}1 - \frac{1}{p} & \text{if } p \equiv 1 \bmod 4, \\ 1 & \text{if } p=2, \\ 1 + \frac{1}{p} + \frac{2}{p^r} & \text{if } p \equiv 3 \bmod 4 \text{ (}r \text{ is the highest power of } p\mid N). \end{cases}$"
+    nu3 = r"$\nu_3 = \begin{cases}1 & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
+    cusps = r"$\nu_\infty = 0$"
+    rational_cusps = r"$\nu_\infty = 0$"
     moduli_description = fr"$X_{{\text{{ns}}}}^+(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of an {display_knowl('gl2.cartan', 'extended Cartan subgroup')} of $\GL_2(\Z/N\Z)$ that is nonsplit at every prime dividing $N$."
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
 
     @lazy_attribute
     def cusps_display(self):
@@ -309,7 +309,7 @@ class XS4p(ModCurveFamily_base):
     cusps = "N/2"
     rational_cusps = "1"
     moduli_description = fr"For $\ell$ an odd prime, $X_{{S_4}}(p)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of the subgroup of $\PGL_2(\Z/p\Z)$ isomorphic to $S_4$ (which is unique up to conjugacy). It parameterizes elliptic curves whose {display_knowl('ec.galois_rep_modell_image','mod-$p$ Galois representation')} has projective image $S_4$, one of the three exceptional groups $A_4$, $A_5$, $S_4$ of $\PGL_2(p)$ that can arise as projective mod-$p$ images, and the only one that can arise for elliptic curves over $\Q$. The subgroup $H$ contains $-I$ and has surjective determinant when $p \equiv \pm 3\bmod 8$, but not otherwise."
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
 
     @lazy_attribute
     def cusps_display(self):
@@ -345,7 +345,7 @@ class XarithN(ModCurveFamily_base):
     cusps = "N/2"
     rational_cusps = "1"
     moduli_description = fr"$X_{{\mathrm{{arith}}}}(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\leq \GL_2(\widehat{{\Z}})$ the inverse image of $\begin{{pmatrix}}1&0\\0&*\end{{pmatrix}}\leq \GL_2(\Z/N\Z)$. As a moduli space, $X_{{\mathrm{{sym}}}}$ parametrizes isomorphism classes of triples $(E,\phi,P)$, where $E$ is a generalized elliptic curve, $P$ is a point of exact order $N$, and $\phi \colon E \to E'$ is a cyclic $N$-isogeny such that $E[N]$ is generated by $P$ and $\ker\phi$. Alternatively, it parametrizes isomorphism classes of pairs $(E,\psi)$ where $E$ is a generalized elliptic curve and $\psi \colon \mu_N\times \Z/N\Z\xrightarrow{{\sim}} E[N]$ is a symplectic isomorphism."
-    genus_formula = r"$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$"
+    genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     biell_level = "?level=7%2C8&family=Xarith"
     hypell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=3145452">MR:3145452</a>] showed that there are no hyperelliptic curves.'
     biell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=3145452">MR:3145452</a>] showed that there are only 2 bielliptic curves. $X_{\textup{arith}}(7)$ is isomorphic to the Klein quartic and $X_{\textup{arith}}(8)$ is isomorphic to the Wiman curve. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=7%2C8&family=Xarith">following table</a>] for the full list.'
