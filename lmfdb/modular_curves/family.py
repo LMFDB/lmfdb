@@ -166,6 +166,7 @@ class XspN(ModCurveFamily_base):
     rational_cusps = "1"
     moduli_description = fr"$X_{{\text{{sp}}}}(N)$ is the {display_knowl('modcurve','modular curve')} for the subgroup $H\le \GL_2(\widehat\Z)$ given by the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} $\begin{{pmatrix}} * & 0\\ 0& * \end{{pmatrix}}$ that is split at every prime dividing $N$. As a moduli space it parameterizes triples $(E,C,D)$ where $E$ is an elliptic curve over $k$, and $C$ and $D$ are $\Gal_k$-stable cyclic subgroups such that $E[N](\overline{{k}})\simeq C \oplus D$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
+    hypell_description = r'(source) showed that there is only 1 hyperelliptic curve, namely $X_{\mathrm{sp}}(11)$. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=11&family=Xsp">following table</a>] for the full list.'
 
     @lazy_attribute
     def cusps_display(self):
