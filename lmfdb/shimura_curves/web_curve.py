@@ -686,7 +686,7 @@ class WebShimCurve(WebObj):
     def show_torsion(self):
         if self.torsion:
             return r"$"+"\oplus".join(["\Z / %s \Z" % t for t in self.torsion]) + "$"
-        return ""
+        return "trivial"
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
