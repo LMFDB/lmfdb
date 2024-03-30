@@ -208,7 +208,7 @@ class ModCrvTest(LmfdbTest):
         assert "Canonical model" in L.get_data(as_text=True)
         assert "$ 12 x^{2} + 3 x y + 3 y^{2} - z^{2} + z w - w^{2} $" in L.get_data(as_text=True)
         assert "Singular plane model" in L.get_data(as_text=True)
-        assert "$  - 2008 x^{6} + 456 x^{5} y + 192 x^{5} z + 408 x^{4} y^{2} - 564 x^{4} y z + 324 x^{4} z^{2} + \cdots  + 9 y^{2} z^{4} $" in L.get_data(as_text=True)
+        assert r"$  - 2008 x^{6} + 456 x^{5} y + 192 x^{5} z + 408 x^{4} y^{2} - 564 x^{4} y z + 324 x^{4} z^{2} + \cdots  + 9 y^{2} z^{4} $" in L.get_data(as_text=True)
 
     def test_rational_points(self):
         data = self.tc.get("/ModularCurve/Q/48.1152.81.mov.1/",follow_redirects=True).get_data(as_text=True)
@@ -469,7 +469,6 @@ class ModCrvTest(LmfdbTest):
             'traces'
             ]:
             assert underlying_data in data
-        
 
     def test_gassmann_class(self):
         data = self.tc.get("/ModularCurve/Q/40.720.49.df", follow_redirects=True).get_data(as_text=True)
