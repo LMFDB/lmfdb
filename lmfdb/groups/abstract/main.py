@@ -310,7 +310,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "is_sylow": ["is_hall", "nilpotent"],
         "nilpotent": ["solvable"],
     }
-    print(getattr(sgp,'normal'))
+
     if type == "normal":
         overall_order = [
             "thecenter",
@@ -596,6 +596,7 @@ def url_for_chartable_label(label):
     gp = ".".join(label.split(".")[:2])
     return url_for(".char_table", label=gp, char_highlight=label)
 
+
 @abstract_page.route("/")
 def index():
     bread = get_bread()
@@ -612,6 +613,9 @@ def index():
         elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
             info["search_array"] = ComplexCharSearchArray()
             return complex_char_search(info)
+        elif search_type in ["ConjugacyClasses"]:  #JP no random because not pages
+            info["search_array"]=ConjugacyClassSearchArray()
+            return conjugacy_class_search(info)
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -1226,8 +1230,12 @@ def indicator_type(strg):
     return strg
 
 def char_to_sub(short_label, group):
-    full_label = f"{group}.{short_label}"
-    return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
+    if short_label:
+        full_label = f"{group}.{short_label}"
+        return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
+    else:
+        return f'not computed'
+
 
 complex_char_columns = SearchColumns([
     LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url),
@@ -1298,6 +1306,64 @@ def complex_char_search(info, query={}):
 #    parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "image_isoclass", regex=abstract_group_label_regex)
 #    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
+
+
+def print_powers(gps, Lpowers):
+    str = ""
+    vals = []
+    for val in Lpowers:
+        lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})
+        vals.append(lab['label'])
+    return ", ".join(vals)    
+
+
+conjugacy_class_columns = SearchColumns([
+    MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col="group"),
+    MathCol("label", "group.label_conjugacy_class", "Label"),
+    MathCol("order", "group.order_conjugacy_class", "Order"),
+    MathCol("size", "group.size_conjugacy_class", "Size"),
+    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col="centralizer"),
+    MultiProcessedCol("powers","group.powers_conjugacy_class","Powers",["group","powers"], print_powers),
+#    LinkCol("qchar", "group.representation.rational_character", r"$\Q$-character", get_qchar_url),
+#    CheckCol("faithful", "group.representation.faithful", "Faithful"),    
+])
+
+
+def cc_postprocess(res, info, query):
+    # We want to get latex for groups in one query
+    labels = set()
+    for rec in res:
+        for col in ["group","centralizer"]:
+            label = rec.get(col)
+            if label is not None:
+                labels.add(label)
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    for rec in res:
+        rec["tex_cache"] = tex_cache
+    return res
+
+
+class Conjugacy_class_download(Downloader):
+    table = db.gps_groups_cc
+
+@search_wrap(
+    table=db.gps_groups_cc,
+    title="Conjugacy class search results",
+    err_title="Conjugacy class search input error",
+    columns=conjugacy_class_columns,
+    shortcuts={"download": Conjugacy_class_download()},
+    bread=lambda: get_bread([("Search Results", "")]),
+    postprocess=cc_postprocess,
+    learnmore=learnmore_list,
+    url_for_label=None   # not pages for conjugacy classes
+)
+
+def conjugacy_class_search(info, query={}):
+    info["search_type"] = "ConjugacyClasses"
+    parse_ints(info, query, "order")
+    parse_ints(info, query, "size")
+    parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
+
 
 
 def factor_latex(n):
@@ -1515,6 +1581,7 @@ def render_abstract_subgroup(label):
     ]
 
     bread = get_bread([(label,)])
+
 
     return render_template(
         "abstract-show-subgroup.html",
@@ -2448,6 +2515,41 @@ class ComplexCharSearchArray(SearchArray):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
 
+
+class ConjugacyClassSearchArray(SearchArray):
+    sorts = [("", "order", ['order', 'size']),
+    ]
+    def __init__(self):
+        group = TextBox(
+            name="group",
+            label="Group",
+            knowl="group.name",
+            example="128.207",
+        )
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="group.order_conjugacy_class",
+            example="3",
+            example_span="3, or a range like 3..5"
+        )
+        size = TextBox(
+            name="size",
+            label="Size",
+            knowl="gp.size_conjugacy_class",
+            example="4",
+            example_span="4, or a range like 3..5"
+        )
+        
+        self.refine_array = [
+            [group,order,size]
+        ]
+        
+    def search_types(self, info):
+        # Note: since we don't access this from the browse page, info will never be None
+        return [("ConjugacyClasses", "Search again")]  
+
+    
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
     # Note that, when called by knowl_cache from transitive_group.py,
