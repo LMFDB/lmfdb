@@ -1234,7 +1234,7 @@ def char_to_sub(short_label, group):
         full_label = f"{group}.{short_label}"
         return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
     else:
-        return f'not computed'
+        return "not computed"
 
 
 complex_char_columns = SearchColumns([
@@ -1309,7 +1309,6 @@ def complex_char_search(info, query={}):
 
 
 def print_powers(gps, Lpowers):
-    str = ""
     vals = []
     for val in Lpowers:
         lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})
