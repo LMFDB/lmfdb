@@ -1728,14 +1728,13 @@ class WebAbstractGroup(WebObj):
             elif c != 0:
                 s += "%s^{%s}" % (var_name(i), c)
         return s
-        
+
     def pcgs_as_str(self, elt):
         # take an element of a pcgs in GAP and make our string form
         if elt=='':
             return ''
         return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt))
 
-    
     def decode_as_pcgs(self, code, as_str=False):
         # Decode an element
         vec = []
@@ -1815,6 +1814,7 @@ class WebAbstractGroup(WebObj):
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
         L = ZZ(code).digits(N)
+
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
@@ -2011,6 +2011,7 @@ class WebAbstractGroup(WebObj):
         gens = [ [ self.decode(gen) for gen in z ] for z in gens]
         auts = [libgap.GroupHomomorphismByImagesNC(self.G,self.G,gens[0],z) for z in gens]
         orders = [z.Order() for z in auts]
+
         def myisinner(a):
             if a.IsInnerAutomorphism():
                 return a.ConjugatorOfConjugatorIsomorphism()
@@ -2027,7 +2028,6 @@ class WebAbstractGroup(WebObj):
                 inners = [matrix(R,d,d,[[z for z in zz] for zz in z3]) if z3 != '' else '' for z3 in inners]
             inners = [latex(matrix(z)) if z != '' else '' for z in inners]
         return {'orders': orders, 'inners': inners}
-
 
     def representation_line(self, rep_type, skip_head=False):
         # TODO: Add links to searches for other representations when available
