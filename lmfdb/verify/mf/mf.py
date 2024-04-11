@@ -4,7 +4,7 @@ from collections import defaultdict
 from sage.all import cached_function, psi, RR, Integer, prod
 
 from psycopg2.sql import SQL, Identifier
-from .verification import TableChecker, overall
+from ..verification import TableChecker, overall
 
 
 @cached_function

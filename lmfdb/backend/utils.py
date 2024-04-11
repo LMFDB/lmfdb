@@ -17,7 +17,11 @@ class SearchParsingError(ValueError):
     """
     Used for errors raised when parsing search boxes
     """
-    pass
+    def __init__(self, *args, **kwargs):
+        trim_msg_error = kwargs.pop("trim_msg_error", False)
+        self.trim_msg_error = trim_msg_error
+        super().__init__(*args, **kwargs)
+
 
 ##################################################################
 # query language                                                 #

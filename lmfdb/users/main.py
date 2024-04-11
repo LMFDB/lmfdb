@@ -9,7 +9,8 @@ from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
-from lmfdb.utils import flash_error
+from lmfdb.utils import flash_error, to_dict
+from lmfdb.utils.uploader import Uploader
 from markupsafe import Markup
 
 from lmfdb import db
@@ -337,3 +338,35 @@ def restart():
         return out.replace('\n', '<br>')
     else:
         return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
+
+class Reviewer(Uploader):
+    """
+    This uploader is used to collect UploadSection objects from different sections of the LMFDB that use them.
+    """
+    def __init__(self):
+        from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC, MultiKnowl
+        super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
+
+@login_page.route("/uploads", methods=["GET", "POST"])
+@login_required
+def review_uploads():
+    uploader = Reviewer()
+    reviewer = current_user.is_knowl_reviewer()
+    if request.method == "POST":
+        info = to_dict(request.form)
+        uploader.review(info, reviewer, current_user.id)
+    else:
+        info = to_dict(request.args)
+
+    user_shown = info.get("user_shown", "" if reviewer else current_user.id)
+    reviewing = (reviewer and not user_shown)
+    results, statuses = uploader.show_uploads(info, reviewing, user_shown)
+
+    return render_template(
+        "user-uploads.html",
+        title="Review data uploads",
+        uploader=uploader,
+        statuses=statuses,
+        results=results,
+        user_shown=user_shown,
+    )

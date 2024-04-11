@@ -181,6 +181,20 @@ st_aliases = {
     'J(E_4)': '1.4.E.8.3a',
     'J(E_6)': '1.4.E.12.4a',
     'U(1)_2': '1.4.F.1.1a',
+    'C_1': '1.4.F.1.1a',
+    'C_2': '1.4.F.2.1b',
+    'C_3': '1.4.F.3.1a',
+    'C_4': '1.4.F.4.1b',
+    'C_6': '1.4.F.6.2c',
+    'C_{4,1}': '1.4.F.4.1a',
+    'J(C_1)': '1.4.F.2.1a',
+    'D_2': '1.4.F.4.2a',
+    'D_3': '1.4.F.6.1a',
+    'D_4': '1.4.F.8.3b',
+    'J(C_3)': '1.4.F.6.2a',
+    'T': '1.4.F.12.3a',
+    'D_6': '1.4.F.12.4c',
+    'O': '1.4.F.24.12b',
     'J(C_2)': '1.4.F.4.2b',
     'J(C_4)': '1.4.F.8.2a',
     'J(C_6)': '1.4.F.12.5a',
@@ -385,6 +399,7 @@ def st_lookup(label):
         return db.gps_st.lookup(label), True
 
 def st_knowl(label):
+    # import pdb; pdb.set_trace()
     try:
         data,_ = st_lookup(label)
         if not data:

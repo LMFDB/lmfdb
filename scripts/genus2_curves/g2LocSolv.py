@@ -19,7 +19,7 @@ def IsSquareInQp(x, p):
 
 
 def HasFinitePointAt(F, p, c):
-    """  
+    """
     Tests whether y²=c*F(x) has a finite Qp-point with x and y both in Zp,
     assuming that deg F = 6 and F integral
     """

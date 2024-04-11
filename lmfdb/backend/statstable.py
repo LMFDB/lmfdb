@@ -611,7 +611,7 @@ class PostgresStatsTable(PostgresBase):
                 if satisfies_constraint(rec[0])
             }
 
-    def _quick_extreme(self, col, ccols, cvals, kind="max"):
+    def _quick_statistic(self, col, ccols, cvals, kind="max"):
         """
         Return the min or max value achieved by the column, or None if not cached.
 
@@ -621,7 +621,7 @@ class PostgresStatsTable(PostgresBase):
         - ``ccols`` -- constraint columns
         - ``cvals`` -- constraint values.  The max will be taken over rows where
           the constraint columns take on these values.
-        - ``kind`` -- either "min" or "max"
+        - ``kind`` -- either "min" or "max" or "sum"
         """
         constraint = SQL("constraint_cols = %s AND constraint_values = %s")
         values = [kind, Json([col]), ccols, cvals]
@@ -632,7 +632,7 @@ class PostgresStatsTable(PostgresBase):
         if cur.rowcount:
             return cur.fetchone()[0]
 
-    def _slow_extreme(self, col, constraint, kind="max"):
+    def _slow_statistic(self, col, constraint, kind="max"):
         """
         Compute the minimum/maximum value achieved by the column.
 
@@ -648,10 +648,13 @@ class PostgresStatsTable(PostgresBase):
             values = []
         else:
             where = SQL(" WHERE {0}").format(qstr)
+
         if kind == "min":
             base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0}")
         elif kind == "max":
             base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0} DESC ")
+        elif kind == "sum":
+            base_selecter = SQL("SELECT SUM({0}) FROM {1}{2} ")
         else:
             raise ValueError("Invalid kind")
         base_selecter = base_selecter.format(
@@ -668,9 +671,9 @@ class PostgresStatsTable(PostgresBase):
             m = cur.fetchone()[0]
         return m
 
-    def _record_extreme(self, col, ccols, cvals, m, kind="max"):
+    def _record_statistic(self, col, ccols, cvals, m, kind="max"):
         """
-        Store a computed maximum value in the stats table.
+        Store a computed statistic (referenced by `kind`) in the stats table.
 
         INPUT:
 
@@ -678,6 +681,7 @@ class PostgresStatsTable(PostgresBase):
         - ``ccols`` -- the constraint columns
         - ``cvals`` -- the constraint values
         - ``m`` -- the maximum value to be stored
+        - ``kind`` -- the kind of statistic. Usually `min` or `max` or `sum`
         """
         try:
             inserter = SQL(
@@ -717,11 +721,11 @@ class PostgresStatsTable(PostgresBase):
         if col not in self.table.search_cols:
             raise ValueError("%s not a column of %s" % (col, self.search_table))
         ccols, cvals = self._split_dict(constraint)
-        m = self._quick_extreme(col, ccols, cvals, kind="max")
+        m = self._quick_statistic(col, ccols, cvals, kind="max")
         if m is None:
-            m = self._slow_extreme(col, constraint, kind="max")
+            m = self._slow_statistic(col, constraint, kind="max")
             if record and self.saving:
-                self._record_extreme(col, ccols, cvals, m, kind="max")
+                self._record_statistic(col, ccols, cvals, m, kind="max")
         return m
 
     def min(self, col, constraint={}, record=True):
@@ -746,11 +750,23 @@ class PostgresStatsTable(PostgresBase):
         if col not in self.table.search_cols:
             raise ValueError("%s not a column of %s" % (col, self.search_table))
         ccols, cvals = self._split_dict(constraint)
-        m = self._quick_extreme(col, ccols, cvals, kind="min")
+        m = self._quick_statistic(col, ccols, cvals, kind="min")
         if m is None:
-            m = self._slow_extreme(col, constraint, kind="min")
+            m = self._slow_statistic(col, constraint, kind="min")
             if record and self.saving:
-                self._record_extreme(col, ccols, cvals, m, kind="min")
+                self._record_statistic(col, ccols, cvals, m, kind="min")
+        return m
+
+    def sum(self, col, constraint={}, record=True):
+        """
+        Look up sum; if it exists return it, otherwise compute it, store it, and return
+        """
+        ccols, cvals = self._split_dict(constraint)
+        m = self._quick_statistic(col, ccols, cvals, kind="sum")
+        if m is None:
+            m = self._slow_statistic(col, constraint, kind="sum")
+            if record:
+                self._record_statistic(col, ccols, cvals, m, kind="sum")
         return m
 
     def _bucket_iterator(self, buckets, constraint):

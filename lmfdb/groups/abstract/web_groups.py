@@ -2751,10 +2751,8 @@ class WebAbstractSubgroup(WebObj):
         # We set various properties from S for create_boolean_subgroup_string
         if not S:
             order = self.subgroup_order
-            #newgroup.order = order
-            #newgroup.pgroup = len(ZZ(order).abs().factor())==1
             newgroup = WebAbstractGroup('nolabel',
-                data={'order': order, 'G': None, 'abelian': self.abelian,
+                data={'order': order, 'G': None, 'abelian': self.abelian,'cyclic': self.cyclic,
                       # What if aut_label is set?
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor())==1})

@@ -1,4 +1,4 @@
-# This script was created using the 2012 paper of Johnson-Leung and Roberts. 
+# This script was created using the 2012 paper of Johnson-Leung and Roberts.
 
 # INPUTS:
 # F is a real quadratic number field

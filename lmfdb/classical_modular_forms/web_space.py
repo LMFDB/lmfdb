@@ -293,13 +293,10 @@ def make_newspace_data(level, char_data, k=2):
     data['weight_parity'] = (-1)**k
     return data
 
-
 def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     # This creates enough of data to generate the oldspace decomposition on a newspace page
     level = int(newspace_label.split('.')[0])
-    weight = int(newspace_label.split('.')[1])
-    char_orbit_label = newspace_label.split('.')[2]
-    
+    weight = int(newspace_label.split('.')[1])  
     prim_orbit_label = str(char_conductor) + '.' + cremona_letter_code(prim_orbit_index - 1)
     # To justify the -1 above compare e.g.
     # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
@@ -315,13 +312,12 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit_index']
         entry['sub_conrey_index'] = int(sub_chars[sub_level]['first_label'].split('.')[-1])
         entry['sub_mult'] = len(ZZ(level/sub_level).divisors())
-        if (sub_level >= 23) or (int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0):
+        if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
             # only include subspaces with cusp forms
             # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
             oldspaces.append(entry)
     
     return oldspaces
-
 
 class WebNewformSpace():
     def __init__(self, data):
