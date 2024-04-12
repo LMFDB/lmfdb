@@ -248,5 +248,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'chi = DirichletCharacter(H, M([1,2]))' in W.get_data(as_text=True), "sage code generator is wrong"
 
     def test_underlying_data(self):
+        W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
+        assert 'is_minimal' in W and 'last_label' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W
