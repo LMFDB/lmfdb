@@ -1323,6 +1323,7 @@ conjugacy_class_columns = SearchColumns([
     MathCol("size", "group.size_conjugacy_class", "Size"),
     MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col="centralizer"),
     MultiProcessedCol("powers","group.powers_conjugacy_class","Powers",["group","powers"], print_powers),
+
 #    LinkCol("qchar", "group.representation.rational_character", r"$\Q$-character", get_qchar_url),
 #    CheckCol("faithful", "group.representation.faithful", "Faithful"),    
 ])
