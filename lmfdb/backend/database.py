@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import csv
 import logging
-import os
+from pathlib import Path
 import time
 import traceback
 import itertools
 from collections import defaultdict, Counter
-from glob import glob
 
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder
@@ -52,6 +51,7 @@ def setup_connection(conn):
         from .encoding import RealEncoder, LmfdbRealLiteral
         register_adapter(RealNumber, RealEncoder)
         register_adapter(LmfdbRealLiteral, RealEncoder)
+
 
 class PostgresDatabase(PostgresBase):
     """
@@ -158,7 +158,7 @@ class PostgresDatabase(PostgresBase):
                 ),
                 [self._user, "public"] + privileges,
             )
-            self._read_only = cur.fetchone()[0] ==0
+            self._read_only = cur.fetchone()[0] == 0
 
         self._super_user = (self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0] == "on")
 
@@ -989,22 +989,24 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 if tablename not in self.tablenames:
                     raise ValueError(f"{tablename} is not in tablenames")
 
-        if os.path.exists(data_folder):
+        data_folder = Path(data_folder)
+
+        if data_folder.exists():
             raise ValueError("The path {} already exists".format(data_folder))
-        os.makedirs(data_folder)
+        data_folder.mkdir(parents=True)
         failures = []
         for tablename in search_tables:
             if tablename in self.tablenames:
                 table = self[tablename]
-                searchfile = os.path.join(data_folder, tablename + ".txt")
-                statsfile = os.path.join(data_folder, tablename + "_stats.txt")
-                countsfile = os.path.join(data_folder, tablename + "_counts.txt")
-                extrafile = os.path.join(data_folder, tablename + "_extras.txt")
+                searchfile = data_folder / (tablename + ".txt")
+                statsfile = data_folder / (tablename + "_stats.txt")
+                countsfile = data_folder / (tablename + "_counts.txt")
+                extrafile = data_folder / (tablename + "_extras.txt")
                 if table.extra_table is None:
                     extrafile = None
-                indexesfile = os.path.join(data_folder, tablename + "_indexes.txt")
-                constraintsfile = os.path.join(data_folder, tablename + "_constraints.txt")
-                metafile = os.path.join(data_folder, tablename + "_meta.txt")
+                indexesfile = data_folder / (tablename + "_indexes.txt")
+                constraintsfile = data_folder / (tablename + "_constraints.txt")
+                metafile = data_folder / (tablename + "_meta.txt")
                 table.copy_to(
                     searchfile=searchfile,
                     extrafile=extrafile,
@@ -1071,7 +1073,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         search table, such as knowls or user data.
 
         """
-        if not os.path.isdir(data_folder):
+        data_folder = Path(data_folder)
+
+        if not data_folder.is_dir():
             raise ValueError("The path {} is not a directory".format(data_folder))
         sep = kwds.get("sep", "|")
         with DelayCommit(self, commit, silence=True):
@@ -1086,11 +1090,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 "_constraints.txt",
                 "_meta.txt",
             ]
-            for path in glob(os.path.join(data_folder, "*.txt")):
-                filename = os.path.basename(path)
+            for path in (data_folder / "*.txt").glob():
+                filename = path.name
                 if any(filename.endswith(elt) for elt in possible_endings):
                     continue
-                tablename = filename[:-4]
+                tablename = path.stem
                 if tablename not in self.tablenames:
                     non_existent_tables.append(tablename)
             if non_existent_tables:
@@ -1102,13 +1106,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     )
                 print("Creating tables: {0}".format(", ".join(non_existent_tables)))
                 for tablename in non_existent_tables:
-                    search_table_file = os.path.join(data_folder, tablename + ".txt")
-                    extras_file = os.path.join(data_folder, tablename + "_extras.txt")
-                    metafile = os.path.join(data_folder, tablename + "_meta.txt")
-                    if not os.path.exists(metafile):
+                    search_table_file = data_folder / (tablename + ".txt")
+                    extras_file = data_folder / (tablename + "_extras.txt")
+                    metafile = data_folder / (tablename + "_meta.txt")
+                    if not metafile.exists():
                         raise ValueError("meta file missing for {0}".format(tablename))
                     # read metafile
-                    with open(metafile, "r") as F:
+                    with metafile.open("r") as F:
                         rows = list(csv.reader(F, delimiter=str(sep)))
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
@@ -1117,7 +1121,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     meta["col_description"] = ast.literal_eval(meta["col_description"])
                     assert meta["name"] == tablename
 
-                    with open(search_table_file, "r") as F:
+                    with search_table_file.open("r") as F:
                         search_columns_pairs = self._read_header_lines(F, sep=sep)
 
                     search_columns = defaultdict(list)
@@ -1127,9 +1131,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
                     extra_columns = None
                     if meta["has_extras"] == "t":
-                        if not os.path.exists(extras_file):
+                        if not extras_file.exists():
                             raise ValueError("extras file missing for {0}".format(tablename))
-                        with open(extras_file, "r") as F:
+                        with extras_file.open("r") as F:
                             extras_columns_pairs = self._read_header_lines(F, sep=sep)
                         extra_columns = defaultdict(list)
                         for name, typ in extras_columns_pairs:
@@ -1142,15 +1146,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for tablename in self.tablenames:
                 included = []
 
-                searchfile = os.path.join(data_folder, tablename + ".txt")
-                if not os.path.exists(searchfile):
+                searchfile = data_folder / (tablename + ".txt")
+                if not searchfile.exists():
                     continue
                 included.append(tablename)
 
                 table = self[tablename]
 
-                extrafile = os.path.join(data_folder, tablename + "_extras.txt")
-                if os.path.exists(extrafile):
+                extrafile = data_folder / (tablename + "_extras.txt")
+                if extrafile.exists():
                     if table.extra_table is None:
                         raise ValueError("Unexpected file %s" % extrafile)
                     included.append(tablename + "_extras")
@@ -1159,28 +1163,28 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 else:
                     raise ValueError("Missing file %s" % extrafile)
 
-                countsfile = os.path.join(data_folder, tablename + "_counts.txt")
-                if os.path.exists(countsfile):
+                countsfile = data_folder / (tablename + "_counts.txt")
+                if countsfile.exists():
                     included.append(tablename + "_counts")
                 else:
                     countsfile = None
 
-                statsfile = os.path.join(data_folder, tablename + "_stats.txt")
-                if os.path.exists(statsfile):
+                statsfile = data_folder / (tablename + "_stats.txt")
+                if statsfile.exists():
                     included.append(tablename + "_stats")
                 else:
                     statsfile = None
 
-                indexesfile = os.path.join(data_folder, tablename + "_indexes.txt")
-                if not os.path.exists(indexesfile):
+                indexesfile = data_folder / (tablename + "_indexes.txt")
+                if not indexesfile.exists():
                     indexesfile = None
 
-                constraintsfile = os.path.join(data_folder, tablename + "_constraints.txt")
-                if not os.path.exists(constraintsfile):
+                constraintsfile = data_folder / (tablename + "_constraints.txt")
+                if not constraintsfile.exists():
                     constraintsfile = None
 
-                metafile = os.path.join(data_folder, tablename + "_meta.txt")
-                if not os.path.exists(metafile):
+                metafile = data_folder / (tablename + "_meta.txt")
+                if not metafile.exists():
                     metafile = None
 
                 file_list.append(
@@ -1244,13 +1248,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             determines which tables
             were modified.
         """
-        if not os.path.isdir(data_folder):
+        data_folder = Path(data_folder)
+
+        if not data_folder.is_dir():
             raise ValueError("The path {} is not a directory".format(data_folder))
 
         with DelayCommit(self, commit, silence=True):
             for tablename in self.tablenames:
-                searchfile = os.path.join(data_folder, tablename + ".txt")
-                if not os.path.exists(searchfile):
+                searchfile = data_folder / (tablename + ".txt")
+                if not searchfile.exists():
                     continue
                 self[tablename].reload_revert()
 
