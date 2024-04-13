@@ -1090,7 +1090,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 "_constraints.txt",
                 "_meta.txt",
             ]
-            for path in (data_folder / "*.txt").glob():
+            for path in data_folder.glob("*.txt"):
                 filename = path.name
                 if any(filename.endswith(elt) for elt in possible_endings):
                     continue
