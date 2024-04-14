@@ -64,10 +64,12 @@ table.reptable td, table.reptable th {
 
       {% if info.cclasses is defined %}
    <table class="ntdata">
-      <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+      <thead><tr><td>Label</td><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
       <tbody>
         {% for c in info.cclasses %}
-           <tr><td> ${{c[3]}}$</td>
+           <tr>
+              <td> {{c[4]}}</td>
+              <td> ${{c[3]}}$</td>
               <td> ${{c[2]}}$</td>
               <td> ${{c[1]}}$</td>
               <td> ${{c[0]}}$</td>
@@ -103,7 +105,9 @@ table.reptable td, table.reptable th {
 
     <table>
       <tr><td>{{KNOWL('group.complex_character_table', 'Character table')}}:
-      {% if info.chartable is defined %}
+      {% if info.have_isom %}
+         {% include 'character_table.html' %}
+      {% elif info.chartable is defined %}
       <td>&nbsp;&nbsp;<td>
       <pre>
 {{info.chartable}}

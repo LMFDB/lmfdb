@@ -2473,7 +2473,9 @@ def sub_display_knowl(label, name=None):
         name = f"Subgroup {label}"
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={label}&func=sub_data">{name}</a>'
 
-def cc_data(gp, label, typ="complex"):
+def cc_data(gp, label, typ="complex", representative=None):
+    # representative allows us to use this mechanism for Galois
+    # group conjugacy classes as well
     if typ == "rational":
         wag = WebAbstractGroup(gp)
         rcc = wag.conjugacy_class_divisions
@@ -2510,7 +2512,9 @@ def cc_data(gp, label, typ="complex"):
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
 
-    if wacc.representative is None:
+    if representative:
+        ans += "<br>Representative: "+representative
+    elif wacc.representative is None:
         ans += "<br>Representative: not computed"
     else:
         if label == '1A':

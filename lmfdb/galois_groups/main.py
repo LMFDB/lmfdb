@@ -14,7 +14,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
-    search_wrap, redirect_no_cache)
+    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
@@ -323,8 +323,10 @@ def render_group_webpage(args):
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         data['nilpotency'] = '$%s$' % data['nilpotency']
+        data['have_isom'] = wgg.have_isomorphism
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] = ' not nilpotent'
+        data['dispv'] = sparse_cyclotomic_to_mathml
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
@@ -335,6 +337,7 @@ def render_group_webpage(args):
             title=title,
             bread=bread,
             info=data,
+            gp=wgg,
             code=wgg.code,
             properties=prop2,
             friends=friends,

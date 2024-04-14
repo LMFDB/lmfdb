@@ -3,12 +3,14 @@ from collections import defaultdict
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function
+from sage.all import ZZ, gap, cached_function, lazy_attribute, Permutations
 import os
 import yaml
+from flask import render_template
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
 def knowl_cache(galois_labels=None, results=None):
     """
@@ -157,27 +159,83 @@ class WebGaloisGroup:
     def num_conjclasses(self):
         return self._data['num_conj_classes']
 
+    @lazy_attribute
+    def wag(self):
+        return WebAbstractGroup(self.abstract_label())
+    
+    def have_isomorphism(self):
+        if self.wag.element_repr_type == "Lie":
+            return False
+        return 'isomorphism' in self._data
+
+    @lazy_attribute
+    def getisom(self):
+        # assumes isomorphism is in _data
+        gens_in_range = gap('['+self.generator_string()+']')
+        # instead this should use the value of isomorphism to get images
+        wag = self.wag
+        imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
+        imgs = [gap("PermList(%s)"%str(z)) for z in imgs]
+        iso=wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
+        return iso
+                       
+    @lazy_attribute
+    def factors_of_order(self):
+        return [z[0] for z in list(ZZ(self.order()).factor())]
+
+    @lazy_attribute
+    def characters(self):
+        return self.wag.characters
+        
     def conjclasses(self):
         if 'conjclasses' in self._data:
             return self._data['conjclasses']
         g = self.gapgroupnt()
         n = self.n()
         gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-        cc = g.ConjugacyClasses()
-        ccn = [x.Size() for x in cc]
-        ccc = [x.Representative() for x in cc]
+        wag = self.wag
+        if self.have_isomorphism() and wag.element_repr_type != "Lie":
+            isom = self.getisom
+            self.conjugacy_classes = wag.conjugacy_classes
+            cc = [z.representative for z in self.conjugacy_classes]
+            cc1 = [wag.decode(z) for z in cc]
+            ccc = [isom.Image(z) for z in cc1]
+            for j in range(len(self.conjugacy_classes)):
+                self.conjugacy_classes[j].set_rep(str(ccc[j]))
+                self.conjugacy_classes[j].force_repr()
+            ccn = [z.size for z in self.conjugacy_classes]
+            cc2 = [gap("cycletype("+str(x)+","+str(n)+")") for x in ccc]
+            cclabels = [z.label for z in self.conjugacy_classes]
+        else:
+            cc = g.ConjugacyClasses()
+            ccn = [x.Size() for x in cc]
+            ccc = [x.Representative() for x in cc]
+            cc2 = [x.cycletype(n) for x in ccc]
+            cclabels = ['' for z in cc]
         if int(n) == 1:
             cc2 = [[1]]
             cc = ['()']
+            cclabels = ['' for z in cc]
         else:
             cc = ccc
-            cc2 = [x.cycletype(n) for x in cc]
         cc2 = [str(x) for x in cc2]
         cc2 = [re.sub(r"\[", '', x) for x in cc2]
         cc2 = [re.sub(r"\]", '', x) for x in cc2]
-        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
+        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(ccn))]
         self._data['conjclasses'] = ans
         return ans
+
+    def chartable(self):
+        if not self.have_isomorphism():
+            G = self.gapgroupnt()
+            ctable = str(G.CharacterTable().Display())
+            ctable = re.sub("^.*\n", '', ctable)
+            ctable = re.sub("^.*\n", '', ctable)
+            return ctable
+        self.conjclasses() # called to load info in self
+        #return render_template("character-table.html", gp=self,
+        return render_template("ch.html", gp=self,
+            info={'dispv': sparse_cyclotomic_to_mathml})
 
     def sibling_bound(self):
         return self._data['bound_siblings']
@@ -568,13 +626,7 @@ def cclasses(n, t):
 
 
 def chartable(n, t):
-    group = WebGaloisGroup.from_nt(n,t)
-    G = group.gapgroupnt()
-    ctable = str(G.CharacterTable().Display())
-    ctable = re.sub("^.*\n", '', ctable)
-    ctable = re.sub("^.*\n", '', ctable)
-    return ctable
-
+    return WebGaloisGroup.from_nt(n,t).chartable()
 
 def group_alias_table():
     aliases = get_aliases()
