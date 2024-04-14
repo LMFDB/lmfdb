@@ -264,10 +264,10 @@ def make_newspace_data(level, char_data, k=2):
     data['char_conductor'] = char_data['conductor']
     data['char_degree'] = char_data['degree']
     data['char_is_real'] = char_data['is_real']
-    data['char_orbit_index'] = char_data['orbit_index']
+    data['char_orbit_index'] = char_data['orbit']
     data['char_orbit_label'] = char_data['label'].split('.')[-1]
     data['char_order'] = char_data['order']
-    data['char_parity'] = char_data['parity']
+    data['char_parity'] = 1 if char_data['is_even'] else -1
     data['conrey_index'] = char_data['first']
     data['cusp_dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (level, k, data['conrey_index'], level))) * char_data['degree'] # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
     data['dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (level, k, data['conrey_index'], level))) * char_data['degree'] # mfdim returns the dimension over Q(chi), not over Q
@@ -302,7 +302,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     for sub_level in sub_level_list:
         entry = {}
         entry['sub_level'] = sub_level
-        entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit_index']
+        entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit']
         entry['sub_conrey_index'] = sub_chars[sub_level]['first']
         entry['sub_mult'] = len(ZZ(level/sub_level).divisors())
         if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
@@ -392,7 +392,6 @@ class WebNewformSpace():
             level = int(label.split('.')[0])
             char_label = str(level) + '.' + label.split('.')[-1]
             char_data = db.char_dirichlet.lookup(char_label)
-            char_data['parity'] = 1 if char_data['is_even'] else -1
             if not char_data:
                 raise ValueError("Space %s not found" % label)
             data = make_newspace_data(level, char_data)
