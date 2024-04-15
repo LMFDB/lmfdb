@@ -238,7 +238,10 @@ character_columns = SearchColumns([
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
     ProcessedCol("is_even", "character.dirichlet.parity", "Parity", lambda is_even: "even" if is_even else "odd"),
-    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive")])
+    CheckCol("is_real", "character.dirichlet.real", "Real"),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive"),
+    CheckCol("is_minimal", "character.dirichlet.minimal", "Minimal"),
+    ])
 
 @search_wrap(
     table=db.char_dirichlet,
@@ -712,9 +715,9 @@ class DirichStats(StatsDisplay):
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
     ]
-    buckets = {"conductor": ["1-10", "11-100", "101-1000", "1001-10000"],
-               "modulus": ["1-10", "11-100", "101-1000", "1001-10000"],
-               "order": ["1-10", "11-100", "101-1000", "1001-10000"]}
+    buckets = {"conductor": ["1-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"],
+               "modulus": ["1-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"],
+               "order": ["1-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"]}
     knowls = {"conductor": "character.dirichlet.conductor",
               "modulus": "character.dirichlet.modulus",
               "order": "character.dirichlet.order",
@@ -739,21 +742,21 @@ class DirichStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return 'The database currently contains %s %s of %s of %s up to %s. This comprises %s Dirichlet characters.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
+        return 'The database currently contains %s %s of %s %s of %s up to %s.  L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
             comma(self.norbits),
             display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
+            comma(self.nchars),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
-            comma(self.nchars),
             url_for(".statistics"))
 
     @property
     def summary(self):
-        return "The database currently contains %s %s of %s of %s up to %s. This comprises %s Dirichlet characters. The tables below show counts of Galois orbits." % (
+        return "The database currently contains %s %s of %s %s of %s up to %s. The tables below count Galois orbits." % (
             comma(self.norbits),
             display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
+            comma(self.nchars),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
-            comma(self.maxmod),
-            comma(self.nchars))
+            comma(self.maxmod))
