@@ -25,7 +25,7 @@ from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
 from lmfdb import db
 
-ORBIT_MAX_MOD = 100000
+ORBIT_MAX_MOD = 1000000
 
 # make url_character available from templates
 
@@ -75,9 +75,9 @@ def render_characterNavigation():
 
 class DirichSearchArray(SearchArray):
     noun = "character"
-    sorts = [("", "modulus", ["modulus", "orbit_index"]),
-             ("conductor", "conductor", ["conductor", "modulus", "orbit_index"]),
-             ("order", "order", ["order", "modulus", "orbit_index"])]
+    sorts = [("", "modulus", ["modulus", "orbit"]),
+             ("conductor", "conductor", ["conductor", "modulus", "orbit"]),
+             ("order", "order", ["order", "modulus", "orbit"])]
     jump_example = "13.2"
     jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl = "character.dirichlet.search_input"
@@ -158,9 +158,9 @@ def common_parse(info, query):
     if 'parity' in info:
         parity = info['parity']
         if parity == 'even':
-            query['parity'] = 1
+            query['is_even'] = True
         elif parity == 'odd':
-            query['parity'] = -1
+            query['is_even'] = False
     parse_bool(info, query, "is_primitive", name="is_primitive")
     parse_bool(info, query, "is_real", name="is_real")
     parse_bool(info, query, "is_minimal", name="is_minimal")
@@ -215,14 +215,13 @@ def url_for_label(label):
         number = int(parts_of_label[2])
         return url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number)
 
-def display_galois_orbit(modulus, first_label, last_label, degree):
+def display_galois_orbit(modulus, first, last, degree):
 
     if degree == 1:
-        orbit = first_label.split(".")[1]
-        disp = r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, orbit)
+        disp = r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, first)
         return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
     else:
-        orbit = [lab.split(".")[1] for lab in [first_label, last_label]]
+        orbit = [first, last]
         disp = [r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, o) for o in orbit]
         if degree == 2:
             disp = "$,$&nbsp".join(disp)
@@ -233,20 +232,23 @@ def display_galois_orbit(modulus, first_label, last_label, degree):
 
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), align="center"),
-    MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first_label", "last_label", "degree"],
+    MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first", "last", "degree"],
                       display_galois_orbit, align="center", short_title="Conrey labels", apply_download=False),
     MathCol("modulus", "character.dirichlet.modulus", "Modulus"),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
-    ProcessedCol("parity", "character.dirichlet.parity", "Parity", lambda parity: "even" if parity == 1 else "odd"),
-    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive")])
+    ProcessedCol("is_even", "character.dirichlet.parity", "Parity", lambda is_even: "even" if is_even else "odd"),
+    CheckCol("is_real", "character.dirichlet.real", "Real"),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive"),
+    CheckCol("is_minimal", "character.dirichlet.minimal", "Minimal"),
+    ])
 
 @search_wrap(
-    table=db.char_orbits,
+    table=db.char_dirichlet,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
-    shortcuts={"jump": jump, "download": Downloader(db.char_orbits)},
+    shortcuts={"jump": jump, "download": Downloader(db.char_dirichlet)},
     url_for_label=url_for_label,
     learnmore=learn,
     random_projection="label",
@@ -361,8 +363,8 @@ def make_webchar(args, get_bread=False):
             return WebDBDirichletOrbit(**args)
         if args.get('orbit_label') is None:
             chi = ConreyCharacter(modulus, number)
-            db_orbit_label = db.char_orbits.lucky(
-            {'modulus': modulus, 'first_label': "{}.{}".format(modulus, chi.min_conrey_conj)},
+            db_orbit_label = db.char_dirichlet.lucky(
+            {'modulus': modulus, 'first': chi.min_conrey_conj},
             projection='label'
             )
             args['orbit_label'] = db_orbit_label.split('.')[-1]
@@ -471,8 +473,8 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 
     if modulus <= ORBIT_MAX_MOD:
         chi = ConreyCharacter(modulus, number)
-        db_orbit_label = db.char_orbits.lucky(
-        {'modulus': modulus, 'first_label': "{}.{}".format(modulus, chi.min_conrey_conj)},
+        db_orbit_label = db.char_dirichlet.lucky(
+        {'modulus': modulus, 'first': chi.min_conrey_conj},
         projection='label'
         )
         real_orbit_label = db_orbit_label.split('.')[-1]
@@ -514,18 +516,18 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 
 @characters_page.route("/Dirichlet/data/<label>")
 def dirchar_data(label):
-    if label.count(".") == 2:
-        modulus, orbit_label, number = label.split(".")
-        title = f"Dirichlet character data - {modulus}.{number}"
-        tail = [(f"{modulus}.{number}", url_for(".render_Dirichletwebpage", modulus=modulus, number=number)),
-                ("Data", " ")]
-        return datapage(f"{modulus}.{orbit_label}", "char_orbits", title=title, bread=bread(tail))
-    elif label.count(".") == 1:
+    if label.count(".") == 1:
         modulus, orbit_label = label.split(".")
         title = f"Dirichlet character data - {modulus}.{orbit_label}"
         tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                 ("Data", " ")]
-        return datapage(label, "char_orbits", title=title, bread=bread(tail))
+        return datapage(label, "char_dirichlet", title=title, bread=bread(tail))
+    elif label.count(".") == 2:
+        modulus, orbit_label, number = label.split(".")
+        title = f"Dirichlet character data - {modulus}.{orbit_label}.{number}"
+        tail = [(label, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)),
+                ("Data", " ")]
+        return datapage(f"{modulus}.{orbit_label}", "char_dirichlet", title=title, bread=bread(tail))
     else:
         return abort(404, f"Invalid label {label}")
 
@@ -595,7 +597,7 @@ def random_Dirichletwebpage():
 def interesting():
     return interesting_knowls(
         "character.dirichlet",
-        db.char_orbits,
+        db.char_dirichlet,
         url_for_label=url_for_label,
         title="Some interesting Dirichlet characters",
         bread=bread("Interesting"),
@@ -692,7 +694,7 @@ def yesno(x):
 
 
 class DirichStats(StatsDisplay):
-    table = db.char_orbits
+    table = db.char_dirichlet
     baseurl_func = ".render_DirichletNavigation"
     stat_list = [
         {"cols": ["conductor"]},
@@ -713,9 +715,9 @@ class DirichStats(StatsDisplay):
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
     ]
-    buckets = {"conductor": ["1-10", "11-100", "101-1000", "1001-10000"],
-               "modulus": ["1-10", "11-100", "101-1000", "1001-10000"],
-               "order": ["1-10", "11-100", "101-1000", "1001-10000"]}
+    buckets = {"conductor": ["1-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"],
+               "modulus": ["1-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"],
+               "order": ["1-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"]}
     knowls = {"conductor": "character.dirichlet.conductor",
               "modulus": "character.dirichlet.modulus",
               "order": "character.dirichlet.order",
@@ -734,27 +736,27 @@ class DirichStats(StatsDisplay):
                   "is_real": yesno}
 
     def __init__(self):
-        self.nchars = db.char_orbits.sum('degree')
-        self.norbits = db.char_orbits.count()
-        self.maxmod = db.char_orbits.max("modulus")
+        self.nchars = db.char_dirichlet.sum('degree')
+        self.norbits = db.char_dirichlet.count()
+        self.maxmod = db.char_dirichlet.max("modulus")
 
     @property
     def short_summary(self):
-        return 'The database currently contains %s %s of %s of %s up to %s. This comprises %s Dirichlet characters.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
+        return 'The database currently contains %s %s of %s %s of %s up to %s.  L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
             comma(self.norbits),
             display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
+            comma(self.nchars),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
-            comma(self.nchars),
             url_for(".statistics"))
 
     @property
     def summary(self):
-        return "The database currently contains %s %s of %s of %s up to %s. This comprises %s Dirichlet characters. The tables below show counts of Galois orbits." % (
+        return "The database currently contains %s %s of %s %s of %s up to %s. The tables below count Galois orbits." % (
             comma(self.norbits),
             display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
+            comma(self.nchars),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
-            comma(self.maxmod),
-            comma(self.nchars))
+            comma(self.maxmod))

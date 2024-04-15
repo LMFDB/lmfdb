@@ -8,7 +8,7 @@ Any character object is obtained as a double inheritance of
 2. an object type (list of groups, character group, character)
 
 For Dirichlet characters of modulus up to 100,000, the database holds data for
-character orbits in char_orbits. For these objects, there are the "DB" classes
+character orbits in char_dirichlet. For these objects, there are the "DB" classes
 that replace on-the-fly computation with database lookups.
 
 The code thus defines, from the generic top class WebCharObject
@@ -45,6 +45,7 @@ The design is the following:
 
 from flask import url_for
 from collections import defaultdict
+from sage.databases.cremona import cremona_letter_code
 from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
                       euler_phi, latex)
 from sage.misc.lazy_attribute import lazy_attribute
@@ -60,7 +61,7 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
 def parity_string(n):
-    return "odd" if n == -1 else "even"
+    return ("even" if n else "odd") if isinstance(n, bool) else ("odd" if n == -1 else "even")
 
 def bool_string(b):
     return "yes" if b else "no"
@@ -523,16 +524,13 @@ class WebChar(WebCharObject):
     def friends(self):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         f = []
-        cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
-        f.append( ("Character group", cglink) )
-        if self.nflabel:
-            f.append( ('Number field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 100000:
-            url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
+        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 1000000:
+            url = url_character(type=self.type, modulus=self.modlabel, number=self.numlabel)
             lfun_label = get_lfunction_by_url(url[1:], projection='label')
             if lfun_label:
                 f.append(('L-function', url_for('by_full_label', lfun_label)))
         if self.type == 'Dirichlet':
+            f.append( ("Character group", url_character(type=self.type,modulus=self.modlabel)) )
             f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}')))
         if len(self.vflabel)>0:
             f.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
@@ -579,13 +577,10 @@ class WebDBDirichlet(WebDirichlet):
     def _populate_from_db(self):
 
         gal_orbit = self.chi.galois_orbit()
-        min_conrey_conj = gal_orbit[0]
 
-        orbit_data = db.char_orbits.lucky(
-            {'modulus': self.modulus, 'first_label': "{}.{}".format(self.modulus, min_conrey_conj)}
-        )
+        orbit_data = db.char_dirichlet.lucky({'modulus': self.modulus, 'first': gal_orbit[0]})
 
-        self.orbit_index = orbit_data['orbit_index']
+        self.orbit_index = orbit_data['orbit']
         self.orbit_label = orbit_data['label'].split(".")[1]
         self.order = int(orbit_data['order'])
         self.conductor = self.chi.conductor()  # this also sets indlabel
@@ -615,10 +610,6 @@ class WebDBDirichlet(WebDirichlet):
             self.genvalues = self.textuple([self._tex_value(v) for v in vals])
 
     def _set_values_and_groupelts(self):
-        """
-        The char_orbits db collection does not contain `values`,
-        so these are computed on the fly.
-        """
         if self.modulus == 1:
             self.groupelts = [1]
             self.values = [r"\(1\)"]
@@ -673,7 +664,7 @@ class WebDBDirichlet(WebDirichlet):
         self.isminimal = bool_string(orbit_data['is_minimal'])
 
     def _set_parity(self, orbit_data):
-        self.parity = parity_string(int(orbit_data['parity']))
+        self.parity = parity_string(orbit_data['is_even'])
 
     def _set_galoisorbit(self, gal_orbit):
         if self.modulus == 1:
@@ -903,12 +894,8 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         valuepairs = compute_values(chi, self.groupelts)
         min_conrey_conj = chi.min_conrey_conj
 
-        # This next db lookup takes ages, I don't know how to speed it up
-        orbit_label = db.char_orbits.lucky(
-            {'modulus': mod, 'first_label': "{}.{}".format(mod, min_conrey_conj)},
-            projection='label'
-        )
-        logger.debug(f"[DC DB query] modulus = {mod}, first_label = {mod},{min_conrey_conj} -> {orbit_label}")
+        orbit_label = db.char_dirichlet.lucky({'modulus':mod,'first':min_conrey_conj},projection='label')
+        logger.debug(f"[DC DB query] modulus = {mod}, first = {min_conrey_conj} -> {orbit_label}")
 
         return is_prim, order, orbit_label, valuepairs
 
@@ -1138,9 +1125,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     def _populate_from_db(self):
 
-        orbit_data = db.char_orbits.lucky(
-            {'modulus': self.modulus, 'label': self.label}
-        )
+        orbit_data = db.char_dirichlet.lookup(self.label)
         if orbit_data is None:
             raise ValueError
 
@@ -1149,10 +1134,10 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.degree = orbit_data['degree']
         self.isprimitive = bool_string(orbit_data['is_primitive'])
         self.isminimal = bool_string(orbit_data['is_minimal'])
-        self.parity = parity_string(int(orbit_data['parity']))
+        self.parity = parity_string(orbit_data['is_even'])
         self._set_kernel_field_poly(orbit_data)
-        self.orbit_index = orbit_data['orbit_index']
-        self.inducing = orbit_data['primitive_label']
+        self.orbit_index = orbit_data['orbit']
+        self.inducing = "{}.{}".format(orbit_data['conductor'],cremona_letter_code(orbit_data['primitive_orbit']-1))
         self.ind_orbit_label = self.inducing.split(".")[1]
 
         # The rest of the function is setting the Galois orbit
@@ -1170,7 +1155,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             ]
 
     def _set_kernel_field_poly(self, orbit_data):
-        an_orbit_rep = int(orbit_data['first_label'].split(".")[1])
+        an_orbit_rep = orbit_data['first']
         chi = ConreyCharacter(self.modulus, an_orbit_rep)
         self.first_chi = chi
         if self.order <= 100:
