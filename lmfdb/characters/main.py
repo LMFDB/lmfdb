@@ -238,7 +238,10 @@ character_columns = SearchColumns([
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
     ProcessedCol("is_even", "character.dirichlet.parity", "Parity", lambda is_even: "even" if is_even else "odd"),
-    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive")])
+    CheckCol("is_real", "character.dirichlet.real", "Real"),
+    CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive"),
+    CheckCol("is_minimal", "character.dirichlet.minimal", "Minimal"),
+    ])
 
 @search_wrap(
     table=db.char_dirichlet,
