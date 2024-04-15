@@ -210,7 +210,7 @@ class ECstats(StatsDisplay):
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
-        {'cols': 'torsion_structure'},
+        {'cols': 'torsion_structure', 'totaler': {'avg': False}},
         {'cols': 'sha', 'totaler': {'avg': False}},
     ]
 
