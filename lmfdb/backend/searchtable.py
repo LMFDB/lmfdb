@@ -308,7 +308,7 @@ class PostgresSearchTable(PostgresTable):
             []
             sage: db.lfunc_lfunctions._parse_values({'bad_lfactors':[1,2]})[1][0]
             '[1, 2]'
-            sage: db.char_orbits._parse_values({'modulus':3})
+            sage: db.char_dirichlet._parse_values({'modulus':3})
             [3]
         """
 
