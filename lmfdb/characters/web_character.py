@@ -61,7 +61,7 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
 def parity_string(n):
-    return ("even" if n else "odd") if type(n) == bool else ("odd" if n == -1 else "even")
+    return ("even" if n else "odd") if isinstance(n, bool) else ("odd" if n == -1 else "even")
 
 def bool_string(b):
     return "yes" if b else "no"
