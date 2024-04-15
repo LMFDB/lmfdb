@@ -82,7 +82,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'DirichletGroup(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
-        assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
+        assert '\\chi_{23}(10,\\cdot)' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
