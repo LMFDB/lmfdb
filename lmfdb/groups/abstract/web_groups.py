@@ -2980,11 +2980,9 @@ class WebAbstractConjClass(WebObj):
         WebObj.__init__(self, label, data)
 
     # Allows us to use representative from a Galois group
-    def force_repr(self):
-        self.force_repr = True
-
-    def set_rep(self, newrep):
+    def force_repr(self, newrep):
         self.representative = newrep
+        self.force_repr = True
 
     def display_knowl(self, name=None):
         if not name:

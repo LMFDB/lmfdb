@@ -24,6 +24,7 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from .transitive_group import (
     galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
+    cclasses_display_knowl, character_table_display_knowl,
     group_alias_table, WebGaloisGroup, knowl_cache)
 
 # Test to see if this gap installation knows about transitive groups
@@ -261,10 +262,15 @@ def render_group_webpage(args):
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
         pgroup = len(ZZ(order).prime_factors()) < 2
-        if wgg.num_conjclasses() < 50:
-            data['cclasses'] = wgg.conjclasses()
-        if ZZ(order) < ZZ(10000000) and wgg.num_conjclasses() < 21:
+        if wgg.num_conjclasses() < 51:
+            data['cclasses'] = wgg.conjclasses
+        else:
+            data['cclass_knowl'] = cclasses_display_knowl(n,t)
+        if wgg.num_conjclasses() < 31:
             data['chartable'] = chartable(n, t)
+        else:
+            data['chartable_knowl'] = character_table_display_knowl(n,t, 
+                name="%d x %d character table"%(wgg.num_conjclasses(),wgg.num_conjclasses()))
         data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
