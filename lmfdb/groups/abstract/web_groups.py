@@ -2976,8 +2976,8 @@ class WebAbstractConjClass(WebObj):
     def __init__(self, group, label, data=None):
         if data is None:
             data = db.gps_groups_cc.lucky({"group": group, "label": label})
-        force_repr = False
         WebObj.__init__(self, label, data)
+        self.force_repr = False
 
     # Allows us to use representative from a Galois group
     def force_repr(self, newrep):
@@ -2989,7 +2989,7 @@ class WebAbstractConjClass(WebObj):
             name = self.label
         force_string = ''
         if self.force_repr:
-            force_string = "%7C"+self.representative
+            force_string = "%7C"+str(self.representative)
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
 
 class WebAbstractDivision():
