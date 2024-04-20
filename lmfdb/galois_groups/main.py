@@ -269,7 +269,7 @@ def render_group_webpage(args):
         if wgg.num_conjclasses() < 31:
             data['chartable'] = chartable(n, t)
         else:
-            data['chartable_knowl'] = character_table_display_knowl(n,t, 
+            data['chartable_knowl'] = character_table_display_knowl(n,t,
                 name="%d x %d character table"%(wgg.num_conjclasses(),wgg.num_conjclasses()))
         data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:

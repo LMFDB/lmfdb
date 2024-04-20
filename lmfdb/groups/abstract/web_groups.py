@@ -311,7 +311,7 @@ class WebAbstractGroup(WebObj):
         elif rep_type in ['GLZ', 'GLFp','GLZN','GLZq','GLFq']:
             gens=[self.decode(g) for g in repn["gens"]]
         return gens
-        
+
     @lazy_attribute
     def PCG(self):
         if self.order == 1:

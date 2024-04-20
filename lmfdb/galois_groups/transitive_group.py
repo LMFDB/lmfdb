@@ -162,7 +162,7 @@ class WebGaloisGroup:
     @lazy_attribute
     def wag(self):
         return WebAbstractGroup(self.abstract_label())
-    
+
     def have_isomorphism(self):
         if self.wag.element_repr_type == "Lie":
             return False
@@ -175,7 +175,7 @@ class WebGaloisGroup:
         imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
         imgs = [gap("PermList(%s)"%str(z)) for z in imgs]
         return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
-                       
+
     @lazy_attribute
     def factors_of_order(self):
         return [z[0] for z in list(ZZ(self.order()).factor())]
