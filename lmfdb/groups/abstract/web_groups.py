@@ -299,7 +299,6 @@ class WebAbstractGroup(WebObj):
         if self.order == 1:
             gens = []
         elif rep_type == "PC":
-            gpc = G.Pcgs()
             gens = G.GeneratorsOfGroup()
             gens = [gens[z-1] for z in repn['gens']]
         elif rep_type=="Perm":
