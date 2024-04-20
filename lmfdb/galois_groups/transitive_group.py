@@ -174,8 +174,7 @@ class WebGaloisGroup:
         wag = self.wag
         imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
         imgs = [gap("PermList(%s)"%str(z)) for z in imgs]
-        iso=wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
-        return iso
+        return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
                        
     @lazy_attribute
     def factors_of_order(self):
@@ -192,34 +191,31 @@ class WebGaloisGroup:
         gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
         wag = self.wag
         self.conjugacy_classes = wag.conjugacy_classes
-        if self.have_isomorphism() and wag.element_repr_type != "Lie":
+        if int(n) == 1:
+            self.conjugacy_classes[0].force_repr('()')
+            return [[self.conjugacy_classes[0], 1, 1, '1', '1A']]
+        elif self.have_isomorphism() and wag.element_repr_type != "Lie":
             isom = self.getisom
             cc = [z.representative for z in self.conjugacy_classes]
             cc1 = [wag.decode(z) for z in cc]
-            ccc = [isom.Image(z) for z in cc1]
+            cc = [isom.Image(z) for z in cc1]
             for j in range(len(self.conjugacy_classes)):
-                self.conjugacy_classes[j].force_repr(str(ccc[j]))
+                self.conjugacy_classes[j].force_repr(str(cc[j]))
             ccn = [z.size for z in self.conjugacy_classes]
-            cc2 = [gap("cycletype("+str(x)+","+str(n)+")") for x in ccc]
+            cc2 = [gap("cycletype("+str(x)+","+str(n)+")") for x in cc]
             cclabels = [z.label for z in self.conjugacy_classes]
         else:
             cc = g.ConjugacyClasses()
             ccn = [x.Size() for x in cc]
-            ccc = [x.Representative() for x in cc]
-            cc2 = [x.cycletype(n) for x in ccc]
             cclabels = ['' for z in cc]
+            cc = [x.Representative() for x in cc]
+            cc2 = [x.cycletype(n) for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
-        if int(n) == 1:
-            cc2 = [[1]]
-            cc = ['()']
-            cclabels = ['' for z in cc]
-        else:
-            cc = ccc
         cc2 = [str(x) for x in cc2]
         cc2 = [re.sub(r"\[", '', x) for x in cc2]
         cc2 = [re.sub(r"\]", '', x) for x in cc2]
-        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(ccn))]
+        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(cc))]
         return ans
 
     @lazy_attribute
