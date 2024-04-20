@@ -2977,18 +2977,18 @@ class WebAbstractConjClass(WebObj):
         if data is None:
             data = db.gps_groups_cc.lucky({"group": group, "label": label})
         WebObj.__init__(self, label, data)
-        self.force_repr = False
+        self.force_repr_elt = False
 
     # Allows us to use representative from a Galois group
     def force_repr(self, newrep):
         self.representative = newrep
-        self.force_repr = True
+        self.force_repr_elt = True
 
     def display_knowl(self, name=None):
         if not name:
             name = self.label
         force_string = ''
-        if self.force_repr:
+        if self.force_repr_elt:
             force_string = "%7C"+str(self.representative)
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
 
