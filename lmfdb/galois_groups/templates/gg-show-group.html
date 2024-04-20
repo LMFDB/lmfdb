@@ -21,7 +21,13 @@ table.reptable td, table.reptable th {
       <tr><td>{{KNOWL('gg.simple_name', title='Group')}}:<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
       {% endif %}
       {% if info.n < 16 %}
-      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
+      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>
+      {% if info.n == 1 %}
+        {{info.name}}
+      {% else %}
+        ${{info.name}}$
+      {% endif %}
+      </tr>
       {% endif %}
       <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}
       <td>{{ place_code('even') }}</td></tr>

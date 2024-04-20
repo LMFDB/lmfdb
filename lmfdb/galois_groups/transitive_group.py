@@ -193,7 +193,7 @@ class WebGaloisGroup:
         self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
             self.conjugacy_classes[0].force_repr('()')
-            return [[self.conjugacy_classes[0], 1, 1, '1', '1A']]
+            return [['()', 1, 1, '1', '1A']]
         elif self.have_isomorphism() and wag.element_repr_type != "Lie":
             isom = self.getisom
             cc = [z.representative for z in self.conjugacy_classes]
