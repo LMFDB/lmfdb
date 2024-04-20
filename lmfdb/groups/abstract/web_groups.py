@@ -291,6 +291,27 @@ class WebAbstractGroup(WebObj):
                 gens = [self.decode(g) for g in self.representations[self.element_repr_type]["gens"]]
             return libgap.Group(gens)
 
+    def G_gens(self):
+        # Generators for the gap group G
+        G = self.G
+        rep_type = self.element_repr_type
+        repn = self.representations[rep_type]
+        if self.order == 1:
+            gens = []
+        elif rep_type == "PC":
+            gens = G.GeneratorsOfGroup()
+            gens = [gens[z-1] for z in repn['gens']]
+        elif rep_type=="Perm":
+            n = repn["d"]
+            gens = [SymmetricGroup(n)(Permutations(n).unrank(z)) for z in repn["gens"]]
+        elif rep_type=="Lie":
+            # problems here
+            # projective groups need to be accounted for
+            gens = [self.decode(g) for g in repn[0]["gens"]]
+        elif rep_type in ['GLZ', 'GLFp','GLZN','GLZq','GLFq']:
+            gens=[self.decode(g) for g in repn["gens"]]
+        return gens
+        
     @lazy_attribute
     def PCG(self):
         if self.order == 1:
@@ -2989,11 +3010,20 @@ class WebAbstractConjClass(WebObj):
         if data is None:
             data = db.gps_groups_cc.lucky({"group": group, "label": label})
         WebObj.__init__(self, label, data)
+        self.force_repr_elt = False
+
+    # Allows us to use representative from a Galois group
+    def force_repr(self, newrep):
+        self.representative = newrep
+        self.force_repr_elt = True
 
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
+        force_string = ''
+        if self.force_repr_elt:
+            force_string = "%7C"+str(self.representative)
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
 
 class WebAbstractDivision():
     def __init__(self, group, label, classes):
