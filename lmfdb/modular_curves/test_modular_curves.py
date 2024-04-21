@@ -378,6 +378,21 @@ class ModCrvTest(LmfdbTest):
                     'Modular curve 60.1440.97.bog.1',
                     'Modular curve 60.1440.97.bol.1'
                 )
+            ),
+            # The next two cases come from LMFDB#5929
+            (
+                "/ModularCurve/Q/6.6.1.a.1",
+                (
+                    'Elliptic curve 36.a3',
+                    'Modular form 36.2.a.a'
+                )
+            ),
+            (
+                "/ModularCurve/Q/23.24.2.a.1",
+                (
+                    'Isogeny class 529.a',
+                    'Modular form 23.2.a.a'
+                )
             )
             ]:
             data = self.tc.get(url,follow_redirects=True).get_data(as_text=True)
