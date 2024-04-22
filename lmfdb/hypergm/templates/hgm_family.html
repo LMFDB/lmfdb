@@ -57,9 +57,9 @@
 <table>
   <tr>
     <th> $\ell$ </th>
-    <th> Index </th>
-    <th> Subimage</th>
-    <th> Image </th>
+    <th> {{ KNOWL('hgm.monodromy_index', title='Index') }} </th>
+    <th> {{ KNOWL('hgm.monodromy_subimage', title='Subimage') }}</th>
+    <th> {{ KNOWL('hgm.monodromy_image', title='Image') }}</th>
     <th> {{ KNOWL('hgm.defining_parameter_primetoppart', title='$A^{\perp} _\ell$') }} </th>
     <th> {{ KNOWL('hgm.defining_parameter_primetoppart', title='$B^{\perp} _\ell$') }} </th>
     <th> {{ KNOWL('hgm.defining_parameter_primetoppart', title='$C^{\perp} _\ell$') }} </th>
@@ -84,7 +84,7 @@
 </table>
 {% if family.defaultp %}
 <p>
-<h2>Good Euler factors</h2>
+<h2>{{KNOWL('hgm.good_prime', title="Good")}} {{KNOWL('hgm.euler_factor', title="Euler factors")}} </h2>
 <form id='euler_factors'>
   <table>
     <tr>
