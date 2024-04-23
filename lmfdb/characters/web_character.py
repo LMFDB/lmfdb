@@ -70,6 +70,20 @@ def compute_values(chi, groupelts):
         "Helper function to compute values of several elements on the fly"
         return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
 
+def valuefield_from_order(order):
+    order2 = order if order % 4 != 2 else order / 2
+    nf = WebNumberField.from_cyclo(order2)
+    if not nf.is_null():
+        if order2 == 3:
+            nfpretty = r'\(\mathbb{Q}(\zeta_3)\)'
+        elif order2 == 4:
+            nfpretty = r'\(\mathbb{Q}(i)\)'
+        else:
+            nfpretty = nf.field_pretty()
+        return nf_display_knowl(nf.get_label(), nfpretty)
+    else:
+        return r'$\Q(\zeta_{%d})$' % order2
+
 #############################################################################
 ###
 ###    Class for Web objects
@@ -486,12 +500,7 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def valuefield(self):
-        order2 = self.order if self.order % 4 != 2 else self.order / 2
-        nf = WebNumberField.from_cyclo(order2)
-        if not nf.is_null():
-            return nf_display_knowl(nf.get_label(), nf.field_pretty())
-        else:
-            return r'$\Q(\zeta_{%d})$' % order2
+        return valuefield_from_order(self.order)
 
     @lazy_attribute
     def kerfield(self):
