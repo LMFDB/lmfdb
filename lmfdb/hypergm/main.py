@@ -506,7 +506,7 @@ def render_hgm_webpage(label):
     for j in range(len(locinfo)):
         locinfo[j] = [primes[j]] + locinfo[j]
         # locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
-        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
+        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='T')
     hodge = data['hodge']
     famhodge = data['famhodge']
     prop2 = [
