@@ -4,7 +4,7 @@
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import euler_phi, PolynomialRing, QQ, gcd
+from sage.all import euler_phi, PolynomialRing, QQ, gcd, ZZ
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
@@ -14,7 +14,9 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.api import datapage
+from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.characters.web_character import (
+    valuefield_from_order,
     WebSmallDirichletCharacter,
     WebDBDirichletCharacter,
     WebDBDirichletGroup,
@@ -216,7 +218,6 @@ def url_for_label(label):
         return url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number)
 
 def display_galois_orbit(modulus, first, last, degree):
-
     if degree == 1:
         disp = r'<a href="{0}/{1}">\(\chi_{{{0}}}({1}, \cdot)\)</a>'.format(modulus, first)
         return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
@@ -230,6 +231,13 @@ def display_galois_orbit(modulus, first, last, degree):
             disp = r"$, \cdots ,$".join(disp)
             return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
+def display_kernel_field(modulus, first, order):
+    if order > 12:
+        return "not computed"
+    else:
+        coeffs = ConreyCharacter(modulus,first).kernel_field_poly()
+        return formatfield([ZZ(x) for x in coeffs])
+
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), align="center"),
     MultiProcessedCol("conrey", "character.dirichlet.conrey", "Conrey labels", ["modulus", "first", "last", "degree"],
@@ -237,6 +245,8 @@ character_columns = SearchColumns([
     MathCol("modulus", "character.dirichlet.modulus", "Modulus"),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
+    MultiProcessedCol("first", "character.dirichlet.field_cut_out", "Kernel field", ["modulus", "first", "order"], display_kernel_field, align="center", default=False, apply_download=False),
+    ProcessedCol("order", "character.dirichlet.value_field", "Value field", valuefield_from_order, align="center", apply_download=False),
     ProcessedCol("is_even", "character.dirichlet.parity", "Parity", lambda is_even: "even" if is_even else "odd"),
     CheckCol("is_real", "character.dirichlet.real", "Real"),
     CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive"),
