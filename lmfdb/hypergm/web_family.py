@@ -14,6 +14,7 @@ from lmfdb.utils import (
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
+from sage.plot.all import line, text, point, points, circle, Graphics
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 
@@ -187,6 +188,65 @@ class WebHyperGeometricFamily():
     @lazy_attribute
     def plot_link(self):
         return '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(self.plot())
+
+    @lazy_attribute
+    def zigzag(self):
+        # alpha is color red
+        # beta is color blue
+        alpha = self.alpha
+        beta = self.beta
+        alpha_dicts = [dict(value=entry,color="red") for entry in alpha]
+        beta_dicts = [dict(value=entry,color="blue") for entry in beta]
+        zigzag_dicts = sorted(alpha_dicts + beta_dicts, key=lambda d: d["value"])
+        y = 0
+        y_values = [y] # zigzag graph will start at (0,0)
+        colors = [entry["color"] for entry in zigzag_dicts]
+        for entry in zigzag_dicts:
+            if entry["color"] == "red":
+                y += 1
+                y_values.append(y)
+            elif entry["color"] == "blue":
+                y += -1
+                y_values.append(y)
+        return [y_values, colors, zigzag_dicts]
+
+    @cached_method
+    def zigzag_plot(self):
+        alpha = self.alpha # color red
+        beta = self.beta # color blue
+        zz = self.zigzag
+        y_values = zz[0]
+        colors = zz[1]
+        x_labels = zz[2]
+        y_max = max(y_values)
+        y_min = min(y_values)
+        x_values = list(range(0,len(y_values)))
+        x_max = len(y_values)
+        pts = [(i, y_values[i]) for i in x_values]
+        L = Graphics()
+        # grid
+        for x in x_values:
+            L += line([(x, y_min), (x, y_max)], color="grey", zorder=1, thickness=0.4)
+        for y in y_values:
+            L += line([(0, y), (x_max-1, y)], color="grey", zorder=1, thickness=0.4)
+        # zigzag
+        L += line(pts, thickness=1, color="black", zorder=2)
+        # points
+        x_values.pop()
+        for x in x_values:
+            L += point((x, y_values[x]), marker='o', size = 36, color=colors[x], zorder=3)
+        for label in x_labels:
+            if label["color"] == "red":
+                L += text(str(QQ(label["value"])), (x_labels.index(label),y_max + 0.3), color=label["color"])
+            else:
+                L += text(str(QQ(label["value"])), (x_labels.index(label),y_min - 0.3), color=label["color"])
+        L.axes(False)
+        L.set_aspect_ratio(1)
+        return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
+
+    @lazy_attribute
+    def zigzag_plot_link(self):
+        return '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(self.zigzag_plot())
 
     @lazy_attribute
     def properties(self):
