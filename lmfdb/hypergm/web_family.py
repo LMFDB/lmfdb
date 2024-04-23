@@ -14,7 +14,7 @@ from lmfdb.utils import (
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
-from sage.plot.all import line, text, point, points, circle, Graphics
+from sage.plot.all import line, text, point, Graphics
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 
@@ -212,8 +212,6 @@ class WebHyperGeometricFamily():
 
     @cached_method
     def zigzag_plot(self):
-        alpha = self.alpha # color red
-        beta = self.beta # color blue
         zz = self.zigzag
         y_values = zz[0]
         colors = zz[1]
