@@ -13,7 +13,7 @@ from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap, Downloader,
-    SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton, RowSpacer,
     to_dict, web_latex, integer_divisors)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
@@ -411,7 +411,7 @@ class HGMDownload(Downloader):
 
 
 @search_wrap(table=db.hgm_motives,  # overridden if family search
-             title=r'Hypergeometric motive over $\Q$ search resultS',
+             title=r'Hypergeometric motive over $\Q$ search results',
              err_title=r'Hypergeometric motive over $\Q$ search input error',
              columns=hgm_columns,
              per_page=50,
@@ -455,9 +455,9 @@ def hgm_search(info, query):
     parse_ints(info, query, 'degree')
     parse_ints(info, query, 'weight')
     parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector', split=True)
-    parse_restricted(info, query, 'sign', allowed=['+1', 1, -1], process=int)
     # Make a version to search reversed way
     if search_type not in ["Family", "RandomFamily"]:
+        parse_restricted(info, query, 'sign', allowed=['+1', 1, -1], process=int)
         parse_ints(info, query, 'conductor', 'Conductor', 'cond')
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
@@ -506,7 +506,7 @@ def render_hgm_webpage(label):
     for j in range(len(locinfo)):
         locinfo[j] = [primes[j]] + locinfo[j]
         # locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
-        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
+        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='T')
     hodge = data['hodge']
     famhodge = data['famhodge']
     prop2 = [
@@ -794,24 +794,28 @@ class HGMSearchArray(SearchArray):
             label="Conductor",
             knowl="hgm.conductor",
             example="64",
-            example_span="a value, like 32, a list, like 32,64, or a range like 1..10000")
+            example_span="a value, like 32, a list, like 32,64, or a range like 1..10000",
+            extra=['class="motive"'])
         hodge = TextBox(
             name="hodge",
             label="Hodge vector",
-            knowl="mot.hodgevector",
-            example="[1,1,1,1]")
+            knowl="hgm.hodge_vector",
+            example="[1,1,1,1]",
+            extra=['class="motive"'])
         t = TextBox(
             name="t",
             label="Specialization point $t$",
             knowl="hgm.specpoint",
             example="3/2",
-            example_span="3/2 (1 has an associated degree drop and is always in the database)")
+            example_span="3/2 (1 has an associated degree drop and is always in the database)",
+            extra=['class="motive"'])
         sign = TextBoxNoEg(
             name="sign",
             label=r"Root number $\epsilon$",
             knowl="lfunction.sign",
             example="-1",
-            example_span="1 or -1, with -1 occurring only in the symplectic case")
+            example_span="1 or -1, with -1 occurring only in the symplectic case",
+            extra=['class="motive"'])
         # The following two boxes are not yet enabled
         # generic = YesNoBox(
         #    name="generic",
@@ -848,15 +852,7 @@ class HGMSearchArray(SearchArray):
     def search_types(self, info):
         st = self._st(info)
         if st is None:
-            # We need a custom button for the family search so that it can be clicked by javascript
-            class FamilySearchButton(SearchButton):
-                def _input(self, info):
-                    btext = "<button type='submit' id='family' name='search_type' value='Family' style='width: {width}px;'>{desc}</button>"
-                    return btext.format(width=self.width, desc=self.description)
-            return [("Motive", "List of motives"),
-                    FamilySearchButton("Family", "List of families"),
-                    ("Random", "Random motive"),
-                    ("RandomFamily", "Random family")]
+            raise RuntimeError("Should never get here")
         elif st == "Family":
             return [("Family", "Search again"),
                     ("RandomFamily", "Random family")]
@@ -871,10 +867,23 @@ class HGMSearchArray(SearchArray):
         else:
             return self.refine_motive_array
 
+    def _html_section(self, array, buttons):
+        table = self._print_table(array, None, "horizontal")
+        buttons = self._print_table([RowSpacer(8), [BasicSpacer("Display:")] + buttons], None, "vertical")
+        return "\n".join([table, buttons])
+
     def family_html(self):
-        return self._print_table(self.family_array, None, "horizontal")
+        # We need a custom button for the family search so that it can be clicked by javascript
+        class FamilySearchButton(SearchButton):
+            def _input(self, info):
+                btext = "<button type='submit' id='family' name='search_type' value='Family' style='width: {width}px;'>{desc}</button>"
+                return btext.format(width=self.width, desc=self.description)
+        return self._html_section(self.family_array, [FamilySearchButton("Family", "List of families"), SearchButton("RandomFamily", "Random family")])
 
     def motive_html(self):
-        table = self._print_table(self.motive_array, None, "horizontal")
-        buttons = self.buttons()
-        return "\n".join([table, buttons])
+        # We need a custom button for the motive search so that it can be clicked by javascript
+        class MotiveSearchButton(SearchButton):
+            def _input(self, info):
+                btext = "<button type='submit' id='motive' name='search_type' value='Motive' style='width: {width}px;'>{desc}</button>"
+                return btext.format(width=self.width, desc=self.description)
+        return self._html_section(self.motive_array, [MotiveSearchButton("Motive", "List of motives"), SearchButton("RandomMotive", "Random motive")])

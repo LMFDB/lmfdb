@@ -20,8 +20,8 @@
   <p>
     <table>
       <tr><td>{{KNOWL('hgm.type', 'Type')}}:<td>&nbsp;&nbsp;<td>{{info.type}}
-      <tr><td>{{KNOWL('mot.hodgevector', 'Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.hodge}}$
-      <tr><td>{{KNOWL('hgm.familyhodgevector', 'Family Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.famhodge}}$
+      <tr><td>{{KNOWL('hgm.hodge_vector', 'Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.hodge}}$
+      <tr><td>{{KNOWL('hgm.hodge_vector', 'Family Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.famhodge}}$
       <tr><td>{{KNOWL('hgm.signature', 'Signature')}}:<td>&nbsp;&nbsp;<td>{{info.sig}}
       <tr><td>{{KNOWL('hgm.conductor', 'Conductor')}}:<td>&nbsp;&nbsp;<td>${{info.cond}}$
       <tr><td>{{KNOWL('hgm.determinant', 'Determinant character')}}:<td>&nbsp;&nbsp;<td>$\chi_{  {{info.det}} }$
@@ -36,21 +36,38 @@
 
 <p><h2> {{ KNOWL('hgm.local_information', 'Local information') }}</h2>
 
-  <p>
-    <table>
-<tr> <th> $p$ <th> $c_p$ <th> $F_p(x)$ <th> 2 <th> 3 <th> 5 <th> 7 <th> $\card{\textrm{Gal}(F_p(x))}$ <th> $|D|$
-{% for loc in info.locinfo: %}
-<tr><td> ${{loc[0]}}$:
-<td>${{loc[1]}}$
-<td>${{loc[2]}}$
-<td>${{loc[3]}}$
-<td>${{loc[4]}}$
-<td>${{loc[5]}}$
-<td>${{loc[6]}}$
-<td>${{loc[7]}}$
-<td>${{loc[8]}}$
-{% endfor %}
-<tr><td><td><td><td>${{info.lcms[0]}}$<td> ${{info.lcms[1]}}$ <td>${{info.lcms[2]}}$ <td>${{info.lcms[3]}}$
+<p>
+  <table style="margin-left:1%;" border="0" class="ntdata">
+<!--TODO make better knowl for charpol of Frob-->
+  <thead>
+    <tr>
+      <th colspan="3"></th>
+      <th colspan="4">Order of semisimple Frobenius at $\ell$</th>
+      <th colspan="2"></th>
+    </tr>
+    <tr style="border-bottom: 1px solid #000;">
+    <th> $p$ </th>
+    <th> {{ KNOWL('hgm.conductor', '$c_p$') }} </th>
+    <th> {{ KNOWL('modlgal.frobenius_charpoly', '$F_p(T)$') }} </th>
+    <th> 2 <th> 3 <th> 5 <th> 7 </th>
+    <th> $\card{\operatorname{Gal}(F_p(T))}$ </th>
+    <th> {{ KNOWL('hgm.local_discriminant', '$D$') }} </th>
+  </thead>
+  {% for loc in info.locinfo: %}
+  <tr><td> ${{loc[0]}}$
+  <td>${{loc[1]}}$
+  <td>${{loc[2]}}$
+  <td>${{loc[3]}}$
+  <td>${{loc[4]}}$
+  <td>${{loc[5]}}$
+  <td>${{loc[6]}}$
+  <td>${{loc[7]}}$
+  <td>${{loc[8]}}$
+  {% endfor %}
+  <tr style="border-top: 2px solid #000;">
+    <!--<td><td><td><td>${{info.lcms[0]}}$<td> ${{info.lcms[1]}}$ <td>${{info.lcms[2]}}$ <td>${{info.lcms[3]}}$-->
+    <td colspan=3>LCMs<td>${{info.lcms[0]}}$<td> ${{info.lcms[1]}}$ <td>${{info.lcms[2]}}$ <td>${{info.lcms[3]}}$ <td colspan=2>
+  </tr>
 </table>
 
 
