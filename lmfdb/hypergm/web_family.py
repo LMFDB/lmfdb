@@ -161,10 +161,17 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def ppart(self):
-        return [[2, self.A2, self.B2, self.C2],
-                [3, self.A3, self.B3, self.C3],
-                [5, self.A5, self.B5, self.C5],
-                [7, self.A7, self.B7, self.C7]]
+        from lmfdb.hypergm.main import normalize_family, ab_label, url_for_label
+        p_data = [[p, getattr(self, f"A{p}"), getattr(self, f"B{p}"), getattr(self, f"C{p}")] for p in [2,3,5,7]]
+        for row in p_data:
+            A = row[1]
+            B = row[2]
+            if len(A) != 0 and len(B) != 0:
+                row.append(url_for_label(normalize_family(ab_label(A,B))))
+            #row.append(ab_label(row[1],row[2]))
+            else:
+                row.append("")
+        return p_data
 
     @cached_method
     def plot(self, typ="circle"):
