@@ -3,12 +3,14 @@ from collections import defaultdict
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function
+from sage.all import ZZ, gap, cached_function, lazy_attribute, Permutations
 import os
 import yaml
+from flask import render_template
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
 def knowl_cache(galois_labels=None, results=None):
     """
@@ -157,27 +159,75 @@ class WebGaloisGroup:
     def num_conjclasses(self):
         return self._data['num_conj_classes']
 
+    @lazy_attribute
+    def wag(self):
+        return WebAbstractGroup(self.abstract_label())
+
+    def have_isomorphism(self):
+        if self.wag.element_repr_type == "Lie":
+            return False
+        return 'isomorphism' in self._data
+
+    @lazy_attribute
+    def getisom(self):
+        # assumes isomorphism is in _data
+        wag = self.wag
+        imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
+        imgs = [gap("PermList(%s)"%str(z)) for z in imgs]
+        return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
+
+    @lazy_attribute
+    def factors_of_order(self):
+        return [z[0] for z in list(ZZ(self.order()).factor())]
+
+    @lazy_attribute
+    def characters(self):
+        return self.wag.characters
+
+    @lazy_attribute
     def conjclasses(self):
-        if 'conjclasses' in self._data:
-            return self._data['conjclasses']
         g = self.gapgroupnt()
         n = self.n()
         gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-        cc = g.ConjugacyClasses()
-        ccn = [x.Size() for x in cc]
-        ccc = [x.Representative() for x in cc]
+        wag = self.wag
+        self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
-            cc2 = [[1]]
-            cc = ['()']
+            self.conjugacy_classes[0].force_repr('()')
+            return [['()', 1, 1, '1', '1A']]
+        elif self.have_isomorphism() and wag.element_repr_type != "Lie":
+            isom = self.getisom
+            cc = [z.representative for z in self.conjugacy_classes]
+            cc1 = [wag.decode(z) for z in cc]
+            cc = [isom.Image(z) for z in cc1]
+            for j in range(len(self.conjugacy_classes)):
+                self.conjugacy_classes[j].force_repr(str(cc[j]))
+            ccn = [z.size for z in self.conjugacy_classes]
+            cc2 = [gap("cycletype("+str(x)+","+str(n)+")") for x in cc]
+            cclabels = [z.label for z in self.conjugacy_classes]
         else:
-            cc = ccc
+            cc = g.ConjugacyClasses()
+            ccn = [x.Size() for x in cc]
+            cclabels = ['' for z in cc]
+            cc = [x.Representative() for x in cc]
             cc2 = [x.cycletype(n) for x in cc]
+            for j in range(len(self.conjugacy_classes)):
+                self.conjugacy_classes[j].force_repr(' ')
         cc2 = [str(x) for x in cc2]
         cc2 = [re.sub(r"\[", '', x) for x in cc2]
         cc2 = [re.sub(r"\]", '', x) for x in cc2]
-        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
-        self._data['conjclasses'] = ans
+        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(cc))]
         return ans
+
+    @lazy_attribute
+    def can_chartable(self):
+        if not db.gps_groups.lookup(self.abstract_label()):
+            return False
+        return self.wag.complex_characters_known
+
+    def chartable(self):
+        self.conjclasses # called to load info in self
+        return render_template("character-table.html", gp=self,
+            info={'dispv': sparse_cyclotomic_to_mathml})
 
     def sibling_bound(self):
         return self._data['bound_siblings']
@@ -296,9 +346,9 @@ def cclasses_display_knowl(n, t, name=None):
         if n==1 and t==1:
             name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
-    if ncc < 50:
-        return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
-    return name + ' are not computed'
+    if ncc > 5000:
+        return name + ' are not computed'
+    return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 
 @cached_function
@@ -306,9 +356,7 @@ def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
         name += group_display_short(n, t)
-    group = WebGaloisGroup.from_nt(n, t)
-    if ZZ(group.order()) < ZZ(10000000) and group.num_conjclasses() < 21:
-        return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
     return name + ' is not computed'
 
 
@@ -421,21 +469,8 @@ def group_cclasses_knowl_guts(n, t):
 
 @cached_function
 def group_character_table_knowl_guts(n, t):
-    label = base_label(n, t)
-    group = db.gps_transitive.lookup(label)
-    gname = group['name']
-    gname = gname.replace('=', ' = ')
-    if group.get('pretty', None) is not None:
-        gname = group['pretty']
-    inf = '<div>Character table for '
-    inf += gname
-    inf += '<blockquote>'
-    inf += '<pre>'
-    inf += chartable(n, t)
-    inf += '</pre>'
-    inf += '</blockquote></div>'
-    return(inf)
-
+    wgg = WebGaloisGroup.from_nt(n,t)
+    return wgg.chartable()
 
 @cached_function
 def galois_module_knowl_guts(n, t, index):
@@ -548,14 +583,14 @@ def group_display_inertia(code):
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
-    if group.num_conjclasses() >= 50:
-        return 'not computed'
+    #if group.num_conjclasses() >= 50:
+    #    return 'not computed'
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
             <tbody>
          """
-    cc = group.conjclasses()
+    cc = group.conjclasses
     for c in cc:
         html += '<tr><td>' + str(c[3]) + '</td>'
         html += '<td>' + str(c[2]) + '</td>'
@@ -568,13 +603,7 @@ def cclasses(n, t):
 
 
 def chartable(n, t):
-    group = WebGaloisGroup.from_nt(n,t)
-    G = group.gapgroupnt()
-    ctable = str(G.CharacterTable().Display())
-    ctable = re.sub("^.*\n", '', ctable)
-    ctable = re.sub("^.*\n", '', ctable)
-    return ctable
-
+    return WebGaloisGroup.from_nt(n,t).chartable()
 
 def group_alias_table():
     aliases = get_aliases()
