@@ -246,7 +246,7 @@ character_columns = SearchColumns([
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
     MultiProcessedCol("first", "character.dirichlet.field_cut_out", "Kernel field", ["modulus", "first", "order"], display_kernel_field, align="center", default=False),
-    ProcessedCol("order", "character.dirichlet.value_field", "Value field", lambda order: valuefield_from_order(order), align="center", default=False),
+    ProcessedCol("order", "character.dirichlet.value_field", "Value field", lambda order: valuefield_from_order(order), align="center"),
     ProcessedCol("is_even", "character.dirichlet.parity", "Parity", lambda is_even: "even" if is_even else "odd"),
     CheckCol("is_real", "character.dirichlet.real", "Real"),
     CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive"),
