@@ -268,7 +268,7 @@ class WebHyperGeometricFamily():
         # points
         x_values.pop()
         for x in x_values:
-            L += point((x, y_values[x]), marker='o', size = 36, color=colors[x], zorder=3)
+            L += point((x, y_values[x]), marker='o', size=36, color=colors[x], zorder=3)
 
         j = 0
         for label in x_labels:
