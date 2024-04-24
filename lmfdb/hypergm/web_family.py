@@ -163,6 +163,7 @@ class WebHyperGeometricFamily():
     def ppart(self):
         from lmfdb.hypergm.main import normalize_family, ab_label, url_for_label
         p_data = [[p, getattr(self, f"A{p}"), getattr(self, f"B{p}"), getattr(self, f"C{p}")] for p in [2,3,5,7]]
+        # make URLs
         for row in p_data:
             A = row[1]
             B = row[2]
