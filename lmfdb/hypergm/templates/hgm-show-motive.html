@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining Parameters') }}</h2>
+<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining parameters') }}</h2>
 
 <p>
   <p>
@@ -22,7 +22,7 @@
       <tr><td>{{KNOWL('hgm.type', 'Type')}}:<td>&nbsp;&nbsp;<td>{{info.type}}
       <tr><td>{{KNOWL('hgm.hodge_vector', 'Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.hodge}}$
       <tr><td>{{KNOWL('hgm.hodge_vector', 'Family Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.famhodge}}$
-      <tr><td>{{KNOWL('hgm.signature', 'Signature')}}:<td>&nbsp;&nbsp;<td>{{info.sig}}
+      <tr><td>{{KNOWL('hgm.signature', 'Signature')}}:<td>&nbsp;&nbsp;<td>${{info.sig}}$
       <tr><td>{{KNOWL('hgm.conductor', 'Conductor')}}:<td>&nbsp;&nbsp;<td>${{info.cond}}$
       <tr><td>{{KNOWL('hgm.determinant', 'Determinant character')}}:<td>&nbsp;&nbsp;<td>$\chi_{  {{info.det}} }$
       <tr><td>{{KNOWL('lfunction.sign', 'Root number')}}:<td>&nbsp;&nbsp;<td>$ {{info.sign}}$
@@ -42,7 +42,7 @@
   <thead>
     <tr>
       <th colspan="3"></th>
-      <th colspan="4">Order of semisimple Frobenius at $\ell$</th>
+      <th colspan="4">{{ KNOWL('modlgal.frobenius_order', 'Order of semisimple Frobenius at $\ell$') }} </th>
       <th colspan="2"></th>
     </tr>
     <tr style="border-bottom: 1px solid #000;">

@@ -11,7 +11,7 @@ from sage.geometry.newton_polygon import NewtonPolygon
 from lmfdb import db
 from lmfdb.utils import (
     encode_plot, list_to_factored_poly_otherorder,
-    make_bigint, web_latex, integer_divisors, integer_prime_divisors)
+    make_bigint, web_latex, integer_divisors, integer_prime_divisors, raw_typeset)
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 # from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
@@ -113,9 +113,14 @@ class WebHyperGeometricFamily():
         return integer_prime_divisors(lcm(lcm(self.A), lcm(self.B)))
 
     @lazy_attribute
+    def wild_primes_string(self):
+        ps = self.wild_primes
+        return raw_typeset(', '.join(str(p) for p in ps), ', '.join(web_latex(p) for p in ps))
+
+    @lazy_attribute
     def motivic_det_char(self):
         exp = -QQ(self.weight * self.degree) / 2
-        first = r'\Q({})'.format(exp)
+        tate_twist = r'\Q({})'.format(exp)
 
         if self.det[0] == 1:
             foo = ""
@@ -125,10 +130,9 @@ class WebHyperGeometricFamily():
             foo = str(self.det[0])
         foo += self.det[1]
         if foo == "":
-            foo = "1"
-        second = r'\Q(\sqrt{{ {} }})'.format(foo)
-
-        return r'{} \otimes {}'.format(first, second)
+            return tate_twist
+        quad_char = r'\chi_{%s}' % foo
+        return r'{} \otimes {}'.format(quad_char, tate_twist)
 
     @lazy_attribute
     def bezout_det(self):
