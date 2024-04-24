@@ -1,10 +1,11 @@
 import re
 from flask import url_for
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from sage.all import (ZZ, QQ, cached_method, ceil, gcd, lcm,
                       latex, lazy_attribute,
-                      matrix, valuation)
+                      matrix, valuation, I)
+from sage.rings.complex_mpfr import ComplexField
 from sage.geometry.newton_polygon import NewtonPolygon
 
 from lmfdb import db
@@ -13,8 +14,9 @@ from lmfdb.utils import (
     make_bigint, web_latex, integer_divisors, integer_prime_divisors)
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
-from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
-from sage.plot.all import line, text, point, Graphics
+# from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
+from sage.plot.all import line, text, point, circle, polygon, Graphics
+from sage.functions.log import exp
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 
@@ -168,14 +170,34 @@ class WebHyperGeometricFamily():
                 [7, self.A7, self.B7, self.C7]]
 
     @cached_method
+    def circle_image(self):
+        alpha = self.alpha
+        beta = self.beta
+        alpha_counter = dict(Counter(alpha))
+        beta_counter = dict(Counter(beta))
+        G = Graphics()
+        G += circle((0, 0), 1, color='gray', thickness=2, zorder=3)
+        G += circle((0, 0), 1.4, color='black', alpha=0, zorder=2)  # Adds invisible framing circle, which protects the aspect ratio from being skewed.
+        C = ComplexField()
+        for a in alpha_counter.keys():
+            P = exp(C(2*3.14159*I*a))
+            P1 = exp(C(2*3.14159*(a + 0.007)*I))
+            P2 = exp(C(2*3.14159*(a - 0.007)*I))
+            P3 = (1+alpha_counter[a]/30)*exp(C(2*3.14159*I*a))
+            G += polygon([P1,P2,P3], color="red", thickness=1)
+            G += line([P,1.3*P], color="red", zorder=1)
+        for b in beta_counter.keys():
+            P = exp(C(2*3.14159*I*b))
+            P1 = exp(C(2*3.14159*(b + 0.007)*I))
+            P2 = exp(C(2*3.14159*(b - 0.007)*I))
+            P3 = (1-beta_counter[b]/30)*exp(C(2*3.14159*I*b))
+            G += polygon([P1,P2,P3], color="blue", thickness=1)
+            G += line([P,0.7*P], color="blue", zorder=1)
+        return G
+
+    @cached_method
     def plot(self, typ="circle"):
-        assert typ in ['circle', 'linear', 'constant']
-        if typ == 'circle':
-            G = circle_image(self.A, self.B)
-        elif typ == 'linear':
-            G = piecewise_linear_image(self.A, self.B)
-        else:
-            G = piecewise_constant_image(self.A, self.B)
+        G = self.circle_image()
 
         return encode_plot(
             G.plot(),
@@ -233,11 +255,15 @@ class WebHyperGeometricFamily():
         x_values.pop()
         for x in x_values:
             L += point((x, y_values[x]), marker='o', size = 36, color=colors[x], zorder=3)
+
+        j = 0
         for label in x_labels:
             if label["color"] == "red":
-                L += text(str(QQ(label["value"])), (x_labels.index(label),y_max + 0.3), color=label["color"])
+                L += text(str(QQ(label["value"])), (j,y_max + 0.3), color=label["color"])
+                j += 1
             else:
-                L += text(str(QQ(label["value"])), (x_labels.index(label),y_min - 0.3), color=label["color"])
+                L += text(str(QQ(label["value"])), (j,y_min - 0.3), color=label["color"])
+                j += 1
         L.axes(False)
         L.set_aspect_ratio(1)
         return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
