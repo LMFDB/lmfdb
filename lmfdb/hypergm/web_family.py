@@ -259,10 +259,10 @@ class WebHyperGeometricFamily():
         j = 0
         for label in x_labels:
             if label["color"] == "red":
-                L += text(str(QQ(label["value"])), (j,y_max + 0.3), color=label["color"])
+                L += text("$"+latex(QQ(label["value"]))+"$", (j,y_max + 0.4), color=label["color"])
                 j += 1
             else:
-                L += text(str(QQ(label["value"])), (j,y_min - 0.3), color=label["color"])
+                L += text("$"+latex(QQ(label["value"]))+"$", (j,y_min - 0.4), color=label["color"])
                 j += 1
         L.axes(False)
         L.set_aspect_ratio(1)
