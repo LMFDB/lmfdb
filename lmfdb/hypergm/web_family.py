@@ -31,6 +31,13 @@ def cyc_to_QZ(A):
                   for k in range(1, Ai + 1) if gcd(k, Ai) == 1)
 
 
+# Given A, B, return URL for family
+def AB_to_url(A,B):
+    from lmfdb.hypergm.main import normalize_family, ab_label, url_for_label
+    if len(A) != 0 and len(B) != 0:
+        return url_for_label(normalize_family(ab_label(A,B)))
+    return ""
+
 class WebHyperGeometricFamily():
     def __init__(self, data):
         for elt in db.hgm_families.col_type:
@@ -161,10 +168,13 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def ppart(self):
-        return [[2, self.A2, self.B2, self.C2],
-                [3, self.A3, self.B3, self.C3],
-                [5, self.A5, self.B5, self.C5],
-                [7, self.A7, self.B7, self.C7]]
+        p_data = [[p, getattr(self, f"A{p}"), getattr(self, f"B{p}"), getattr(self, f"C{p}")] for p in [2,3,5,7]]
+        # make URLs
+        for row in p_data:
+            A = row[1]
+            B = row[2]
+            row.append(AB_to_url(A,B))
+        return p_data
 
     @cached_method
     def plot(self, typ="circle"):
@@ -256,8 +266,15 @@ class WebHyperGeometricFamily():
         mono = [[m[0], dogapthing(m[1]),
                  getgroup(m[1], m[0]),
                  latex(ZZ(m[1][0]).factor())] for m in mono]
-        return [[m0, m1, m2[0], splitint(ZZ(m1[0]) / m2[1], m0), m3]
-                for m0, m1, m2, m3 in mono]
+
+        mono = [[m0, m1, m2[0], splitint(ZZ(m1[0]) / m2[1], m0), m3] for m0, m1, m2, m3 in mono]
+        # make URLs
+        for row in mono:
+            A = row[1][3][0]
+            B = row[1][3][1]
+            row.append(AB_to_url(A,B))
+
+        return mono
 
     @lazy_attribute
     def friends(self):
