@@ -117,7 +117,7 @@ class WebHyperGeometricFamily():
     @lazy_attribute
     def motivic_det_char(self):
         exp = -QQ(self.weight * self.degree) / 2
-        first = r'\Q({})'.format(exp)
+        tate_twist = r'\Q({})'.format(exp)
 
         if self.det[0] == 1:
             foo = ""
@@ -127,10 +127,9 @@ class WebHyperGeometricFamily():
             foo = str(self.det[0])
         foo += self.det[1]
         if foo == "":
-            foo = "1"
-        second = r'\Q(\sqrt{{ {} }})'.format(foo)
-
-        return r'{} \otimes {}'.format(first, second)
+            return tate_twist
+        quad_char = r'\chi_{%s}' % foo
+        return r'{} \otimes {}'.format(quad_char, tate_twist)
 
     @lazy_attribute
     def bezout_det(self):
