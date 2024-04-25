@@ -422,7 +422,7 @@ class HGMDownload(Downloader):
 def hgm_search(info, query):
     info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
     if search_type in ["Family", "RandomFamily"]:
-        query['__title__'] = r'Hypergeometric family over $\Q$ search result'
+        query['__title__'] = r'Hypergeometric family over $\Q$ search results'
         query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
         query['__table__'] = db.hgm_families
 
@@ -506,7 +506,7 @@ def render_hgm_webpage(label):
     for j in range(len(locinfo)):
         locinfo[j] = [primes[j]] + locinfo[j]
         # locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
-        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
+        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='T')
     hodge = data['hodge']
     famhodge = data['famhodge']
     prop2 = [
@@ -740,7 +740,7 @@ class HGMSearchArray(SearchArray):
         famhodge = TextBox(
             name="famhodge",
             label="Family Hodge vector",
-            knowl="hgm.familyhodgevector",
+            knowl="hgm.hodge_vector",
             example="[1,1,1,1]",
             extra=['class="family"'])
         A = TextBox(
