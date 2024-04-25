@@ -18,16 +18,19 @@
   <tr><td>{{KNOWL('hgm.degree', title="Degree")}}:</td><td>${{family.degree}}$</td></tr>
   <tr><td>{{KNOWL('hgm.weight', title="Weight")}}:</td><td>${{family.weight}}$</td></tr>
   <tr><td>{{KNOWL('hgm.type', title="Type")}}:</td><td>{{family.type}}</td></tr>
-  <tr><td>{{KNOWL('hgm.wild', title="Wild primes")}}:</td><td>{{family.wild_primes}}</td></tr>
+  <tr><td>{{KNOWL('hgm.wild', title="Wild primes")}}:</td><td>{{family.wild_primes_string | safe}}</td></tr>
   <tr><td>{{KNOWL('hgm.hodge_vector', title="Hodge vector")}}:</td><td>${{family.hodge}}$</td></tr>
   <tr><td>{{KNOWL('hgm.rotation_number', title="Rotation number")}}:</td><td>${{family.rotation_number}}$</td></tr>
-  <tr><td>{{KNOWL('hgm.determinant', title="Motive determinant character")}}:</td><td>${{family.motivic_det_char}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.determinant', title="Determinant character")}}:</td><td>${{family.motivic_det_char}}$</td></tr>
   <tr><td>{{KNOWL('hgm.bezout_matrix', title="Bezout matrix")}}:</td><td>${{family.bezout_latex}}$</td></tr>
   <tr><td>{{KNOWL('hgm.bezout_determinant', title="Bezout determinant")}}:</td><td>${{family.bezout_det}}$</td></tr>
   <tr><td>{{KNOWL('hgm.bezout_module', title="Bezout module")}}:</td><td>${{family.bezout_module}}$</td></tr>
   <!--Levelt matrices purposefully tex'd slightly oddly for better viewing on narrow screens-->
   <tr><td>{{KNOWL('hgm.levelt_matrices', title="Levelt matrices")}}:</td><td>${h_{\infty}={{family.hinf_latex}},\;}$ ${h_0={{family.h0_latex}},\;}$ $ {h_1={{family.h1_latex}}}$</td></tr>
 </table>
+
+<h2> {{ KNOWL('hgm.zigzagplot', title='Zigzag plot') }} </h2>
+<img src="{{ family.zigzag_plot() }}" width="500">
 
 <h2> {{ KNOWL('hgm.defining_parameter_ppart', title='$p$-parts of defining parameters') }} </h2>
 
@@ -41,11 +44,16 @@
     </tr>
   </thead>
   <tbody>
-    {% for p, Ap, Bp, Cp  in family.ppart %}
+    {% for p, Ap, Bp, Cp, U  in family.ppart %}
       <tr>
         <td> ${{p}}$ </td>
-        <td> ${{Ap}}$ </td>
-        <td> ${{Bp}}$ </td>
+        {% if U %}
+          <td> <a href={{U}}>${{Ap}}$</a> </td>
+          <td> <a href={{U}}>${{Bp}}$</a> </td>
+        {% else %}
+          <td> ${{Ap}}$ </td>
+          <td> ${{Bp}}$ </td>
+        {% endif %}
         <td> ${{Cp}}$ </td>
       </tr>
     {% endfor %}
@@ -71,18 +79,22 @@
     {% for m in family.monodromy %}
       {% if m[1]!=0 %}
         <tr>
-          <td> ${{m[0]}}$ </td>
-          <td> ${{m[3]}}$ </td>
-          <td> {{m[2] | safe}} </td>
-          <td> {{m[1][2] | safe}} </td>
-          {% for i in range(3) %}
+          <td> ${{m[0]}}$ </td> <!-- ell -->
+          <td> ${{m[3]}}$</td> <!-- Index -->
+          <td> {{m[2] | safe}}</td> <!-- Subimage -->
+          <td> {{m[1][2] | safe}}</td> <!-- Image -->
+          {% for i in range(3) %} <!-- A_ell^perp,... -->
             {% if m[1][3][i] %}
-              <td> ${{m[1][3][i]}}$ </td>
+              {% if m[5] and i in range(2) %} <!-- if URL exists -->
+                <td> <a href={{m[5]}}>${{m[1][3][i]}}$</a> </td>
+              {% else %}
+                <td> ${{m[1][3][i]}}$ </td>
+              {% endif %}
             {% else %}
               <td> $[\ ]$ </td>
             {% endif %}
           {% endfor %}
-          <td> ${{m[1][3][3]}}$ </td>
+          <td> ${{m[1][3][3]}}$</td> <!-- Imprimitiviy -->
         </tr>
       {% endif %}
     {% endfor %}
