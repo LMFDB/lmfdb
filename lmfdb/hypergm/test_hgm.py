@@ -116,14 +116,14 @@ class HGMTest(LmfdbTest):
 
     ### downloads
 
-    ### friends 
+    ### friends
 
     ### for families
 
     def test_friends_family(self):
         self.check_args("/Motive/Hypergeometric/Q/A12.6.6.6_B3.2.2.2.2.2.2.1.1", "Motives in the family")
 
-    ### for motives 
+    ### for motives
 
     def test_friends_motive(self):
         self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "Motive family A2.2.2 B4.1") # containing family
