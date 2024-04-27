@@ -5,7 +5,7 @@
 from lmfdb import db
 from sage.all import ZZ, prod, gp
 from sage.modular.dims import sturm_bound
-from sage.databases.cremona import cremona_letter_code, class_to_int
+from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
@@ -151,7 +151,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     N, k, n = map(int, spacelabel_conrey.split('.'))
     try:
         return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
-    except AssertionError: # N and n not relatively prime
+    except ValueError: # N and n not relatively prime
         pass
 
 
@@ -264,11 +264,11 @@ def make_newspace_data(level, char_data, k=2):
     data['char_conductor'] = char_data['conductor']
     data['char_degree'] = char_data['degree']
     data['char_is_real'] = char_data['is_real']
-    data['char_orbit_index'] = char_data['orbit_index']
+    data['char_orbit_index'] = char_data['orbit']
     data['char_orbit_label'] = char_data['label'].split('.')[-1]
     data['char_order'] = char_data['order']
-    data['char_parity'] = char_data['parity']
-    data['conrey_index'] = int(char_data['first_label'].split('.')[-1])
+    data['char_parity'] = 1 if char_data['is_even'] else -1
+    data['conrey_index'] = char_data['first']
     data['cusp_dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (level, k, data['conrey_index'], level))) * char_data['degree'] # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
     data['dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (level, k, data['conrey_index'], level))) * char_data['degree'] # mfdim returns the dimension over Q(chi), not over Q
     data['eis_dim'] = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 3)' % (level, k, data['conrey_index'], level))) * char_data['degree']
@@ -283,10 +283,7 @@ def make_newspace_data(level, char_data, k=2):
     data['level_radical'] = prod(data['level_primes'])
     data['mf_dim'] = data['cusp_dim'] + data['eis_dim']
     data['mf_new_dim'] = data['dim'] + data['eis_new_dim']
-    data['prim_orbit_index'] = class_to_int(char_data['primitive_label'].split('.')[-1]) + 1
-    # To justify the +1 above compare e.g.
-    # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
-    # https://www.lmfdb.org/Character/Dirichlet/data/3333.dn 'primitive_label': '1111.bx' and cremona.class_to_int('bx') == 49
+    data['prim_orbit_index'] = char_data['primitive_orbit']
     data['relative_dim'] = data['dim']/data['char_degree']
     data['sturm_bound'] = sturm_bound(level, k)
     data['weight'] = k
@@ -297,20 +294,16 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     # This creates enough of data to generate the oldspace decomposition on a newspace page
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
-    prim_orbit_label = str(char_conductor) + '.' + cremona_letter_code(prim_orbit_index - 1)
-    # To justify the -1 above compare e.g.
-    # https://www.lmfdb.org/ModularForm/GL/Q/holomorphic/data/3333.2.dn 'prim_orbit_index': 50
-    # https://www.lmfdb.org/Character/Dirichlet/data/3333.dn 'primitive_label': '1111.bx' and cremona.class_to_int('bx') == 49
     sub_level_list = [sub_level for sub_level in ZZ(level).divisors() if (sub_level % char_conductor == 0) and sub_level != level]
-    sub_chars = list(db.char_orbits.search({'modulus':{'$in':sub_level_list}, 'primitive_label':prim_orbit_label}))
+    sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'primitive_orbit':prim_orbit_index}))
     sub_chars = {char['modulus'] : char for char in sub_chars}
 
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
         entry['sub_level'] = sub_level
-        entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit_index']
-        entry['sub_conrey_index'] = int(sub_chars[sub_level]['first_label'].split('.')[-1])
+        entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit']
+        entry['sub_conrey_index'] = sub_chars[sub_level]['first']
         entry['sub_mult'] = len(ZZ(level/sub_level).divisors())
         if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
             # only include subspaces with cusp forms
@@ -398,7 +391,7 @@ class WebNewformSpace():
                 raise ValueError("Space %s not found" % label)
             level = int(label.split('.')[0])
             char_label = str(level) + '.' + label.split('.')[-1]
-            char_data = db.char_orbits.lucky({'modulus':level, 'label':char_label})
+            char_data = db.char_dirichlet.lookup(char_label)
             if not char_data:
                 raise ValueError("Space %s not found" % label)
             data = make_newspace_data(level, char_data)
@@ -502,7 +495,7 @@ class WebGamma1Space():
                 else:
                     self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
         else:
-            char_orbits = list(db.char_orbits.search({'modulus':level}))
+            char_orbits = list(db.char_dirichlet.search({'modulus':level}))
             newspaces_by_label = {str(level) + '.' + ns['char_orbit_label'] : ns for ns in newspaces} # to match the full character orbit label
             newspace_dims_by_label = {char_orbits[i]['label'] : self.newspace_dims[i] for i in range(len(char_orbits))} # This relies on the fact that newspaces are sorted by char_orbit_index, which is the default at the time of writing.
             for char in char_orbits:
@@ -516,7 +509,7 @@ class WebGamma1Space():
                 elif newspace_dims_by_label[char['label']] != 0:
                     space = {}
                     space['level'] = level
-                    space['conrey_index'] = int(char['first_label'].split('.')[1])
+                    space['conrey_index'] = char['first']
                     space['char_orbit_label'] = char['label'].split('.')[-1]
                     space['char_degree'] = char['degree']
                     space['dim'] = newspace_dims_by_label[char['label']]

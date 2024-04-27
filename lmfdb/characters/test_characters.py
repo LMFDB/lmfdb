@@ -18,7 +18,7 @@ class WebCharacterTest(LmfdbTest):
 class DirichletSearchTest(LmfdbTest):
     def test_nchars(self):
         from lmfdb import db
-        nchars = db.char_orbits.sum('degree')
+        nchars = db.char_dirichlet.sum('degree')
         W = self.tc.get('/Character/Dirichlet/')
         assert comma(nchars) in W.get_data(as_text=True)
 
@@ -82,7 +82,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'DirichletGroup(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
-        assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
+        assert '\\chi_{23}(10,\\cdot)' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
@@ -249,6 +249,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_underlying_data(self):
         W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
-        assert 'is_minimal' in W and 'last_label' in W
+        assert 'is_minimal' in W and 'last' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W

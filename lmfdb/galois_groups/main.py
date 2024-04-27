@@ -14,7 +14,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
-    search_wrap, redirect_no_cache)
+    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
@@ -24,6 +24,7 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from .transitive_group import (
     galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
+    cclasses_display_knowl, character_table_display_knowl,
     group_alias_table, WebGaloisGroup, knowl_cache)
 
 # Test to see if this gap installation knows about transitive groups
@@ -261,10 +262,15 @@ def render_group_webpage(args):
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
         pgroup = len(ZZ(order).prime_factors()) < 2
-        if wgg.num_conjclasses() < 50:
-            data['cclasses'] = wgg.conjclasses()
-        if ZZ(order) < ZZ(10000000) and wgg.num_conjclasses() < 21:
+        if wgg.num_conjclasses() < 51:
+            data['cclasses'] = wgg.conjclasses
+        else:
+            data['cclass_knowl'] = cclasses_display_knowl(n,t)
+        if wgg.num_conjclasses() < 31:
             data['chartable'] = chartable(n, t)
+        else:
+            data['chartable_knowl'] = character_table_display_knowl(n,t,
+                name="%d x %d character table"%(wgg.num_conjclasses(),wgg.num_conjclasses()))
         data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
@@ -323,8 +329,10 @@ def render_group_webpage(args):
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         data['nilpotency'] = '$%s$' % data['nilpotency']
+        data['have_isom'] = wgg.have_isomorphism
         if data['nilpotency'] == '$-1$':
             data['nilpotency'] = ' not nilpotent'
+        data['dispv'] = sparse_cyclotomic_to_mathml
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
@@ -335,6 +343,7 @@ def render_group_webpage(args):
             title=title,
             bread=bread,
             info=data,
+            gp=wgg,
             code=wgg.code,
             properties=prop2,
             friends=friends,

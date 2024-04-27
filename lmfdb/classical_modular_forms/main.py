@@ -704,7 +704,7 @@ def parse_character(inp, query, qfield, prim=False):
             if level > ORBIT_MAX_MOD:
                 raise ValueError("The level is too large.")
             # Check that this character is actually primitive
-            conductor = db.char_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            conductor = db.char_dirichlet.lucky({'modulus':level, 'orbit': orbit}, 'conductor')
             if conductor is None:
                 raise ValueError("No character orbit with this label exists.")
             if conductor != level:

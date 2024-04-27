@@ -1,8 +1,6 @@
 # ListCharacters.py
 import re
 from sage.all import lcm, factor, Integers
-from sage.databases.cremona import cremona_letter_code
-from lmfdb.characters.web_character import WebDirichlet, parity_string
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import flash_error, integer_divisors
 
@@ -101,37 +99,3 @@ def get_character_modulus(a, b, limit=7):
         entries2[k] = l
     cols = headers
     return headers, entries2, rows, cols
-
-
-def info_from_db_orbit(orbit):
-    mod = orbit['modulus']
-    conductor = orbit['conductor']
-    orbit_index = orbit['orbit_index']
-    orbit_letter = cremona_letter_code(orbit_index - 1)
-    orbit_label = f"{mod}.{orbit_letter}"
-    order = orbit['order']
-    is_odd = parity_string(orbit['parity'])
-    is_prim = _is_primitive(orbit['is_primitive'])
-    return [(mod,
-             num,
-             conductor,
-             orbit_label,
-             order,
-             is_odd,
-             is_prim,
-             WebDirichlet.char2tex(mod, num))
-            for num in orbit['galois_orbit']]
-
-
-def _is_primitive(db_primitive):
-    """
-    Translate db's primitive entry to boolean.
-    """
-    return str(db_primitive) == "True"
-
-
-def _is_odd(db_parity):
-    """
-    Translate db's parity entry to boolean.
-    """
-    return int(db_parity) == -1
