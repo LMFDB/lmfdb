@@ -597,6 +597,12 @@ def url_for_chartable_label(label):
     return url_for(".char_table", label=gp, char_highlight=label)
 
 
+#label is the label of a complex character
+#def url_for_cctable_label(label):
+#    gp = ".".join(label.split(".")[:2])
+#    return url_for(".char_table", label=gp, cc_highlight=label)
+
+
 @abstract_page.route("/")
 def index():
     bread = get_bread()
@@ -790,6 +796,9 @@ def char_table(label):
     if "char_highlight" in info and info["char_highlight"] not in [chtr.label for chtr in gp.characters]:
         flash_error(f"There is no character of {label} with label {info['char_highlight']}.")
         del info["char_highlight"]
+    if "cc_highlight" in info and info["cc_highlight"] not in [c.label for c in gp.conjugacy_classes]:
+        flash_error(f"There is no conjugacy class of {label} with label {info['cc_highlight']}.")
+        del info["cc_highlight"]
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -985,6 +994,14 @@ def get_qchar_url(label):
     label = q_char(label)  #in case user passed in complex char
     gplabel = ".".join(label.split(".")[:2])
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
+
+
+#This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
+def get_cc_url(gplabel, label):
+#    gplabel = ".".join(label.split(".")[:2])
+    return url_for(".char_table", label=gplabel, cc_highlight=label)
+
+
 
 def field_knowl(fld):
     from lmfdb.number_fields.web_number_field import WebNumberField
@@ -1328,13 +1345,13 @@ def cc_repr(label,code):
 
 #JP FIX KNOWLS
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col="group"),
-    SearchCol("label", "group.label_conjugacy_class", "Label"),
+    MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col = "group"),
+    MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group","label"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
-    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col="centralizer"),
+    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col = "centralizer"),
     MultiProcessedCol("powers","group.powers_conjugacy_class","Powers",["group","powers"], print_powers),
-    MultiProcessedCol("representative","group.repr","Representative",["group","representative"], cc_repr, download_col= "representative"),
+    MultiProcessedCol("representative","group.repr","Representative",["group","representative"], cc_repr, download_col = "representative"),
 #    LinkCol("qchar", "group.representation.rational_character", r"$\Q$-character", get_qchar_url),
 #    CheckCol("faithful", "group.representation.faithful", "Faithful"),    
 ])
