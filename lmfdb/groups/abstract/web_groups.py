@@ -564,6 +564,11 @@ class WebAbstractGroup(WebObj):
         return len(self.conjugacy_classes)
 
     @lazy_attribute
+    def cc_known(self):
+        return db.gps_groups_cc.exists({'group': self.label})
+
+    
+    @lazy_attribute
     def element_repr_type(self):
         if isinstance(self._data, (tuple, list)) and self.solvable:
             return "PC"

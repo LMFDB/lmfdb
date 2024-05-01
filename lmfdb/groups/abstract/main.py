@@ -50,7 +50,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns,LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns,SearchCol, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -1315,17 +1315,26 @@ def print_powers(gps, Lpowers):
         val = Lpowers[i]
         lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})
         vals.append(lab['label'] + " (" + str(facts[i]) + ")")
-    return ", ".join(vals)    
+    return ", ".join(vals)
 
 
+#JP mathmode??
+def cc_repr(label,code):
+    if code == 0:
+        return "id"
+    gp = WebAbstractGroup(label)
+    return "$" + gp.decode(code,as_str= True) + "$"
+
+
+#JP FIX KNOWLS
 conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col="group"),
-    MathCol("label", "group.label_conjugacy_class", "Label"),
+    SearchCol("label", "group.label_conjugacy_class", "Label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
     MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col="centralizer"),
     MultiProcessedCol("powers","group.powers_conjugacy_class","Powers",["group","powers"], print_powers),
-
+    MultiProcessedCol("representative","group.repr","Representative",["group","representative"], cc_repr, download_col= "representative"),
 #    LinkCol("qchar", "group.representation.rational_character", r"$\Q$-character", get_qchar_url),
 #    CheckCol("faithful", "group.representation.faithful", "Faithful"),    
 ])
