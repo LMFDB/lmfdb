@@ -1310,9 +1310,11 @@ def complex_char_search(info, query={}):
 
 def print_powers(gps, Lpowers):
     vals = []
-    for val in Lpowers:
+    facts = db.gps_groups.lucky({'label':gps})['factors_of_order']
+    for i in range(len(facts)):
+        val = Lpowers[i]
         lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})
-        vals.append(lab['label'])
+        vals.append(lab['label'] + " (" + str(facts[i]) + ")")
     return ", ".join(vals)    
 
 
