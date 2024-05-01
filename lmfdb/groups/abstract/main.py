@@ -2522,7 +2522,7 @@ def cc_data(gp, label, typ="complex", representative=None):
         else:
             gp_value = WebAbstractGroup(gp)
             if gp_value.representations.get("Lie") and gp_value.representations["Lie"][0]["family"][0] == "P" and gp_value.order < 2000:  #Problem with projective lie groups of order <2000
-                    pass
+                pass
             else:
                 repn = gp_value.decode(wacc.representative, as_str=True)
                 ans += "<br>Representative: {}".format("$" + repn + "$")
