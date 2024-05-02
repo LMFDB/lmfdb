@@ -491,7 +491,7 @@ def mf_data(label):
         label_cols = ["label", "label", "label", "hecke_orbit_code"]
         title = f"Newspace data - {label}"
     elif len(slabel) == 2:
-        tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
+        tables = ["mf_gamma1", "mf_gamma1_portraits"]
         labels = label
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
