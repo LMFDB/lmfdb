@@ -240,7 +240,7 @@ def QDimensionNewEisensteinForms(chi, k):
     # The Q-dimension of the new subspace of E_k(N,chi), the space of Eisenstein series of weight k, level N, and character chi, where N is the modulus of chi.
     from sage.all import prod
     assert k > 0, "The weight k must be a positive integer"
-    if ((k%2) == 1) != (chi['parity'] == -1):
+    if ((k%2) == 1) == chi['is_even']:
         return 0
     N = ZZ(chi['modulus'])
     M = ZZ(chi['conductor'])
@@ -295,9 +295,8 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
     sub_level_list = [sub_level for sub_level in ZZ(level).divisors() if (sub_level % char_conductor == 0) and sub_level != level]
-    sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'primitive_orbit':prim_orbit_index}))
+    sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index}))
     sub_chars = {char['modulus'] : char for char in sub_chars}
-
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -309,7 +308,6 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
             # only include subspaces with cusp forms
             # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
             oldspaces.append(entry)
-
     return oldspaces
 
 class WebNewformSpace():
@@ -328,7 +326,6 @@ class WebNewformSpace():
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
-
         # Properties
         self.properties = [('Label',self.label)]
         if self.plot is not None and self.dim > 0:
