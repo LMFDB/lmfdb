@@ -3,7 +3,7 @@
 # See templates/space.html for how functions are called
 
 from lmfdb import db
-from sage.all import ZZ, prod, gp
+from sage.all import ZZ, prod, gp, divisors, number_of_divisors
 from sage.modular.dims import sturm_bound
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
@@ -294,7 +294,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     # This creates enough of data to generate the oldspace decomposition on a newspace page
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
-    sub_level_list = [sub_level for sub_level in ZZ(level).divisors() if (sub_level % char_conductor == 0) and sub_level != level]
+    sub_level_list = [sub_level for sub_level in divisors(level) if (sub_level % char_conductor == 0) and sub_level != level]
     sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index}))
     sub_chars = {char['modulus'] : char for char in sub_chars}
     oldspaces = []
@@ -303,7 +303,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_level'] = sub_level
         entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit']
         entry['sub_conrey_index'] = sub_chars[sub_level]['first']
-        entry['sub_mult'] = len(ZZ(level/sub_level).divisors())
+        entry['sub_mult'] = number_of_divisors(level/sub_level)
         if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
             # only include subspaces with cusp forms
             # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
@@ -477,8 +477,7 @@ class WebGamma1Space():
         self.has_trace_form = (data.get('traces') is not None)
         # By default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
-        oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_mult']) for old in oldspaces]
+        self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level)]
         self.oldspaces.sort()
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []

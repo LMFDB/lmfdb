@@ -140,15 +140,6 @@ class mf_gamma1(MfChecker):
         # TODO: check that the number of char_orbits of level N and weight k is the same as the number of rows in mf_newspaces with this weight and level.  The following doesn't work since num_spaces counts spaces with positive dimension
         return self._run_crosstable(SQL("COUNT(*)"), 'mf_newspaces', 'num_spaces', ['level', 'weight'], extra=SQL(" AND t2.dim > 0"))
 
-    ### mf_gamma1_subspaces ###
-    @overall
-    def check_oldspace_decomposition_totaldim(self):
-        """
-        check that summing sub_dim * sub_mult over rows with a given label gives dim S_k(Gamma1(N))
-        """
-        # TIME about 1s
-        return self.check_crosstable_dotprod('mf_gamma1_subspaces', 'cusp_dim', 'label', ['sub_mult', 'sub_dim'])
-
     ### mf_gamma1_portraits ###
     @overall
     def check_portraits_count(self):
