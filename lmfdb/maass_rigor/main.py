@@ -127,9 +127,8 @@ def maass_data(label):
 def source_page():
     t = 'Source of rigorous Maass form data'
     bread = bread_prefix() + [('Source','')]
-    # TODO Make new KNOWLS and put them here
-    return render_template('multi.html', kids=['rcs.source.maass',
-                                               'rcs.ack.maass',
+    return render_template('multi.html', kids=['rcs.source.maass_rigor',
+                                               'rcs.ack.maass_rigor',
                                                'rcs.cite.maass'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
