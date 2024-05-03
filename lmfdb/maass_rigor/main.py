@@ -145,7 +145,7 @@ def completeness_page():
 def reliability_page():
     t = 'Reliability of Maass form data'
     bread = bread_prefix() + [('Reliability','')]
-    return render_template('single.html', kid='rcs.rigor.maass',
+    return render_template('single.html', kid='rcs.rigor.maass_rigor',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 
@@ -168,8 +168,7 @@ def random():
 @maass_rigor_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        # TODO change knowl something
-        # Update interesting KNOWLS for new labels
+        # TODO Update interesting KNOWLS for new labels
         "mf.maass.mwf",
         db.maass_rigor,
         label_col="maass_label",
@@ -358,7 +357,6 @@ class MaassStats(StatsDisplay):
     buckets = {'level': ['1', '2-13', '14-20', '21-30', '31-100', '101-997'],
                'spectral_parameter': ['0-1', '1-2', '2-3', '3-4', '4-6', '6-10', '10-20', '20-32', '32-50']}
 
-    # TODO KNOWL check
     knowls = {'level': 'mf.maass.mwf.level',
               'spectral_parameter': 'mf.maass.mwf.spectralparameter',
               'symmetry': 'mf.maass.mwf.symmetry'}
