@@ -37,7 +37,8 @@ def bread_prefix():
 def learnmore_list():
     return [('Source and acknowledgments', url_for('.source_page')),
             ('Completeness of the data', url_for('.completeness_page')),
-            ('Reliability of the data', url_for('.reliability_page'))]
+            ('Reliability of the data', url_for('.reliability_page')),
+            ('Rigorous Maass form labels', url_for(".labels_page"))]
 
 
 def learnmore_list_remove(matchstring):
@@ -147,6 +148,15 @@ def reliability_page():
     bread = bread_prefix() + [('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.maass',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
+
+@maass_rigor_page.route("/Labels")
+def labels_page():
+    t = 'Labels for Rigorous Maass forms'
+    bread = bread_prefix() + [('Labels', '')]
+    return render_template("single.html", kid='mf.maass_rigor.label',
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('labels'))
 
 
 @maass_rigor_page.route('/random')
