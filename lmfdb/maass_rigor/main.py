@@ -138,7 +138,7 @@ def source_page():
 def completeness_page():
     t = 'Completeness of rigorous Maass form data'
     bread = bread_prefix() + [('Completeness','')]
-    return render_template('single.html', kid='rcs.cande.maass',
+    return render_template('single.html', kid='rcs.cande.maass_rigor',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 
