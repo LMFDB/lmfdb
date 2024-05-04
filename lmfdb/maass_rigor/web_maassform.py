@@ -150,8 +150,15 @@ class WebRigorMaassForm():
 
     @property
     def friends(self):
-        # TODO should include next and previous form here
-        return [("L-function not computed", '')]
+        friendlist = []
+        if self.nspec > 1:
+            prevlabel = f"{self.level}.{self.weight}.{self.conrey_index}.{self.nspec - 1}.1"
+            friendlist += [("Previous Maass form", url_for(".by_label", label=prevlabel))]
+        if self.nspec < db.maass_rigor.count(query={'level':self.level}):
+            nextlabel = f"{self.level}.{self.weight}.{self.conrey_index}.{self.nspec + 1}.1"
+            friendlist += [("Next Maass form", url_for(".by_label", label=nextlabel))]
+        friendlist += [("L-function not computed", '')]
+        return friendlist
 
     def coefficient_table(self, rows=20, cols=3):
         n = len(self.coefficients)
