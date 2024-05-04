@@ -55,6 +55,9 @@
     - title: Siegel
       status: beta
       url_for: "smf.index"
+    - title: RigorMaass
+      status: beta
+      url_for: "maass_rigor.index"
     - title: U(2,1)
       status: future
 
