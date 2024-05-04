@@ -11,7 +11,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils import display_knowl
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.maass_rigor.plot import paintSvgMaass
 from lmfdb.maass_rigor.web_maassform import character_link, fricke_pretty, symmetry_pretty, WebRigorMaassForm, MaassFormDownloader
@@ -294,7 +294,12 @@ def spectral_parameter_link(maass_label, spectral_parameter):
     return f"<a href=\"{url}\">{str(spectral_parameter)[:10]}</a>"
 
 
+def get_url(label):
+    return url_for(".by_label", label=label)
+
+
 maass_columns = SearchColumns([
+    LinkCol("maass_label", "mf.maass_rigor.label", "Label", get_url),
     MathCol("level", "mf.maass.mwf.level", "Level"),
     MathCol("weight", "mf.maass.mwf.weight", "Weight"),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
