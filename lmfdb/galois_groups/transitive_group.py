@@ -70,9 +70,8 @@ def cyclestrings(perm):
     return ''.join(a)
 
 def compress_cycle_type(ct):
-    ccount=Counter(ct)
-    bits = [(z, '^{'+str(ccount[z])+'}' if ccount[z]>1 else '' ) for z in sorted(list(ccount.keys()),reverse=True)]
-    return ','.join([str(z[0])+ z[1] for z in bits])
+    bits = [(str(z), f'^{{c}}' if c>1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    return ','.join(z + e for z,e in bits)
 ############  Galois group object
 
 
@@ -205,14 +204,14 @@ class WebGaloisGroup:
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(str(cc[j]))
             ccn = [z.size for z in self.conjugacy_classes]
-            cc2 = [gap("CycleLengths(%s, [1..%d])"%(str(x),n)) for x in cc]
+            cc2 = [gap(f"CycleLengths({x}, [1..{n}])" for x in cc]
             cclabels = [z.label for z in self.conjugacy_classes]
         else:
             cc = g.ConjugacyClasses()
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            cc2 = [gap("CycleLengths(%s, [1..%d])"%(str(x),n)) for x in cc]
+            cc2 = [gap(f"CycleLengths({x}, [1..{n}])" for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
         cc2 = [compress_cycle_type(z) for z in cc2]
