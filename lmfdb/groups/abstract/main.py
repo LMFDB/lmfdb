@@ -1333,41 +1333,55 @@ def cc_repr(label,code):
     return "$" + gp.decode(code,as_str= True) + "$"
 
 
-def Power_col(i,val,gps):
-    facts = db.gps_groups.lucky({'label':gps})['factors_of_order']
-    lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})['label']
-    return ProcessedCol("power_col", None, str(facts[i]), lambda info: lab, align="center")
+def Power_col(i, ps):
+    p = ps[i]
+    return MultiProcessedCol(f"powers{i}", None, f"{p}P", ["group", "powers"], lambda group, powers: get_cc_url(group, powers[i]), align="center")
 
-#JP CAN DELETE??
-def flatten(L):
-    return [x for ell in L for x in ell]
-
-
-#JP FIX KNOWLS AND WORK ON contingent=display_Power,
+#JP FIX KNOWLS
 conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col = "group"),
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group","label"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
     MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col = "centralizer"),
-#    ColGroup("power_cols","group.pwers_conjugacy_class", "Powers", lambda info: [Power_col(i, info["results"][j]["powers"][i], info["results"][0]["group"]) for i in range(len(info["results"][0]["powers"])) for j in range(len(info["results"])) ], orig=["powers"], download_col="powers"),
-    ColGroup("power_cols","group.pwers_conjugacy_class", "Powers", lambda info:	[Power_col(i, info["results"][0]["powers"][i], info["results"][0]["group"]) for i in range(len(info["results"][0]["powers"]))], orig=["powers"], download_col="powers"),
-#             contingent=display_Power, orig=["powers"], download_col="powers"),
+    ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
+             lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
+             contingent=lambda info: info["group_factors"],
+             orig=["powers"],
+             download_col="powers"),
     MultiProcessedCol("representative","group.repr","Representative",["group","representative"], cc_repr, download_col = "representative"),
-])
+],db_cols=["centralizer", "counter", "group", "label", "order", "powers", "representative", "size"])
 
 
 def cc_postprocess(res, info, query):
-    # We want to get latex for groups in one query
+    # We want to get latex for groups in one query, figure out what powers to use, and create a lookup table for counter->label
     labels = set()
+    counter_to_label = {(rec["group"], rec["counter"]): rec["label"] for rec in res}
+    missing = defaultdict(list)
+    common_support = None
     for rec in res:
+        group = rec.get("group")
+        group_support = ZZ(group.split(".")[0]).prime_factors()
+        if common_support is None:
+            common_support = group_support
+        elif common_support is not False and common_support != group_support:
+            common_support = False
+        for ctr in rec.get("powers", []):
+            if (group, ctr) not in counter_to_label:
+                missing[group].append(ctr)
         for col in ["group","centralizer"]:
             label = rec.get(col)
             if label is not None:
                 labels.add(label)
+    # We use an empty list so that [Powers_col(i,...) for i in info["group_factors"]] works
+    info["group_factors"] = common_support if common_support else []
+    if missing:
+        for rec in db.gps_groups_cc.search({"$or":[{"group":group, "counter":{"$in":counters}} for (group, counters) in missing.items()]}, ["group", "counter", "label"]):
+            counter_to_label[rec["group"],rec["counter"]] = rec["label"]
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
+        rec["powers"] = [counter_to_label[rec["group"], ctr] for ctr in rec["powers"]]
     return res
 
 
