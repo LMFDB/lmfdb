@@ -70,7 +70,7 @@ def cyclestrings(perm):
     return ''.join(a)
 
 def compress_cycle_type(ct):
-    bits = [(str(z), f'^{{c}}' if c>1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    bits = [(str(z), f'^{{{c}}}' if c>1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
 ############  Galois group object
 
