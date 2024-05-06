@@ -1,5 +1,5 @@
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from lmfdb import db
 
@@ -69,6 +69,10 @@ def cyclestrings(perm):
     a = ['('+','.join([str(u) for u in v])+')' for v in perm]
     return ''.join(a)
 
+def compress_cycle_type(ct):
+    ccount=Counter(ct)
+    bits = [(z, '^{'+str(ccount[z])+'}' if ccount[z]>1 else '' ) for z in sorted(list(ccount.keys()),reverse=True)]
+    return ','.join([str(z[0])+ z[1] for z in bits])
 ############  Galois group object
 
 
@@ -188,7 +192,6 @@ class WebGaloisGroup:
     def conjclasses(self):
         g = self.gapgroupnt()
         n = self.n()
-        gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
         wag = self.wag
         self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
@@ -202,19 +205,17 @@ class WebGaloisGroup:
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(str(cc[j]))
             ccn = [z.size for z in self.conjugacy_classes]
-            cc2 = [gap("cycletype("+str(x)+","+str(n)+")") for x in cc]
+            cc2 = [gap("CycleLengths(%s, [1..%d])"%(str(x),n)) for x in cc]
             cclabels = [z.label for z in self.conjugacy_classes]
         else:
             cc = g.ConjugacyClasses()
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            cc2 = [x.cycletype(n) for x in cc]
+            cc2 = [gap("CycleLengths(%s, [1..%d])"%(str(x),n)) for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
-        cc2 = [str(x) for x in cc2]
-        cc2 = [re.sub(r"\[", '', x) for x in cc2]
-        cc2 = [re.sub(r"\]", '', x) for x in cc2]
+        cc2 = [compress_cycle_type(z) for z in cc2]
         ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(cc))]
         return ans
 
