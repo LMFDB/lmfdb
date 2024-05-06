@@ -204,14 +204,14 @@ class WebGaloisGroup:
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(str(cc[j]))
             ccn = [z.size for z in self.conjugacy_classes]
-            cc2 = [gap(f"CycleLengths({x}, [1..{n}])" for x in cc]
+            cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             cclabels = [z.label for z in self.conjugacy_classes]
         else:
             cc = g.ConjugacyClasses()
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            cc2 = [gap(f"CycleLengths({x}, [1..{n}])" for x in cc]
+            cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
         cc2 = [compress_cycle_type(z) for z in cc2]
