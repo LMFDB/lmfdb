@@ -1863,6 +1863,8 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Perm":
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
+            if code == 0:
+                return "1"
             return self.decode_as_pcgs(code, as_str=as_str)
         else:
             return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str, LieType=(rep_type=="Lie"))

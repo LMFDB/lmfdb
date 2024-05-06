@@ -597,11 +597,6 @@ def url_for_chartable_label(label):
     return url_for(".char_table", label=gp, char_highlight=label)
 
 
-#label is the label of a complex character
-#def url_for_cctable_label(label):
-#    gp = ".".join(label.split(".")[:2])
-#    return url_for(".char_table", label=gp, cc_highlight=label)
-
 
 @abstract_page.route("/")
 def index():
@@ -996,10 +991,16 @@ def get_qchar_url(label):
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
 
 
+#JP
 #This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
+# Or returns just the label if conjugacy classes are known but not characters
 def get_cc_url(gplabel, label):
-#    gplabel = ".".join(label.split(".")[:2])
-    return url_for(".char_table", label=gplabel, cc_highlight=label)
+    if db.gps_groups.lucky({'label': gplabel})['complex_characters_known']:
+        cc = db.gps_groups_cc.lucky({'group':gplabel, 'label':label})
+        highlight_col = cc['counter']
+        return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i = highlight_col) +">" + label + "</a>"
+    else:
+        return label
 
 
 
@@ -1325,35 +1326,34 @@ def complex_char_search(info, query={}):
 #    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
 
 
-def print_powers(gps, Lpowers):
-    vals = []
-    facts = db.gps_groups.lucky({'label':gps})['factors_of_order']
-    for i in range(len(facts)):
-        val = Lpowers[i]
-        lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})
-        vals.append(lab['label'] + " (" + str(facts[i]) + ")")
-    return ", ".join(vals)
 
-
-#JP mathmode??
+#need mathmode for MultiProcessedCol
 def cc_repr(label,code):
-    if code == 0:
-        return "id"
     gp = WebAbstractGroup(label)
     return "$" + gp.decode(code,as_str= True) + "$"
 
 
-#JP FIX KNOWLS
+def Power_col(i,val,gps):
+    facts = db.gps_groups.lucky({'label':gps})['factors_of_order']
+    lab = db.gps_groups_cc.lucky({'group':gps, 'counter':val})['label']
+    return ProcessedCol("power_col", None, str(facts[i]), lambda info: lab, align="center")
+
+#JP CAN DELETE??
+def flatten(L):
+    return [x for ell in L for x in ell]
+
+
+#JP FIX KNOWLS AND WORK ON contingent=display_Power,
 conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col = "group"),
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group","label"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
     MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col = "centralizer"),
-    MultiProcessedCol("powers","group.powers_conjugacy_class","Powers",["group","powers"], print_powers),
+#    ColGroup("power_cols","group.pwers_conjugacy_class", "Powers", lambda info: [Power_col(i, info["results"][j]["powers"][i], info["results"][0]["group"]) for i in range(len(info["results"][0]["powers"])) for j in range(len(info["results"])) ], orig=["powers"], download_col="powers"),
+    ColGroup("power_cols","group.pwers_conjugacy_class", "Powers", lambda info:	[Power_col(i, info["results"][0]["powers"][i], info["results"][0]["group"]) for i in range(len(info["results"][0]["powers"]))], orig=["powers"], download_col="powers"),
+#             contingent=display_Power, orig=["powers"], download_col="powers"),
     MultiProcessedCol("representative","group.repr","Representative",["group","representative"], cc_repr, download_col = "representative"),
-#    LinkCol("qchar", "group.representation.rational_character", r"$\Q$-character", get_qchar_url),
-#    CheckCol("faithful", "group.representation.faithful", "Faithful"),    
 ])
 
 

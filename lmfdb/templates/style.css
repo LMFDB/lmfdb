@@ -2523,8 +2523,13 @@ button.sub_inactive {
   border: 1px solid {{color.lf_ar_button_brd}};
 }
 
-tr.highlighted, td.highlighted {
+tr.highlighted {
   background-color: {{color.col_main_ll}};
+}
+
+td.highlighted {
+  background-color: {{color.col_main_ll}};
+  text-align: right;
 }
 
 #column-selector, #sort-selecter {
