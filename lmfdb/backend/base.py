@@ -122,8 +122,6 @@ _meta_tables_cols = (
     "total",
     "important",
     "include_nones",
-    "table_description",
-    "col_description",
 )
 _meta_tables_cols_notrequired = (
     "count_cutoff",
@@ -131,9 +129,7 @@ _meta_tables_cols_notrequired = (
     "total",
     "important",
     "include_nones",
-    "table_description",
-    "col_description",
-)  # defaults: 1000, true, 0, false, false, "", {}
+)  # defaults: 1000, true, 0, false, false
 _meta_tables_types = dict(zip(_meta_tables_cols, (
     "text",
     "jsonb",
@@ -146,8 +142,6 @@ _meta_tables_types = dict(zip(_meta_tables_cols, (
     "bigint",
     "boolean",
     "boolean",
-    "text",
-    "jsonb",
 )))
 _meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
 
@@ -222,12 +216,13 @@ class PostgresBase():
         self.slow_cutoff = logging_options["slowcutoff"]
         self.logger = l = logging.getLogger(loggername)
         l.propagate = False
+        # we only want 2 handlers
+        l.handlers = []
         l.setLevel(logging_options.get('loglevel', logging.INFO))
-        fhandler = logging.FileHandler(logging_options["slowlogfile"])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
-        filt = QueryLogFilter()
+        fhandler = logging.FileHandler(logging_options["slowlogfile"])
         fhandler.setFormatter(formatter)
-        fhandler.addFilter(filt)
+        fhandler.addFilter(QueryLogFilter())
         l.addHandler(fhandler)
         shandler = logging.StreamHandler()
         shandler.setFormatter(formatter)

@@ -1171,7 +1171,6 @@ class PostgresTable(PostgresBase):
                         if not self._table_exists(table + "_tmp"):
                             self._clone(table, table + "_tmp")
                 self.stats.refresh_stats(suffix=suffix)
-                self.stats.refresh_null_counts(suffix=suffix)
             if not inplace:
                 swapped_tables = (
                     [self.search_table]
@@ -1786,7 +1785,7 @@ class PostgresTable(PostgresBase):
                     if table not in tables:
                         tables.append(table)
 
-            if countsfile:
+            if self.stats.counts in tables:
                 # create index on counts table
                 self._create_counts_indexes(suffix=suffix)
 
@@ -2217,73 +2216,33 @@ class PostgresTable(PostgresBase):
 
     def description(self, table_description=None):
         """
-        Return or set the description string for this table in meta_tables
+        This stub defines the API for getting and setting the table description.
+        In the LMFDB, this is implemented using the knowl table, but we do nothing by default.
 
         INPUT:
 
-        - ``table_description`` -- if provided, set the description to this value.  If not, return the current description.
+        - ``table_description`` -- if provided, set the description to this value.
+          If not, return the current description.
         """
-        if table_description is None:
-            selecter = SQL("SELECT table_description FROM meta_tables WHERE name = %s")
-            desc = list(self._execute(selecter, [self.search_table]))
-            if desc and desc[0]:
-                return desc[0]
-            else:
-                return "(table description not yet updated on this server)"
-        else:
-            assert isinstance(table_description, str)
-            modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
-            self._execute(modifier, [table_description, self.search_table])
+        pass
 
     def column_description(self, col=None, description=None, drop=False):
         """
-        Set the description for a column in meta_tables.
+        This stub defines the API for getting, setting and deleting column descriptions.
+        In the LMFDB, this is implemented using the knowl table, but we do nothing by default.
 
         INPUT:
 
-        - ``col`` -- the name of the column.  If None, ``description`` should be a dictionary with keys equal to the column names.
+        - ``col`` -- the name of the column.  If None, ``description`` should be a dictionary
+          with keys equal to the column names.
 
-        - ``description`` -- if provided, set the column description to this value.  If not, return the current description.
+        - ``description`` -- if provided, set the column description to this value.
+          If not, return the current description.
 
-        - ``drop`` -- if ``True``, delete the column from the description dictionary in preparation for dropping the column.
+        - ``drop`` -- if ``True``, delete the column from the description dictionary in
+          preparation for dropping the column.
         """
-        allcols = self.search_cols + self.extra_cols
-        # Get the current column description
-        selecter = SQL("SELECT col_description FROM meta_tables WHERE name = %s")
-        cur = self._execute(selecter, [self.search_table])
-        current = cur.fetchone()[0]
-
-        if not drop and description is None:
-            # We want to allow the set of columns to be out of date temporarily, on prod for example
-            if col is None:
-                for col in allcols:
-                    if col not in current:
-                        current[col] = "(description not yet updated on this server)"
-                return current
-            return current.get(col, "(description not yet updated on this server)")
-        else:
-            if not (drop or col is None or col in allcols):
-                raise ValueError("%s is not a column of this table" % col)
-            if drop:
-                if col is None:
-                    raise ValueError("Must specify column name to drop")
-                try:
-                    del current[col]
-                except KeyError:
-                    # column was already not present for some reason
-                    return
-            elif col is None:
-                assert isinstance(description, dict)
-                for col in description:
-                    if col not in allcols:
-                        raise ValueError("%s is not a column of this table" % col)
-                    assert isinstance(description[col], str)
-                    current[col] = description[col]
-            else:
-                assert isinstance(description, str)
-                current[col] = description
-            modifier = SQL("UPDATE meta_tables SET col_description = %s WHERE name = %s")
-            self._execute(modifier, [Json(current), self.search_table])
+        pass
 
     def add_column(self, name, datatype, description=None, extra=False, label=False, force_description=False):
         """

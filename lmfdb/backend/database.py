@@ -44,11 +44,11 @@ def setup_connection(conn):
     register_json(conn, loads=Json.loads)
     try:
         from sage.all import Integer, RealNumber
+        from .encoding import RealEncoder, LmfdbRealLiteral
     except ImportError:
         pass
     else:
         register_adapter(Integer, AsIs)
-        from .encoding import RealEncoder, LmfdbRealLiteral
         register_adapter(RealNumber, RealEncoder)
         register_adapter(LmfdbRealLiteral, RealEncoder)
 
@@ -489,13 +489,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 "(name text, sort jsonb, count_cutoff smallint DEFAULT 1000, "
                 "id_ordered boolean, out_of_order boolean, has_extras boolean, "
                 "stats_valid boolean DEFAULT true, label_col text, total bigint, "
-                "include_nones boolean, table_description text, col_description jsonb, version integer)"
+                "include_nones boolean, version integer)"
             ))
             version = 0
 
             # copy data from meta_tables
             rows = self._execute(SQL(
-                "SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, table_description, col_description FROM meta_tables "
+                "SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones FROM meta_tables "
             ))
 
             for row in rows:
@@ -503,8 +503,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     SQL(
                         "INSERT INTO meta_tables_hist "
                         "(name, sort, id_ordered, out_of_order, has_extras, label_col, "
-                        "total, include_nones, table_description, col_description, version) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                        "total, include_nones, version) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
                     ),
                     row + (version,),
                 )
@@ -778,8 +778,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # FIXME use global constants ?
             inserter = SQL(
                 "INSERT INTO meta_tables "
-                "(name, sort, id_ordered, out_of_order, has_extras, label_col, table_description, col_description) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                "(name, sort, id_ordered, out_of_order, has_extras, label_col) "
+                "VALUES (%s, %s, %s, %s, %s, %s)"
             )
             self._execute(
                 inserter,
@@ -790,11 +790,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     not id_ordered,
                     extra_columns is not None,
                     label_col,
-                    table_description,
-                    Json(col_description),
                 ],
             )
-        self.__dict__[name] = self._search_table_class_(
+        new_table = self._search_table_class_(
             self,
             name,
             label_col,
@@ -804,6 +802,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             has_extras=(extra_columns is not None),
             total=0,
         )
+        new_table.description(table_description)
+        new_table.column_description(description=col_description)
+        self.__dict__[name] = new_table
         self.tablenames.append(name)
         self.tablenames.sort()
         self.log_db_change(
@@ -1117,8 +1118,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
-                    import ast
-                    meta["col_description"] = ast.literal_eval(meta["col_description"])
                     assert meta["name"] == tablename
 
                     with search_table_file.open("r") as F:
@@ -1141,7 +1140,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                                 extra_columns[typ].append(name)
                     # the rest of the meta arguments will be replaced on the reload_all
                     # We use force_description=False so that beta and prod can be out-of-sync with respect to columns and/or descriptions
-                    self.create_table(tablename, search_columns, None, table_description=meta["table_description"], col_description=meta["col_description"], extra_columns=extra_columns, force_description=False)
+                    self.create_table(tablename, search_columns, None, extra_columns=extra_columns, force_description=False)
 
             for tablename in self.tablenames:
                 included = []

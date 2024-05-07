@@ -1581,6 +1581,7 @@ ORDER BY v.ord LIMIT %s"""
             if total:
                 # Refresh total in meta_tables
                 self.total = self._slow_count({}, suffix=suffix, extra=False)
+            self.refresh_null_counts(suffix=suffix)
             self.logger.info("Refreshed statistics in %.3f secs" % (time.time() - t0))
 
     def status(self, reset_None_to_1=False):
