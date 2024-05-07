@@ -10,14 +10,14 @@ from sage.plot.all import line, points, text, Graphics
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, coeff_to_poly, pol_to_html, teXify_pol, display_multiset, display_knowl,
+    web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
     parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, eval_rational_list
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, PolynomialCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -52,7 +52,7 @@ def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
 
 def format_coeffs(coeffs):
-    return pol_to_html(str(coeff_to_poly(coeffs)))
+    return latex(coeff_to_poly(coeffs))
 
 def lf_formatfield(coef):
     coef = string2list(coef)
@@ -276,6 +276,11 @@ def local_field_jump(info):
 def unpack_slopes(slopes, t, u):
     return eval_rational_list(slopes), t, u
 
+def format_eisen(eisstr):
+    Pt = PolynomialRing(QQ, 't')
+    Ptx = PolynomialRing(Pt, 'x')
+    return latex(Ptx(str(eisstr).replace('y','x')))
+
 class LF_download(Downloader):
     table = db.lf_fields
     title = '$p$-adic fields'
@@ -293,7 +298,7 @@ class LF_download(Downloader):
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label),
     MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
-    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True),
     MathCol("p", "lf.qp", "$p$", short_title="prime"),
     MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index"),
     MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree"),
@@ -310,9 +315,12 @@ lf_columns = SearchColumns([
                       ["slopes", "t", "u"],
                       show_slope_content,
                       mathmode=True, apply_download=unpack_slopes),
+    # want apply_download for download conversion
+    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
+    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
-    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia"])
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))

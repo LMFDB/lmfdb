@@ -10,8 +10,7 @@ from lmfdb.utils import flash_error
 
 def get_bread(breads=[]):
     bc = [("Permutations", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 

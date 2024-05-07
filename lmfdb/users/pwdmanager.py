@@ -96,7 +96,7 @@ class PostgresUserTable(PostgresBase):
             pwd = pwd_input
         password = self.bchash(pwd)
         #TODO: use identifiers
-        insertor = SQL(u"INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
+        insertor = SQL("INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
         self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user

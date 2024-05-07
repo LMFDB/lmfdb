@@ -20,8 +20,8 @@ The three main entry points to ``SearchCol`` are
 """
 
 from .web_display import display_knowl
-from lmfdb.utils import pol_to_html, coeff_to_poly
-from sage.all import Rational
+from lmfdb.utils import coeff_to_poly
+from sage.all import Rational, latex
 
 def get_default_func(default, name):
     """
@@ -258,6 +258,9 @@ class FloatCol(MathCol):
 
     def get(self, rec):
         val = self._get(rec)
+        if val == "":
+            # null value
+            return ""
         # We mix string processing directives so that we can use variable precision
         return f"%.{self.prec}f" % val
 
@@ -544,7 +547,7 @@ class PolynomialCol(SearchCol):
     These columns display their contents as polynomials in x.
     """
     def display(self, rec):
-        return pol_to_html(str(coeff_to_poly(self.get(rec))))
+        return f"${latex(coeff_to_poly(self.get(rec)))}$"
 
 def eval_rational_list(s):
     """

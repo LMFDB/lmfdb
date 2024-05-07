@@ -620,6 +620,7 @@ class WebEC():
             mwbsd['reg']  = self.regulator
             mwbsd['sha']  = self.sha
             mwbsd['sha2'] = latex_sha(self.sha)
+            mwbsd['sha_is_exact'] = self.rank==0 # see Issue #5872
             for num in ['reg', 'special_value', 'real_period', 'area']:
                 mwbsd[num]  = RR(mwbsd[num])
         except AttributeError:
@@ -709,7 +710,7 @@ class WebEC():
                 rtknowl = ['ec.nonsplit_multiplicative_reduction', 'ec.additive_reduction', 'ec.split_multiplicative_reduction'][1+red]
             p = str(p)
             pdata = iwdata[p]
-            if isinstance(pdata, type(u'?')):
+            if isinstance(pdata, str):
                 if not rtype:
                     if pdata=="o?":
                         rtype = "ord"

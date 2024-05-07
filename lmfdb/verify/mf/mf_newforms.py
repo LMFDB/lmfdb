@@ -6,7 +6,7 @@ from psycodict.utils import IdentifierWrapper as Identifier
 from psycopg2.sql import SQL, Literal
 from lmfdb.utils import names_and_urls
 from .mf import MfChecker
-from .verification import overall, overall_long, slow, fast, accumulate_failures
+from ..verification import overall, overall_long, slow, fast, accumulate_failures
 
 CCC = ComplexField(200)
 

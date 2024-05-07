@@ -491,7 +491,7 @@ def mf_data(label):
         label_cols = ["label", "label", "label", "hecke_orbit_code"]
         title = f"Newspace data - {label}"
     elif len(slabel) == 2:
-        tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
+        tables = ["mf_gamma1", "mf_gamma1_portraits"]
         labels = label
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
@@ -704,7 +704,7 @@ def parse_character(inp, query, qfield, prim=False):
             if level > ORBIT_MAX_MOD:
                 raise ValueError("The level is too large.")
             # Check that this character is actually primitive
-            conductor = db.char_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            conductor = db.char_dirichlet.lucky({'modulus':level, 'orbit': orbit}, 'conductor')
             if conductor is None:
                 raise ValueError("No character orbit with this label exists.")
             if conductor != level:

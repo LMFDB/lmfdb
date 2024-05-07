@@ -21,7 +21,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.api import datapage
@@ -195,7 +195,7 @@ class ECstats(StatsDisplay):
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
-              'sha': 'ec.q.analytic_sha_order',
+              'sha': 'ec.analytic_sha_order',
               'torsion_structure': 'ec.torsion_order'}
 
     top_titles = {'rank': 'rank',
@@ -210,7 +210,7 @@ class ECstats(StatsDisplay):
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
-        {'cols': 'torsion_structure'},
+        {'cols': 'torsion_structure', 'totaler': {'avg': False}},
         {'cols': 'sha', 'totaler': {'avg': False}},
     ]
 
@@ -410,6 +410,16 @@ class EC_download(Downloader):
         )
     }
 
+def ec_postprocess(res, info, query):
+    labels = [rec["lmfdb_label"] for rec in res]
+    mwgens = {rec["lmfdb_label"]: rec["gens"] for rec in db.ec_mwbsd.search({"lmfdb_label":{"$in":labels}}, ["lmfdb_label", "gens"])}
+    for rec in res:
+        gens = mwgens.get(rec["lmfdb_label"])
+        if gens is not None:
+            gens = [(a/c, b/c) for (a,b,c) in gens]
+        rec["mwgens"] = gens
+    return res
+
 def make_modcurve_link(label):
     from lmfdb.modular_curves.main import modcurve_link
     return modcurve_link(label)
@@ -464,10 +474,13 @@ ec_columns = SearchColumns([
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
     ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
                   short_title="j-invariant", align="center", default=False),
+    FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
+    FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
+    MathCol("mwgens", "ec.mordell_weil_group", "MW-generators", default=False),
 ])
 
 class ECDownloader(Downloader):
@@ -486,7 +499,8 @@ class ECDownloader(Downloader):
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':ECDownloader()},
-             bread=lambda:get_bread('Search results'))
+             bread=lambda:get_bread('Search results'),
+             postprocess=ec_postprocess)
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')
     parse_ints(info, query, 'conductor')
@@ -520,7 +534,9 @@ def elliptic_curve_search(info, query):
             flash_error(err)
             raise ValueError(err)
     parse_floats(info,query,'regulator','regulator')
-    parse_floats(info, query, 'faltings_height', 'faltings_height')
+    parse_floats(info,query,'faltings_height','faltings_height')
+    parse_floats(info,query,'abc_quality')
+    parse_floats(info,query,'szpiro_ratio')
     if info.get('reduction'):
         if info['reduction'] == 'semistable':
             query['semistable'] = True
@@ -588,7 +604,7 @@ def elliptic_curve_search(info, query):
                     modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
-                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if l.strip() not in max_primes]
                     max_primes.sort(key=int)
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'
@@ -968,7 +984,7 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
     Ecode = E.code()
     lang = args['download_type']
-    if not lang in Fullname:
+    if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
     name = Fullname[lang]
     if lang=='gp':
@@ -1129,7 +1145,9 @@ class ECSearchArray(SearchArray):
              ("adelic_level", "adelic level", ["adelic_level", "adelic_index", "adelic_genus"]),
              ("adelic_index", "adelic index", ["adelic_index", "adelic_level", "adelic_genus"]),
              ("adelic_genus", "adelic genus", ["adelic_genus", "adelic_level", "adelic_index"]),
-             ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
+             ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("abc_quality", "$abc$ quality", ["abc_quality", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"])]
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
@@ -1310,6 +1328,18 @@ class ECSearchArray(SearchArray):
             knowl="ec.galois_rep_adelic_image",
             example="3",
             advanced=True)
+        abc_quality = TextBox(
+            name="abc_quality",
+            label="$abc$ quality",
+            knowl="ec.q.abc_quality",
+            example="1.5-",
+            advanced=True)
+        szpiro_ratio = TextBox(
+            name="szpiro_ratio",
+            label="Szpiro ratio",
+            knowl="ec.q.szpiro_ratio",
+            example="8-",
+            advanced=True)
 
         count = CountBox()
 
@@ -1325,6 +1355,7 @@ class ECSearchArray(SearchArray):
             [galois_image, nonmax_primes],
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
+            [abc_quality, szpiro_ratio],
             [count]
             ]
 
@@ -1333,5 +1364,6 @@ class ECSearchArray(SearchArray):
             [bad_primes, optimal, cm, torsion],
             [class_deg, isodeg, class_size, num_int_pts],
             [sha, sha_primes, regulator, reduction, faltings_height],
-            [galois_image, nonmax_primes, adelic_level, adelic_index, adelic_genus]
+            [galois_image, adelic_level, adelic_index, adelic_genus],
+            [nonmax_primes, abc_quality, szpiro_ratio],
             ]

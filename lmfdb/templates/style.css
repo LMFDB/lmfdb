@@ -565,7 +565,7 @@ input, textarea {
 }
 /* TODO: above? */
 
-button, select, a.like-button {
+button, select, a.like-button, .file-upload {
   padding: 3px 6px;
   border-radius: 4px;
   cursor: pointer;
@@ -573,11 +573,19 @@ button, select, a.like-button {
   min-width: 75px;
 }
 
-button, a.like-button {
+input[type=file] {
+  display: none;
+}
+
+span.fileup {
+  margin-left: 10px;
+}
+
+button, a.like-button, .file-upload {
   background: {{color.button_background}};
 }
 
-a.like-button {
+a.like-button, .file-upload {
   color: {{color.black}};
   font-size: 11px;
   padding: 6px 16px 3px 16px;
@@ -762,6 +770,9 @@ table.ntdata > thead > tr:first-child {
 
 table.ntdata > tbody > tr:last-child {
     border-bottom:  2px solid {{ color.table_ntdata_border }};
+}
+table.ntdata.nobottom > tbody > tr:last-child {
+    border-bottom:  0px;
 }
 
 table.ntdata > tr.even,
@@ -1418,15 +1429,14 @@ a.navlink {
   font-weight: bold;
   font-size: 11px;
   text-align: center;
-  padding: 5px;
-  padding-top: 3px;
-  padding-bottom: 4px;
+  padding: 4px;
   border: 1px solid {{color.a_nav_border}};
   outline: 1px solid {{color.a_nav_background}};
   text-decoration: none;
   margin-left: 1px;
   margin-top: 10px;
-  vertical-align: top;
+  vertical-align: middle;
+  border-radius: 4px;
 }
 
 hr {
@@ -2472,6 +2482,13 @@ span.activesubgp {
     display: none;
 }
 
+#row_selector_shown {
+  display: none;
+}
+#download_row_count_input {
+  width: 75px;
+}
+
 span.chargp {
     color: {{color.col_main}};
 }
@@ -2504,6 +2521,10 @@ button.sub_active {
 button.sub_inactive {
   background: {{color.lf_ar_button_bkg}};
   border: 1px solid {{color.lf_ar_button_brd}};
+}
+
+tr.highlighted, td.highlighted {
+  background-color: {{color.col_main_ll}};
 }
 
 #column-selector, #sort-selecter {
@@ -2599,10 +2620,6 @@ span.raw-tset-container:hover > span.raw-tset-copy-btn {
   cursor: pointer;
 }
 
-
-
-
-
-
-
-
+div.upload_section {
+  margin-bottom: 60px;
+}

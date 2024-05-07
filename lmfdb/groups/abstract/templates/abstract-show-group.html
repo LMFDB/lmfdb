@@ -157,25 +157,9 @@
  {% if not gp.live() %}
 <h2>Minimal Presentations</h2>
 
-<p>
-  <table>
-    <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
-    <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
-    {% if gp.irrC_degree == None %}
-	  <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree
-		  of $\mathbb{C}$-irrep')}}:</td><td>not computed</td></tr> 
-    {% elif gp.irrC_degree == -1 %}
-      <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree
-		  of $\mathbb{C}$-irrep')}}:</td><td>no faithful irreducible representations</td></tr>
-	 {% else %}
-	  <tr><td>  {{KNOWL('group.min_complex_irrep_deg','Minimal degree of $\mathbb{C}$-irrep')}}:</td><td>${{gp.irrC_degree}}$</td></tr>
-	{% endif %}
-    {% if gp.irrQ_degree == None %}
-        <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>not computed</td></tr>
-    {% elif gp.irrQ_degree == -1 %}
-<tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>no faithful irreducible rational representations</td></tr>
-    {% else %}
-    <tr><td>  {{KNOWL('group.min_rational_irrep_deg','Minimal degree of $\mathbb{Q}$-irrep')}}:</td><td>${{gp.irrQ_degree}}$</td></tr> {% endif %}
+<table>
+  <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
+  <tr><td>{{KNOWL('group.transitive_degree', 'Transitive degree')}}:</td><td>{{gp.trans_degree()|safe}}</td></tr>
   <tr>
     <td>{{KNOWL('group.rank', 'Rank')}}:</td>
     {% if gp.rank %}
@@ -186,14 +170,13 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.generators', 'Inequivalent ' + gp.gen_noun())}}:</td>
-  {% if gp.eulerian_function != None %}
-    <td>${{gp.eulerian_function}}$</td>
+    {% if gp.eulerian_function != None %}
+      <td>${{gp.eulerian_function}}$</td>
     {% else %} <td>not computed</td> {% endif %}
   </tr>
 </table>
 
-</p>
-
+{{gp.linear_degrees_table|safe}}
 
 {% endif %}
 
@@ -525,7 +508,7 @@
 {% endif %}
 {% else %}
   <p> Subgroup data has not been computed. </p>
-  {% endif %}
+{% endif %}
 
 <h2> Character theory </h2>
 <p>
@@ -534,79 +517,60 @@
 
 {% if not gp.rational_characters and gp.number_conjugacy_classes == None %}
 
-   <p> The character tables for this group have not been computed. </p>
+  <p> The character tables for this group have not been computed. </p>
 
 {% else %}
 
-   <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
+  <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
 
-     {% if gp.number_divisions == gp.number_conjugacy_classes %}
+  {% if gp.number_divisions == gp.number_conjugacy_classes %}
 
-        <p>
-           Every character has rational values, so the {{KNOWL('group.complex_character_table','complex character table')}} is the same as the rational character table below.
-        </p>
+    <p>
+      Every character has rational values, so the {{KNOWL('group.complex_character_table','complex character table')}} is the same as the rational character table below.
+    </p>
 
+  {% elif gp.number_conjugacy_classes == None %}
 
-   {% else %}
+    <p> The complex character table for this group is not computed. </p>
 
+  {% elif gp.complex_characters_known == False %}
 
+    <p> The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not available for this group. </p>
 
-   {% if gp.number_conjugacy_classes == None %}
+  {% elif gp.number_conjugacy_classes <= 16 %}
 
-       <p> The complex character table for this group is not computed. </p>
+    {% include 'character_table.html' %}
 
-       {% elif gp.complex_characters_known == False %}
+  {% else %}
 
-      <p> The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not available for this group.    </p>
+    <p>
+      See the <a href="{{url_for('.char_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>{% if gp.number_conjugacy_classes >= 128 %} (warning: may be slow to load){% endif %}.
+      Alternatively, you may <a href="{{url_for('.index', group=gp.label, search_type='ComplexCharacters')}}">search for characters</a> of this group with desired properties.
+    </p>
 
-       {% else %}
-       {% if gp.number_conjugacy_classes <= 16 %}
+  {% endif %}
 
-      {% include 'character_table.html' %}
+  <h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 
-      {% elif gp.number_conjugacy_classes <= 127 %}
+  {% if not gp.rational_characters %}
 
-          <p>
-           See the <a href="{{url_for('.char_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>.
-           </p>
+    <p>
+      The ${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table is not available for this group.
+    </p>
 
-      {% elif gp.number_divisions == gp.number_conjugacy_classes %}
+  {% elif gp.number_divisions <= 16 %}
 
-          <p>
-          See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>.
-          </p>
+    {% include 'rational_character_table.html' %}
 
-      {% else %}
-          <p>
-          The ${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table is not available for this group.
-         </p>
+  {% else %}
 
+    <p>
+      See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>{% if gp.number_divisions >= 128 %} (warning: may be slow to load){% endif %}.
+      {% if gp.number_divisions == gp.number_conjugacy_classes %}
+        Alternatively, you may <a href="{{url_for('.index', group=gp.label, search_type='ComplexCharacters')}}">search for characters</a> of this group with desired properties.
       {% endif %}
-
-{% endif %}
-
-
-
-{% endif %}
-
-<h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
-
-{% if not gp.rational_characters %}
-
-  <p>
-    The ${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table is not available for this group.
-  </p>
-
-{% elif gp.number_divisions <= 16 %}
-
-  {% include 'rational_character_table.html' %}
-
-{% else %}
-
-  <p>
-    See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>.
-  </p>
-{% endif %}
+    </p>
+  {% endif %}
 {% endif %}
 {% endif %} {# gp.live() #}
 

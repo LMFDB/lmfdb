@@ -56,7 +56,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     </span>
     <span class="raw-tset-toggle" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
-        class="tset-icon"
+        class="tset-icon">
     </span>
 </span>"""
     return out
@@ -368,7 +368,6 @@ def web_latex_split_on_pm(x):
     return A
     # return web_latex_split_on(x)
 
-
 def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     r"""
     Convert input into a latex string, with splits into separate latex strings
@@ -409,35 +408,39 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     A = A.replace(r'+\) \(O', r'+O')
     return A
 
-
-def compress_polynomial(poly, threshold, decreasing=True):
+def compress_multipolynomial(poly, threshold=100, decreasing=True):
+    R = poly.parent().base_ring()
+    assert R is ZZ
     if poly == 0:
         return '0'
     plus = r" + "
     minus = r" - "
-    var = poly.parent().gen()
-
-    d = 0 if decreasing else poly.degree()
-    assert poly[d] != 0 or decreasing
-    while poly[d]  == 0: # we only enter the loop if decreasing=True
-        d += 1
-    lastc = poly[d]
     cdots = r" + \cdots "
-    tsetend = plus if lastc > 0 else minus
-    short, shortened = compress_int(abs(lastc))
-    if abs(lastc) != 1 or d == 0:
-        tsetend += short
 
+    monomials = sorted(poly.monomials())
+    if decreasing:
+        monomials.reverse()
+    coefficients = [poly.monomial_coefficient(m) for m in monomials]
+    # figure out how much space the first and last coefficient take
+
+    last_coeff = coefficients[-1]
+    last_monomial = monomials[-1]
+    # tsetend is the typeset code coming from the last term
+    tsetend = plus if last_coeff > 0 else minus
+    if abs(last_coeff) != 1 or last_monomial == 1:
+        short, shortened = compress_int(abs(last_coeff))
+        tsetend += short
     monomial_length = 0
-    if d > 0:
-        monomial = latex(var**d)
+    if last_monomial != 1:
+        monomial = latex(last_monomial)
         tsetend += monomial
         monomial_length += len(monomial)
 
     tset = ""
-    for n in (reversed(range(d + 1, poly.degree() + 1)) if decreasing else range(d)):
-        c = poly[n]
-        if tset and len(tset) + len(tsetend) - monomial_length > threshold:
+    for c, m in zip(coefficients[:-1], monomials[:-1]):
+        #if tset and len(tset) + len(tsetend) - monomial_length > threshold:
+        if tset and len(tset) + len(tsetend) > threshold:
+
             tset += cdots
             break
 
@@ -457,10 +460,11 @@ def compress_polynomial(poly, threshold, decreasing=True):
         if abs(c) != 1:
             tset += compress_int(abs(c))[0] + " "
 
-        if n >= 1:
-            monomial = latex(var**n)
-        else:
+        if m == 1:
             monomial = "1" if abs(c) == 1 else ""
+        else:
+            monomial = latex(m)
+
         monomial_length += len(monomial)
         tset += monomial
 
@@ -469,13 +473,15 @@ def compress_polynomial(poly, threshold, decreasing=True):
         tset = tset[len(plus):]
     return tset
 
+def compress_polynomial(poly, threshold, decreasing=True):
+    return compress_multipolynomial(poly, threshold, decreasing=decreasing)
+
 def raw_typeset_int(n, cutoff=80, sides=3, extra=''):
     """
     Raw/typeset for integers with configurable parameters
     """
     compv, compb = compress_int(n, cutoff=cutoff, sides=sides)
     return raw_typeset(n, rf'\({compv}\)', extra=extra, compressed=compb)
-
 
 def raw_typeset_poly(coeffs,
                      denominator=1,
@@ -789,11 +795,75 @@ def sparse_cyclotomic_to_latex(n, dat):
             ans += '-'  + zpart
         else:
             ans += '{:+d}'.format(p[0])  + zpart
-    ans= re.compile(r'^\+').sub('', ans)
+    ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
 
+def sparse_cyclotomic_to_mathml(n, dat):
+    r"""
+    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
+    and return sum_{j=1}^k cj zeta_n^ej in mathml form as it is given
+    (converting to sage will rewrite the element in terms of a basis)
+    """
+    dat.sort(key=lambda p: p[1])
+    minus = "<mo>&#x02212;</mo>"
+    plus = "<mo>&#x0002B;</mo>"
+    if n == 4:
+        zeta = "<mi>i</mi>"
+    elif n < 10: # will be wrapped in <msub> or <msubsup> below
+        zeta = f"<mi>&#x003B6;</mi><mn>{n}</mn>"
+    else:
+        zeta = f"<mi>&#x003B6;</mi><mrow><mn>{n}</mn></mrow>"
+
+    def zetapow(k):
+        if k == 0:
+            return "<mn>1</mn>"
+        elif n == 4:
+            assert k == 1
+            return zeta
+        if k == 1:
+            return f"<msub>{zeta}</msub>"
+        if 1 < k < 10:
+            return f"<msubsup>{zeta}<mn>{k}</mn></msubsup>"
+        if k < 0:
+            return f"<msubsup>{zeta}<mrow>{minus}<mn>{-k}</mn></mrow></msubsup>"
+        return f"<msubsup>{zeta}<mrow><mn>{k}</mn></mrow></msubsup>"
+    ans = ''
+    for c, e in dat:
+        if c == 0:
+            continue
+        if e == 0:
+            if c == 1 or c == -1:
+                zpart = "<mn>1</mn>"
+            else:
+                zpart = ""
+        else:
+            zpart = zetapow(e)
+
+        # Now the coefficient
+        if c == 1:
+            ans += plus + zpart
+        elif c == -1:
+            ans += minus + zpart
+        elif c > 0:
+            ans += plus + f"<mn>{c}</mn>" + zpart
+        else:
+            ans += minus + f"<mn>{-c}</mn>" + zpart
+    if ans.startswith(plus):
+        ans = ans[len(plus):]
+    if not ans:
+        ans = "<mn>0</mn>"
+
+    # We omit xmlns="http://www.w3.org/1998/Math/MathML" since rendering seems to work without it, and we have a bunch of math tags
+    return f'<math display="inline"><mrow>{ans}</mrow></math>'
+
+def integer_to_mathml(n):
+    if n >= 0:
+        n = f"<mn>{n}</mn>"
+    else:
+        n = f"<mo>&#x02212;</mo><mn>{-n}</mn>"
+    return f'<math display="inline"><mrow>{n}</mrow></math>'
 
 def dispZmat(mat):
     r""" Display a matrix with integer entries
@@ -836,7 +906,5 @@ def dispZmat_from_list(a_list, dim):
     """
     num_entries = len(a_list)
     assert num_entries == dim ** 2
-    output = []
-    for i in range(0,dim**2,dim):
-        output.append(a_list[i:i+dim])
+    output = [a_list[i:i + dim] for i in range(0, dim**2, dim)]
     return matrix(output)

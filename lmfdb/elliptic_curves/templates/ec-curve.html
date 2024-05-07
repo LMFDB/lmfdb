@@ -213,6 +213,20 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ place_code('stable_faltings') }}</td>
         </tr>
 
+        <tr>
+        <td>{{ KNOWL('ec.q.abc_quality', title='$abc$ quality') }}:</td>
+        <td>${{ data.abc_quality }}\dots$</td>
+        <td></td><td></td>
+        <td>{{ place_code('abc_quality') }}</td>
+        </tr>
+
+        <tr>
+        <td>{{ KNOWL('ec.q.szpiro_ratio', title='Szpiro ratio') }}:</td>
+        <td>${{ data.szpiro_ratio }}\dots$</td>
+        <td></td><td></td>
+        <td>{{ place_code('szpiro_ratio') }}</td>
+        </tr>
+
        </table>
 
     <h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD invariants') }}</h2>
@@ -271,10 +285,10 @@ white-space: pre in order to keep line breaks! #}
         	  {% if data.mwbsd.sha > 1 %}
           	  = {{data.mwbsd.sha2}}
             {% endif %}
-            {% if data.rank > 1 %}
-              ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
+            {% if data.mwbsd.sha_is_exact %}
+              ({{ KNOWL('ec.analytic_sha_value',title="exact") }})
             {% else %}
-              ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
+              ({{ KNOWL('ec.analytic_sha_value',title="rounded") }})
             {% endif %}
           {% endif %}
         </td>
