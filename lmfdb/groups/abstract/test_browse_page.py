@@ -391,8 +391,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "3.1.3.a1.a1")
         self.not_check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "60.5.1.a1.a1")
-        self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
+        # Solvable = False requires a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
 
     def test_subgroup_normal_search(self):
         r"""
@@ -539,8 +540,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?quotient_solvable=yes&search_type=Subgroups", "1.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?quotient_solvable=yes&search_type=Subgroups", "60.5.60.a1.a1")
-        self.check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "60.5.60.a1.a1")
-        self.not_check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
+        # The following searches require a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "60.5.60.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
 
     def test_subgroup_maximal_quotient_search(self):
         r"""
