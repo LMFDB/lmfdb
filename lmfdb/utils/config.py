@@ -18,7 +18,6 @@ via optional command-line arguments.
 import argparse
 import getpass
 import os
-import sys
 import random
 import string
 import __main__
