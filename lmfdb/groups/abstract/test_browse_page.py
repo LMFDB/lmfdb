@@ -185,11 +185,10 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to solvable or non-solvbable groups only
         """
-        # Solvable = False requires a 30GB index to support, so we disable them for now
-        #self.check_args("/Groups/Abstract/?order=60&solvable=no", "60.5")
+        self.check_args("/Groups/Abstract/?order=60&solvable=no", "60.5")
         self.check_args("/Groups/Abstract/?order=60&solvable=yes", "60.3")
         self.not_check_args("/Groups/Abstract/?order=60&solvable=yes", "60.5")
-        #self.not_check_args("/Groups/Abstract/?order=60&solvable=no", "60.12")
+        self.not_check_args("/Groups/Abstract/?order=60&solvable=no", "60.12")
 
     def test_nilpotent_search(self):
         r"""
@@ -392,8 +391,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "3.1.3.a1.a1")
         self.not_check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "60.5.1.a1.a1")
-        self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
+        # Solvable = False requires a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
 
     def test_subgroup_normal_search(self):
         r"""
