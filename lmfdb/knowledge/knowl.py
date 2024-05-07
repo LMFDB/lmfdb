@@ -7,8 +7,8 @@ import time
 import subprocess
 import sys
 
-from lmfdb.backend.base import PostgresBase
-from lmfdb.backend import DelayCommit
+from psycodict.base import PostgresBase
+from psycodict import DelayCommit
 from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
@@ -123,7 +123,7 @@ def normalize_define(term):
 def extract_defines(content):
     return sorted({x.strip() for x in defines_finder_re.findall(content)})
 
-# We don't use the PostgresTable from lmfdb.backend.database
+# We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
 
 

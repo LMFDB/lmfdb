@@ -58,7 +58,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
-from lmfdb.backend.utils import SearchParsingError
+from psycodict.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
 

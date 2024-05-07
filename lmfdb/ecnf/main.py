@@ -10,7 +10,7 @@ from flask import render_template, request, url_for, redirect, make_response, ab
 from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error, display_knowl, Downloader,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,

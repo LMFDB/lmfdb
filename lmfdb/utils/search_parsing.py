@@ -10,7 +10,7 @@ from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
-from lmfdb.backend.utils import SearchParsingError
+from psycodict.utils import SearchParsingError
 from .utilities import coeff_to_poly, integer_squarefree_part
 from math import log2
 import ast

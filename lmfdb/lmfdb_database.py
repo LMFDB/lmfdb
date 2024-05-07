@@ -7,10 +7,10 @@ import signal
 import subprocess
 from psycopg2.sql import SQL
 from lmfdb.utils.config import Configuration
-from lmfdb.backend.utils import DelayCommit
-from lmfdb.backend.database import PostgresDatabase
-from lmfdb.backend.searchtable import PostgresSearchTable
-from lmfdb.backend.statstable import PostgresStatsTable
+from psycodict.utils import DelayCommit
+from psycodict.database import PostgresDatabase
+from psycodict.searchtable import PostgresSearchTable
+from psycodict.statstable import PostgresStatsTable
 
 def overrides(super_class):
     def overrider(method):

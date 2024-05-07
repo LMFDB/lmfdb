@@ -6,7 +6,7 @@ import json
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import (render_template, request, url_for, current_app,

@@ -3,7 +3,7 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import prime_range, CC, gcd, ZZ
 
 from lmfdb.lmfdb_database import db
-from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from psycodict.utils import IdentifierWrapper as Identifier
 from psycopg2.sql import SQL, Literal
 from .mf import MfChecker
 from .verification import overall, overall_long, slow

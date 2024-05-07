@@ -1,7 +1,7 @@
 from lmfdb import db
 from lmfdb.utils import Downloader
 from flask import abort
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from .isog_class import AbvarFq_isoclass
 
 class AbvarFq_download(Downloader):
