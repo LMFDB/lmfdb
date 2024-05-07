@@ -350,7 +350,6 @@ def edit(ID):
     elif knowl.type == 0:
         title = "Edit Knowl '%s'" % ID
     elif knowl.type == 2:
-        pieces = ID.split(".")
         if knowl.source:
             title = f"Edit column information for '{knowl.source_name}' in '{knowl.source}'"
         else:
