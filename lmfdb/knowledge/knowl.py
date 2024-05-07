@@ -854,6 +854,7 @@ class Knowl():
             elif len(pieces) == 2:
                 # Table
                 self.title = f"Table {pieces[1]}"
+                self.coltype = None
                 if pieces[1] not in db.tablenames:
                     self.title += " (DEFUNCT)"
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default

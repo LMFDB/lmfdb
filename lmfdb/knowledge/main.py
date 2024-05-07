@@ -351,13 +351,10 @@ def edit(ID):
         title = "Edit Knowl '%s'" % ID
     elif knowl.type == 2:
         pieces = ID.split(".")
-        title = f"Edit column information for '{pieces[2]}' in '{pieces[1]}'"
-        knowl.title = f"Column {pieces[2]} of table {pieces[1]}"
-        from lmfdb import db
-        if pieces[1] in db.tablenames:
-            knowl.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+        if knowl.source:
+            title = f"Edit column information for '{knowl.source_name}' in '{knowl.source}'"
         else:
-            knowl.coltype = "DEFUNCT"
+            title = f"Edit description for '{knowl.source_name}'"
     else:
         ann_type = 'Top' if knowl.type == 1 else 'Bottom'
         title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
