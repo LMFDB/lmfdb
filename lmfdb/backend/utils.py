@@ -171,7 +171,7 @@ class QueryLogFilter():
     """
 
     def filter(self, record):
-        if record.pathname.startswith("db_backend.py"):
+        if record.pathname.endswith("base.py"):
             return 1
         else:
             return 0
