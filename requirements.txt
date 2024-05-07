@@ -6,7 +6,7 @@ flask-login
 flask-markdown
 markupsafe==2.0.1
 itsdangerous
-git+https://github.com/roed314/psycodict.git#egg=project[pgbinary]
+git+https://github.com/roed314/psycodict.git#egg=psycodict[pgbinary]
 pyflakes
 pytest
 pytest-cov
