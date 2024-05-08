@@ -23,6 +23,7 @@ text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
 coldesc_knowl_re = re.compile(r"columns.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)")
+tabledesc_knowl_re = re.compile(r"tables.([A-Za-z0-9_]+)")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
     (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
@@ -86,6 +87,9 @@ def extract_typ(kid):
     m = coldesc_knowl_re.match(kid)
     if m:
         return 2, m.group(1), m.group(2)
+    m = tabledesc_knowl_re.match(kid)
+    if m:
+        return 2, None, m.group(1)
     m = top_knowl_re.match(kid)
     if m:
         prelabel = m.group(1)
@@ -289,8 +293,8 @@ class KnowlBackend(PostgresBase):
         else:
             typ, source, name = extract_typ(knowl.id)
         links = extract_links(knowl.content)
-        if typ == 2: # column description
-            defines = [knowl.id.split(".")[-1]]
+        if typ == 2: # column or table description
+            defines = [name]
         else:
             defines = extract_defines(knowl.content)
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
@@ -351,6 +355,31 @@ class KnowlBackend(PostgresBase):
 
     def drop_column(self, table, col):
         kid = f"columns.{table}.{col}"
+        kwl = Knowl(kid, data=self.get_knowl(kid, beta=True))
+        self.delete(kwl)
+
+    def get_table_description(self, table):
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        rec = self._execute(selecter, [f"tables.{table}", 2, 0]).fetchone()
+        if rec:
+            return Knowl(rec[0], data=dict(zip(fields, rec)))
+
+    def set_table_description(self, table, description):
+        uid = db.login()
+        kid = f"tables.{table}"
+        data = {
+            'content': description,
+            'defines': table,
+        }
+        kwl = Knowl(kid, data=data)
+        old = self.get_knowl(kid, beta=True)
+        if old is None:
+            old = {'authors': []}
+        self.save(kwl, uid, most_recent=old)
+
+    def drop_table(self, table):
+        kid = f"tables.{table}"
         kwl = Knowl(kid, data=self.get_knowl(kid, beta=True))
         self.delete(kwl)
 
@@ -815,11 +844,19 @@ class Knowl():
         if self.type == 2:
             pieces = ID.split(".")
             # Ignore the title passed in
-            self.title = f"Column {pieces[2]} of table {pieces[1]}"
-            if pieces[1] in db.tablenames:
-                self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
-            else:
-                self.coltype = "DEFUNCT"
+            if len(pieces) == 3:
+                # Column
+                self.title = f"Column {pieces[2]} of table {pieces[1]}"
+                if pieces[1] in db.tablenames:
+                    self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+                else:
+                    self.coltype = "DEFUNCT"
+            elif len(pieces) == 2:
+                # Table
+                self.title = f"Table {pieces[1]}"
+                self.coltype = None
+                if pieces[1] not in db.tablenames:
+                    self.title += " (DEFUNCT)"
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
         #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
