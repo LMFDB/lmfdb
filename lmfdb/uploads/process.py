@@ -15,7 +15,7 @@ upone, _ = os.path.split(here)
 uptwo, _ = os.path.split(upone)
 sys.path.append(uptwo)
 from lmfdb import db
-from lmfdb.backend.encoding import copy_dumps
+from psycodict.encoding import copy_dumps
 from lmfdb.users.main import Reviewer
 
 

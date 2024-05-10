@@ -6,7 +6,7 @@ from flask import render_template, url_for, request, redirect, abort
 from sage.misc.cachefunc import cached_function
 from sage.all import QQ, PolynomialRing, NumberField, sage_eval, CC
 
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb import db
 from lmfdb.utils import (
     to_dict,
