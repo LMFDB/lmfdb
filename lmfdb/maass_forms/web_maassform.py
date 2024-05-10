@@ -207,14 +207,24 @@ class WebMaassForm():
         friendlist += [("L-function not computed", '')]
         return friendlist
 
-    def coefficient_table(self, rows=20, cols=3):
+    def coefficient_table(self, rows=20, cols=3, row_opts=[20,60,334]):
         n = len(self.coefficients)
+        row_opts = sorted(row_opts)
+        overage = [r for r in row_opts if r * cols >= n]
+        if len(overage) > 1:
+            row_opts = row_opts[:1 - len(overage)]
+        if rows not in row_opts:
+            rows = row_opts[0]
         assert rows > 0 and cols > 0
+        default_rows = rows
+        rows = row_opts[-1]
         table = ['<table class="ntdata"><thead><tr><th></th></tr></thead><tbody>']
         if (rows - 1) * cols >= n:
             rows = (n // cols) + (1 if (n % cols) else 0)
         for i in range(rows):
-            table.append('<tr>')
+            maassrow = "maassrow " + " ".join(f"maassrow{m}" for m in row_opts if i < m)
+            display = "" if i < default_rows else ' style="display: none;"'
+            table.append(f'<tr class="{maassrow}"{display}>')
             for j in range(cols):
                 if i * cols + j >= n:
                     break
@@ -227,10 +237,8 @@ class WebMaassForm():
                                 ))))
             table.append('</tr>')
         table.append('</tbody></table>')
-        if rows * cols < n:
-            table.append('<p>Showing %d of %d available coefficients</p>' % (rows * cols, n))
-        else:
-            table.append('<p>Showing all %d available coefficients</p>' % n)
+        buttons = " ".join(f'<a onclick="return maass_switch({r});" href="#">{min(n, r*cols)}</a>' for r in row_opts)
+        table.append(f'<p>Displaying $a_n$ with $n$ up to: {buttons}</p>')
         return '\n'.join(table)
 
 

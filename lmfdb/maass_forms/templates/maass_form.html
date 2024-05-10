@@ -2,6 +2,14 @@
 
 {% block content %}
 
+<script type="text/javascript">
+  function maass_switch(r) {
+    $(".maassrow").hide();
+    $(".maassrow" + r).show();
+    return false;
+  }
+</script>
+
 <h2>{{ KNOWL('mf.maass.mwf', 'Maass form') }} invariants</h2>
 
 <table>
