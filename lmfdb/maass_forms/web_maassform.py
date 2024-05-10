@@ -105,7 +105,7 @@ def long_label(label):
     return label
 
 
-class WebRigorMaassForm():
+class WebMaassForm():
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data
@@ -117,7 +117,7 @@ class WebRigorMaassForm():
         data = db.maass_rigor.lookup(label)
         if data is None:
             raise KeyError("Maass newform %s not found in database." % (label))
-        return WebRigorMaassForm(data)
+        return WebMaassForm(data)
 
     @property
     def label(self):
@@ -235,7 +235,7 @@ class WebRigorMaassForm():
 
 
 class MaassFormDownloader(Downloader):
-    title = 'Rigorous Maass forms'
+    title = 'Maass forms'
 
     def download(self, label, lang='text'):
         table = db.maass_rigor
@@ -250,17 +250,17 @@ class MaassFormDownloader(Downloader):
         return self._wrap(Json.dumps(data),
                           "maass." + label,
                           lang=lang,
-                          title='All stored data for Rigorous Maass form %s,' % (label))
+                          title='All stored data for Maass form %s,' % (label))
 
     def download_coefficients(self, label, lang='text'):
         table = db.maass_rigor
         data = table.lookup(label, projection=["coefficients", "coefficient_errors"])
         if data is None:
-            return abort(404, "Coefficient data for Rigorous Maass form %s not found in the database" % label)
+            return abort(404, "Coefficient data for Maass form %s not found in the database" % label)
         coeffs = data["coefficients"]
         errors = data["coefficient_errors"]
         retdata = [str(coeffs[n]) + " +- " + str(errors[n]) for n in range(len(coeffs))]
         return self._wrap(Json.dumps(retdata).replace('"', ''),
                           "maass." + label + '.coefficients',
                           lang=lang,
-                          title='Coefficients for Rigorous Maass form %s,' % (label))
+                          title='Coefficients for Maass form %s,' % (label))

@@ -42,7 +42,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = L + url_for("maass_rigor.by_label", label=f['maass_label'])
+        linkurl = L + url_for("maass_forms.by_label", label=f['maass_label'])
         x = (f['spectral_parameter'] - xMin) * xfactor + xshift
         y = (f['level'] - yMin + 1) * yfactor
         s = f.get('symmetry', 0)

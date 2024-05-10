@@ -3,7 +3,7 @@
 import re
 from lmfdb import db
 from flask import render_template, request, url_for, abort, redirect
-from lmfdb.maass_rigor import maass_rigor_page, logger
+from lmfdb.maass_forms import maass_forms_page, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, redirect_no_cache)
@@ -13,8 +13,8 @@ from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils import display_knowl
 from lmfdb.utils.search_columns import SearchColumns, ProcessedLinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
-from lmfdb.maass_rigor.plot import paintSvgMaass
-from lmfdb.maass_rigor.web_maassform import character_link, fricke_pretty, symmetry_pretty, short_label, long_label, WebRigorMaassForm, MaassFormDownloader
+from lmfdb.maass_forms.plot import paintSvgMaass
+from lmfdb.maass_forms.web_maassform import character_link, fricke_pretty, symmetry_pretty, short_label, long_label, WebMaassForm, MaassFormDownloader
 from sage.all import gcd
 
 
@@ -38,7 +38,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for('.source_page')),
             ('Completeness of the data', url_for('.completeness_page')),
             ('Reliability of the data', url_for('.reliability_page')),
-            ('Rigorous Maass form labels', url_for(".labels_page"))]
+            ('Maass form labels', url_for(".labels_page"))]
 
 
 def learnmore_list_remove(matchstring):
@@ -52,11 +52,11 @@ def learnmore_list_remove(matchstring):
 
 def search_by_label(label):
     try:
-        mf = WebRigorMaassForm.by_label(label)
+        mf = WebMaassForm.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     info = to_dict(request.args)
-    return render_template("maass_rigor_form.html",
+    return render_template("maass_form.html",
                            mf=mf,
                            info=info,
                            properties=mf.properties,
@@ -65,7 +65,7 @@ def search_by_label(label):
                            title=mf.title,
                            friends=mf.friends,
                            learnmore=learnmore_list(),
-                           KNOWL_ID="mf.maass_rigor.mwf.%s" % mf.label
+                           KNOWL_ID="mf.maass.mwf.%s" % mf.label
                            )
 
 
@@ -75,12 +75,12 @@ def search_by_label(label):
 
 
 
-@maass_rigor_page.route('/')
+@maass_forms_page.route('/')
 def index():
     info = to_dict(request.args, search_array=MaassSearchArray(), stats=MaassStats())
     if request.args:
         return search(info)
-    title = 'Rigorous Maass forms'
+    title = 'Maass forms'
     bread = bread_prefix()
     return render_template(
         'maass_browse.html',
@@ -92,7 +92,7 @@ def index():
     )
 
 
-@maass_rigor_page.route('/<label>')
+@maass_forms_page.route('/<label>')
 def by_label(label):
     if not MAASS_ID_RE.match(label):
         return abort(404, f"Invalid label {label}")
@@ -100,7 +100,7 @@ def by_label(label):
     return search_by_label(label)
 
 
-@maass_rigor_page.route("/download/<label>")
+@maass_forms_page.route("/download/<label>")
 def download(label):
     if not MAASS_ID_RE.match(label):
         return abort(404, f"Invalid label {label}")
@@ -108,7 +108,7 @@ def download(label):
     return MaassFormDownloader().download(label)
 
 
-@maass_rigor_page.route("/download_coefficients/<label>")
+@maass_forms_page.route("/download_coefficients/<label>")
 def download_coefficients(label):
     if not MAASS_ID_RE.match(label):
         return abort(404, f"Invalid label {label}")
@@ -116,11 +116,11 @@ def download_coefficients(label):
     return MaassFormDownloader().download_coefficients(label)
 
 
-@maass_rigor_page.route("/data/<label>")
+@maass_forms_page.route("/data/<label>")
 def maass_data(label):
     if not MAASS_ID_RE.fullmatch(label):
         return abort(404, f"Invalid label {label}")
-    title = f"Rigorous Maass form data - {short_label(label)}"
+    title = f"Maass form data - {short_label(label)}"
     label = long_label(label)
     bread = [("Modular forms", url_for("modular_forms")),
              ("Maass", url_for(".index")),
@@ -132,52 +132,52 @@ def maass_data(label):
     return datapage(label, tables, bread=bread, title=title, label_cols=label_cols)
 
 
-@maass_rigor_page.route('/Source')
+@maass_forms_page.route('/Source')
 def source_page():
-    t = 'Source of rigorous Maass form data'
+    t = 'Source of Maass form data'
     bread = bread_prefix() + [('Source','')]
-    return render_template('multi.html', kids=['rcs.source.maass_rigor',
-                                               'rcs.ack.maass_rigor',
+    return render_template('multi.html', kids=['rcs.source.maass_forms',
+                                               'rcs.ack.maass_forms',
                                                'rcs.cite.maass'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 
-@maass_rigor_page.route('/Completeness')
+@maass_forms_page.route('/Completeness')
 def completeness_page():
-    t = 'Completeness of rigorous Maass form data'
+    t = 'Completeness of Maass form data'
     bread = bread_prefix() + [('Completeness','')]
-    return render_template('single.html', kid='rcs.cande.maass_rigor',
+    return render_template('single.html', kid='rcs.cande.maass_forms',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 
-@maass_rigor_page.route('/Reliability')
+@maass_forms_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
     bread = bread_prefix() + [('Reliability','')]
-    return render_template('single.html', kid='rcs.rigor.maass_rigor',
+    return render_template('single.html', kid='rcs.rigor.maass_forms',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 
-@maass_rigor_page.route("/Labels")
+@maass_forms_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Rigorous Maass forms'
+    t = 'Labels for Maass forms'
     bread = bread_prefix() + [('Labels', '')]
-    return render_template("single.html", kid='mf.maass_rigor.label',
+    return render_template("single.html", kid='mf.maass_forms.label',
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('labels'))
 
 
-@maass_rigor_page.route('/random')
+@maass_forms_page.route('/random')
 @redirect_no_cache
 def random():
     label = db.maass_rigor.random()
     return url_for('.by_label', label=label)
 
 
-@maass_rigor_page.route("/interesting")
+@maass_forms_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "mf.maass_rigor.mwf",
+        "mf.maass.mwf",
         db.maass_rigor,
         label_col="maass_label",
         url_for_label=lambda label: url_for(".by_label", label=label),
@@ -187,14 +187,14 @@ def interesting():
     )
 
 
-@maass_rigor_page.route("/stats")
+@maass_forms_page.route("/stats")
 def statistics():
-    title = "Rigorous Maass forms: statistics"
+    title = "Maass forms: statistics"
     bread = bread_prefix() + [("Statistics", " ")]
     return render_template("display_stats.html", info=MaassStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
-@maass_rigor_page.route("/<int:level>/")
+@maass_forms_page.route("/<int:level>/")
 def by_level(level):
     info = to_dict(request.args, search_array=MaassSearchArray())
     if 'level' in info:
@@ -204,7 +204,7 @@ def by_level(level):
         return search(info)
 
 
-@maass_rigor_page.route("/<int:level>/<int:weight>/")
+@maass_forms_page.route("/<int:level>/<int:weight>/")
 def by_level_weight(level, weight):
     info = to_dict(request.args, search_array=MaassSearchArray())
     if 'level' in info or 'weight' in info:
@@ -215,7 +215,7 @@ def by_level_weight(level, weight):
         return search(info)
 
 
-@maass_rigor_page.route("/<int:level>/<int:weight>/<int:conrey_index>/")
+@maass_forms_page.route("/<int:level>/<int:weight>/<int:conrey_index>/")
 def by_level_weight_character(level, weight, conrey_index):
     info = to_dict(request.args, search_array=MaassSearchArray())
     if 'level' in info or 'weight' in info or 'conrey_index' in info:
@@ -227,7 +227,7 @@ def by_level_weight_character(level, weight, conrey_index):
         return search(info)
 
 
-@maass_rigor_page.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")
+@maass_forms_page.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")
 def browse_graph(min_level, max_level, min_R, max_R):
     r"""
     Render a page with a graph with clickable dots for all
@@ -254,7 +254,7 @@ class MaassSearchArray(SearchArray):
     plural_noun = "Maass forms"
     jump_example = "42.42"
     jump_egspan = "e.g. 42.42 or 42.0.1.42.1"
-    jump_knowl = "mf.maass_rigor.label"
+    jump_knowl = "mf.maass.label"
     jump_prompt = "Label"
 
     def __init__(self):
@@ -322,7 +322,7 @@ def get_url(label):
 
 
 maass_columns = SearchColumns([
-    ProcessedLinkCol("maass_label", "mf.maass_rigor.label", "Label", get_url, short_label),
+    ProcessedLinkCol("maass_label", "mf.maass.label", "Label", get_url, short_label),
     MathCol("level", "mf.maass.mwf.level", "Level"),
     MathCol("weight", "mf.maass.mwf.weight", "Weight"),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
@@ -352,8 +352,8 @@ def jump_box(info):
 
 @search_wrap(
     table=db.maass_rigor,
-    title="Rigorous Maass forms search results",
-    err_title="Rigorous Maass forms search input error",
+    title="Maass form search results",
+    err_title="Maass form search input error",
     columns=maass_columns,
     shortcuts={"download": MaassFormDownloader(),
                "jump": jump_box},

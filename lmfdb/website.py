@@ -98,8 +98,6 @@ from .groups import glnC
 assert glnC
 from . import maass_forms
 assert maass_forms
-from . import maass_rigor
-assert maass_rigor
 from . import modular_curves
 assert modular_curves
 from .homepage import random
