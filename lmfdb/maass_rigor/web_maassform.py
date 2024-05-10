@@ -41,17 +41,48 @@ def td_wrapr(val):
 
 
 def coeff_error_notation(coeff, error):
-    r"""Given an input such as 1.23E12, return \pm 1.23\cdot10^{12}"""
+    r"""Web coefficient and error display, with trunctation"""
     if error == -1:
         return r"\mathrm{unknown}"
-    coeffpart = "%+.9f" % coeff
+    coeffpart = "%+.8f" % coeff
     if error == 0:
         errorpart = ""
     else:
-        rawerrorpart = f"%.3E" % error
-        base, _, exponent = rawerrorpart.partition("E")
-        errorpart = rf"\pm {base} \cdot 10^{{{exponent}}}"
+        base, negexponent = mantissa_and_exponent(error)
+        negexponent = min(negexponent, 8)
+        errorpart = r" \pm " + exponential_form(base, negexponent, digits_to_show=3)
     return coeffpart + errorpart
+
+
+def mantissa_and_exponent(number):
+    """
+    Returns (mantissa, exponent) where number = mantissa * 10^(-exponent).
+
+    The input should be a RealLiteral.
+    """
+    if number > 1:
+        return (number, 0)
+    snum = str(number)
+    if '.' not in snum:
+        return (number, 0)
+    pre, post = snum.split('.')
+    # determine the exponent
+    idx = 0
+    for idx, c in enumerate(post):
+        if c != '0':
+            break
+    negative_exponent = idx + 1
+    mantissa = post[idx] + "." + post[idx+1:]
+    return (mantissa, negative_exponent)
+
+
+def exponential_form(mantissa, negative_exponent, digits_to_show=9):
+    """
+    Format the number `mantissa * 10^(-negative_exponent)` nicely.
+    """
+    if negative_exponent == 0:
+        return mantissa[:digits_to_show]
+    return mantissa[:digits_to_show] + r" \cdot 10^{-" + str(negative_exponent) + "}"
 
 
 def parity_text(val):
