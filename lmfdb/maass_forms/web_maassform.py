@@ -277,8 +277,13 @@ class WebMaassForm():
             for j in range(cols):
                 if i * cols + j >= n:
                     break
+                m = i * cols + j + 1
+                if m == 1:
+                    table.append(
+                        td_wrapl(rf"\(a_{{{m}}}= +1 \)")
+                    )
+                    continue
                 if has_finite_rational_coeffs:
-                    m = i * cols + j + 1
                     m_is_finite_rational = True
                     f = factor(m)
                     for p, e in f:
