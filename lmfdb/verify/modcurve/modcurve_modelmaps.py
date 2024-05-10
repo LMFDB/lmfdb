@@ -27,18 +27,19 @@ class modcurve_modelmaps(TableChecker):
     @lazy_attribute
     def modcurve_points(self):
         ans = defaultdict(list)
-        for rec in db.modcurve_points.search({}, ["curve_label", "coordinates", "jinv"]):
+        for rec in db.modcurve_points.search({'degree': 1}, ["curve_label", "coordinates", "jinv"]):
             ans[rec["curve_label"]].append(rec)
         return ans
 
     @lazy_attribute
     def modcurve_models(self):
-        ans = defaultdict(list)
+        ans = {}
         for rec in db.modcurve_models.search({}, ["modcurve", "model_type", "equation", "number_variables"]):
             ans[rec["modcurve"], rec["model_type"]] = (rec["equation"], rec["number_variables"])
         return ans
 
-    @slow(projection=['domain_label', 'codomain_label', 'coordinates', 'domain_model_type', 'codomain_model_type'])
+    @slow(ratio=1, projection=['domain_label', 'codomain_label', 'coordinates', 'domain_model_type', 'codomain_model_type'],
+          constraint={'domain_model_type':{"$ne":1}, 'codomain_model_type':{"$ne":1}})
     def check_rat_pts_map_to_rat_pts(self, rec):
         """
         given a rational point on a modular curve, and a map from this modular curve
@@ -50,15 +51,15 @@ class modcurve_modelmaps(TableChecker):
             if not point.get("coordinates"):
                 continue
             try:
-                relevant_pts = point['coordinates'][rec['domain_model_type']]  # these are the pts that can be hit with the map
+                relevant_pts = point['coordinates'][str(rec['domain_model_type'])]  # these are the pts that can be hit with the map
+                print(f"Found point on {rec['domain_label']}")
             except KeyError:
                 # means there are no points on the model required by the map
                 continue
-            
             jinv_this_pt = point['jinv']  # needed for the third test below
             for rel_pt in relevant_pts:
                 pt_on_codomain_as_list = apply_map_to_pt(rec['coordinates'], rel_pt)
-                
+
                 # TEST 1: check this pt is rational
                 if not all([t in QQ for t in pt_on_codomain_as_list]):
                     return False
@@ -68,7 +69,7 @@ class modcurve_modelmaps(TableChecker):
                 Pol = PolynomialRing(QQ, number_variables, names=VARORDER[:number_variables])
                 for f_str in equation:
                     assert Pol(f_str)(pt_on_codomain_as_list) == 0, "point not on codomain"
-                
+
                 ### TEST 3: check this pt is accounted for in modcurve_points
 
                 # 3a. first get the points on the codomain
@@ -76,9 +77,12 @@ class modcurve_modelmaps(TableChecker):
                 assert len(points_on_codomain_with_this_j) == 1
 
                 # 3b. now check the point is among them
-                pts_on_codomain_as_str = points_on_codomain_with_this_j[0]['coordinates'][rec['codomain_model_type']]  # a list of strings
+                if str(rec['codomain_model_type']) in points_on_codomain_with_this_j[0]['coordinates']:
+                    pts_on_codomain_as_str = points_on_codomain_with_this_j[0]['coordinates'][str(rec['codomain_model_type'])]
+                else:
+                    # Means we don't have coordinates on the model we're dealing with, so can't do anything
+                    continue
                 P = ProjectiveSpace(QQ, number_variables - 1, names=VARORDER[:number_variables])
                 assert P(pt_on_codomain_as_list) in [P(pt_str.split(':')) for pt_str in pts_on_codomain_as_str], "missing point"
-        
         return True
 
