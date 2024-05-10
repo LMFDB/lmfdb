@@ -3,7 +3,7 @@ from lmfdb import db
 from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
 from psycodict.encoding import Json
 from flask import url_for, abort
-from sage.all import RR, factor, sign
+from sage.all import RR, ZZ, factor, sign, prod
 
 
 def character_link(level, conrey_index):
@@ -75,11 +75,14 @@ def rational_coeff_error_notation(factored_n):
     return res
 
 
-def coeff_error_notation(coeff, error):
+def coeff_error_notation(coeff, error, pm=False):
     r"""Web coefficient and error display, with trunctation"""
     if error == -1:
         return r"\mathrm{unknown}"
-    coeffpart = "%+.8f" % coeff
+    if pm:
+        coeffpart = r"\pm%.8f" % coeff
+    else:
+        coeffpart = "%+.8f" % coeff
     if error == 0:
         errorpart = ""
     else:
@@ -97,18 +100,8 @@ def mantissa_and_exponent(number):
     """
     if number > 1:
         return (number, 0)
-    snum = str(number)
-    if '.' not in snum:
-        return (number, 0)
-    pre, post = snum.split('.')
-    # determine the exponent
-    idx = 0
-    for idx, c in enumerate(post):
-        if c != '0':
-            break
-    negative_exponent = idx + 1
-    mantissa = post[idx] + "." + post[idx+1:]
-    return (mantissa, negative_exponent)
+    exponent = -number.log10().floor()
+    return (number * 10**exponent, exponent)
 
 
 def exponential_form(mantissa, negative_exponent, digits_to_show=9):
@@ -249,13 +242,9 @@ class WebMaassForm():
     def coefficient_table(self, rows=20, cols=3, row_opts=[20,60,334]):
         # This logic applies to squarefree level.
         has_finite_rational_coeffs = False
-        level_primes = []
-        if self.level % 2 == 0:
-            level_primes.append(2)
-            has_finite_rational_coeffs = True
-        if self.level % 5 == 0:
-            level_primes.append(5)
-            has_finite_rational_coeffs = True
+        level_primes = ZZ(self.level).prime_divisors()
+        level_10_primes = [p for p in level_primes if p in [2,5]]
+        has_finite_rational_coeffs = bool(level_10_primes)
 
         n = len(self.coefficients)
         row_opts = sorted(row_opts)
@@ -277,15 +266,12 @@ class WebMaassForm():
             for j in range(cols):
                 if i * cols + j >= n:
                     break
+                m = i * cols + j + 1
+                f = factor(m)
                 if has_finite_rational_coeffs:
-                    m = i * cols + j + 1
-                    m_is_finite_rational = True
-                    f = factor(m)
-                    for p, e in f:
-                        if p not in level_primes:
-                            m_is_finite_rational = False
-                        if e % 2 != 0:
-                            m_is_finite_rational = False
+                    level_part = prod(p**e for (p,e) in f if p in level_10_primes)
+                    other_part = prod(p**e for (p,e) in f if p not in level_10_primes)
+                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for (p,e) in f))
                     if m_is_finite_rational:
                         # determine sign
                         sgn = sign(self.coefficients[m - 1])  # if fricke_unknown, this is 0
@@ -294,13 +280,28 @@ class WebMaassForm():
                             td_wrapl(rf"\(a_{{{m}}}= {sign_str}{rational_coeff_error_notation(f)} \)")
                         )
                         continue
+                coeff = self.coefficients[i * cols + j]
+                error = self.coefficient_errors[i * cols + j]
+                pm = False
+                if self.fricke_eigenvalue == 0:
+                    # Work out the coefficient from one that's prime to the level
+                    level_part = prod(p**e for (p,e) in f if p in level_primes)
+                    other_part = prod(p**e for (p,e) in f if p not in level_primes)
+                    if level_part > 1:
+                        coeff = abs(self.coefficients[other_part - 1] / RR(level_part).sqrt())
+                        pm = True
+                        if other_part == 1:
+                            error = RR(1e-8)
+                        else:
+                            error = max(RR(1e-8),self.coefficient_errors[other_part - 1] / RR(level_part.sqrt()))
                 # otherwise: m is not special, and print as normal
                 table.append(
                     td_wrapl(r"\(a_{%d}= %s \)"
                              % (i * cols + j + 1,
                                 coeff_error_notation(
-                                    self.coefficients[i * cols + j],
-                                    self.coefficient_errors[i * cols + j]
+                                    coeff,
+                                    error,
+                                    pm=pm
                                 ))))
             table.append('</tr>')
         table.append('</tbody></table>')
