@@ -65,7 +65,7 @@ def search_by_label(label):
                            title=mf.title,
                            friends=mf.friends,
                            learnmore=learnmore_list(),
-                           KNOWL_ID="mf.maass.mwf.%s" % mf.label
+                           KNOWL_ID="mf.maass.%s" % mf.label
                            )
 
 
@@ -177,7 +177,7 @@ def random():
 @maass_forms_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "mf.maass.mwf",
+        "mf.maass",
         db.maass_rigor,
         label_col="maass_label",
         url_for_label=lambda label: url_for(".by_label", label=label),
