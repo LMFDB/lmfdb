@@ -267,6 +267,11 @@ class WebMaassForm():
                 if i * cols + j >= n:
                     break
                 m = i * cols + j + 1
+                if m == 1:
+                    table.append(
+                        td_wrapl(rf"\(a_{{{m}}}= +1 \)")
+                    )
+                    continue
                 f = factor(m)
                 if has_finite_rational_coeffs:
                     level_part = prod(p**e for (p,e) in f if p in level_10_primes)
