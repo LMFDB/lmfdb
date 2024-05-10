@@ -3014,6 +3014,7 @@ class WebAbstractConjClass(WebObj):
 
     # Allows us to use representative from a Galois group
     def force_repr(self, newrep):
+        newrep=newrep.replace(' ','')
         self.representative = newrep
         self.force_repr_elt = True
 
