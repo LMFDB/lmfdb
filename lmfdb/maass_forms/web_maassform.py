@@ -3,7 +3,7 @@ from lmfdb import db
 from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
 from psycodict.encoding import Json
 from flask import url_for, abort
-from sage.all import RR
+from sage.all import RR, factor, sign
 
 
 def character_link(level, conrey_index):
@@ -18,6 +18,15 @@ def fricke_pretty(fricke_eigenvalue):
         return "$+1$"
     else:
         return "$-1$"
+
+
+def sgn_to_tex(sgn):
+    if sgn == 1:
+        return "+"
+    elif sgn == -1:
+        return "-"
+    else:
+        return r"\pm"
 
 
 def symmetry_pretty(symmetry):
@@ -38,6 +47,32 @@ def td_wrapc(val):
 
 def td_wrapr(val):
     return '    <td align="right">%s</td>' % val
+
+
+def coeff_is_special(n, primes):
+    """
+    In the special case when n is divisible only the primes 2 and 5, and 2 or 5
+    divides the level, and if n is a square, and the level is squarefree --- then a(n)
+    is actually rational. We call this "special".
+    """
+    f = factor(n)
+    for p, e in f:
+        if p not in primes:
+            return False
+        if e % 2 != 0:
+            return False
+    return True
+
+
+def special_coeff_error_notation(factored_n):
+    res = 1
+    if not factored_n:  # n = 1
+        return "1"
+    for p, e in factored_n:
+        res *= (p**(e//2))
+    res = 1./res
+    res = str(res).rstrip('0')
+    return res
 
 
 def coeff_error_notation(coeff, error):
@@ -211,6 +246,17 @@ class WebMaassForm():
         return friendlist
 
     def coefficient_table(self, rows=20, cols=3):
+        # "Special" coefficients are actually rational.
+        # This logic applies to squarefree level.
+        has_special_coeffs = False
+        special_coeff_primes = []
+        if self.level % 2 == 0:
+            special_coeff_primes.append(2)
+            has_special_coeffs = True
+        if self.level % 5 == 0:
+            special_coeff_primes.append(5)
+            has_special_coeffs = True
+
         n = len(self.coefficients)
         assert rows > 0 and cols > 0
         table = ['<table class="ntdata"><thead><tr><th></th></tr></thead><tbody>']
@@ -221,6 +267,24 @@ class WebMaassForm():
             for j in range(cols):
                 if i * cols + j >= n:
                     break
+                if has_special_coeffs:
+                    m = i * cols + j + 1
+                    m_is_special = True
+                    f = factor(m)
+                    for p, e in f:
+                        if p not in special_coeff_primes:
+                            m_is_special = False
+                        if e % 2 != 0:
+                            m_is_special = False
+                    if m_is_special:
+                        # determine sign
+                        sgn = sign(self.coefficients[m - 1])  # if fricke_unknown, this is 0
+                        sign_str = sgn_to_tex(sgn)
+                        table.append(
+                            td_wrapl(rf"\(a_{{{m}}}= {sign_str}{special_coeff_error_notation(f)} \)")
+                        )
+                        continue
+                # otherwise: m is not special, and print as normal
                 table.append(
                     td_wrapl(r"\(a_{%d}= %s \)"
                              % (i * cols + j + 1,
