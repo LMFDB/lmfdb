@@ -1883,8 +1883,7 @@ class WebAbstractGroup(WebObj):
             return ""
         gens = ", ".join(self.decode(g, as_str=True) for g in H.generators)
         if self.element_repr_type == "Perm":
-            gens=raw_typeset(gens,compress_perm(gens))
-            return gens
+            return raw_typeset(gens,compress_perm(gens))
         return raw_typeset(gens,"$" + gens + "$")
 
     # @lazy_attribute
