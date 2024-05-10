@@ -115,6 +115,7 @@ def exponential_form(mantissa, negative_exponent, digits_to_show=9):
     """
     Format the number `mantissa * 10^(-negative_exponent)` nicely.
     """
+    mantissa = str(mantissa)
     if negative_exponent == 0:
         return mantissa[:digits_to_show]
     return mantissa[:digits_to_show] + r" \cdot 10^{-" + str(negative_exponent) + "}"
