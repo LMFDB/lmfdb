@@ -2,7 +2,7 @@
 
 import re
 from lmfdb import db
-from flask import render_template, request, url_for, abort
+from flask import render_template, request, url_for, abort, redirect
 from lmfdb.maass_rigor import maass_rigor_page, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
@@ -184,28 +184,37 @@ def statistics():
     return render_template("display_stats.html", info=MaassStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
-# @maass_rigor_page.route("/<int:level>/")
-# def by_level(level):
-#     info = to_dict(request.args, search_array=MaassSearchArray())
-#     info['level'] = level
-#     return search(info)
-# 
-# 
-# @maass_rigor_page.route("/<int:level>/<int:weight>/")
-# def by_level_weight(level, weight):
-#     info = to_dict(request.args, search_array=MaassSearchArray())
-#     info['level'] = level
-#     info['weight'] = weight
-#     return search(info)
-# 
-# 
-# @maass_rigor_page.route("/<int:level>/<int:weight>/<int:conrey_index>/")
-# def by_level_weight_character(level, weight, conrey_index):
-#     info = to_dict(request.args, search_array=MaassSearchArray())
-#     info['level'] = level
-#     info['weight'] = weight
-#     info['conrey_index'] = conrey_index
-#     return search(info)
+@maass_rigor_page.route("/<int:level>/")
+def by_level(level):
+    info = to_dict(request.args, search_array=MaassSearchArray())
+    if 'level' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['level'] = str(level)
+        return search(info)
+
+
+@maass_rigor_page.route("/<int:level>/<int:weight>/")
+def by_level_weight(level, weight):
+    info = to_dict(request.args, search_array=MaassSearchArray())
+    if 'level' in info or 'weight' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['level'] = str(level)
+        info['weight'] = str(weight) # str needed since search_wrap will remove 0 as an int
+        return search(info)
+
+
+@maass_rigor_page.route("/<int:level>/<int:weight>/<int:conrey_index>/")
+def by_level_weight_character(level, weight, conrey_index):
+    info = to_dict(request.args, search_array=MaassSearchArray())
+    if 'level' in info or 'weight' in info or 'conrey_index' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['level'] = str(level)
+        info['weight'] = str(weight)
+        info['conrey_index'] = str(conrey_index)
+        return search(info)
 
 
 @maass_rigor_page.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")

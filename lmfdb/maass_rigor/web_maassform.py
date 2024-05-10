@@ -135,10 +135,9 @@ class WebRigorMaassForm():
     def bread(self):
         return [('Modular forms', url_for('modular_forms')),
                 ('Maass', url_for(".index")),
-                # TODO readd bread
-                #("Level %d" % (self.level), url_for(".by_level", level=self.level)),
-                #("Weight %d" % (self.weight), url_for(".by_level_weight", level=self.level, weight=self.weight)),
-                #("Character %s" % (self.character_label), url_for(".by_level_weight_character", weight=self.weight, level=self.level, conrey_index=self.conrey_index)),
+                ("Level %d" % (self.level), url_for(".by_level", level=self.level)),
+                ("Weight %d" % (self.weight), url_for(".by_level_weight", level=self.level, weight=self.weight)),
+                ("Character %s" % (self.character_label), url_for(".by_level_weight_character", weight=self.weight, level=self.level, conrey_index=self.conrey_index)),
                 ]
 
     @property
