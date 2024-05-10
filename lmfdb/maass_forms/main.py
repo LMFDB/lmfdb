@@ -3,7 +3,7 @@
 import re
 from lmfdb import db
 from flask import render_template, request, url_for, abort, redirect
-from lmfdb.maass_forms import maass_forms_page, logger
+from lmfdb.maass_forms import maass_forms_page
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, redirect_no_cache)

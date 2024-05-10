@@ -36,7 +36,7 @@ class MaassTest(LmfdbTest):
 
     def test_search_R_40_50(self):
         L = self.tc.get("/ModularForm/GL2/Q/Maass/?spectral_parameter=40-50")
-        assert "40.54335" in L.get_data(as_text=True) and "49.961696" in L.get_data(as_text=True)
+        assert "40.54335" in L.get_data(as_text=True) and "49.68352" in L.get_data(as_text=True)
 
     def test_search_R_1234(self):
         L = self.tc.get("/ModularForm/GL2/Q/Maass/?spectral_parameter=12.34")
@@ -52,4 +52,4 @@ class MaassTest(LmfdbTest):
 
     def test_underlying_data(self):
         data = self.tc.get("/ModularForm/GL2/Q/Maass/data/42.42").get_data(as_text=True)
-        assert ("maass_newforms" in data and "symmetry" in data)
+        assert ("maass_rigor" in data and "symmetry" in data)
