@@ -135,6 +135,9 @@ class WebMaassForm():
     def web_spectral_error(self):
         str_error = "%E" % self.spectral_error
         base, _, exponent = str_error.partition("E")
+        base, rest = base.split(".")
+        base = str(int(base) + 1)
+        exponent = str(int(exponent))
         return rf"{base} \cdot 10^{{{exponent}}}"
 
     @property
