@@ -614,7 +614,7 @@ def index():
         elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
             info["search_array"] = ComplexCharSearchArray()
             return complex_char_search(info)
-        elif search_type in ["ConjugacyClasses"]:  #JP no random because not pages
+        elif search_type in ["ConjugacyClasses"]:  # no random because not pages
             info["search_array"]=ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
     info["stats"] = GroupStats()
@@ -1349,7 +1349,7 @@ conjugacy_class_columns = SearchColumns([
              contingent=lambda info: info["group_factors"],
              orig=["powers"],
              download_col="powers"),
-    MultiProcessedCol("representative","group.repr","Representative",["group","representative"], cc_repr, download_col = "representative"),
+    MultiProcessedCol("representative","group.repr_explain","Representative",["group","representative"], cc_repr, download_col = "representative"),
 ],db_cols=["centralizer", "counter", "group", "label", "order", "powers", "representative", "size"])
 
 
