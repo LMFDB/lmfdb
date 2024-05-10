@@ -11,15 +11,15 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils import display_knowl
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, ProcessedLinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.maass_rigor.plot import paintSvgMaass
-from lmfdb.maass_rigor.web_maassform import character_link, fricke_pretty, symmetry_pretty, WebRigorMaassForm, MaassFormDownloader
+from lmfdb.maass_rigor.web_maassform import character_link, fricke_pretty, symmetry_pretty, short_label, long_label, WebRigorMaassForm, MaassFormDownloader
 from sage.all import gcd
 
 
 CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
-MAASS_ID_RE = re.compile(r"^[0-9\.]+$")
+MAASS_ID_RE = re.compile(r"^(\d+)\.(\d+)(?:\.(\d+)\.(\d+)\.(\d+))?$")
 
 
 def bread_prefix():
@@ -94,24 +94,34 @@ def index():
 
 @maass_rigor_page.route('/<label>')
 def by_label(label):
+    if not MAASS_ID_RE.match(label):
+        return abort(404, f"Invalid label {label}")
+    label = long_label(label)
     return search_by_label(label)
 
 
 @maass_rigor_page.route("/download/<label>")
 def download(label):
+    if not MAASS_ID_RE.match(label):
+        return abort(404, f"Invalid label {label}")
+    label = long_label(label)
     return MaassFormDownloader().download(label)
 
 
 @maass_rigor_page.route("/download_coefficients/<label>")
 def download_coefficients(label):
+    if not MAASS_ID_RE.match(label):
+        return abort(404, f"Invalid label {label}")
+    label = long_label(label)
     return MaassFormDownloader().download_coefficients(label)
 
 
 @maass_rigor_page.route("/data/<label>")
 def maass_data(label):
     if not MAASS_ID_RE.fullmatch(label):
-        return abort(404, f"Invalid id {label}")
-    title = f"Rigorous Maass form data - {label}"
+        return abort(404, f"Invalid label {label}")
+    title = f"Rigorous Maass form data - {short_label(label)}"
+    label = long_label(label)
     bread = [("Modular forms", url_for("modular_forms")),
              ("Maass", url_for(".index")),
              (label, url_for(".by_label", label=label)),
@@ -240,8 +250,12 @@ def browse_graph(min_level, max_level, min_R, max_R):
 class MaassSearchArray(SearchArray):
     sorts = [("", "level", ['level', 'weight', 'conrey_index', 'spectral_parameter']),
              ("spectral", "spectral parameter", ['spectral_parameter', 'weight', 'level', 'conrey_index'])]
-    noun = "Rigorous Maass form"
-    plural_noun = "Rigorous Maass forms"
+    noun = "Maass form"
+    plural_noun = "Maass forms"
+    jump_example = "42.42"
+    jump_egspan = "e.g. 42.42 or 42.0.1.42.1"
+    jump_knowl = "mf.maass_rigor.label"
+    jump_prompt = "Label"
 
     def __init__(self):
         level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="2 or 1-10")
@@ -304,11 +318,11 @@ def spectral_parameter_link(maass_label, spectral_parameter):
 
 
 def get_url(label):
-    return url_for(".by_label", label=label)
+    return url_for(".by_label", label=short_label(label))
 
 
 maass_columns = SearchColumns([
-    LinkCol("maass_label", "mf.maass_rigor.label", "Label", get_url),
+    ProcessedLinkCol("maass_label", "mf.maass_rigor.label", "Label", get_url, short_label),
     MathCol("level", "mf.maass.mwf.level", "Level"),
     MathCol("weight", "mf.maass.mwf.weight", "Weight"),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
@@ -328,12 +342,21 @@ maass_columns = SearchColumns([
     db_cols=["maass_label", "level", "weight", "conrey_index", "spectral_parameter", "symmetry", "fricke_eigenvalue"])
 
 
+def jump_box(info):
+    jump = info.pop("jump").strip()
+    if not MAASS_ID_RE.match(jump):
+        flash_error("%s is not a valid Maass form label", jump)
+        return redirect(url_for(".index"))
+    return redirect(url_for(".by_label", label=long_label(jump)))
+
+
 @search_wrap(
     table=db.maass_rigor,
     title="Rigorous Maass forms search results",
     err_title="Rigorous Maass forms search input error",
     columns=maass_columns,
-    shortcuts={"download": MaassFormDownloader()},
+    shortcuts={"download": MaassFormDownloader(),
+               "jump": jump_box},
     random_projection="maass_label",
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,

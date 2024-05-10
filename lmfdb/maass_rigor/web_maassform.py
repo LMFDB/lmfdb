@@ -58,6 +58,22 @@ def parity_text(val):
     return 'odd' if val == -1 else 'even'
 
 
+def short_label(label):
+    # We shorten some labels from 5 components to 2 for simplicity (all of the Maass forms in the initial draft of the database had the same values for the second, third and fifth part of the label)
+    pieces = label.split(".")
+    if len(pieces) == 5 and pieces[1] == '0' and pieces[2] == '1' and pieces[4] == '1':
+        return f"{pieces[0]}.{pieces[3]}"
+    return label
+
+
+def long_label(label):
+    # Undo the transformation from short_label
+    pieces = label.split(".")
+    if len(pieces) == 2:
+        return f"{pieces[0]}.0.1.{pieces[1]}.1"
+    return label
+
+
 class WebRigorMaassForm():
     def __init__(self, data):
         self.__dict__.update(data)
@@ -93,7 +109,7 @@ class WebRigorMaassForm():
     @property
     def title(self):
         digits_to_show = 10
-        return (rf"Maass form {self.label} on \(\Gamma_0({self.level})\) "
+        return (rf"Maass form {short_label(self.label)} on \(\Gamma_0({self.level})\) "
                 rf"with \(R={str(self.spectral_parameter)[:digits_to_show]}\)")
 
     @property
@@ -102,7 +118,8 @@ class WebRigorMaassForm():
         #   (None, '<img src="{0}" width="200" height="150" style="margin:10px;"/>'.format(self.portrait))
         # ] if self.portrait is not None else []
         props = []
-        props += [('Level', prop_int_pretty(self.level)),
+        props += [('Label', short_label(self.label)),
+                  ('Level', prop_int_pretty(self.level)),
                   ('Weight', prop_int_pretty(self.weight)),
                   ('Character', self.character_label),
                   ('Symmetry', self.symmetry_pretty),
