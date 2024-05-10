@@ -29,21 +29,11 @@
   {% endif %}
   <tr>
     <td> {{ KNOWL('mf.maass.mwf.spectralparameter', title='Spectral parameter') }}: </td>
-    <td>\( {{ mf.spectral_parameter }} \)</td>
+    <td>\( {{ mf.spectral_parameter }} \pm {{ mf.web_spectral_error }} \)</td>
   </tr>
 </table>
 
 <h2>Maass form {{KNOWL('mf.maass.mwf.coefficients','coefficients')}}</h2>
-{{ mf.coefficient_table(info.rows, info.cols) | safe }}
-
-<form id='coefficient_table'>
-  <table>
-    <tr>
-      <td>Rows: <input type='text' name='edit_rows' style="width: 40px" value="{{info.rows}}"></td>
-      <td>Cols: <input type='text' name='edit_cols' style="width: 40px" value="{{info.cols}}"></td>
-      <td><button id="refresh_coefficient_table">Refresh table</button></td>
-    </tr>
-  </table>
-</form>
+{{ mf.coefficient_table(20, 3) | safe }}
 
 {% endblock content %}
