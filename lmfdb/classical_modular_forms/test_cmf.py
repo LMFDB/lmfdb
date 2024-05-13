@@ -551,7 +551,6 @@ class CmfTest(LmfdbTest):
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
         assert ('mf_gamma1' in data and 'newspace_dims' in data
-                and 'mf_gamma1_subspaces' in data and 'sub_mult' in data
                 and 'mf_gamma1_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)

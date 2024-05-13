@@ -7,6 +7,7 @@ flask-markdown
 markupsafe==2.0.1
 itsdangerous
 psycopg2-binary
+git+https://github.com/roed314/psycodict.git
 pyflakes
 pytest
 pytest-cov

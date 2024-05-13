@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from flask import url_for, abort
 from sage.all import RR
 

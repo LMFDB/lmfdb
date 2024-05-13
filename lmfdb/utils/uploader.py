@@ -23,7 +23,7 @@ from flask_login import current_user
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.rings.integer_ring import ZZ
 from lmfdb.utils import flash_error, flash_info, pluralize
-from lmfdb.backend.encoding import copy_dumps
+from psycodict.encoding import copy_dumps
 from lmfdb import db
 
 class UploadBox():

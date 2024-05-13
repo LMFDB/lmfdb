@@ -1888,7 +1888,10 @@ class WebAbstractGroup(WebObj):
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
-        return ", ".join(self.decode(g, as_str=True) for g in H.generators)
+        gens = ", ".join(self.decode(g, as_str=True) for g in H.generators)
+        if self.element_repr_type == "Perm":
+            return raw_typeset(gens,compress_perm(gens))
+        return raw_typeset(gens,"$" + gens + "$")
 
     # @lazy_attribute
     # def fp_isom(self):
@@ -3021,6 +3024,7 @@ class WebAbstractConjClass(WebObj):
 
     # Allows us to use representative from a Galois group
     def force_repr(self, newrep):
+        newrep=newrep.replace(' ','')
         self.representative = newrep
         self.force_repr_elt = True
 
