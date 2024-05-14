@@ -50,7 +50,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import parse_multiset
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns,SearchCol, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -991,18 +991,20 @@ def get_qchar_url(label):
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
 
 
-#JP
+
 #This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
 # Or returns just the label if conjugacy classes are known but not characters
-def get_cc_url(gplabel, label):
-    if db.gps_groups.lucky({'label': gplabel})['complex_characters_known']:
-        cc = db.gps_groups_cc.lucky({'group':gplabel, 'label':label})
-        highlight_col = cc['counter']
-        return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i = highlight_col) +">" + label + "</a>"
-    else:
+def get_cc_url(gplabel, label, highlight):
+    highlight_col = highlight.get((gplabel,label))
+    if highlight_col is None:
         return label
+    else:
+        return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i = highlight_col) +">" + label + "</a>"
 
 
+
+
+    
 
 def field_knowl(fld):
     from lmfdb.number_fields.web_number_field import WebNumberField
@@ -1335,12 +1337,12 @@ def cc_repr(label,code):
 
 def Power_col(i, ps):
     p = ps[i]
-    return MultiProcessedCol(f"powers{i}", None, f"{p}P", ["group", "powers"], lambda group, powers: get_cc_url(group, powers[i]), align="center")
+    return MultiProcessedCol(f"powers{i}", None, f"{p}P", ["group", "powers","highlight_col"], lambda group, powers, highlight_col: get_cc_url(group, powers[i], highlight_col), align="center")
 
-#JP FIX KNOWLS
+
 conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("group", "group.name", "Group", ["group", "tex_cache"], display_url_cache, download_col = "group"),
-    MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group","label"],get_cc_url, download_col = "label"),
+    MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group","label","highlight_col"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
     MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col = "centralizer"),
@@ -1356,11 +1358,13 @@ conjugacy_class_columns = SearchColumns([
 def cc_postprocess(res, info, query):
     # We want to get latex for groups in one query, figure out what powers to use, and create a lookup table for counter->label
     labels = set()
+    gps = set()
     counter_to_label = {(rec["group"], rec["counter"]): rec["label"] for rec in res}
     missing = defaultdict(list)
     common_support = None
     for rec in res:
         group = rec.get("group")
+        gps.add(group)
         group_support = ZZ(group.split(".")[0]).prime_factors()
         if common_support is None:
             common_support = group_support
@@ -1379,9 +1383,19 @@ def cc_postprocess(res, info, query):
         for rec in db.gps_groups_cc.search({"$or":[{"group":group, "counter":{"$in":counters}} for (group, counters) in missing.items()]}, ["group", "counter", "label"]):
             counter_to_label[rec["group"],rec["counter"]] = rec["label"]
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
+    highlight_col = dict()
+    for rec in res:
+        label = rec.get("label")
+        group = rec.get("group")
+        if complex_char_known[group]:
+            highlight_col[(group, label)] = rec["counter"]
+        else:
+            highlight_col[(group, label)] = None
     for rec in res:
         rec["tex_cache"] = tex_cache
         rec["powers"] = [counter_to_label[rec["group"], ctr] for ctr in rec["powers"]]
+        rec["highlight_col"] = highlight_col
     return res
 
 
@@ -2578,7 +2592,7 @@ class ConjugacyClassSearchArray(SearchArray):
         size = TextBox(
             name="size",
             label="Size",
-            knowl="gp.size_conjugacy_class",
+            knowl="group.size_conjugacy_class",
             example="4",
             example_span="4, or a range like 3..5"
         )

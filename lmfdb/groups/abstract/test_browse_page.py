@@ -572,3 +572,21 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highighted below.")
         self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highighted below.")
+
+    def test_conj_class_search(self):
+        r"""
+        Check that conjugacy class search works
+        """
+	self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", #Centralizer
+                                                                                      "6A", #Label
+        ])
+        self.check_args("/Groups/Abstract/?group=128.15&search_type=ConjugacyClasses", r"\OD_{16}:C_8" #group name
+        )        
+        
+    def test_highlighted_conj_class(self):
+        r"""
+        Check that conjugacy class links work
+        """
+	self.check_args("/Groups/Abstract/char_table/24.7?cc_highlight=4B-1&cc_highlight_i=9", "The column representing the conjugacy class 4B-1 is highlighted below.")
+
+
