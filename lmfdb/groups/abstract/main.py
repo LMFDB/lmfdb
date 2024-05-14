@@ -1421,7 +1421,6 @@ def conjugacy_class_search(info, query={}):
     parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
 
 
-
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
@@ -2573,7 +2572,7 @@ class ComplexCharSearchArray(SearchArray):
 
 
 class ConjugacyClassSearchArray(SearchArray):
-    sorts = [("", "order", ['order', 'size']),
+    sorts = [("", "group", ['group','order','size']),("", "order", ['order', 'size']),
     ]
     def __init__(self):
         group = TextBox(

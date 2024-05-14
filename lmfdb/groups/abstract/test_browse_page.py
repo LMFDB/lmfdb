@@ -577,9 +577,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that conjugacy class search works
         """
-	self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", #Centralizer
-                                                                                      "6A", #Label
-        ])
+        self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", "6A"])
         self.check_args("/Groups/Abstract/?group=128.15&search_type=ConjugacyClasses", r"\OD_{16}:C_8" #group name
         )        
         
@@ -587,6 +585,4 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that conjugacy class links work
         """
-	self.check_args("/Groups/Abstract/char_table/24.7?cc_highlight=4B-1&cc_highlight_i=9", "The column representing the conjugacy class 4B-1 is highlighted below.")
-
-
+        self.check_args("/Groups/Abstract/char_table/24.7?cc_highlight=4B-1&cc_highlight_i=9", r"The column representing the conjugacy class 4B-1 is highlighted below.")
