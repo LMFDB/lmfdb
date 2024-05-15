@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import euler_phi, lazy_attribute, point, line, frac, floor, lcm, cartesian_product, ZZ, PolynomialRing, OrderedPartitions, srange
+from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, PolynomialRing, OrderedPartitions, srange
 from lmfdb import db
 from lmfdb.utils import encode_plot
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
@@ -76,15 +76,19 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def picture(self):
         P = point(self.black, color="black", size=20)
-        for (A, B, C, D) in self.bands:
-            P += line([A, B], color="black")
-            P += line([C, D], color="black")
-        for color in ["green", "red", "blue"]:
+        for A, B, C, D in self.bands:
+            P += polygon([A,B,D,C], fill=True, rgbcolor=(0.9, 0.9, 0.9), zorder=-3)
+            P += line([A, B], color="black", zorder=-1)
+            P += line([C, D], color="black", zorder=-1)
+        for (A0, B0, C0, D0), (A1, B1, C1, D1) in zip(self.bands[:-1], self.bands[1:]):
+            if A1 < C0:
+                P += polygon([A1, B1, D0, C0], fill=True, rgbcolor=(0.8, 0.8, 0.8), zorder=-2)
+        for color, marker in [("green", "s"), ("red", "D"), ("blue", "o")]:
             pts = getattr(self, color)
             for (u, v, solid) in pts:
-                P += point((u, v), color=color, size=20)
+                P += point((u, v), color=color, size=20, marker=marker)
                 if not solid:
-                    P += point((u, v), color="white", size=15)
+                    P += point((u, v), color="white", size=15, marker=marker)
         P.set_aspect_ratio(1)
         #P._set_extra_kwds(dict(xmin=0, xmax=self.n, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
