@@ -2,6 +2,7 @@
 from lmfdb.tests import LmfdbTest
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+from lmfdb.utils import comma
 
 
 class WebCharacterTest(LmfdbTest):
@@ -15,6 +16,11 @@ class WebCharacterTest(LmfdbTest):
 
 
 class DirichletSearchTest(LmfdbTest):
+    def test_nchars(self):
+        from lmfdb import db
+        nchars = db.char_dirichlet.sum('degree')
+        W = self.tc.get('/Character/Dirichlet/')
+        assert comma(nchars) in W.get_data(as_text=True)
 
     def test_order(self):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
@@ -76,7 +82,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'DirichletGroup(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
-        assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
+        assert '\\chi_{23}(10,\\cdot)' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
@@ -129,7 +135,6 @@ class DirichletCharactersTest(LmfdbTest):
         # Tests for URL behaviour of characters
 
         W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
-        #import pdb; pdb.set_trace()
         assert bool_string(True) in W.get_data(as_text=True)
         assert r"The URL has been duly corrected." in W.get_data(as_text=True)
 
@@ -244,6 +249,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_underlying_data(self):
         W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
-        assert 'is_minimal' in W and 'last_label' in W
+        assert 'is_minimal' in W and 'last' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W

@@ -5,7 +5,7 @@ import datetime
 #import time
 from collections import defaultdict
 from lmfdb.inventory_app.id_object import get_description
-from lmfdb.backend import db
+from psycodict import db
 
 __version__ = '1.0.0'
 
@@ -32,7 +32,7 @@ def merge_dicts(d1, d2):
 
 def _get_db_records(table):
 
-    """ Routine to execute the MapReduce operation on a specified table 
+    """ Routine to execute the MapReduce operation on a specified table
        object """
 
     mapper = Code("""
@@ -59,7 +59,7 @@ def _get_db_records(table):
     return results
 
 def get_sample_record(collection, field_name):
-    """ Function to get a sample, non-empty record from a collection 
+    """ Function to get a sample, non-empty record from a collection
         collection - MongoDB collection object
         field_name - name of field to find sample record from
 
@@ -69,7 +69,7 @@ def get_sample_record(collection, field_name):
 
 def _jsonify_table_info(table, dbname = None):
 
-    """Private function to turn information about one table into base 
+    """Private function to turn information about one table into base
        JSON """
     # Needs to be rewritten for Postgres
     raise NotImplementedError

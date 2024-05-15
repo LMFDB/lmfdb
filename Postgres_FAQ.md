@@ -158,11 +158,11 @@ Database Interface
 
    If use `db._execute`, make sure to wrap your statements in the SQL
    class from `psycopg2.sql` (you can also import it from
-   `lmfdb.backend`). You can see lots of examples of this
+   `psycodict`). You can see lots of examples of this
    paradigm in `lmfdb/backend/`.
 
    ```python
-   sage: from lmfdb.backend import db, SQL
+   sage: from psycodict import db, SQL
    sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
    sage: cur.rowcount
    2
@@ -539,7 +539,7 @@ Statistics
    One purpose of statistics is to inform viewers of the website of
    the extent of the data.  Many sections of the lmfdb have statistics
    pages for this purpose (e.g. [number field
-   statistics](http://www.lmfdb.org/NumberField/stats)).  Each table
+   statistics](https://www.lmfdb.org/NumberField/stats)).  Each table
    has an attached statistics object (e.g. `db.nf_fields.stats`) with
    methods to support the collection of and access to statistics on
    the table.

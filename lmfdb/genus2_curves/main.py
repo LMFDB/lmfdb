@@ -8,7 +8,7 @@ from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
 from lmfdb.app import app
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     CountBox,
     Downloader,
@@ -568,7 +568,7 @@ class G2C_download(Downloader):
             {
                 "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
                 "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
-                "gp": 'curve = apply(Polrev, mapget(out, "eqn"))',
+                "gp": 'curve = apply(Polrev, mapget(out, "eqn"));',
             }
         ),
     }

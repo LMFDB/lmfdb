@@ -15,4 +15,4 @@ def body_class():
 from . import half_integral_form
 assert half_integral_form
 
-app.register_blueprint(hiwf_page, url_prefix="/ModularForm/GL2/Q/holomorphic/half")
+app.register_blueprint(hiwf_page, url_prefix="/ModularForm/GL2/Q/holomorphic_half")

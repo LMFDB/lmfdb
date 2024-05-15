@@ -17,8 +17,9 @@ class DynamicKnowlTest(LmfdbTest):
 
     def test_character_table_knowl(self):
         L = self.tc.get('/knowledge/show/gg.character_table.data?n=5&t=5', follow_redirects=True)
-        # character table order can vary, so use trivial character
-        assert '1  1  1  1  1  1  1' in L.get_data(as_text=True)
+        # character values now complicated text in mathml, so look for labels
+        assert '120.34.5a' in L.get_data(as_text=True)
+        assert '5A' in L.get_data(as_text=True)
 
     def test_abstract_group_knowl(self):
         L = self.tc.get('/knowledge/show/lmfdb.object_information?func=group_data&args=16.5', follow_redirects=True)

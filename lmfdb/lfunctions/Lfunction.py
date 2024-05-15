@@ -46,7 +46,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.app import is_debug_mode
 
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     Downloader,
     display_complex,

@@ -9,7 +9,7 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+from lmfdb.utils import (web_latex, coeff_to_poly,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
@@ -451,6 +451,13 @@ class WebNumberField:
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
 
+    def minimal_sibling(self):
+        if 'is_minimal_sibling' in self._data:
+            if self._data['is_minimal_sibling']:
+                return 'This field is its own minimal sibling'
+            return formatfield(self._data['minimal_sibling'], show_poly=True)
+        return na_text()
+
     # Is the polynomial polredabs'ed
     def is_reduced(self):
         if not self.haskey('reduced'):
@@ -469,6 +476,27 @@ class WebNumberField:
     # Even rd is in the database, that does not low precision for searching
     def rd(self):
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
+
+    def grd(self):
+        if 'grd' not in self._data:
+            return 'not computed'
+        if self.degree() == 1:
+            return '$1$'
+        ramps = self._data['ramps']
+        exps = self._data['galois_disc_exponents']
+        grd = self._data['grd']
+        grd = str(grd)
+        galord = int(self.gg().order())
+        exps = [str(QQ(z/galord)) for z in exps]
+        exact = '$'
+        for j in range(len(ramps)):
+            exact += str(ramps[j])
+            if exps[j] != '1':
+                exact += f'^{{{exps[j]}}}'
+            else:
+                if j != len(ramps)-1:
+                    exact += r'\cdot '
+        return exact+r'\approx '+grd+'$'
 
     # Return a nice string for the Galois group
     def galois_string(self, cache=None):
@@ -799,9 +827,6 @@ class WebNumberField:
         if D < 0:
             s = r'-\,'
         return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()), cutoff=30)
-
-    def web_poly(self):
-        return pol_to_html(str(coeff_to_poly(self.coeffs())))
 
     def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):

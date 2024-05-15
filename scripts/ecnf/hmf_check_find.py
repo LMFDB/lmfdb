@@ -480,7 +480,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
 # 1) for the given field are processed; one can also specify a range
 # of level norms, or an individual newform label (without the field
 # prefix).
-            
+
 def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, outfilename=None, verbose=False, effort=500):
     r""" Go through all Hilbert Modular Forms with the given field label,
     assumed totally real, for level norms in the given range, test

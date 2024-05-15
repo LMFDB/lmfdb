@@ -5,7 +5,7 @@ import os
 import yaml
 
 from flask import render_template, url_for, redirect, abort, request, make_response
-from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime
+from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime, lazy_attribute
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
@@ -19,7 +19,7 @@ from lmfdb.utils import (
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
-from lmfdb.backend.utils import range_formatter
+from psycodict.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
@@ -491,7 +491,7 @@ def mf_data(label):
         label_cols = ["label", "label", "label", "hecke_orbit_code"]
         title = f"Newspace data - {label}"
     elif len(slabel) == 2:
-        tables = ["mf_gamma1", "mf_gamma1_subspaces", "mf_gamma1_portraits"]
+        tables = ["mf_gamma1", "mf_gamma1_portraits"]
         labels = label
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
@@ -704,7 +704,7 @@ def parse_character(inp, query, qfield, prim=False):
             if level > ORBIT_MAX_MOD:
                 raise ValueError("The level is too large.")
             # Check that this character is actually primitive
-            conductor = db.char_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            conductor = db.char_dirichlet.lucky({'modulus':level, 'orbit': orbit}, 'conductor')
             if conductor is None:
                 raise ValueError("No character orbit with this label exists.")
             if conductor != level:
@@ -1302,32 +1302,42 @@ class CMF_stats(StatsDisplay):
     Class for creating and displaying statistics for classical modular forms
     """
     def __init__(self):
-        self.nforms = comma(db.mf_newforms.count())
-        self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
-        self.ndim = comma(db.mf_hecke_cc.count())
-        #self.weight_knowl = display_knowl('cmf.weight', title='weight')
-        #self.level_knowl = display_knowl('cmf.level', title='level')
         self.newform_knowl = display_knowl('cmf.newform', title='newforms')
         self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
-    @property
+    @lazy_attribute
+    def nforms(self):
+        return comma(db.mf_newforms.count())
+
+    @lazy_attribute
+    def nspaces(self):
+        return comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
+
+    @lazy_attribute
+    def ndim(self):
+        return comma(db.mf_hecke_cc.count())
+
+    @lazy_attribute
     def short_summary(self):
         return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
 
-    @property
+    @lazy_attribute
     def summary(self):
         return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+
+    @lazy_attribute
+    def buckets(self):
+        return {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
+                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
+                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
+                'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
 
     extent_knowl = 'cmf.statistics_extent'
     table = db.mf_newforms
     baseurl_func = ".index"
-    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
-               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
-               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
-               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
     knowls = {'level': 'cmf.level',

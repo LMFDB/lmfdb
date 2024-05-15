@@ -10,7 +10,7 @@ from flask import render_template, request, url_for, redirect, make_response, ab
 from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error, display_knowl, Downloader,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
@@ -524,7 +524,7 @@ def elliptic_curve_search(info, query):
                     modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
-                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if l.strip() not in max_primes]
                     max_primes.sort(key=int)
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'

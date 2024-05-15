@@ -3,7 +3,7 @@
 
 from flask import url_for
 from lmfdb import db
-from lmfdb.backend import SQL
+from psycodict import SQL
 
 from lmfdb.utils import comma, display_knowl, StatsDisplay
 

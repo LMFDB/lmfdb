@@ -58,7 +58,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
-from lmfdb.backend.utils import SearchParsingError
+from psycodict.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
 
@@ -991,6 +991,9 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
+    if GCD(level, character) != 1:
+        flash_error("%s", 'Level and character must be coprime')
+        return redirect(url_for(".index"))
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
     char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:

@@ -2,7 +2,7 @@
 from ast import literal_eval
 from flask import url_for, redirect, abort
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
 from lmfdb.classical_modular_forms.web_newform import WebNewform
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
@@ -311,7 +311,7 @@ class CMF_download(Downloader):
         if lang == 'gp':
             lang = 'pari'
         Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
-        if not lang in Fullname:
+        if lang not in Fullname:
             abort(404,"Invalid code language specified: " + lang)
         data = db.mf_newforms.lookup(label)
         if data is None:
