@@ -1,6 +1,6 @@
-{% extends "homepage.html" %}
+{% extends 'embedded_results.html' %}
 
-{% block content %}
+{% block embedding_content %}
 
 <h2> Defining polynomial </h2>
 
@@ -25,27 +25,9 @@
 
 <h2> Fields </h2>
 
-<table>
-  <tr>
-    <th>{{ KNOWL('lf.field.label', 'Label') }}</th>
-    <th>{{ KNOWL('lf.defining_polynomial', 'Polynomial') }}</th>
-    <th>{{ KNOWL('nf.galois_group', 'Galois group') }}</th>
-    <th>{{ KNOWL('lf.slope_content', 'Slope content') }}</th>
-    <th>{{ KNOWL('lf.indices_of_inseparability', 'Ind. of Insep.') }}</th>
-    <th>{{ KNOWL('lf.associated_inertia', 'Assoc. Inertia') }}</th>
-  </tr>
-  {% for label, poly, gal, content, ind_of_insep, assoc_inertia in family.fields %}
-    <tr>
-      <td>{{label|safe}}</td>
-      <td>${{poly}}$</td>
-      <td>{{gal|safe}}</td>
-      <td>${{content}}$</td>
-      <td>${{ind_of_insep}}$</td>
-      <td>${{assoc_inertia}}$</td>
-    </tr>
-  {% endfor %}
-</table>
+{% endblock %}
 
+{% block post_results_content %}
 
 {% if family.poly_count < 100 %}
 <h2> Polynomials </h2>

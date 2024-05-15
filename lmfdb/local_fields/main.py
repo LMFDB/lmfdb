@@ -15,6 +15,7 @@ from lmfdb.utils import (
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
+    EmbeddedSearchArray, embed_wrap,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, PolynomialCol, eval_rational_list
@@ -324,10 +325,34 @@ lf_columns = SearchColumns([
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
 
+family_columns = SearchColumns([
+    LinkCol("label", "lf.field.label", "Label", url_for_label),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True),
+    MultiProcessedCol("gal", "nf.galois_group", "Galois group",
+                      ["n", "gal", "cache"],
+                      lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
+                      apply_download=lambda n, t, cache: [n, t]),
+    MathCol("galsize", "nf.galois_group", "Galois degree"),
+    #ListCol("visible", "lf.visible_slopes", "Visible slopes",
+    #                show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
+    MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
+                      ["slopes", "t", "u"],
+                      show_slope_content,
+                      mathmode=True, apply_download=unpack_slopes),
+    #MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden slopes",
+    #                  ["slopes", "t", "u", "visible"],
+    #                  show_hidden_slopes,
+    #                  mathmode=True, apply_download=unpack_hidden),
+    MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep."),
+    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia")])
+
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))
     for rec in res:
         rec["cache"] = cache
+        gglabel = f"{rec['n']}T{rec['gal']}"
+        rec["galsize"] = cache[gglabel]["order"]
+        print(rec)
     return res
 
 @search_wrap(table=db.lf_fields,
@@ -586,27 +611,47 @@ def reliability():
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+class FamilySearchArray(EmbeddedSearchArray):
+    pass
+
 @local_fields_page.route("/family/<label>")
 def family_page(label):
     m = FAMILY_RE.match(label)
     if m is None:
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
+
     p, den, nums = m.groups()
     p, den, nums = ZZ(p), ZZ(den), [ZZ(n) for n in nums.split("_")]
     slopes = [n / den for n in nums]
     family = pAdicSlopeFamily(p, slopes=slopes)
-    bread = get_bread([(str(p), url_for(".families_page_p", p=p)),
+    info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family)
+    info['bread'] = get_bread([(str(p), url_for(".families_page_p", p=p)),
                        (str(family.n), url_for(".families_page_pn", p=p, n=family.n)),
                        (label, "")])
-    title = f"$p$-adic family {label}"
-    return render_template(
-        "lf-family.html",
-        title=title,
-        bread=bread,
-        family=family,
-        learnmore=learnmore_list(),
-    )
+    info['title'] = f"$p$-adic family {label}"
+    # Properties?
+    return render_family(info)
+
+@embed_wrap(
+    table=db.lf_fields,
+    template="lf-family.html",
+    err_title="Local field family error",
+    columns=family_columns,
+    learnmore=learnmore_list,
+    postprocess=lf_postprocess,
+    # Each of the following arguments is set here so that it is overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in family_page() before calling render_family)
+    bread=lambda:None,
+    properties=lambda:None,
+    family=lambda:None,
+)
+def render_family(info, query):
+    family = info["family"]
+    query["p"] = family.p
+    query["visible"] = str(family.artin_slopes)
+    query["f"] = 1 # TODO: Update to allow for tame extensions
+    query["e"] = family.n
 
 @local_fields_page.route("/families/<int:p>")
 def families_page_p(p):
