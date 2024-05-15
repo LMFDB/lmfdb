@@ -151,7 +151,7 @@
 
 <p>
   {% if seq.characteristic %}
-  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the {{KNOWL(' group.weyl_group','Weyl group')}} $W = G / Z_G(H)$.
+  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the {{KNOWL('group.weyl_group','Weyl group')}} $W = G / Z_G(H)$.
   {% set S = "\operatorname{Aut}(G)" %}
   {% else %}
   While the subgroup $H$ is not {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the stabilizer $S$ of $H$ in the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : S \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphisms')}} $\operatorname{Inn}(G) \cap S$ is the {{KNOWL('group.weyl_group','Weyl group')}} $W = N_G(H) / Z_G(H)$.
