@@ -169,7 +169,7 @@
     {% if seq.aut_weyl_group is not none %}
       <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.aut_weyl.order)}}</td></tr>
     {% elif seq.aut_weyl_index is not none %}
-    <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{info.pos_int_and_factor(seq.sub.aut_order / seq.aut_weyl_index)}}</td></tr>
+      <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{info.pos_int_and_factor(seq.amb.aut_order/seq.aut_weyl_index)}}</td></tr>
     {% endif %}
     {% if seq.aut_centralizer_order is not none %}
     <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>{{info.pos_int_and_factor(seq.aut_centralizer_order)}}</td></tr>
