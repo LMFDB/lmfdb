@@ -1642,10 +1642,11 @@ def picture(label):
             flash_error("Error generating image for %s.", label)
             return redirect(url_for(".index"))
         else:
+            img = f'<!DOCTYPE html>\n<html lang="en">\n<body>\n{img}</body></html>'
             svg_io = BytesIO()
             svg_io.write(img.encode("utf-8"))
             svg_io.seek(0)
-            return send_file(svg_io, mimetype='image/svg+xml')
+            return send_file(svg_io, mimetype='text/html') #, mimetype='image/svg+xml')
     else:
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))
@@ -1674,7 +1675,7 @@ def gp_data(label):
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
-    if not abstract_subgroup_label_regex.fullmatch(label):
+    if not subgroup_label_is_valid(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_subgroup_label(label)), ("Data", " ")])
     title = f"Abstract subgroup data - {label}"
