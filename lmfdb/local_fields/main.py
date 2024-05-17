@@ -14,7 +14,7 @@ from lmfdb.utils import (
     parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
+    search_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, embed_wrap,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
@@ -252,6 +252,12 @@ def show_slope_content(sl,t,u):
         sc += '^{%d}'%u
     return(sc)
 
+def show_hidden_slopes(sl, vis):
+    hidden = sorted((Counter(eval_rational_list(sl)) - Counter(eval_rational_list(vis))).elements())
+    if not hidden:
+        return r'[\ ]'
+    return str(hidden)
+
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
@@ -273,11 +279,17 @@ def url_for_label(label):
         return url_for('.random_field')
     return url_for(".by_label", label=label)
 
+def url_for_family(label):
+    return url_for(".family_page", label=label)
+
 def local_field_jump(info):
     return redirect(url_for_label(info['jump']), 301)
 
 def unpack_slopes(slopes, t, u):
     return eval_rational_list(slopes), t, u
+
+def unpack_hidden(slopes, visible):
+    return sorted((Counter(eval_rational_list(slopes)) - Counter(eval_rational_list(visible))).elements())
 
 def format_eisen(eisstr):
     Pt = PolynomialRing(QQ, 't')
@@ -298,26 +310,38 @@ class LF_download(Downloader):
         ),
     }
 
+label_col = LinkCol("label", "lf.field.label", "Label", url_for_label)
+def degree_col(default):
+    return MathCol("n", "lf.degree", "$n$", short_title="degree", default=default)
+poly_col = ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True)
+p_col = MathCol("p", "lf.qp", "$p$", short_title="prime")
+c_col = MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent")
+gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
+                            ["n", "gal", "cache"],
+                            lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
+                            apply_download=lambda n, t, cache: [n, t])
+def visible_col(default):
+    return ListCol("visible", "lf.visible_slopes", "Visible slopes",
+                   show_slopes2, default=default, mathmode=True)
+def slopes_col(default):
+    return MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
+                             ["slopes", "t", "u"],
+                             show_slope_content,
+                             mathmode=True, apply_download=unpack_slopes, default=default)
+
 lf_columns = SearchColumns([
-    LinkCol("label", "lf.field.label", "Label", url_for_label),
-    MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
-    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True),
-    MathCol("p", "lf.qp", "$p$", short_title="prime"),
+    label_col,
+    degree_col(False),
+    poly_col,
+    p_col,
     MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index"),
     MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree"),
-    MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent"),
-    MultiProcessedCol("gal", "nf.galois_group", "Galois group",
-                      ["n", "gal", "cache"],
-                      lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
-                      apply_download=lambda n, t, cache: [n, t]),
+    c_col,
+    gal_col,
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
-    ListCol("visible", "lf.visible_slopes", "Visible slopes",
-                    show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
-    MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
-                      ["slopes", "t", "u"],
-                      show_slope_content,
-                      mathmode=True, apply_download=unpack_slopes),
+    visible_col(lambda info: info.get("visible")),
+    slopes_col(True),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
@@ -326,25 +350,28 @@ lf_columns = SearchColumns([
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
 
 family_columns = SearchColumns([
-    LinkCol("label", "lf.field.label", "Label", url_for_label),
-    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True),
-    MultiProcessedCol("gal", "nf.galois_group", "Galois group",
-                      ["n", "gal", "cache"],
-                      lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
-                      apply_download=lambda n, t, cache: [n, t]),
+    label_col,
+    poly_col,
+    gal_col,
     MathCol("galsize", "nf.galois_group", "Galois degree"),
-    #ListCol("visible", "lf.visible_slopes", "Visible slopes",
-    #                show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
-    MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
-                      ["slopes", "t", "u"],
-                      show_slope_content,
-                      mathmode=True, apply_download=unpack_slopes),
-    #MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden slopes",
-    #                  ["slopes", "t", "u", "visible"],
-    #                  show_hidden_slopes,
-    #                  mathmode=True, apply_download=unpack_hidden),
+    slopes_col(False),
+    MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden slopes",
+                      ["slopes", "visible"],
+                      show_hidden_slopes,
+                      mathmode=True, apply_download=unpack_hidden),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep."),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia")])
+
+families_columns = SearchColumns([
+    LinkCol("label", "lf.family_label", "Label", url_for_family),
+    p_col,
+    degree_col(True),
+    c_col,
+    visible_col(True),
+    MathCol("heights", "lf.heights", "Heights"),
+    MathCol("rams", "lf.rams", "Rams"),
+    MathCol("poly_count", "lf.family_poly_count", "Num. Poly"),
+    MathCol("field_count", "lf.family_field_count", "Num. Fields")])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))
@@ -352,7 +379,6 @@ def lf_postprocess(res, info, query):
         rec["cache"] = cache
         gglabel = f"{rec['n']}T{rec['gal']}"
         rec["galsize"] = cache[gglabel]["order"]
-        print(rec)
     return res
 
 @search_wrap(table=db.lf_fields,
@@ -382,7 +408,6 @@ def local_field_search(info,query):
     parse_bracketed_posints(info,query,"associated_inertia")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
-    info['search_array'] = LFSearchArray()
 
 def render_field_webpage(args):
     data = None
@@ -611,11 +636,9 @@ def reliability():
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
-class FamilySearchArray(EmbeddedSearchArray):
-    pass
-
 @local_fields_page.route("/family/<label>")
 def family_page(label):
+    # TODO: update to allow for tame extensions
     m = FAMILY_RE.match(label)
     if m is None:
         flash_error("Invalid label %s", label)
@@ -626,10 +649,11 @@ def family_page(label):
     slopes = [n / den for n in nums]
     family = pAdicSlopeFamily(p, slopes=slopes)
     info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family)
-    info['bread'] = get_bread([(str(p), url_for(".families_page_p", p=p)),
-                       (str(family.n), url_for(".families_page_pn", p=p, n=family.n)),
+    info['bread'] = get_bread([(str(p), url_for(".families_page", p=p)),
+                       (str(family.n), url_for(".families_page", p=p, n=family.n)),
                        (label, "")])
     info['title'] = f"$p$-adic family {label}"
+    info['show_count'] = True
     # Properties?
     return render_family(info)
 
@@ -653,11 +677,34 @@ def render_family(info, query):
     query["f"] = 1 # TODO: Update to allow for tame extensions
     query["e"] = family.n
 
-@local_fields_page.route("/families/<int:p>")
-def families_page_p(p):
-    pass
+    parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
+    parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
+    parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
+    parse_bracketed_posints(info,query,"associated_inertia")
 
-@local_fields_page.route("/families/<int:p>/<int:n>")
+@local_fields_page.route("/families/")
+def families_page():
+    info = to_dict(request.args, search_array=FamiliesSearchArray())
+    return families_search(info)
+
+@yield_wrap(
+    yielder=pAdicSlopeFamily.families,
+    columns=families_columns,
+    title='$p$-adic families search results',
+    titletag=lambda:'p-adic families search results',
+    err_title='p-adic families search input error',
+    learnmore=learnmore_list,
+    bread=lambda:get_bread([("Families", "")]),
+    url_for_label=url_for_family,
+)
+def families_search(info,query):
+    parse_ints(info,query,'p',name='Prime p')
+    parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'c',name='Discriminant exponent c')
+    #parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
+
+@local_fields_page.route("/families/")
 def families_page_pn(p, n):
     p, n = ZZ(p), ZZ(n)
     w = n.exact_log(p)
@@ -676,6 +723,142 @@ def families_page_pn(p, n):
         families=pAdicSlopeFamily.families(p, w, count_cache),
         learnmore=learnmore_list())
 
+def common_boxes():
+    degree = TextBox(
+        name='n',
+        label='Degree',
+        knowl='lf.degree',
+        example='6',
+        example_span='6, or a range like 3..5')
+    qp = TextBox(
+        name='p',
+        label=r'Residue field characteristic',
+        short_label='Residue characteristic',
+        knowl='lf.residue_field',
+        example='3',
+        example_span='3, or a range like 3..7')
+    c = TextBox(
+        name='c',
+        label='Discriminant exponent',
+        knowl='lf.discriminant_exponent',
+        example='8',
+        example_span='8, or a range like 2..6')
+    e = TextBox(
+        name='e',
+        label='Ramification index',
+        knowl='lf.ramification_index',
+        example='3',
+        example_span='3, or a range like 2..6')
+    f = TextBox(
+        name='f',
+        label='Residue field degree',
+        knowl='lf.residue_field_degree',
+        example='3',
+        example_span='3, or a range like 2..6')
+    topslope = TextBox(
+        name='topslope',
+        label='Top slope',
+        knowl='lf.top_slope',
+        example='4/3',
+        example_span='4/3, or a range like 3..5')
+    slopes_quantifier = SubsetBox(
+        name="slopes_quantifier",
+    )
+    slopes = TextBoxWithSelect(
+        name='slopes',
+        label='Wild slopes',
+        short_label='Wild',
+        knowl='lf.wild_slopes',
+        select_box=slopes_quantifier,
+        example='[2,2,3]',
+        example_span='[2,2,3] or [3,7/2,4]')
+    visible_quantifier = SubsetBox(
+        name="visible_quantifier",
+    )
+    visible = TextBoxWithSelect(
+        name='visible',
+        label='Visible slopes',
+        short_label='Visible',
+        knowl='lf.visible_slopes',
+        select_box=visible_quantifier,
+        example='[2,2,3]',
+        example_span='[2,2,3] or [2,3,17/4]')
+    insep_quantifier = SubsetBox(
+        name="insep_quantifier",
+    )
+    ind_insep = TextBoxWithSelect(
+        name='ind_of_insep',
+        label='Ind. of insep.',
+        short_label='Indices',
+        knowl='lf.indices_of_inseparability',
+        select_box=insep_quantifier,
+        example='[1,1,0]',
+        example_span='[1,1,0] or [18,10,4,0]')
+    associated_inertia = TextBox(
+        name='associated_inertia',
+        label='Assoc. Inertia',
+        knowl='lf.associated_inertia',
+        example='[1,2,1]',
+        example_span='[1,2,1] or [1,1,1,1]')
+    gal = TextBoxNoEg(
+        name='gal',
+        label='Galois group',
+        short_label='Galois group',
+        knowl='nf.galois_search',
+        example='5T3',
+        example_span='e.g. [8,3], 8.3, C5 or 7T2')
+    u = TextBox(
+        name='u',
+        label='Galois unramified degree',
+        knowl='lf.unramified_degree',
+        example='3',
+        example_span='3, or a range like 1..4'
+    )
+    t = TextBox(
+        name='t',
+        label='Galois tame degree',
+        knowl='lf.tame_degree',
+        example='2',
+        example_span='2, or a range like 2..3'
+    )
+    inertia = TextBox(
+        name='inertia_gap',
+        label='Inertia subgroup',
+        knowl='lf.inertia_group_search',
+        example='[3,1]',
+        example_span='e.g. [8,3], 8.3, C5 or 7T2',
+    )
+    wild = TextBox(
+        name='wild_gap',
+        label='Wild inertia subgroup',
+        knowl='lf.wild_inertia_group_search',
+        example='[4,1]',
+        example_span='e.g. [8,3], 8.3, C5 or 7T2',
+    )
+    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild
+
+class FamilySearchArray(EmbeddedSearchArray):
+    sorts = [
+        ("", "Label", ['label']),
+        ("gal", "Galois group", ['galT', 'label']),
+        ("s", "top slope", ['top_slope', 'label']),
+        ("ind_of_insep", "Index of insep", ['ind_of_insep', 'label']),
+    ]
+    def __init__(self):
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild = common_boxes()
+        self.refine_array = [[gal, slopes, ind_insep, associated_inertia]]
+
+class FamiliesSearchArray(SearchArray):
+    sorts = [
+        ("", "slopes", ['visible']),
+        ("c", "discriminant exponent", ['c', 'visible']),
+        ("poly_count", "num poly", ['poly_count', 'visible']),
+        ("field_count", "num fields", ['field_count', 'visible']),
+    ]
+    def __init__(self):
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild = common_boxes()
+        self.refine_array = [[qp, degree, c]] #, visible]]
+
 class LFSearchArray(SearchArray):
     noun = "field"
     sorts = [("", "prime", ['p', 'n', 'c', 'label']),
@@ -693,117 +876,7 @@ class LFSearchArray(SearchArray):
     jump_prompt = "Label"
 
     def __init__(self):
-        degree = TextBox(
-            name='n',
-            label='Degree',
-            knowl='lf.degree',
-            example='6',
-            example_span='6, or a range like 3..5')
-        qp = TextBox(
-            name='p',
-            label=r'Residue field characteristic',
-            short_label='Residue characteristic',
-            knowl='lf.residue_field',
-            example='3',
-            example_span='3, or a range like 3..7')
-        c = TextBox(
-            name='c',
-            label='Discriminant exponent',
-            knowl='lf.discriminant_exponent',
-            example='8',
-            example_span='8, or a range like 2..6')
-        e = TextBox(
-            name='e',
-            label='Ramification index',
-            knowl='lf.ramification_index',
-            example='3',
-            example_span='3, or a range like 2..6')
-        f = TextBox(
-            name='f',
-            label='Residue field degree',
-            knowl='lf.residue_field_degree',
-            example='3',
-            example_span='3, or a range like 2..6')
-        topslope = TextBox(
-            name='topslope',
-            label='Top slope',
-            knowl='lf.top_slope',
-            example='4/3',
-            example_span='4/3, or a range like 3..5')
-        slopes_quantifier = SubsetBox(
-            name="slopes_quantifier",
-        )
-        slopes = TextBoxWithSelect(
-            name='slopes',
-            label='Wild slopes',
-            short_label='Wild',
-            knowl='lf.wild_slopes',
-            select_box=slopes_quantifier,
-            example='[2,2,3]',
-            example_span='[2,2,3] or [3,7/2,4]')
-        visible_quantifier = SubsetBox(
-            name="visible_quantifier",
-        )
-        visible = TextBoxWithSelect(
-            name='visible',
-            label='Visible slopes',
-            short_label='Visible',
-            knowl='lf.visible_slopes',
-            select_box=visible_quantifier,
-            example='[2,2,3]',
-            example_span='[2,2,3] or [2,3,17/4]')
-        insep_quantifier = SubsetBox(
-            name="insep_quantifier",
-        )
-        ind_insep = TextBoxWithSelect(
-            name='ind_of_insep',
-            label='Ind. of insep.',
-            short_label='Indices',
-            knowl='lf.indices_of_inseparability',
-            select_box=insep_quantifier,
-            example='[1,1,0]',
-            example_span='[1,1,0] or [18,10,4,0]')
-        associated_inertia = TextBox(
-            name='associated_inertia',
-            label='Assoc. Inertia',
-            knowl='lf.associated_inertia',
-            example='[1,2,1]',
-            example_span='[1,2,1] or [1,1,1,1]')
-        gal = TextBoxNoEg(
-            name='gal',
-            label='Galois group',
-            short_label='Galois group',
-            knowl='nf.galois_search',
-            example='5T3',
-            example_span='e.g. [8,3], 8.3, C5 or 7T2')
-        u = TextBox(
-            name='u',
-            label='Galois unramified degree',
-            knowl='lf.unramified_degree',
-            example='3',
-            example_span='3, or a range like 1..4'
-            )
-        t = TextBox(
-            name='t',
-            label='Galois tame degree',
-            knowl='lf.tame_degree',
-            example='2',
-            example_span='2, or a range like 2..3'
-            )
-        inertia = TextBox(
-            name='inertia_gap',
-            label='Inertia subgroup',
-            knowl='lf.inertia_group_search',
-            example='[3,1]',
-            example_span='e.g. [8,3], 8.3, C5 or 7T2',
-            )
-        wild = TextBox(
-            name='wild_gap',
-            label='Wild inertia subgroup',
-            knowl='lf.wild_inertia_group_search',
-            example='[4,1]',
-            example_span='e.g. [8,3], 8.3, C5 or 7T2',
-            )
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild = common_boxes()
         results = CountBox()
 
         self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],

@@ -356,6 +356,21 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus
     else:
         return [key, parse_singleton(arg)]
 
+def unparse_range(query_part, col_name=None):
+    """
+    Given the output of parse_ints or other parser based on parse_range2,
+    return a lower and upper bound for the result.  Either being None indicates no limit.
+    $or is not supported
+    """
+    if isinstance(query_part, dict):
+        if "$or" in query_part:
+            msg = "Multiple ranges not supported"
+            if col_name:
+                msg += f" for {col_name}"
+            raise ValueError(msg)
+        return query_part.get("$gte"), query_part.get("$lte")
+    return query_part, query_part
+
 # Like parse_range2, but to deal with strings which could be rational numbers
 # process is a function to apply to arguments after they have been parsed
 def parse_range2rat(arg, key, process):

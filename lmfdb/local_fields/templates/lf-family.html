@@ -14,9 +14,19 @@
   <tr><td>Ramification exponent $e$:</td><td> ${{family.e}}$ </td></tr>
   <tr><td>Residue field degree $f$:</td><td> ${{family.f}}$ </td></tr>
   <tr><td>Discriminant exponent $c$:</td><td> ${{family.c}}$ </td></tr>
-  <tr><td>Visible slopes:</td><td> ${{family.artin_slopes}}$</td></tr>
-  <tr><td>Field count:</td><td>${{family.field_count}}$</td></tr>
-  <tr><td>Poly count:</td><td>${{family.poly_count}}$</td></tr>
+  <tr><td>Visible slopes:</td><td> ${{family.artin_slopes}}$ </td></tr>
+  <tr><td>Heights:</td><td> ${{family.heights}}$ </td></tr>
+  <tr><td>Rams:</td><td> ${{family.rams}}$ </td></tr>
+  <tr><td>Field count:</td><td> ${{family.field_count}}$ </td></tr>
+  <tr><td>Poly count:</td><td> ${{family.poly_count}}$ </td></tr>
+</table>
+
+<h2> Varying </h2>
+<table>
+  <tr><td>Galois group:</td><td> {{ family.galois_groups | safe }} </td></tr>
+  <tr><td>Hidden slopes:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
+  <tr><td>Indices of inseparability:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
+  <tr><td>Associated inertia:</td><td> {{ family.associated_inertia | safe }} </td></tr>
 </table>
 
 <h2> Picture </h2>
