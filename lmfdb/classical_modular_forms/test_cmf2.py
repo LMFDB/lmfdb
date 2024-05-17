@@ -134,8 +134,8 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+2000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
         assert 'Error: We limit downloads of traces to' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+83330%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
-        assert '999983.2.a' in page.get_data(as_text=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+30000%2C%27%24lte%27%3A30600%7D%2C%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
+        assert '863.2.c' in page.get_data(as_text=True)
 
     def test_random(self):
         r"""
