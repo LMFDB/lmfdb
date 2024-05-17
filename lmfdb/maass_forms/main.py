@@ -389,8 +389,8 @@ class MaassStats(StatsDisplay):
 
     top_titles = {'symmetry': 'symmetries'}
 
-    buckets = {'level': ['1', '2-13', '14-20', '21-30', '31-100', '101-997'],
-               'spectral_parameter': ['0-1', '1-2', '2-3', '3-4', '4-6', '6-10', '10-20', '20-32', '32-50']}
+    buckets = {'level': ['1', '2-13', '14-20', '21-30', '31-105'],
+               'spectral_parameter': ['0-1', '1-2', '2-3', '3-4', '4-6', '6-10', '10-20', '20-32']}
 
     knowls = {'level': 'mf.maass.mwf.level',
               'spectral_parameter': 'mf.maass.mwf.spectralparameter',
