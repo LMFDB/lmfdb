@@ -167,8 +167,8 @@ class WebGaloisGroup:
         return WebAbstractGroup(self.abstract_label())
 
     def have_isomorphism(self):
-        if self.wag.element_repr_type == "Lie":
-            return False
+        #if self.wag.element_repr_type == "Lie":
+        #    return False
         return 'isomorphism' in self._data
 
     @lazy_attribute
@@ -196,7 +196,7 @@ class WebGaloisGroup:
         if int(n) == 1:
             self.conjugacy_classes[0].force_repr('()')
             return [['()', 1, 1, '1', '1A']]
-        elif self.have_isomorphism() and wag.element_repr_type != "Lie":
+        elif self.have_isomorphism():
             isom = self.getisom
             cc = [z.representative for z in self.conjugacy_classes]
             cc1 = [wag.decode(z) for z in cc]
