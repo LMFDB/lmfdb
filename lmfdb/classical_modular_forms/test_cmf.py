@@ -164,7 +164,6 @@ class CmfTest(LmfdbTest):
         assert "The newform 100.2.z.a is not in the database" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-', follow_redirects=True)
         assert "No matches" in page.get_data(as_text=True)
-        assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
         assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)
 

@@ -15,7 +15,7 @@ from lmfdb.utils import (
     search_wrap, display_float, factor_base_factorization_latex,
     flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
+    DoubleSelectBox, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
@@ -852,6 +852,8 @@ newform_columns = SearchColumns([
                       short_title="RM",
                       download_col="rm_discs"),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual", default=False),
+    CheckCol("is_twist_minimal", "cmf.twist_minimal", "Twist minimal", default=False),
+    LinkCol("minimal_twist", "cmf.minimal_twist", "Minimal twist", url_for_label, default=False),
     MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists", default=False),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*", default=False),
     ColGroup("traces", "cmf.trace_form", "Traces",
@@ -870,7 +872,7 @@ newform_columns = SearchColumns([
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       download_col="qexp_display")],
-    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.mf_newforms,
@@ -1303,6 +1305,7 @@ class CMF_stats(StatsDisplay):
     """
     def __init__(self):
         self.newform_knowl = display_knowl('cmf.newform', title='newforms')
+        self.galois_orbit_knowl = display_knowl('cmf.galois_orbit', title='Galois orbits')
         self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
@@ -1320,11 +1323,11 @@ class CMF_stats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
+        return r'The database currently contains %s (%s of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
 
     @lazy_attribute
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (%s of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
     @lazy_attribute
     def buckets(self):
@@ -1475,9 +1478,11 @@ class CMFSearchArray(SearchArray):
             name='level_type',
             options=[('', ''),
                      ('prime', 'prime'),
+                     ('prime_square', 'prime squared'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
                      ('squarefree', 'squarefree'),
+                     ('powerful', 'powerful'),
                      ('divides','divides'),
                      ],
             min_width=110)
@@ -1517,6 +1522,7 @@ class CMFSearchArray(SearchArray):
         prime_quantifier = SubsetBox(
             name="prime_quantifier",
             min_width=110)
+
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
@@ -1545,7 +1551,8 @@ class CMFSearchArray(SearchArray):
 
         dim = TextBoxWithSelect(
             name='dim',
-            label='Dim.',
+            label='Dimension',
+            short_label="Dim.",
             knowl='cmf.dimension',
             example='1',
             example_span='2, 1-6',
@@ -1559,7 +1566,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.coefficient_field',
             label='Coefficient field',
             example='1.1.1.1',
-            example_span='4.0.144.1, Qsqrt5')
+            example_span='2.0.5.1, Qsqrt5')
 
         analytic_conductor = TextBox(
             name='analytic_conductor',
@@ -1604,6 +1611,11 @@ class CMFSearchArray(SearchArray):
             example='1-',
             example_span='0, 1-, 2-3')
 
+        is_twist_minimal = YesNoBox(
+            name='is_twist_minimal',
+            knowl='cmf.twist_minimal',
+            label='Is twist minimal')
+
         is_self_dual = YesNoBox(
             name='is_self_dual',
             knowl='cmf.selfdual',
@@ -1635,7 +1647,7 @@ class CMFSearchArray(SearchArray):
             label='Projective image',
             knowl='cmf.projective_image',
             example='D15',
-            example_span='wt. 1 only')
+            example_span='weight 1 only')
 
         projective_image_type = SelectBoxNoEg(
             name='projective_image_type',
@@ -1646,11 +1658,12 @@ class CMFSearchArray(SearchArray):
                      ('A4', 'A4'),
                      ('S4', 'S4'),
                      ('A5','A5')],
-            example_span='wt. 1 only')
+            example_span='weight 1 only')
 
         num_newforms = TextBox(
             name='num_forms',
-            label='Num. ' + display_knowl("cmf.newform", "newforms"),
+            label='Newform orbits',
+            knowl='cmf.galois_orbit',
             width=160,
             example='3')
         hnum_newforms = HiddenBox(
@@ -1658,8 +1671,6 @@ class CMFSearchArray(SearchArray):
             label='')
 
         results = CountBox()
-
-        wt1only = BasicSpacer("Only for weight 1:")
 
         trace_coldisplay = TextBox(
             name='n',
@@ -1695,19 +1706,20 @@ class CMFSearchArray(SearchArray):
             [level, weight],
             [level_primes, character],
             [char_order, char_primitive],
-            [dim, coefficient_field],
+            [dim, analytic_rank],
             [analytic_conductor, Nk2],
-            [self_twist, self_twist_discs],
-            [inner_twist_count, is_self_dual],
+            [coefficient_field, is_self_dual],
+            [inner_twist_count, is_twist_minimal],
+            [self_twist_discs, self_twist],
             [coefficient_ring_index, hecke_ring_generator_nbound],
-            [analytic_rank, projective_image],
-            [results, projective_image_type]]
+            [projective_image, projective_image_type],
+            [results]]
 
         self.refine_array = [
-            [level, weight, analytic_conductor, Nk2, dim],
+            [level, weight, analytic_conductor, analytic_rank, dim],
             [level_primes, character, char_primitive, char_order, coefficient_field],
-            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
-            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
+            [self_twist, self_twist_discs, inner_twist_count, is_twist_minimal, is_self_dual],
+            [Nk2, coefficient_ring_index, hecke_ring_generator_nbound, projective_image, projective_image_type]]
 
         self.space_array = [
             [level, weight, analytic_conductor, Nk2, dim],
@@ -1763,7 +1775,7 @@ class CMFSearchArray(SearchArray):
                 name="all_spaces",
                 options=[("", "split spaces"),
                          ("yes", "all spaces")],
-                width=None)
+                width=110)
             search_again = SearchButtonWithSelect(
                 value=st,
                 description="Search again",
