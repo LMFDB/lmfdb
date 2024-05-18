@@ -15,7 +15,7 @@ from lmfdb.utils import (
     search_wrap, display_float, factor_base_factorization_latex,
     flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
+    DoubleSelectBox, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
