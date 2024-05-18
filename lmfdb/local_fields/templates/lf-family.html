@@ -29,6 +29,10 @@
   <tr><td>Associated inertia:</td><td> {{ family.associated_inertia | safe }} </td></tr>
 </table>
 
+<p>
+  See also: <a href="{{ url_for('.dynamic_statistics', p=family.p, n=family.n, count=None, visible_quantifier='exactly', visible=(family.artin_slopes|string), col1='slopes', totals1='yes', col2='galois_label', totals2='yes', proportions='none') }}">table of Galois group vs slopes</a> for this family.
+</p>
+
 <h2> Picture </h2>
 
 <img src="{{ family.picture }}" width="1000">

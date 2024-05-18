@@ -381,18 +381,7 @@ def lf_postprocess(res, info, query):
         rec["galsize"] = cache[gglabel]["order"]
     return res
 
-@search_wrap(table=db.lf_fields,
-             title='$p$-adic field search results',
-             titletag=lambda:'p-adic field search results',
-             err_title='Local field search input error',
-             columns=lf_columns,
-             per_page=50,
-             shortcuts={'jump': local_field_jump, 'download': LF_download()},
-             postprocess=lf_postprocess,
-             bread=lambda:get_bread([("Search results", ' ')]),
-             learnmore=learnmore_list,
-             url_for_label=url_for_label)
-def local_field_search(info,query):
+def common_parse(info, query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
     parse_ints(info,query,'u',name='Unramified degree')
@@ -408,6 +397,20 @@ def local_field_search(info,query):
     parse_bracketed_posints(info,query,"associated_inertia")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
+
+@search_wrap(table=db.lf_fields,
+             title='$p$-adic field search results',
+             titletag=lambda:'p-adic field search results',
+             err_title='Local field search input error',
+             columns=lf_columns,
+             per_page=50,
+             shortcuts={'jump': local_field_jump, 'download': LF_download()},
+             postprocess=lf_postprocess,
+             bread=lambda:get_bread([("Search results", ' ')]),
+             learnmore=learnmore_list,
+             url_for_label=url_for_label)
+def local_field_search(info,query):
+    common_parse(info, query)
 
 def render_field_webpage(args):
     data = None
@@ -597,6 +600,19 @@ def statistics():
     title = "Local fields: statistics"
     bread = get_bread([("Statistics", " ")])
     return render_template("display_stats.html", info=LFStats(), title=title, bread=bread, learnmore=learnmore_list())
+
+@local_fields_page.route("/dynamic_stats")
+def dynamic_statistics():
+    info = to_dict(request.args, search_array=LFSearchArray())
+    LFStats().dynamic_setup(info)
+    title = "p-adic fields: Dynamic statistics"
+    return render_template(
+        "dynamic_stats.html",
+        info=info,
+        title=title,
+        bread=get_bread([("Dynamic Statistics", " ")]),
+        learnmore=learnmore_list(),
+    )
 
 @local_fields_page.route("/Completeness")
 def cande():
@@ -957,6 +973,14 @@ class LFStats(StatsDisplay):
 
     def __init__(self):
         self.numfields = db.lf_fields.count()
+
+    @staticmethod
+    def dynamic_parse(info, query):
+        from .main import common_parse
+        common_parse(info, query)
+
+    dynamic_parent_page = "padic-refine-search.html"
+    dynamic_cols = ["galois_label", "slopes"]
 
     @property
     def short_summary(self):
