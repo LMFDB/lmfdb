@@ -1672,8 +1672,6 @@ class CMFSearchArray(SearchArray):
 
         results = CountBox()
 
-        wt1only = BasicSpacer("(only for weight 1)")
-
         trace_coldisplay = TextBox(
             name='n',
             label='Columns to display',
