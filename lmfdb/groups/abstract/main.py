@@ -71,15 +71,6 @@ from .stats import GroupStats
 abstract_group_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)$")
 
 
-#abstract_subgroup_label_regex = re.compile(
-#    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.[a-z]+(\d+)(\.[a-z]+\d+)?(\.([N|M]|([N][C](\d+))))?$"
-#)
-
-#abstract_noncanonical_subgroup_label_regex = re.compile(
-#    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([A-Z]+)(\.([N|M]|([N][C](\d+))))?$"
-#)
-
-
 abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+\d+)(?:\.([a-z]+\d+))?(?:\.(N|M|NC\d+))?$"
 )
@@ -882,6 +873,10 @@ def group_jump(info):
     # by abelian label
     if jump.startswith("ab/") and AB_LABEL_RE.fullmatch(jump[3:]):
         return redirect(url_for(".by_abelian_label", label=jump[3:]))
+    # by subgroup label
+    if subgroup_label_is_valid(jump):
+        return redirect(url_for(".by_subgroup_label", label=jump))
+    #transitive group
     from lmfdb.galois_groups.transitive_group import Tfinder
     if Tfinder.fullmatch(jump):
         label = db.gps_transitive.lookup(jump, "abstract_label")
@@ -909,19 +904,8 @@ def group_jump(info):
                 return redirect(url_for(".by_label", label=lab))
             else:
                 flash_error("The group %s has not yet been added to the database." % jump)
-    flash_error("%s is not a valid name for a group; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
+    flash_error("%s is not a valid name for a group or subgroup; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
     return redirect(url_for(".index"))
-
-#def group_download(info):
-#    t = "Stub"
-#    bread = get_bread([("Jump", "")])
-#    return render_template(
-#        "single.html",
-#        kid="rcs.groups.abstract.source",
-#        title=t,
-#        bread=bread,
-#        learnmore=learnmore_list_remove("Source"),
-#    )
 
 def show_factor(n):
     if n is None or n == "":
@@ -1643,7 +1627,7 @@ def picture_page():
         learnmore=learnmore_list_remove("Picture")
     )
 
-@abstract_page.route("picture/<label>")
+@abstract_page.route("picture/<label>.svg")
 def picture(label):
     if label_is_valid(label):
         label = clean_input(label)
@@ -1690,7 +1674,7 @@ def gp_data(label):
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
-    if not abstract_subgroup_label_regex.fullmatch(label):
+    if not subgroup_label_is_valid(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_subgroup_label(label)), ("Data", " ")])
     title = f"Abstract subgroup data - {label}"
@@ -1830,7 +1814,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5 or C16.D4"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, or 12.4.2.b1.a1"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 

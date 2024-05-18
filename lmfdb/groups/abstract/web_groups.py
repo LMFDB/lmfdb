@@ -1881,7 +1881,10 @@ class WebAbstractGroup(WebObj):
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
-        return ", ".join(self.decode(g, as_str=True) for g in H.generators)
+        gens = ", ".join(self.decode(g, as_str=True) for g in H.generators)
+        if self.element_repr_type == "Perm":
+            return raw_typeset(gens,compress_perm(gens))
+        return raw_typeset(gens,"$" + gens + "$")
 
     # @lazy_attribute
     # def fp_isom(self):
@@ -2502,7 +2505,7 @@ class WebAbstractGroup(WebObj):
         else:
             R = 1
             circles = ""
-        return f'<img><svg xmlns="https://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
+        return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
     # The following attributes are used in create_boolean_string
     @property

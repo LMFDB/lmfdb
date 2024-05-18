@@ -17,7 +17,7 @@ while os.path.basename(mypath) != 'lmfdb':
 sys.path.append(mypath)
 
 from lmfdb import db
-from lmfdb.backend.encoding import copy_dumps
+from psycodict.encoding import copy_dumps
 
 rep=db.artin_reps
 nfgal=db.artin_field_data
