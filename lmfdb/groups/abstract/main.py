@@ -1627,7 +1627,7 @@ def picture_page():
         learnmore=learnmore_list_remove("Picture")
     )
 
-@abstract_page.route("picture/<label>")
+@abstract_page.route("picture/<label>.svg")
 def picture(label):
     if label_is_valid(label):
         label = clean_input(label)
@@ -1642,11 +1642,10 @@ def picture(label):
             flash_error("Error generating image for %s.", label)
             return redirect(url_for(".index"))
         else:
-            img = f'<!DOCTYPE html>\n<html lang="en">\n<body>\n{img}</body></html>'
             svg_io = BytesIO()
             svg_io.write(img.encode("utf-8"))
             svg_io.seek(0)
-            return send_file(svg_io, mimetype='text/html') #, mimetype='image/svg+xml')
+            return send_file(svg_io, mimetype='image/svg+xml')
     else:
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))
