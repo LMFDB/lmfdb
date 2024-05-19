@@ -5,7 +5,7 @@ from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
 from .utilities import format_percentage
 from .web_display import display_knowl
-from lmfdb.backend.utils import KeyedDefaultDict, range_formatter
+from psycodict.utils import KeyedDefaultDict, range_formatter
 
 class formatters():
     @classmethod

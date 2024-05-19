@@ -14,7 +14,7 @@ from lmfdb.elliptic_curves.web_ec import latex_equation
 
 from lmfdb import db
 from lmfdb.app import app
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
