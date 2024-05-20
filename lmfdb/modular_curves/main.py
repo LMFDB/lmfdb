@@ -966,8 +966,8 @@ class ModCurveSearchArray(SearchArray):
     sorts = [
         ("", "level", _default),
         ("index", "index", ["index", "level"] + _default[2:]),
-        ("genus", "genus", ["genus", "level", "index"] + _default[3:]),
-        ("rank", "rank", ["rank"] + _default),
+        ("genus", "genus", ["genus"] + _default[:2] + _default[3:]),
+        ("rank", "rank", ["rank", "genus"] + default[:2] + _default[3:]),
     ]
     null_column_explanations = {
         'simple': False,
