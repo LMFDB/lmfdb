@@ -262,6 +262,34 @@ Note that you need editor privileges to add, delete or modify data.
                    search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
    ```
 
+   If there were `extras` (suppose we put `log_N` and `num_factors` in
+   `extras`), the table creation could look like
+
+   ```python
+   db.create_table(name='perfect_numbers2',
+                   search_columns={'numeric': ['N','mersenne_n'],
+                                   'text': ['label'],
+                                   'bool': ['odd'],
+                                   },
+                   label_col='label',
+                   sort=['label'],
+                   table_description='perfect numbers',
+                   extra_columns={'double precision': ['log_N'],
+                                 'int': ['num_factors'],
+                                 },
+                   col_description={'N': "Integer value of the perfect number",
+                                    'log_N': "Natural logarithm of $N$",
+                                    'num_factors': "The number of factors of the perfect number.",
+                                    'mersenne_n': "For odd perfect numbers, the positive integer n for which $N=2^{n-1}(2^n-1)$, where $2^n-1$ is prime.  Set to zero for even perfect numbers",
+                                    'label': "Label of the perfect number",
+                                    'odd': "True if $N$ is odd, false otherwise.",
+                                   },
+                   search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
+   ```
+
+   In `perfect_numbers2`, the columns `log_N` and `num_factors` are now not in
+   the search columns.
+
    Once this table exists, you can access it via the object
     `db.perfect_numers`, which is of type `PostgresTable`.
 
