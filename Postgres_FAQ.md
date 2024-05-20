@@ -603,9 +603,9 @@ Statistics
    ```
 
    If you added stats for column `A`, it would record that there are
-   four instances of 2, three of 1, two of 5 and one each of 3, 4, and
-   8.  It would also record the minimum value (1), the maximum value
-   (6), the average (3), and the total (12 rows).
+   four instances of 2, three of 1, two of 5 and one each of 3, 4,
+   and 8.  It would also record the minimum value (1), the maximum value (6),
+   the average (3), and the total (12 rows).
 
    If you specified a threshold of 3, it would only record that there
    are four instances of 2 and three of 1.  Now the minimum and
@@ -618,8 +618,8 @@ Statistics
    statistics.
 
    If you want to group values into buckets (for example, class
-   numbers of number fields split into ranges like 1 < h <= 10 and 10
-   < h <= 100 and 100 < h <= 1000), you can use the
+   numbers of number fields split into ranges like `1 < h <= 10` and `10
+   < h <= 100` and `100 < h <= 1000`), you can use the
    `add_bucketed_counts` method.
 
    If you want to add counts for many sets of columns (in order to
@@ -644,7 +644,6 @@ Statistics
    collect the relevant statistics.  You should also create a view
    using the `display_stats.html` template, passing your object in as
    the `info` parameter.  Note that `DisplayStats` inherits from
-   Sage's `UniqueRepresentation, so it will only be created once.
    Sage's `UniqueRepresentation`, so it will only be created once.
 
 1. How do I display statistics from multiple tables on one page?
