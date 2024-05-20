@@ -45,6 +45,10 @@ def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 ###############################################################################
 # Utilities
 ###############################################################################
@@ -56,6 +60,7 @@ def search_by_label(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     info = to_dict(request.args)
+    learnmore_picture = ('Picture description', url_for('.picture_page'))
     return render_template("maass_form.html",
                            mf=mf,
                            info=info,
@@ -64,7 +69,7 @@ def search_by_label(label):
                            bread=mf.bread,
                            title=mf.title,
                            friends=mf.friends,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_picture),
                            KNOWL_ID="mf.maass.%s" % mf.label
                            )
 
@@ -135,9 +140,9 @@ def maass_data(label):
 def source_page():
     t = 'Source of Maass form data'
     bread = bread_prefix() + [('Source','')]
-    return render_template('multi.html', kids=['rcs.source.maass_forms',
-                                               'rcs.ack.maass_forms',
-                                               'rcs.cite.maass'],
+    return render_template('multi.html', kids=['rcs.source.maass_rigor',
+                                               'rcs.ack.maass_rigor',
+                                               'rcs.cite.maass_rigor'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 
@@ -145,7 +150,7 @@ def source_page():
 def completeness_page():
     t = 'Completeness of Maass form data'
     bread = bread_prefix() + [('Completeness','')]
-    return render_template('single.html', kid='rcs.cande.maass_forms',
+    return render_template('single.html', kid='rcs.cande.maass_rigor',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 
@@ -153,7 +158,7 @@ def completeness_page():
 def reliability_page():
     t = 'Reliability of Maass form data'
     bread = bread_prefix() + [('Reliability','')]
-    return render_template('single.html', kid='rcs.rigor.maass_forms',
+    return render_template('single.html', kid='rcs.rigor.maass_rigor',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 
@@ -161,9 +166,22 @@ def reliability_page():
 def labels_page():
     t = 'Labels for Maass forms'
     bread = bread_prefix() + [('Labels', '')]
-    return render_template("single.html", kid='mf.maass_forms.label',
+    return render_template("single.html", kid='mf.maass.label',
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('labels'))
+
+
+@maass_forms_page.route("/MaassPictures")
+def picture_page():
+    t = "Pictures for Maass forms"
+    bread = bread_prefix() + [('Pictures', '')]
+    return render_template(
+        "single.html",
+        kid='portrait.maass',
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list()
+    )
 
 
 @maass_forms_page.route('/random')
