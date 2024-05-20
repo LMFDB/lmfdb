@@ -138,8 +138,9 @@ class WebMaassForm():
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data
-        # TODO figure out how to handle portraits appropriately
-        #self.portrait = db.maass_portraits.lookup(self.label, projection="portrait")
+        self.portrait = db.maass_rigor_portraits.lookup(self.label, projection="portrait")
+        print(f"Looked up {self.label}")
+        print(f"found {self.portrait[:100]}...")
 
     @staticmethod
     def by_label(label):
@@ -177,10 +178,9 @@ class WebMaassForm():
 
     @property
     def properties(self):
-        # props = [
-        #   (None, '<img src="{0}" width="200" height="150" style="margin:10px;"/>'.format(self.portrait))
-        # ] if self.portrait is not None else []
-        props = []
+        props = [
+          (None, '<img src="{0}" width="200" height="200" style="margin:10px;"/>'.format(self.portrait))
+        ] if self.portrait is not None else []
         props += [('Label', short_label(self.label)),
                   ('Level', prop_int_pretty(self.level)),
                   ('Weight', prop_int_pretty(self.weight)),

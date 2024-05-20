@@ -126,8 +126,7 @@ def maass_data(label):
              ("Maass", url_for(".index")),
              (label, url_for(".by_label", label=label)),
              ("Data", " ")]
-    # TODO when portraits are done, re-add 
-    tables = ["maass_rigor"]
+    tables = ["maass_rigor", "maass_rigor_portraits"]
     label_cols = ["maass_label"]
     return datapage(label, tables, bread=bread, title=title, label_cols=label_cols)
 
