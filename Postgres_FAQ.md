@@ -13,8 +13,10 @@ Changes
 
 1. What's an overview of the changes?
 
-   There is a new folder, `lmfdb/backend/`, containing the
-   main components of the new interface to the Postgres database.
+   The main components of the interface to the Postgres database are
+   in [psycodict](https://github.com/roed314/psycodict/), which is the LMFDB
+   now depends on. This might be moved to the lmfdb organization later.
+
    Postgres is a mature, open-source implementation of SQL.  One of
    the main differences is that Postgres is a strongly-typed
    relational database, meaning that every table has a schema with
@@ -48,11 +50,6 @@ Changes
    advantage of this restructuring to add some consistency to the
    naming scheme.
 
-1. Why do I still see messages about mongo when I start the LMFDB?
-
-   Classical modular forms are still using mongo.  We're working on
-   revising them to use postgres, but in the mean time we're still
-   connecting to a mongo database.
 
 Database Interface
 ------------------
@@ -105,7 +102,7 @@ Database Interface
    ```
 
    The first argument is a dictionary specifying the query (in a style
-   similar to what you're used to from MongoDB, but with custom
+   similar to what you may be used to from MongoDB, but with custom
    operators like `$contains` that are translated to Postgres
    expressions).  You can project in order to obtain only a certain
    set of columns, and provide limits, offsets and custom sort orders.
@@ -115,8 +112,8 @@ Database Interface
 
    The `info` argument is a dictionary that will be updated with
    various data that is commonly needed by templates populated by the
-   search functions.  For more details, see the documentation in the folder
-   `lmfdb/backend`.
+   search functions.  For more details, see the documentation at
+   https://github.com/roed314/psycodict/.
 
 1. What if I only want a single entry, for example with a specified label?
 
@@ -159,7 +156,7 @@ Database Interface
    If use `db._execute`, make sure to wrap your statements in the SQL
    class from `psycopg2.sql` (you can also import it from
    `psycodict`). You can see lots of examples of this
-   paradigm in `lmfdb/backend/`.
+   paradigm in https://github.com/roed314/psycodict/
 
    ```python
    sage: from psycodict import db, SQL
@@ -683,18 +680,15 @@ Data Validation
 1. How can I add consistency checks for data in the LMFDB?
 
    One option is to add constraints to your table.  To do so, use the
-   `create_constraint` method in `database.py`.  You can see the
-   current constraints using `list_constraints`.
+   `create_constraint` method in `psycodict.table.py`. You can see the current
+   constraints using `list_constraints`.
 
    There are three supported types of constraints.  The simplest is
    `not null`, which checks that a specified column is filled in for
    every row in the table.  The second is `unique`, which checks that
    a column or set of columns is unique across all rows of a table.
    The final options is `check`, which runs an arbitrary SQL function
-   on a set of rows.  We are building up a library of SQL functions
-   for use in this way; you can see them in `backend/utils.psql`.
-   Once written, these functions need to be added to postgres, at
-   which point they can be used in checks.
+   on a set of rows.
 
    Note that constraints are checked whenever a row is added or
    updated, so if they are complicated it will impose a speed penalty
