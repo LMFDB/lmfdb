@@ -139,8 +139,6 @@ class WebMaassForm():
         self.__dict__.update(data)
         self._data = data
         self.portrait = db.maass_rigor_portraits.lookup(self.label, projection="portrait")
-        print(f"Looked up {self.label}")
-        print(f"found {self.portrait[:100]}...")
 
     @staticmethod
     def by_label(label):
