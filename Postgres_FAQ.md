@@ -236,10 +236,10 @@ Note that you need editor privileges to add, delete or modify data.
    be used to populate knowls that can then be edited by you or anyone
    with an LMFDB account can edit, they don't need to be perfect).
 
-   You can also give columns for an extra table (see the question two prior),
-   using the same format as the second argument.  Finally, you can specify
-   the order of columns, which will be used by the `copy_from` and `copy_to`
-   functions by default.
+   You can also give columns for an extra table (see the question "What is an
+   `extra_table`?" later in this document), using the same format as the second
+   argument.  Finally, you can specify the order of columns, which will be used
+   by the `copy_from` and `copy_to` functions by default.
 
    ```python
    db.create_table(name='perfect_numbers',
