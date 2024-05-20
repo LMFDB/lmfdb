@@ -79,7 +79,6 @@ def search_by_label(label):
 ###############################################################################
 
 
-
 @maass_forms_page.route('/')
 def index():
     info = to_dict(request.args, search_array=MaassSearchArray(), stats=MaassStats())
@@ -264,6 +263,11 @@ def browse_graph(min_level, max_level, min_R, max_R):
     return render_template("maass_browse_graph.html", title='Browsing graph of Maass forms', **info)
 
 
+###############################################################################
+# Search
+###############################################################################
+
+
 class MaassSearchArray(SearchArray):
     sorts = [("", "level", ['level', 'weight', 'conrey_index', 'spectral_parameter']),
              ("spectral", "spectral parameter", ['spectral_parameter', 'weight', 'level', 'conrey_index'])]
@@ -386,6 +390,11 @@ def search(info, query):
     parse_floats(info, query, 'spectral_parameter', name='Spectral parameter')
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
+
+
+###############################################################################
+# Stats
+###############################################################################
 
 
 class MaassStats(StatsDisplay):
