@@ -962,11 +962,12 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
+    _default = ["level", "index", "genus", "coarse_class_num", "coarse_level", "coarse_num", "fine_num"]
     sorts = [
-        ("", "level", ["level", "index", "genus", "label"]),
-        ("index", "index", ["index", "level", "genus", "label"]),
-        ("genus", "genus", ["genus", "level", "index", "label"]),
-        ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
+        ("level", "level", _default),
+        ("index", "index", ["index"] + _default),
+        ("genus", "genus", ["genus"] + _default),
+        ("rank", "rank", ["rank"] + _default),
     ]
     null_column_explanations = {
         'simple': False,
