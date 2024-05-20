@@ -131,8 +131,11 @@ def maass_data(label):
              (label, url_for(".by_label", label=label)),
              ("Data", " ")]
     tables = ["maass_rigor", "maass_rigor_portraits"]
-    label_cols = ["maass_label"]
-    return datapage(label, tables, bread=bread, title=title, label_cols=label_cols)
+    label_cols = ["maass_label", "maass_label"]
+    return datapage(
+        [label, label], tables,
+        bread=bread, title=title, label_cols=label_cols
+    )
 
 
 @maass_forms_page.route('/Source')
