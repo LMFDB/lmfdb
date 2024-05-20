@@ -7,7 +7,7 @@
 # License as published by the Free Software Foundation; either
 # version 2 of the License, or (at your option) any later version.
 
-import unittest2
+import unittest
 
 from sage.all import var
 
@@ -32,7 +32,7 @@ from lmfdb.utils import (
 )
 
 
-class UtilsTest(unittest2.TestCase):
+class UtilsTest(unittest.TestCase):
     """
     An example of unit tests that are not based on the website itself.
     """

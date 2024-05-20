@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-import unittest2
+import unittest
 
 from . import cmf_logger
 cmf_logger.setLevel(100)
@@ -77,7 +77,7 @@ class CmfTest(LmfdbTest):
         assert '10.10.b.a' in page.get_data(as_text=True)
         assert '2580' in page.get_data(as_text=True)
 
-    @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
+    @unittest.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
         from sage.all import ZZ
         for Nk2 in range(1, 2001):

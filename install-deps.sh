@@ -111,7 +111,7 @@ fi
 ### TODO: add different tested versions of the dependencies (possibly different for different sage versions)
 checked_versions="8 10 11"
 
-deps="flask flask-login flask-cache flask-markdown psycopg2 pyyaml unittest2"
+deps="flask flask-login flask-cache flask-markdown psycopg2 pyyaml"
 #deps="flask==0.10.1 flask-login==0.2.6 flask-cache==0.12 flask-markdown==0.3 psycopg2==2.7.5 pyyaml==3.10"
 
 if ! [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
