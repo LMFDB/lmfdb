@@ -217,7 +217,7 @@ Developer configuration
 Adding and modifying data
 -------------------------
 
-Note that you need editor priviledges to add, delete or modify data.
+Note that you need editor privileges to add, delete or modify data.
 
 1. How do I create a new table?
 
@@ -231,14 +231,14 @@ Note that you need editor priviledges to add, delete or modify data.
    `lookup` method, typically the `label` column if there is one.
    You should provide a default sort order if your table will be the
    primary table behind a section of the website (auxiliary tables may
-   not need a sort order).  You also need to proved a short description
+   not need a sort order).  You also need to provide a short description
    of the table, which will be shown in the banner when its contents are
    viewed on the database section of the website, as well as short
    descriptions of each of its columns which will be shown when users
    view the schema for the table in the database section (these will
    be used to populate knowls that can then be edited by you or anyone
    with an LMFDB account can edit, they don't need to be perfect).
-   
+
    You can also give columns for an extra table (see the question two prior),
    using the same format as the second argument.  Finally, you can specify
    the order of columns, which will be used by the `copy_from` and `copy_to`
@@ -290,7 +290,7 @@ Note that you need editor priviledges to add, delete or modify data.
    ```
 
    This column will be NULL for existing rows.
-   
+
 1. How do I delete a column?
 
    If you want to delete a column to an existing table, use the
@@ -299,7 +299,7 @@ Note that you need editor priviledges to add, delete or modify data.
    ```python
    sage: db.test_table.drop_column("bad_primes")
    ```
-   
+
 1. How do I insert new data?
 
    There are two main methods for adding data to a table.
@@ -586,7 +586,7 @@ Statistics
    in which case the function will only compute counts of at least the
    threshold.  You can also specify a dictionary of constraints (in
    fact, an arbitrary search query), in which case only rows
-   satsifying the query will be considered.
+   satisfying the query will be considered.
 
    For example, consider the following data.
    ```
@@ -634,11 +634,11 @@ Statistics
    Create a statistics object inheriting from `StatsDisplay` in
    `lmfdb/display_stats.py`.  It should have attributes
 
-   - `short_summary` (which can be displayed at the top of your browse page), 
+   - `short_summary` (which can be displayed at the top of your browse page),
    - `summary` (which will be displayed at the top of the statistics page),
    - `table` (the postgres table on which statistics are computed),
    - `baseurl_func` (the function giving your browse page, e.g. `'.index'`),
-   - `stat_list` (a list of dictionaries giving the statistics to be displayed; 
+   - `stat_list` (a list of dictionaries giving the statistics to be displayed;
    - `'cols'`, `'row_title'` and `'knowl'` are required arguments,
    - and other optional arguments allow you to adjust the default behavior)
 
@@ -648,6 +648,7 @@ Statistics
    using the `display_stats.html` template, passing your object in as
    the `info` parameter.  Note that `DisplayStats` inherits from
    Sage's `UniqueRepresentation, so it will only be created once.
+   Sage's `UniqueRepresentation`, so it will only be created once.
 
 1. How do I display statistics from multiple tables on one page?
 
@@ -714,7 +715,7 @@ Data Validation
    utilities for writing such queries, such as `check_values`,
    `check_iff`, `check_count`.  You can also write the query directly
    and use `_run_query`.  If you want to run queries that check
-   consistency accross multiple tables, see the `check_crosstable`
+   consistency across multiple tables, see the `check_crosstable`
    utility functions.  For fast queries you can use the `@overall`
    decorator; if your query takes longer than about a minute, you may
    want to use the `@overall_long` decorator instead.
