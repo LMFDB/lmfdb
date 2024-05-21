@@ -14,7 +14,7 @@ Changes
 1. What's an overview of the changes?
 
    The main components of the interface to the Postgres database are
-   in [psycodict](https://github.com/roed314/psycodict/), which is the LMFDB
+   in [psycodict](https://github.com/roed314/psycodict/), which the LMFDB
    now depends on. This might be moved to the lmfdb organization later.
 
    Postgres is a mature, open-source implementation of SQL.  One of
@@ -707,7 +707,7 @@ Data Validation
 1. How can I add consistency checks for data in the LMFDB?
 
    One option is to add constraints to your table.  To do so, use the
-   `create_constraint` method in `psycodict.table.py`. You can see the current
+   `create_constraint` method in `psycodict/table.py`. You can see the current
    constraints using `list_constraints`.
 
    There are three supported types of constraints.  The simplest is
