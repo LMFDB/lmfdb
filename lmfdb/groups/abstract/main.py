@@ -1000,10 +1000,6 @@ def get_cc_url(gplabel, label, highlight):
         return label
     else:
         return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i = highlight_col) +">" + label + "</a>"
-
-
-
-
     
 
 def field_knowl(fld):
@@ -1359,6 +1355,7 @@ def cc_postprocess(res, info, query):
     # We want to get latex for groups in one query, figure out what powers to use, and create a lookup table for counter->label
     labels = set()
     gps = set()
+    highlight_col = dict()
     counter_to_label = {(rec["group"], rec["counter"]): rec["label"] for rec in res}
     missing = defaultdict(list)
     common_support = None
@@ -1379,19 +1376,26 @@ def cc_postprocess(res, info, query):
                 labels.add(label)
     # We use an empty list so that [Powers_col(i,...) for i in info["group_factors"]] works
     info["group_factors"] = common_support if common_support else []
+    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)\
+}}, ["label", "complex_characters_known"])}
+    highlight_col = dict()                                                                                                        
+    for rec in res:                                                                                                               
+        label = rec.get("label")                                                                                                  
+        group = rec.get("group")
+        if complex_char_known[group]:                                                                                             
+            highlight_col[(group, label)] = rec["counter"]                                                                        
+        else:
+            highlight_col[(group, label)] = None 
     if missing:
         for rec in db.gps_groups_cc.search({"$or":[{"group":group, "counter":{"$in":counters}} for (group, counters) in missing.items()]}, ["group", "counter", "label"]):
+            group = rec.get("group")
+            label = rec.get("label")
             counter_to_label[rec["group"],rec["counter"]] = rec["label"]
+            if complex_char_known[group]:
+                highlight_col[(group, label)] = rec["counter"]
+            else:
+                highlight_col[(group, label)] = None
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
-    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
-    highlight_col = dict()
-    for rec in res:
-        label = rec.get("label")
-        group = rec.get("group")
-        if complex_char_known[group]:
-            highlight_col[(group, label)] = rec["counter"]
-        else:
-            highlight_col[(group, label)] = None
     for rec in res:
         rec["tex_cache"] = tex_cache
         rec["powers"] = [counter_to_label[rec["group"], ctr] for ctr in rec["powers"]]
