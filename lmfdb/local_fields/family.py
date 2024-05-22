@@ -62,7 +62,7 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def green(self):
         p, n, w = self.p, self.n, self.w
-        return [(n*frac(h), 1 + floor(h), (n*frac(h)).valuation(p) == (w - i)) for (i, h) in enumerate(self.scaled_heights, 1)]
+        return [(n*frac(h), 1 + floor(h), (n*frac(h)).valuation(p) == (w - i)) for (i, h) in enumerate(self.scaled_heights, 1) if (n*frac(h)).denominator() == 1]
 
     def _set_redblue(self):
         self.blue = []
