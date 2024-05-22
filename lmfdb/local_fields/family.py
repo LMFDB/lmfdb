@@ -79,6 +79,8 @@ class pAdicSlopeFamily:
                 elif u.valuation(p) == (w - i):
                     self.blue.append((u, v, True))
                 u += 1
+        self.blue = sorted(set(self.blue))
+        self.red = sorted(set(self.red))
 
     @lazy_attribute
     def blue(self):
