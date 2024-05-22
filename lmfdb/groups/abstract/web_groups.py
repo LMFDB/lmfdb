@@ -2512,7 +2512,7 @@ class WebAbstractGroup(WebObj):
         else:
             R = 1
             circles = ""
-        return f'<img><svg xmlns="https://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
+        return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
     # The following attributes are used in create_boolean_string
     @property

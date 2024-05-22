@@ -151,7 +151,7 @@
 
 <p>
   {% if seq.characteristic %}
-  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the {{KNOWL(' group.weyl_group','Weyl group')}} $W = G / Z_G(H)$.
+  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the {{KNOWL('group.weyl_group','Weyl group')}} $W = G / Z_G(H)$.
   {% set S = "\operatorname{Aut}(G)" %}
   {% else %}
   While the subgroup $H$ is not {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the stabilizer $S$ of $H$ in the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : S \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphisms')}} $\operatorname{Inn}(G) \cap S$ is the {{KNOWL('group.weyl_group','Weyl group')}} $W = N_G(H) / Z_G(H)$.
@@ -169,7 +169,7 @@
     {% if seq.aut_weyl_group is not none %}
       <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.aut_weyl.order)}}</td></tr>
     {% elif seq.aut_weyl_index is not none %}
-    <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{info.pos_int_and_factor(seq.sub.aut_order / seq.aut_weyl_index)}}</td></tr>
+      <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{info.pos_int_and_factor(seq.amb.aut_order/seq.aut_weyl_index)}}</td></tr>
     {% endif %}
     {% if seq.aut_centralizer_order is not none %}
     <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>{{info.pos_int_and_factor(seq.aut_centralizer_order)}}</td></tr>
