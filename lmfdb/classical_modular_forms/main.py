@@ -182,8 +182,6 @@ def index():
             return dimension_space_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
-        elif search_type == 'SpaceTraces':
-            return space_trace_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = CMF_stats()
@@ -486,9 +484,9 @@ def mf_data(label):
         ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
         if ocode is None:
             return abort(404, f"{label} not in database")
-        tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits", "mf_hecke_newspace_traces"]
-        labels = [label, label, label, ocode]
-        label_cols = ["label", "label", "label", "hecke_orbit_code"]
+        tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits"]
+        labels = [label, label, label]
+        label_cols = ["label", "label", "label"]
         title = f"Newspace data - {label}"
     elif len(slabel) == 2:
         tables = ["mf_gamma1", "mf_gamma1_portraits"]
@@ -891,7 +889,7 @@ def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
 
-def trace_postprocess(res, info, query, spaces=False):
+def trace_postprocess(res, info, query):
     if res:
         if info.get('view_modp') == 'reductions':
             q = int(info['an_modulo'])
@@ -899,7 +897,7 @@ def trace_postprocess(res, info, query, spaces=False):
             q = None
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
-        table = db.mf_hecke_newspace_traces if spaces else db.mf_hecke_traces
+        table = db.mf_hecke_traces
         for rec in table.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             if q:
                 trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
@@ -959,22 +957,6 @@ def set_Trn(info, query, limit=1000):
 def trace_search(info, query):
     set_Trn(info, query)
     newform_parse(info, query)
-    process_an_constraints(info, query)
-    set_info_funcs(info)
-
-@search_wrap(template="cmf_space_trace_search_results.html",
-             table=db.mf_newspaces,
-             title='Newspace search results',
-             err_title='Newspace search input error',
-             shortcuts={'jump':jump_box,
-                        'download':CMF_download().download_multiple_space_traces},
-             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
-             postprocess=space_trace_postprocess,
-             bread=get_search_bread,
-             learnmore=learnmore_list)
-def space_trace_search(info, query):
-    set_Trn(info, query)
-    newspace_parse(info, query)
     process_an_constraints(info, query)
     set_info_funcs(info)
 
@@ -1454,8 +1436,7 @@ class CMFSearchArray(SearchArray):
     _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
     sorts = {'': _sort_forms,
              'Traces': _sort_forms,
-             'Spaces': _sort_spaces,
-             'SpaceTraces': _sort_spaces}
+             'Spaces': _sort_spaces}
     jump_example="3.6.a.a"
     jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     jump_knowl="cmf.search_input"
@@ -1746,7 +1727,7 @@ class CMFSearchArray(SearchArray):
         if info is None:
             return self.browse_array
         search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['Spaces', 'SpaceTraces']:
+        if search_type == 'Spaces':
             return self.space_array
         elif search_type == 'SpaceDimensions':
             return self.sd_array
@@ -1761,7 +1742,6 @@ class CMFSearchArray(SearchArray):
                  ('Random', 'Random form')]
         spaces = [('Spaces', 'List of spaces'),
                   ('SpaceDimensions', 'Dimension table'),
-                  ('SpaceTraces', 'Traces table'),
                   ('RandomSpace', 'Random')]
         if info is None:
             return basic
@@ -1788,7 +1768,7 @@ class CMFSearchArray(SearchArray):
         # We need to override html to add the trace inputs
         layout = [self.hidden_inputs(info), self.main_table(info), self.buttons(info)]
         st = self._st(info)
-        if st in ["Traces", "SpaceTraces"]:
+        if st in ["Traces"]:
             trace_table = self._print_table(self.traces_array, info, layout_type="box")
             layout.append(trace_table)
         return "\n".join(layout)
