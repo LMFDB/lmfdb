@@ -25,6 +25,7 @@ from sage.all import (
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.misc.cachefunc import cached_function, cached_method
+from sage.databases.cremona import class_to_int
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -94,6 +95,11 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+def gp_label_to_cc_data(gp):
+    gp_order, gp_counter = gp.split(".") 
+    return gp_order, class_to_int(gp_counter +1)
+
+    
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
@@ -564,8 +570,8 @@ class WebAbstractGroup(WebObj):
         return len(self.conjugacy_classes)
 
     @lazy_attribute
-    def cc_known(self):
-        return db.gps_groups_cc.exists({'group': self.label})
+    def cc_known(self):  #JP
+        return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     
     @lazy_attribute
@@ -1329,7 +1335,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_groups_cc.search({"group": self.label})
+            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter})  #JP
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -3014,11 +3020,12 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_groups_cc
+    table = db.gps_conj_classes  #JP HERE
 
     def __init__(self, group, label, data=None):
         if data is None:
-            data = db.gps_groups_cc.lucky({"group": group, "label": label})
+            group_order, group_counter = gp_label_to_cc_data(group)
+            data = db.gps_groups_cc.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) #JP
         WebObj.__init__(self, label, data)
         self.force_repr_elt = False
 
