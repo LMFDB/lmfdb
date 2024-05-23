@@ -234,16 +234,6 @@ class mf_newspaces(MfChecker):
         # TIME about 2s
         return self.check_sorted('hecke_orbit_dims')
 
-    ### mf_subspaces ###
-    @overall
-    def check_oldspace_decomposition_totaldim(self):
-        """
-        check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
-        """
-        # TIME about 20s
-        # from mf_subspaces
-        return self.check_crosstable_dotprod('mf_subspaces', 'cusp_dim', 'label', ['sub_mult', 'sub_dim'])
-
     ### mf_newspace_portraits ###
     @overall
     def check_portraits_count(self):

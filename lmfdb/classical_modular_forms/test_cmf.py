@@ -554,7 +554,6 @@ class CmfTest(LmfdbTest):
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)
         assert ('mf_newspaces' in data and 'num_forms' in data
-                and 'mf_subspaces' in data and 'sub_mult' in data
                 and 'mf_newspace_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a').get_data(as_text=True)

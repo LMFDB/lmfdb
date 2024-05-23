@@ -484,9 +484,9 @@ def mf_data(label):
         ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
         if ocode is None:
             return abort(404, f"{label} not in database")
-        tables = ["mf_newspaces", "mf_subspaces", "mf_newspace_portraits"]
-        labels = [label, label, label]
-        label_cols = ["label", "label", "label"]
+        tables = ["mf_newspaces", "mf_newspace_portraits"]
+        labels = [label, label]
+        label_cols = ["label", "label"]
         title = f"Newspace data - {label}"
     elif len(slabel) == 2:
         tables = ["mf_gamma1", "mf_gamma1_portraits"]
