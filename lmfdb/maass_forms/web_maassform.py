@@ -127,7 +127,9 @@ def parity_text(val):
 
 
 def short_label(label):
-    # We shorten some labels from 5 components to 2 for simplicity (all of the Maass forms in the initial draft of the database had the same values for the second, third and fifth part of the label)
+    # We shorten some labels from 5 components to 2 for simplicity (all of the
+    # Maass forms in the initial draft of the database had the same values for
+    # the second, third and fifth part of the label)
     pieces = label.split(".")
     if len(pieces) == 5 and pieces[1] == '0' and pieces[2] == '1' and pieces[4] == '1':
         return f"{pieces[0]}.{pieces[3]}"
@@ -204,6 +206,7 @@ class WebMaassForm():
                   ('Weight', prop_int_pretty(self.weight)),
                   ('Character', self.character_label),
                   ('Symmetry', self.symmetry_pretty),
+                  (r"\(R\)", str(self.spectral_parameter)[:8]),
                   ]
         if self.conrey_index == 1:
             props.append(('Fricke sign', self.fricke_pretty))
