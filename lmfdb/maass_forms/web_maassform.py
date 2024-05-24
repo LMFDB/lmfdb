@@ -87,7 +87,9 @@ def coeff_error_notation(coeff, error, pm=False):
         errorpart = ""
     else:
         base, negexponent = mantissa_and_exponent(error)
-        negexponent = min(negexponent, 8)
+        if negexponent > 8:
+            negexponent = 8
+            base = 1
         errorpart = r" \pm " + exponential_form(base, negexponent, digits_to_show=3)
     return coeffpart + errorpart
 
