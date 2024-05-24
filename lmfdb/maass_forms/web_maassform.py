@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
-from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
+from lmfdb.utils import (
+    display_knowl,
+    Downloader,
+    prop_int_pretty,
+    raw_typeset,
+    web_latex_factored_integer,
+)
 from psycodict.encoding import Json
 from flask import url_for, abort
 from sage.all import RR, ZZ, factor, sign, prod
@@ -169,6 +175,18 @@ class WebMaassForm():
         base = str(int(base) + 1)
         exponent = str(int(exponent))
         return rf"{base} \cdot 10^{{{exponent}}}"
+
+    @property
+    def web_spectral_line(self):
+        if len(str(self.spectral_parameter)) < 35:
+            return rf"\({self.spectral_parameter} \pm {self.web_spectral_error}\)"
+        else:
+            short_spectral = str(self.spectral_parameter)[:35]
+            return raw_typeset(
+                str(self.spectral_parameter) + " +- " + str(self.spectral_error),
+                rf"\( {short_spectral}\ldots \pm {self.web_spectral_error} \)",
+                extra="(toggle for full precision)"
+            )
 
     @property
     def title(self):

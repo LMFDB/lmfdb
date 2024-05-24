@@ -37,7 +37,7 @@
   {% endif %}
   <tr>
     <td> {{ KNOWL('mf.maass.mwf.spectralparameter', title='Spectral parameter') }}: </td>
-    <td>\( {{ mf.spectral_parameter }} \pm {{ mf.web_spectral_error }} \)</td>
+    <td> {{ mf.web_spectral_line | safe }} </td>
   </tr>
 </table>
 
