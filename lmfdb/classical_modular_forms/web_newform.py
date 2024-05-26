@@ -180,6 +180,7 @@ class WebNewform():
         self.qexp_converted = False  # set to True if the q-expansion is rewritten in terms of a root of unity
         self.single_generator = None
         self.has_exact_qexp = False
+        self.hecke_ring_cyclotomic_generator = None # in case there is no data in mf_hecke_nf
         if self.embedding_label is None:
             hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
             eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
@@ -277,7 +278,7 @@ class WebNewform():
             self.properties += [('RM discriminant', disc)]
         elif self.weight == 1:
             self.properties += [('CM/RM', 'no')]
-        else:
+        elif self.inner_twist_count == 1:
             self.properties += [('CM', 'no')]
         if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
@@ -667,9 +668,14 @@ class WebNewform():
         else:
             return r'multiple of %s' % fac
 
+    def fricke_eigenval_display(self):
+        if self.fricke_eigenval is None:
+            return "not computed"
+        return r'\(-1\)' if self.fricke_eigenval < 0 else r'\(+1\)'
+
     def twist_minimal_display(self):
         if self.is_twist_minimal is None:
-            return 'unknown'
+            return 'not computed'
         if self.is_twist_minimal:
             return r'yes'
         else:
@@ -958,6 +964,8 @@ function switch_basis(btype) {
         return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
 
     def display_inner_twists(self):
+        if self.inner_twist_count < 1:
+            return "<p>Inner twists of this newform have not been computed.</p>"
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
@@ -1156,7 +1164,7 @@ function switch_basis(btype) {
         return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
-        return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else ''
+        return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else 'not computed'
 
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']

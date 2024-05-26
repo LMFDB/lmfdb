@@ -186,7 +186,7 @@ def index():
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = CMF_stats()
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
+    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-5000', '5001-10000', '10001-50000', '50001-100000', '100001-1000000')
     return render_template("cmf_browse.html",
                            info=info,
                            title="Classical modular forms",
@@ -840,7 +840,7 @@ newform_columns = SearchColumns([
                  align="center", short_title="projective image"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
-                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
+                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else ("None" if is_cm == False else "not computed"),
                       short_title="CM",
                       download_col="cm_discs"),
     MultiProcessedCol("rm", "cmf.self_twist", "RM",
@@ -1172,8 +1172,9 @@ space_columns = SearchColumns([
                       short_title="character"),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order"),
     MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension"),
-    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+    MathCol("num_forms", "cmf.galois_oribit", "Orbits", short_title="Galois orbits"),
+    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomposition", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-decomposition.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="AL-decomposition", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.mf_newspaces,
              title='Newspace search results',
@@ -1218,7 +1219,6 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
-
 @cmf.route("/FormPictures")
 def picture_page():
     t = "Pictures for classical modular forms"
@@ -1229,7 +1229,6 @@ def picture_page():
         bread=get_bread(other="Form Pictures"),
         learnmore=learnmore_list(),
     )
-
 
 def projective_image_sort_key(im_type):
     if im_type == 'A4':
@@ -1305,15 +1304,15 @@ class CMF_stats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return r'The database currently contains %s (%s of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
+        return r'The database currently contains %s (%s of) %s, and %s of their embeddings into the complex numbers. You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
 
     @lazy_attribute
     def summary(self):
-        return r"The database currently contains %s (%s of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (%s of) %s in %s %s, and %s of their embeddings into the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
     @lazy_attribute
     def buckets(self):
-        return {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
+        return {'level':['1','2-10','11-100','101-1000','1001-5000', '5001-10000','10001-50000','50001-100000','100001-1000000'],
                 'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
                 'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
                 'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
