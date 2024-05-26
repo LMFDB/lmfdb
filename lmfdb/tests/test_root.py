@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest2
 from flask import url_for
 from lmfdb.tests import LmfdbTest

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # See genus2_curves/web_g2c.py
 # See templates/space.html for how functions are called
 

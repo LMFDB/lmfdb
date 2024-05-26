@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This script is used to run verification jobs in parallel.
 For more options (such as verifying only a single check or a single object)

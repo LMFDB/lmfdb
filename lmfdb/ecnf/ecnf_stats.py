@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.app import app
 from lmfdb.utils import comma, StatsDisplay, proportioners, totaler
 from lmfdb.logger import make_logger

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest2
 from lmfdb.tests import LmfdbTest
 

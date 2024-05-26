@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # make pyflakes happy, define interface for import *
 __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',

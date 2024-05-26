@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
 from collections import defaultdict
 import bisect

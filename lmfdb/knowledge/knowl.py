@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # the basic knowledge object, with database awareness, …
 
 from datetime import datetime, timedelta

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Artin representations
 # Authors: Paul-Olivier Dehaye, John Jones
 

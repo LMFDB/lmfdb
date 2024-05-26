@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import encode_plot, names_and_urls, web_latex

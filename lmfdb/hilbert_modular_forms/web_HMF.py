@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # Class created to aid in uploading HMF data from the Magma output data files.
 # Incomplete, and currently not used for real work.

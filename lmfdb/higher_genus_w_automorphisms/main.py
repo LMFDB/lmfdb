@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about higher genus curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Nhi Ngo, Albert Ford
 # (initial code copied from John Jones Local Fields)

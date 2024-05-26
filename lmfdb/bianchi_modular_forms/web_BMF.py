@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty

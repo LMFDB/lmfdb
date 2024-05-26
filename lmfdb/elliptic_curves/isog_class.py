@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
 from lmfdb.elliptic_curves import ec_logger
