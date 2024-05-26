@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import unittest
+
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 import ssl

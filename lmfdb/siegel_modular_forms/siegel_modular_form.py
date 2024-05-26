@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 from io import BytesIO

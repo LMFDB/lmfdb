@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.app import app
 assert app # keeps pyflakes happy

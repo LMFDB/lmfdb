@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2017 by the LMFDB authors
 #

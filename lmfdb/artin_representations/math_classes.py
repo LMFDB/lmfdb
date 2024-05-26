@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,

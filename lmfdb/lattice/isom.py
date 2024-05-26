@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from sage.all import matrix, ZZ, QuadraticForm
 

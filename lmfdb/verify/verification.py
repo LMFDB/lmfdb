@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import traceback
 import time
 import os
@@ -635,7 +634,6 @@ class TableChecker():
         """
         Check that col1 is the sum of the product of the values in the columns of col2 over rows of other_table with self.table.join1 = other_table.join2.
 
-        There are some peculiarities of this method, resulting from its application to mf_subspaces.
         col1 is allowed to be a pair, in which case the difference col1[0] - col1[1] will be compared.
 
         col2 does not take value col1 as a default, since they are playing different roles.

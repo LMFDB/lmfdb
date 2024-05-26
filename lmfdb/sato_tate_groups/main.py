@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 from flask import render_template, url_for, redirect, request, abort

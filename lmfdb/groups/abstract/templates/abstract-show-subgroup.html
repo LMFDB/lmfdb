@@ -6,7 +6,9 @@
 <h2> Subgroup ($H$) information</h2>
 <p>
   <table>
-    {% if seq.subgroup is not none %}
+    {% if seq.sub.sub_missing %}
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td> ${{seq.subgroup_tex}}$</td></tr>
+    {% elif seq.subgroup is not none %}
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td></tr>
     {% else %}
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>not computed</td></tr>

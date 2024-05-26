@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r""" Class for interface with the 'field' component of the Hilbert modular forms database.
 
 Initial version (University of Warwick 2015) Aurel Page and John Cremona

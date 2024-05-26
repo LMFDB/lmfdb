@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import abort, render_template, url_for, request, redirect, make_response
 
 from lmfdb import db

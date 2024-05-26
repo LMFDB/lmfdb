@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import unittest
+
 from flask import url_for
 from lmfdb.tests import LmfdbTest
 
