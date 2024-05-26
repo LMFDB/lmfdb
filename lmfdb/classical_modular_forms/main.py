@@ -840,7 +840,7 @@ newform_columns = SearchColumns([
                  align="center", short_title="projective image"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
-                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else "None",
+                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else ("None" if is_cm == False else "not computed"),
                       short_title="CM",
                       download_col="cm_discs"),
     MultiProcessedCol("rm", "cmf.self_twist", "RM",
