@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file includes classes defining how the columns on search result pages display,
 as well as how they create content in a downloaded file.  There are two kinds of classes:

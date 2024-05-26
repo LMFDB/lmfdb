@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import cmath
 import math
 import datetime

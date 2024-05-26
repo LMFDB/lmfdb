@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # psycodict was added as a dependency on May 10, 2024; we provide a useful error message for people upgrading
 try:

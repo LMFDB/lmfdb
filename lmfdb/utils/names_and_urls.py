@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.utils.utilities import key_for_numerically_sort
 from flask import url_for
 #######################################################################

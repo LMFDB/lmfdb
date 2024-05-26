@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 # this holds all the flask-login specific logic (+ url mapping an rendering templates)
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>

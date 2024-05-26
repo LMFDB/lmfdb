@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # See genus2_curves/web_g2c.py
 # See templates/space.html for how functions are called
 
@@ -88,9 +87,9 @@ def ALdim_table(al_dims, level, weight):
     def url_sign_char(x): return "-" if x else "%2B"
     primes = ZZ(level).prime_divisors()
     num_primes = len(primes)
-    header = [r'<th>\(%s\)</th>'%p for p in primes]
+    header = [r"<th class='center'>\(%s\)</th>"%p for p in primes]
     if num_primes > 1:
-        header.append(r"<th class='right'>%s</th>"%(display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
+        header.append(r"<th class='center'>%s</th>"%(display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim</th>')
     rows = []
     fricke = [0,0]
@@ -99,10 +98,10 @@ def ALdim_table(al_dims, level, weight):
             continue
         b = list(reversed(ZZ(i).bits()))
         b = [0 for j in range(num_primes-len(b))] + b
-        row = [r'<td>\(%s\)</td>'%sign_char(x) for x in b]
+        row = [r"<td class='center'>\(%s\)</td>"%sign_char(x) for x in b]
         sign = sum(b) % 2
         if num_primes > 1:
-            row.append(r"<td class='right'>$%s$</td>"%sign_char(sign))
+            row.append(r"<td class='center'>\(%s\)</td>"%sign_char(sign))
         query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
         link = newform_search_link(r'\(%s\)'%dim, **query)
         row.append(r'<td>%s</td>'%(link))
@@ -117,8 +116,8 @@ def ALdim_table(al_dims, level, weight):
         plus_link = newform_search_link(r'\(%s\)'%fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
         minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
         minus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
-        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
-        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 
