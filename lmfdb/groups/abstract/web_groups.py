@@ -2815,7 +2815,7 @@ class WebAbstractSubgroup(WebObj):
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor())==1})
             return newgroup
-        if self.subgroup_order == 6561: 
+        if self.subgroup_order == 6561:
             gp = WebAbstractGroup(self.subgroup, None)
             if gp.source == "Missing":
                 order = self.subgroup_order
