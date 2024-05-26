@@ -1,13 +1,13 @@
 
 
 from lmfdb.tests import LmfdbTest
-import unittest2
+import unittest
 
 
 class SpellingTest(LmfdbTest):
     # this tests the spelling on the website
 
-    @unittest2.skip("Tests for 'zeroes' should be 'zeros', but fails at the moment because of other errors")
+    @unittest.skip("Tests for 'zeroes' should be 'zeros', but fails at the moment because of other errors")
     def test_zeroes_spelling(self):
         """
             'zeroes' should be 'zeros'

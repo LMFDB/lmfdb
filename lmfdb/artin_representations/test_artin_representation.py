@@ -1,5 +1,4 @@
 from lmfdb.tests import LmfdbTest
-#import unittest2
 
 class ArtinRepTest(LmfdbTest):
 
