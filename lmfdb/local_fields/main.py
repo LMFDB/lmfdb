@@ -587,15 +587,15 @@ def reliability():
 
 class LFSearchArray(SearchArray):
     noun = "field"
-    sorts = [("", "prime", ['p', 'n', 'c', 'label']),
-             ("n", "degree", ['n', 'p', 'c', 'label']),
-             ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
-             ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
-             ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
-             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
-             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
-             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
-             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'label'])]
+    sorts = [("", "prime", ['p', 'n', 'c', 'num']),
+             ("n", "degree", ['n', 'p', 'c', 'num']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'num']),
+             ("e", "ramification index", ['e', 'n', 'p', 'c', 'num']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'num']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'num']),
+             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'num']),
+             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'num']),
+             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'num'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
