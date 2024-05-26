@@ -1,4 +1,3 @@
-#-*- coding: utf-8 -*-
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 

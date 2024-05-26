@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (
     Gamma0, cached_function, dimension_new_cusp_forms,

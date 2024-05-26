@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl

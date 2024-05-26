@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from collections import defaultdict
 from flask import url_for
