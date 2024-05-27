@@ -787,7 +787,6 @@ def newform_parse(info, query):
             query['is_largest'] = True
         elif info['is_maximal_largest'] == 'notlargest':
             query['is_largest'] = False
-    parse_bool(info, query, 'is_maximal')
     parse_ints(info, query, 'hecke_ring_index')
     parse_ints(info, query, 'hecke_ring_generator_nbound')
     if 'projective_image_type' in info and not 'projective_image' in info:
