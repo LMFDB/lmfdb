@@ -780,10 +780,20 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool(info, query, 'is_self_dual')
+    if info.get('is_maximal_largest'):
+        if info['is_maximal_largest'] == 'maximal':
+            query['is_maximal'] = True
+        elif info['is_maximal_largest'] == 'largest':
+            query['is_largest'] = True
+        elif info['is_maximal_largest'] == 'notlargest':
+            query['is_largest'] = False
+    parse_bool(info, query, 'is_maximal')
     parse_ints(info, query, 'hecke_ring_index')
     parse_ints(info, query, 'hecke_ring_generator_nbound')
-    parse_noop(info, query, 'projective_image', func=str.upper)
-    parse_noop(info, query, 'projective_image_type')
+    if info.get('projective_image','').lower() in ["dn","dihedral"]:
+        query["projective_image_type"] = "Dn"
+    else:
+        parse_noop(info, query, 'projective_image', func=str.upper)
     parse_ints(info, query, 'artin_degree', name="Artin degree")
 
 def newspace_parse(info, query):
@@ -803,7 +813,7 @@ def newspace_parse(info, query):
     if info['search_type'] != 'SpaceDimensions':
         parse_ints(info, query, 'num_forms', name='Number of newforms')
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
-            # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
+            # Don't show spaces that only include dimension data but no newforms
             query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
@@ -851,6 +861,8 @@ newform_columns = SearchColumns([
                       download_col="rm_discs"),
     CheckCol("is_self_dual", "cmf.selfdual", "Self-dual", default=False),
     CheckCol("is_twist_minimal", "cmf.twist_minimal", "Twist minimal", default=False),
+    CheckCol("is_largest", "cmf.maximal", "Largest", default=False),
+    CheckCol("is_maximal", "cmf.maximal", "Maximal", default=False),
     LinkCol("minimal_twist", "cmf.minimal_twist", "Minimal twist", url_for_label, default=False),
     MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists", default=False),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*", default=False),
@@ -870,7 +882,7 @@ newform_columns = SearchColumns([
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       download_col="qexp_display")],
-    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_largest', 'is_maximal', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.mf_newforms,
@@ -1555,13 +1567,6 @@ class CMFSearchArray(SearchArray):
             example='1-10',
             example_span='1-10')
 
-        Nk2 = TextBox(
-            name='Nk2',
-            knowl='cmf.nk2',
-            label=r'\(Nk^2\)',
-            example='40-100',
-            example_span='40-100')
-
         cm = SelectBox(
             name='cm',
             options=[('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')],
@@ -1601,6 +1606,12 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.selfdual',
             label='Is self-dual')
 
+        is_maximal_largest = SelectBox(
+            name='is_maximal_largest',
+            knowl='cmf.maximal',
+            label='Is maximal/largest',
+            options=[('',''),('maximal','maximal'),('largest','largest'),('notlargest','not largest')])
+
         coefficient_ring_index = TextBox(
             name='hecke_ring_index',
             label='Coefficient ring index',
@@ -1626,19 +1637,8 @@ class CMFSearchArray(SearchArray):
             name='projective_image',
             label='Projective image',
             knowl='cmf.projective_image',
-            example='D15',
-            example_span='weight 1 only')
-
-        projective_image_type = SelectBoxNoEg(
-            name='projective_image_type',
-            knowl='cmf.projective_image',
-            label='Projective image type',
-            options=[('', ''),
-                     ('Dn', 'Dn'),
-                     ('A4', 'A4'),
-                     ('S4', 'S4'),
-                     ('A5','A5')],
-            example_span='weight 1 only')
+            example='Dn',
+            example_span='A5, D7, or Dn; weight 1 only')
 
         num_newforms = TextBox(
             name='num_forms',
@@ -1686,29 +1686,28 @@ class CMFSearchArray(SearchArray):
             [level, weight],
             [level_primes, character],
             [char_order, char_primitive],
-            [dim, analytic_rank],
-            [analytic_conductor, Nk2],
+            [dim, is_maximal_largest],
+            [analytic_conductor, analytic_rank],
             [coefficient_field, is_self_dual],
-            [inner_twist_count, is_twist_minimal],
-            [self_twist_discs, self_twist],
             [coefficient_ring_index, hecke_ring_generator_nbound],
-            [projective_image, projective_image_type],
-            [results]]
+            [self_twist_discs, self_twist],
+            [inner_twist_count, is_twist_minimal],
+            [results, projective_image]]
 
         self.refine_array = [
             [level, weight, analytic_conductor, analytic_rank, dim],
-            [level_primes, character, char_primitive, char_order, coefficient_field],
-            [self_twist, self_twist_discs, inner_twist_count, is_twist_minimal, is_self_dual],
-            [Nk2, coefficient_ring_index, hecke_ring_generator_nbound, projective_image, projective_image_type]]
+            [level_primes, character, char_primitive, char_order, is_maximal_largest],
+            [coefficient_field, self_twist, self_twist_discs, inner_twist_count, is_self_dual],
+            [coefficient_ring_index, hecke_ring_generator_nbound,  is_twist_minimal, projective_image]]
 
         self.space_array = [
-            [level, weight, analytic_conductor, Nk2, dim],
-            [level_primes, character, char_primitive, char_order, num_newforms]
+            [level, weight, analytic_conductor, dim, num_newforms],
+            [level_primes, character, char_primitive, char_order]
         ]
 
         self.sd_array = [
-            [level, weight, analytic_conductor, Nk2, hdim],
-            [level_primes, character, char_primitive, char_order, hnum_newforms]
+            [level, weight, analytic_conductor, hdim, hnum_newforms],
+            [level_primes, character, char_primitive, char_order]
         ]
 
         self.traces_array = [

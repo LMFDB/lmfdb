@@ -201,7 +201,7 @@ class CmfTest(LmfdbTest):
                 ('level=900-1000&weight=1-&projective_image=D2',
                     ['Results (26 matches)', r"\sqrt{-1}", r"\sqrt{-995}", r"\sqrt{137}"]
                     )]:
-            for s in Subsets(['has_self_twist=yes', 'has_self_twist=cm', 'has_self_twist=rm', 'projective_image_type=Dn','dim=1-4']):
+            for s in Subsets(['has_self_twist=yes', 'has_self_twist=cm', 'has_self_twist=rm', 'projective_image=Dn','dim=1-4']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
                 page = self.tc.get(s, follow_redirects=True)
                 for elt in begin[1]:
