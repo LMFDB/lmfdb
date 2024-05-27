@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Crystals
 # Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 

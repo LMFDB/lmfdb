@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # HeckeCharacters.py
 from sage.all import gp, xmrange, Integer, pari, gcd, LCM, prod
 from sage.misc.cachefunc import cached_method

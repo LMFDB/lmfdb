@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 """
 Any character object is obtained as a double inheritance of

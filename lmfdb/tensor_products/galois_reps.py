@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r"""
 
 AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014

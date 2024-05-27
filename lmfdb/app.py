@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .utils.config import get_secret_key
 import os
 from socket import gethostname

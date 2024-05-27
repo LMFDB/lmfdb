@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about elliptic curves over number Fields
 # Authors: Harald Schilly and John Cremona
 

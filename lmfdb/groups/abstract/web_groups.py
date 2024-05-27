@@ -2815,6 +2815,16 @@ class WebAbstractSubgroup(WebObj):
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor())==1})
             return newgroup
+        if self.subgroup_order == 6561:
+            gp = WebAbstractGroup(self.subgroup, None)
+            if gp.source == "Missing":
+                order = self.subgroup_order
+                newgroup = WebAbstractGroup('nolabel',
+                      data={'order': order, 'G': None, 'abelian': self.abelian,'cyclic': self.cyclic,
+                      # What if aut_label is set?
+                      'aut_group': self.aut_label, 'aut_order': None, 'sub_missing' : True,
+                      'pgroup':len(ZZ(order).abs().factor())==1})
+                return newgroup
         for prop in [
             "pgroup",
             "is_elementary",
