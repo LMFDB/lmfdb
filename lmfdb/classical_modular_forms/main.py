@@ -1698,7 +1698,7 @@ class CMFSearchArray(SearchArray):
             [level, weight, analytic_conductor, analytic_rank, dim],
             [level_primes, character, char_primitive, char_order, is_maximal_largest],
             [coefficient_field, self_twist, self_twist_discs, inner_twist_count, is_self_dual],
-            [coefficient_ring_index, hecke_ring_generator_nbound,  is_twist_minimal, projective_image]]
+            [coefficient_ring_index, hecke_ring_generator_nbound, is_twist_minimal, projective_image]]
 
         self.space_array = [
             [level, weight, analytic_conductor, dim, num_newforms],
