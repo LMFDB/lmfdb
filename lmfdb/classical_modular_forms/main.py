@@ -790,7 +790,9 @@ def newform_parse(info, query):
     parse_bool(info, query, 'is_maximal')
     parse_ints(info, query, 'hecke_ring_index')
     parse_ints(info, query, 'hecke_ring_generator_nbound')
-    if info.get('projective_image','').lower() in ["dn","dihedral"]:
+    if 'projective_image_type' in info and not 'projective_image' in info:
+        query['projective_image_type'] = info['projective_image_type']
+    elif info.get('projective_image','').lower() in ["dn","dihedral"]:
         query["projective_image_type"] = "Dn"
     else:
         parse_noop(info, query, 'projective_image', func=str.upper)
