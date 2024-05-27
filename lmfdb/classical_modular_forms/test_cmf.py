@@ -295,7 +295,6 @@ class CmfTest(LmfdbTest):
         assert not '1234.2.a.i' in page.get_data(as_text=True)
         assert '1234.2.b.c' in page.get_data(as_text=True)
 
-
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
