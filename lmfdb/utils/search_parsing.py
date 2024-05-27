@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 
 ## parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 import re

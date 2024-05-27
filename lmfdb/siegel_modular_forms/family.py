@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file provides the class Collection whose instances
 # represent the respective collections of Siegel modular forms.
 #

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
 from psycodict.encoding import Json

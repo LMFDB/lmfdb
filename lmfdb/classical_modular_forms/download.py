@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ast import literal_eval
 from flask import url_for, redirect, abort
 from lmfdb import db

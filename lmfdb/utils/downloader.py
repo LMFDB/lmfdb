@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file defines two kinds of classes used in constructing download files for the LMFDB:
 

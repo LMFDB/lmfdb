@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb.utils import prop_int_pretty
 from lmfdb.modular_curves import modcurve_logger
