@@ -18,7 +18,7 @@ from markupsafe import Markup
 from string import ascii_lowercase, digits
 from io import BytesIO
 from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
-from sage.databases.cremona import cremona_letter_code
+#from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
 from lmfdb.app import app
@@ -65,6 +65,7 @@ from .web_groups import (
     primary_to_smith,
     abelian_gp_display,
     abstract_group_display_knowl,
+    cc_data_to_gp_label,
 )
 from .stats import GroupStats
 
@@ -976,9 +977,11 @@ def get_qchar_url(label):
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
 
 
-
-def cc_data_to_gp_label(order,counter):
-    return order + '.' + cremona_letter_code(int(counter) - 1)
+#JP DELETE IN WEB_GROUPS??
+#def cc_data_to_gp_label(order,counter):
+#    if (order <= 2000 and order != 1024) or order in {3^7, 3^8, 7^4, 5^5}:  #JP MORE OPTIONS HERE
+#        return str(order) + '.' + str(counter)
+#    return str(order) + '.' + cremona_letter_code(counter - 1)
 
 #This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
 # Or returns just the label if conjugacy classes are known but not characters
@@ -1324,8 +1327,12 @@ def Power_col(i, ps):
     return MultiProcessedCol(f"powers{i}", None, f"{p}P", ["group_order", "group_counter", "powers","highlight_col"], lambda group_order, group_counter,  powers, highlight_col: get_cc_url(group_order, group_counter, powers[i], highlight_col), align="center")
 
 
+def gp_link(gp_order,gp_counter, tex_cache):
+    gp = cc_data_to_gp_label(gp_order,gp_counter)
+    return display_url_cache(gp, tex_cache)
+
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], cc_data_to_gp_label, download_col = "group_order"),
+    MultiProcessedCol("group_order", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, download_col = "group_order"), 
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
@@ -1339,8 +1346,6 @@ conjugacy_class_columns = SearchColumns([
 ],db_cols=["centralizer", "counter", "group_order", "group_counter", "label", "order", "powers", "representative", "size"])
 
 
-
-
 def cc_postprocess(res, info, query):
     # We want to get latex for groups in one query, figure out what powers to use, and create a lookup table for counter->label
     labels = set()
@@ -1351,9 +1356,9 @@ def cc_postprocess(res, info, query):
     common_support = None
     for rec in res:
 #        group = rec.get("group")
-        gp_ord = rec.get("group_order")
+        gp_order = rec.get("group_order")
         gp_counter = rec.get("group_counter")
-        group = cc_data_to_gp_label(gp_ord,gp_counter)
+        group = cc_data_to_gp_label(gp_order,gp_counter)
         gps.add(group)
 #        group_support = ZZ(group.split(".")[0]).prime_factors()
         group_support = gp_order.prime_factors()
@@ -1363,7 +1368,7 @@ def cc_postprocess(res, info, query):
             common_support = False
         for ctr in rec.get("powers", []):
             if (gp_order,gp_counter, ctr) not in counter_to_label:
-                missing[group_order,gp_counter].append(ctr)
+                missing[gp_order,gp_counter].append(ctr)
 #        for col in ["group","centralizer"]:
 #            label = rec.get(col)
 #            if label is not None:
@@ -1375,17 +1380,16 @@ def cc_postprocess(res, info, query):
             labels.add(group)
     # We use an empty list so that [Powers_col(i,...) for i in info["group_factors"]] works
     info["group_factors"] = common_support if common_support else []
-    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)\
-}}, ["label", "complex_characters_known"])}
-    highlight_col = dict()                                                                                                        
-    for rec in res:                                                                                                               
+    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
+    highlight_col = dict()
+    for rec in res:
         label = rec.get("label")
-        gp_ord = rec.get("group_order")
+        gp_order = rec.get("group_order")
         gp_counter = rec.get("group_counter")
-        rec["group"] = cc_data_to_gp_label(gp_ord,gp_counter)
+        rec["group"] = cc_data_to_gp_label(gp_order,gp_counter)
         group = rec.get("group")
-        if complex_char_known[group]:                                                                                             
-            highlight_col[(group, label)] = rec["counter"]                                                                        
+        if complex_char_known[group]:
+            highlight_col[(group, label)] = rec["counter"]
         else:
             highlight_col[(group, label)] = None 
     if missing:  #JP
@@ -1430,7 +1434,11 @@ def conjugacy_class_search(info, query={}):
     info["search_type"] = "ConjugacyClasses"
     parse_ints(info, query, "order")
     parse_ints(info, query, "size")
-    parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
+#    parse_group_label_or_order(
+#        info, query, "group", regex=abstract_group_label_regex
+#    )
+    parse_ints(info,query, "group_order")  #JP THIS IS WRONG
+#    parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
 
 
 def factor_latex(n):
@@ -2588,7 +2596,7 @@ class ConjugacyClassSearchArray(SearchArray):
     ]
     def __init__(self):
         group = TextBox(
-            name="group",
+            name="group_order",
             label="Group",
             knowl="group.name",
             example="128.207",
@@ -2675,11 +2683,13 @@ def cc_data(gp, label, typ="complex", representative=None):
     if wacc.centralizer is None:
         ans +="<br>Centralizer: not computed"
     else:
-        centralizer = f"{wacc.group}.{wacc.centralizer}"
+        group = cc_data_to_gp_label(wacc.group_order,wacc.group_counter) 
+        centralizer = f"{group}.{wacc.centralizer}"
         wcent = WebAbstractSubgroup(centralizer)
         ans += "<br>Centralizer: {}".format(
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
+        
 
     if representative:
         ans += "<br>Representative: "+representative

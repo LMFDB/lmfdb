@@ -25,7 +25,7 @@ from sage.all import (
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.misc.cachefunc import cached_function, cached_method
-from sage.databases.cremona import class_to_int
+from sage.databases.cremona import class_to_int, cremona_letter_code
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -36,6 +36,7 @@ from lmfdb.utils import (
     pos_int_and_factor,
     raw_typeset,
 )
+#from lmfdb.groups.abstract.main import cc_data_to_gp_label
 from .circles import find_packing
 
 
@@ -96,8 +97,16 @@ def group_pretty_image(label):
     # we should not get here
 
 def gp_label_to_cc_data(gp):
-    gp_order, gp_counter = gp.split(".") 
-    return gp_order, class_to_int(gp_counter +1)
+    gp_ord, gp_counter = gp.split(".")
+    gp_order = int(gp_ord)
+    if (gp_order <= 2000 and gp_order != 1024) or gp_order in {3^7, 3^8, 7^4, 5^5}:  #JP MORE OPTIONS HERE
+        return gp_order, int(gp_counter)
+    return gp_order, class_to_int(gp_counter) + 1
+
+def cc_data_to_gp_label(order,counter):
+    if (order <= 2000 and order != 1024) or order in {3^7, 3^8, 7^4, 5^5}:  #JP MORE OPTIONS HERE
+        return str(order) + '.' + str(counter)
+    return str(order) + '.' + cremona_letter_code(counter - 1)
 
     
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
@@ -3021,11 +3030,10 @@ class WebAbstractSubgroup(WebObj):
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
     table = db.gps_conj_classes  #JP HERE
-
     def __init__(self, group, label, data=None):
         if data is None:
             group_order, group_counter = gp_label_to_cc_data(group)
-            data = db.gps_groups_cc.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) #JP
+            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) #JP
         WebObj.__init__(self, label, data)
         self.force_repr_elt = False
 
@@ -3041,7 +3049,8 @@ class WebAbstractConjClass(WebObj):
         force_string = ''
         if self.force_repr_elt:
             force_string = "%7C"+str(self.representative)
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
+        group = cc_data_to_gp_label(self.group_order, self.group_counter)
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
 
 class WebAbstractDivision():
     def __init__(self, group, label, classes):
