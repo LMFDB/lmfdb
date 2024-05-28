@@ -76,10 +76,12 @@
   	<td> {{ KNOWL('cmf.defining_polynomial',title='Defining polynomial') }}: </td>
   	<td>{{ newform.field_poly_display | safe }}</td>
   </tr>
-  <tr>
-    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
-    <td> {{ newform.ring_display() | safe }}</td>
-  </tr>
+    {% if newform.hecke_ring_generator_nbound %}
+    <tr>
+      <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
+      <td> {{ newform.ring_display() | safe }}</td>
+    </tr>
+    {% endif %}
   {% elif newform.dim == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
@@ -103,7 +105,7 @@
   {% if newform.char_order == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
-    <td>\({{ newform.fricke_eigenval }}\)</td>
+    <td>{{ newform.fricke_eigenval_display() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.projective_image %}
@@ -239,7 +241,7 @@ function show_qexp(qstyle) {
 </div>
 {% else %}
 <h2> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
-<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('cmf.trace_form', title='trace expansion') }}.</p>
+<p>The algebraic \(q\)-expansion of this newform has not been computed, but we have computed the {{ KNOWL('cmf.trace_form', title='trace expansion') }}.</p>
 
 <form id="qexp">
   <table><tr><td>

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 from collections import Counter
@@ -962,11 +961,12 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
+    _default = ["level", "index", "genus", "coarse_class_num", "coarse_level", "coarse_num", "fine_num"]
     sorts = [
-        ("", "level", ["level", "index", "genus", "label"]),
-        ("index", "index", ["index", "level", "genus", "label"]),
-        ("genus", "genus", ["genus", "level", "index", "label"]),
-        ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
+        ("", "level", _default),
+        ("index", "index", ["index", "level"] + _default[2:]),
+        ("genus", "genus", ["genus"] + _default[:2] + _default[3:]),
+        ("rank", "rank", ["rank", "genus"] + _default[:2] + _default[3:]),
     ]
     null_column_explanations = {
         'simple': False,

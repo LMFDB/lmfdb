@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file provides an interface for logged in users to upload data for approval by LMFDB editors.
 

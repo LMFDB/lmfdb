@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-import unittest2
+import unittest
 
 from . import cmf_logger
 cmf_logger.setLevel(100)
@@ -77,7 +76,7 @@ class CmfTest(LmfdbTest):
         assert '10.10.b.a' in page.get_data(as_text=True)
         assert '2580' in page.get_data(as_text=True)
 
-    @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
+    @unittest.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
         from sage.all import ZZ
         for Nk2 in range(1, 2001):
@@ -164,7 +163,6 @@ class CmfTest(LmfdbTest):
         assert "The newform 100.2.z.a is not in the database" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-', follow_redirects=True)
         assert "No matches" in page.get_data(as_text=True)
-        assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
         assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)
 
@@ -274,6 +272,28 @@ class CmfTest(LmfdbTest):
             for e in range(1, 13):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
                 assert "Newform orbit 38.9.d.a" in page.get_data(as_text=True)
+
+    def test_maximal(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2")
+        assert '15 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=maximal")
+        assert 'unique match' in page.get_data(as_text=True)
+        assert not '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert not '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=largest")
+        assert '5 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert not '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=notlargest")
+        assert '10 matches' in page.get_data(as_text=True)
+        assert not '1234.2.a.h' in page.get_data(as_text=True)
+        assert not '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' in page.get_data(as_text=True)
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
@@ -555,9 +575,7 @@ class CmfTest(LmfdbTest):
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)
         assert ('mf_newspaces' in data and 'num_forms' in data
-                and 'mf_subspaces' in data and 'sub_mult' in data
-                and 'mf_newspace_portraits' in data and "data:image/png;base64" in data
-                and 'mf_hecke_newspace_traces' in data and 'trace_an' in data)
+                and 'mf_newspace_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a').get_data(as_text=True)
         assert ('mf_newforms' in data and 'field_disc_factorization' in data and

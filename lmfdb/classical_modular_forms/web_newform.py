@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
 from collections import defaultdict
 import bisect
@@ -8,7 +7,7 @@ import yaml
 
 from flask import url_for
 from lmfdb.characters.TinyConrey import get_sage_genvalues, ConreyCharacter
-from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
+from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd, previous_prime,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
@@ -180,9 +179,15 @@ class WebNewform():
         self.qexp_converted = False  # set to True if the q-expansion is rewritten in terms of a root of unity
         self.single_generator = None
         self.has_exact_qexp = False
+        self.hecke_ring_cyclotomic_generator = None # in case there is no data in mf_hecke_nf
         if self.embedding_label is None:
             hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
-            eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
+            if self.dim == 1:
+                # avoid using mf_hecke_nf when the dimension is 1
+                vals = ConreyCharacter(self.level, db.char_dirichlet.lookup("%s.%s"%(self.level,self.char_orbit_label),projection="first")).values_gens
+                eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces }
+            else:
+                eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
             if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
                 for attr in hecke_cols:
@@ -277,7 +282,7 @@ class WebNewform():
             self.properties += [('RM discriminant', disc)]
         elif self.weight == 1:
             self.properties += [('CM/RM', 'no')]
-        else:
+        elif self.inner_twist_count == 1:
             self.properties += [('CM', 'no')]
         if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
@@ -667,9 +672,14 @@ class WebNewform():
         else:
             return r'multiple of %s' % fac
 
+    def fricke_eigenval_display(self):
+        if self.fricke_eigenval is None:
+            return "not computed"
+        return r'\(-1\)' if self.fricke_eigenval < 0 else r'\(+1\)'
+
     def twist_minimal_display(self):
         if self.is_twist_minimal is None:
-            return 'unknown'
+            return 'not computed'
         if self.is_twist_minimal:
             return r'yes'
         else:
@@ -958,6 +968,8 @@ function switch_basis(btype) {
         return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
 
     def display_inner_twists(self):
+        if self.inner_twist_count < 1:
+            return "<p>Inner twists of this newform have not been computed.</p>"
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
@@ -1156,7 +1168,7 @@ function switch_basis(btype) {
         return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
-        return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else ''
+        return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else 'not computed'
 
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
@@ -1195,7 +1207,7 @@ function switch_basis(btype) {
                         return []
                     out = [0]*(max(e for _, e in data) + 1)
                     for c, e in data:
-                        out[e] = c
+                        out[e] += c
                     return out
                 coeffs = [to_list(data) for data in self.qexp[:prec]]
                 return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')

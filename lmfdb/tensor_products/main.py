@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 

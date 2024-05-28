@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about adding a Knowledge Base to the LMFDB website.
 # referencing content, dynamically inserting information into the website, …
 #
