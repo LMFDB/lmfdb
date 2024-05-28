@@ -1,4 +1,3 @@
-
 import re
 
 import time
@@ -48,7 +47,7 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
 )
-from lmfdb.utils.search_parsing import parse_multiset
+from lmfdb.utils.search_parsing import (parse_multiset, search_parser)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
@@ -65,6 +64,7 @@ from .web_groups import (
     abelian_gp_display,
     abstract_group_display_knowl,
     cc_data_to_gp_label,
+    gp_label_to_cc_data,
 )
 from .stats import GroupStats
 
@@ -146,6 +146,19 @@ def subgroup_label_is_valid(lab):
 def label_is_valid(lab):
     return abstract_group_label_regex.fullmatch(lab)
 
+
+#parser for conjugacy class search 
+@search_parser(clean_info=True, prep_ranges=True)
+def parse_group(inp, query, qfield):
+    if label_is_valid(inp):
+        gp_ord, gp_count = gp_label_to_cc_data(inp)
+        query["group_order"] = gp_ord
+        query["group_counter"] = gp_count
+    elif re.fullmatch(r'\d+',inp):
+        query["group_order"] = int(inp)
+    else:
+        raise ValueError("It must be a valid group label or order of the group. ")
+        
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -976,12 +989,6 @@ def get_qchar_url(label):
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
 
 
-#JP DELETE IN WEB_GROUPS??
-#def cc_data_to_gp_label(order,counter):
-#    if (order <= 2000 and order != 1024) or order in {3^7, 3^8, 7^4, 5^5}:  #JP MORE OPTIONS HERE
-#        return str(order) + '.' + str(counter)
-#    return str(order) + '.' + cremona_letter_code(counter - 1)
-
 #This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
 # Or returns just the label if conjugacy classes are known but not characters
 def get_cc_url(gp_order, gp_counter, label, highlight):
@@ -1331,7 +1338,7 @@ def gp_link(gp_order,gp_counter, tex_cache):
     return display_url_cache(gp, tex_cache)
 
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group_order", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, download_col = "group_order"), 
+    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, download_col = "group_order"), 
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
@@ -1354,12 +1361,10 @@ def cc_postprocess(res, info, query):
     missing = defaultdict(list)
     common_support = None
     for rec in res:
-#        group = rec.get("group")
         gp_order = rec.get("group_order")
         gp_counter = rec.get("group_counter")
         group = cc_data_to_gp_label(gp_order,gp_counter)
         gps.add(group)
-#        group_support = ZZ(group.split(".")[0]).prime_factors()
         group_support = gp_order.prime_factors()
         if common_support is None:
             common_support = group_support
@@ -1368,10 +1373,6 @@ def cc_postprocess(res, info, query):
         for ctr in rec.get("powers", []):
             if (gp_order,gp_counter, ctr) not in counter_to_label:
                 missing[gp_order,gp_counter].append(ctr)
-#        for col in ["group","centralizer"]:
-#            label = rec.get(col)
-#            if label is not None:
-#                labels.add(label)
         label = rec.get("centralizer")
         if label is not None:
             labels.add(label)
@@ -1390,16 +1391,13 @@ def cc_postprocess(res, info, query):
         if complex_char_known[group]:
             highlight_col[(group, label)] = rec["counter"]
         else:
-            highlight_col[(group, label)] = None 
-    if missing:  #JP
-        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for (group_order,group_counter, counters) in missing.items()]}, ["group_order", "group_counter",  "counter", "label"]):
-            #group = rec.get("group")
+            highlight_col[(group, label)] = None
+    if missing:
+        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for ((group_order,group_counter), counters) in missing.items()]}, ["group_order", "group_counter",  "counter", "label"]):
             gp_ord = rec.get("group_order")
             gp_counter = rec.get("group_counter")
-#            rec["group"] = cc_data_to_gp_label(gp_ord,gp_counter)
             group = cc_data_to_gp_label(gp_ord,gp_counter)
             label = rec.get("label")
-#            counter_to_label[rec["group"],rec["counter"]] = rec["label"]
             counter_to_label[rec["group_order"],rec["group_counter"], rec["counter"]] = rec["label"]
             if complex_char_known[group]:
                 highlight_col[(group, label)] = rec["counter"]
@@ -1428,16 +1426,12 @@ class Conjugacy_class_download(Downloader):
     learnmore=learnmore_list,
     url_for_label=None   # not pages for conjugacy classes
 )
-
 def conjugacy_class_search(info, query={}):
     info["search_type"] = "ConjugacyClasses"
     parse_ints(info, query, "order")
     parse_ints(info, query, "size")
-#    parse_group_label_or_order(
-#        info, query, "group", regex=abstract_group_label_regex
-#    )
-    parse_ints(info,query, "group_order")  #JP THIS IS WRONG
-#    parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
+    parse_group(info,query, "group")
+
 
 
 def factor_latex(n):
@@ -2591,14 +2585,14 @@ class ComplexCharSearchArray(SearchArray):
 
 
 class ConjugacyClassSearchArray(SearchArray):
-    sorts = [("", "group_order", ['group_order','group_counter','order','size']),("", "order", ['order', 'size']),
+    sorts = [("", "group", ['group_order','group_counter','order','size']),("", "order", ['order', 'group_order', 'group_counter','size']),
     ]
     def __init__(self):
         group = TextBox(
-            name="group_order",
+            name="group",
             label="Group",
             knowl="group.name",
-            example="128.207",
+            example="128.207, or 12",
         )
         order = TextBox(
             name="order",
@@ -2618,7 +2612,6 @@ class ConjugacyClassSearchArray(SearchArray):
         self.refine_array = [
             [group,order,size]
         ]
-        
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ConjugacyClasses", "Search again")]  

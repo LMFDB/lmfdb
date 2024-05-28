@@ -14,6 +14,7 @@ from sage.all import (
     GF,
     Zmod,
     factor,
+    magma,
     matrix,
     latex,
     lazy_attribute,
@@ -36,7 +37,6 @@ from lmfdb.utils import (
     pos_int_and_factor,
     raw_typeset,
 )
-#from lmfdb.groups.abstract.main import cc_data_to_gp_label
 from .circles import find_packing
 
 
@@ -96,17 +96,20 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
-def gp_label_to_cc_data(gp):
+
+# Two functions below are for conjugacy class searches
+def gp_label_to_cc_data(gp): 
     gp_ord, gp_counter = gp.split(".")
     gp_order = int(gp_ord)
-    if (gp_order <= 2000 and gp_order != 1024) or gp_order in {3^7, 3^8, 7^4, 5^5}:  #JP MORE OPTIONS HERE
+    if re.fullmatch(r'\d+',gp_counter):
         return gp_order, int(gp_counter)
-    return gp_order, class_to_int(gp_counter) + 1
+    return gp_order, class_to_int(gp_counter)
+
 
 def cc_data_to_gp_label(order,counter):
-    if (order <= 2000 and order != 1024) or order in {3^7, 3^8, 7^4, 5^5}:  #JP MORE OPTIONS HERE
+    if magma.IsInSmallGroupDatabase(order):  #Determine if we use numbers or letters for counter  
         return str(order) + '.' + str(counter)
-    return str(order) + '.' + cremona_letter_code(counter - 1)
+    return str(order) + '.' + cremona_letter_code(counter)  
 
     
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
@@ -579,7 +582,7 @@ class WebAbstractGroup(WebObj):
         return len(self.conjugacy_classes)
 
     @lazy_attribute
-    def cc_known(self):  #JP
+    def cc_known(self): 
         return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     
@@ -1344,7 +1347,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter})  #JP
+            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter}) 
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -3039,11 +3042,11 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_conj_classes  #JP HERE
+    table = db.gps_conj_classes 
     def __init__(self, group, label, data=None):
         if data is None:
             group_order, group_counter = gp_label_to_cc_data(group)
-            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) #JP
+            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) 
         WebObj.__init__(self, label, data)
         self.force_repr_elt = False
 
