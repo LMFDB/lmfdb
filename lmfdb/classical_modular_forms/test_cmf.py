@@ -273,6 +273,28 @@ class CmfTest(LmfdbTest):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
                 assert "Newform orbit 38.9.d.a" in page.get_data(as_text=True)
 
+    def test_maximal(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2")
+        assert '15 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=maximal")
+        assert 'unique match' in page.get_data(as_text=True)
+        assert not '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert not '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=largest")
+        assert '5 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert not '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=notlargest")
+        assert '10 matches' in page.get_data(as_text=True)
+        assert not '1234.2.a.h' in page.get_data(as_text=True)
+        assert not '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' in page.get_data(as_text=True)
+
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)

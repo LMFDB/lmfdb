@@ -7,7 +7,7 @@ import yaml
 
 from flask import url_for
 from lmfdb.characters.TinyConrey import get_sage_genvalues, ConreyCharacter
-from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
+from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd, previous_prime,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
@@ -182,7 +182,12 @@ class WebNewform():
         self.hecke_ring_cyclotomic_generator = None # in case there is no data in mf_hecke_nf
         if self.embedding_label is None:
             hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
-            eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
+            if self.dim == 1:
+                # avoid using mf_hecke_nf when the dimension is 1
+                vals = ConreyCharacter(self.level, db.char_dirichlet.lookup("%s.%s"%(self.level,self.char_orbit_label),projection="first")).values_gens
+                eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces }
+            else:
+                eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
             if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
                 for attr in hecke_cols:
@@ -1202,7 +1207,7 @@ function switch_basis(btype) {
                         return []
                     out = [0]*(max(e for _, e in data) + 1)
                     for c, e in data:
-                        out[e] = c
+                        out[e] += c
                     return out
                 coeffs = [to_list(data) for data in self.qexp[:prec]]
                 return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
