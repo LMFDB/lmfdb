@@ -14,7 +14,6 @@ from sage.all import (
     GF,
     Zmod,
     factor,
-    magma,
     matrix,
     latex,
     lazy_attribute,
@@ -22,6 +21,7 @@ from sage.all import (
     lcm,
     is_prime,
     cartesian_product_iterator,
+    exists,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
@@ -97,7 +97,7 @@ def group_pretty_image(label):
     # we should not get here
 
 
-# Two functions below are for conjugacy class searches
+# Functions below are for conjugacy class searches
 def gp_label_to_cc_data(gp): 
     gp_ord, gp_counter = gp.split(".")
     gp_order = int(gp_ord)
@@ -106,8 +106,33 @@ def gp_label_to_cc_data(gp):
     return gp_order, class_to_int(gp_counter)
 
 
+# mimics magma IsInSmallGroupDatabase
+def in_small_gp_db(order):
+    if order == 1024:
+        return False
+    if order <= 2000  or  order in {2187, 6561, 3125, 2401}:
+        return True
+    f = factor(order)
+    if all(f[i][1] == 1 and f[i][0] < 1073741824 for i in range(len(f))):
+        return True     
+    if len(f) == 2:
+        pairs, n = exists((i for i in {0,1}), lambda i: f[i][1] == 1)
+        if pairs:
+            p = f[1-n] 
+            if ( p[1] <= 2 or p[0] == 2  and  p[1] <= 8
+                  or p[0] == 3  and  p[1] <= 6
+                  or p[0] == 5  and  p[1] <= 5
+                  or p[0] == 7  and  p[1] <= 4 ):
+                return True
+    if len(f) <= 3 and sum([p[1] for p in f]) == 4:
+        return True
+    if len(f) == 1 and f[0,1] <= 7:
+        return True
+    return False
+
+
 def cc_data_to_gp_label(order,counter):
-    if magma.IsInSmallGroupDatabase(order):  #Determine if we use numbers or letters for counter  
+    if in_small_gp_db(order):
         return str(order) + '.' + str(counter)
     return str(order) + '.' + cremona_letter_code(counter)  
 

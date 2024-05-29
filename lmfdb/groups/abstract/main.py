@@ -16,7 +16,6 @@ from markupsafe import Markup
 from string import ascii_lowercase, digits
 from io import BytesIO
 from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
-#from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
 from lmfdb.app import app
@@ -2675,7 +2674,7 @@ def cc_data(gp, label, typ="complex", representative=None):
     if wacc.centralizer is None:
         ans +="<br>Centralizer: not computed"
     else:
-        group = cc_data_to_gp_label(wacc.group_order,wacc.group_counter) 
+        group = cc_data_to_gp_label(wacc.group_order,wacc.group_counter)
         centralizer = f"{group}.{wacc.centralizer}"
         wcent = WebAbstractSubgroup(centralizer)
         ans += "<br>Centralizer: {}".format(
