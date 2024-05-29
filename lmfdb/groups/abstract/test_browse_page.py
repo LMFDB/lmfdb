@@ -570,8 +570,8 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that character links work
         """
-        self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highighted below.")
-        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highighted below.")
+        self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highlighted below.")
+        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highlighted below.")
 
     def test_conj_class_search(self):
         r"""
