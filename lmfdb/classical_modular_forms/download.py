@@ -1,8 +1,10 @@
 from ast import literal_eval
+from sage.all import prime_range, previous_prime
 from flask import url_for, redirect, abort
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.classical_modular_forms.web_newform import WebNewform
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
@@ -15,14 +17,22 @@ class CMF_download(Downloader):
 
     def _get_hecke_nf(self, label):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
+        print(label)
         data = db.mf_hecke_nf.lucky({'label':label}, proj)
-        if not data:
-            return None
+        print(data)
+        if data is None:
+            f = db.mf_newforms.lookup(label,projection=["level","char_orbit_label","dim","traces"])
+            if f["dim"]==1:
+                vals = ConreyCharacter(f["level"], db.char_dirichlet.lookup("%s.%s"%(f["level"],f["char_orbit_label"]),projection="first")).values_gens
+                vals = [[v[0],[1] if v[1]==0 else [-1]] for v in vals]
+                aps = [[f["traces"][p-1]] for p in prime_range(len(f["traces"])+1)]
+                data = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'field_poly': [0,1], 'maxp': previous_prime(len(f["traces"])), 'ap': aps }
+            else:
+                return None
         # Make up for db_backend currently deleting Nones
         for elt in proj:
             if elt not in data:
                 data[elt] = None
-
         return data
 
     def _get_traces(self, label):
@@ -142,7 +152,7 @@ class CMF_download(Downloader):
             lang = self.languages.get(lang, self.languages['sage'])
         hecke_nf = self._get_hecke_nf(label)
         if hecke_nf is None:
-            return abort(404, "No q-expansion found for %s" % label)
+            return abort(404, "q-expansion not available for newform %s" % label)
 
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
@@ -509,7 +519,7 @@ class CMF_download(Downloader):
                 '    // 1/(1 - a_p T + p^(weight - 1) * char(p) T^2) = 1 + a_p T + a_{p^2} T^2 + ...',
                 '    R<T> := PowerSeriesRing(FXY : Precision := log_prec + 1);',
                 '    recursion := Coefficients(1/(1 - X*T + Y*T^2));',
-                '    coeffs := [F!0: i in [1..(prec+1)]];',
+                '    coeffs := [F!0: i in [1..prec]];',
                 '    coeffs[1] := 1; //a_1',
                 '    for i := 1 to #primes do',
                 '        p := primes[i];',
