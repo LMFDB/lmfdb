@@ -988,7 +988,7 @@ def get_qchar_url(label):
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
 
 
-#This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
+# This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
 # Or returns just the label if conjugacy classes are known but not characters
 def get_cc_url(gp_order, gp_counter, label, highlight):
     gplabel =  cc_data_to_gp_label(gp_order, gp_counter)
@@ -1008,6 +1008,10 @@ def field_knowl(fld):
     else:
         return wnf.knowl()
 
+
+# This function returns a label for the conjugacy class search page for a group
+def display_cc_url(numb,gp):
+    return f'<a href = "/Groups/Abstract/?group={gp}&search_type=ConjugacyClasses">{numb}</a>'
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -1035,7 +1039,7 @@ group_columns = SearchColumns([
     MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length", default=False),
     MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length", default=False),
     MathCol("rank", "group.rank", "Rank", default=False),
-    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", short_title="conjugacy classes"),
+    MultiProcessedCol("number_cojugacy_classes","group.conjugacy_class",r"$\card{\mathrm{conj}(G)}$",["number_conjugacy_classes","label"], display_cc_url, download_col="number_conjugacy_classes", align="center"),
     MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups", default=False),
     MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes", default=False),
     MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups", default=False),
@@ -1242,9 +1246,11 @@ def indicator_type(strg):
     strg = strg.replace("S","-1")
     return strg
 
-def char_to_sub(short_label, group):
+def char_to_sub(short_label, group, as_latex = None):
     if short_label:
         full_label = f"{group}.{short_label}"
+        if as_latex:
+            return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">${as_latex}$</a>'
         return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
     else:
         return "not computed"
@@ -1325,6 +1331,8 @@ def complex_char_search(info, query={}):
 #need mathmode for MultiProcessedCol
 def cc_repr(label,code):
     gp = WebAbstractGroup(label)
+    if gp.representations.get("Lie") and gp.representations["Lie"][0]["family"][0] == "P" and gp.order < 2000:
+        return ""   #Problem with PGL, PSL, etc
     return "$" + gp.decode(code,as_str= True) + "$"
 
 def Power_col(i, ps):
@@ -1337,11 +1345,11 @@ def gp_link(gp_order,gp_counter, tex_cache):
     return display_url_cache(gp, tex_cache)
 
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, download_col = "group_order"), 
+    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download = lambda group: group), 
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col = "label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
-    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group"], char_to_sub, download_col = "centralizer"),
+    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col = "centralizer"),
     ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
              lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
              contingent=lambda info: info["group_factors"],
@@ -1351,10 +1359,12 @@ conjugacy_class_columns = SearchColumns([
 ],db_cols=["centralizer", "counter", "group_order", "group_counter", "label", "order", "powers", "representative", "size"])
 
 
+
 def cc_postprocess(res, info, query):
     # We want to get latex for groups in one query, figure out what powers to use, and create a lookup table for counter->label
     labels = set()
     gps = set()
+    centralizers = set()
     highlight_col = dict()
     counter_to_label = {(rec["group_order"],rec["group_counter"], rec["counter"]): rec["label"] for rec in res}
     missing = defaultdict(list)
@@ -1375,11 +1385,16 @@ def cc_postprocess(res, info, query):
         label = rec.get("centralizer")
         if label is not None:
             labels.add(label)
+            centralizers.add(group + "." + label)
         if group is not None:
             labels.add(group)
     # We use an empty list so that [Powers_col(i,...) for i in info["group_factors"]] works
+    if len(gps) == 1:  # add a message about what type representatives are
+        gp = WebAbstractGroup(list(gps)[0])
+        info["one_group"] = gp.repr_strg(other_page = True)
     info["group_factors"] = common_support if common_support else []
     complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
+    centralizer_data = {(rec["ambient"], rec["short_label"]): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["ambient","short_label","subgroup_tex"])}
     highlight_col = dict()
     for rec in res:
         label = rec.get("label")
@@ -1387,6 +1402,10 @@ def cc_postprocess(res, info, query):
         gp_counter = rec.get("group_counter")
         rec["group"] = cc_data_to_gp_label(gp_order,gp_counter)
         group = rec.get("group")
+        if (group,rec["centralizer"]) in centralizer_data:
+            rec["sub_latex"] = centralizer_data[(group,rec["centralizer"])]
+        else:
+            rec["sub_latex"] = None
         if complex_char_known[group]:
             highlight_col[(group, label)] = rec["counter"]
         else:
@@ -1404,7 +1423,6 @@ def cc_postprocess(res, info, query):
                 highlight_col[(group, label)] = None   
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
-        rec["group"] = cc_data_to_gp_label(rec.get("group_order"),rec.get("group_counter"))
         rec["tex_cache"] = tex_cache
         rec["powers"] = [counter_to_label[rec["group_order"], rec["group_counter"], ctr] for ctr in rec["powers"]]
         rec["highlight_col"] = highlight_col
@@ -1430,7 +1448,6 @@ def conjugacy_class_search(info, query={}):
     parse_ints(info, query, "order")
     parse_ints(info, query, "size")
     parse_group(info,query, "group")
-
 
 
 def factor_latex(n):
@@ -1820,7 +1837,7 @@ def gp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Abstract group data - {label}"
-    return datapage(label, ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", "group", "group", "group", "ambient"])
+    return datapage(label, ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  #JP check "label" right for gps_conj_classes
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
@@ -2584,8 +2601,9 @@ class ComplexCharSearchArray(SearchArray):
 
 
 class ConjugacyClassSearchArray(SearchArray):
-    sorts = [("", "group", ['group_order','group_counter','order','size']),("", "order", ['order', 'group_order', 'group_counter','size']),
+    sorts = [("", "group", ['group_order','group_counter','order','size']),("order", "order", ['order', 'group_order', 'group_counter','size']),
     ]
+    
     def __init__(self):
         group = TextBox(
             name="group",

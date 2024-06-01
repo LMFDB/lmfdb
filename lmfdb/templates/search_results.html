@@ -14,6 +14,13 @@
 {# This core is used in some classical modular forms pages to include lists of newforms #}
 {% include 'search_results_table.html' %}
 
+
+{# This part is for showing presentations in abstract group conjugacy class searches #}
+{% if info.one_group is defined %}
+{{info.one_group | safe}}
+<br><br>
+{% endif %}
+
 {% include 'forward_back.html' %}
 {% if info.columns.dummy_download %}
   {% include 'dummy_download_search_results.html' %}

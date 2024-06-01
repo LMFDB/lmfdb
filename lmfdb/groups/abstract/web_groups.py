@@ -126,7 +126,7 @@ def in_small_gp_db(order):
                 return True
     if len(f) <= 3 and sum([p[1] for p in f]) == 4:
         return True
-    if len(f) == 1 and f[0,1] <= 7:
+    if len(f) == 1 and f[0][1] <= 7:
         return True
     return False
 
@@ -607,7 +607,9 @@ class WebAbstractGroup(WebObj):
         return len(self.conjugacy_classes)
 
     @lazy_attribute
-    def cc_known(self): 
+    def cc_known(self):
+#        if self.representations.get("Lie") and self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000:
+#            return False   # problem with PGL, PSL, etc.
         return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     
@@ -1906,7 +1908,7 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Perm":
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
-            if code == 0:
+            if code == 0 and as_str:
                 return "1"
             return self.decode_as_pcgs(code, as_str=as_str)
         else:
@@ -2106,6 +2108,7 @@ class WebAbstractGroup(WebObj):
     def representation_line(self, rep_type, skip_head=False):
         # TODO: Add links to searches for other representations when available
         # skip_head is used for matrix groups, where we only include the header for the first
+        # or for PC groups if not on the same page
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
@@ -2114,10 +2117,18 @@ class WebAbstractGroup(WebObj):
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
-            pres_raw=self.presentation_raw()
-            pres = raw_typeset(pres_raw,compress_pres(pres))
+            if not skip_head:  #add copy button in certain cases
+                pres_raw=self.presentation_raw()
+                pres = raw_typeset(pres_raw,compress_pres(pres))
+            else:
+                pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
-                pres = "Abelian group " + pres
+                if skip_head:
+                    pres = " of the abelian group " + pres 
+                else:
+                    pres = "Abelian group " + pres
+            if skip_head:
+                return f'{pres} .'  # for repr_strg
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -2508,11 +2519,11 @@ class WebAbstractGroup(WebObj):
             d = data["d"]
             return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
-            rep_str =  "Elements of the group are displayed as words in the generators from the presentation given"
-            if other_page:
-                return rep_str + " in the Construction section of this group's <a href='%s'>main page</a>." % url_for(".by_label", label=self.label)
+            rep_str =  "Elements of the group are displayed as words in the presentation"
+            if other_page: 
+                return rep_str + self.representation_line("PC", skip_head = True)
             else:
-                return rep_str + " above."
+                return rep_str + " generators from the presentation above."
         elif rep_type in ["GLFp", "GLFq", "GLZN", "GLZq", "GLZ"]:
             d = data["d"]
             if rep_type == "GLFp":

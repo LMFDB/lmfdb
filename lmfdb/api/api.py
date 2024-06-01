@@ -388,7 +388,10 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     search_schema = {}
     extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
-        q = {col: label}
+        if type(col) == list:  # Needed for conjugacy class table in abstract groups
+            q = dict(zip(col, label.split(".")))  
+        else:
+            q = {col: label}
         coll = db[table]
         try:
             data.append(list(coll.search(q, projection=3, sort=sort)))
