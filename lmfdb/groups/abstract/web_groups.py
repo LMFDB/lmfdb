@@ -2521,7 +2521,7 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "PC":
             rep_str =  "Elements of the group are displayed as words in the presentation"
             if other_page: 
-                return rep_str + self.representation_line("PC", skip_head = True)
+                return rep_str + self.representation_line("PC", skip_head=True)
             else:
                 return rep_str + " generators from the presentation above."
         elif rep_type in ["GLFp", "GLFq", "GLZN", "GLZq", "GLZ"]:
