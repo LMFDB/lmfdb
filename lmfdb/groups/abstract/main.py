@@ -1346,17 +1346,18 @@ def gp_link(gp_order,gp_counter, tex_cache):
     return display_url_cache(gp, tex_cache)
 
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download = lambda group: group), 
-    MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col = "label"),
+    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download=lambda group_order, group_counter, tex_cache: f"{group_order}.{group_counter}"),
+    MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
-    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col = "centralizer"),
+    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
     ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
              lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
-             contingent=lambda info: info["group_factors"],
+             contingent=lambda info: info.get("group_factors",True), # group_factors not present when downloading
              orig=["powers"],
+             download_together=True,
              download_col="powers"),
-    MultiProcessedCol("representative","group.repr_explain","Representative",["group","representative"], cc_repr, download_col = "representative"),
+    MultiProcessedCol("representative","group.repr_explain","Representative",["group","representative"], cc_repr, download_col="representative"),
 ],db_cols=["centralizer", "counter", "group_order", "group_counter", "label", "order", "powers", "representative", "size"])
 
 

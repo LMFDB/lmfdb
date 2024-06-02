@@ -456,31 +456,35 @@ class ColGroup(SearchCol):
 
     def __init__(self, name, knowl, title, subcols,
                  contingent=lambda info: True, orig=None,
-                 align="center", **kwds):
+                 align="center", download_together=False, **kwds):
         if orig is None:
             orig = sum([sub.orig for sub in subcols], [])
         super().__init__(name, knowl, title, align=align, orig=orig, contingent=contingent, **kwds)
         self.subcols = subcols
+        self.download_together = download_together
         # A more complicated grouping could add more header rows, but the examples we have only need 2
         self.height = 2
 
     def show(self, info, rank=None):
         if self.contingent(info):
-            if callable(self.subcols):
-                subcols = self.subcols(info)
-            else:
-                subcols = self.subcols
-            n = 0
-            for sub in subcols:
-                if sub.name != self.name and "colgroup" not in sub.th_class:
-                    sub.th_class += f" colgroup-{self.name}"
-                if sub.default(info):
-                    n += 1
-            self.th_content = f" colspan={n}"
-            if rank is None or rank > 0:
-                yield from subcols
-            else:
+            if self.download_together:
                 yield self
+            else:
+                if callable(self.subcols):
+                    subcols = self.subcols(info)
+                else:
+                    subcols = self.subcols
+                n = 0
+                for sub in subcols:
+                    if sub.name != self.name and "colgroup" not in sub.th_class:
+                        sub.th_class += f" colgroup-{self.name}"
+                    if sub.default(info):
+                        n += 1
+                self.th_content = f" colspan={n}"
+                if rank is None or rank > 0:
+                    yield from subcols
+                else:
+                    yield self
 
     def download(self, rec):
         if self.download_col is not None:
@@ -534,7 +538,7 @@ class SearchColumns:
           0 (indicating the top row of the header) or a positive integer (indicating a lower row in the header).
         """
         # By default, this doesn't depend on info
-        # rank is None in the body of the table, and 0..(maxrank-1) in the header
+        # rank is None in the body of the table, 0..(maxrank-1) in the header, and -1 when downloading
         for C in self.columns:
             yield from C.show(info, rank)
 
