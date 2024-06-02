@@ -1337,7 +1337,7 @@ def cc_repr(label,code):
 
 def Power_col(i, ps):
     p = ps[i]
-    return MultiProcessedCol(f"powers{i}", None, f"{p}P", ["group_order", "group_counter", "powers","highlight_col"], lambda group_order, group_counter,  powers, highlight_col: get_cc_url(group_order, group_counter, powers[i], highlight_col), align="center")
+    return MultiProcessedCol("power_cols", None, f"{p}P", ["group_order", "group_counter", "powers","highlight_col"], lambda group_order, group_counter,  powers, highlight_col: get_cc_url(group_order, group_counter, powers[i], highlight_col), align="center")
 
 
 def gp_link(gp_order,gp_counter, tex_cache):
@@ -1391,7 +1391,7 @@ def cc_postprocess(res, info, query):
     # We use an empty list so that [Powers_col(i,...) for i in info["group_factors"]] works
     if len(gps) == 1:  # add a message about what type representatives are
         gp = WebAbstractGroup(list(gps)[0])
-        info["one_group"] = gp.repr_strg(other_page = True)
+        info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
     info["group_factors"] = common_support if common_support else []
     complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
     centralizer_data = {(rec["ambient"], rec["short_label"]): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["ambient","short_label","subgroup_tex"])}
