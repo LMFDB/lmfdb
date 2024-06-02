@@ -67,7 +67,7 @@ class AbGpsTest(LmfdbTest):
         ])
 
     def test_underlying_data(self):
-        self.check_args("/Groups/Abstract/data/256.33517", [
+        self.check_args("/Groups/Abstract/data/2520.a", [
             "gps_groups", "number_normal_subgroups",
             "gps_conj_classes", "representative",
             "gps_qchar", "cdim",

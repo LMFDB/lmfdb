@@ -357,7 +357,7 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     """
     INPUT:
 
-    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table)
+    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table).  Entries can also be a list of values (corresponding to multiple ``label_cols``) in cases where multiple columns are needed to uniquely specify a row.
     - ``tables`` -- a search table or list of search tables (as strings)
     - ``title`` -- title for the page
     - ``bread`` -- bread for the page
@@ -388,8 +388,8 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     search_schema = {}
     extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
-        if type(col) == list:  # Needed for conjugacy class table in abstract groups
-            q = dict(zip(col, label.split(".")))  
+        if type(col) == list:  # Needed for gps_conj_classes, which effectively has a pair of columns for a label
+            q = dict(zip(col, label))
         else:
             q = {col: label}
         coll = db[table]

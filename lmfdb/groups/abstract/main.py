@@ -45,6 +45,7 @@ from lmfdb.utils import (
     pos_int_and_factor,
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
+    letters2num
 )
 from lmfdb.utils.search_parsing import (parse_multiset, search_parser)
 from lmfdb.utils.interesting import interesting_knowls
@@ -1837,7 +1838,13 @@ def gp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Abstract group data - {label}"
-    return datapage(label, ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  #JP check "label" right for gps_conj_classes
+    group_order, group_counter = label.split(".")
+    group_order = int(group_order)
+    if group_counter.isdigit():
+        group_counter = int(group_counter)
+    else:
+        group_counter = letters2num(group_counter)
+    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  #JP check "label" right for gps_conj_classes
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
