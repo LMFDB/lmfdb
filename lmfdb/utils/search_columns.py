@@ -467,7 +467,7 @@ class ColGroup(SearchCol):
 
     def show(self, info, rank=None):
         if self.contingent(info):
-            if self.download_together:
+            if self.download_together and rank == -1:
                 yield self
             else:
                 if callable(self.subcols):
