@@ -1346,7 +1346,7 @@ def gp_link(gp_order,gp_counter, tex_cache):
     return display_url_cache(gp, tex_cache)
 
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download=lambda group_order, group_counter, tex_cache: f"{group_order}.{group_counter}"),
+    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download=lambda group_order, group_counter, tex_cache: cc_data_to_gp_label(group_order, group_counter)), 
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
