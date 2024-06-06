@@ -1,4 +1,3 @@
-
 import re
 
 import time
@@ -2751,6 +2750,10 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                     url_for("abstract.by_subgroup_label", label=H.label), H.label
                 )
             ans += "</div><br />"
+    else:
+        ans += '<a href="{}">{}</a>&nbsp;'.format(
+            f"/Groups/Abstract/?subgroup_order={order}&ambient={ambient}&search_type=Subgroups",
+            "Subgroups with this order")
     if label != "None":
         ans += f'<div align="right"><a href="{url}">{label} home page</a></div>'
     if quotient_label != "None":
