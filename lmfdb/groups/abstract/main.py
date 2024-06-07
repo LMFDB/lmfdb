@@ -1337,7 +1337,7 @@ def cc_repr(label,code , latex = True):  #default is include dollar signs
     if latex:
         return "$" + gp.decode(code,as_str= True) + "$"
     else:  # this is for download postprocess
-        if gp.element_repr_type == ("Perm" or "PC"): 
+        if gp.element_repr_type == "Perm" or gp.element_repr_type == "PC": 
             return gp.decode(code,as_str= True)  
         else:   # matrices as lists
             return gp.decode(code,as_str= False)
