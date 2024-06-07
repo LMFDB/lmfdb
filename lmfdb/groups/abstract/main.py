@@ -1330,11 +1330,17 @@ def complex_char_search(info, query={}):
 
 
 #need mathmode for MultiProcessedCol
-def cc_repr(label,code):
+def cc_repr(label,code , latex = True):  #default is include dollar signs
     gp = WebAbstractGroup(label)
     if gp.representations.get("Lie") and gp.representations["Lie"][0]["family"][0] == "P" and gp.order < 2000:
         return ""   #Problem with PGL, PSL, etc
-    return "$" + gp.decode(code,as_str= True) + "$"
+    if latex:
+        return "$" + gp.decode(code,as_str= True) + "$"
+    else:  # this is for download postprocess
+        if gp.element_repr_type == ("Perm" or "PC"): 
+            return gp.decode(code,as_str= True)  
+        else:   # matrices as lists
+            return gp.decode(code,as_str= False)
 
 def Power_col(i, ps):
     p = ps[i]
@@ -1359,7 +1365,7 @@ conjugacy_class_columns = SearchColumns([
              download_col="powers"),
     MultiProcessedCol("representative","group.repr_explain","Representative",["group","representative"], cc_repr, download_col="representative"),
 ],db_cols=["centralizer", "counter", "group_order", "group_counter", "label", "order", "powers", "representative", "size"])
-
+conjugacy_class_columns.languages = ['text']
 
 
 def cc_postprocess(res, info, query):
@@ -1433,6 +1439,19 @@ def cc_postprocess(res, info, query):
 
 class Conjugacy_class_download(Downloader):
     table = db.gps_conj_classes
+    
+    def postprocess(self, res, info, query):
+        if not hasattr(self,'counter_to_label'):
+            query_pow = {}  # need this to get all the power labels
+            if 'group_order' in query:
+                query_pow['group_order'] = query['group_order']
+            if 'group_counter' in query:
+                query_pow['group_counter'] = query['group_counter']
+            self.counter_to_label = {(rec["group_order"], rec["group_counter"], rec["counter"]): rec["label"] for rec in db.gps_conj_classes.search(query_pow, ["group_order", "group_counter", "counter", "label"])}            
+        res['representative'] = cc_repr(cc_data_to_gp_label(res['group_order'],res['group_counter']), res['representative'], latex=False)  
+        pow_list = [self.counter_to_label[res["group_order"],res["group_counter"], pow] for pow in res['powers']]
+        res['powers'] = ",".join(pow_list)
+        return res
 
 @search_wrap(
     table=db.gps_conj_classes,
@@ -1845,7 +1864,7 @@ def gp_data(label):
         group_counter = int(group_counter)
     else:
         group_counter = letters2num(group_counter)
-    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  #JP check "label" right for gps_conj_classes
+    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
