@@ -103,7 +103,7 @@ def gp_label_to_cc_data(gp):
     gp_order = int(gp_ord)
     if re.fullmatch(r'\d+',gp_counter):
         return gp_order, int(gp_counter)
-    return gp_order, class_to_int(gp_counter)
+    return gp_order, class_to_int(gp_counter) + 1
 
 
 # mimics magma IsInSmallGroupDatabase
@@ -134,7 +134,7 @@ def in_small_gp_db(order):
 def cc_data_to_gp_label(order,counter):
     if in_small_gp_db(order):
         return str(order) + '.' + str(counter)
-    return str(order) + '.' + cremona_letter_code(counter)  
+    return str(order) + '.' + cremona_letter_code(counter-1)  
 
     
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
