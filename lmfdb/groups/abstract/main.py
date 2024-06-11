@@ -1289,14 +1289,16 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     # Counts are not right for aut diagram if we know up to conj.
     if aut and not gp.outer_equivalence:
         autcounts = gp.aut_class_counts
-    ilayer = 2
+    ilayer = 4
     iorder = 0
     if normal:
         ilayer += 1
         iorder += 1
-    if aut and not gp.outer_equivalence:
-        ilayer += 4
-        iorder += 4
+    if not aut and not gp.outer_equivalence:
+        ilayer += 2
+        iorder += 2
+    if gp.outer_equivalence and ilayer>3:
+       ilayer -= 2 
     ll = [
         [
             grp.subgroup,
