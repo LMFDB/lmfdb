@@ -147,6 +147,7 @@ def label_is_valid(lab):
     return abstract_group_label_regex.fullmatch(lab)
 
 
+
 #parser for conjugacy class search 
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_group(inp, query, qfield):
@@ -159,7 +160,7 @@ def parse_group(inp, query, qfield):
     else:
         raise ValueError("It must be a valid group label or order of the group. ")
         
-
+    
 #input string of complex character label and return rational character label
 def q_char(char):
     return char.rstrip(digits)
@@ -1439,17 +1440,18 @@ def cc_postprocess(res, info, query):
 
 class Conjugacy_class_download(Downloader):
     table = db.gps_conj_classes
-    
-    def postprocess(self, res, info, query):
-        if not hasattr(self,'counter_to_label'):
-            query_pow = {}  # need this to get all the power labels
-            if 'group_order' in query:
-                query_pow['group_order'] = query['group_order']
-            if 'group_counter' in query:
-                query_pow['group_counter'] = query['group_counter']
-            self.counter_to_label = {(rec["group_order"], rec["group_counter"], rec["counter"]): rec["label"] for rec in db.gps_conj_classes.search(query_pow, ["group_order", "group_counter", "counter", "label"])}            
+
+    def postprocess(self, res, info, query):  # need to convert representatives to human readable, and write cc labels
+        if not hasattr(self, 'counter_to_label'):
+            self.counter_to_label = {}  # initialize dictionary
+        gptuple = (res['group_order'],res['group_counter'])   # have we already found this group
+        if not gptuple in self.counter_to_label:
+            query_pow = {}  # need this dict to get all the power labels
+            query_pow['group_order'] = res['group_order']
+            query_pow['group_counter'] = res['group_counter']
+            self.counter_to_label[gptuple] = {rec["counter"]: rec["label"] for rec in db.gps_conj_classes.search(query_pow, ["group_order", "group_counter", "counter", "label"])}  # counter-to-label dictionary for group, order pair
         res['representative'] = cc_repr(cc_data_to_gp_label(res['group_order'],res['group_counter']), res['representative'], latex=False)  
-        pow_list = [self.counter_to_label[res["group_order"],res["group_counter"], pow] for pow in res['powers']]
+        pow_list = [self.counter_to_label[gptuple][pow] for pow in res['powers']]  
         res['powers'] = ",".join(pow_list)
         return res
 
