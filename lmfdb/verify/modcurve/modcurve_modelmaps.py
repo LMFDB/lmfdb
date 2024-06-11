@@ -69,4 +69,3 @@ class modcurve_modelmaps(TableChecker):
                     return False
 
         return True
-
