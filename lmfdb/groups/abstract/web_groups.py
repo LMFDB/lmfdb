@@ -1269,11 +1269,6 @@ class WebAbstractGroup(WebObj):
 
     def fullpage_links(self, getpositions=False):
         s = ""
-        if getpositions:
-            s += '<button onclick="getpositions()">Get positions</button><br>\n'
-            s += '<p><div id="positions"></div></p>\n'
-#        s += '<div>\nEach subgroup order has its own level?\n'
-#        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         for sub_all in ["subgroup", "normal"]:
             for sub_aut in ["", "aut"]:
                 cls = f'{sub_all}_{sub_aut}diagram'
