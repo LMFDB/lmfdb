@@ -1869,7 +1869,7 @@ def gp_data(label):
     if group_counter.isdigit():
         group_counter = int(group_counter)
     else:
-        group_counter = class_to_int(group_counter)
+        group_counter = class_to_int(group_counter) + 1  # we start labeling at 1   
     return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  
 
 @abstract_page.route("/sdata/<label>")
