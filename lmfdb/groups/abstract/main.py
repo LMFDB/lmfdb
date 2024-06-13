@@ -622,7 +622,7 @@ def index():
         elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
             info["search_array"] = ComplexCharSearchArray()
             return complex_char_search(info)
-        elif search_type in ["ConjugacyClasses", "RandomConjugacyClass"]:
+        elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
             info["search_array"]=ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
     info["stats"] = GroupStats()
@@ -1467,7 +1467,7 @@ class Conjugacy_class_download(Downloader):
     bread=lambda: get_bread([("Search Results", "")]),
     postprocess=cc_postprocess,
     learnmore=learnmore_list,
-    random_projection=["group_order", "group_counter", "label", "counter"],
+#    random_projection=["group_order", "group_counter", "label", "counter"],
     url_for_label=url_for_cc_label,
 )
 def conjugacy_class_search(info, query={}):
@@ -2664,7 +2664,7 @@ class ConjugacyClassSearchArray(SearchArray):
         ]
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
-        return [("ConjugacyClasses", "Search again"), ("RandomConjugacyClass", "Random")]
+        return [("ConjugacyClasses", "Search again")]
 
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
