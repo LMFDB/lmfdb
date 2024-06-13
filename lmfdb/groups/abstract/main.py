@@ -1298,7 +1298,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
         ilayer += 2
         iorder += 2
     if gp.outer_equivalence and ilayer>3:
-       ilayer -= 2 
+       ilayer -= 2
     ll = [
         [
             grp.subgroup,
