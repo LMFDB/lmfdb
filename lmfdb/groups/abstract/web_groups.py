@@ -92,7 +92,7 @@ def group_pretty_image(label):
     img = db.gps_images.lookup("?", "image")
     if img:
         return str(img)
-    # we should not get here
+    # we should not get here 
 
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
@@ -1269,11 +1269,6 @@ class WebAbstractGroup(WebObj):
 
     def fullpage_links(self, getpositions=False):
         s = ""
-        if getpositions:
-            s += '<button onclick="getpositions()">Get positions</button><br>\n'
-            s += '<p><div id="positions"></div></p>\n'
-#        s += '<div>\nEach subgroup order has its own level?\n'
-#        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         for sub_all in ["subgroup", "normal"]:
             for sub_aut in ["", "aut"]:
                 cls = f'{sub_all}_{sub_aut}diagram'
