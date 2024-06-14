@@ -21,10 +21,12 @@ from sage.all import (
     lcm,
     is_prime,
     cartesian_product_iterator,
+    exists,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.misc.cachefunc import cached_function, cached_method
+from sage.databases.cremona import class_to_int, cremona_letter_code
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -94,6 +96,47 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+
+# Functions below are for conjugacy class searches
+def gp_label_to_cc_data(gp): 
+    gp_ord, gp_counter = gp.split(".")
+    gp_order = int(gp_ord)
+    if re.fullmatch(r'\d+',gp_counter):
+        return gp_order, int(gp_counter)
+    return gp_order, class_to_int(gp_counter) + 1
+
+
+# mimics magma IsInSmallGroupDatabase
+def in_small_gp_db(order):
+    if order == 1024:
+        return False
+    if order <= 2000  or  order in {2187, 6561, 3125, 2401}:
+        return True
+    f = factor(order)
+    if all(f[i][1] == 1 and f[i][0] < 1073741824 for i in range(len(f))):
+        return True     
+    if len(f) == 2:
+        pairs, n = exists((i for i in {0,1}), lambda i: f[i][1] == 1)
+        if pairs:
+            p = f[1-n] 
+            if ( p[1] <= 2 or p[0] == 2  and  p[1] <= 8
+                  or p[0] == 3  and  p[1] <= 6
+                  or p[0] == 5  and  p[1] <= 5
+                  or p[0] == 7  and  p[1] <= 4 ):
+                return True
+    if len(f) <= 3 and sum([p[1] for p in f]) == 4:
+        return True
+    if len(f) == 1 and f[0][1] <= 7:
+        return True
+    return False
+
+
+def cc_data_to_gp_label(order,counter):
+    if in_small_gp_db(order):
+        return str(order) + '.' + str(counter)
+    return str(order) + '.' + cremona_letter_code(counter-1)  
+
+    
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
@@ -563,6 +606,13 @@ class WebAbstractGroup(WebObj):
             return self.order
         return len(self.conjugacy_classes)
 
+    @lazy_attribute
+    def cc_known(self):
+#        if self.representations.get("Lie") and self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000:
+#            return False   # problem with PGL, PSL, etc.
+        return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
+
+    
     @lazy_attribute
     def element_repr_type(self):
         if isinstance(self._data, (tuple, list)) and self.solvable:
@@ -1319,7 +1369,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_groups_cc.search({"group": self.label})
+            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter}) 
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -1853,6 +1903,8 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Perm":
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
+            if code == 0 and as_str:
+                return "1"
             return self.decode_as_pcgs(code, as_str=as_str)
         else:
             return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str, LieType=(rep_type=="Lie"))
@@ -2051,6 +2103,7 @@ class WebAbstractGroup(WebObj):
     def representation_line(self, rep_type, skip_head=False):
         # TODO: Add links to searches for other representations when available
         # skip_head is used for matrix groups, where we only include the header for the first
+        # or for PC groups if not on the same page
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
@@ -2059,10 +2112,18 @@ class WebAbstractGroup(WebObj):
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
-            pres_raw=self.presentation_raw()
-            pres = raw_typeset(pres_raw,compress_pres(pres))
+            if not skip_head:  #add copy button in certain cases
+                pres_raw=self.presentation_raw()
+                pres = raw_typeset(pres_raw,compress_pres(pres))
+            else:
+                pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
-                pres = "Abelian group " + pres
+                if skip_head:
+                    pres = " of the abelian group " + pres 
+                else:
+                    pres = "Abelian group " + pres
+            if skip_head:
+                return f'{pres} .'  # for repr_strg
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -2453,11 +2514,11 @@ class WebAbstractGroup(WebObj):
             d = data["d"]
             return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
-            rep_str =  "Elements of the group are displayed as words in the generators from the presentation given"
-            if other_page:
-                return rep_str + " in the Construction section of this group's <a href='%s'>main page</a>." % url_for(".by_label", label=self.label)
+            rep_str =  "Elements of the group are displayed as words in the presentation"
+            if other_page: 
+                return rep_str + self.representation_line("PC", skip_head=True)
             else:
-                return rep_str + " above."
+                return rep_str + " generators from the presentation above."
         elif rep_type in ["GLFp", "GLFq", "GLZN", "GLZq", "GLZ"]:
             d = data["d"]
             if rep_type == "GLFp":
@@ -3012,11 +3073,11 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_groups_cc
-
+    table = db.gps_conj_classes 
     def __init__(self, group, label, data=None):
         if data is None:
-            data = db.gps_groups_cc.lucky({"group": group, "label": label})
+            group_order, group_counter = gp_label_to_cc_data(group)
+            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) 
         WebObj.__init__(self, label, data)
         self.force_repr_elt = False
 
@@ -3032,7 +3093,8 @@ class WebAbstractConjClass(WebObj):
         force_string = ''
         if self.force_repr_elt:
             force_string = "%7C"+str(self.representative)
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
+        group = cc_data_to_gp_label(self.group_order, self.group_counter)
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
 
 class WebAbstractDivision():
     def __init__(self, group, label, classes):

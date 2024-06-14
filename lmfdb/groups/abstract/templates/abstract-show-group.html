@@ -67,11 +67,19 @@
       </tr>
       <tr>
         <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
+	{% if gp.cc_known %}
         {% for c in gp.cc_statistics %}
-          <td>{{ c[1] }} </td>
+	<td><a href={{ url_for('.index', group=gp.label, order=c[0], search_type="ConjugacyClasses") }}>{{ c[1] }}</a></td>
+        {% endfor %}
+        <td class="border-left"><a href={{url_for('.index', group=gp.label, search_type="ConjugacyClasses") }}>{{ gp.number_conjugacy_classes }}</td>
+      </tr>
+      {% else %}
+ {% for c in gp.cc_statistics %}
+        <td>{{ c[1] }}</a></td>
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
       </tr>
+      {% endif %}
       {% if not gp.live() %}
       <tr>
         <td>{{KNOWL('group.division', 'Divisions')}}</td>

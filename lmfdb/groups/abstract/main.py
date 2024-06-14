@@ -16,6 +16,7 @@ from markupsafe import Markup
 from string import ascii_lowercase, digits
 from io import BytesIO
 from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
+from sage.databases.cremona import class_to_int
 
 from lmfdb import db
 from lmfdb.app import app
@@ -46,9 +47,9 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
 )
-from lmfdb.utils.search_parsing import parse_multiset
+from lmfdb.utils.search_parsing import (parse_multiset, search_parser)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns,LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page  # , abstract_logger
 from .web_groups import (
@@ -62,6 +63,8 @@ from .web_groups import (
     primary_to_smith,
     abelian_gp_display,
     abstract_group_display_knowl,
+    cc_data_to_gp_label,
+    gp_label_to_cc_data,
 )
 from .stats import GroupStats
 
@@ -143,6 +146,19 @@ def subgroup_label_is_valid(lab):
 def label_is_valid(lab):
     return abstract_group_label_regex.fullmatch(lab)
 
+
+
+#parser for conjugacy class search
+@search_parser(clean_info=True, prep_ranges=True)
+def parse_group(inp, query, qfield):
+    if label_is_valid(inp):
+        gp_ord, gp_count = gp_label_to_cc_data(inp)
+        query["group_order"] = gp_ord
+        query["group_counter"] = gp_count
+    elif re.fullmatch(r'\d+',inp):
+        query["group_order"] = int(inp)
+    else:
+        raise ValueError("It must be a valid group label or order of the group. ")
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -299,7 +315,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "is_sylow": ["is_hall", "nilpotent"],
         "nilpotent": ["solvable"],
     }
-    print(getattr(sgp,'normal'))
+
     if type == "normal":
         overall_order = [
             "thecenter",
@@ -585,6 +601,11 @@ def url_for_chartable_label(label):
     gp = ".".join(label.split(".")[:2])
     return url_for(".char_table", label=gp, char_highlight=label)
 
+#Here the input is a dictionary with certain data from the gps_conj_classes table filled in
+def url_for_cc_label(record):
+    gplabel = cc_data_to_gp_label(record["group_order"], record["group_counter"])
+    return url_for(".char_table", label=gplabel, cc_highlight=record["label"], cc_highlight_i=record["counter"])
+
 @abstract_page.route("/")
 def index():
     bread = get_bread()
@@ -601,6 +622,9 @@ def index():
         elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
             info["search_array"] = ComplexCharSearchArray()
             return complex_char_search(info)
+        elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
+            info["search_array"]=ConjugacyClassSearchArray()
+            return conjugacy_class_search(info)
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -775,6 +799,9 @@ def char_table(label):
     if "char_highlight" in info and info["char_highlight"] not in [chtr.label for chtr in gp.characters]:
         flash_error(f"There is no character of {label} with label {info['char_highlight']}.")
         del info["char_highlight"]
+    if "cc_highlight" in info and info["cc_highlight"] not in [c.label for c in gp.conjugacy_classes]:
+        flash_error(f"There is no conjugacy class of {label} with label {info['cc_highlight']}.")
+        del info["cc_highlight"]
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -964,6 +991,20 @@ def get_qchar_url(label):
     gplabel = ".".join(label.split(".")[:2])
     return url_for(".Qchar_table", label=gplabel, char_highlight=label)
 
+
+# This function takes in a conjugacy class label and returns url for its group's char table HIGHLIGHTING ONE
+# Or returns just the label if conjugacy classes are known but not characters
+def get_cc_url(gp_order, gp_counter, label, highlight):
+    gplabel = cc_data_to_gp_label(gp_order, gp_counter)
+    if isinstance(highlight, dict):
+        highlight_col = highlight.get((gplabel,label))
+    else:
+        highlight_col = highlight
+    if highlight_col is None:
+        return label
+    else:
+        return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i=highlight_col) +">" + label + "</a>"
+
 def field_knowl(fld):
     from lmfdb.number_fields.web_number_field import WebNumberField
     field = [int(n) for n in fld]
@@ -973,6 +1014,10 @@ def field_knowl(fld):
     else:
         return wnf.knowl()
 
+
+# This function returns a label for the conjugacy class search page for a group
+def display_cc_url(numb,gp):
+    return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -1000,7 +1045,7 @@ group_columns = SearchColumns([
     MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length", default=False),
     MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length", default=False),
     MathCol("rank", "group.rank", "Rank", default=False),
-    MathCol("number_conjugacy_classes", "group.conjugacy_class", r"$\card{\mathrm{conj}(G)}$", short_title="conjugacy classes"),
+    MultiProcessedCol("number_cojugacy_classes","group.conjugacy_class",r"$\card{\mathrm{conj}(G)}$",["number_conjugacy_classes","label"], display_cc_url, download_col="number_conjugacy_classes", align="center", short_title="#conj(G)"),
     MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups", default=False),
     MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes", default=False),
     MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups", default=False),
@@ -1207,9 +1252,15 @@ def indicator_type(strg):
     strg = strg.replace("S","-1")
     return strg
 
-def char_to_sub(short_label, group):
-    full_label = f"{group}.{short_label}"
-    return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
+def char_to_sub(short_label, group, as_latex = None):
+    if short_label:
+        full_label = f"{group}.{short_label}"
+        if as_latex:
+            return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">${as_latex}$</a>'
+        return f'<a href="{url_for(".by_subgroup_label", label=full_label)}">{short_label}</a>'
+    else:
+        return "not computed"
+
 
 complex_char_columns = SearchColumns([
     LinkCol("label", "group.label_complex_group_char", "Label", get_cchar_url),
@@ -1280,6 +1331,150 @@ def complex_char_search(info, query={}):
 #    parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, "image_isoclass", regex=abstract_group_label_regex)
 #    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
+
+
+
+#need mathmode for MultiProcessedCol
+def cc_repr(label,code , latex = True):  #default is include dollar signs
+    gp = WebAbstractGroup(label)
+    if gp.representations.get("Lie") and gp.representations["Lie"][0]["family"][0] == "P" and gp.order < 2000:
+        return ""   #Problem with PGL, PSL, etc
+    if latex:
+        return "$" + gp.decode(code,as_str= True) + "$"
+    else:  # this is for download postprocess
+        if gp.element_repr_type == "Perm" or gp.element_repr_type == "PC":
+            return gp.decode(code,as_str= True)
+        else:   # matrices as lists
+            return gp.decode(code,as_str= False)
+
+def Power_col(i, ps):
+    p = ps[i]
+    return MultiProcessedCol("power_cols", None, f"{p}P", ["group_order", "group_counter", "powers","highlight_col"], lambda group_order, group_counter,  powers, highlight_col: get_cc_url(group_order, group_counter, powers[i], highlight_col), align="center")
+
+
+def gp_link(gp_order,gp_counter, tex_cache):
+    gp = cc_data_to_gp_label(gp_order,gp_counter)
+    return display_url_cache(gp, tex_cache)
+
+conjugacy_class_columns = SearchColumns([
+    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download=lambda group_order, group_counter, tex_cache: cc_data_to_gp_label(group_order, group_counter)), 
+    MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
+    MathCol("order", "group.order_conjugacy_class", "Order"),
+    MathCol("size", "group.size_conjugacy_class", "Size"),
+    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
+    ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
+             lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
+             contingent=lambda info: info.get("group_factors",True), # group_factors not present when downloading
+             orig=["powers"],
+             download_together=True,
+             download_col="powers"),
+    MultiProcessedCol("representative","group.repr_explain","Representative",["group","representative"], cc_repr, download_col="representative"),
+],db_cols=["centralizer", "counter", "group_order", "group_counter", "label", "order", "powers", "representative", "size"])
+conjugacy_class_columns.languages = ['text']
+
+
+def cc_postprocess(res, info, query):
+    # We want to get latex for groups in one query, figure out what powers to use, and create a lookup table for counter->label
+    labels = set()
+    gps = set()
+    centralizers = set()
+    counter_to_label = {(rec["group_order"],rec["group_counter"], rec["counter"]): rec["label"] for rec in res}
+    missing = defaultdict(list)
+    common_support = None
+    for rec in res:
+        gp_order = rec.get("group_order")
+        gp_counter = rec.get("group_counter")
+        group = cc_data_to_gp_label(gp_order,gp_counter)
+        gps.add(group)
+        group_support = gp_order.prime_factors()
+        if common_support is None:
+            common_support = group_support
+        elif common_support is not False and common_support != group_support:
+            common_support = False
+        for ctr in rec.get("powers", []):
+            if (gp_order,gp_counter, ctr) not in counter_to_label:
+                missing[gp_order,gp_counter].append(ctr)
+        label = rec.get("centralizer")
+        if label is not None:
+            labels.add(label)
+            centralizers.add(group + "." + label)
+        if group is not None:
+            labels.add(group)
+    # We use an empty list so that [Powers_col(i,...) for i in info["group_factors"]] works
+    if len(gps) == 1:  # add a message about what type representatives are
+        gp = WebAbstractGroup(list(gps)[0])
+        info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
+    info["group_factors"] = common_support if common_support else []
+    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
+    centralizer_data = {(rec["ambient"], rec["short_label"]): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["ambient","short_label","subgroup_tex"])}
+    highlight_col = {}
+    for rec in res:
+        label = rec.get("label")
+        gp_order = rec.get("group_order")
+        gp_counter = rec.get("group_counter")
+        rec["group"] = cc_data_to_gp_label(gp_order,gp_counter)
+        group = rec.get("group")
+        if (group,rec["centralizer"]) in centralizer_data:
+            rec["sub_latex"] = centralizer_data[(group,rec["centralizer"])]
+        else:
+            rec["sub_latex"] = None
+        if complex_char_known[group]:
+            highlight_col[(group, label)] = rec["counter"]
+        else:
+            highlight_col[(group, label)] = None
+    if missing:
+        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for ((group_order,group_counter), counters) in missing.items()]}, ["group_order", "group_counter",  "counter", "label"]):
+            gp_ord = rec.get("group_order")
+            gp_counter = rec.get("group_counter")
+            group = cc_data_to_gp_label(gp_ord,gp_counter)
+            label = rec.get("label")
+            counter_to_label[rec["group_order"],rec["group_counter"], rec["counter"]] = rec["label"]
+            if complex_char_known[group]:
+                highlight_col[(group, label)] = rec["counter"]
+            else:
+                highlight_col[(group, label)] = None
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    for rec in res:
+        rec["tex_cache"] = tex_cache
+        rec["powers"] = [counter_to_label[rec["group_order"], rec["group_counter"], ctr] for ctr in rec["powers"]]
+        rec["highlight_col"] = highlight_col
+    return res
+
+
+class Conjugacy_class_download(Downloader):
+    table = db.gps_conj_classes
+
+    def postprocess(self, res, info, query):  # need to convert representatives to human readable, and write cc labels
+        if not hasattr(self, 'counter_to_label'):
+            self.counter_to_label = {}  # initialize dictionary
+        gptuple = (res['group_order'],res['group_counter'])   # have we already found this group
+        if not gptuple in self.counter_to_label:
+            query_pow = {}  # need this dict to get all the power labels
+            query_pow['group_order'] = res['group_order']
+            query_pow['group_counter'] = res['group_counter']
+            self.counter_to_label[gptuple] = {rec["counter"]: rec["label"] for rec in db.gps_conj_classes.search(query_pow, ["group_order", "group_counter", "counter", "label"])}  # counter-to-label dictionary for group, order pair
+        res['representative'] = cc_repr(cc_data_to_gp_label(res['group_order'],res['group_counter']), res['representative'], latex=False)
+        pow_list = [self.counter_to_label[gptuple][pow] for pow in res['powers']]
+        res['powers'] = ",".join(pow_list)
+        return res
+
+@search_wrap(
+    table=db.gps_conj_classes,
+    title="Conjugacy class search results",
+    err_title="Conjugacy class search input error",
+    columns=conjugacy_class_columns,
+    shortcuts={"download": Conjugacy_class_download()},
+    bread=lambda: get_bread([("Search Results", "")]),
+    postprocess=cc_postprocess,
+    learnmore=learnmore_list,
+#    random_projection=["group_order", "group_counter", "label", "counter"],
+    url_for_label=url_for_cc_label,
+)
+def conjugacy_class_search(info, query={}):
+    info["search_type"] = "ConjugacyClasses"
+    parse_ints(info, query, "order")
+    parse_ints(info, query, "size")
+    parse_group(info,query, "group")
 
 
 def factor_latex(n):
@@ -1500,6 +1695,7 @@ def render_abstract_subgroup(label):
 
     bread = get_bread([(label,)])
 
+
     return render_template(
         "abstract-show-subgroup.html",
         title=title,
@@ -1670,7 +1866,13 @@ def gp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Abstract group data - {label}"
-    return datapage(label, ["gps_groups", "gps_groups_cc", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", "group", "group", "group", "ambient"])
+    group_order, group_counter = label.split(".")
+    group_order = int(group_order)
+    if group_counter.isdigit():
+        group_counter = int(group_counter)
+    else:
+        group_counter = class_to_int(group_counter) + 1  # we start labeling at 1   
+    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
@@ -2433,6 +2635,43 @@ class ComplexCharSearchArray(SearchArray):
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
 
 
+class ConjugacyClassSearchArray(SearchArray):
+    sorts = [
+        ("", "group", ['group_order','group_counter','order','size']),
+        ("order", "order", ['order', 'group_order', 'group_counter','size']),
+        ("size", "size", ['size', 'order', 'group_order', 'group_counter']),
+    ]
+
+    def __init__(self):
+        group = TextBox(
+            name="group",
+            label="Group",
+            knowl="group.name",
+            example="128.207, or 12",
+        )
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="group.order_conjugacy_class",
+            example="3",
+            example_span="3, or a range like 3..5"
+        )
+        size = TextBox(
+            name="size",
+            label="Size",
+            knowl="group.size_conjugacy_class",
+            example="4",
+            example_span="4, or a range like 3..5"
+        )
+
+        self.refine_array = [
+            [group,order,size]
+        ]
+    def search_types(self, info):
+        # Note: since we don't access this from the browse page, info will never be None
+        return [("ConjugacyClasses", "Search again")]
+
+
 def abstract_group_namecache(labels, cache=None, reverse=None):
     # Note that, when called by knowl_cache from transitive_group.py,
     # the resulting cache will have two types of records: abstract group ones with keys
@@ -2490,11 +2729,13 @@ def cc_data(gp, label, typ="complex", representative=None):
     if wacc.centralizer is None:
         ans +="<br>Centralizer: not computed"
     else:
-        centralizer = f"{wacc.group}.{wacc.centralizer}"
+        group = cc_data_to_gp_label(wacc.group_order,wacc.group_counter)
+        centralizer = f"{group}.{wacc.centralizer}"
         wcent = WebAbstractSubgroup(centralizer)
         ans += "<br>Centralizer: {}".format(
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
+
 
     if representative:
         ans += "<br>Representative: "+representative
