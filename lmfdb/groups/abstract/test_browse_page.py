@@ -579,8 +579,8 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", "6A"])
         self.check_args("/Groups/Abstract/?group=128.15&search_type=ConjugacyClasses", r"\OD_{16}:C_8" #group name
-        )        
-        
+        )
+
     def test_highlighted_conj_class(self):
         r"""
         Check that conjugacy class links work
