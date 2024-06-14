@@ -1017,7 +1017,7 @@ def field_knowl(fld):
 
 # This function returns a label for the conjugacy class search page for a group
 def display_cc_url(numb,gp):
-    return f'<a href = "/Groups/Abstract/?group={gp}&search_type=ConjugacyClasses">{numb}</a>'
+    return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -2634,7 +2634,10 @@ class ComplexCharSearchArray(SearchArray):
 
 
 class ConjugacyClassSearchArray(SearchArray):
-    sorts = [("", "group", ['group_order','group_counter','order','size']),("order", "order", ['order', 'group_order', 'group_counter','size']),
+    sorts = [
+        ("", "group", ['group_order','group_counter','order','size']),
+        ("order", "order", ['order', 'group_order', 'group_counter','size']),
+        ("size", "size", ['size', 'order', 'group_order', 'group_counter']),
     ]
 
     def __init__(self):
@@ -2730,7 +2733,7 @@ def cc_data(gp, label, typ="complex", representative=None):
         ans += "<br>Centralizer: {}".format(
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
-        
+
 
     if representative:
         ans += "<br>Representative: "+representative
