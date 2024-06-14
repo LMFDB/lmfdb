@@ -147,7 +147,6 @@ def label_is_valid(lab):
     return abstract_group_label_regex.fullmatch(lab)
 
 
-
 #parser for conjugacy class search
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_group(inp, query, qfield):
@@ -1252,7 +1251,7 @@ def indicator_type(strg):
     strg = strg.replace("S","-1")
     return strg
 
-def char_to_sub(short_label, group, as_latex = None):
+def char_to_sub(short_label, group, as_latex=None):
     if short_label:
         full_label = f"{group}.{short_label}"
         if as_latex:
@@ -1333,23 +1332,22 @@ def complex_char_search(info, query={}):
 #    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
 
 
-
 #need mathmode for MultiProcessedCol
-def cc_repr(label,code , latex = True):  #default is include dollar signs
+def cc_repr(label,code , latex=True):  #default is include dollar signs
     gp = WebAbstractGroup(label)
     if gp.representations.get("Lie") and gp.representations["Lie"][0]["family"][0] == "P" and gp.order < 2000:
         return ""   #Problem with PGL, PSL, etc
     if latex:
-        return "$" + gp.decode(code,as_str= True) + "$"
+        return "$" + gp.decode(code,as_str=True) + "$"
     else:  # this is for download postprocess
         if gp.element_repr_type == "Perm" or gp.element_repr_type == "PC":
-            return gp.decode(code,as_str= True)
+            return gp.decode(code,as_str=True)
         else:   # matrices as lists
-            return gp.decode(code,as_str= False)
+            return gp.decode(code,as_str=False)
 
 def Power_col(i, ps):
     p = ps[i]
-    return MultiProcessedCol("power_cols", None, f"{p}P", ["group_order", "group_counter", "powers","highlight_col"], lambda group_order, group_counter,  powers, highlight_col: get_cc_url(group_order, group_counter, powers[i], highlight_col), align="center")
+    return MultiProcessedCol("power_cols", None, f"{p}P", ["group_order", "group_counter", "powers","highlight_col"], lambda group_order, group_counter, powers, highlight_col: get_cc_url(group_order, group_counter, powers[i], highlight_col), align="center")
 
 
 def gp_link(gp_order,gp_counter, tex_cache):
@@ -1357,7 +1355,7 @@ def gp_link(gp_order,gp_counter, tex_cache):
     return display_url_cache(gp, tex_cache)
 
 conjugacy_class_columns = SearchColumns([
-    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download=lambda group_order, group_counter, tex_cache: cc_data_to_gp_label(group_order, group_counter)), 
+    MultiProcessedCol("group", "group.name", "Group", ["group_order", "group_counter", "tex_cache"], gp_link, apply_download=lambda group_order, group_counter, tex_cache: cc_data_to_gp_label(group_order, group_counter)),
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
@@ -1423,7 +1421,7 @@ def cc_postprocess(res, info, query):
         else:
             highlight_col[(group, label)] = None
     if missing:
-        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for ((group_order,group_counter), counters) in missing.items()]}, ["group_order", "group_counter",  "counter", "label"]):
+        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for ((group_order,group_counter), counters) in missing.items()]}, ["group_order", "group_counter", "counter", "label"]):
             gp_ord = rec.get("group_order")
             gp_counter = rec.get("group_counter")
             group = cc_data_to_gp_label(gp_ord,gp_counter)
@@ -1695,7 +1693,6 @@ def render_abstract_subgroup(label):
 
     bread = get_bread([(label,)])
 
-
     return render_template(
         "abstract-show-subgroup.html",
         title=title,
@@ -1871,8 +1868,8 @@ def gp_data(label):
     if group_counter.isdigit():
         group_counter = int(group_counter)
     else:
-        group_counter = class_to_int(group_counter) + 1  # we start labeling at 1   
-    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])  
+        group_counter = class_to_int(group_counter) + 1  # we start labeling at 1
+    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
@@ -2735,7 +2732,6 @@ def cc_data(gp, label, typ="complex", representative=None):
         ans += "<br>Centralizer: {}".format(
             sub_display_knowl(centralizer, "$" + wcent.subgroup_tex + "$")
         )
-
 
     if representative:
         ans += "<br>Representative: "+representative

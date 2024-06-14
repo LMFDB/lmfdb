@@ -98,7 +98,7 @@ def group_pretty_image(label):
 
 
 # Functions below are for conjugacy class searches
-def gp_label_to_cc_data(gp): 
+def gp_label_to_cc_data(gp):
     gp_ord, gp_counter = gp.split(".")
     gp_order = int(gp_ord)
     if re.fullmatch(r'\d+',gp_counter):
@@ -110,19 +110,19 @@ def gp_label_to_cc_data(gp):
 def in_small_gp_db(order):
     if order == 1024:
         return False
-    if order <= 2000  or  order in {2187, 6561, 3125, 2401}:
+    if order <= 2000 or order in {2187, 6561, 3125, 2401}:
         return True
     f = factor(order)
     if all(f[i][1] == 1 and f[i][0] < 1073741824 for i in range(len(f))):
-        return True     
+        return True
     if len(f) == 2:
         pairs, n = exists((i for i in {0,1}), lambda i: f[i][1] == 1)
         if pairs:
-            p = f[1-n] 
-            if ( p[1] <= 2 or p[0] == 2  and  p[1] <= 8
-                  or p[0] == 3  and  p[1] <= 6
-                  or p[0] == 5  and  p[1] <= 5
-                  or p[0] == 7  and  p[1] <= 4 ):
+            p = f[1-n]
+            if ( p[1] <= 2 or p[0] == 2 and p[1] <= 8
+                  or p[0] == 3 and p[1] <= 6
+                  or p[0] == 5 and p[1] <= 5
+                  or p[0] == 7 and p[1] <= 4 ):
                 return True
     if len(f) <= 3 and sum([p[1] for p in f]) == 4:
         return True
@@ -134,9 +134,9 @@ def in_small_gp_db(order):
 def cc_data_to_gp_label(order,counter):
     if in_small_gp_db(order):
         return str(order) + '.' + str(counter)
-    return str(order) + '.' + cremona_letter_code(counter-1)  
+    return str(order) + '.' + cremona_letter_code(counter-1)
 
-    
+
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
@@ -612,7 +612,6 @@ class WebAbstractGroup(WebObj):
 #            return False   # problem with PGL, PSL, etc.
         return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
-    
     @lazy_attribute
     def element_repr_type(self):
         if isinstance(self._data, (tuple, list)) and self.solvable:
@@ -1369,7 +1368,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter}) 
+            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter})
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -2119,7 +2118,7 @@ class WebAbstractGroup(WebObj):
                 pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
                 if skip_head:
-                    pres = " of the abelian group " + pres 
+                    pres = " of the abelian group " + pres
                 else:
                     pres = "Abelian group " + pres
             if skip_head:
@@ -2515,7 +2514,7 @@ class WebAbstractGroup(WebObj):
             return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
             rep_str =  "Elements of the group are displayed as words in the presentation"
-            if other_page: 
+            if other_page:
                 return rep_str + self.representation_line("PC", skip_head=True)
             else:
                 return rep_str + " generators from the presentation above."
@@ -3073,11 +3072,11 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_conj_classes 
+    table = db.gps_conj_classes
     def __init__(self, group, label, data=None):
         if data is None:
             group_order, group_counter = gp_label_to_cc_data(group)
-            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label}) 
+            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label})
         WebObj.__init__(self, label, data)
         self.force_repr_elt = False
 
