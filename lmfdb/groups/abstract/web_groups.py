@@ -1,6 +1,7 @@
 import re
 # import timeout_decorator
-
+import os
+import yaml
 from lmfdb import db
 from flask import url_for
 from urllib.parse import quote_plus
@@ -94,6 +95,12 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+
+
+
+    
+
+    
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
@@ -1818,7 +1825,8 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm = False):
+        # ListForm is for code snippet
         if rep_type == "GLZ" and not isinstance(code, int):  # decimal here represents an integer encoding b
             a, b = str(code).split(".")
             code = int(a)
@@ -1839,6 +1847,8 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
+        if ListForm:
+            return L
         x = matrix(R, d, d, L)
         if as_str:
             # for projective families, we add "[ ]"
@@ -1953,8 +1963,9 @@ class WebAbstractGroup(WebObj):
         relators = ", ".join(rel_powers + relators)
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
-    def presentation_raw(self):
+    def presentation_raw(self, as_str = True):
         # We use knowledge of the form of the presentation to construct it manually.
+        # Need as_str = False for code snippet
         gens = list(self.PCG.GeneratorsOfGroup())
         pcgs = self.PCG.FamilyPcgs()
         used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed
@@ -2005,16 +2016,22 @@ class WebAbstractGroup(WebObj):
             for j in range(i + 1, ngens):
                 b = used[j]
                 if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed
-                    if not self.abelian:
+                    if not as_str:  # print commutator out for code snippets
+                        comm.append("%s^-1*%s^-1*%s*%s" % (var_name(i), var_name(j), var_name(i), var_name(j)))
+                    elif not self.abelian:
                         comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
                     v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
                     relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i)))
-        show_gens = ", ".join(var_name(i) for i in range(len(used)))
         if pure_powers or comm:
             rel_powers = [",".join(pure_powers + comm)] + rel_powers
         relators = ", ".join(rel_powers + relators)
-        return r"< %s | %s >" % (show_gens, relators)
+        if as_str:
+            show_gens = ", ".join(var_name(i) for i in range(len(used)))
+            return r"< %s | %s >" % (show_gens, relators)
+        else:
+            show_gens = ",".join(var_name(i) for i in range(len(used)))  # no space for code snipptes
+            return show_gens, relators, len(used)
 
     @lazy_attribute
     def representations(self):
@@ -2061,25 +2078,31 @@ class WebAbstractGroup(WebObj):
             pres = self.presentation()
             pres_raw=self.presentation_raw()
             pres = raw_typeset(pres_raw,compress_pres(pres))
+            if self.live():
+                code_cmd = None
+            else:
+                code_cmd = self.create_snippet('presentation')  
             if self.abelian and not self.cyclic:
                 pres = "Abelian group " + pres
-            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
+            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>{code_cmd}'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
             gens=raw_typeset(gens,compress_perm(gens))
             d = rdata["d"]
+            code_cmd = self.create_snippet('permutation') 
             if d >= 10:
                 gens=f"Degree ${d}$" + gens
-            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
+            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>{code_cmd}'
         else:
             # Matrix group
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
+            code_cmd = self.create_snippet(rep_type)
             if skip_head:
-                return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
+                return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
             else:
-                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>'
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>{code_cmd}'
 
     @lazy_attribute
     def transitive_friends(self):
@@ -2502,6 +2525,94 @@ class WebAbstractGroup(WebObj):
             circles = ""
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
+    
+    #JP
+    def create_snippet(self,item):
+        # mimics jinja macro place_code to be included in Constructions section
+        # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
+#        if self.live():
+#            return None
+        if self.code is None:
+            self.code_snippets()
+        code = self.code
+        print("WHAT WE HAVE FOR CODE", code)
+        snippet_str = "" # initiate new string
+        if code[item]:
+            for L in code[item]:
+                if isinstance(code[item][L],str):
+                    lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
+                    lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
+                else:   # not currrently used in groups
+                    lines = code[item][L]
+                prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
+                class_str = " ".join([L,'nodisplay','code','codebox'])
+                col_span_val = '"6"'
+                for line in lines:
+                    snippet_str = snippet_str + f'<tr class="{class_str}"><td colspan={col_span_val}>{prompt}:&nbsp;{line}</td></tr>'
+        print("FINAL STR", snippet_str)
+        return snippet_str
+
+
+    #JP NEED TO ADD IFS IF IN DATA TYPE.
+    def code_snippets(self):
+        if self.live():
+            return None
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        self.code['show'] = { lang:'' for lang in self.code['prompt'] }
+        if "PC" in self.representations:
+            gens, reln, ngens =  self.presentation_raw(as_str = False)
+        else:
+            gens, reln, ngens = None, None, None
+        if "Perm" in self.representations:
+            rdata = self.representations["Perm"]
+            perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
+            deg = rdata["d"]
+        else:
+            perms, deg = None, None
+
+        if "GLZ" in self.representations:
+            nZ = self.representations["GLZ"]["d"]
+            LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]] 
+        else:
+            nZ, LZ = None, None
+        if "GLFp" in self.representations:
+            nFp = self.representations["GLFp"]["d"]
+            Fp = self.representations["GLFp"]["p"]
+            LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]] 
+        else:
+            nFp, Fp, LFp = None, None, None
+        if "GLZN" in self.representations:
+            nZN = self.representations["GLZN"]["d"]
+            N = self.representations["GLZN"]["p"]
+            LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]] 
+        else:
+            nZN, N, LZN = None, None, None
+        if "GLZq" in self.representations:
+            nZq = self.representations["GLZ"]["d"]
+            Zq = self.representations["GLZ"]["q"]
+            LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
+        else:
+            nZq, Zq, LZq = None, None, None
+        if  "GLFq" in self.representations:
+            nFq = self.representations["GLFq"]["d"]
+            Fq = self.representations["GLFq"]["q"]
+            LFq = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
+        else:
+            nFq, Fq, LFq = None, None, None
+
+            
+        data = {'gens' : gens, 'reln': reln, 'ngens': ngens,
+                'deg' : deg, 'perms' : perms,
+                'nZ' : nZ, 'nFp' : nFp, 'nZN' : nZN, 'nZq': nZq, 'nFq' : nFq,
+                'Fp' : Fp, 'N' : N, 'Zq' : Zq, 'Fq' : Fq,
+                'LZ' : LZ, 'LFp': LFp, 'LZN' : LZN, 'LZq' : LZq, 'LFq': LFq,
+        }
+        for prop in self.code:
+            for lang in self.code['prompt']:
+               self.code[prop][lang] = self.code[prop][lang].format(**data)
+    
+    
     # The following attributes are used in create_boolean_string
     @property
     def nonabelian(self):
@@ -2661,6 +2772,7 @@ class LiveAbelianGroup():
             for T in cartesian_product_iterator(
                     [Zmod(m) for m in self.snf]))
 
+    
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
 
