@@ -158,15 +158,16 @@ class XspN(ModCurveFamily_base):
     name = "X_{\mathrm{sp}}(N)"
     sl2level = "N"
     index = "N+1"
-    psl2index = "N^2+1"
+    psl2index = r"i = N^2\cdot \prod_{p|N, \text{ prime}} (1 + p^{-1})"
     genus = "g"
-    nu2 = "0"
-    nu3 = "0"
-    cusps = "N/2"
+    nu2 = r"$\nu_2 = \begin{cases}2^{\omega(N)} & \text{if } p \equiv 1 \bmod 4 \text{ for every } p \mid N, \\ 0 & \text{otherwise.}\end{cases}$" 
+    nu3 = r"$\nu_3 = \begin{cases}2^{\omega(N)} & \text{if } p \equiv 1 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise.}\end{cases}$"
+    cusps = r"$\nu_\infty = N\cdot \prod_{p|N, \text{ prime}} (1 + p^{-1})$"
     rational_cusps = "1"
     moduli_description = fr"$X_{{\text{{sp}}}}(N)$ is the {display_knowl('modcurve','modular curve')} for the subgroup $H\le \GL_2(\widehat\Z)$ given by the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} $\begin{{pmatrix}} * & 0\\ 0& * \end{{pmatrix}}$ that is split at every prime dividing $N$. As a moduli space it parameterizes triples $(E,C,D)$ where $E$ is an elliptic curve over $k$, and $C$ and $D$ are $\Gal_k$-stable cyclic subgroups such that $E[N](\overline{{k}})\simeq C \oplus D$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = r'(source) showed that there is only 1 hyperelliptic curve, namely $X_{\mathrm{sp}}(11)$. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=11&family=Xsp">following table</a>] for the full list.'
+    biell_description = "Not sure at the moment."
 
     @lazy_attribute
     def cusps_display(self):
