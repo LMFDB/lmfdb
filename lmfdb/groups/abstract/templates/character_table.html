@@ -1,34 +1,64 @@
 
 {% set ccs = gp.conjugacy_classes %}
 
-
-{% if info.char_highlight %}
-  <p>The row representing the character {{info.char_highlight}} is highighted below.</p>
+{% if info.cc_highlight %}
+{% set highlight_i = info.cc_highlight_i | int %}
 {% endif %}
 
+{% if info.char_highlight %}
+  <p>The row representing the character {{info.char_highlight}} is highlighted below.</p>
+{% endif %}
+
+
+
+{% if info.cc_highlight %}
+  <p>The column representing the conjugacy class {{info.cc_highlight}} is highlighted below. </p>
+{% endif %}
+
+
+  
 <table class="nowrap">
   <tr>
     <td></td><td></td>
     {% for c in ccs %}
-      <td class="right">{{ c.display_knowl() | safe }}</td>
+    {% if loop.index == highlight_i  %}
+    <td class="highlighted">{{c.display_knowl() | safe }}</td>
+    {% else %}
+    <td class="right">{{ c.display_knowl() | safe }}</td>
+    {% endif %}
     {% endfor %}
     <tr>
     <td></td><td>Size</td>
     {% for c in ccs %}
-      <td class="right">{{ c.size }}</td>
+    {% if loop.index == highlight_i %}
+    <td class="highlighted">{{c.size}}</td>
+    {% else %}
+    <td class="right">{{ c.size }}</td>
+    {% endif %}
     {% endfor %}
   </tr>
   {% for p in gp.factors_of_order %}
     {% set ploop = loop %}
-    <tr>
+    <tr> 
       <td></td><td class="right">{{KNOWL('group.conjugacy_class.power_classes',"{} P".format(p))}}</td>
       {% for c in ccs %}
-        <td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+       {% if loop.index ==  highlight_i %}
+      <td class="highlighted">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+      {% else %}
+<td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+      {% endif %}
       {% endfor %}
     </tr>
   {% endfor %}
   <tr>
     <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
+    {% for c in ccs %}
+       {% if loop.index ==  highlight_i %}
+      <td class="highlighted" > </td>
+      {% else %}
+      <td class="right"> </td>
+     {% endif %}
+    {% endfor %}
   </tr>
   {% set dispv = info.dispv %}
 
@@ -42,7 +72,11 @@
     <td class="center">{{chtr.type()}}</td>
     {% set cond = chtr.cyclotomic_n %}
     {% for val in chtr.values %}
-      <td class="right">{{ dispv(cond, val) | safe }}</td>
+    {% if loop.index ==  highlight_i %}
+    <td class="highlighted" align="right">{{ dispv(cond, val) | safe }}</td>
+    {% else %}
+    <td class="right">{{ dispv(cond, val) | safe }}</td>
+    {% endif %}
     {% endfor %}
     </tr>
   {% endfor %}
