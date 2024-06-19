@@ -629,8 +629,10 @@ abvar_columns = SearchColumns([
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-rank deficit", default=False),
     MathCol("curve_count", "av.fq.curve_point_counts", "points on curve", default=False),
     MathCol("abvar_count", "ag.fq.point_counts", "points on variety", default=False),
+    MathCol("jacobian_count", "av.jacobian_count", "jacobians", default=False),
+    MathCol("hyp_count", "av.hyperelliptic_count", "hyperelliptic jacobians", default=False),
     SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw")],
-    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "abvar_count"])
+    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "abvar_count", "jacobian_count", "hyp_count"])
 
 @search_wrap(
     table=db.av_fq_isog,
