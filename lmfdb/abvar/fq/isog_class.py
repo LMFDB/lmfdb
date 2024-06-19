@@ -76,6 +76,8 @@ class AbvarFq_isoclass():
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
+        if "hyp_count" not in dbdata:
+            dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
         self.__dict__.update(dbdata)
