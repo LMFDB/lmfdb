@@ -41,7 +41,8 @@ GLZ:
 GLFp:
   comment: Define the group as a matrix group with coefficients in GLFp
   magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
-  gap: Not yet implemented
+  gap: G := not yet implemented
+#  gap: G := Group({LFpsplit});
 
 GLZN:
   comment: Define the group as a matrix group with coefficients in GLZN
@@ -54,10 +55,10 @@ GLZq:
   gap: G := Group({LZqsplit});
 
 
-GLFq:
-  comment: Define the group as a matrix group with coefficients in GLFq
-  magma: G := MatrixGroup< {nFq}, GL({Fq}) | {LFq} >;
-  gap: Not yet implemented
+#GLFq:
+#  comment: Define the group as a matrix group with coefficients in GLFq
+#  magma: G := MatrixGroup< {nFq}, GL({Fq}) | {LFq} >;
+#  gap: G := Group({LFqsplit}); 
 
 transitive:
   comment: Define the group from the transitive group database

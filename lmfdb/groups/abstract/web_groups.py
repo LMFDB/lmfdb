@@ -104,14 +104,12 @@ def create_gens_list(genslist):
     used_gens = used_gens[:-1] + "]"
     return used_gens
 
-def split_matrix_list(longList,d):   #, Znfld = None, Fqfld = None):
-    # for code snippets, turns d^2 list into d lists of length d for gap matrices
+def split_matrix_list(longList,d): 
+    # for code snippets, turns d^2 list into d lists of length d for Gap matrices
     counter = 0
     BigList = []
     for i in range(d):
-        SmList = []
-        for j in range(d):
-            SmList.append(longList[j+counter])
+        SmList = [longList[j+counter] for j in range(d)]
         BigList.append(SmList)
         counter = counter + d
     return BigList
@@ -123,6 +121,24 @@ def split_matrix_list_ZN(longList,d, Znfld):
         SmList = "["
         for j in range(d):
             SmList = SmList + "ZmodnZObj(" +str(longList[j+counter])+ "," +str(Znfld) +"),"
+        SmList =SmList[:-1] + "]"
+        BigList = BigList + SmList + ","
+        counter = counter +d
+    BigList =BigList[:-1] + "]"
+    return BigList
+
+#not currently in use.  Should work if elements of Fp and Fq are given as
+#power of mult. generator
+def split_matrix_list_Fq(longList,d, Fqfld):
+    counter = 0
+    BigList = "["
+    for i in range(d):
+        SmList = "["
+        for j in range(d):
+            if longList[j+counter] == 0:
+                SmList =SmList + "0*Z("+str(Fqfld) + "),"
+            else:    
+                SmList = SmList + "Z("+str(Fqfld) + ")^" + str(longList[j+counter]-1)+","
         SmList =SmList[:-1] + "]"
         BigList = BigList + SmList + ","
         counter = counter +d
@@ -2188,6 +2204,11 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
+            if rep_type == "GLFq":
+                if skip_head:
+                    return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
+                else:
+                    return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>'
             code_cmd = self.create_snippet(rep_type)
             if skip_head:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
@@ -2670,9 +2691,11 @@ class WebAbstractGroup(WebObj):
         if "GLFp" in self.representations:
             nFp = self.representations["GLFp"]["d"]
             Fp = self.representations["GLFp"]["p"]
-            LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]] 
+            LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]]
+#            LFpsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFp", ListForm=True), nFp, Fp) for g in self.representations["GLFp"]["gens"]]) +"]"
         else:
             nFp, Fp, LFp = None, None, None
+            #nFp, Fp, LFp, LFpsplit = None, None, None, None
         if "GLZN" in self.representations:
             nZN = self.representations["GLZN"]["d"]
             N = self.representations["GLZN"]["p"]
@@ -2687,20 +2710,23 @@ class WebAbstractGroup(WebObj):
             LZqsplit ="[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZq", ListForm=True) , nZq, Zq) for g in self.representations["GLZq"]["gens"]]) +"]"
         else:
             nZq, Zq, LZq, LZqsplit = None, None, None, None
-        if  "GLFq" in self.representations:
-            nFq = self.representations["GLFq"]["d"]
-            Fq = self.representations["GLFq"]["q"]
-            LFq = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
-        else:
-            nFq, Fq, LFq = None, None, None
+# add below for GLFq implementation
+#        if  "GLFq" in self.representations:
+#            nFq = self.representations["GLFq"]["d"]
+#            Fq = self.representations["GLFq"]["q"]
+#            LFq = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
+#            LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
+#        else:
+#            nFq, Fq, LFq, LFqsplit = None, None, None, None
 
-            
+           
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
                 'ordgp': ordgp, 'used_gens' : used_gens, 'deg' : deg, 'perms' : perms,
-                'nZ' : nZ, 'nFp' : nFp, 'nZN' : nZN, 'nZq': nZq, 'nFq' : nFq,
-                'Fp' : Fp, 'N' : N, 'Zq' : Zq, 'Fq' : Fq,
-                'LZ' : LZ, 'LFp': LFp, 'LZN' : LZN, 'LZq' : LZq, 'LFq': LFq,
-                'LZsplit' : LZsplit, 'LZNsplit' : LZNsplit, 'LZqsplit' :LZqsplit, 
+                'nZ' : nZ, 'nFp' : nFp, 'nZN' : nZN, 'nZq': nZq, #'nFq' : nFq,
+                'Fp' : Fp, 'N' : N, 'Zq' : Zq, #'Fq' : Fq,
+                'LZ' : LZ, 'LFp': LFp, 'LZN' : LZN, 'LZq' : LZq, #'LFq': LFq,
+                'LZsplit' : LZsplit, 'LZNsplit' : LZNsplit, 'LZqsplit' :LZqsplit,
+               # 'LFpsplit' : LFpsplit, 'LFqsplit' : LFqsplit, # add for GLFq GAP
         }
         for prop in self.code:
             for lang in self.code['prompt']:
