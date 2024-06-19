@@ -95,10 +95,39 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+def create_gens_list(genslist):
+    used_gens = "["
+    for i in genslist:
+        used_gens = used_gens + "G." + str(i) + ","
+    used_gens = used_gens[:-1] + "]"
+    return used_gens
+
+def split_matrix_list(longList,d):   #, Znfld = None, Fqfld = None):
+    # for code snippets, turns d^2 list into d lists of length d for gap matrices
+    counter = 0
+    BigList = []
+    for i in range(d):
+        SmList = []
+        for j in range(d):
+            SmList.append(longList[j+counter])
+        BigList.append(SmList)
+        counter = counter + d
+    return BigList
+
+def split_matrix_list_ZN(longList,d, Znfld):
+    counter = 0
+    BigList = "["
+    for i in range(d):
+        SmList = "["
+        for j in range(d):
+            SmList = SmList + "ZmodnZObj(" +str(longList[j+counter])+ "," +str(Znfld) +"),"
+        SmList =SmList[:-1] + "]"
+        BigList = BigList + SmList + ","
+        counter = counter +d
+    BigList =BigList[:-1] + "]"
+    return BigList
 
 
-
-    
 
     
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
@@ -2031,7 +2060,7 @@ class WebAbstractGroup(WebObj):
             return r"< %s | %s >" % (show_gens, relators)
         else:
             show_gens = ",".join(var_name(i) for i in range(len(used)))  # no space for code snipptes
-            return show_gens, relators, len(used)
+            return show_gens
 
     @lazy_attribute
     def representations(self):
@@ -2078,10 +2107,9 @@ class WebAbstractGroup(WebObj):
             pres = self.presentation()
             pres_raw=self.presentation_raw()
             pres = raw_typeset(pres_raw,compress_pres(pres))
-            if self.live():
-                code_cmd = None
-            else:
-                code_cmd = self.create_snippet('presentation')  
+            if self.live():  # skip code snippet on live group for now
+                return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
+            code_cmd = self.create_snippet('presentation')  
             if self.abelian and not self.cyclic:
                 pres = "Abelian group " + pres
             return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>{code_cmd}'
@@ -2089,6 +2117,10 @@ class WebAbstractGroup(WebObj):
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
             gens=raw_typeset(gens,compress_perm(gens))
             d = rdata["d"]
+            if self.live():  # skip code snippet on live group for now
+                if d >= 10:
+                    gens=f"Degree ${d}$" + gens
+                return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
             code_cmd = self.create_snippet('permutation') 
             if d >= 10:
                 gens=f"Degree ${d}$" + gens
@@ -2530,12 +2562,9 @@ class WebAbstractGroup(WebObj):
     def create_snippet(self,item):
         # mimics jinja macro place_code to be included in Constructions section
         # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
-#        if self.live():
-#            return None
         if self.code is None:
             self.code_snippets()
         code = self.code
-        print("WHAT WE HAVE FOR CODE", code)
         snippet_str = "" # initiate new string
         if code[item]:
             for L in code[item]:
@@ -2548,8 +2577,7 @@ class WebAbstractGroup(WebObj):
                 class_str = " ".join([L,'nodisplay','code','codebox'])
                 col_span_val = '"6"'
                 for line in lines:
-                    snippet_str = snippet_str + f'<tr class="{class_str}"><td colspan={col_span_val}>{prompt}:&nbsp;{line}</td></tr>'
-        print("FINAL STR", snippet_str)
+                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"> {prompt}:&nbsp;{line}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'  
         return snippet_str
 
 
@@ -2561,9 +2589,13 @@ class WebAbstractGroup(WebObj):
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         self.code['show'] = { lang:'' for lang in self.code['prompt'] }
         if "PC" in self.representations:
-            gens, reln, ngens =  self.presentation_raw(as_str = False)
+            gens =  self.presentation_raw(as_str = False)
+            pccodelist = self.representations["PC"]["pres"]
+            pccode = self.representations["PC"]["code"]
+            ordgp = self.order
+            used_gens = create_gens_list(self.representations["PC"]["gens"])
         else:
-            gens, reln, ngens = None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens = None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -2573,9 +2605,10 @@ class WebAbstractGroup(WebObj):
 
         if "GLZ" in self.representations:
             nZ = self.representations["GLZ"]["d"]
-            LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]] 
+            LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]]
+            LZsplit = [split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ) for g in self.representations["GLZ"]["gens"]]
         else:
-            nZ, LZ = None, None
+            nZ, LZ, LZsplit = None, None, None
         if "GLFp" in self.representations:
             nFp = self.representations["GLFp"]["d"]
             Fp = self.representations["GLFp"]["p"]
@@ -2585,15 +2618,17 @@ class WebAbstractGroup(WebObj):
         if "GLZN" in self.representations:
             nZN = self.representations["GLZN"]["d"]
             N = self.representations["GLZN"]["p"]
-            LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]] 
+            LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
+            LZNsplit ="[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZN", ListForm=True) , nZN, N) for g in self.representations["GLZN"]["gens"]]) +"]"
         else:
-            nZN, N, LZN = None, None, None
+            nZN, N, LZN, LZNsplit = None, None, None, None
         if "GLZq" in self.representations:
-            nZq = self.representations["GLZ"]["d"]
-            Zq = self.representations["GLZ"]["q"]
+            nZq = self.representations["GLZq"]["d"]
+            Zq = self.representations["GLZq"]["q"]
             LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
+            LZqsplit ="[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZq", ListForm=True) , nZq, Zq) for g in self.representations["GLZq"]["gens"]]) +"]"
         else:
-            nZq, Zq, LZq = None, None, None
+            nZq, Zq, LZq, LZqsplit = None, None, None, None
         if  "GLFq" in self.representations:
             nFq = self.representations["GLFq"]["d"]
             Fq = self.representations["GLFq"]["q"]
@@ -2602,11 +2637,12 @@ class WebAbstractGroup(WebObj):
             nFq, Fq, LFq = None, None, None
 
             
-        data = {'gens' : gens, 'reln': reln, 'ngens': ngens,
-                'deg' : deg, 'perms' : perms,
+        data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
+                'ordgp': ordgp, 'used_gens' : used_gens, 'deg' : deg, 'perms' : perms,
                 'nZ' : nZ, 'nFp' : nFp, 'nZN' : nZN, 'nZq': nZq, 'nFq' : nFq,
                 'Fp' : Fp, 'N' : N, 'Zq' : Zq, 'Fq' : Fq,
                 'LZ' : LZ, 'LFp': LFp, 'LZN' : LZN, 'LZq' : LZq, 'LFq': LFq,
+                'LZsplit' : LZsplit, 'LZNsplit' : LZNsplit, 'LZqsplit' :LZqsplit, 
         }
         for prop in self.code:
             for lang in self.code['prompt']:

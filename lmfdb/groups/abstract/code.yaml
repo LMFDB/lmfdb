@@ -22,44 +22,45 @@ not-implemented:
 
 presentation:
   comment: Define the group with the given generators and relations
-  magma: F<{gens}> := FreeGroup({ngens});  G := quo<F | {reln}>;
-  gap: G := quo(a*b+c);
+  magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens});
+  gap: G := PcGroupCode({pccode},{ordgp});
 
 
 permutation:
   comment: Define the group as a permutation group
   magma: G := PermutationGroup< {deg} | {perms} >;
-  gap: G := Group( perms );
+  gap: G := Group( {perms} );
 
 
 GLZ:
   comment: Define the group as a matrix group with coefficients in Z
   magma: G := MatrixGroup< {nZ}, Integers() | {LZ} >;
-  gap: \\\\
+  gap: G := Group({LZsplit});
 
 
 GLFp:
+  comment: Define the group as a matrix group with coefficients in GLFp
   magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
-  gap: \\\\
+  gap: Not yet implemented
 
 GLZN:
-  comment: Define the group as a matrix group with coefficients in GLFp
+  comment: Define the group as a matrix group with coefficients in GLZN
   magma: G := MatrixGroup< {nZN}, Integers({N}) | {LZN} >;
-  gap: \\\\
+  gap: G := Group({LZNsplit});
 
 GLZq:
-  comment: Define the group as a matrix group with coefficients in GLFp
+  comment: Define the group as a matrix group with coefficients in GLZq
   magma: G := MatrixGroup< {nZq}, Integers({Zq}) | {LZq} >;
-  gap: \\\\
+  gap: G := Group({LZqsplit});
 
 
 GLFq:
-  comment: Define the group as a matrix group with coefficients in GLFp
+  comment: Define the group as a matrix group with coefficients in GLFq
   magma: G := MatrixGroup< {nFq}, GL({Fq}) | {LFq} >;
-  gap: \\\\
-
+  gap: Not yet implemented
 
 transitive:
   comment: Define the group from the transitive group database
   magma: G := TransitiveGroup(d,n);
-  gap: \\\\
+  gap: Not yet implemented
+

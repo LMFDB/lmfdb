@@ -1377,12 +1377,15 @@ def render_abstract_group(label, data=None):
 
         title = f"Abstract group ${gp.tex_name}$"
 
+        # disable until we can fix downloads
         downloads = [
-            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-            ("Underlying data", url_for(".gp_data", label=label)),
+           ("Underlying data", url_for(".gp_data", label=label)),
         ]
+#            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
+#            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+#            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+ #          ("Underlying data", url_for(".gp_data", label=label)),
+#       ]
 
         # "internal" friends
         sbgp_of_url = (
@@ -1455,7 +1458,6 @@ def render_abstract_group(label, data=None):
         code = None
     else:
         code = gp.code
-#    print("HERE IS gp.code", gp.code)
 
     
     return render_template(
@@ -1470,7 +1472,7 @@ def render_abstract_group(label, data=None):
         friends=friends,
         learnmore=learnmore_list_add(*learnmore_gp_picture),
         KNOWL_ID=f"group.abstract.{label}",
-        downloads=downloads,
+        downloads=downloads, 
     )
 
 

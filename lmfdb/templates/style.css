@@ -1956,18 +1956,6 @@ div.codebox {
 }
 
 
-tr.codebox {
-    text-align: left;
-    padding: 5px;
-    text-padding: 10px;
-    border: 1px solid {{color.knowl_thin_border}};
-    border-radius: 5px;
-    background-color: {{color.knowl_background}};
-    box-shadow: 3px 3px 3px {{color.knowl_shadow}};
-    white-space: pre;
-}
-
-
 
 /* Styling of Maass form plot */
 
