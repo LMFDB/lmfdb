@@ -115,7 +115,7 @@ def create_magma_assignment(G):
         if j == ngens - 1:
             icap = len(rel_ords)
         else:
-            icap = used[i+1]
+            icap = used[j+1]
         power = 1
         v = var_name(j)
         for i0 in range(i, icap):
@@ -2627,7 +2627,7 @@ class WebAbstractGroup(WebObj):
             circles = ""
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
-    #JP
+
     def create_snippet(self,item):
         # mimics jinja macro place_code to be included in Constructions section
         # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
@@ -2648,7 +2648,6 @@ class WebAbstractGroup(WebObj):
         return snippet_str
 
 
-    #JP NEED TO ADD IFS IF IN DATA TYPE.
     @cached_method
     def code_snippets(self):
         if self.live():
