@@ -1540,7 +1540,6 @@ def diagram_js_string(gp, only=None):
 
 # Writes individual pages
 def render_abstract_group(label, data=None):
-
     info = {}
     if data is None:
         label = clean_input(label)
@@ -1571,12 +1570,15 @@ def render_abstract_group(label, data=None):
 
         title = f"Abstract group ${gp.tex_name}$"
 
+        # disable until we can fix downloads
         downloads = [
-            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-            ("Underlying data", url_for(".gp_data", label=label)),
+           ("Underlying data", url_for(".gp_data", label=label)),
         ]
+#            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
+#            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+#            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+ #          ("Underlying data", url_for(".gp_data", label=label)),
+#       ]
 
         # "internal" friends
         sbgp_of_url = (
@@ -1651,6 +1653,7 @@ def render_abstract_group(label, data=None):
         bread=bread,
         info=info,
         gp=gp,
+        code=gp.code_snippets(),
         properties=gp.properties(),
         friends=friends,
         learnmore=learnmore_list_add(*learnmore_gp_picture),
@@ -3082,3 +3085,16 @@ def order_stats_list_to_string(o_list):
         if o_list.index(pair) != len(o_list) - 1:
             s += ","
     return s
+
+
+sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
+
+code_names = {'presentation': 'Define the group using generators and relations',
+              'permutation': 'Define the group as a permutation group',
+              'matrix': 'Define the group as a matrix group',
+              'transitive': 'Define the group from the transitive group database'}
+
+Fullname = {'magma': 'Magma', 'gap': 'Gap'}
+Comment = {'magma': '//', 'gap': '#'}
+
+

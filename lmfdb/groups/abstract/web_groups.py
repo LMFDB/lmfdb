@@ -1,6 +1,7 @@
 import re
 # import timeout_decorator
-
+import os
+import yaml
 from lmfdb import db
 from flask import url_for
 from urllib.parse import quote_plus
@@ -96,6 +97,48 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+def create_gens_list(genslist):
+    # For Magma
+    gens_list = [f"G.{i}" for i in genslist]
+    return str(gens_list).replace("'", "")
+
+def create_gap_assignment(genslist):
+    # For GAP
+    return " ".join(f"{var_name(j)} := G.{i};" for j, i in enumerate(genslist))
+
+def create_magma_assignment(G):
+    used = [u - 1 for u in sorted(G.gens_used)]
+    rel_ords = [ZZ(p) for p in G.PCG.FamilyPcgs().RelativeOrders()]
+    ngens = len(used)
+    names = []
+    for j, i in enumerate(used):
+        if j == ngens - 1:
+            icap = len(rel_ords)
+        else:
+            icap = used[j+1]
+        power = 1
+        v = var_name(j)
+        for i0 in range(i, icap):
+            if power == 1:
+                names.append(v)
+            else:
+                names.append(f"{v}{power}")
+            power *= rel_ords[i0]
+    return str(names).replace("'", '"')
+
+def split_matrix_list(longList,d):
+    # for code snippets, turns d^2 list into d lists of length d for Gap matrices
+    return [longList[i:i+d] for i in range(0,d**2,d)]
+
+def split_matrix_list_ZN(longList,d, Znfld):
+    longList = [f"ZmodnZObj({x},{Znfld})" for x in longList]
+    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
+
+#not currently in use.  Should work if elements of Fp and Fq are given as
+#power of mult. generator
+def split_matrix_list_Fq(longList,d, Fqfld):
+    longList = [f"0*Z({Fqfld})" if x == 0 else "Z({Fqfld})^{x-1}" for x in longList]
+    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 # Functions below are for conjugacy class searches
 def gp_label_to_cc_data(gp):
@@ -135,6 +178,7 @@ def cc_data_to_gp_label(order,counter):
     if in_small_gp_db(order):
         return str(order) + '.' + str(counter)
     return str(order) + '.' + cremona_letter_code(counter-1)
+
 
 
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
@@ -1867,7 +1911,8 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm=False):
+        # ListForm is for code snippet
         if rep_type == "GLZ" and not isinstance(code, int):  # decimal here represents an integer encoding b
             a, b = str(code).split(".")
             code = int(a)
@@ -1888,6 +1933,8 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
+        if ListForm:
+            return L
         x = matrix(R, d, d, L)
         if as_str:
             # for projective families, we add "[ ]"
@@ -2004,8 +2051,9 @@ class WebAbstractGroup(WebObj):
         relators = ", ".join(rel_powers + relators)
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
-    def presentation_raw(self):
+    def presentation_raw(self, as_str=True):
         # We use knowledge of the form of the presentation to construct it manually.
+        # Need as_str = False for code snippet
         gens = list(self.PCG.GeneratorsOfGroup())
         pcgs = self.PCG.FamilyPcgs()
         used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed
@@ -2056,16 +2104,22 @@ class WebAbstractGroup(WebObj):
             for j in range(i + 1, ngens):
                 b = used[j]
                 if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed
-                    if not self.abelian:
+                    if not as_str:  # print commutator out for code snippets
+                        comm.append("%s^-1*%s^-1*%s*%s" % (var_name(i), var_name(j), var_name(i), var_name(j)))
+                    elif not self.abelian:
                         comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
                     v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
                     relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i)))
-        show_gens = ", ".join(var_name(i) for i in range(len(used)))
         if pure_powers or comm:
             rel_powers = [",".join(pure_powers + comm)] + rel_powers
         relators = ", ".join(rel_powers + relators)
-        return r"< %s | %s >" % (show_gens, relators)
+        if as_str:
+            show_gens = ", ".join(var_name(i) for i in range(len(used)))
+            return r"< %s | %s >" % (show_gens, relators)
+        else:
+            show_gens = ",".join(var_name(i) for i in range(len(used)))  # no space for code snipptes
+            return show_gens
 
     @lazy_attribute
     def representations(self):
@@ -2114,6 +2168,9 @@ class WebAbstractGroup(WebObj):
             if not skip_head:  #add copy button in certain cases
                 pres_raw=self.presentation_raw()
                 pres = raw_typeset(pres_raw,compress_pres(pres))
+                if self.live():  # skip code snippet on live group for now
+                    return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:<td><td colspan="5">{pres}</td></tr>'
+                code_cmd = self.create_snippet('presentation')
             else:
                 pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
@@ -2123,23 +2180,31 @@ class WebAbstractGroup(WebObj):
                     pres = "Abelian group " + pres
             if skip_head:
                 return f'{pres} .'  # for repr_strg
-            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
+            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>{code_cmd}'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
             gens=raw_typeset(gens,compress_perm(gens))
             d = rdata["d"]
+            if self.live():  # skip code snippet on live group for now
+                code_cmd = ""
+            else:
+                code_cmd = self.create_snippet('permutation')
             if d >= 10:
                 gens=f"Degree ${d}$" + gens
-            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
+            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>{code_cmd}'
         else:
             # Matrix group
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
-            if skip_head:
-                return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
+            if rep_type == "GLFq":
+                code_cmd = ""
             else:
-                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>'
+                code_cmd = self.create_snippet(rep_type)
+            if skip_head:
+                return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
+            else:
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>{code_cmd}'
 
     @lazy_attribute
     def transitive_friends(self):
@@ -2562,6 +2627,102 @@ class WebAbstractGroup(WebObj):
             circles = ""
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
+
+    def create_snippet(self,item):
+        # mimics jinja macro place_code to be included in Constructions section
+        # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
+        code = self.code_snippets()
+        snippet_str = "" # initiate new string
+        if code[item]:
+            for L in code[item]:
+                if isinstance(code[item][L],str):
+                    lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
+                    lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
+                else:   # not currrently used in groups
+                    lines = code[item][L]
+                prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
+                class_str = " ".join([L,'nodisplay','code','codebox'])
+                col_span_val = '"6"'
+                for line in lines:
+                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"> {prompt}:&nbsp;{line}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'
+        return snippet_str
+
+
+    @cached_method
+    def code_snippets(self):
+        if self.live():
+            return
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        code['show'] = { lang:'' for lang in code['prompt'] }
+        if "PC" in self.representations:
+            gens =  self.presentation_raw(as_str=False)
+            pccodelist = self.representations["PC"]["pres"]
+            pccode = self.representations["PC"]["code"]
+            ordgp = self.order
+            used_gens = create_gens_list(self.representations["PC"]["gens"])
+            gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
+            magma_assign = create_magma_assignment(self)
+        else:
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign = None, None, None, None, None, None, None
+        if "Perm" in self.representations:
+            rdata = self.representations["Perm"]
+            perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
+            deg = rdata["d"]
+        else:
+            perms, deg = None, None
+
+        if "GLZ" in self.representations:
+            nZ = self.representations["GLZ"]["d"]
+            LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]]
+            LZsplit = [split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ) for g in self.representations["GLZ"]["gens"]]
+        else:
+            nZ, LZ, LZsplit = None, None, None
+        if "GLFp" in self.representations:
+            nFp = self.representations["GLFp"]["d"]
+            Fp = self.representations["GLFp"]["p"]
+            LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]]
+#            LFpsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFp", ListForm=True), nFp, Fp) for g in self.representations["GLFp"]["gens"]]) +"]"
+        else:
+            nFp, Fp, LFp = None, None, None
+            #nFp, Fp, LFp, LFpsplit = None, None, None, None
+        if "GLZN" in self.representations:
+            nZN = self.representations["GLZN"]["d"]
+            N = self.representations["GLZN"]["p"]
+            LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
+            LZNsplit ="[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZN", ListForm=True) , nZN, N) for g in self.representations["GLZN"]["gens"]]) +"]"
+        else:
+            nZN, N, LZN, LZNsplit = None, None, None, None
+        if "GLZq" in self.representations:
+            nZq = self.representations["GLZq"]["d"]
+            Zq = self.representations["GLZq"]["q"]
+            LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
+            LZqsplit ="[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZq", ListForm=True) , nZq, Zq) for g in self.representations["GLZq"]["gens"]]) +"]"
+        else:
+            nZq, Zq, LZq, LZqsplit = None, None, None, None
+# add below for GLFq implementation
+#        if  "GLFq" in self.representations:
+#            nFq = self.representations["GLFq"]["d"]
+#            Fq = self.representations["GLFq"]["q"]
+#            LFq = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
+#            LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
+#        else:
+#            nFq, Fq, LFq, LFqsplit = None, None, None, None
+
+        data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
+                'magma_assign': magma_assign, 'deg': deg, 'perms' : perms,
+                'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, #'nFq': nFq,
+                'Fp': Fp, 'N': N, 'Zq': Zq, #'Fq': Fq,
+                'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, #'LFq': LFq,
+                'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
+               # 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
+        }
+        for prop in code:
+            for lang in code['prompt']:
+               code[prop][lang] = code[prop][lang].format(**data)
+        return code
+
     # The following attributes are used in create_boolean_string
     @property
     def nonabelian(self):
@@ -2721,6 +2882,7 @@ class LiveAbelianGroup():
             for T in cartesian_product_iterator(
                     [Zmod(m) for m in self.snf]))
 
+    
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
 
