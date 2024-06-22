@@ -98,11 +98,13 @@ def group_pretty_image(label):
     # we should not get here
 
 def create_gens_list(genslist):
-    used_gens = "["
-    for i in genslist:
-        used_gens = used_gens + "G." + str(i) + ","
-    used_gens = used_gens[:-1] + "]"
-    return used_gens
+    # For Magma
+    gens_list = [f"G.{i}" for i in genslist]
+    return str(gens_list).replace("'", "")
+
+def create_gens_assignment(genslist):
+    # For GAP; gens := GeneratorsOfGroup(G); has already been included
+    return " ".join(f"{var_name(j)} := gens[{i}];" for j, i in enumerate(genslist))
 
 def split_matrix_list(longList,d):
     # for code snippets, turns d^2 list into d lists of length d for Gap matrices
@@ -2635,13 +2637,14 @@ class WebAbstractGroup(WebObj):
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
         if "PC" in self.representations:
-            gens =  self.presentation_raw(as_str = False)
+            gens =  self.presentation_raw(as_str=False)
             pccodelist = self.representations["PC"]["pres"]
             pccode = self.representations["PC"]["code"]
             ordgp = self.order
             used_gens = create_gens_list(self.representations["PC"]["gens"])
+            gens_assign = create_gens_assignment(self.representations["PC"]["gens"])
         else:
-            gens, pccodelist, pccode, ordgp, used_gens = None, None, None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens, gens_assign = None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -2687,12 +2690,13 @@ class WebAbstractGroup(WebObj):
 #            nFq, Fq, LFq, LFqsplit = None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
-                'ordgp': ordgp, 'used_gens' : used_gens, 'deg' : deg, 'perms' : perms,
-                'nZ' : nZ, 'nFp' : nFp, 'nZN' : nZN, 'nZq': nZq, #'nFq' : nFq,
-                'Fp' : Fp, 'N' : N, 'Zq' : Zq, #'Fq' : Fq,
-                'LZ' : LZ, 'LFp': LFp, 'LZN' : LZN, 'LZq' : LZq, #'LFq': LFq,
-                'LZsplit' : LZsplit, 'LZNsplit' : LZNsplit, 'LZqsplit' :LZqsplit,
-               # 'LFpsplit' : LFpsplit, 'LFqsplit' : LFqsplit, # add for GLFq GAP
+                'ordgp': ordgp, 'used_gens': used_gens, 'gens_assign': gens_assign,
+                'deg': deg, 'perms' : perms,
+                'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, #'nFq': nFq,
+                'Fp': Fp, 'N': N, 'Zq': Zq, #'Fq': Fq,
+                'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, #'LFq': LFq,
+                'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
+               # 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
         }
         for prop in code:
             for lang in code['prompt']:
