@@ -3093,5 +3093,3 @@ code_names = {'presentation': 'Define the group using generators and relations',
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}
-
-
