@@ -104,47 +104,19 @@ def create_gens_list(genslist):
     used_gens = used_gens[:-1] + "]"
     return used_gens
 
-def split_matrix_list(longList,d): 
+def split_matrix_list(longList,d):
     # for code snippets, turns d^2 list into d lists of length d for Gap matrices
-    counter = 0
-    BigList = []
-    for i in range(d):
-        SmList = [longList[j+counter] for j in range(d)]
-        BigList.append(SmList)
-        counter = counter + d
-    return BigList
+    return [longList[i:i+d] for i in range(0,d**2,d)]
 
 def split_matrix_list_ZN(longList,d, Znfld):
-    counter = 0
-    BigList = "["
-    for i in range(d):
-        SmList = "["
-        for j in range(d):
-            SmList = SmList + "ZmodnZObj(" +str(longList[j+counter])+ "," +str(Znfld) +"),"
-        SmList =SmList[:-1] + "]"
-        BigList = BigList + SmList + ","
-        counter = counter +d
-    BigList =BigList[:-1] + "]"
-    return BigList
+    longList = [f"ZmodnZObj({x},{Znfld})" for x in longList]
+    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 #not currently in use.  Should work if elements of Fp and Fq are given as
 #power of mult. generator
 def split_matrix_list_Fq(longList,d, Fqfld):
-    counter = 0
-    BigList = "["
-    for i in range(d):
-        SmList = "["
-        for j in range(d):
-            if longList[j+counter] == 0:
-                SmList =SmList + "0*Z("+str(Fqfld) + "),"
-            else:    
-                SmList = SmList + "Z("+str(Fqfld) + ")^" + str(longList[j+counter]-1)+","
-        SmList =SmList[:-1] + "]"
-        BigList = BigList + SmList + ","
-        counter = counter +d
-    BigList =BigList[:-1] + "]"
-    return BigList
-
+    longList = [f"0*Z({Fqfld})" if x == 0 else "Z({Fqfld})^{x-1}" for x in longList]
+    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 # Functions below are for conjugacy class searches
 def gp_label_to_cc_data(gp):
@@ -1917,7 +1889,7 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm = False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm=False):
         # ListForm is for code snippet
         if rep_type == "GLZ" and not isinstance(code, int):  # decimal here represents an integer encoding b
             a, b = str(code).split(".")
@@ -2057,7 +2029,7 @@ class WebAbstractGroup(WebObj):
         relators = ", ".join(rel_powers + relators)
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
-    def presentation_raw(self, as_str = True):
+    def presentation_raw(self, as_str=True):
         # We use knowledge of the form of the presentation to construct it manually.
         # Need as_str = False for code snippet
         gens = list(self.PCG.GeneratorsOfGroup())
@@ -2176,7 +2148,7 @@ class WebAbstractGroup(WebObj):
                 pres = raw_typeset(pres_raw,compress_pres(pres))
                 if self.live():  # skip code snippet on live group for now
                     return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:<td><td colspan="5">{pres}</td></tr>'
-                code_cmd = self.create_snippet('presentation')  
+                code_cmd = self.create_snippet('presentation')
             else:
                 pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
@@ -2192,10 +2164,9 @@ class WebAbstractGroup(WebObj):
             gens=raw_typeset(gens,compress_perm(gens))
             d = rdata["d"]
             if self.live():  # skip code snippet on live group for now
-                if d >= 10:
-                    gens=f"Degree ${d}$" + gens
-                return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
-            code_cmd = self.create_snippet('permutation') 
+                code_cmd = ""
+            else:
+                code_cmd = self.create_snippet('permutation')
             if d >= 10:
                 gens=f"Degree ${d}$" + gens
             return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>{code_cmd}'
@@ -2205,11 +2176,9 @@ class WebAbstractGroup(WebObj):
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
             if rep_type == "GLFq":
-                if skip_head:
-                    return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
-                else:
-                    return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>'
-            code_cmd = self.create_snippet(rep_type)
+                code_cmd = ""
+            else:
+                code_cmd = self.create_snippet(rep_type)
             if skip_head:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
             else:
@@ -2636,14 +2605,11 @@ class WebAbstractGroup(WebObj):
             circles = ""
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
-    
     #JP
     def create_snippet(self,item):
         # mimics jinja macro place_code to be included in Constructions section
         # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
-        if self.code is None:
-            self.code_snippets()
-        code = self.code
+        code = self.code_snippets()
         snippet_str = "" # initiate new string
         if code[item]:
             for L in code[item]:
@@ -2656,17 +2622,18 @@ class WebAbstractGroup(WebObj):
                 class_str = " ".join([L,'nodisplay','code','codebox'])
                 col_span_val = '"6"'
                 for line in lines:
-                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"> {prompt}:&nbsp;{line}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'  
+                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"> {prompt}:&nbsp;{line}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'
         return snippet_str
 
 
     #JP NEED TO ADD IFS IF IN DATA TYPE.
+    @cached_method
     def code_snippets(self):
         if self.live():
-            return None
+            return
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        self.code['show'] = { lang:'' for lang in self.code['prompt'] }
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        code['show'] = { lang:'' for lang in code['prompt'] }
         if "PC" in self.representations:
             gens =  self.presentation_raw(as_str = False)
             pccodelist = self.representations["PC"]["pres"]
@@ -2719,7 +2686,6 @@ class WebAbstractGroup(WebObj):
 #        else:
 #            nFq, Fq, LFq, LFqsplit = None, None, None, None
 
-           
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
                 'ordgp': ordgp, 'used_gens' : used_gens, 'deg' : deg, 'perms' : perms,
                 'nZ' : nZ, 'nFp' : nFp, 'nZN' : nZN, 'nZq': nZq, #'nFq' : nFq,
@@ -2728,11 +2694,11 @@ class WebAbstractGroup(WebObj):
                 'LZsplit' : LZsplit, 'LZNsplit' : LZNsplit, 'LZqsplit' :LZqsplit,
                # 'LFpsplit' : LFpsplit, 'LFqsplit' : LFqsplit, # add for GLFq GAP
         }
-        for prop in self.code:
-            for lang in self.code['prompt']:
-               self.code[prop][lang] = self.code[prop][lang].format(**data)
-    
-    
+        for prop in code:
+            for lang in code['prompt']:
+               code[prop][lang] = code[prop][lang].format(**data)
+        return code
+
     # The following attributes are used in create_boolean_string
     @property
     def nonabelian(self):

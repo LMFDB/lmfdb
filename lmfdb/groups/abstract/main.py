@@ -1646,26 +1646,19 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(label, "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
-    gp.code_snippets()
-    if gp.live():
-        code = None
-    else:
-        code = gp.code
 
-    
     return render_template(
         "abstract-show-group.html",
         title=title,
         bread=bread,
         info=info,
         gp=gp,
- #       code=gp.code,
-        code=code,
+        code=gp.code_snippets(),
         properties=gp.properties(),
         friends=friends,
         learnmore=learnmore_list_add(*learnmore_gp_picture),
         KNOWL_ID=f"group.abstract.{label}",
-        downloads=downloads, 
+        downloads=downloads,
     )
 
 
@@ -3099,7 +3092,7 @@ sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
 code_names = {'presentation': 'Define the group using generators and relations',
               'permutation': 'Define the group as a permutation group',
               'matrix': 'Define the group as a matrix group',
-              'transitivei': 'Define the group from the transitive group database'}
+              'transitive': 'Define the group from the transitive group database'}
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}

@@ -58,10 +58,10 @@ GLZq:
 #GLFq:
 #  comment: Define the group as a matrix group with coefficients in GLFq
 #  magma: G := MatrixGroup< {nFq}, GL({Fq}) | {LFq} >;
-#  gap: G := Group({LFqsplit}); 
+#  gap: G := Group({LFqsplit});
 
 transitive:
   comment: Define the group from the transitive group database
   magma: G := TransitiveGroup(d,n);
-  gap: Not yet implemented
+  gap: G := TransitiveGroup(d,n);
 
