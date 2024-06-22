@@ -22,8 +22,8 @@ not-implemented:
 
 presentation:
   comment: Define the group with the given generators and relations
-  magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens});
-  gap: G := PcGroupCode({pccode},{ordgp}); gens := GeneratorsOfGroup(G); {gens_assign}
+  magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens}); AssignNames(~G, {magma_assign});
+  gap: G := PcGroupCode({pccode},{ordgp}); {gap_assign}
 
 
 permutation:

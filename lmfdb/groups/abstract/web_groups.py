@@ -102,9 +102,29 @@ def create_gens_list(genslist):
     gens_list = [f"G.{i}" for i in genslist]
     return str(gens_list).replace("'", "")
 
-def create_gens_assignment(genslist):
-    # For GAP; gens := GeneratorsOfGroup(G); has already been included
-    return " ".join(f"{var_name(j)} := gens[{i}];" for j, i in enumerate(genslist))
+def create_gap_assignment(genslist):
+    # For GAP
+    return " ".join(f"{var_name(j)} := G.{i};" for j, i in enumerate(genslist))
+
+def create_magma_assignment(G):
+    used = [u - 1 for u in sorted(G.gens_used)]
+    rel_ords = [ZZ(p) for p in G.PCG.FamilyPcgs().RelativeOrders()]
+    ngens = len(used)
+    names = []
+    for j, i in enumerate(used):
+        if j == ngens - 1:
+            icap = len(rel_ords)
+        else:
+            icap = used[i+1]
+        power = 1
+        v = var_name(j)
+        for i0 in range(i, icap):
+            if power == 1:
+                names.append(v)
+            else:
+                names.append(f"{v}{power}")
+            power *= rel_ords[i0]
+    return str(names).replace("'", '"')
 
 def split_matrix_list(longList,d):
     # for code snippets, turns d^2 list into d lists of length d for Gap matrices
@@ -2642,9 +2662,10 @@ class WebAbstractGroup(WebObj):
             pccode = self.representations["PC"]["code"]
             ordgp = self.order
             used_gens = create_gens_list(self.representations["PC"]["gens"])
-            gens_assign = create_gens_assignment(self.representations["PC"]["gens"])
+            gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
+            magma_assign = create_magma_assignment(self)
         else:
-            gens, pccodelist, pccode, ordgp, used_gens, gens_assign = None, None, None, None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign = None, None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -2690,8 +2711,8 @@ class WebAbstractGroup(WebObj):
 #            nFq, Fq, LFq, LFqsplit = None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
-                'ordgp': ordgp, 'used_gens': used_gens, 'gens_assign': gens_assign,
-                'deg': deg, 'perms' : perms,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
+                'magma_assign': magma_assign, 'deg': deg, 'perms' : perms,
                 'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, #'nFq': nFq,
                 'Fp': Fp, 'N': N, 'Zq': Zq, #'Fq': Fq,
                 'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, #'LFq': LFq,
