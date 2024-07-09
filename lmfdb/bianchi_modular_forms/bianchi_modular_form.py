@@ -791,7 +791,7 @@ class BianchiStats(StatsDisplay):
     stat_list = [
         {'cols': ['field_label', 'level_norm'],
          'top_title': '%s by %s and %s' % (
-             display_knowl("mf.bianchi.bianchimodularforms",
+             display_knowl("mf.bianchi",
                            "Bianchi modular forms"),
              display_knowl('nf', 'base field'),
              display_knowl('mf.bianchi.level', 'level norm')),
@@ -852,7 +852,7 @@ class BianchiStats(StatsDisplay):
     def summary(self):
         return r"The database currently contains %s %s of weight 2 over %s imaginary quadratic fields, and %s %s over %s imaginary quadratic fields, including all with class number one." % (
             comma(self.nforms),
-            display_knowl("mf.bianchi.bianchimodularforms",
+            display_knowl("mf.bianchi",
                           "Bianchi modular forms"),
             self.nformfields,
             comma(self.ndims),
@@ -862,4 +862,4 @@ class BianchiStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return r'The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), self.nformfields, url_for(".statistics"))
+        return r'The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi", "Bianchi modular forms"), self.nformfields, url_for(".statistics"))

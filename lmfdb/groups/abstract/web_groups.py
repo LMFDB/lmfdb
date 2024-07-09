@@ -180,7 +180,6 @@ def cc_data_to_gp_label(order,counter):
     return str(order) + '.' + cremona_letter_code(counter-1)
 
 
-
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
@@ -2627,7 +2626,6 @@ class WebAbstractGroup(WebObj):
             circles = ""
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
-
     def create_snippet(self,item):
         # mimics jinja macro place_code to be included in Constructions section
         # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
@@ -2646,7 +2644,6 @@ class WebAbstractGroup(WebObj):
                 for line in lines:
                     snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"> {prompt}:&nbsp;{line}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'
         return snippet_str
-
 
     @cached_method
     def code_snippets(self):
@@ -2882,7 +2879,7 @@ class LiveAbelianGroup():
             for T in cartesian_product_iterator(
                     [Zmod(m) for m in self.snf]))
 
-    
+
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
 
