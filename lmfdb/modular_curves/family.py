@@ -268,7 +268,7 @@ class XnsplusN(ModCurveFamily_base):
     name = "X_{\mathrm{ns}}^+(N)"
     sl2level = "N"
     index = "N+1"
-    psl2index = r"i = N \cdot \varphi(N)"
+    psl2index = r"i = N \cdot \varphi(N)/2"
     genus = "g"
     nu2 = r"$\nu_2 = N$"
     nu3 = r"$\nu_3 = \begin{cases} 2^{\omega(N)-1} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
