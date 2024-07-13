@@ -70,7 +70,7 @@ table.reptable td, table.reptable th {
 
       {% if info.cclasses is defined %}
    <table class="ntdata">
-      <thead><tr><td>Label</td><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+      <thead><tr><td>Label</td><td>Cycle Type</td><td>Size</td><td>Order</td><td>{{KNOWL('gg.index', 'Index')}}</td><td>Representative</td></tr></thead>
       <tbody>
         {% for c in info.cclasses %}
            <tr>
@@ -78,6 +78,7 @@ table.reptable td, table.reptable th {
               <td> ${{c[3]}}$</td>
               <td> ${{c[2]}}$</td>
               <td> ${{c[1]}}$</td>
+              <td> ${{c[5]}}$</td>
               <td> ${{c[0]}}$</td>
            </tr>
         {% endfor %}
@@ -88,7 +89,13 @@ table.reptable td, table.reptable th {
       {% endif %}
    </p>
    <p>{{ place_code('ccs') }}</p>
-
+   <p>
+   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp; 
+   {% if info.malle_a %}
+   {{info.malle_a}}
+   {% else %}
+   not computed
+   {% endif %}
 
 
 
