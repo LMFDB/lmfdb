@@ -304,7 +304,7 @@ class XS4p(ModCurveFamily_base):
     name = "X_{S_4}(p)"
     sl2level = "N"
     index = "N+1"
-    psl2index = r"$i = \frac{1}{24}\cdot p\cdot (p^2 - 1)$"
+    psl2index = r"i = \frac{1}{24}\cdot p\cdot (p^2 - 1)"
     genus = "g"
     nu2 = r"$\nu_2 = \frac{1}{4}\cdot \left(p - \left(\frac{-1}{p}\right)\right)$"
     nu3 = r"$\nu_3 = \frac{1}{3}\cdot \left(p - \left(\frac{-3}{p}\right)\right)$"
