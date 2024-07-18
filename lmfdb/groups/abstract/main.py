@@ -1446,7 +1446,7 @@ class Conjugacy_class_download(Downloader):
         if not hasattr(self, 'counter_to_label'):
             self.counter_to_label = {}  # initialize dictionary
         gptuple = (res['group_order'],res['group_counter'])   # have we already found this group
-        if not gptuple in self.counter_to_label:
+        if gptuple not in self.counter_to_label:
             query_pow = {}  # need this dict to get all the power labels
             query_pow['group_order'] = res['group_order']
             query_pow['group_counter'] = res['group_counter']
