@@ -44,9 +44,10 @@
   {{info.boolean_characteristics_string | safe}}
 </p>
 
+{% if gp.order_stats != None %}
 <h2>Group statistics</h2>
 
-<p> {% if gp.order_stats != None %}
+<p> 
   <div class="table-scroll-wrapper">
    <table class="ntdata onesticky" style="margin-left:0;">
     <thead>
@@ -164,7 +165,7 @@
 
 
  {% if not gp.live() %}
-<h2>Minimal Presentations</h2>
+<h2>Minimal presentations</h2>
 
 <table>
   <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
