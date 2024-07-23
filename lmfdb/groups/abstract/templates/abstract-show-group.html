@@ -44,10 +44,8 @@
   {{info.boolean_characteristics_string | safe}}
 </p>
 
-{% if gp.order_stats != None %}
 <h2>Group statistics</h2>
-
-<p> 
+<p> {% if gp.order_stats != None %} 
   <div class="table-scroll-wrapper">
    <table class="ntdata onesticky" style="margin-left:0;">
     <thead>
@@ -117,10 +115,13 @@
         <td colspan="{{gp.order_stats|length}}">data not computed</td>
         <td class="border-left"></td>
       </tr>
+      
       {% endif %}
     </tbody>
   </table>
-  </div> 
+</div>
+{% else %}
+Statistics about orders of elements in this group have not been computed.
   {% endif %}
 </p>
 
