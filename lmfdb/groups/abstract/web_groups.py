@@ -134,11 +134,24 @@ def split_matrix_list_ZN(longList,d, Znfld):
     longList = [f"ZmodnZObj({x},{Znfld})" for x in longList]
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
+
+
+def split_matrix_list_Fp(longList,d,e):
+    return [longList[i:i+d]*e for i in range(0,d**2,d)]
+
 #not currently in use.  Should work if elements of Fp and Fq are given as
 #power of mult. generator
 def split_matrix_list_Fq(longList,d, Fqfld):
-    longList = [f"0*Z({Fqfld})" if x == 0 else "Z({Fqfld})^{x-1}" for x in longList]
+    longList = [f"0*Z({Fqfld})" if x == 0 else f"Z({Fqfld})^{x}" for x in longList]  #JP HAD x-1 here?!?!
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
+
+
+def split_matrix_Fq_add_al(longList,d):
+    longList = [0 if x == 0 else f"al^{x}" for x in longList]  #JP HAD x-1 here?!?!               
+    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
+
+
+
 
 # Functions below are for conjugacy class searches
 def gp_label_to_cc_data(gp):
@@ -1894,6 +1907,7 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "GLFp":
             N = rep_data["p"]
             R = rf"\F_{{{N}}}" if as_str else GF(N)
+            print("N, R, GLFp",N,R)
         elif rep_type == "GLZN":
             N = rep_data["p"]
             R = rf"\Z/{N}\Z" if as_str else Zmod(N)
@@ -1904,7 +1918,11 @@ class WebAbstractGroup(WebObj):
             q = ZZ(rep_data["q"])
             if sq_flag:
                 q = q**2
-            R = rf"\F_{{{q}}}" if as_str else GF(q)
+                print("new q",q)
+            if as_str:
+                R = rf"\F_{{{q}}}"
+            else:
+                R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1)
             N, k = q.is_prime_power(get_data=True)
             if k == 1:
                 # Might happen for Lie
@@ -1923,23 +1941,48 @@ class WebAbstractGroup(WebObj):
             d = rep_data["d"]
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
+            print("HERE IS R, N, K, d, rep_type", R, N, k, d, rep_type)
+            if rep_type == "GLFq":
+                q=N**k
+                R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers
         L = ZZ(code).digits(N)
+        print("HERE IS L", L)
 
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
+        print("PADDED L", L)
         if rep_type == "GLFq":
+            q = N**k
+            R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers   
             L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
+            print("HERE IS L before", L)
+            L = [l.log(a) if l!= 0 else 0  for l in L]
+            print("GLFq updates MORE L", L)
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
         if ListForm:
-            return L
-        x = matrix(R, d, d, L)
+            print("HERE IF LIST FORM", L)
+            return L  #as ints representing powers if GLFq
+        if rep_type == "GLFq":
+            x = matrix(ZZ,d,d,L)  #giving powers of a
+        else:
+            x = matrix(R, d, d, L)
+        print("HERE x otherwise",x)
         if as_str:
             # for projective families, we add "[ ]"
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
                 return r"\left[" + latex(x) + "\\right]"
+            if rep_type == "GLFq":  #need to customize latex
+                rs = 'r'*d
+                st_latex = '\left(\\begin{array}{'+rs+'}'
+                for i in range(d):
+                    for j in range(d-1):
+                        st_latex =st_latex + '\\alpha^{' +str(L[d*i+j]) + '} & ' if L[d*i+j] !=0 else st_latex+ str(0)+ ' & '
+                    st_latex =st_latex + '\\alpha^{' + str(L[d*i+d-1])+ '} \\\ ' if L[d*i+d-1] !=0 else st_latex + str(0) +' \\\ '
+                st_latex=st_latex +'\end{array}\\right)'
+                return st_latex
             return latex(x)
         return x
 
@@ -2197,10 +2240,10 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
             gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
-            if rep_type == "GLFq":
-                code_cmd = ""
-            else:
-                code_cmd = self.create_snippet(rep_type)
+#            if rep_type == "GLFq":
+#                code_cmd = ""
+#            else:
+            code_cmd = self.create_snippet(rep_type)
             if skip_head:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
             else:
@@ -2682,10 +2725,10 @@ class WebAbstractGroup(WebObj):
             nFp = self.representations["GLFp"]["d"]
             Fp = self.representations["GLFp"]["p"]
             LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]]
-#            LFpsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFp", ListForm=True), nFp, Fp) for g in self.representations["GLFp"]["gens"]]) +"]"
+            e = libgap.One(GF(Fp))
+            LFpsplit = [split_matrix_list_Fp(A,nFp,e) for A in LFp]
         else:
-            nFp, Fp, LFp = None, None, None
-            #nFp, Fp, LFp, LFpsplit = None, None, None, None
+            nFp, Fp, LFp, LFpsplit = None, None, None, None
         if "GLZN" in self.representations:
             nZN = self.representations["GLZN"]["d"]
             N = self.representations["GLZN"]["p"]
@@ -2701,22 +2744,25 @@ class WebAbstractGroup(WebObj):
         else:
             nZq, Zq, LZq, LZqsplit = None, None, None, None
 # add below for GLFq implementation
-#        if  "GLFq" in self.representations:
-#            nFq = self.representations["GLFq"]["d"]
-#            Fq = self.representations["GLFq"]["q"]
-#            LFq = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
-#            LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
-#        else:
-#            nFq, Fq, LFq, LFqsplit = None, None, None, None
+        if  "GLFq" in self.representations:
+            print("WE GOT HERE!!")
+            nFq = self.representations["GLFq"]["d"]
+            Fq = self.representations["GLFq"]["q"]
+            LFq = ",".join([split_matrix_Fq_add_al(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq ) for g in self.representations["GLFq"]["gens"]]) 
+#            LFq = [f'al^'+str(LFqraw[i]) if LFqraw[i] != 0 else 0 for i in range(len(LFqraw))]
+            LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
+            print("AND HERE!!!")
+        else:
+            nFq, Fq, LFq, LFqsplit = None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
                 'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
                 'magma_assign': magma_assign, 'deg': deg, 'perms' : perms,
-                'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, #'nFq': nFq,
-                'Fp': Fp, 'N': N, 'Zq': Zq, #'Fq': Fq,
-                'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, #'LFq': LFq,
+                'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
+                'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,
+                'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, 'LFq': LFq,
                 'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
-               # 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
+                'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
         }
         for prop in code:
             for lang in code['prompt']:
