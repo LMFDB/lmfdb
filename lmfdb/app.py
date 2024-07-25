@@ -320,6 +320,7 @@ def bad_bots_list():
             "Sogou",
             "MJ12bot",
             "Amazonbot",
+            "meta",
         ]
     ]
 
