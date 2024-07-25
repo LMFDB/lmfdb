@@ -321,6 +321,7 @@ def bad_bots_list():
             "MJ12bot",
             "Amazonbot",
             "meta",
+            "facebook",
         ]
     ]
 
