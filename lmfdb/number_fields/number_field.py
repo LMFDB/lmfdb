@@ -776,7 +776,7 @@ download_preamble = {
     'gp' : '',
     'magma' : 'R<x> := PolynomialRing(Rationals());',
     'mathematica' : '',
-    'oscar' : 'Rx, x = PolynomialRing(QQ)',
+    'oscar' : 'Rx, x = polynomial_ring(QQ)',
     'sage' : 'x = polygen(QQ)',
 }
 
@@ -784,7 +784,7 @@ download_makedata = {
     'gp' : '', # don't try to make fields in gp, even with nfinit it may take a very long time
     'magma' : 'function make_data() return [NumberField(r[2]) : r in data]; end function;',
     'mathematica' : '',
-    'oscar' : 'function make_data() return [NumberField(r[2]) for r in data] end',
+    'oscar' : 'function make_data() return [number_field(r[2]) for r in data] end',
     'sage' : 'def make_data(): return [NumberField(r[1],"a") for r in data]',
 }
 download_makedata_comment = {
