@@ -25,8 +25,11 @@
           href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css"
           integrity="sha384-Nlo8b0yiGl7Dn+BgLn4mxhIIBU6We7aeeiulNCjHdUv/eKHx59s3anfSUjExbDxn"
           crossorigin="anonymous">
-    <!--reCAPTCHA-->
-    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LchHWwpAAAAACFe52hZNEkUP5Bn5_0FfLiEuF3i&waf=session" async defer></script>
+
+    {% if not BETA %}
+      <!--reCAPTCHA-->
+      <script src="https://www.google.com/recaptcha/enterprise.js?render=6LchHWwpAAAAACFe52hZNEkUP5Bn5_0FfLiEuF3i&waf=session" async defer></script>
+    {% endif %}
 
 
 
@@ -182,10 +185,10 @@ katexOpts = {
 
   {%- if BETA -%}
   <body class="beta {{ body_class }}">
-    {%- else -%}
-    <body class="{{ body_class }}">
-      {%- endif -%}
+  {%- else -%}
+  <body class="{{ body_class }}">
+  {%- endif -%}
 
-      {% block body -%}{%- endblock body %}
-      </body>
+  {% block body -%}{%- endblock body %}
+  </body>
 </html>
