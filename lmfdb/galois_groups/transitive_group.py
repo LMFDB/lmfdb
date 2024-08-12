@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function, lazy_attribute, Permutations
+from sage.all import ZZ, gap, cached_function, lazy_attribute, Permutations, QQ
 import os
 import yaml
 from flask import render_template
@@ -195,7 +195,7 @@ class WebGaloisGroup:
         self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
             self.conjugacy_classes[0].force_repr('()')
-            return [['()', 1, 1, '1', '1A']]
+            return [['()', 1, 1, '1', '1A',0]]
         elif self.have_isomorphism():
             isom = self.getisom
             cc = [z.representative for z in self.conjugacy_classes]
@@ -214,9 +214,22 @@ class WebGaloisGroup:
             cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
+        inds = [n-len(z) for z in cc2]
         cc2 = [compress_cycle_type(z) for z in cc2]
-        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(cc))]
+        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j],inds[j]] for j in range(len(cc))]
         return ans
+
+    @lazy_attribute
+    def malle_a(self):
+        ccs = self.conjclasses
+        inds = [z[5] for z in ccs]
+        if len(inds)==1:
+            return 0
+        if len(inds)==0:
+            return None
+        inds = [z for z in inds if z>0]
+
+        return QQ(f"1/{min(inds)}")
 
     @lazy_attribute
     def can_chartable(self):

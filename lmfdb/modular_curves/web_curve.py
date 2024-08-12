@@ -187,10 +187,10 @@ def formatted_model_html(self, m):
             return title
         elif typ == 2:
             #smooth is true, false, or none
-            if smooth == True:
+            if smooth is True:
                 return display_knowl('modcurve.plane_model', 'Smooth plane model')+\
                 " Smooth plane model"
-            elif smooth == False:
+            elif smooth is False:
                 return display_knowl('modcurve.plane_model', 'Singular plane model') +\
                 " Singular plane model"
             else:
