@@ -1550,20 +1550,6 @@ table.display td.center {
 }
 
 
-/* are .top, .bottom, or .clear used? */
-.top, .bottom {
-    padding: 52px 5px 5px;
-    background-color: {{color.white_1}};
-    border: 1px solid {{color.light_grey_4}};
-}
-
-.top {
-    float: none;
-}
-
-.clear {
-    clear: both;
-}
 
 
 /* TODO: div? */
