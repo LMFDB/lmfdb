@@ -2630,3 +2630,8 @@ span.raw-tset-container:hover > span.raw-tset-copy-btn {
 div.upload_section {
   margin-bottom: 60px;
 }
+
+/* hidge google badge */
+.grecaptcha-badge {
+    visibility: hidden;
+}
