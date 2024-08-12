@@ -2691,10 +2691,20 @@ class WebAbstractGroup(WebObj):
                 else:   # not currrently used in groups
                     lines = code[item][L]
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
-                class_str = " ".join([L,'nodisplay','code','codebox'])
-                col_span_val = '"6"'  
+                class_str = " ".join([L,'nodisplay','codebox'])
+                col_span_val = '"6"'
                 for line in lines:
-                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"><span class="raw-tset-copy-btn" onclick="copyTextOf(this)"><img alt="Copy content" class="tset-icon"></span> {prompt}:&nbsp;{line}<div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'
+                    snippet_str += f"""
+<tr>
+    <td colspan={col_span_val}>
+        <div class="{class_str}">
+            <span class="raw-tset-copy-btn" onclick="copycode(this)"><img alt="Copy content" class="tset-icon"></span>
+            <span class="prompt">{prompt}:&nbsp;</span><span class="code">{line}</span>
+            <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
+        </div>
+    </td>
+</tr>
+"""
         return snippet_str
 
 
