@@ -139,18 +139,17 @@ def split_matrix_list_ZN(longList,d, Znfld):
 def split_matrix_list_Fp(longList,d,e):
     return [longList[i:i+d]*e for i in range(0,d**2,d)]
 
-#not currently in use.  Should work if elements of Fp and Fq are given as
-#power of mult. generator
+
 def split_matrix_list_Fq(longList,d, Fqfld):
-    longList = [f"0*Z({Fqfld})" if x == 0 else f"Z({Fqfld})^{x}" for x in longList]  #JP HAD x-1 here?!?!
+# for gap definition of Fq
+    longList = [f"0*Z({Fqfld})" if x == -1 else f"Z({Fqfld})^{x}" for x in longList]  #-1 distinguishes 0 from z^0
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 
 def split_matrix_Fq_add_al(longList,d):
-    longList = [0 if x == 0 else f"al^{x}" for x in longList]  #JP HAD x-1 here?!?!               
+# for magma definition of Fq
+    longList = [0 if x == -1 else 1 if x ==0 else f"al^{x}" for x in longList]  
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
-
-
 
 
 # Functions below are for conjugacy class searches
@@ -1907,7 +1906,7 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "GLFp":
             N = rep_data["p"]
             R = rf"\F_{{{N}}}" if as_str else GF(N)
-            print("N, R, GLFp",N,R)
+#            print("N, R, GLFp",N,R)
         elif rep_type == "GLZN":
             N = rep_data["p"]
             R = rf"\Z/{N}\Z" if as_str else Zmod(N)
@@ -1918,7 +1917,7 @@ class WebAbstractGroup(WebObj):
             q = ZZ(rep_data["q"])
             if sq_flag:
                 q = q**2
-                print("new q",q)
+#                print("new q",q)
             if as_str:
                 R = rf"\F_{{{q}}}"
             else:
@@ -1941,46 +1940,54 @@ class WebAbstractGroup(WebObj):
             d = rep_data["d"]
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
-            print("HERE IS R, N, K, d, rep_type", R, N, k, d, rep_type)
+#            print("HERE IS R, N, K, d, rep_type", R, N, k, d, rep_type)
             if rep_type == "GLFq":
                 q=N**k
                 R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers
         L = ZZ(code).digits(N)
-        print("HERE IS L", L)
+#        print("HERE IS L", L)
 
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
-        print("PADDED L", L)
+#        print("PADDED L", L)
         if rep_type == "GLFq":
-            q = N**k
-            R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers   
+#            q = N**k
+#            R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers   
             L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
             print("HERE IS L before", L)
-            L = [l.log(a) if l!= 0 else 0  for l in L]
+            L = [l.log(a) if l!= 0 else -1  for l in L]  #-1 represents 0, to distinguish from  a^0
             print("GLFq updates MORE L", L)
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
         if ListForm:
-            print("HERE IF LIST FORM", L)
-            return L  #as ints representing powers if GLFq
+#            print("HERE IF LIST FORM", L)
+            return L  #as ints representing powers of primitive element if GLFq
         if rep_type == "GLFq":
-            x = matrix(ZZ,d,d,L)  #giving powers of a
+            x = matrix(ZZ,d,d,L)  #giving powers of alpha (primitive element)
         else:
             x = matrix(R, d, d, L)
-        print("HERE x otherwise",x)
+#        print("HERE x otherwise",x)
         if as_str:
             # for projective families, we add "[ ]"
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
                 return r"\left[" + latex(x) + "\\right]"
-            if rep_type == "GLFq":  #need to customize latex
+            if rep_type == "GLFq":  #need to customize latex command for GLFq
                 rs = 'r'*d
                 st_latex = '\left(\\begin{array}{'+rs+'}'
                 for i in range(d):
-                    for j in range(d-1):
-                        st_latex =st_latex + '\\alpha^{' +str(L[d*i+j]) + '} & ' if L[d*i+j] !=0 else st_latex+ str(0)+ ' & '
-                    st_latex =st_latex + '\\alpha^{' + str(L[d*i+d-1])+ '} \\\ ' if L[d*i+d-1] !=0 else st_latex + str(0) +' \\\ '
+                    for j in range(d):
+                        if j<d-1:
+                            endstr = ' & '
+                        else:
+                            endstr = ' \\\ '
+                        if L[d*i+j] >0:
+                            st_latex =st_latex + '\\alpha^{' +str(L[d*i+j]) + '}' + endstr
+                        elif L[d*i+j] == 0:
+                            st_latex = st_latex+ str(1)+ endstr
+                        else:
+                            st_latex = st_latex+ str(0)+ endstr
                 st_latex=st_latex +'\end{array}\\right)'
                 return st_latex
             return latex(x)
@@ -2685,9 +2692,9 @@ class WebAbstractGroup(WebObj):
                     lines = code[item][L]
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','code','codebox'])
-                col_span_val = '"6"'
+                col_span_val = '"6"'  
                 for line in lines:
-                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"> {prompt}:&nbsp;{line}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'
+                    snippet_str = snippet_str + f'<tr><td colspan={col_span_val}><div class="{class_str}"><span class="raw-tset-copy-btn" onclick="copyTextOf(this)"><img alt="Copy content" class="tset-icon"></span> {prompt}:&nbsp;{line}<div style="margin: 0; padding: 0; height: 0;">&nbsp;</div></div></td></tr>'
         return snippet_str
 
 
@@ -2745,13 +2752,13 @@ class WebAbstractGroup(WebObj):
             nZq, Zq, LZq, LZqsplit = None, None, None, None
 # add below for GLFq implementation
         if  "GLFq" in self.representations:
-            print("WE GOT HERE!!")
+#            print("WE GOT HERE!!")
             nFq = self.representations["GLFq"]["d"]
             Fq = self.representations["GLFq"]["q"]
             LFq = ",".join([split_matrix_Fq_add_al(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq ) for g in self.representations["GLFq"]["gens"]]) 
 #            LFq = [f'al^'+str(LFqraw[i]) if LFqraw[i] != 0 else 0 for i in range(len(LFqraw))]
             LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
-            print("AND HERE!!!")
+#            print("AND HERE!!!")
         else:
             nFq, Fq, LFq, LFqsplit = None, None, None, None
 
