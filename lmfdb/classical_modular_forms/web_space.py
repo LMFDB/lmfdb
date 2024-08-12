@@ -506,6 +506,7 @@ class WebGamma1Space():
                     space['level'] = level
                     space['conrey_index'] = char['first']
                     space['char_orbit_label'] = char['label'].split('.')[-1]
+                    space['label'] = "%s.%s.%s"%(level,weight,space['char_orbit_label'])
                     space['char_degree'] = char['degree']
                     space['dim'] = newspace_dims_by_label[char['label']]
                     space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a')
