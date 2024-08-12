@@ -308,7 +308,6 @@ def netloc_redirect():
         return redirect(urlunparse(replaced), code=302)
 
 
-
 def timestamp():
     return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
