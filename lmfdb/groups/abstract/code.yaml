@@ -41,7 +41,6 @@ GLZ:
 GLFp:
   comment: Define the group as a matrix group with coefficients in GLFp
   magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
-  gap: G := not yet implemented
   gap: G := Group({LFpsplit});
 
 GLZN:
