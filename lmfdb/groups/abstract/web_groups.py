@@ -1905,7 +1905,6 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "GLFp":
             N = rep_data["p"]
             R = rf"\F_{{{N}}}" if as_str else GF(N)
-#            print("N, R, GLFp",N,R)
         elif rep_type == "GLZN":
             N = rep_data["p"]
             R = rf"\Z/{N}\Z" if as_str else Zmod(N)
@@ -1916,7 +1915,6 @@ class WebAbstractGroup(WebObj):
             q = ZZ(rep_data["q"])
             if sq_flag:
                 q = q**2
-#                print("new q",q)
             if as_str:
                 R = rf"\F_{{{q}}}"
             else:
@@ -1939,35 +1937,26 @@ class WebAbstractGroup(WebObj):
             d = rep_data["d"]
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
-#            print("HERE IS R, N, K, d, rep_type", R, N, k, d, rep_type)
             if rep_type == "GLFq":
                 q=N**k
                 R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers
         L = ZZ(code).digits(N)
-#        print("HERE IS L", L)
 
         def pad(X, m):
             return X + [0] * (m - len(L))
         L = pad(L, k * d**2)
-#        print("PADDED L", L)
         if rep_type == "GLFq":
-#            q = N**k
-#            R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers   
             L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
-            print("HERE IS L before", L)
             L = [l.log(a) if l!= 0 else -1  for l in L]  #-1 represents 0, to distinguish from  a^0
-            print("GLFq updates MORE L", L)
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
         if ListForm:
-#            print("HERE IF LIST FORM", L)
             return L  #as ints representing powers of primitive element if GLFq
         if rep_type == "GLFq":
             x = matrix(ZZ,d,d,L)  #giving powers of alpha (primitive element)
         else:
             x = matrix(R, d, d, L)
-#        print("HERE x otherwise",x)
         if as_str:
             # for projective families, we add "[ ]"
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
@@ -2759,13 +2748,10 @@ class WebAbstractGroup(WebObj):
             nZq, Zq, LZq, LZqsplit = None, None, None, None
 # add below for GLFq implementation
         if  "GLFq" in self.representations:
-#            print("WE GOT HERE!!")
             nFq = self.representations["GLFq"]["d"]
             Fq = self.representations["GLFq"]["q"]
             LFq = ",".join([split_matrix_Fq_add_al(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq ) for g in self.representations["GLFq"]["gens"]]) 
-#            LFq = [f'al^'+str(LFqraw[i]) if LFqraw[i] != 0 else 0 for i in range(len(LFqraw))]
             LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
-#            print("AND HERE!!!")
         else:
             nFq, Fq, LFq, LFqsplit = None, None, None, None
 
