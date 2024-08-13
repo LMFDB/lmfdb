@@ -1918,7 +1918,8 @@ class WebAbstractGroup(WebObj):
             if as_str:
                 R = rf"\F_{{{q}}}"
             else:
-                R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1)
+                R = GF(q, modulus = "primitive", names=('a',))
+                (a,) = R._first_ngens(1)
             N, k = q.is_prime_power(get_data=True)
             if k == 1:
                 # Might happen for Lie
