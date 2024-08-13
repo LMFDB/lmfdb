@@ -1939,7 +1939,8 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
             if rep_type == "GLFq":
                 q=N**k
-                R = GF(q, modulus = "primitive", names=('a',)); (a,) = R._first_ngens(1) #need a for powers
+                R = GF(q, modulus = "primitive", names=('a',))
+                (a,) = R._first_ngens(1) #need a for powers
         L = ZZ(code).digits(N)
 
         def pad(X, m):
