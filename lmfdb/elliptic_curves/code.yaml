@@ -35,7 +35,7 @@ curve:
   sage:  E = EllipticCurve({ainvs})
   pari:  E = ellinit({ainvs})
   magma: E := EllipticCurve({ainvs});
-  oscar: E = EllipticCurve({ainvs})
+  oscar: E = elliptic_curve({ainvs})
 
 simple_curve:
   sage: E.short_weierstrass_model()

@@ -788,7 +788,7 @@ def newform_parse(info, query):
             query['is_largest'] = False
     parse_ints(info, query, 'hecke_ring_index')
     parse_ints(info, query, 'hecke_ring_generator_nbound')
-    if 'projective_image_type' in info and not 'projective_image' in info:
+    if 'projective_image_type' in info and 'projective_image' not in info:
         query['projective_image_type'] = info['projective_image_type']
     elif info.get('projective_image','').lower() in ["dn","dihedral"]:
         query["projective_image_type"] = "Dn"
@@ -850,7 +850,7 @@ newform_columns = SearchColumns([
                  align="center", short_title="projective image"),
     MultiProcessedCol("cm", "cmf.self_twist", "CM",
                       ["is_cm", "cm_discs"],
-                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else ("None" if is_cm == False else "not computed"),
+                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else ("None" if is_cm is False else "not computed"),
                       short_title="CM",
                       download_col="cm_discs"),
     MultiProcessedCol("rm", "cmf.self_twist", "RM",

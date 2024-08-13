@@ -1446,7 +1446,7 @@ class Conjugacy_class_download(Downloader):
         if not hasattr(self, 'counter_to_label'):
             self.counter_to_label = {}  # initialize dictionary
         gptuple = (res['group_order'],res['group_counter'])   # have we already found this group
-        if not gptuple in self.counter_to_label:
+        if gptuple not in self.counter_to_label:
             query_pow = {}  # need this dict to get all the power labels
             query_pow['group_order'] = res['group_order']
             query_pow['group_counter'] = res['group_counter']
@@ -2745,11 +2745,8 @@ def cc_data(gp, label, typ="complex", representative=None):
             ans += "<br>Representative: id"
         else:
             gp_value = WebAbstractGroup(gp)
-            if gp_value.representations.get("Lie") and gp_value.representations["Lie"][0]["family"][0] == "P" and gp_value.order < 2000:  #Problem with projective lie groups of order <2000
-                pass
-            else:
-                repn = gp_value.decode(wacc.representative, as_str=True)
-                ans += "<br>Representative: {}".format("$" + repn + "$")
+            repn = gp_value.decode(wacc.representative, as_str=True)
+            ans += "<br>Representative: {}".format("$" + repn + "$")
     return Markup(ans)
 
 
@@ -3096,5 +3093,3 @@ code_names = {'presentation': 'Define the group using generators and relations',
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}
-
-
