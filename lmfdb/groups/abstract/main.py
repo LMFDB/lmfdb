@@ -928,6 +928,7 @@ def group_jump(info):
                 return redirect(url_for(".by_label", label=lab))
             else:
                 flash_error("The group %s has not yet been added to the database." % jump)
+                return redirect(url_for(".index"))
     flash_error("%s is not a valid name for a group or subgroup; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
     return redirect(url_for(".index"))
 
