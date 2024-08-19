@@ -827,7 +827,7 @@ nf_columns = SearchColumns([
     PolynomialCol("coeffs", "nf.defining_polynomial", "Polynomial"),
     MathCol("degree", "nf.degree", "Degree", align="center", default=False),
     MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), apply_download=False, align="center", default=False),
-    DiscriminantCol("disc", "nf.disc", "Discriminant", ['disc_sign', 'disc_abs'], func=None, align="left"),
+    DiscriminantCol("disc", "nf.discriminant", "Discriminant", ['disc_sign', 'disc_abs'], func=None, align="left"),
     MathCol("num_ram", "nf.ramified_primes", "Ram. prime count", short_title="ramified prime count", default=False),
     MathCol("rd", "nf.root_discriminant", "Root discriminant", default=False),
     MathCol("grd", "nf.galois_root_discriminant", "Galois root discriminant", default=False),
