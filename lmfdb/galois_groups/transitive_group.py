@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function, lazy_attribute, Permutations, QQ
+from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
 from flask import render_template
@@ -154,9 +154,10 @@ class WebGaloisGroup:
 
     def gapgroupnt(self):
         if int(self.n()) == 1:
-            G = gap.SmallGroup(1, 1)
+            G = libgap.SmallGroup(1, 1)
         else:
-            G = gap('Group(['+self.generator_string()+'])')
+            gens = [SymmetricGroup(self.n())([tuple(cyc) for cyc in g]) for g in self.gens()]
+            G = libgap.Group([g._libgap_() for g in gens])
         return G
 
     def num_conjclasses(self):
@@ -176,7 +177,7 @@ class WebGaloisGroup:
         # assumes isomorphism is in _data
         wag = self.wag
         imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
-        imgs = [gap("PermList(%s)"%str(z)) for z in imgs]
+        imgs = [libgap.PermList(z) for z in imgs]
         return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
 
     @lazy_attribute
@@ -204,16 +205,15 @@ class WebGaloisGroup:
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(str(cc[j]))
             ccn = [z.size for z in self.conjugacy_classes]
-            cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             cclabels = [z.label for z in self.conjugacy_classes]
         else:
             cc = g.ConjugacyClasses()
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
+        cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
         inds = [n-len(z) for z in cc2]
         cc2 = [compress_cycle_type(z) for z in cc2]
         ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j],inds[j]] for j in range(len(cc))]
@@ -605,10 +605,10 @@ def cclasses(n, t):
          """
     cc = group.conjclasses
     for c in cc:
-        html += '<tr><td>' + str(c[3]) + '</td>'
-        html += '<td>' + str(c[2]) + '</td>'
-        html += '<td>' + str(c[1]) + '</td>'
-        html += '<td>' + str(c[0]) + '</td>'
+        html += f'<tr><td>${c[3]}$</td>'
+        html += f'<td>${c[2]}$</td>'
+        html += f'<td>${c[1]}$</td>'
+        html += f'<td>${c[0]}$</td>'
     html += """</tr></tbody>
              </table>
           """
