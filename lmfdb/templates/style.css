@@ -528,11 +528,22 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     height: 0px;
 }
 
-.code {
+.code, .prompt {
     font-family: monospace;
+    white-space: pre;
+}
+
+.code {
     margin: 2px;
     margin-right: 20px;
+    margin-left: 0px;
 }
+
+.prompt {
+    margin: 2px;
+    margin-right: 0px;
+}
+
 
 .nodisplay {
     display: None;
@@ -1569,7 +1580,6 @@ div.codebox {
     border-radius: 5px;
     background-color: {{color.knowl_background}};
     box-shadow: 3px 3px 3px {{color.knowl_shadow}};
-    white-space: pre;
 }
 
 
