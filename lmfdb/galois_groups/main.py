@@ -4,7 +4,7 @@
 import re
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from sage.all import ZZ, latex, gap
+from sage.all import ZZ, latex, libgap
 
 from lmfdb import db
 from lmfdb.app import app
@@ -30,7 +30,7 @@ from .transitive_group import (
 # logger = make_logger("GG")
 
 try:
-    G = gap.TransitiveGroup(9, 2)
+    G = libgap.TransitiveGroup(9, 2)
 except Exception:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
