@@ -202,16 +202,8 @@ class WebModLGalRep(WebObj):
     def downloads(self):
         self.downloads = [
             (
-                "Code to Magma",
-                url_for(".modlgal_magma_download", label=self.label),
-            ),
-            (
-                "Code to SageMath",
-                url_for(".modlgal_sage_download", label=self.label),
-            ),
-            (
                 "All data to text",
-                url_for(".modlgal_text_download", label=self.label),
+                url_for(".download_modlgal_text", label=self.label),
             ),
             (
                 'Underlying data',
@@ -219,5 +211,4 @@ class WebModLGalRep(WebObj):
             )
 
         ]
-        #self.downloads.append(("Underlying data", url_for(".belyi_data", label=self.label)))
         return self.downloads
