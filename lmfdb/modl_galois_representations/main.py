@@ -2,7 +2,8 @@
 import re
 from lmfdb import db
 
-from flask import render_template, url_for, request, redirect, abort
+from psycodict.encoding import Json
+from flask import render_template, url_for, request, redirect, make_response, abort
 
 from sage.all import ZZ, QQ
 
@@ -84,7 +85,7 @@ def random_rep():
     label = db.modlgal_reps.random()
     return url_for_modlgal_label(label)
 
-@modlgal_page.route("/interesting")
+@modlgal_page.route("/Q/interesting")
 def interesting():
     return interesting_knowls(
         "modlgal",
@@ -114,6 +115,7 @@ def by_label(label):
         "modlgal_rep.html",
         rep=rep,
         properties=rep.properties,
+        downloads=rep.downloads,
         friends=rep.friends,
         bread=rep.bread,
         title=rep.title,
@@ -381,7 +383,7 @@ def statistics():
     title = r'Mod-$\ell$ Galois representations: Statistics'
     return render_template("display_stats.html", info=ModLGalRep_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
 
-@modlgal_page.route("/Source")
+@modlgal_page.route("/Q/Source")
 def how_computed_page():
     t = r'Source and acknowledgments for mod-$\ell$ Galois representation data'
     bread = get_bread('Source')
@@ -391,28 +393,38 @@ def how_computed_page():
                            'rcs.cite.modlgal'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@modlgal_page.route("/Completeness")
+@modlgal_page.route("/Q/Completeness")
 def completeness_page():
     t = r'Completeness of mod-$\ell$ Galois representation data'
     bread = get_bread('Completeness')
     return render_template("single.html", kid='rcs.cande.modlgal',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@modlgal_page.route("/Reliability")
+@modlgal_page.route("/Q/Reliability")
 def reliability_page():
     t = r'Reliability of mod-$\ell$ Galois representation data'
     bread = get_bread('Reliability')
     return render_template("single.html", kid='rcs.rigor.modlgal',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
-@modlgal_page.route("/Labels")
+@modlgal_page.route("/Q/Labels")
 def labels_page():
     t = r'Labels for mod-$\ell$ Galois representations'
     bread = get_bread('Labels')
     return render_template("single.html", kid='modlgal.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
-@modlgal_page.route("/data/<label>")
+@modlgal_page.route("/download_all/<label>")
+def download_modlgal_text(label):
+    data = db.modlgal_reps.lookup(label, label_col='label')
+    if data is None:
+        return r"There is no mod-$\ell$ Galois representation %s in the database"%(label)
+    data_list = [data]
+    response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@modlgal_page.route("/Q/data/<label>")
 def modlgal_data(label):
     bread = get_bread([(label, url_for_modlgal_label(label)), ("Data", " ")])
     if LABEL_RE.fullmatch(label):
