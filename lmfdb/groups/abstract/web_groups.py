@@ -135,7 +135,6 @@ def split_matrix_list_ZN(longList,d, Znfld):
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 
-
 def split_matrix_list_Fp(longList,d,e):
     return [longList[i:i+d]*e for i in range(0,d**2,d)]
 
@@ -148,7 +147,7 @@ def split_matrix_list_Fq(longList,d, Fqfld):
 
 def split_matrix_Fq_add_al(longList,d):
 # for magma definition of Fq
-    longList = [0 if x == -1 else 1 if x ==0 else f"al^{x}" for x in longList]  
+    longList = [0 if x == -1 else 1 if x ==0 else f"al^{x}" for x in longList]
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 
@@ -1918,7 +1917,7 @@ class WebAbstractGroup(WebObj):
             if as_str:
                 R = rf"\F_{{{q}}}"
             else:
-                R = GF(q, modulus = "primitive", names=('a',))
+                R = GF(q, modulus="primitive", names=('a',))
                 (a,) = R._first_ngens(1)
             N, k = q.is_prime_power(get_data=True)
             if k == 1:
@@ -1940,7 +1939,7 @@ class WebAbstractGroup(WebObj):
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
             if rep_type == "GLFq":
                 q=N**k
-                R = GF(q, modulus = "primitive", names=('a',))
+                R = GF(q, modulus="primitive", names=('a',))
                 (a,) = R._first_ngens(1) #need a for powers
         L = ZZ(code).digits(N)
 
@@ -1949,7 +1948,7 @@ class WebAbstractGroup(WebObj):
         L = pad(L, k * d**2)
         if rep_type == "GLFq":
             L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
-            L = [l.log(a) if l!= 0 else -1  for l in L]  #-1 represents 0, to distinguish from  a^0
+            L = [l.log(a) if l!= 0 else -1 for l in L]  #-1 represents 0, to distinguish from  a^0
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
@@ -1965,20 +1964,20 @@ class WebAbstractGroup(WebObj):
                 return r"\left[" + latex(x) + "\\right]"
             if rep_type == "GLFq":  #need to customize latex command for GLFq
                 rs = 'r'*d
-                st_latex = '\left(\\begin{array}{'+rs+'}'
+                st_latex = r'\left(\\begin{array}{'+rs+'}'
                 for i in range(d):
                     for j in range(d):
                         if j<d-1:
                             endstr = ' & '
                         else:
-                            endstr = ' \\\ '
+                            endstr = r' \\\ '
                         if L[d*i+j] >0:
                             st_latex =st_latex + '\\alpha^{' +str(L[d*i+j]) + '}' + endstr
                         elif L[d*i+j] == 0:
                             st_latex = st_latex+ str(1)+ endstr
                         else:
                             st_latex = st_latex+ str(0)+ endstr
-                st_latex=st_latex +'\end{array}\\right)'
+                st_latex=st_latex +r'\end{array}\\right)'
                 return st_latex
             return latex(x)
         return x
@@ -2746,10 +2745,10 @@ class WebAbstractGroup(WebObj):
         else:
             nZq, Zq, LZq, LZqsplit = None, None, None, None
 # add below for GLFq implementation
-        if  "GLFq" in self.representations:
+        if "GLFq" in self.representations:
             nFq = self.representations["GLFq"]["d"]
             Fq = self.representations["GLFq"]["q"]
-            LFq = ",".join([split_matrix_Fq_add_al(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq ) for g in self.representations["GLFq"]["gens"]]) 
+            LFq = ",".join([split_matrix_Fq_add_al(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq ) for g in self.representations["GLFq"]["gens"]])
             LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) +"]"
         else:
             nFq, Fq, LFq, LFqsplit = None, None, None, None
