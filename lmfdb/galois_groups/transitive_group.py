@@ -600,7 +600,9 @@ def cclasses(n, t):
     #    return 'not computed'
     html = """<div>
             <table class="ntdata">
-            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td>
+            <td><a title = "' + index + ' [gg.index]" knowl="gg.index">Index</a></td>
+            <td>Representative</td></tr></thead>
             <tbody>
          """
     cc = group.conjclasses
@@ -608,6 +610,7 @@ def cclasses(n, t):
         html += f'<tr><td>${c[3]}$</td>'
         html += f'<td>${c[2]}$</td>'
         html += f'<td>${c[1]}$</td>'
+        html += f'<td>${c[5]}$</td>'
         html += f'<td>${c[0]}$</td>'
     html += """</tr></tbody>
              </table>
