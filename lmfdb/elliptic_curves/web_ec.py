@@ -96,7 +96,7 @@ def gl2_subgroup_data(label):
                 data['Slabel'] = label
         elif S_EXT_LABEL_RE.fullmatch(label):
             in_modcurve_db = False
-            data = data = db.gps_gl2zhat.lucky({'Slabel':label})
+            data = data = db.gps_gl2zhat_fine.lucky({'Slabel':label})
         else:
             return "Unrecognized GL(2,Zhat) subgroup label format %s" % label
         if data is None:
@@ -336,6 +336,12 @@ class WebEC():
         data['cond_factor'] =latex(Nfac)
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
+
+        def red(p):
+            ld = [ld['reduction_type'] for ld in local_data if ld['prime'] == p]
+            return ld[0] if len(ld) else 2
+
+        self.serre_data = [(l,red(l),k,web_latex_factored_integer(M,equals=True)) for l,k,M in self.serre_invariants]
 
         # retrieve data about MW rank, generators, heights and
         # torsion, leading term of L-function & other BSD data from
@@ -758,7 +764,7 @@ class WebEC():
 
         for tgd in tgdata:
             tg1 = {}
-            tg1['bc_label'] = "Not in database"
+            tg1['bc_label'] = "not in database"
             tg1['d'] = tgd['degree']
             F = tgd['field']
             tg1['f'] = formatfield(F)

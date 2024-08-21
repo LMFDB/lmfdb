@@ -24,7 +24,7 @@ def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ri
     s = _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field)
     if is_surjective:
         return "$" + s + "$"
-    t = t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
+    t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
     return t + r" $< " + s + "$" if codomain else t
 
 def rep_pretty(algebraic_group, dimension, base_ring_order, base_ring_is_field):
