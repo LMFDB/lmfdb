@@ -64,7 +64,7 @@ def index():
 @modlgal_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=ModLGalRepSearchArray())
-    if len(info) > 1:
+    if request.args:
         return modlgal_search(info)
     title = r"Mod-$\ell$ Galois representations"
     codomains = ["GL,1,2,1","GL,2,2,1","GL,2,3,1","GL,2,5,1","GSp,4,2,1"]
