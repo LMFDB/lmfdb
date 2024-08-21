@@ -40,7 +40,7 @@ from lmfdb.api import datapage
 
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
-from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty
+from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty_with_abstract
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
@@ -138,21 +138,24 @@ modlgal_columns = SearchColumns(
         MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension"),
         ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, align="center"),
         RationalCol("top_slope_rational", "modlgal.top_slope", "Top slope", lambda x: x, align="center", default=lambda info: info.get("top_slope")),
-        MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
-                          image_pretty, align="center", apply_download=False),
-        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index", default=False),
-        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order", default=False),
+        MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field", "image_abstract_group"],
+        image_pretty_with_abstract, align="center", apply_download=False),
+        MultiProcessedCol("algebraic_group", "modlgal.codomain", "Codomain", ["algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"], codomain, align="center", apply_download=False, default=False),
+        SearchCol("image_index", "modlgal.image_index", "Index", short_title="image index", default=False),
+        SearchCol("image_order", "modlgal.image_order", "Order", short_title="image order", default=False),
         CheckCol("is_surjective", "modlgal.surjective", "Surjective"),
-        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
-        CheckCol("is_solvable", "modlgal.is_solvable", "Solvable", default=False),
-        LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center", default=False),
+        CheckCol("is_absolutely_irreducible", "modlgal.absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
+        CheckCol("is_solvable", "modlgal.solvable", "Solvable", default=False),
+        LinkCol("determinant_label", "modlgal.determinant", "Determinant", url_for_modlgal_label, align="center", default=False),
+        ProcessedCol("determinant_index", "modlgal.det_surjective", "Det. surjective", lambda a: "&#x2713;" if a == 1 else "" , align="center", default=False),
         ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center", default=False),
-        ProcessedCol("kernel_polynomial", "modlgal.splitting_field", "Splitting field", formatfield),
-        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield, default=False),
+        ProcessedCol("kernel_polynomial", "modlgal.min_sib_splitting_field", "Splitting field", formatfield),
+        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective splitting field", formatfield, default=False),
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
              "is_surjective", "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial",
-             "image_index", "image_order", "top_slope_rational", "generating_primes"]
+             "image_index", "image_order", "top_slope_rational", 
+             "generating_primes", "determinant_index", "image_abstract_group"]
     )
 
 @search_wrap(
@@ -200,6 +203,7 @@ def modlgal_search(info, query):
     parse_bool(info, query, "is_surjective")
     parse_bool(info, query, "is_solvable")
     parse_bool(info, query, "is_absolutely_irreducible")
+    parse_bool(info, query, "determinant_index", process=lambda a: 1 if a else {"$gt":1})
 
 
 class ModLGalRepSearchArray(SearchArray):
@@ -281,6 +285,12 @@ class ModLGalRepSearchArray(SearchArray):
             label="Absolutely irreducible",
             example_col=True,
         )
+        determinant_index = YesNoBox(
+            name="determinant_index",
+            knowl="modlgal.determinant_index",
+            label="Determinant surjective",
+            example_col=True,
+        )
         image_index = TextBox(
             name="image_index",
             knowl="modlgal.image_index",
@@ -300,14 +310,15 @@ class ModLGalRepSearchArray(SearchArray):
             [dimension, surjective],
             [conductor, absolutely_irreducible],
             [conductor_primes, solvable],
-            [top_slope, image_index],
-            [count, image_order],
+            [image_index, determinant_index],
+            [image_order, top_slope],
+            [count]
         ]
 
         self.refine_array = [
             [base_ring_characteristic, dimension, conductor, conductor_primes],
             [codomain, solvable, surjective, absolutely_irreducible],
-            [top_slope, image_index, image_order]
+            [top_slope, image_index, image_order, determinant_index]
         ]
 
     #sort_knowl = "modlgal.sort_order"

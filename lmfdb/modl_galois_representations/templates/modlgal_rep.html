@@ -24,6 +24,13 @@
     $\cong$ {{ rep.image_abstract | safe }}
   {% endif %}
     </td></tr>
+  <tr><td>{{ KNOWL('modlgal.determinant_index', 'Determinant index') }}:<td>{{ rep.determinant_index }}
+  {% if rep.determinant_index == 1 %}
+  (determinant is surjective)
+  {% else %}
+  (determinant is not surjective)
+  {% endif %}
+  </td></tr>
   {% if rep.frobenius_generators %}
   <tr><td>{{ KNOWL('modlgal.generating_primes', 'Generating primes') }}:<td>${{ rep.frobenius_primes }}$</td></tr>
   {% endif %}
@@ -38,9 +45,12 @@
 <h2>Associated number fields</h2>
 
 <table>
-  <tr><td>{{ KNOWL('modlgal.min_sib_splitting_field','Minimal sibling of the splitting field') }} of $\rho$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
+  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling') }}  of the 
+  {{ KNOWL('modlgal.splitting_field', 'splitting field') }} of $\rho$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
   {% if rep.base_ring_characteristic != 2 %}
-  <tr><td>{{ KNOWL('modlgal.min_sib_splitting_field','Minimal sibling of the splitting field') }} of the {{ KNOWL('modlgal.projective_representation','projective representation') }} $\mathbb{P}\rho$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
+  <tr><td> {{ KNOWL('nf.minimal_sibling','Minimal sibling') }}  of the 
+  {{ KNOWL('modlgal.splitting_field', 'splitting field') }}
+  of the {{ KNOWL('modlgal.projective_representation','projective representation') }} $\mathbb{P}\rho$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
   {% endif %}
 </table>
 

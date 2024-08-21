@@ -20,12 +20,21 @@ def _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
 def codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     return "$" + _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field) + "$"
 
-def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, codomain=True):
+def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, codomain=False):
     s = _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field)
     if is_surjective:
         return "$" + s + "$"
     t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
     return t + r" $< " + s + "$" if codomain else t
+
+def image_pretty_with_abstract(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, image_abstract_group, codomain=False):
+    s = _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field)
+    if is_surjective:
+        return "$" + s + "$"
+    t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
+    if image_abstract_group:
+        t += "$\ \cong$ "+ abstract_group_display_knowl(image_abstract_group)
+    return t
 
 def rep_pretty(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     return r"$\rho\colon\Gal_\Q\to" + _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field) + "$"
