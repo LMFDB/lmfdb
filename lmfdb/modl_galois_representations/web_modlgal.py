@@ -33,7 +33,7 @@ def image_pretty_with_abstract(image_label, is_surjective, algebraic_group, dime
         return "$" + s + "$"
     t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
     if image_abstract_group:
-        t += "$\ \cong$ "+ abstract_group_display_knowl(image_abstract_group)
+        t += r"$\ \cong$ "+ abstract_group_display_knowl(image_abstract_group)
     return t
 
 def rep_pretty(algebraic_group, dimension, base_ring_order, base_ring_is_field):

@@ -154,7 +154,7 @@ modlgal_columns = SearchColumns(
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
              "is_surjective", "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial",
-             "image_index", "image_order", "top_slope_rational", 
+             "image_index", "image_order", "top_slope_rational",
              "generating_primes", "determinant_index", "image_abstract_group"]
     )
 
