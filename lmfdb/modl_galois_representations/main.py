@@ -134,7 +134,7 @@ def blankzeros(n):
 modlgal_columns = SearchColumns(
     [
         LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label),
-        MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$"),
+        MathCol("base_ring_characteristic", "modlgal.characteristic", r"$\ell$"),
         MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension"),
         ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, align="center"),
         RationalCol("top_slope_rational", "modlgal.top_slope", "Top slope", lambda x: x, align="center", default=lambda info: info.get("top_slope")),
@@ -142,12 +142,12 @@ modlgal_columns = SearchColumns(
                           image_pretty, align="center", apply_download=False),
         SearchCol("image_index", "modgal.image_index", "Index", short_title="image index", default=False),
         SearchCol("image_order", "modgal.image_order", "Order", short_title="image order", default=False),
-        CheckCol("is_surjective", "modlgal.is_surjective", "Surjective"),
+        CheckCol("is_surjective", "modlgal.surjective", "Surjective"),
         CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
         CheckCol("is_solvable", "modlgal.is_solvable", "Solvable", default=False),
         LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center", default=False),
         ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center", default=False),
-        ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield),
+        ProcessedCol("kernel_polynomial", "modlgal.splitting_field", "Splitting field", formatfield),
         ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield, default=False),
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
@@ -229,7 +229,7 @@ class ModLGalRepSearchArray(SearchArray):
             select_box=conductor_quantifier)
         base_ring_characteristic = TextBox(
             name="base_ring_characteristic",
-            knowl="modlgal.base_ring_characteristic",
+            knowl="modlgal.characteristic",
             label=r"Characteristic $\ell$",
             example="2",
             example_span="2, 3, or 5")
@@ -310,7 +310,7 @@ class ModLGalRepSearchArray(SearchArray):
             [top_slope, image_index, image_order]
         ]
 
-    sort_knowl = "modlgal.sort_order"
+    #sort_knowl = "modlgal.sort_order"
     sorts = [
         ("label", "label", ["dimension", "base_ring_order", "conductor", "num"]),
         ("conductor", "conductor", ["conductor", "dimension", "base_ring_order", "conductor", "num"]),
@@ -336,7 +336,7 @@ class ModLGalRep_stats(StatsDisplay):
     def short_summary(self):
         modlgal_knowl = display_knowl("modlgal", title=r"mod-$\ell$ Galois representations")
         return (
-            fr'The database currently contains {self.nreps} {modlgal_knowl} of $\Gal_\Q$ of conductor $N\le {self.max_cond}$ and dimension $d\le {self.max_dim}$ for $\ell \le {self.max_ell}$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
+            fr'The database currently contains {self.nreps} irreducible {modlgal_knowl} of $\Gal_\Q$ of conductor $N\le {self.max_cond}$ and dimension $d\le {self.max_dim}$ for $\ell \le {self.max_ell}$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
         )
 
     @property

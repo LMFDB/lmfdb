@@ -63,9 +63,14 @@ class WebModLGalRep(WebObj):
     def properties(self):
         props = [
             ("Label", self.label),
-            ("Dimension", str(self.dimension)),
-            ("Codomain", str(self.codomain)),
+            ("Characteristic", str(self.base_ring_characteristic)),
+            ("Dimension", str(self.dimension))
+        ]
+        if self.dimension>1:
+            props += [("Determinant", str(self.determinant_label))]
+        props += [
             ("Conductor", str(self.conductor)),
+            ("Codomain", str(self.codomain)),
             ("Top slope", self.top_slope_rational),
             ("Image index", str(self.image_index)),
             ("Image order", str(self.image_order)),
@@ -132,7 +137,7 @@ class WebModLGalRep(WebObj):
 
     @lazy_attribute
     def image_pretty(self):
-        return image_pretty(self.image_label, self.is_surjective, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field, codomain=False)
+        return image_pretty(self.image_label, self.image_index==1, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field, codomain=False)
 
     @lazy_attribute
     def rep_pretty(self):
@@ -165,6 +170,12 @@ class WebModLGalRep(WebObj):
         return ",".join([r"\mathrm{Frob}_{%s}"%(p) for p in self.generating_primes])
 
     @lazy_attribute
+    def frobenius_primes(self):
+        if not self.generating_primes:
+            return None
+        return ",".join([str(p) for p in self.generating_primes])
+
+    @lazy_attribute
     def frobenius_matrices_pretty(self):
         L = []
         F = GF(self.base_ring_order) if self.base_ring_is_field else Integers(self.base_ring_order)
@@ -176,10 +187,10 @@ class WebModLGalRep(WebObj):
             for i in range(len(ps)):
                 m = Matrix(F,n,frobs[i])
                 M = R(frobs[i])
-                if self.generating_primes and ps[i] in self.generating_primes:
-                    L.append([r"\mathbf{%s}"%(ps[i]),m.trace(),M.order(),web_latex(factor(m.charpoly())),web_latex(m)])
-                else:
-                    L.append([ps[i],m.trace(),M.order(),web_latex(factor(m.charpoly())),web_latex(m)])
+                p = r"\mathbf{%s}"%(ps[i]) if self.generating_primes and ps[i] in self.generating_primes else ps[i]
+                charpoly = m.charpoly()
+                pol = web_latex(charpoly) if charpoly.is_irreducible() else web_latex(factor(charpoly))
+                L.append([p, m.trace(), m.det(), M.order(), pol, web_latex(m)])
         except ValueError:
             print(f"Error occurred while attempting to parse frobenius_matrices for {self.label}")
             print(self.frobenius_matrices)
@@ -197,6 +208,10 @@ class WebModLGalRep(WebObj):
                  "Phi": r"\frac{1}{%s} "%(str(A[2][0])) + web_latex(Matrix(QQ,n,A[2][1]),enclose=False)
                }
         return data
+
+    @lazy_attribute
+    def determinant(self):
+        return modlgal_link(self.determinant_label)
 
     @lazy_attribute
     def downloads(self):
