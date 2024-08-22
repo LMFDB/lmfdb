@@ -153,6 +153,10 @@ class WebModLGalRep(WebObj):
         return codomain(self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field)
 
     @lazy_attribute
+    def image_pretty_with_abstract(self):
+        return image_pretty_with_abstract(self.image_label, self.image_index==1, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field, self.image_abstract_group, codomain=False)
+
+    @lazy_attribute
     def image_pretty(self):
         return image_pretty(self.image_label, self.image_index==1, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field, codomain=False)
 
