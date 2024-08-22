@@ -5,6 +5,7 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
@@ -85,9 +86,9 @@ def gl2_subgroup_data(label):
             r = S_LABEL_RE.fullmatch(label)
             Slevel = int(r[1])
             if r[2] != "G":
-                data = data = db.gps_gl2zhat_fine.lucky({'Slabel':label,'level':Slevel})
+                data = db.gps_gl2zhat_fine.lucky({'Slabel':label,'level':Slevel})
             else:
-                # hack to handle surjective mod-ell images where we the level of the image is 1 but we want to show data at level ell
+                # hack to handle surjective mod-ell images where the level of the image is 1 but we want to show data at level ell
                 data = db.gps_gl2zhat_fine.lucky({'level':1})
                 data['level'] = Slevel
                 data['generators'] = [[m.matrix()[0,0],m.matrix()[0,1],m.matrix()[1,0],m.matrix()[0,1]] for m in GL(2,Integers(Slevel)).generators()]
@@ -96,13 +97,13 @@ def gl2_subgroup_data(label):
                 data['Slabel'] = label
         elif S_EXT_LABEL_RE.fullmatch(label):
             in_modcurve_db = False
-            data = data = db.gps_gl2zhat.lucky({'Slabel':label})
+            data = db.gps_gl2zhat_fine.lucky({'Slabel':label})
         else:
-            return "Unrecognized GL(2,Zhat) subgroup label format %s" % label
+            return "Unrecognized subgroup label format %s" % label
         if data is None:
             raise ValueError
     except ValueError:
-        return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
+        return "Unable to locate data for subgroup with label: %s" % label
 
     def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
@@ -130,6 +131,8 @@ def gl2_subgroup_data(label):
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-1$', "yes" if data['contains_negative_one'] else "no")
+    if data.get('Glabel'):
+        info += row_wrap('Abstract group', abstract_group_display_knowl(data.get('Glabel')))
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
@@ -336,6 +339,12 @@ class WebEC():
         data['cond_factor'] =latex(Nfac)
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
+
+        def red(p):
+            ld = [ld['reduction_type'] for ld in local_data if ld['prime'] == p]
+            return ld[0] if len(ld) else 2
+
+        self.serre_data = [(l,red(l),k,web_latex_factored_integer(M,equals=True)) for l,k,M in self.serre_invariants]
 
         # retrieve data about MW rank, generators, heights and
         # torsion, leading term of L-function & other BSD data from
@@ -758,7 +767,7 @@ class WebEC():
 
         for tgd in tgdata:
             tg1 = {}
-            tg1['bc_label'] = "Not in database"
+            tg1['bc_label'] = "not in database"
             tg1['d'] = tgd['degree']
             F = tgd['field']
             tg1['f'] = formatfield(F)

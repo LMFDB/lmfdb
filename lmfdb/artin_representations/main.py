@@ -223,7 +223,7 @@ def parse_projective_type(inp, query, qfield):
             query[qfield] = current
 
 def url_for_label(label):
-    return url_for(".render_artin_representation_webpage", label=label)
+    return url_for("artin_representations.render_artin_representation_webpage", label=label)
 
 artin_columns = SearchColumns([
     SearchCol("galois_links", "artin.label", "Label", download_col="baselabel"),

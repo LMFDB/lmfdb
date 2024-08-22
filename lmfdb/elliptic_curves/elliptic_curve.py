@@ -231,6 +231,10 @@ def ctx_elliptic_curve_summary():
 def ctx_gl2_subgroup():
     return {'gl2_subgroup_data': gl2_subgroup_data}
 
+@app.context_processor
+def ctx_ec_reduction_type():
+    return {'ec_reduction_type': lambda x: ["nonsplit multiplicative","additive","split multiplicative","good"][x+1] if x >= -1 and x <= 2 else "unknown" }
+
 @ec_page.route("/stats")
 def statistics():
     title = r'Elliptic curves over $\Q$: Statistics'
