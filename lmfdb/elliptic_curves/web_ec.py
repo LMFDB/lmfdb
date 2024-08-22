@@ -97,7 +97,7 @@ def gl2_subgroup_data(label):
                 data['Slabel'] = label
         elif S_EXT_LABEL_RE.fullmatch(label):
             in_modcurve_db = False
-            data = db.gps_gl2zhat_fine.lucky({'Slabel':label})
+            data = db.gps_gl2zhat_nonsurjdet.lucky({'Slabel':label})
         else:
             return "Unrecognized subgroup label format %s" % label
         if data is None:
