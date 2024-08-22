@@ -108,7 +108,7 @@ class WebModLGalRep(WebObj):
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
             elif r[0] == "Artin":
-                friends.append(("Artin representation " + r[1], url_for_artin_label(r[1]))) 
+                friends.append(("Artin representation " + r[1], url_for_artin_label(r[1])))
         kerfield = WebNumberField.from_coeffs(self.kernel_polynomial)
         if kerfield and kerfield._data:
             friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
