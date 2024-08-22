@@ -7,6 +7,7 @@ from lmfdb.utils import WebObj, web_latex, display_knowl, web_latex_factored_int
 from lmfdb import db
 from lmfdb.genus2_curves.main import url_for_curve_label as url_for_g2c_label
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
+from lmfdb.artin_representations.main import url_for_label as url_for_artin_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -106,6 +107,8 @@ class WebModLGalRep(WebObj):
                 friends.append(("Modular form " + r[1], url_for_mf_label(r[1])))
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
+            elif r[0] == "Artin":
+                friends.append(("Artin representation " + r[1], url_for_artin_label(r[1]))) 
         kerfield = WebNumberField.from_coeffs(self.kernel_polynomial)
         if kerfield and kerfield._data:
             friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))

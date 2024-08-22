@@ -67,7 +67,7 @@ def index_Q():
     if request.args:
         return modlgal_search(info)
     title = r"Mod-$\ell$ Galois representations"
-    codomains = ["GL,1,2,1","GL,2,2,1","GL,2,3,1","GL,2,5,1","GSp,4,2,1"]
+    codomains = ["GL,1,3,1","GL,1,5,1","GL,2,2,1","GL,2,3,1","GL,2,5,1","GSp,4,2,1"]
     info["codomain_list"] = [[codomain(*a.split(",")),a] for a in codomains]
     info["conductor_list"] = ["1-100", "101-1000", "1001-10000"]
     info["stats"] = ModLGalRep_stats()
