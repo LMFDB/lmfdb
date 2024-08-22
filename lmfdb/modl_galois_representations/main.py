@@ -260,7 +260,7 @@ class ModLGalRepSearchArray(SearchArray):
             example="2",
             example_span="2 or 4/3 or 1-1.5"
         )
-        codomain_opts = ([('', ''), ('GL,1,2,1', 'GL(1,2)'), ('GL,2,2,1', 'GL(2,2)'), ('GL,2,3,1', 'GL(2,3)'), ('GL,2,5,1', 'GL(2,5)'), ('GSp,4,2,1', 'GSp(4,2)')])
+        codomain_opts = ([('', ''), ('GL,1,3,1', 'GL(1,3)'), ('GL,1,5,1', 'GL(1,5)'), ('GL,2,2,1', 'GL(2,2)'), ('GL,2,3,1', 'GL(2,3)'), ('GL,2,5,1', 'GL(2,5)'), ('GSp,4,2,1', 'GSp(4,2)')])
         codomain = SelectBox(
             name="codomain",
             knowl="modlgal.codomain",
