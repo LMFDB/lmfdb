@@ -24,6 +24,7 @@ from lmfdb.utils import (
     parse_bool,
     parse_primes,
     parse_rats,
+    parse_kerpol_string,
     integer_divisors,
     StatsDisplay,
     comma,
@@ -204,6 +205,8 @@ def modlgal_search(info, query):
     parse_bool(info, query, "is_solvable")
     parse_bool(info, query, "is_absolutely_irreducible")
     parse_bool(info, query, "determinant_index", process=lambda a: 1 if a else {"$gt":1})
+    parse_kerpol_string(info, query, 'kernel_polynomial')
+    parse_kerpol_string(info, query, "projective_kernel_polynomial")
 
 
 class ModLGalRepSearchArray(SearchArray):
@@ -303,6 +306,20 @@ class ModLGalRepSearchArray(SearchArray):
             label="Image order",
             example="2",
             example_span="12, 10-20")
+        kernel_field = TextBox(
+            name="kernel_polynomial",
+            knowl="modlgal.min_sib_splitting_field",
+            label="Kernel polynomial",
+            example="3.1.175.1",
+            example_span="e.g. 3.1.175.1 or x^3 - x^2 + 2*x - 3 or a "
+                + display_knowl("nf.nickname", "field nickname"))
+        projective_kernel_field = TextBox(
+            name="projective_kernel_polynomial",
+            knowl="modlgal.projective_kernel_polynomial",
+            label="Projective kernel polynomial",
+            example="2.2.8.1",
+            example_span="e.g. 2.2.8.1 or x^2 - 2 or a "
+                + display_knowl("nf.nickname", "field nickname"))
         count = CountBox()
 
         self.browse_array = [
@@ -312,13 +329,15 @@ class ModLGalRepSearchArray(SearchArray):
             [conductor_primes, solvable],
             [image_index, determinant_index],
             [image_order, top_slope],
+            [kernel_field, projective_kernel_field],
             [count]
         ]
 
         self.refine_array = [
             [base_ring_characteristic, dimension, conductor, conductor_primes],
             [codomain, solvable, surjective, absolutely_irreducible],
-            [top_slope, image_index, image_order, determinant_index]
+            [top_slope, image_index, image_order, determinant_index],
+            [kernel_field, projective_kernel_field]
         ]
 
     #sort_knowl = "modlgal.sort_order"

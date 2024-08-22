@@ -1383,6 +1383,12 @@ def parse_subfield(inp, query, qfield):
 def parse_nf_string(inp, query, qfield):
     query[qfield] = nf_string_to_label(inp)
 
+@search_parser
+def parse_kerpol_string(inp, query, qfield):
+    label = nf_string_to_label(inp)
+    from lmfdb import db
+    query[qfield] = db.nf_fields.lookup(label, projection='coeffs')
+
 def pol_string_to_list(pol, deg=None, var=None):
     if var is None:
         from lmfdb.hilbert_modular_forms.hilbert_field import findvar
