@@ -7,6 +7,7 @@ from lmfdb.utils import WebObj, web_latex, display_knowl, web_latex_factored_int
 from lmfdb import db
 from lmfdb.genus2_curves.main import url_for_curve_label as url_for_g2c_label
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
+from lmfdb.artin_representations.main import url_for_label as url_for_artin_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -20,12 +21,23 @@ def _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
 def codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     return "$" + _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field) + "$"
 
-def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, codomain=True):
+def image_pretty(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, codomain=False):
     s = _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field)
     if is_surjective:
         return "$" + s + "$"
     t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
     return t + r" $< " + s + "$" if codomain else t
+
+def image_pretty_with_abstract(image_label, is_surjective, algebraic_group, dimension, base_ring_order, base_ring_is_field, image_abstract_group, codomain=False):
+    s = _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field)
+    if is_surjective:
+        return "$" + s + "$"
+    if dimension==1:
+        return image_label
+    t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
+    if image_abstract_group:
+        t += r" $\ \cong$ "+ abstract_group_display_knowl(image_abstract_group)
+    return t
 
 def rep_pretty(algebraic_group, dimension, base_ring_order, base_ring_is_field):
     return r"$\rho\colon\Gal_\Q\to" + _codomain(algebraic_group, dimension, base_ring_order, base_ring_is_field) + "$"
@@ -95,6 +107,8 @@ class WebModLGalRep(WebObj):
                 friends.append(("Modular form " + r[1], url_for_mf_label(r[1])))
             elif r[0] == "G2C":
                 friends.append(("Genus 2 curve " + r[1], url_for_g2c_label(r[1])))
+            elif r[0] == "Artin":
+                friends.append(("Artin representation " + r[1], url_for_artin_label(r[1])))
         kerfield = WebNumberField.from_coeffs(self.kernel_polynomial)
         if kerfield and kerfield._data:
             friends.append(("Number field "+kerfield.field_pretty(), url_for("number_fields.by_label", label=kerfield.label)))
