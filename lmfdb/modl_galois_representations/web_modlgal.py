@@ -99,6 +99,7 @@ class WebModLGalRep(WebObj):
         has_dirichlet = False
         if not hasattr(self, "related_objects"):
             self.related_objects = []
+        self.related_objects.sort()
         for r in self.related_objects:
             if r[0] == "Dirichlet":
                 c = r[1].split(".")
