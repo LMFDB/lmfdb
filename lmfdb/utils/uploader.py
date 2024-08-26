@@ -296,7 +296,7 @@ class UploadSection():
 
     @lazy_attribute
     def header_dict(self):
-        return {name: box for (name, box) in zip(self.header, self.inputs)}
+        return dict(zip(self.header, self.inputs))
 
     def parse_csv(self, stream):
         reader = csv.reader(stream)

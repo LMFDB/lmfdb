@@ -101,7 +101,7 @@ class WebHMF():
 
         # The weight
 
-        data['parallel_weight'] = int(2)
+        data['parallel_weight'] = 2
         data['weight'] = str([data['parallel_weight']] * F.degree())
         weight = [2] * F.degree()
 
@@ -126,14 +126,14 @@ class WebHMF():
             i = L.find("x")
             j = L.find(i+1,",")
             data['hecke_polynomial'] = pol = L[i:j]
-            data['dimension'] = int(1)
+            data['dimension'] = 1
             x = polygen(QQ)
             hpol = x.parent()(str(pol))
             data['dimension'] = int(hpol.degree())
         else:
             # rational
             data['hecke_polynomial'] = 'x'
-            data['dimension'] = int(1)
+            data['dimension'] = 1
 
         i = L.rfind("[")
         j = L.rfind("]")

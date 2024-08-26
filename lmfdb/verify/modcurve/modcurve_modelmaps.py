@@ -58,14 +58,15 @@ class modcurve_modelmaps(TableChecker):
                 pt_on_codomain_as_list = apply_map_to_pt(rec['coordinates'], rel_pt)
 
                 # TEST 1: check this pt is rational
-                if not all([t in QQ for t in pt_on_codomain_as_list]):
+                if not all(t in QQ for t in pt_on_codomain_as_list):
                     return False
 
                 # TEST 2: check this is actually a point on the codomain
                 equation, number_variables = self.modcurve_models[rec["codomain_label"], rec["codomain_model_type"]]
                 Pol = PolynomialRing(QQ, number_variables, names=VARORDER[:number_variables])
 
-                if not all([Pol(f_str)(pt_on_codomain_as_list) == 0 for f_str in equation]):
+                if not all(Pol(f_str)(pt_on_codomain_as_list) == 0
+                           for f_str in equation):
                     return False
 
         return True

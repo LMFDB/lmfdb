@@ -1074,7 +1074,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.quasidegree = 1
         self.level_factored = self.level = 1
         self.mu_fe = []  # the shifts of the Gamma_R to print
-        self.automorphyexp = float(self.weight) - float(1.5)
+        self.automorphyexp = float(self.weight) - 1.5
         self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
         self.compute_kappa_lambda_Q_from_mu_nu()
         self.algebraic = True

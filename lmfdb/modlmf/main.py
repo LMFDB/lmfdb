@@ -189,9 +189,9 @@ def render_modlmf_webpage(**args):
 
     info['coeffs']=[str(s).replace('x','a').replace('*','') for s in data['coeffs']]
 
-    if data['deg'] != int(1):
+    if data['deg'] != 1:
         try:
-            pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace('x','a').replace('*','')
+            pol = str(conway_polynomial(data['characteristic'], data['deg'])).replace('x','a').replace('*','')
             info['field']= pol
         except Exception:
             info['field']=""

@@ -2186,9 +2186,10 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "Perm":
             inners = [str(z) for z in inners]
         else:
-            if self.element_repr_type=="GLFq":
+            if self.element_repr_type == "GLFq":
                 R, N, k, d, rep_type = self._matrix_coefficient_data(self.element_repr_type)
-                inners = [matrix(R,d,d,[[z for z in zz] for zz in z3]) if z3 != '' else '' for z3 in inners]
+                inners = [matrix(R, d, d, [list(zz) for zz in z3])
+                          if z3 != '' else '' for z3 in inners]
             inners = [latex(matrix(z)) if z != '' else '' for z in inners]
         return {'orders': orders, 'inners': inners}
 

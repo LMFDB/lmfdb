@@ -1259,7 +1259,7 @@ def modcurve_data(label):
                                              "coarse_class_num" : iso_num,
                                              "contains_negative_one" : "yes"},
                                             "label")
-        labels = [lab for lab in labels]
+        labels = list(labels)
         label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
     else:
         label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
