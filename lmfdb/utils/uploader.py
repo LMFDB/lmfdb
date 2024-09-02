@@ -6,7 +6,7 @@ Validation occurs in several stages, with the progression indicated by status co
 * An additional validation step is run on a server (anything that might take a nontrivial amount of computation).  Entries passing this step are graduated to status 1; failures are marked with status -1.
 * Entries passing this step are checked by a human editor; acceptance earns status 2 and failure is marked with status -2.
 * Approved entries are then added to the appropriate table by another script run on a server (since this step may also involve nontrivial computation, like with gonality bounds).  Entries passing this step are marked with status 3; failures with -3.  A successful run of this step produces file(s) for use with copy_from on appropriate tables.
-* Finally, a script executes copy_from.  Failure here is unexpected and marked with -4 (due to failue in Postgres loading the file); success is marked with 4.
+* Finally, a script executes copy_from.  Failure here is unexpected and marked with -4 (due to failure in Postgres loading the file); success is marked with 4.
 * While in stage 0, 1 or 2, uploads can be withdrawn by the submitter.  If so, they will be marked with status -5.
 """
 
@@ -209,6 +209,7 @@ class UploadSection():
     inputs = []
     offer_csv = True
     csv_template_url = None
+
     def __init__(self, **kwds):
         for key, val in kwds.items():
             setattr(self, key, val)
@@ -218,7 +219,7 @@ class UploadSection():
         This function is called at input time when a user uploads data,
         performating basic validation but nothing that takes a long time.
 
-        Failure is immediately reported to the user who attemped to upload data.
+        Failure is immediately reported to the user who attempted to upload data.
         """
         for box in self.inputs:
             rec[box.name] = box.validate(rec[box.name])

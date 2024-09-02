@@ -367,7 +367,7 @@ class ProcessedCol(SearchCol):
 
 class ProcessedLinkCol(ProcessedCol):
     """
-    These columns allow for funtions to be applied to the contents retrieved from the database before generating
+    These columns allow for functions to be applied to the contents retrieved from the database before generating
     a link.  They take three additional inputs:
 
     - ``url_func`` -- a function producing the url from the contents
@@ -392,7 +392,7 @@ class MultiProcessedCol(SearchCol):
 
     - ``inputs`` -- a list of column names from the search table (or that have been created in a postprocessing step)
     - ``func`` -- a function taking as input the inputs from a given row and producing a value to be displayed
-    - ``apply_download`` -- either a boolean (determing whether the function should be applied when
+    - ``apply_download`` -- either a boolean (determining whether the function should be applied when
       downloading), or a function that is applied instead when downloading.
 
     Note that ``download_col`` is still available, and provides an alternative to the use of ``apply_download``.

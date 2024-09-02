@@ -74,14 +74,14 @@ def rational_coeff_error_notation(factored_n):
     if not factored_n:  # n = 1
         return "1"
     for p, e in factored_n:
-        res *= (p**(e//2))
+        res *= p**(e//2)
     res = 1./res
     res = str(res).rstrip('0')
     return res
 
 
 def coeff_error_notation(coeff, error, pm=False):
-    r"""Web coefficient and error display, with trunctation"""
+    r"""Web coefficient and error display, with truncation"""
     if error == -1:
         return r"\mathrm{unknown}"
     if pm:

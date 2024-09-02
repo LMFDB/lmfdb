@@ -7,6 +7,7 @@ from lmfdb import db
 
 from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
+
 class ECisog_class():
     """
     Class for an isogeny class of elliptic curves over Q
@@ -186,6 +187,7 @@ class ECisog_class():
         self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}
         self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
         self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
+
 
 def make_graph(M, vertex_labels=None):
     """

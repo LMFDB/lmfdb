@@ -660,7 +660,7 @@ def complete_group_code(code):
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
-    # covert GAP code to abstract group label
+    # convert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
         code = "%s.%s" % (rematch.group(1), rematch.group(2))

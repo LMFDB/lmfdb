@@ -718,7 +718,7 @@ class ECNF():
         # LMFDB labels:
         self.base_change_Q = [cremona_label_to_lmfdb_label(lab) for lab in self.base_change if '-' not in lab]
 
-        # sort by conductor (so also unkown curves come last)
+        # sort by conductor (so also unknown curves come last)
         self.base_change_Q.sort(key=lambda lab:ZZ(conductor_from_label(lab)))
         self.bcQtext = [] # for the Base change section of the home page
         for lab in self.base_change_Q:

@@ -172,10 +172,10 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model_html(self, m):
-#this is only for curves with models
-#but not curves with self.has_more_models
-#and also not for genus 0 cuves with points
-#we need to somehow give this info
+    # this is only for curves with models
+    # but not curves with self.has_more_models
+    # and also not for genus 0 curves with points
+    # we need to somehow give this info
     eqn_threshold = 3 #this displays threshold - 1 lines to start
     eqns, lines, nb_var, typ, smooth = formatted_model_data(m)
     def title_of_model(self, lines, nb_var, typ, smooth):
