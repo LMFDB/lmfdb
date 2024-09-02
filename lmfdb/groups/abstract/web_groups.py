@@ -942,7 +942,7 @@ class WebAbstractGroup(WebObj):
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
             if self.aut_order is None:
-                  props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
+                props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -952,7 +952,7 @@ class WebAbstractGroup(WebObj):
                     pass
 
             if self.outer_order is None:
-                  props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
+                props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -1003,7 +1003,7 @@ class WebAbstractGroup(WebObj):
                     ret_str=ret_str+ ", and all normal subgroups are characteristic.<p>"+charcolor
                 return ret_str
         elif self.number_normal_subgroups < self.number_subgroups:
-            ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
+            ret_str = "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
         else:
             ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
@@ -1137,7 +1137,7 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal:
-                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
@@ -1815,10 +1815,9 @@ class WebAbstractGroup(WebObj):
     def aut_statistics(self):
         if self.aut_stats is None:
             return None
-        else:
-           D = Counter()
-           for (o, s, k, m) in self.aut_stats:
-               D[o] += m
+        D = Counter()
+        for o, s, k, m in self.aut_stats:
+            D[o] += m
         return sorted(D.items())
 
     @lazy_attribute
@@ -2615,7 +2614,7 @@ class WebAbstractGroup(WebObj):
             d = data["d"]
             return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
-            rep_str =  "Elements of the group are displayed as words in the presentation"
+            rep_str = "Elements of the group are displayed as words in the presentation"
             if other_page:
                 return rep_str + self.representation_line("PC", skip_head=True)
             else:
@@ -2701,7 +2700,7 @@ class WebAbstractGroup(WebObj):
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
         if "PC" in self.representations:
-            gens =  self.presentation_raw(as_str=False)
+            gens = self.presentation_raw(as_str=False)
             pccodelist = self.representations["PC"]["pres"]
             pccode = self.representations["PC"]["code"]
             ordgp = self.order
@@ -2765,7 +2764,7 @@ class WebAbstractGroup(WebObj):
         }
         for prop in code:
             for lang in code['prompt']:
-               code[prop][lang] = code[prop][lang].format(**data)
+                code[prop][lang] = code[prop][lang].format(**data)
         return code
 
     # The following attributes are used in create_boolean_string

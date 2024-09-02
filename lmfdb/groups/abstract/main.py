@@ -1492,7 +1492,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
         ilayer += 2
         iorder += 2
     if gp.outer_equivalence and ilayer>3:
-       ilayer -= 2
+        ilayer -= 2
     ll = [
         [
             grp.subgroup,
@@ -1630,7 +1630,7 @@ def render_abstract_group(label, data=None):
             friends += [("As the automorphism of a curve", auto_url)]
 
         if abstract_group_label_regex.fullmatch(label) and len(gp.transitive_friends) > 0:
-            gal_gp_url =  "/GaloisGroup/?gal="+label
+            gal_gp_url = "/GaloisGroup/?gal=" + label
             friends += [("As a transitive group", gal_gp_url)]
 
         if db.gps_st.count({"component_group": label}) > 0:
