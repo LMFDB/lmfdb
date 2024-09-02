@@ -129,6 +129,7 @@ def an_from_data(euler_factors,upperbound=30):
 
     return result
 
+
 # Convert the information extracted from the database to the format
 # expected by the L-functions homepage template.
 # As of July 2015, some of the fields are hard coded specifically
@@ -1324,6 +1325,7 @@ class ArtinLfunction(Lfunction):
 
     def original_object(self):
         return self.artin
+
 
 #############################################################################
 

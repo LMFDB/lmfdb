@@ -475,7 +475,7 @@ class StatsDisplay(UniqueRepresentation):
         - ``table`` -- a ``PostgresStatsTable``
         - ``cols`` -- a list of column names
         - ``constraint`` -- a dictionary giving constraints on other columns.
-            Only rows satsifying those constraints are included in the counts.
+            Only rows satisfying those constraints are included in the counts.
         - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of strings such as '5' or '2-7'.

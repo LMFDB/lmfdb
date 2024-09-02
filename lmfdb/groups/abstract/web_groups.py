@@ -2674,7 +2674,7 @@ class WebAbstractGroup(WebObj):
                 if isinstance(code[item][L],str):
                     lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
                     lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
-                else:   # not currrently used in groups
+                else:   # not currently used in groups
                     lines = code[item][L]
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])
