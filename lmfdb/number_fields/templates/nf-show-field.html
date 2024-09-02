@@ -84,7 +84,8 @@ table.ntdata a {
         </p>
           {% if nf.is_cm_field() %}
         <p>
-          Relative class number: {{ nf.relh() }}
+          {{KNOWL('nf.relative_class_number','Relative class number')}}: {{ nf.relh() }}
+          {{ info.grh_label|safe }}
         </p>
           {% endif %}
 
