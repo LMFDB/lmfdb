@@ -178,6 +178,7 @@ def formatted_model_html(self, m):
     # we need to somehow give this info
     eqn_threshold = 3 #this displays threshold - 1 lines to start
     eqns, lines, nb_var, typ, smooth = formatted_model_data(m)
+
     def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
             title =  display_knowl('ag.canonical_model', 'Canonical model') +\
@@ -209,6 +210,7 @@ def formatted_model_html(self, m):
         elif typ == 8:
             return display_knowl('modcurve.embedded_model', 'Embedded model') +\
              r" Embedded model in $\mathbb{P}^{%d}$" % (nb_var-1,)
+
     def equation_of_model(lines, typ):
         table = '<table valign="center">'+\
         '<tr>'+\
