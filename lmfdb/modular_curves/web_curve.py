@@ -181,7 +181,7 @@ def formatted_model_html(self, m):
 
     def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
-            title =  display_knowl('ag.canonical_model', 'Canonical model') +\
+            title = display_knowl('ag.canonical_model', 'Canonical model') +\
              r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
             if len(lines) > eqn_threshold:
                 title += " defined by %d equations" % (len(lines) - 1,)

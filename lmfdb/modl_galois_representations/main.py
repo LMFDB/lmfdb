@@ -356,12 +356,15 @@ class ModLGalRepSearchArray(SearchArray):
         ("image_index", "image index", ["image_index", "dimension", "base_ring_order", "conductor", "num"]),
     ]
 
+
 def groupdata(group):
     parts = group.split('.')
     return [int(z) for z in parts]
 
+
 def groupformatter(group):
-  return abstract_group_display_knowl(group)
+    return abstract_group_display_knowl(group)
+
 
 class ModLGalRep_stats(StatsDisplay):
     def __init__(self):
