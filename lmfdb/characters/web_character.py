@@ -59,15 +59,19 @@ from lmfdb.characters.utils import url_character, complex2str
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
+
 def parity_string(n):
     return ("even" if n else "odd") if isinstance(n, bool) else ("odd" if n == -1 else "even")
+
 
 def bool_string(b):
     return "yes" if b else "no"
 
+
 def compute_values(chi, groupelts):
-        "Helper function to compute values of several elements on the fly"
-        return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+    "Helper function to compute values of several elements on the fly"
+    return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+
 
 def valuefield_from_order(order):
     order2 = order if order % 4 != 2 else order / 2
