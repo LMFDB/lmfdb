@@ -641,8 +641,8 @@ def modcurve_Gassmann_download(request, lang):
     print("info query = ", info["query"])
     info["results"] = []
     for i in range(ncurves):
-            query_dict.update({'coarse_num' : i+1})
-            info["results"].append(db.gps_gl2zhat_fine.lucky(query_dict))
+        query_dict.update({'coarse_num' : i+1})
+        info["results"].append(db.gps_gl2zhat_fine.lucky(query_dict))
     info["search_table"] = db.gps_gl2zhat_fine
     info["columns"] = modcurve_columns
     info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
