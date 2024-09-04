@@ -2114,7 +2114,7 @@ span.activesubgp {
 #row_selector_shown {
   display: none;
 }
-#download_row_count_input {
+input.download_row_count_input {
   width: 75px;
 }
 
