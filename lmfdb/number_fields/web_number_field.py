@@ -873,7 +873,7 @@ class WebNumberField:
 
     def relh(self):
         if self.haskey('relative_class_number'):
-            return self._data['relative_class_number']
+            return '$' + self._data['relative_class_number'] + '$'
         return dnc
 
     def is_null(self):
