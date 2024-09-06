@@ -1919,7 +1919,7 @@ def download_group(**args):
     if dltype == "oscar":
         # This needs to change for larger groups
         if gp_data["solvable"]:
-            s += com + " The group will be created as a polycylic group (not necessarily matching the presentation in the LMFDB).\n"
+            s += com + " The group will be created as a polycyclic group (not necessarily matching the presentation in the LMFDB).\n"
             s += com + ' You can turn it into a permutation group using "PermGroup(G)".\n'
         else:
             s += com + " The group will be created as a permutation group (not necessarily using the generators used in the LMFDB).\n"

@@ -221,8 +221,8 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 def primary_to_smith(invs):
-    if invs==[]:
-        return([])
+    if not invs:
+        return []
     by_p = defaultdict(list)
     for q in invs:
         p, _ = q.is_prime_power(get_data=True)
@@ -1339,10 +1339,9 @@ class WebAbstractGroup(WebObj):
                 return [h for h in G.normal_contains if test(subs[h])]
         nodes = [H for H in subs.values() if test(H)]
         if self.outer_equivalence or not sub_aut:
-            edges = []
-            for G in nodes:
-                for h in contains(G):
-                    edges.append([h, G.short_label])
+            edges = [[h, G.short_label]
+                     for G in nodes
+                     for h in contains(G)]
         else:
             # Subgroups are stored up to conjugacy but we want them up to automorphism.
             # We pick a rep from each autjugacy class

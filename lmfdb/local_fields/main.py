@@ -138,7 +138,7 @@ def plot_polygon(verts, polys, inds, p):
     L += line([(0,0), (xmax, 0)], color="grey")
     for i in range(1, ymax + 1):
         L += line([(0, i), (tick, i)], color="grey")
-    for i in range(0, xmax + 1):
+    for i in range(xmax + 1):
         L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
     for P in verts:
         L += text(

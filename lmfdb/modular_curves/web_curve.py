@@ -372,7 +372,8 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
             else:
                 equations.append("{}({})".format(lead[j], eqs[j]))
     f["equations"] = equations
-    return(f)
+    return f
+
 
 def difference(Ad, Bd, Am, Bm):
     # Ad and Bd are lists of dimensions, Am, Bm of multiplicities
@@ -671,13 +672,13 @@ class WebModCurve(WebObj):
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
         f["nb_coords"] = nb_coords
         f["coord_names"] = ["j"] + [""]*(nb_coords-1)
-        return(f)
+        return f
 
     def formatted_E4E6(self, domain_model_type):
         E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
-        return(f)
+        return f
 
     @lazy_attribute
     def formatted_modelisos(self):

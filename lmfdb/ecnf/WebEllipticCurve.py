@@ -176,8 +176,10 @@ def inflate_interval(a,b,r):
     d*=r
     return (c-d,c+d)
 
-def plot_zone_union(R,S):
-    return(min(R[0],S[0]),max(R[1],S[1]),min(R[2],S[2]),max(R[3],S[3]))
+
+def plot_zone_union(R, S):
+    return (min(R[0], S[0]), max(R[1], S[1]), min(R[2], S[2]), max(R[3], S[3]))
+
 
 # Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x)
 def EC_R_plot_zone_piece(f,h,a,b):
