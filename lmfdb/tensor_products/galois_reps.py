@@ -651,9 +651,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
         S = s1
     if s2 <= s1:
         S = s2
-    BadPrimes = []
-    for bpi in BadPrimeInfo:
-        BadPrimes.append(bpi[0])
+    BadPrimes = [bpi[0] for bpi in BadPrimeInfo]
     P = prime_range(S+1)
     Z = S * [1]
     S = RealField()(S)
@@ -704,9 +702,7 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
         S = s1
     if s2 <= s1:
         S = s2
-    BadPrimes = []
-    for bpi in BadPrimeInfo:
-        BadPrimes.append(bpi[0])
+    BadPrimes = [bpi[0] for bpi in BadPrimeInfo]
     P = prime_range(S+1)
     Z = S * [1]
     S = RealField()(S) # fix bug

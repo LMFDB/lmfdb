@@ -511,7 +511,7 @@ body > .debug {
   padding: 0px;
 }
 
-/* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
+/* highlighting menu entries (if their respective blueprint overwrites the body_class variable!) */
 body.mwf #sidebar a.mwf { background: {{ color.sidebar_bkg_highlight }}; }
 body.cmf #sidebar a.cmf { background: {{ color.sidebar_bkg_highlight }}; }
 body.knowl #sidebar a.knowl { background: {{ color.sidebar_bkg_highlight_knowl }}; }

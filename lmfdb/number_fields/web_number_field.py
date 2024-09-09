@@ -190,8 +190,8 @@ def na_text():
 ## Turn a list into a string (without brackets)
 
 def list2string(li):
-    li2 = [str(x) for x in li]
-    return ','.join(li2)
+    return ','.join(str(x) for x in li)
+
 
 def string2list(s):
     s = str(s)
@@ -461,9 +461,7 @@ class WebNumberField:
     def is_reduced(self):
         if not self.haskey('reduced'):
             return True
-        if self._data['reduced'] == 0:
-            return False
-        return True
+        return self._data['reduced'] != 0
 
     # Return discriminant as a sage int
     def disc(self):
