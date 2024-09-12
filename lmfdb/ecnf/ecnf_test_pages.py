@@ -2,9 +2,10 @@
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
+
 class ECNFTest(LmfdbTest):
 
-    def runTest():
+    def runTest(self):
         pass
 
     def test_d6_pages(self):

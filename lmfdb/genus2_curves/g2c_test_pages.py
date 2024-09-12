@@ -2,9 +2,10 @@
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
+
 class Genus2Test(LmfdbTest):
 
-    def runTest():
+    def runTest(self):
         pass
 
     def test_all_pages(self):

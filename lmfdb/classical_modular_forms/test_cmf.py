@@ -7,7 +7,7 @@ cmf_logger.setLevel(100)
 
 
 class CmfTest(LmfdbTest):
-    def runTest():
+    def runTest(self):
         pass
 
     def test_expression_divides(self):
