@@ -320,6 +320,7 @@ gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                             ["n", "gal", "cache"],
                             lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
                             apply_download=lambda n, t, cache: [n, t])
+aut_col = MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=lambda info:info.get("aut"))
 def visible_col(default):
     return ListCol("visible", "lf.visible_slopes", "Visible slopes",
                    show_slopes2, default=default, mathmode=True)
@@ -342,18 +343,20 @@ lf_columns = SearchColumns([
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
     visible_col(lambda info: info.get("visible")),
     slopes_col(True),
+    aut_col,
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
-    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
+    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
 
 family_columns = SearchColumns([
     label_col,
     poly_col,
     gal_col,
     MathCol("galsize", "nf.galois_group", "Galois degree"),
+    aut_col,
     slopes_col(False),
     MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden slopes",
                       ["slopes", "visible"],
@@ -387,6 +390,7 @@ def common_parse(info, query):
     parse_ints(info,query,'u',name='Unramified degree')
     parse_ints(info,query,'t',name='Tame degree')
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
+    parse_ints(info,query,'aut',name='Automorphisms')
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_ints(info,query,'f',name='Residue field degree f')
@@ -823,6 +827,13 @@ def common_boxes():
         knowl='nf.galois_search',
         example='5T3',
         example_span='e.g. [8,3], 8.3, C5 or 7T2')
+    aut = TextBox(
+        name='aut',
+        label='Num. automorphisms',
+        knowl='lf.automorphism_group',
+        example='1',
+        example_span='2, or a range like 2..3'
+    )
     u = TextBox(
         name='u',
         label='Galois unramified degree',
@@ -851,7 +862,7 @@ def common_boxes():
         example='[4,1]',
         example_span='e.g. [8,3], 8.3, C5 or 7T2',
     )
-    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild
+    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
@@ -861,7 +872,7 @@ class FamilySearchArray(EmbeddedSearchArray):
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'label']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild = common_boxes()
         self.refine_array = [[gal, slopes, ind_insep, associated_inertia]]
 
 class FamiliesSearchArray(SearchArray):
@@ -872,7 +883,7 @@ class FamiliesSearchArray(SearchArray):
         ("field_count", "num fields", ['field_count', 'visible']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild = common_boxes()
         self.refine_array = [[qp, degree, c]] #, visible]]
 
 class LFSearchArray(SearchArray):
@@ -892,14 +903,15 @@ class LFSearchArray(SearchArray):
     jump_prompt = "Label"
 
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild = common_boxes()
         results = CountBox()
 
         self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
-                             [slopes, visible], [ind_insep, associated_inertia], [gal, inertia], [wild], [results]]
-        self.refine_array = [[degree, qp, gal, u, associated_inertia],
-            [e, c, inertia, t, ind_insep],
-            [f, topslope, slopes, visible, wild]]
+                             [slopes, visible], [ind_insep, associated_inertia], [gal, inertia], [aut, wild], [results]]
+        self.refine_array = [[degree, qp, c, gal],
+                             [e, f, t, u],
+                             [aut, inertia, ind_insep, associated_inertia],
+                             [topslope, slopes, visible, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
