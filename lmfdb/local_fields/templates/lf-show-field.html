@@ -17,9 +17,10 @@
       <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$:</td> <td>${{info.c}}$</td></tr>
       <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf|safe}}</td></tr>
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
-      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q_{ {{info.p}} }) }$:</td> <td>${{info.aut}}$</td></tr>
+      <tr><td> {{KNOWL('lf.automorphism_group', info.autstring)}} :</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
       <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
+      <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>${{info.jump_set}}$</td></tr>
 </table>
 
 <h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>

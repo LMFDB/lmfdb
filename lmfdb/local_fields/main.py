@@ -348,8 +348,9 @@ lf_columns = SearchColumns([
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
-    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"))],
-    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
+    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia")),
+    MathCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"))],
+    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen"])
 
 family_columns = SearchColumns([
     label_col,
@@ -363,7 +364,8 @@ family_columns = SearchColumns([
                       show_hidden_slopes,
                       mathmode=True, apply_download=unpack_hidden),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep."),
-    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia")])
+    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia"),
+    MathCol("jump_set", "lf.jump_set", "Jump Set")])
 
 families_columns = SearchColumns([
     LinkCol("label", "lf.family_label", "Label", url_for_family),
@@ -399,6 +401,7 @@ def common_parse(info, query):
     parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
     parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
     parse_bracketed_posints(info,query,"associated_inertia")
+    parse_bracketed_posints(info,query,"jump_set")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
 
@@ -443,6 +446,7 @@ def render_field_webpage(args):
         abelian = ' and abelian' if the_gal.is_abelian() else ''
         galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$'%p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
+        autstring = r'$\card{ %s(K/\Q_{%s}) }$' % (autstring, p)
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
@@ -509,6 +513,7 @@ def render_field_webpage(args):
                     'hw': data['hw'],
                     'visible': show_slopes(data['visible']),
                     'slopes': show_slopes(data['slopes']),
+                    'jump_set': data['jump_set'],
                     'gal': group_pretty_and_nTj(gn, gt, True),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
@@ -820,6 +825,12 @@ def common_boxes():
         knowl='lf.associated_inertia',
         example='[1,2,1]',
         example_span='[1,2,1] or [1,1,1,1]')
+    jump_set = TextBox(
+        name='jump_set',
+        label='Jump Set',
+        knowl='lf.jump_set',
+        example='[1,2]',
+        example_span='[1,2] or [1,3,8]')
     gal = TextBoxNoEg(
         name='gal',
         label='Galois group',
@@ -862,7 +873,7 @@ def common_boxes():
         example='[4,1]',
         example_span='e.g. [8,3], 8.3, C5 or 7T2',
     )
-    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild
+    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
@@ -872,7 +883,7 @@ class FamilySearchArray(EmbeddedSearchArray):
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'label']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
         self.refine_array = [[gal, slopes, ind_insep, associated_inertia]]
 
 class FamiliesSearchArray(SearchArray):
@@ -883,7 +894,7 @@ class FamiliesSearchArray(SearchArray):
         ("field_count", "num fields", ['field_count', 'visible']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
         self.refine_array = [[qp, degree, c]] #, visible]]
 
 class LFSearchArray(SearchArray):
@@ -903,14 +914,15 @@ class LFSearchArray(SearchArray):
     jump_prompt = "Label"
 
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, gal, aut, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
         results = CountBox()
 
         self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
-                             [slopes, visible], [ind_insep, associated_inertia], [gal, inertia], [aut, wild], [results]]
+                             [slopes, visible], [ind_insep, associated_inertia],
+                             [jump_set, aut], [gal, inertia], [wild], [results]]
         self.refine_array = [[degree, qp, c, gal],
                              [e, f, t, u],
-                             [aut, inertia, ind_insep, associated_inertia],
+                             [aut, inertia, ind_insep, associated_inertia, jump_set],
                              [topslope, slopes, visible, wild]]
 
 def ramdisp(p):
