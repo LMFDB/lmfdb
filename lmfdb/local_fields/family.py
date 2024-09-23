@@ -92,8 +92,12 @@ class pAdicSlopeFamily:
         self.red = []
         p, n, w = self.p, self.n, self.w
         for i, (s, (u, v, code)) in enumerate(zip(self.slopes, self.virtual_green), 1):
-            u += 1
+            if u.denominator() == 1 and code == -1:
+                self.blue.append((u, v, True))
+            u = floor(u + 1)
+            #print("Starting", i, s, u, v, code, n, w)
             while v <= 1 + s - u/n:
+                #print("While", u, v, 1 + s - u/n, u.valuation(p), w-i)
                 if u == n:
                     u = ZZ(0)
                     v += 1
@@ -170,6 +174,12 @@ class pAdicSlopeFamily:
         return (p-1)**alpha * p**(beta + gamma)
 
     @lazy_attribute
+    def mass(self):
+        q = self.p**len(self.red)
+        fields, cache = self.fields
+        return sum(q / rec["aut"] for rec in fields)
+
+    @lazy_attribute
     def base(self):
         return fr"\Q_{{{self.p}}}"
 
@@ -189,7 +199,7 @@ class pAdicSlopeFamily:
     def fields(self):
         fields = list(db.lf_fields.search(
             {"p": self.p, "visible": str(self.artin_slopes), "f": 1, "e": self.n},
-            ["label", "coeffs", "galT", "galois_label", "slopes", "ind_of_insep", "associated_inertia", "t", "u"]))
+            ["label", "coeffs", "galT", "galois_label", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut"]))
         cache = knowl_cache([rec["galois_label"] for rec in fields])
         return fields, cache
 

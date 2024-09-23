@@ -320,7 +320,8 @@ gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                             ["n", "gal", "cache"],
                             lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
                             apply_download=lambda n, t, cache: [n, t])
-aut_col = MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=lambda info:info.get("aut"))
+def aut_col(default):
+    return MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=default)
 def visible_col(default):
     return ListCol("visible", "lf.visible_slopes", "Visible slopes",
                    show_slopes2, default=default, mathmode=True)
@@ -343,7 +344,7 @@ lf_columns = SearchColumns([
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
     visible_col(lambda info: info.get("visible")),
     slopes_col(True),
-    aut_col,
+    aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
@@ -357,7 +358,7 @@ family_columns = SearchColumns([
     poly_col,
     gal_col,
     MathCol("galsize", "nf.galois_group", "Galois degree"),
-    aut_col,
+    aut_col(True),
     slopes_col(False),
     MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden slopes",
                       ["slopes", "visible"],
@@ -376,7 +377,9 @@ families_columns = SearchColumns([
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
     MathCol("poly_count", "lf.family_poly_count", "Num. Poly"),
-    MathCol("field_count", "lf.family_field_count", "Num. Fields")])
+    MathCol("field_count", "lf.family_field_count", "Num. Fields"),
+    #MathCol("mass", "lf.mass", "Mass"),
+])
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))
