@@ -60,15 +60,38 @@ class pAdicSlopeFamily:
         return [(0, 1), (self.n, 0)]
 
     @lazy_attribute
-    def green(self):
+    def virtual_green(self):
         p, n, w = self.p, self.n, self.w
-        return [(n*frac(h), 1 + floor(h), (n*frac(h)).valuation(p) == (w - i)) for (i, h) in enumerate(self.scaled_heights, 1) if (n*frac(h)).denominator() == 1]
+        last_slope = {}
+        for i, s in enumerate(self.slopes, 1):
+            last_slope[s] = i
+        ans = []
+        for i, (h, s) in enumerate(zip(self.scaled_heights, self.slopes), 1):
+            u = n*frac(h)
+            v = 1 + floor(h)
+            if last_slope[s] == i:
+                if (n*frac(h)).valuation(p) == w - i:
+                    code = 1
+                else:
+                    code = 0
+            else:
+                code = -1
+            ans.append((u, v, code))
+        return ans
+
+    @lazy_attribute
+    def green(self):
+        return [(u, v, bool(code)) for (u, v, code) in self.virtual_green if code >= 0]
+
+    @lazy_attribute
+    def solid_green(self):
+        return [(u, v) for (u, v, solid) in self.green if solid]
 
     def _set_redblue(self):
         self.blue = []
         self.red = []
         p, n, w = self.p, self.n, self.w
-        for i, (s, (u, v, solid)) in enumerate(zip(self.slopes, self.green), 1):
+        for i, (s, (u, v, code)) in enumerate(zip(self.slopes, self.virtual_green), 1):
             u += 1
             while v <= 1 + s - u/n:
                 if u == n:
@@ -127,7 +150,7 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def polynomial(self):
-        pts = ([("a", u, v) for (u, v, solid) in self.green] +
+        pts = ([("a", u, v) for (u, v) in self.solid_green] +
                [("b", u, v) for (u, v, solid) in self.blue] +
                [("c", u, v) for (u, v, solid) in self.red])
         names = [f"{c}{self.n*(v-1)+u}" for (c, u, v) in pts]
@@ -142,7 +165,7 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def poly_count(self):
-        p, alpha, beta, gamma = self.p, len(self.green), len(self.blue), len(self.red)
+        p, alpha, beta, gamma = self.p, len(self.solid_green), len(self.blue), len(self.red)
         # TODO: This needs to be updated if we ever allow f > 1
         return (p-1)**alpha * p**(beta + gamma)
 
