@@ -10,7 +10,7 @@
 
 <h2> Invariants </h2>
 <table>
-  <tr><td>Base field:</td><td> ${{family.base}}$ </td></tr>
+  <tr><td>Base field:</td><td> {{family.base | safe}} </td></tr>
   <tr><td>Ramification exponent $e$:</td><td> ${{family.e}}$ </td></tr>
   <tr><td>Residue field degree $f$:</td><td> ${{family.f}}$ </td></tr>
   <tr><td>Discriminant exponent $c$:</td><td> ${{family.c}}$ </td></tr>
@@ -37,6 +37,16 @@
 <h2> Picture </h2>
 
 <img src="{{ family.picture }}" width="1000">
+
+{% if family.field_count > 0 %}
+
+<h2> Galois groups and Hidden slopes </h2>
+
+{% for d in family.gal_slope_tables %}
+  {% include 'stat_2d.html' %}
+{% endfor %}
+
+{% endif %}
 
 <h2> Fields </h2>
 

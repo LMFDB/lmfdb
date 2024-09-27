@@ -666,17 +666,20 @@ def reliability():
 
 @local_fields_page.route("/family/<label>")
 def family_page(label):
-    # TODO: update to allow for tame extensions
     m = FAMILY_RE.match(label)
     if m is None:
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
 
-    p, den, nums = m.groups()
-    p, den, nums = ZZ(p), ZZ(den), [ZZ(n) for n in nums.split("_")]
-    slopes = [n / den for n in nums]
-    family = pAdicSlopeFamily(p, slopes=slopes)
-    info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family)
+    tame, den, nums = m.groups()
+    p = ZZ(tame.split(".")[0])
+    if den is None:
+        slopes = []
+    else:
+        den, nums = ZZ(den), [ZZ(n) for n in nums.split("_")]
+        slopes = [n / den for n in nums]
+    family = pAdicSlopeFamily(tame, slopes=slopes)
+    info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family, stats=LFStats())
     info['bread'] = get_bread([(str(p), url_for(".families_page", p=p)),
                        (str(family.n), url_for(".families_page", p=p, n=family.n)),
                        (label, "")])
@@ -700,10 +703,11 @@ def family_page(label):
 )
 def render_family(info, query):
     family = info["family"]
-    query["p"] = family.p
-    query["visible"] = str(family.artin_slopes)
-    query["f"] = 1 # TODO: Update to allow for tame extensions
-    query["e"] = family.n
+    query["family"] = family.label
+    #query["p"] = family.p
+    #query["visible"] = str(family.artin_slopes)
+    #query["f"] = 1 # TODO: Update to allow for tame extensions
+    #query["e"] = family.n
 
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
@@ -962,7 +966,7 @@ def galcache():
     return knowl_cache(db.lf_fields.distinct("galois_label"))
 def galformatter(gal):
     n, t = galdata(gal)
-    return group_pretty_and_nTj(n, t, True, cache=galcache())
+    return '<span class="nowrap">' + group_pretty_and_nTj(n, t, True, cache=galcache()).replace("(as", '</span><br><span class="nowrap">(as') + "</span>"
 class LFStats(StatsDisplay):
     table = db.lf_fields
     baseurl_func = ".index"

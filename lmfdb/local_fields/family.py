@@ -1,25 +1,31 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime
+from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime, gcd
 from lmfdb import db
-from lmfdb.utils import encode_plot, unparse_range
+from lmfdb.utils import encode_plot, unparse_range, totaler, proportioners
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
 from lmfdb.local_fields import local_fields_page
 from flask import url_for
 
-from collections import Counter
+from collections import defaultdict, Counter
 import itertools
 import re
-FAMILY_RE = re.compile(r'(\d+)\.(\d+)\.(\d+(?:_\d+)*)')
+FAMILY_RE = re.compile(r'(\d+(?:\.\d+\.\d+\.\d+)?)-(?:(\d+)\.(\d+(?:_\d+)*))?')
 
 class pAdicSlopeFamily:
-    def __init__(self, p, u=1, t=1, slopes=[], heights=[], rams=[], count_cache=None):
+    def __init__(self, tame, slopes=[], heights=[], rams=[], count_cache=None):
+        self.tame = tame
+        if "." in tame:
+            p = ZZ(tame.split(".")[0])
+            rec = db.lf_fields.lookup(tame, ["e", "f"])
+            self.e, self.f = rec["e"], rec["f"]
+        else:
+            p = ZZ(tame)
+            self.e = self.f = 1
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
         self.w = w = max(len(L) for L in [slopes, heights, rams])
-        # For now, we don't support tamely ramified fields; if this changes, also need to update the "if not rams" and "if not slopes" below
-        assert w > 0
-        assert u == t == 1 # various things below need to change to support non-wild extensions
+        # We support tamely ramified fields by specifying a tame base and empty slopes/rams/heights
         # slopes/rams -> heights -> rams/slopes
         if rams:
             heights = [sum(p**(k-j) * rams[j] for j in range(k+1)) for k in range(w)]
@@ -31,9 +37,9 @@ class pAdicSlopeFamily:
                 h += phipk * s
                 heights.append(h)
                 phipk *= p
-        if not rams:
+        if w and not rams:
             rams = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
-        if not slopes:
+        if w and not slopes:
             slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
         self.slopes = slopes
         self.visible = self.artin_slopes = [s + 1 for s in slopes]
@@ -41,9 +47,7 @@ class pAdicSlopeFamily:
         self.rams = rams
         self.n = self.e = n = p**w
         self.p = p
-        self.f = self.u = u
-        self.t = t
-        self.c = heights[-1] + n - 1
+        self.c = heights[-1] + n - 1 # TODO: This is now wrong!
         self.count_cache = count_cache
 
     @lazy_attribute
@@ -123,7 +127,7 @@ class pAdicSlopeFamily:
     def label(self):
         den = lcm(s.denominator() for s in self.slopes)
         nums = "_".join(str(den*n) for n in self.slopes)
-        return f"{self.p}.{den}.{nums}"
+        return f"{self.tame}-{den}.{nums}"
 
     @lazy_attribute
     def link(self):
@@ -147,7 +151,11 @@ class pAdicSlopeFamily:
                     P += point((u, v), markeredgecolor=color, color=color, size=20, marker=marker, zorder=1)
                 else:
                     P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
-        P.set_aspect_ratio(1)
+        if len(self.visible) > 1:
+            aspect = 0.75 * self.n / self.visible[-1]
+        else:
+            aspect = 1
+        P.set_aspect_ratio(aspect)
         #P._set_extra_kwds(dict(xmin=0, xmax=self.n, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight")
@@ -168,22 +176,38 @@ class pAdicSlopeFamily:
         return poly
 
     @lazy_attribute
+    def gamma(self):
+        if self.f == 1:
+            return len(self.red)
+        n = self.n
+        gamma = 0
+        for (u, v, _) in self.red:
+            s = v + u/n - 1
+            cnt = self.slopes.count(s)
+            gamma += gcd(cnt, self.f)
+        return gamma
+
+    @lazy_attribute
     def poly_count(self):
-        p, alpha, beta, gamma = self.p, len(self.solid_green), len(self.blue), len(self.red)
-        # TODO: This needs to be updated if we ever allow f > 1
-        return (p-1)**alpha * p**(beta + gamma)
+        p, f, alpha, beta, gamma = self.p, self.f, len(self.solid_green), len(self.blue), self.gamma
+        q = p**f
+        return (q-1)**alpha * q**beta * p**gamma
 
     @lazy_attribute
     def mass(self):
-        q = self.p**len(self.red)
         fields, cache = self.fields
-        return sum(q / rec["aut"] for rec in fields)
+        return sum(ZZ(1) / rec["aut"] for rec in fields)
 
     @lazy_attribute
     def base(self):
-        return fr"\Q_{{{self.p}}}"
+        if "." in self.tame:
+            url = url_for(".by_label", label=self.tame)
+            return f'<a href="{url}">{self.tame}</a>'
+        url = url_for(".by_label", label=f"{self.p}.1.0.1")
+        return fr'<a href="{url}">$\Q_{{{self.p}}}$</a>'
 
     def __iter__(self):
+        # TODO: This needs to be fixed when base != Qp
         generic = self.polynomial
         R = generic.base_ring()
         Zx = PolynomialRing(ZZ, "x")
@@ -198,8 +222,8 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def fields(self):
         fields = list(db.lf_fields.search(
-            {"p": self.p, "visible": str(self.artin_slopes), "f": 1, "e": self.n},
-            ["label", "coeffs", "galT", "galois_label", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut"]))
+            {"family": self.label},
+            ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden"]))
         cache = knowl_cache([rec["galois_label"] for rec in fields])
         return fields, cache
 
@@ -258,7 +282,57 @@ class pAdicSlopeFamily:
     def field_count(self):
         if self.count_cache is not None:
             return self.count_cache[str(self.artin_slopes)]
-        return db.lf_fields.count({"p": self.p, "visible": str(self.artin_slopes), "f": 1, "e": self.n})
+        return db.lf_fields.count({"family": self.label})
+
+    @lazy_attribute
+    def gal_slope_tables(self):
+        from .main import LFStats
+        stats = LFStats()
+        fields, cache = self.fields
+        gps = defaultdict(set)
+        slopes = defaultdict(set)
+        for rec in fields:
+            gps[rec["galois_degree"]].add(rec["galois_label"])
+            slopes[rec["galois_degree"]].add(rec["slopes"])
+        print("gps", gps)
+        print("slopes", slopes)
+        dyns = []
+        def add_grid(Ns, rowcount, colcount):
+            if len(Ns) == 1:
+                Nconstraint = list(Ns)[0]
+            else:
+                Nconstraint = {"$gte": min(Ns), "$lte": max(Ns)}
+            constraint = {
+                'family': self.label,
+                'galois_degree': Nconstraint,
+            }
+            attr = {
+                'cols': ['slopes', 'galois_label'],
+                'constraint': constraint,
+                'totaler': totaler(row_counts=(colcount > 1), col_counts=(rowcount > 1), row_proportions=False, col_proportions=False)
+            }
+            dyns.append(stats.prep(attr))
+
+        cur_rows = set()
+        cur_cols = set()
+        max_rows = 8
+        max_cols = 8
+        curN = set()
+        for N in sorted(gps):
+            rowcount = len(cur_rows)
+            colcount = len(cur_cols)
+            cur_rows = cur_rows.union(slopes[N])
+            cur_cols = cur_cols.union(gps[N])
+            if curN and (len(cur_cols) > max_cols or len(cur_rows) > max_rows):
+                add_grid(curN, rowcount, colcount)
+                cur_rows = set()
+                cur_cols = set()
+                curN = set()
+            curN.add(N)
+        rowcount = len(cur_rows.union(slopes[N]))
+        colcount = len(cur_cols.union(gps[N]))
+        add_grid(curN, rowcount, colcount)
+        return dyns
 
     def satisfies(self, query):
         if "$or" in query:
@@ -288,7 +362,7 @@ class pAdicSlopeFamily:
         if sort is None:
             for rmvec in it:
                 if test or wrap:
-                    family = cls(p, rams=rmvec, count_cache=count_cache)
+                    family = cls(str(p), rams=rmvec, count_cache=count_cache)
                 if (test and family.satisfies(query)) or not test:
                     if (offset is None or ctr[0] >= offset) and (limit is None or ctr[0] < limit):
                         yield (family if wrap else rmvec)
@@ -296,7 +370,7 @@ class pAdicSlopeFamily:
                     if limit is not None and ctr[0] >= limit:
                         break
         else:
-            families = [cls(p, rams=rmvec, count_cache=count_cache) for rmvec in it]
+            families = [cls(str(p), rams=rmvec, count_cache=count_cache) for rmvec in it]
             if test:
                 families = [family for family in families if family.satisfies(query)]
             families.sort(key=cls._sortkey(sort))
@@ -450,11 +524,11 @@ class pAdicSlopeFamily:
                 # We can short-circuit actually constructing the families
                 # It would be nice to know the length of this list ahead of time in order to save memory
                 rmvec = choice(list(pw_ram_iterator(p, w)))
-                return pAdicSlopeFamily(p, rams=rmvec, count_cache=count_cache).label
+                return pAdicSlopeFamily(str(p), rams=rmvec, count_cache=count_cache).label
             else:
                 valid = []
                 for rmvec in pw_ram_iterator(p, w):
-                    family = pAdicSlopeFamily(p, rams=rmvec, count_cache=count_cache)
+                    family = pAdicSlopeFamily(str(p), rams=rmvec, count_cache=count_cache)
                     if family.satisfies(query):
                         valid.append(family.label)
                 return choice(valid)

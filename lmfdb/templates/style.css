@@ -2321,7 +2321,7 @@ div.table-scroll-wrapper table.onesticky th:first-child::after, div.table-scroll
 table.nowrap td {
     white-space:nowrap;
 }
-td.nowrap {
+td.nowrap, th.nowrap, span.nowrap {
     white-space:nowrap;
 }
 table.ntdata td.nowrap a {
