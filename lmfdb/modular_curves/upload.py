@@ -36,7 +36,7 @@ class Points(UploadSection):
               UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
               UTextBox("residue_field", "Residue field", "upload.modcurve.residue_field", label_for="nf_fields", label_linker=lambda label: nf_display_knowl(label, label)),
               UTextBox("jorig", "$j$-invariant", "upload.modcurve.jinv", remove_spaces=True, re=(jre, "comma separated rationals"), mathmode=True),
-              UTextBox("coordinates", "Coordinates", "upload.modcurve.coordinates", remove_spaces=True, re=(coordre, "semicolon separated points, each point giving (weighted) projective coordinates sepatated by colons, with each coordinate specified as a comma separated list of rational numbers"), mathmode=True),
+              UTextBox("coordinates", "Coordinates", "upload.modcurve.coordinates", remove_spaces=True, re=(coordre, "semicolon separated points, each point giving (weighted) projective coordinates separated by colons, with each coordinate specified as a comma separated list of rational numbers"), mathmode=True),
               ModelTypeBox("model_type", "Model type"),
               USelectBox("isolated", "Isolated", "upload.modcurve.isolated",
                          [("0", "Unknown"),
@@ -142,7 +142,7 @@ class Points(UploadSection):
         # TODO: compute data["j_height"]
         # TODO: compute data["Elabel"], data["ainvs"], data["conductor_norm"]
         # TODO: compute data["cm"]; there should be good code for this in Sage
-        # BIG TODO: Propogate this point to other modular curves (both up and down, including fine models)
+        # BIG TODO: Propagate this point to other modular curves (both up and down, including fine models)
         return [("modcurve_points", True, data)]
 
     @lazy_attribute
@@ -172,7 +172,7 @@ class PointCompleteness(UploadSection):
 class GonalityBounds(UploadSection):
     name = "modcurve_gonality"
     title = "Gonality bounds"
-    intro = "To update gonality bounds for a single curve, enter it here; these bounds will be propogated to other modular curves."
+    intro = "To update gonality bounds for a single curve, enter it here; these bounds will be propagated to other modular curves."
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
               UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
               UTextBox("q_gonality", r"$\mathbb{Q}$-gonality", "upload.modcurve.q_gonality", remove_spaces=True, natural_or_range=True),
@@ -212,7 +212,7 @@ class GonalityBounds(UploadSection):
 
     def verify(self, rec):
         # TODO: If gonal map specified, we should confirm that its degree matches the provided upper gonality bound
-        # We don't do anything further here, since propogation is expensive and we want to wait until the processing stage
+        # We don't do anything further here, since propagation is expensive and we want to wait until the processing stage
         pass
 
     def process(self, rec):

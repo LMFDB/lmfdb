@@ -13,11 +13,8 @@ def apply_map_to_pt(a_map, a_pt):
     P = ProjectiveSpace(QQ, how_many_vars - 1, names=my_vars)
     my_pt = P(a_pt.split(':'))
     Pol = PolynomialRing(QQ, how_many_vars, names=my_vars)
-    output = []
     my_pt_tuple = tuple(my_pt)
-    for a_pol in a_map:
-        output.append(Pol(a_pol)(my_pt_tuple))
-    return output
+    return [Pol(a_pol)(my_pt_tuple) for a_pol in a_map]
 
 
 class modcurve_modelmaps(TableChecker):
@@ -58,14 +55,15 @@ class modcurve_modelmaps(TableChecker):
                 pt_on_codomain_as_list = apply_map_to_pt(rec['coordinates'], rel_pt)
 
                 # TEST 1: check this pt is rational
-                if not all([t in QQ for t in pt_on_codomain_as_list]):
+                if not all(t in QQ for t in pt_on_codomain_as_list):
                     return False
 
                 # TEST 2: check this is actually a point on the codomain
                 equation, number_variables = self.modcurve_models[rec["codomain_label"], rec["codomain_model_type"]]
                 Pol = PolynomialRing(QQ, number_variables, names=VARORDER[:number_variables])
 
-                if not all([Pol(f_str)(pt_on_codomain_as_list) == 0 for f_str in equation]):
+                if not all(Pol(f_str)(pt_on_codomain_as_list) == 0
+                           for f_str in equation):
                     return False
 
         return True

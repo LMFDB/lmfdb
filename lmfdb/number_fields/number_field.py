@@ -839,7 +839,7 @@ nf_columns = SearchColumns([
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center", default=False),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True, default=False),
     MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False)],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram"])
+    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -895,6 +895,7 @@ def number_field_search(info, query):
     parse_floats(info, query, 'rd')
     parse_floats(info, query, 'regulator')
     parse_posints(info,query,'class_number')
+    parse_posints(info,query,'relative_class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bool(info,query,'is_galois')
@@ -1196,6 +1197,11 @@ class NFSearchArray(SearchArray):
             knowl="nf.ideal_class_group",
             example="[2,4]",
             example_span="[ ], [3], or [2,4]")
+        relative_class_number = TextBox(
+            name="relative_class_number",
+            label="Relative class number",
+            knowl="nf.relative_class_number",
+            example="3")
         num_ram = TextBox(
             name="num_ram",
             label="Ramified prime count",
@@ -1258,13 +1264,20 @@ class NFSearchArray(SearchArray):
             [class_number, class_group],
             [ram_primes, ur_primes],
             [regulator, cm_field],
-            [completion, subfield],
-            [index, inessentialprimes],
-            [monogenic, is_minimal_sibling],
-            [count]]
+            [completion, relative_class_number],
+            [index, subfield],
+            [monogenic, inessentialprimes],
+            [count, is_minimal_sibling]]
 
         self.refine_array = [
-            [degree, signature, class_number, class_group, cm_field],
-            [num_ram, ram_primes, ur_primes, gal, is_galois],
-            [discriminant, rd, grd, regulator, subfield],
-            [completion, is_minimal_sibling, monogenic, index, inessentialprimes]]
+            [degree, signature, num_ram, ram_primes, ur_primes ],
+            [gal, is_galois, subfield, class_group, class_number],
+            [discriminant, rd, grd, cm_field, relative_class_number],
+            [regulator, completion, monogenic, index, inessentialprimes],
+            [is_minimal_sibling]]
+
+            #[degree, signature, class_number, class_group, cm_field],
+            #[num_ram, ram_primes, ur_primes, gal, is_galois],
+            #[discriminant, rd, grd, regulator, subfield],
+            #[completion, is_minimal_sibling, monogenic, index, inessentialprimes],
+            #[relative_class_number]]

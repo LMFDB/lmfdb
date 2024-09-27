@@ -221,8 +221,8 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 def primary_to_smith(invs):
-    if invs==[]:
-        return([])
+    if not invs:
+        return []
     by_p = defaultdict(list)
     for q in invs:
         p, _ = q.is_prime_power(get_data=True)
@@ -942,7 +942,7 @@ class WebAbstractGroup(WebObj):
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
             if self.aut_order is None:
-                  props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
+                props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -952,7 +952,7 @@ class WebAbstractGroup(WebObj):
                     pass
 
             if self.outer_order is None:
-                  props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
+                props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -1003,7 +1003,7 @@ class WebAbstractGroup(WebObj):
                     ret_str=ret_str+ ", and all normal subgroups are characteristic.<p>"+charcolor
                 return ret_str
         elif self.number_normal_subgroups < self.number_subgroups:
-            ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
+            ret_str = "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
         else:
             ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
@@ -1137,7 +1137,7 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal:
-                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
@@ -1339,10 +1339,9 @@ class WebAbstractGroup(WebObj):
                 return [h for h in G.normal_contains if test(subs[h])]
         nodes = [H for H in subs.values() if test(H)]
         if self.outer_equivalence or not sub_aut:
-            edges = []
-            for G in nodes:
-                for h in contains(G):
-                    edges.append([h, G.short_label])
+            edges = [[h, G.short_label]
+                     for G in nodes
+                     for h in contains(G)]
         else:
             # Subgroups are stored up to conjugacy but we want them up to automorphism.
             # We pick a rep from each autjugacy class
@@ -1815,10 +1814,9 @@ class WebAbstractGroup(WebObj):
     def aut_statistics(self):
         if self.aut_stats is None:
             return None
-        else:
-           D = Counter()
-           for (o, s, k, m) in self.aut_stats:
-               D[o] += m
+        D = Counter()
+        for o, s, k, m in self.aut_stats:
+            D[o] += m
         return sorted(D.items())
 
     @lazy_attribute
@@ -2186,9 +2184,10 @@ class WebAbstractGroup(WebObj):
         elif rep_type == "Perm":
             inners = [str(z) for z in inners]
         else:
-            if self.element_repr_type=="GLFq":
+            if self.element_repr_type == "GLFq":
                 R, N, k, d, rep_type = self._matrix_coefficient_data(self.element_repr_type)
-                inners = [matrix(R,d,d,[[z for z in zz] for zz in z3]) if z3 != '' else '' for z3 in inners]
+                inners = [matrix(R, d, d, [list(zz) for zz in z3])
+                          if z3 != '' else '' for z3 in inners]
             inners = [latex(matrix(z)) if z != '' else '' for z in inners]
         return {'orders': orders, 'inners': inners}
 
@@ -2614,7 +2613,7 @@ class WebAbstractGroup(WebObj):
             d = data["d"]
             return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
-            rep_str =  "Elements of the group are displayed as words in the presentation"
+            rep_str = "Elements of the group are displayed as words in the presentation"
             if other_page:
                 return rep_str + self.representation_line("PC", skip_head=True)
             else:
@@ -2673,7 +2672,7 @@ class WebAbstractGroup(WebObj):
                 if isinstance(code[item][L],str):
                     lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
                     lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
-                else:   # not currrently used in groups
+                else:   # not currently used in groups
                     lines = code[item][L]
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])
@@ -2700,7 +2699,7 @@ class WebAbstractGroup(WebObj):
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
         if "PC" in self.representations:
-            gens =  self.presentation_raw(as_str=False)
+            gens = self.presentation_raw(as_str=False)
             pccodelist = self.representations["PC"]["pres"]
             pccode = self.representations["PC"]["code"]
             ordgp = self.order
@@ -2764,7 +2763,7 @@ class WebAbstractGroup(WebObj):
         }
         for prop in code:
             for lang in code['prompt']:
-               code[prop][lang] = code[prop][lang].format(**data)
+                code[prop][lang] = code[prop][lang].format(**data)
         return code
 
     # The following attributes are used in create_boolean_string

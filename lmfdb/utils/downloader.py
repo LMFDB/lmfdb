@@ -584,7 +584,7 @@ class Downloader():
         """
         This determines the sort order requested from the database.
 
-        OUPUT:
+        OUTPUT:
 
         - a list or other object appropriate for passing as the ``sort`` argument
           to the ``search`` method of the search table.

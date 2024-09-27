@@ -684,13 +684,13 @@ def mu_data(n):
     assert n > 0
     n = ZZ(n)
     rec = {}
-    rec['label'] = "0.1.%d"%n
-    rec['label_components'] = [int(0),int(1),int(0),int(n)]
+    rec['label'] = "0.1.%d" % n
+    rec['label_components'] = [0, 1, 0, int(n)]
     rec['weight'] = 0
     rec['degree'] = 1
     rec['rational'] = bool(n <= 2)
-    rec['name'] = 'mu(%d)'%n
-    rec['pretty'] = r'\mu(%d)'%n
+    rec['name'] = 'mu(%d)' % n
+    rec['pretty'] = r'\mu(%d)' % n
     rec['real_dimension'] = 0
     rec['components'] = int(n)
     rec['component_group'] = db.gps_special_names.lucky({'family':'C','parameters':{'n':n}},projection='label')

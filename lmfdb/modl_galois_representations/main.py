@@ -24,6 +24,7 @@ from lmfdb.utils import (
     parse_bool,
     parse_primes,
     parse_rats,
+    parse_group_label_or_order,
     parse_kerpol_string,
     integer_divisors,
     StatsDisplay,
@@ -42,7 +43,7 @@ from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
 from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty_with_abstract
-from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_group_label_regex
 
 LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
 
@@ -174,6 +175,7 @@ def modlgal_search(info, query):
     parse_ints(info, query, "conductor")
     parse_ints(info, query, "image_index")
     parse_ints(info, query, "image_order")
+    parse_ints(info, query, "base_ring_order")
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['conductor_num_primes'] = 1
@@ -207,6 +209,7 @@ def modlgal_search(info, query):
     parse_bool(info, query, "determinant_index", process=lambda a: 1 if a else {"$gt":1})
     parse_kerpol_string(info, query, 'kernel_polynomial')
     parse_kerpol_string(info, query, "projective_kernel_polynomial")
+    parse_group_label_or_order(info, query, "image_abstract_group", regex=abstract_group_label_regex)
 
 
 class ModLGalRepSearchArray(SearchArray):
@@ -306,6 +309,11 @@ class ModLGalRepSearchArray(SearchArray):
             label="Image order",
             example="2",
             example_span="12, 10-20")
+        image_abstract_group = TextBox(
+            name="image_abstract_group",
+            knowl="modlgal.image_abstract_group",
+            label="Abstract image",
+            example="4.3")
         kernel_field = TextBox(
             name="kernel_polynomial",
             knowl="modlgal.min_sib_splitting_field",
@@ -328,16 +336,16 @@ class ModLGalRepSearchArray(SearchArray):
             [conductor, absolutely_irreducible],
             [conductor_primes, solvable],
             [image_index, determinant_index],
-            [image_order, top_slope],
+            [image_order, image_abstract_group],
             [kernel_field, projective_kernel_field],
-            [count]
+            [count, top_slope]
         ]
 
         self.refine_array = [
             [base_ring_characteristic, dimension, conductor, conductor_primes],
             [codomain, solvable, surjective, absolutely_irreducible],
-            [top_slope, image_index, image_order, determinant_index],
-            [kernel_field, projective_kernel_field]
+            [image_index, image_order, image_abstract_group, determinant_index],
+            [top_slope, kernel_field, projective_kernel_field]
         ]
 
     #sort_knowl = "modlgal.sort_order"
@@ -348,12 +356,15 @@ class ModLGalRepSearchArray(SearchArray):
         ("image_index", "image index", ["image_index", "dimension", "base_ring_order", "conductor", "num"]),
     ]
 
+
 def groupdata(group):
     parts = group.split('.')
     return [int(z) for z in parts]
 
+
 def groupformatter(group):
-  return abstract_group_display_knowl(group)
+    return abstract_group_display_knowl(group)
+
 
 class ModLGalRep_stats(StatsDisplay):
     def __init__(self):
@@ -388,6 +399,7 @@ class ModLGalRep_stats(StatsDisplay):
               }
     short_display = {'image_abstract_group': 'image'}
     formatters = {'image_abstract_group': groupformatter}
+    query_formatters = {'image_abstract_group': lambda x: "image_abstract_group=%s" % x}
     stat_list = [
         {'cols': ['conductor', 'dimension'],
          'proportioner': proportioners.per_row_total,

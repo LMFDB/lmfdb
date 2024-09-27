@@ -176,8 +176,10 @@ def inflate_interval(a,b,r):
     d*=r
     return (c-d,c+d)
 
-def plot_zone_union(R,S):
-    return(min(R[0],S[0]),max(R[1],S[1]),min(R[2],S[2]),max(R[3],S[3]))
+
+def plot_zone_union(R, S):
+    return (min(R[0], S[0]), max(R[1], S[1]), min(R[2], S[2]), max(R[3], S[3]))
+
 
 # Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x)
 def EC_R_plot_zone_piece(f,h,a,b):
@@ -718,7 +720,7 @@ class ECNF():
         # LMFDB labels:
         self.base_change_Q = [cremona_label_to_lmfdb_label(lab) for lab in self.base_change if '-' not in lab]
 
-        # sort by conductor (so also unkown curves come last)
+        # sort by conductor (so also unknown curves come last)
         self.base_change_Q.sort(key=lambda lab:ZZ(conductor_from_label(lab)))
         self.bcQtext = [] # for the Base change section of the home page
         for lab in self.base_change_Q:

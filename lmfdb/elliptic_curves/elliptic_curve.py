@@ -764,20 +764,21 @@ def render_curve_webpage_by_label(label):
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
-    T =  render_template("ec-curve.html",
-                         properties=data.properties,
-                         data=data,
-                         # set default show names but actually code snippets are filled in only when needed
-                         code=code,
-                         bread=data.bread, title=data.title,
-                         friends=data.friends,
-                         downloads=data.downloads,
-                         KNOWL_ID="ec.q.%s"%lmfdb_label,
-                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                         learnmore=learnmore_list_add(*learnmore_curve_picture))
+    T = render_template("ec-curve.html",
+                        properties=data.properties,
+                        data=data,
+                        # set default show names but actually code snippets are filled in only when needed
+                        code=code,
+                        bread=data.bread, title=data.title,
+                        friends=data.friends,
+                        downloads=data.downloads,
+                        KNOWL_ID="ec.q.%s"%lmfdb_label,
+                        BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
+                        learnmore=learnmore_list_add(*learnmore_curve_picture))
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
+
 
 @ec_page.route("/data/<label>")
 def EC_data(label):
