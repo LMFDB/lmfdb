@@ -12,7 +12,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
     parse_inertia, parse_newton_polygon, parse_bracketed_posints,
-    parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
+    parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, embed_wrap,
@@ -316,6 +316,8 @@ def degree_col(default):
 poly_col = ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True)
 p_col = MathCol("p", "lf.qp", "$p$", short_title="prime")
 c_col = MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent")
+e_col = MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index")
+f_col = MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree")
 gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                             ["n", "gal", "cache"],
                             lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
@@ -336,8 +338,8 @@ lf_columns = SearchColumns([
     degree_col(False),
     poly_col,
     p_col,
-    MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index"),
-    MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree"),
+    e_col,
+    f_col,
     c_col,
     gal_col,
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
@@ -372,13 +374,18 @@ families_columns = SearchColumns([
     LinkCol("label", "lf.family_label", "Label", url_for_family),
     p_col,
     degree_col(True),
+    LinkCol("base", "lf.tame_degree", "Base", url_for_label),
     c_col,
+    MathCol("c_formula", "lf.discriminant_exponent", "Formula for $c$", short_title="discriminant exponent"),
     visible_col(True),
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
+    PolynomialCol("poly", "lf.family_poly", "Generic poly"),
     MathCol("poly_count", "lf.family_poly_count", "Num. Poly"),
     MathCol("field_count", "lf.family_field_count", "Num. Fields"),
-    #MathCol("mass", "lf.mass", "Mass"),
+    MathCol("mass", "lf.mass", "Mass"),
+    MathCol("mass_stored", "lf.mass", "Mass stored"),
+    MathCol("packet_count", "lf.packet", "Num. Packets"),
 ])
 
 def lf_postprocess(res, info, query):
@@ -720,8 +727,8 @@ def families_page():
     info = to_dict(request.args, search_array=FamiliesSearchArray())
     return families_search(info)
 
-@yield_wrap(
-    yielder=pAdicSlopeFamily.families,
+@search_wrap(
+    table=db.lf_families,
     columns=families_columns,
     title='$p$-adic families search results',
     titletag=lambda:'p-adic families search results',
@@ -733,7 +740,12 @@ def families_page():
 def families_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'e',name='Ramification index')
+    parse_ints(info,query,'e0',name='Base ramification index')
+    parse_ints(info,query,'f',name='Residue field degree')
     parse_ints(info,query,'c',name='Discriminant exponent c')
+    parse_ints(info,query,'w',name='Wild ramification log')
+    parse_noop(info,query,'base',name='Base')
     #parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
 
 @local_fields_page.route("/families/")
@@ -895,14 +907,32 @@ class FamilySearchArray(EmbeddedSearchArray):
 
 class FamiliesSearchArray(SearchArray):
     sorts = [
-        ("", "slopes", ['visible']),
-        ("c", "discriminant exponent", ['c', 'visible']),
-        ("poly_count", "num poly", ['poly_count', 'visible']),
-        ("field_count", "num fields", ['field_count', 'visible']),
+        ("", "base", ['p', 'n', 'e0', 'e', 'c', 'visible']),
+        ("c", "discriminant exponent", ['p', 'n', 'c', 'e0', 'e', 'visible']),
+        ("slopes", "slopes", ['p', 'n', 'visible']),
+        ("poly_count", "num poly", ['p', 'n', 'poly_count', 'visible']),
+        ("field_count", "num fields", ['p', 'n', 'field_count', 'visible']),
     ]
     def __init__(self):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
-        self.refine_array = [[qp, degree, c]] #, visible]]
+        e0 = TextBox(
+            name='e0',
+            label='Base ramification index',
+            knowl='lf.ramification_index',
+            example='3',
+            example_span='3, or a range like 2..6')
+        w = TextBox(
+            name='w',
+            label='Wild ramification log',
+            knowl='lf.ramification_index',
+            example='3',
+            example_span='3, or a range like 2..6')
+        base = TextBox(
+            name='base',
+            label='Base',
+            knowl='lf.tame_degree',
+            example='2.2.0.1')
+        self.refine_array = [[qp, degree, e, f, c], [base, e0, w] #, visible]]
 
 class LFSearchArray(SearchArray):
     noun = "field"
