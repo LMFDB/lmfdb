@@ -1270,7 +1270,7 @@ class NFSearchArray(SearchArray):
             [count, is_minimal_sibling]]
 
         self.refine_array = [
-            [degree, signature, num_ram, ram_primes, ur_primes ], 
+            [degree, signature, num_ram, ram_primes, ur_primes ],
             [gal, is_galois, subfield, class_group, class_number],
             [discriminant, rd, grd, cm_field, relative_class_number],
             [regulator, completion, monogenic, index, inessentialprimes],
