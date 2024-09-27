@@ -2,6 +2,7 @@
 from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 
+
 class LfunctionTest(LmfdbTest):
 
     # All tests should pass

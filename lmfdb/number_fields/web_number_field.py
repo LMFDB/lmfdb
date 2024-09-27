@@ -190,8 +190,8 @@ def na_text():
 ## Turn a list into a string (without brackets)
 
 def list2string(li):
-    li2 = [str(x) for x in li]
-    return ','.join(li2)
+    return ','.join(str(x) for x in li)
+
 
 def string2list(s):
     s = str(s)
@@ -461,9 +461,7 @@ class WebNumberField:
     def is_reduced(self):
         if not self.haskey('reduced'):
             return True
-        if self._data['reduced'] == 0:
-            return False
-        return True
+        return self._data['reduced'] != 0
 
     # Return discriminant as a sage int
     def disc(self):
@@ -800,16 +798,18 @@ class WebNumberField:
     def cnf(self):
         if self.degree()==1:
             return r'=\mathstrut &amp \frac{2^1 (2\pi)^0 \cdot 1\cdot 1}{2\cdot\sqrt 1}' + r'\cr' + r'= \mathstrut &amp; 1'
-        if not self.haskey('class_group'):
-            return r'$<td>  '+na_text()
-        # Otherwise we should have what we need
         [r1,r2] = self.signature()
-        reg = self.regulator()
-        h = self.class_number()
         w = self.root_of_1_order()
         r1term= r'2^{%s}\cdot'% r1
         r2term= r'(2\pi)^{%s}\cdot'% r2
         disc = ZZ(self._data['disc_abs'])
+        approx1 = r'= \mathstrut &amp;'
+        if not self.haskey('class_group'):
+            ltx = r'%s\frac{%s%s %s \cdot %s}{%s\cdot\sqrt{%s}}'%(approx1,r1term,r2term,'R','h',w,disc)
+            return ltx+r'\cr\mathstrut &amp; \text{<td> some values not computed }'
+        # Otherwise we should have what we need
+        reg = self.regulator()
+        h = self.class_number()
         approx1 = r'\approx' if self.unit_rank()>0 else r'='
         approx1 += r"\mathstrut &amp;"
         ltx = r'%s\frac{%s%s %s \cdot %s}{%s\cdot\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
@@ -868,6 +868,11 @@ class WebNumberField:
         if self.haskey('class_number'):
             return True
         return False
+
+    def relh(self):
+        if self.haskey('relative_class_number'):
+            return f"${self._data['relative_class_number']}$"
+        return dnc
 
     def is_null(self):
         return self._data is None

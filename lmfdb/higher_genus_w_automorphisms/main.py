@@ -512,8 +512,8 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                 else:
                     ret.append({a[0]:a[1]})
             else:
-                for i in range(0, len(a)):
-                    ret.append({a[i][0]: a[i][1], 'genus': a[i][2]})
+                for ai in a:
+                    ret.append({ai[0]: ai[1], 'genus': ai[2]})
         return ['$or', ret]
     elif 'g' in arg: # linear function of variable g (ax+b)
         if GENUS_RE.match(arg):

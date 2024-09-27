@@ -34,7 +34,10 @@ def image_pretty_with_abstract(image_label, is_surjective, algebraic_group, dime
         return "$" + s + "$"
     if dimension==1:
         return image_label
-    t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
+    if algebraic_group=='GSp' and dimension==4 and base_ring_order==2:
+        t = display_knowl('gsp4.subgroup_data', title=image_label, kwargs={'label':image_label})
+    else:
+        t = display_knowl('gl2.subgroup_data', title=image_label, kwargs={'label':image_label}) if dimension == 2 else image_label
     if image_abstract_group:
         t += r" $\ \cong$ "+ abstract_group_display_knowl(image_abstract_group)
     return t
@@ -96,6 +99,7 @@ class WebModLGalRep(WebObj):
         has_dirichlet = False
         if not hasattr(self, "related_objects"):
             self.related_objects = []
+        self.related_objects.sort()
         for r in self.related_objects:
             if r[0] == "Dirichlet":
                 c = r[1].split(".")
@@ -148,6 +152,10 @@ class WebModLGalRep(WebObj):
     @lazy_attribute
     def codomain(self):
         return codomain(self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field)
+
+    @lazy_attribute
+    def image_pretty_with_abstract(self):
+        return image_pretty_with_abstract(self.image_label, self.image_index==1, self.algebraic_group, self.dimension, self.base_ring_order, self.base_ring_is_field, self.image_abstract_group, codomain=False)
 
     @lazy_attribute
     def image_pretty(self):

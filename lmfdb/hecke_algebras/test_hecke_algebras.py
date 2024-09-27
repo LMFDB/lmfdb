@@ -1,6 +1,7 @@
 
 from lmfdb.tests import LmfdbTest
 
+
 class HomePageTest(LmfdbTest):
     # Hecke algebra browse page
     def test_hecke_algebra(self):

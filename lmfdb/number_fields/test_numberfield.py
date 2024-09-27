@@ -77,6 +77,9 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/?start=0&degree=6&signature=%5B0%2C3%5D&count=100', '6.0.61131.1')
         self.check_args('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', '7.3.1420409.1')
 
+    def test_relative_class_number(self):
+        self.check_args('/NumberField/4.0.1327873600.2', '2108')
+
     def test_fundamental_units(self):
         self.check_args('NumberField/2.2.10069.1', '43388173')
         self.check_args('NumberField/3.3.10004569.1', '22153437467081345')

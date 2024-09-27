@@ -97,7 +97,7 @@ def gl2_subgroup_data(label):
                 data['Slabel'] = label
         elif S_EXT_LABEL_RE.fullmatch(label):
             in_modcurve_db = False
-            data = db.gps_gl2zhat_fine.lucky({'Slabel':label})
+            data = db.gps_gl2zhat_nonsurjdet.lucky({'Slabel':label})
         else:
             return "Unrecognized subgroup label format %s" % label
         if data is None:
@@ -398,7 +398,7 @@ class WebEC():
         if adelic_data:
             assert len(adelic_data) == 1
             my_adelic_data = adelic_data[0]
-            data['adelic_data'] =  my_adelic_data
+            data['adelic_data'] = my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
             M = ZZ(self.adelic_level)
             data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)

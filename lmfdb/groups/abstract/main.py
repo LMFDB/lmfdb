@@ -1492,7 +1492,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
         ilayer += 2
         iorder += 2
     if gp.outer_equivalence and ilayer>3:
-       ilayer -= 2
+        ilayer -= 2
     ll = [
         [
             grp.subgroup,
@@ -1630,7 +1630,7 @@ def render_abstract_group(label, data=None):
             friends += [("As the automorphism of a curve", auto_url)]
 
         if abstract_group_label_regex.fullmatch(label) and len(gp.transitive_friends) > 0:
-            gal_gp_url =  "/GaloisGroup/?gal="+label
+            gal_gp_url = "/GaloisGroup/?gal=" + label
             friends += [("As a transitive group", gal_gp_url)]
 
         if db.gps_st.count({"component_group": label}) > 0:
@@ -1919,10 +1919,10 @@ def download_group(**args):
     if dltype == "oscar":
         # This needs to change for larger groups
         if gp_data["solvable"]:
-            s += com + " The group will be created as a polycylic group (not necessarily matching the presentation in the LMFDB).\n"
-            s += com + ' You can turn it into a permuation group using "PermGroup(G)".\n'
+            s += com + " The group will be created as a polycyclic group (not necessarily matching the presentation in the LMFDB).\n"
+            s += com + ' You can turn it into a permutation group using "PermGroup(G)".\n'
         else:
-            s += com + " The group will be created as a permuation group (not necessarily using the generators used in the LMFDB).\n"
+            s += com + " The group will be created as a permutation group (not necessarily using the generators used in the LMFDB).\n"
         s += com2 + "\n"
         s += "\n"
         s += "G = small_group(%s,%s)" % tuple(label.split("."))

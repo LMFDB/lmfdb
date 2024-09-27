@@ -4,6 +4,7 @@ from flask import abort
 from psycodict.encoding import Json
 from .isog_class import AbvarFq_isoclass
 
+
 class AbvarFq_download(Downloader):
     table = db.av_fq_isog
     title = 'Abelian variety isogeny classes'

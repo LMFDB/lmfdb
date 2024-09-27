@@ -36,10 +36,8 @@ from psycodict.config import Configuration as _Configuration
 def is_port_open(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(1)
-        if sock.connect_ex((host, port)) == 0:
-            return True
-        else:
-            return False
+        return sock.connect_ex((host, port)) == 0
+
 
 def abs_path_lmfdb(filename):
     return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
