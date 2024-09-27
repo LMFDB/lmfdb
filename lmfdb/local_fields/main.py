@@ -380,7 +380,7 @@ families_columns = SearchColumns([
     visible_col(True),
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
-    PolynomialCol("poly", "lf.family_poly", "Generic poly"),
+    MathCol("poly", "lf.family_poly", "Generic poly", default=False),
     MathCol("poly_count", "lf.family_poly_count", "Num. Poly"),
     MathCol("field_count", "lf.family_field_count", "Num. Fields"),
     MathCol("mass", "lf.mass", "Mass"),
@@ -932,7 +932,7 @@ class FamiliesSearchArray(SearchArray):
             label='Base',
             knowl='lf.tame_degree',
             example='2.2.0.1')
-        self.refine_array = [[qp, degree, e, f, c], [base, e0, w] #, visible]]
+        self.refine_array = [[qp, degree, e, f, c], [base, e0, w]] #, visible]]
 
 class LFSearchArray(SearchArray):
     noun = "field"
