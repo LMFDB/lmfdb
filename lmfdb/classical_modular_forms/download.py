@@ -22,9 +22,9 @@ class CMF_download(Downloader):
         print(data)
         if data is None:
             f = db.mf_newforms.lookup(label,projection=["level","char_orbit_label","dim","traces"])
-            if f["dim"]==1:
-                vals = ConreyCharacter(f["level"], db.char_dirichlet.lookup("%s.%s"%(f["level"],f["char_orbit_label"]),projection="first")).values_gens
-                vals = [[v[0],[1] if v[1]==0 else [-1]] for v in vals]
+            if f["dim"] == 1:
+                vals = ConreyCharacter(f["level"], db.char_dirichlet.lookup("%s.%s" % (f["level"],f["char_orbit_label"]),projection="first")).values_gens
+                vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
                 aps = [[f["traces"][p-1]] for p in prime_range(len(f["traces"])+1)]
                 data = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'field_poly': [0,1], 'maxp': previous_prime(len(f["traces"])), 'ap': aps }
             else:
@@ -43,11 +43,11 @@ class CMF_download(Downloader):
         elif label.count('.') == 3:
             traces = db.mf_newforms.lookup(label, projection=['traces'])
         else:
-            return abort(404, "Invalid label: %s"%label)
+            return abort(404, "Invalid label: %s" % label)
         if traces is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         elif traces.get('traces') is None:
-            return abort(404, "We have not computed traces for: %s"%label)
+            return abort(404, "We have not computed traces for: %s" % label)
         else:
             return [0] + traces['traces']
 
@@ -204,7 +204,7 @@ class CMF_download(Downloader):
         return self._wrap(explain + code + level_data + weight_data + poly_data + basis_data + hecke_ring_character_values + aps_data,
                           label + '.qexp',
                           lang=lang,
-                          title='q-expansion of newform %s,'%(label))
+                          title='q-expansion of newform %s,' % (label))
 
     def download_traces(self, label, lang='text'):
         data = self._get_traces(label)
@@ -214,7 +214,7 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label + '.traces',
                           lang=lang,
-                          title='Trace form for %s,'%(label))
+                          title='Trace form for %s,' % (label))
 
     def download_multiple_traces(self, info, spaces=False):
         lang = info.get(self.lang_key,'text').strip()
@@ -293,7 +293,7 @@ class CMF_download(Downloader):
                                      'an_normalized',
                                      'angles'])
         if data is None:
-            return abort(404, "No embedded newform found for %s"%(label))
+            return abort(404, "No embedded newform found for %s" % (label))
         root = (data.pop('embedding_root_real', None),
                 data.pop('embedding_root_imag', None))
         if root != (None, None):
@@ -301,12 +301,12 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Coefficient data for embedded newform %s,'%label)
+                          title='Coefficient data for embedded newform %s,' % label)
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
@@ -314,7 +314,7 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for newform %s,'%(label))
+                          title='Stored data for newform %s,' % (label))
 
     def download_code(self, label, lang):
         if lang == 'gp':
@@ -324,7 +324,7 @@ class CMF_download(Downloader):
             abort(404,"Invalid code language specified: " + lang)
         data = db.mf_newforms.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         code = form.code
         comment = code.pop('comment').get(lang).strip()
@@ -339,20 +339,20 @@ class CMF_download(Downloader):
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         space = WebNewformSpace(data)
         data['newforms'] = [form['label'] for form in space.newforms]
         data['oldspaces'] = space.oldspaces
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for newspace %s,'%(label))
+                          title='Stored data for newspace %s,' % (label))
 
     def download_full_space(self, label, lang='text'):
         try:
             space = WebGamma1Space.by_label(label)
         except ValueError:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         data = {}
         for attr in ['level', 'weight', 'label', 'oldspaces']:
             data[attr] = getattr(space, attr)
@@ -364,7 +364,7 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for newspace %s,'%(label))
+                          title='Stored data for newspace %s,' % (label))
 
     def download_spaces(self, info):
         lang = info.get(self.lang_key,'text').strip()

@@ -67,30 +67,30 @@ def local_algebra_data(labels):
     f1 = labs[0].split('.')
     labs = sorted(labs, key=lambda u: (int(j) for j in u.split('.')), reverse=True)
     ans = '<div align="center">'
-    ans += '$%s$-adic algebra'%str(f1[0])
+    ans += '$%s$-adic algebra' % str(f1[0])
     ans += '</div>'
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
     fall = [db.lf_fields.lookup(label) for label in labs]
     for f in fall:
         l = str(f['label'])
-        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
+        ans += '<tr><td><a href="%s">%s</a><td>' % (url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
-        ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
+        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'],f['f'],f['c'])
         ans += transitive_group_display_knowl(f['galois_label'])
-        ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
+        ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
-        ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
+        ans += '<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
     return ans
 
 def local_field_data(label):
     f = db.lf_fields.lookup(label)
     nicename = ''
     if f['n'] < 3:
-        nicename = ' = '+ prettyname(f)
-    ans = '$p$-adic field %s%s<br><br>'% (label, nicename)
-    ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+        nicename = ' = ' + prettyname(f)
+    ans = '$p$-adic field %s%s<br><br>' % (label, nicename)
+    ans += r'Extension of $\Q_{%s}$ defined by %s<br>' % (str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
     ans += 'Degree: %s<br>' % str(gn)
@@ -242,10 +242,10 @@ def show_slope_content(sl,t,u):
     sc = str(sl)
     if sc == '[]':
         sc = r'[\ ]'
-    if t>1:
-        sc += '_{%d}'%t
-    if u>1:
-        sc += '^{%d}'%u
+    if t > 1:
+        sc += '_{%d}' % t
+    if u > 1:
+        sc += '^{%d}' % u
     return(sc)
 
 @local_fields_page.route("/")
@@ -381,7 +381,7 @@ def render_field_webpage(args):
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$'%p
+        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
@@ -445,7 +445,7 @@ def render_field_webpage(args):
                     't': data['t'],
                     'u': data['u'],
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
-                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
+                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
                     'hw': data['hw'],
                     'visible': show_slopes(data['visible']),
                     'slopes': show_slopes(data['slopes']),
@@ -726,7 +726,7 @@ def ramdisp(p):
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('ramification index', 'lf.ramification_index'),
-                         ('for %s-adic fields'%p, None)],
+                         ('for %s-adic fields' % p, None)],
             'totaler': totaler(col_counts=False),
             'proportioner': proportioners.per_row_total}
 
@@ -736,7 +736,7 @@ def discdisp(p):
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('discriminant exponent', 'lf.discriminant_exponent'),
-                         ('for %s-adic fields'%p, None)],
+                         ('for %s-adic fields' % p, None)],
             'totaler': totaler(col_counts=False),
             'proportioner': proportioners.per_row_query(lambda n: {'n':int(n)})}
 
@@ -744,7 +744,7 @@ def galdisp(p, n):
     return {'cols': ['galois_label'],
             'constraint': {'p': p, 'n': n},
             'top_title':[('Galois groups', 'nf.galois_group'),
-                         ('for %s-adic fields of'%p, None),
+                         ('for %s-adic fields of' % p, None),
                          ('degree', 'lf.degree'),
                          (str(n), None)]}
 

@@ -70,7 +70,7 @@ def cyclestrings(perm):
     return ''.join(a)
 
 def compress_cycle_type(ct):
-    bits = [(str(z), f'^{{{c}}}' if c>1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
 ############  Galois group object
 
@@ -134,7 +134,7 @@ class WebGaloisGroup:
     def otherrep_list(self, givebound=True, cache=None):
         sibs = self._data['siblings']
         pharse = r"with degree $\leq %d$" % self.sibling_bound()
-        if len(sibs)==0 and givebound:
+        if len(sibs) == 0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False, cache=cache)
         if givebound:
@@ -223,11 +223,11 @@ class WebGaloisGroup:
     def malle_a(self):
         ccs = self.conjclasses
         inds = [z[5] for z in ccs]
-        if len(inds)==1:
+        if len(inds) == 1:
             return 0
-        if len(inds)==0:
+        if len(inds) == 0:
             return None
-        inds = [z for z in inds if z>0]
+        inds = [z for z in inds if z > 0]
 
         return QQ(f"1/{min(inds)}")
 
@@ -348,15 +348,15 @@ def galois_module_knowl(n, t, index):
     name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
         return 'Error'
-    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>' % (name, n, t, index, name)
 
 
 @cached_function
 def cclasses_display_knowl(n, t, name=None):
     ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'The %d conjugacy class representatives for '% ncc
-        if n==1 and t==1:
+        name = 'The %d conjugacy class representatives for ' % ncc
+        if n == 1 and t == 1:
             name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
     if ncc > 5000:
@@ -437,8 +437,8 @@ def galois_group_data(n, t):
         inf += ", imprimitive"
     if n < 16:
         inf += '<div>'
-        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
-        inf += '%s</div>'%(group['name'])
+        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: ' % ('CHM label',str(n),str(t),'CHM label')
+        inf += '%s</div>' % (group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += WebGaloisGroup.from_nt(n,t).generator_string()
@@ -459,7 +459,7 @@ def galois_group_data(n, t):
     rest += '</div>'
 
     if group.get('pretty', None) is not None:
-        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + rest
     return inf + rest
 
 
@@ -500,7 +500,7 @@ def galois_module_knowl_guts(n, t, index):
     out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
-        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+        out += "%s &\\mapsto %s \\\\" % (str(g[0]), matg)
     out = out[:-2]
     out += r"\end{aligned}$$"
     out += "</blockquote>"
@@ -914,7 +914,7 @@ def get_aliases():
     }
     for ky in aliases:
         nt = aliases[ky][0]
-        label = "%sT%s"% nt
+        label = "%sT%s" % nt
         aliases[ky] = siblings[label][:]
         if nt not in aliases[ky]:
             aliases[ky].append(nt)

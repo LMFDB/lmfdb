@@ -447,14 +447,14 @@ ec_columns = SearchColumns([
                        default=lambda info: info.get("discriminant"), align="center", apply_download=lambda s, a: s*a),
     MathCol("rank", "ec.rank", "Rank"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
     ProcessedCol("geom_end_alg", "ag.endomorphism_algebra", r"$\textrm{End}^0(E_{\overline\Q})$",
-                  lambda v: r"$\Q$" if not v else r"$\Q(\sqrt{%d})$"%(integer_squarefree_part(v)),
+                  lambda v: r"$\Q$" if not v else r"$\Q(\sqrt{%d})$" % (integer_squarefree_part(v)),
                   short_title="Qbar-end algebra", align="center", orig="cm", default=False),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                   short_title="CM discriminant", mathmode=True, align="center", orig="cm"),
-    ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
-                  short_title="Sato-Tate group", align="center", orig="cm", apply_download=lambda v:'1.2.A.1.1a' if v==0 else '1.2.B.2.1a', default=False),
+    ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v == 0 else '1.2.B.2.1a'),
+                  short_title="Sato-Tate group", align="center", orig="cm", apply_download=lambda v:'1.2.A.1.1a' if v == 0 else '1.2.B.2.1a', default=False),
     CheckCol("semistable", "ec.reduction", "Semistable", default=False),
     CheckCol("potential_good_reduction", "ec.reduction", "Potentially good", default=False),
     ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
@@ -473,9 +473,9 @@ ec_columns = SearchColumns([
     MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
              default=lambda info: info.get("num_int_pts"), align="center"),
     MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center", default=False),
-    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)), short_title="Faltings height",
+    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f" % (RealField(20)(v)), short_title="Faltings height",
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
-    ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
+    ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$" % (v[0],v[1]) if v[1] > 1 else r"$%s$" % v[0],
                   short_title="j-invariant", align="center", default=False),
     FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
     FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
@@ -723,7 +723,7 @@ def render_isogeny_class(iso_class):
                            bread=class_data.bread,
                            title=class_data.title,
                            friends=class_data.friends,
-                           KNOWL_ID="ec.q.%s"%iso_class,
+                           KNOWL_ID ="ec.q.%s" % iso_class,
                            downloads=class_data.downloads,
                            learnmore=learnmore_list_add(*learnmore_isog_picture) if class_data.class_size > 1 else learnmore_list())
 
@@ -772,11 +772,11 @@ def render_curve_webpage_by_label(label):
                         bread=data.bread, title=data.title,
                         friends=data.friends,
                         downloads=data.downloads,
-                        KNOWL_ID="ec.q.%s"%lmfdb_label,
-                        BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
+                        KNOWL_ID ="ec.q.%s" % lmfdb_label,
+                        BACKUP_KNOWL_ID ="ec.q.%s" % data.lmfdb_iso,
                         learnmore=learnmore_list_add(*learnmore_curve_picture))
-    ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
-    ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
+    ec_logger.debug("Total walltime: %ss" % (time.time() - t0))
+    ec_logger.debug("Total cputime: %ss" % (cputime(cpt0)))
     return T
 
 
@@ -991,7 +991,7 @@ def ec_code(**args):
     if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
     name = Fullname[lang]
-    if lang=='gp':
+    if lang == 'gp':
         lang = 'pari'
     comment = Ecode.pop('comment').get(lang).strip()
     code = f"{comment} {name} code for working with elliptic curve {label}\n\n"
@@ -1016,7 +1016,7 @@ def tor_struct_search_Q(prefill="any"):
 
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
     for n in range(2,13):
-        if n!=11:
+        if n != 11:
             gps.append(cyc(n))
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
@@ -1209,7 +1209,7 @@ class ECSearchArray(SearchArray):
             options=torsion_opts)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
+                   + [('-%d' % d, 'CM discriminant -%d' % d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",

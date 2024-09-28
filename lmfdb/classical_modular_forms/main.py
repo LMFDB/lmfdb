@@ -91,9 +91,9 @@ def level_bound(nontriv=None):
 #############################################################################
 
 def ALdims_knowl(al_dims, level, weight):
-    short = "+".join(["$%s$"%(d) for d in al_dims])
+    short = "+".join(["$%s$" % (d) for d in al_dims])
     AL_table = ALdim_table(al_dims, level, weight)
-    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
+    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>' % (AL_table, short)
 
 def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
     # args: ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"]
@@ -128,14 +128,14 @@ def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
     for dim in sorted(dim_dict.keys()):
         count = dim_dict[dim]
         query = {'weight':weight,
-                 'char_label':'%s.%s'%(level,char_orbit_label),
+                 'char_label':'%s.%s' % (level,char_orbit_label),
                  'dim':dim}
         if count > 3:
             short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
             title = '%s newforms' % count
         else:
-            short = '+'.join([r'\(%s\)'%dim]*count)
-            title=None
+            short = '+'.join([r'\(%s\)' % dim]*count)
+            title = None
         if count == 1:
             query['jump'] = 'yes'
         link = newform_search_link(short, title=title, **query)
@@ -269,8 +269,8 @@ def parse_n(info, newform, primes_only):
 def parse_m(info, newform):
     errs = []
     maxm = min(newform.dim, 20)
-    info['default_mrange'] = '1-%s'%maxm
-    mrange = info.get('m', '1-%s'%maxm)
+    info['default_mrange'] = '1-%s' % maxm
+    mrange = info.get('m', '1-%s' % maxm)
     if '.' in mrange:
         # replace embedding codes with the corresponding integers
         # If error, need to replace 'm' by default
@@ -278,7 +278,7 @@ def parse_m(info, newform):
             mrange = re.sub(r'\d+\.\d+', newform.embedding_from_embedding_label, mrange)
         except ValueError:
             errs.append("Invalid embedding label")
-            mrange = info['m'] = '1-%s'%maxm
+            mrange = info['m'] = '1-%s' % maxm
     try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
@@ -442,7 +442,7 @@ def render_full_gamma1_space_webpage(label):
         space = WebGamma1Space.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
-    info={}
+    info = {}
     set_info_funcs(info)
     learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_full_gamma1_space.html",
@@ -728,13 +728,13 @@ def common_parse(info, query, na_check=False):
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
-        parity=info['weight_parity']
+        parity = info['weight_parity']
         if parity == 'even':
             query['weight_parity'] = 1
         elif parity == 'odd':
             query['weight_parity'] = -1
     if 'char_parity' in info:
-        parity=info['char_parity']
+        parity = info['char_parity']
         if parity == 'even':
             query['char_parity'] = 1
         elif parity == 'odd':
@@ -844,7 +844,7 @@ newform_columns = SearchColumns([
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", align="center", short_title="analytic conductor"),
     MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, download_col="nf_label"),
     ProcessedCol("projective_image", "cmf.projective_image", "Image",
-                 lambda img: ('' if img=='?' else '$%s_{%s}$' % (img[:1], img[1:])),
+                 lambda img: ('' if img == '?' else '$%s_{%s}$' % (img[:1], img[1:])),
                  contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
                  default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
                  align="center", short_title="projective image"),
@@ -877,7 +877,7 @@ newform_columns = SearchColumns([
                  lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
     ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
-                 lambda fac: "" if fac=="" else factor_base_factorization_latex(fac), mathmode=True, align="center", default=False),
+                 lambda fac: "" if fac == "" else factor_base_factorization_latex(fac), mathmode=True, align="center", default=False),
     ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group", default=False),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
@@ -982,9 +982,9 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large: at most 200 options for weight")
     if 'weight_parity' in query:
         if query['weight_parity'] == -1:
-            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
+            info['weight_list'] = [k for k in info['weight_list'] if k % 2 == 1]
         else:
-            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
+            info['weight_list'] = [k for k in info['weight_list'] if k % 2 == 0]
     if 'char_orbit_index' in query:
         # Character was set, consistent with level
         info['level_list'] = [query['level']]
@@ -1325,7 +1325,7 @@ class CMF_stats(StatsDisplay):
     @lazy_attribute
     def buckets(self):
         return {'level':['1','2-10','11-100','101-1000','1001-5000', '5001-10000','10001-50000','50001-100000','100001-1000000'],
-                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
+                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d' % weight_bound()],
                 'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
                 'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
                 'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
@@ -1448,10 +1448,10 @@ class CMFSearchArray(SearchArray):
     sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces}
-    jump_example="3.6.a.a"
-    jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
-    jump_knowl="cmf.search_input"
-    jump_prompt="Label"
+    jump_example = "3.6.a.a"
+    jump_egspan = "e.g. 3.6.a.a, 55.3.d or 20.5"
+    jump_knowl = "cmf.search_input"
+    jump_prompt = "Label"
     null_column_explanations = { # No need to display warnings for these
         'is_polredabs': False,
         'projective_image': False,
@@ -1626,7 +1626,7 @@ class CMFSearchArray(SearchArray):
             example='20',
             example_span='7, 1-10')
 
-        analytic_rank= TextBox(
+        analytic_rank = TextBox(
             name='analytic_rank',
             label='Analytic rank',
             knowl='cmf.analytic_rank',

@@ -27,8 +27,8 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_even_odd(self):
         W = self.tc.get('/Character/Dirichlet/?modulus=35')
-        assert '>%s</t'%(parity_string(1)) in W.get_data(as_text=True)
-        assert '>%s</t'%(parity_string(-1)) in W.get_data(as_text=True)
+        assert '>%s</t' % (parity_string(1)) in W.get_data(as_text=True)
+        assert '>%s</t' % (parity_string(-1)) in W.get_data(as_text=True)
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=41-60')
@@ -61,8 +61,8 @@ class DirichletSearchTest(LmfdbTest):
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
-        get= r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
-        W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
+        get = r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        W = self.tc.get('/Character/Dirichlet/grouptable?%s' % get)
         assert '35 }(29' in W.get_data(as_text=True)
 
 class DirichletCharactersTest(LmfdbTest):
