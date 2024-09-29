@@ -13,7 +13,7 @@ from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
     parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
-    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
+    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, embed_wrap,
     redirect_no_cache, raw_typeset)
@@ -282,6 +282,9 @@ def url_for_label(label):
 def url_for_family(label):
     return url_for(".family_page", label=label)
 
+def url_for_packet(packet):
+    return url_for(".index", packet=packet)
+
 def local_field_jump(info):
     return redirect(url_for_label(info['jump']), 301)
 
@@ -311,6 +314,8 @@ class LF_download(Downloader):
     }
 
 label_col = LinkCol("label", "lf.field.label", "Label", url_for_label)
+def packet_col(default):
+    return MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=default)
 def degree_col(default):
     return MathCol("n", "lf.degree", "$n$", short_title="degree", default=default)
 poly_col = ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True)
@@ -357,6 +362,7 @@ lf_columns = SearchColumns([
 
 family_columns = SearchColumns([
     label_col,
+    packet_col(lambda info: info.get("one_per") == "packet"),
     poly_col,
     gal_col,
     MathCol("galsize", "nf.galois_group", "Galois degree"),
@@ -413,6 +419,8 @@ def common_parse(info, query):
     parse_bracketed_posints(info,query,"jump_set")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
+    parse_noop(info,query,'packet')
+    parse_noop(info,query,'family')
 
 @search_wrap(table=db.lf_fields,
              title='$p$-adic field search results',
@@ -714,6 +722,8 @@ def render_family(info, query):
     parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
     parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
     parse_bracketed_posints(info,query,"associated_inertia")
+    if 'one_per' in info and info['one_per'] == 'packet':
+        query["__one_per__"] = "packet"
 
 @local_fields_page.route("/families/")
 def families_page():
@@ -866,7 +876,17 @@ def common_boxes():
         example='[4,1]',
         example_span='e.g. [8,3], 8.3, C5 or 7T2',
     )
-    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild
+    family = SneakyTextBox(
+        name='family',
+        label='Family',
+        knowl='lf.family',
+    )
+    packet = SneakyTextBox(
+        name='packet',
+        label='Packet',
+        knowl='lf.packet',
+    )
+    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
@@ -876,8 +896,14 @@ class FamilySearchArray(EmbeddedSearchArray):
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'label']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
-        self.refine_array = [[gal, slopes, ind_insep, associated_inertia]]
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
+        one_per = SelectBox(
+            name="one_per",
+            label="Fields per packet",
+            knowl="lf.packet",
+            options=[("", "all"),
+                     ("packet", "one")])
+        self.refine_array = [[gal, slopes, ind_insep, associated_inertia, one_per]]
 
 class FamiliesSearchArray(SearchArray):
     sorts = [
@@ -888,7 +914,7 @@ class FamiliesSearchArray(SearchArray):
         ("field_count", "num fields", ['p', 'n', 'field_count', 'visible']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
         e0 = TextBox(
             name='e0',
             label='Base ramification index',
@@ -925,7 +951,7 @@ class LFSearchArray(SearchArray):
     jump_prompt = "Label"
 
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
         results = CountBox()
 
         self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
@@ -934,7 +960,8 @@ class LFSearchArray(SearchArray):
         self.refine_array = [[degree, qp, c, gal],
                              [e, f, t, u],
                              [aut, inertia, ind_insep, associated_inertia, jump_set],
-                             [topslope, slopes, visible, wild]]
+                             [topslope, slopes, visible, wild],
+                             [family, packet]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],

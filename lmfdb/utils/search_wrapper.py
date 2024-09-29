@@ -403,6 +403,12 @@ class EmbedWrapper(Wrapper):
         proj = query.pop("__projection__", self.projection)
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
+        if "result_count" in info:
+            if one_per:
+                nres = table.count_distinct(one_per, query)
+            else:
+                nres = table.count(query)
+            return jsonify({"nres": str(nres)})
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
@@ -413,6 +419,7 @@ class EmbedWrapper(Wrapper):
                 offset=start,
                 sort=sort,
                 info=info,
+                one_per=one_per
             )
         except QueryCanceledError as err:
             return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)

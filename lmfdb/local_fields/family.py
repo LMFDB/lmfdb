@@ -172,7 +172,6 @@ class pAdicSlopeFamily:
             aspect = 0.75 * self.pw / (1 + self.slopes[-1])
         else:
             aspect = 1
-        print("ASPECT", self.e, self.visible, aspect)
         P.set_aspect_ratio(aspect)
         #P._set_extra_kwds(dict(xmin=0, xmax=self.pw, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
@@ -296,8 +295,6 @@ class pAdicSlopeFamily:
         for rec in fields:
             gps[rec["galois_degree"]].add(rec["galois_label"])
             slopes[rec["galois_degree"]].add(rec["slopes"])
-        print("gps", gps)
-        print("slopes", slopes)
         dyns = []
         def add_grid(Ns, rowcount, colcount):
             if len(Ns) == 1:
