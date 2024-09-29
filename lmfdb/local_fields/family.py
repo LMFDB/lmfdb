@@ -13,18 +13,32 @@ import re
 FAMILY_RE = re.compile(r'(\d+(?:\.\d+\.\d+\.\d+)?)-(?:(\d+)\.(\d+(?:_\d+)*))?')
 
 class pAdicSlopeFamily:
-    def __init__(self, tame, slopes=[], heights=[], rams=[], count_cache=None):
-        self.tame = tame
-        if "." in tame:
-            p = ZZ(tame.split(".")[0])
-            rec = db.lf_fields.lookup(tame, ["e", "f"])
-            self.e, self.f = rec["e"], rec["f"]
+    def __init__(self, label=None, base=None, slopes=[], heights=[], rams=[], field_cache=None):
+        if label is not None:
+            assert not base and not slopes and not heights and not rams
+            base, slopes = label.split("-")
+            if slopes:
+                den, nums = slopes.split(".")
+                den = ZZ(den)
+                nums = [ZZ(n) for n in nums.split("_")]
+                slopes = [n/den for n in nums]
+            else:
+                slopes = []
+            self.label = label
+        if base.endswith(".1.0.1"):
+            base = base.split(".")[0]
+        self.short_base = base
+        if "." in base:
+            p = ZZ(base.split(".")[0])
         else:
-            p = ZZ(tame)
-            self.e = self.f = 1
+            p = ZZ(base)
+            base = f"{p}.1.0.1"
+        self.base = base
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
+        self.p = p
         self.w = w = max(len(L) for L in [slopes, heights, rams])
+        self.pw = p**w
         # We support tamely ramified fields by specifying a tame base and empty slopes/rams/heights
         # slopes/rams -> heights -> rams/slopes
         if rams:
@@ -42,13 +56,14 @@ class pAdicSlopeFamily:
         if w and not slopes:
             slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
         self.slopes = slopes
-        self.visible = self.artin_slopes = [s + 1 for s in slopes]
+        data_cols = ["base_aut", "f", "e0", "n0", "e", "n", "w", "c", "field_count", "packet_count", "poly_count", "mass", "mass_stored"]
+        data = db.lf_families.lookup(self.label, data_cols)
+        if data:
+            for col in data_cols:
+                setattr(self, col, data[col])
+        self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
         self.heights = heights
         self.rams = rams
-        self.n = self.e = n = p**w
-        self.p = p
-        self.c = heights[-1] + n - 1 # TODO: This is now wrong!
-        self.count_cache = count_cache
 
     @lazy_attribute
     def scaled_heights(self):
@@ -57,15 +72,15 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def bands(self):
-        return [((0, 1+h), (self.n, h), (0, 1+s), (self.n, s)) for (h, s) in zip(self.scaled_heights, self.slopes)]
+        return [((0, 1+h), (self.pw, h), (0, 1+s), (self.pw, s)) for (h, s) in zip(self.scaled_heights, self.slopes)]
 
     @lazy_attribute
     def black(self):
-        return [(0, 1), (self.n, 0)]
+        return [(0, 1), (self.pw, 0)]
 
     @lazy_attribute
     def virtual_green(self):
-        p, n, w = self.p, self.n, self.w
+        p, n, w = self.p, self.pw, self.w
         last_slope = {}
         for i, s in enumerate(self.slopes, 1):
             last_slope[s] = i
@@ -94,7 +109,7 @@ class pAdicSlopeFamily:
     def _set_redblue(self):
         self.blue = []
         self.red = []
-        p, n, w = self.p, self.n, self.w
+        p, n, w = self.p, self.pw, self.w
         for i, (s, (u, v, code)) in enumerate(zip(self.slopes, self.virtual_green), 1):
             if u.denominator() == 1 and code == -1:
                 self.blue.append((u, v, True))
@@ -125,9 +140,11 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def label(self):
+        if not self.slopes:
+            return f"{self.short_base}-"
         den = lcm(s.denominator() for s in self.slopes)
         nums = "_".join(str(den*n) for n in self.slopes)
-        return f"{self.tame}-{den}.{nums}"
+        return f"{self.short_base}-{den}.{nums}"
 
     @lazy_attribute
     def link(self):
@@ -151,12 +168,13 @@ class pAdicSlopeFamily:
                     P += point((u, v), markeredgecolor=color, color=color, size=20, marker=marker, zorder=1)
                 else:
                     P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
-        if len(self.visible) > 1:
-            aspect = 0.75 * self.n / self.visible[-1]
+        if len(self.visible) > 0:
+            aspect = 0.75 * self.pw / (1 + self.slopes[-1])
         else:
             aspect = 1
+        print("ASPECT", self.e, self.visible, aspect)
         P.set_aspect_ratio(aspect)
-        #P._set_extra_kwds(dict(xmin=0, xmax=self.n, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
+        #P._set_extra_kwds(dict(xmin=0, xmax=self.pw, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight")
 
@@ -165,21 +183,21 @@ class pAdicSlopeFamily:
         pts = ([("a", u, v) for (u, v) in self.solid_green] +
                [("b", u, v) for (u, v, solid) in self.blue] +
                [("c", u, v) for (u, v, solid) in self.red])
-        names = [f"{c}{self.n*(v-1)+u}" for (c, u, v) in pts]
+        names = [f"{c}{self.pw*(v-1)+u}" for (c, u, v) in pts] + ["pi"]
         R = PolynomialRing(ZZ, names)
         S = PolynomialRing(R, "x")
         x = S.gen()
-        p = self.p
-        poly = x**(self.n) + p
+        pi = R.gens()[-1]
+        poly = x**(self.pw) + pi
         for i, (c, u, v) in enumerate(pts):
-            poly += R.gen(i) * p**v * x**u
+            poly += R.gen(i) * pi**v * x**u
         return poly
 
     @lazy_attribute
     def gamma(self):
         if self.f == 1:
             return len(self.red)
-        n = self.n
+        n = self.pw
         gamma = 0
         for (u, v, _) in self.red:
             s = v + u/n - 1
@@ -188,21 +206,10 @@ class pAdicSlopeFamily:
         return gamma
 
     @lazy_attribute
-    def poly_count(self):
-        p, f, alpha, beta, gamma = self.p, self.f, len(self.solid_green), len(self.blue), self.gamma
-        q = p**f
-        return (q-1)**alpha * q**beta * p**gamma
-
-    @lazy_attribute
-    def mass(self):
-        fields, cache = self.fields
-        return sum(ZZ(1) / rec["aut"] for rec in fields)
-
-    @lazy_attribute
-    def base(self):
-        if "." in self.tame:
-            url = url_for(".by_label", label=self.tame)
-            return f'<a href="{url}">{self.tame}</a>'
+    def base_link(self):
+        if "." in self.short_base:
+            url = url_for(".by_label", label=self.base)
+            return f'<a href="{url}">{self.base}</a>'
         url = url_for(".by_label", label=f"{self.p}.1.0.1")
         return fr'<a href="{url}">$\Q_{{{self.p}}}$</a>'
 
@@ -241,6 +248,7 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def hidden_slopes(self):
+        # TODO: Update this to use hidden column from lf_fields
         fields, cache = self.fields
         full_slopes = [Counter(QQ(s) for s in rec["slopes"][1:-1].split(",")) if rec["slopes"] != "[]" else Counter() for rec in fields]
         visible = Counter(self.artin_slopes)
@@ -277,12 +285,6 @@ class pAdicSlopeFamily:
             url = url_for(".family_page", label=self.label, associated_inertia=disp)
             return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
         return ", ".join(show_ai(list(x), cnt) for (x,cnt) in ai)
-
-    @lazy_attribute
-    def field_count(self):
-        if self.count_cache is not None:
-            return self.count_cache[str(self.artin_slopes)]
-        return db.lf_fields.count({"family": self.label})
 
     @lazy_attribute
     def gal_slope_tables(self):
@@ -333,225 +335,3 @@ class pAdicSlopeFamily:
         colcount = len(cur_cols.union(gps[N]))
         add_grid(curN, rowcount, colcount)
         return dyns
-
-    def satisfies(self, query):
-        if "$or" in query:
-            raise ValueError("Multiple ranges not supported")
-        D = query.get("c")
-        if isinstance(D, dict):
-            if "$gte" in D and D["$gte"] > self.c:
-                return False
-            if "$lte" in D and D["$lte"] < self.c:
-                return False
-        elif D is not None and D != self.c:
-            return False
-        # TODO: add tests for visible
-        return True
-
-    @classmethod
-    def _sortkey(cls, sort):
-        # We don't support pairs (col, -1) yet.
-        assert all(isinstance(x, str) for x in sort)
-        def key(family):
-            return tuple(getattr(family, x) for x in sort)
-        return key
-
-    @classmethod
-    def resort(cls, p, it, query, ctr, sort=None, limit=None, offset=None, wrap=True, count_cache=None):
-        test = not all(key in ["p", "n"] for key in query)
-        if sort is None:
-            for rmvec in it:
-                if test or wrap:
-                    family = cls(str(p), rams=rmvec, count_cache=count_cache)
-                if (test and family.satisfies(query)) or not test:
-                    if (offset is None or ctr[0] >= offset) and (limit is None or ctr[0] < limit):
-                        yield (family if wrap else rmvec)
-                    ctr[0] += 1
-                    if limit is not None and ctr[0] >= limit:
-                        break
-        else:
-            families = [cls(str(p), rams=rmvec, count_cache=count_cache) for rmvec in it]
-            if test:
-                families = [family for family in families if family.satisfies(query)]
-            families.sort(key=cls._sortkey(sort))
-            for family in families:
-                if (offset is None or ctr[0] >= offset) and (limit is None or ctr[0] < limit):
-                    yield (family if wrap else family.rams)
-                ctr[0] += 1
-                if limit is not None and ctr[0] >= limit:
-                    break
-
-    @classmethod
-    def families(cls, query, count=False, random=False, limit=None, offset=None, sort=None, info=None, one_per=None, count_cache=None):
-        orig_limit = limit
-        limit = 1000
-        pmin, pmax = unparse_range(query.get("p"), "p")
-        if pmin is None:
-            pmin = ZZ(2)
-        else:
-            pmin = next_prime(pmin - 1)
-        if pmax is not None:
-            pmax = previous_prime(pmax + 1)
-        nmin, nmax = unparse_range(query.get("n"), "degree")
-        if nmin is None or nmin <= pmin:
-            nmin = pmin
-        else:
-            nmin = ZZ(nmin)
-        if nmax is not None and pmax is not None and pmax > nmax:
-            pmax = previous_prime(nmax + 1)
-            nmax = ZZ(nmax)
-
-        if count:
-            # We don't want to limit iteration with limit, offset or sort
-            limit = offset = sort = None
-
-        def pw_ram_iterator(p, w):
-            def R(e, rho):
-                den = sum(p**i for i in range(rho))
-                nums = [n for n in range(1, p*e*den) if n % p != 0]
-                if rho == 1:
-                    nums.append(p*e*den)
-                return [n / den for n in nums]
-
-            for mvec in reversed(OrderedPartitions(w)):
-                mtup = tuple(mvec)
-                Mvec = [0]
-                for m in mvec[:-1]:
-                    Mvec.append(Mvec[-1] + m)
-                Rs = [R(p**M, m) for m, M in zip(mvec, Mvec)]
-                for rvec in cartesian_product(Rs):
-                    if all(a < b for (a,b) in zip(rvec[:-1], rvec[1:])):
-                        rmvec = []
-                        for r, m in zip(rvec, mvec):
-                            rmvec.extend([r] * m)
-                        yield rmvec
-        def full_iterator():
-            ctr = [0] # We use a list so that it can be modified inside resort
-            if pmax is None:
-                n = nmin
-                while True:
-                    p, w = n.is_prime_power(get_data=True)
-                    if w > 0 and p >= pmin:
-                        yield from cls.resort(p, pw_ram_iterator(p, w), query, ctr, sort=sort, limit=limit, offset=offset, count_cache=count_cache)
-                    #if limit is not None and ctr[0] >= limit:
-                    #    break
-                    n += 1
-                    if nmax is not None and n > nmax:
-                        break
-            else:
-                nextq = set(prime_range(pmin, pmax + 1))
-                while True:
-                    q = min(nextq)
-                    if nmax is not None and q > nmax:
-                        break
-                    p, w = q.is_prime_power(get_data=True)
-                    if q >= nmin:
-                        yield from cls.resort(p, pw_ram_iterator(p, w), query, ctr, sort=sort, limit=limit, offset=offset, count_cache=count_cache)
-                    #if limit is not None and ctr[0] >= limit:
-                    #    break
-                    nextq.remove(q)
-                    nextq.add(p * q)
-
-        if random:
-            if pmax is not None and pmin > pmax or prime_pi(pmin-1) == prime_pi(pmax):
-                return # No primes in range
-            if nmax is None:
-                # We first choose p, then n
-                if pmax is None:
-                    # Choose a prime index and find the corresponding prime
-                    poffset = ZZ.random_element()
-                    while poffset < 0:
-                        poffset = ZZ.random_element()
-                    if pmin is not None:
-                        poffset += prime_pi(pmin - 1)
-                    p = nth_prime(poffset + 1) # 1-indexed
-                else:
-                    # Choose a random prime in the given range
-                    p = random_prime(pmax+1, proof=False, lbound=pmin)
-
-                # Now we choose an exponent w, large enough to satisfy nmin if relevant
-                if nmin <= p:
-                    wmin = 1
-                else:
-                    wmin = (nmin - 1).exact_log(p) + 1
-                w = wmin + ZZ.random_element()
-                while w < wmin:
-                    w = wmin + ZZ.random_element()
-                n = p**w
-            else:
-                # We choose uniformly on valid n
-                if nmin > nmax:
-                    return
-                if pmax is None:
-                    # We sample from the n-range until we find valid power
-                    # We first ensure that there is at least one valid prime power in the given range
-                    # (otherwise we might loop forever below)
-                    def has_prime_power(a, b, p0):
-                        """
-                        Return True if there is a prime power q with a <= q <= b and q a power of p >= p0
-                        """
-                        k = 1
-                        while True:
-                            if p0**k > b:
-                                return False
-                            aa, exact = a.nth_root(k, truncate_mode=1)
-                            if not exact:
-                                aa += 1
-                            bb, exact = b.nth_root(k, truncate_mode=1)
-                            if prime_pi(bb) > prime_pi(aa - 1):
-                                # There is a prime in the kth root range, and the p0**k > b test
-                                # guarantees that there is one that is big enough.
-                                return True
-                            k += 1
-                    if not has_prime_power(nmin, nmax, pmin):
-                        return
-
-                    # Now we know there are valid outputs, so we choose randomly until we find one
-                    while True:
-                        n = ZZ.random_element(nmin, nmax + 1)
-                        p, w = n.is_prime_power(get_data=True)
-                        if w > 0 and p >= pmin:
-                            break
-                else:
-                    # We construct the set of valid prime_powers in the n-range and choose one
-                    valid = []
-                    for p in prime_range(pmin, pmax + 1):
-                        for w in range((nmin - 1).exact_log(p) + 1, nmax.exact_log(p) + 1):
-                            valid.append((p, w))
-                    p, w = choice(valid)
-
-            if all(key in ["p", "n"] for key in query):
-                # We can short-circuit actually constructing the families
-                # It would be nice to know the length of this list ahead of time in order to save memory
-                rmvec = choice(list(pw_ram_iterator(p, w)))
-                return pAdicSlopeFamily(str(p), rams=rmvec, count_cache=count_cache).label
-            else:
-                valid = []
-                for rmvec in pw_ram_iterator(p, w):
-                    family = pAdicSlopeFamily(str(p), rams=rmvec, count_cache=count_cache)
-                    if family.satisfies(query):
-                        valid.append(family.label)
-                return choice(valid)
-
-        if count:
-            if nmax is None:
-                return r"$\infty$"
-            return len(list(full_iterator()))
-
-        full = full_iterator()
-        first1000 = list(itertools.islice(full, 1000))
-        print("LENNNN", len(first1000))
-
-        if info is not None:
-            info["query"] = dict(query)
-            info["count"] = orig_limit
-            info["start"] = offset
-            info["number"] = offset + len(first1000)
-            info["exact_count"] = (len(first1000) < 1000)
-
-        if limit is None or orig_limit > 1000:
-            return itertools.chain(first1000, full)
-        else:
-            return first1000[:orig_limit]
-
-

@@ -376,7 +376,6 @@ families_columns = SearchColumns([
     degree_col(True),
     LinkCol("base", "lf.tame_degree", "Base", url_for_label),
     c_col,
-    MathCol("c_formula", "lf.discriminant_exponent", "Formula for $c$", short_title="discriminant exponent"),
     visible_col(True),
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
@@ -678,17 +677,11 @@ def family_page(label):
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
 
-    tame, den, nums = m.groups()
-    p = ZZ(tame.split(".")[0])
-    if den is None:
-        slopes = []
-    else:
-        den, nums = ZZ(den), [ZZ(n) for n in nums.split("_")]
-        slopes = [n / den for n in nums]
-    family = pAdicSlopeFamily(tame, slopes=slopes)
+    family = pAdicSlopeFamily(label)
     info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family, stats=LFStats())
+    p, n = family.p, family.n
     info['bread'] = get_bread([(str(p), url_for(".families_page", p=p)),
-                       (str(family.n), url_for(".families_page", p=p, n=family.n)),
+                       (str(family.n), url_for(".families_page", p=p, n=n)),
                        (label, "")])
     info['title'] = f"$p$-adic family {label}"
     info['show_count'] = True
@@ -747,25 +740,6 @@ def families_search(info,query):
     parse_ints(info,query,'w',name='Wild ramification log')
     parse_noop(info,query,'base',name='Base')
     #parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
-
-@local_fields_page.route("/families/")
-def families_page_pn(p, n):
-    p, n = ZZ(p), ZZ(n)
-    w = n.exact_log(p)
-    if n != p**w:
-        flash_error("%s must be a power of %s", n, p)
-        return redirect(url_for(".index"))
-    bread = get_bread([(str(p), url_for(".families_page_p", p=p)),
-                       (str(n), "")])
-    count_cache = Counter()
-    for rec in db.lf_fields.search({"p": p, "f": 1, "e": n}, ["visible"]):
-        count_cache[rec["visible"]] += 1
-    return render_template(
-        "lf-families.html",
-        title=f"{p}-adic families of degree {n}",
-        bread=bread,
-        families=pAdicSlopeFamily.families(p, w, count_cache),
-        learnmore=learnmore_list())
 
 def common_boxes():
     degree = TextBox(
