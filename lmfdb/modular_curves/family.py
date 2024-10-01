@@ -270,7 +270,7 @@ class XnsplusN(ModCurveFamily_base):
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)/2"
     genus = "g"
-    nu2 = r"$\nu_2 = N$"
+    nu2 = r"$\nu_2 = \begin{cases}\omega(N) & \forall p\mid N, p\equiv 3\bmod 4, \\ 0 & \text{otherwise.} \end{cases} + \frac{N}{2}\prod_{p\mid N}\left( 1 + \frac{1}{p}\right) - \#S$, where $\omega(N) = \prod_{p\mid N, \text{prime}} p$ and $S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$"
     nu3 = r"$\nu_3 = \begin{cases} 2^{\omega(N)-1} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
     cusps = r"$\nu_\infty = \varphi(N)/2$"
     rational_cusps = r"$\nu_\infty = 0$"
