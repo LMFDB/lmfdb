@@ -56,11 +56,24 @@ class pAdicSlopeFamily:
         if w and not slopes:
             slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
         self.slopes = slopes
-        data_cols = ["base_aut", "f", "e0", "n0", "e", "n", "w", "c", "field_count", "packet_count", "poly_count", "mass", "mass_stored"]
+        data_cols = ["base_aut", "f", "e0", "n0", "e", "n", "c", "field_count", "packet_count", "poly_count", "mass", "mass_stored"]
         data = db.lf_families.lookup(self.label, data_cols)
         if data:
             for col in data_cols:
                 setattr(self, col, data[col])
+        else:
+            self.field_count = self.packet_count = self.poly_count = 0
+            if "." in self.short_base:
+                data = db.lf_fields.lookup(self.base, ["aut", "f", "e", "n"])
+                self.base_aut = data["aut"]
+                self.f = data["f"]
+                self.e0 = data["e"]
+                self.e = self.pw * self.e0
+                self.n0 = data["n"]
+                self.n = self.f * self.e
+            else:
+                self.base_aut = self.f = self.e0 = self.n0 = 1
+                self.n = self.e = self.pw
         self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
         self.heights = heights
         self.rams = rams
