@@ -189,13 +189,13 @@ def formatted_model_html(self, m):
         elif typ == 2:
             #smooth is true, false, or none
             if smooth is True:
-                return display_knowl('modcurve.plane_model', 'Smooth plane model')+\
+                return display_knowl('modcurve.plane_model', 'Smooth plane model') +\
                 " Smooth plane model"
             elif smooth is False:
                 return display_knowl('modcurve.plane_model', 'Singular plane model') +\
                 " Singular plane model"
             else:
-                return display_knowl('modcurve.plane_model', 'Plane model')+\
+                return display_knowl('modcurve.plane_model', 'Plane model') +\
                     " Plane model"
         elif typ == 5:
             if self.genus == 1:
@@ -205,17 +205,17 @@ def formatted_model_html(self, m):
                 return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model') +\
                 " Weierstrass model"
         elif typ == 7:
-            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')+\
+            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model') +\
             " Geometric Weierstrass model"
         elif typ == 8:
             return display_knowl('modcurve.embedded_model', 'Embedded model') +\
              r" Embedded model in $\mathbb{P}^{%d}$" % (nb_var-1,)
 
     def equation_of_model(lines, typ):
-        table = '<table valign="center">'+\
-        '<tr>'+\
+        table = '<table valign="center">' +\
+        '<tr>' +\
         f'<td> $ {lines[0]} $ </td>' +\
-        '<td style="padding: 5px 0px;">$=$</td>'+\
+        '<td style="padding: 5px 0px;">$=$</td>' +\
         f'<td> $ {lines[1]} $</td>' +\
         '</tr>'
         if typ == 2 or typ == 5: #plane or weierstrass, 1 eqn
@@ -393,7 +393,7 @@ def difference(Ad, Bd, Am, Bm):
     return tuple(zip(*(sorted(C.items()))))
 
 def modcurve_link(label):
-    return '<a href="%s">%s</a>'%(url_for("modcurve.by_label",label=label),label)
+    return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",label=label),label)
 
 def combined_data(label):
     data = db.gps_gl2zhat_fine.lookup(label)
@@ -451,7 +451,7 @@ class WebModCurve(WebObj):
             if self.curve_label:
                 assert self.genus in [1,2]
                 route = "ec.by_ec_label" if self.genus == 1 else "g2c.by_label"
-                name = ("Elliptic" if self.genus ==1 else "Genus 2") + " curve " + self.curve_label
+                name = ("Elliptic" if self.genus == 1 else "Genus 2") + " curve " + self.curve_label
                 friends.append((name, url_for(route, label=self.curve_label)))
             else: # the best we can do is to point to the isogeny class
                 if self.genus == 1:
@@ -527,14 +527,14 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.coarse_label))
+            return r"no $\quad$ (see %s for the level structure with $-I$)" % (modcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s"%(', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
+                return r"%s" % (', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
             else:
                 return r"none in database"
         else:

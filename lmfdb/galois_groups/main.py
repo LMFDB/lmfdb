@@ -131,7 +131,7 @@ class GG_download(Downloader):
 # For the search order-parsing
 def make_order_key(order):
     order1 = int(ZZ(order).log(10))
-    return '%03d%s'%(order1,str(order))
+    return '%03d%s' % (order1,str(order))
 
 gg_columns = SearchColumns([
     LinkCol("label", "gg.label", "Label", url_for_label),
@@ -269,7 +269,7 @@ def render_group_webpage(args):
             data['chartable'] = chartable(n, t)
         else:
             data['chartable_knowl'] = character_table_display_knowl(n,t,
-                name="%d x %d character table"%(wgg.num_conjclasses(),wgg.num_conjclasses()))
+                name="%d x %d character table" % (wgg.num_conjclasses(),wgg.num_conjclasses()))
         data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
@@ -281,9 +281,9 @@ def render_group_webpage(args):
         data['groupid'] = abstract_group_display_knowl(gp_label, gp_label)
         data['otherreps'] = wgg.otherrep_list()
         ae = data['arith_equiv']
-        if ae>0:
-            if ae>1:
-                data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
+        if ae > 0:
+            if ae > 1:
+                data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.' % ae
             else:
                 data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
         elif ae > -1:
@@ -294,7 +294,7 @@ def render_group_webpage(args):
         if intreps:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
-                onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]
+                onerep['gens'] = [list_to_latex_matrix(z[1]) for z in onerep['gens']]
             data['int_reps'] = intreps
             data['int_reps_complete'] = int_reps_are_complete(intreps)
             dcq = data['moddecompuniq']
@@ -322,7 +322,7 @@ def render_group_webpage(args):
             ('$p$-group', yesno(pgroup)),
         ]
         pretty = group_display_short(n,t, emptyifnotpretty=True)
-        if len(pretty)>0:
+        if len(pretty) > 0:
             prop2.extend([('Group:', pretty)])
             data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
@@ -348,7 +348,7 @@ def render_group_webpage(args):
             properties=prop2,
             friends=friends,
             downloads=downloads,
-            KNOWL_ID="gg.%s"%label,
+            KNOWL_ID ="gg.%s" % label,
             learnmore=learnmore_list())
 
 @galois_groups_page.route('/<label>/download/<download_type>')

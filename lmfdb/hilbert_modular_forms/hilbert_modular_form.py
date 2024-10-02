@@ -143,8 +143,8 @@ hmf_columns = SearchColumns([
     MathCol("level_norm", "mf.level_norm", "Level norm", default=False),
     ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True, default=False),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension"),
-    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
-    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm == "yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
+    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc == "yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
 
 @search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',
@@ -482,7 +482,7 @@ def render_hmf_webpage(**args):
                             'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
 
     max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
-    display_eigs = display_eigs or (max_eig_len<=300)
+    display_eigs = display_eigs or (max_eig_len <= 300)
     info['display_eigs'] = display_eigs
     if not display_eigs:
         for eig in info['eigs']:
@@ -526,7 +526,7 @@ def render_hmf_webpage(**args):
         bread=bread,
         friends=info['friends'],
         learnmore=learnmore_list(),
-        KNOWL_ID="mf.hilbert.%s"%label,
+        KNOWL_ID ="mf.hilbert.%s" % label,
     )
 
 @hmf_page.route("/data/<label>")
@@ -585,7 +585,7 @@ def statistics_by_degree(d):
     counts = HMFstats().counts()
     info = {}
     if d not in counts['degrees']:
-        if d==1:
+        if d == 1:
             info['error'] = r"For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
@@ -596,22 +596,22 @@ def statistics_by_degree(d):
         info['degree'] = d
         info['stats'] = HMFstats().statistics(d)
 
-    if d==2:
+    if d == 2:
         t = 'Hilbert modular forms over real quadratic number fields'
-    elif d==3:
+    elif d == 3:
         t = 'Hilbert modular forms over totally real cubic number fields'
-    elif d==4:
+    elif d == 4:
         t = 'Hilbert modular forms over totally real quartic number fields'
-    elif d==5:
+    elif d == 5:
         t = 'Hilbert modular forms over totally real quintic number fields'
-    elif d==6:
+    elif d == 6:
         t = 'Hilbert modular forms over totally real sextic number fields'
     else:
         t = 'Hilbert modular forms over totally real fields of degree %s' % d
 
     bread = get_bread("Degree %s" % d)
 
-    if d=='bad':
+    if d == 'bad':
         t = 'Hilbert modular forms'
         bread = bread[:-1]
 

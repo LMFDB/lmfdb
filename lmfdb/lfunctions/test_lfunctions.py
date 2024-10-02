@@ -49,7 +49,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/Q/27/a/', follow_redirects=True)
         assert '0.5888795834' in L.get_data(as_text=True)
-        assert 'Elliptic curve 27.a'in L.get_data(as_text=True)
+        assert 'Elliptic curve 27.a' in L.get_data(as_text=True)
         assert 'Modular form 27.2.a.a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-3e3-1.1-c1-0-0' in L.get_data(as_text=True)

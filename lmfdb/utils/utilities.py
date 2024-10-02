@@ -60,7 +60,7 @@ def integer_prime_divisors(n):
 
 def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
+    return sign(n)*prod([p**(e % 2) for p, e in ZZ(n).factor()])
 
 
 def integer_is_squarefree(n):
@@ -289,7 +289,7 @@ def display_multiset(mset, formatter=str, *args):
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+    return ', '.join([formatter(pair[0], *args)+(' x%d' % pair[1] if pair[1] > 1 else '') for pair in mset])
 
 
 def pair2complex(pair):
@@ -372,7 +372,7 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  += sign * CBF(b)* CBF.gens()[0]
+            res  += sign * CBF(b) * CBF.gens()[0]
         return res
 
 # Conversion from numbers to letters and back
@@ -393,7 +393,7 @@ def num2letters(n):
     if n <= 26:
         return chr(96+n)
     else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
+        return num2letters(int((n-1)/26))+chr(97+(n-1) % 26)
 
 
 def to_dict(args, exclude=[], **kwds):
@@ -594,7 +594,7 @@ def latex_comma(x):
 def format_percentage(num, denom):
     if denom == 0:
         return 'NaN'
-    return "%10.2f"%((100.0*num)/denom)
+    return "%10.2f" % ((100.0*num)/denom)
 
 
 def signtocolour(sign):

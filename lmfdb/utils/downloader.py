@@ -766,7 +766,7 @@ class Downloader():
                 num_res_disp = pluralize(num_results, self.short_name)
             else:
                 num_res_disp = pluralize(limit, self.short_name, denom=num_results, offset=offset)
-            yield lang.comment(' Query "%s" %s %s%s.\n\n' %(
+            yield lang.comment(' Query "%s" %s %s%s.\n\n' % (
                 str(info.get('query')),
                 "returned" if limit is None else "was limited to",
                 num_res_disp,

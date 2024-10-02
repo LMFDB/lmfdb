@@ -139,7 +139,7 @@ class ModCrvTest(LmfdbTest):
         assert "Cummins and Pauli (CP) label" in L.get_data(as_text=True)
         assert "48P21" in L.get_data(as_text=True)
         assert "Rouse, Sutherland, and Zureick-Brown (RSZB) label" in L.get_data(as_text=True)
-        assert "48.576.21.26699"in L.get_data(as_text=True)
+        assert "48.576.21.26699" in L.get_data(as_text=True)
 
     def test_GL2ZNZ_gens(self):
         L = self.tc.get("/ModularCurve/Q/240.288.8-48.jt.2.31",follow_redirects=True)
