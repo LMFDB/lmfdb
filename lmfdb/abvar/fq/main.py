@@ -133,11 +133,11 @@ def abelian_varieties_by_gqi(g, q, iso):
         properties=cl.properties(),
         friends=cl.friends(),
         downloads=downloads,
-        title ='Abelian variety isogeny class %s over $%s$' % (label, cl.field()),
+        title='Abelian variety isogeny class %s over $%s$' % (label, cl.field()),
         bread=bread,
         cl=cl,
         learnmore=learnmore_list(),
-        KNOWL_ID ='av.fq.%s' % label
+        KNOWL_ID='av.fq.%s' % label
     )
 
 def url_for_label(label):

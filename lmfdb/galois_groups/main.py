@@ -348,7 +348,7 @@ def render_group_webpage(args):
             properties=prop2,
             friends=friends,
             downloads=downloads,
-            KNOWL_ID ="gg.%s" % label,
+            KNOWL_ID="gg.%s" % label,
             learnmore=learnmore_list())
 
 @galois_groups_page.route('/<label>/download/<download_type>')

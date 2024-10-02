@@ -98,7 +98,7 @@ def Sp4Z_j_space(k,j):
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title =r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$' % (k, j),
+                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$' % (k, j),
                            bread=bread,
                            info=info)
 

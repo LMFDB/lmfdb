@@ -723,7 +723,7 @@ def render_isogeny_class(iso_class):
                            bread=class_data.bread,
                            title=class_data.title,
                            friends=class_data.friends,
-                           KNOWL_ID ="ec.q.%s" % iso_class,
+                           KNOWL_ID="ec.q.%s" % iso_class,
                            downloads=class_data.downloads,
                            learnmore=learnmore_list_add(*learnmore_isog_picture) if class_data.class_size > 1 else learnmore_list())
 
@@ -772,8 +772,8 @@ def render_curve_webpage_by_label(label):
                         bread=data.bread, title=data.title,
                         friends=data.friends,
                         downloads=data.downloads,
-                        KNOWL_ID ="ec.q.%s" % lmfdb_label,
-                        BACKUP_KNOWL_ID ="ec.q.%s" % data.lmfdb_iso,
+                        KNOWL_ID="ec.q.%s" % lmfdb_label,
+                        BACKUP_KNOWL_ID="ec.q.%s" % data.lmfdb_iso,
                         learnmore=learnmore_list_add(*learnmore_curve_picture))
     ec_logger.debug("Total walltime: %ss" % (time.time() - t0))
     ec_logger.debug("Total cputime: %ss" % (cputime(cpt0)))
