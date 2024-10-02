@@ -526,7 +526,7 @@ def render_hmf_webpage(**args):
         bread=bread,
         friends=info['friends'],
         learnmore=learnmore_list(),
-        KNOWL_ID ="mf.hilbert.%s" % label,
+        KNOWL_ID="mf.hilbert.%s" % label,
     )
 
 @hmf_page.route("/data/<label>")
