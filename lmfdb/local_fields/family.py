@@ -10,29 +10,43 @@ from flask import url_for
 from collections import defaultdict, Counter
 import itertools
 import re
-FAMILY_RE = re.compile(r'(\d+(?:\.\d+\.\d+\.\d+)?)-(?:(\d+)\.(\d+(?:_\d+)*))?')
+FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+[a-z]+)?')
 
 class pAdicSlopeFamily:
     def __init__(self, label=None, base=None, slopes=[], heights=[], rams=[], field_cache=None):
+        data_cols = ["base", "rams", "base_aut", "p", "f", "e0", "n0", "e", "n", "c", "field_count", "packet_count", "poly_count", "mass", "mass_stored"]
         if label is not None:
             assert not base and not slopes and not heights and not rams
-            base, slopes = label.split("-")
-            if slopes:
-                den, nums = slopes.split(".")
-                den = ZZ(den)
-                nums = [ZZ(n) for n in nums.split("_")]
-                slopes = [n/den for n in nums]
+            data = db.lf_families.lookup(label, data_cols)
+            if data:
+                for col in data_cols:
+                    setattr(self, col, data[col])
+                base, rams, p = data["base"], data["rams"], ZZ(data["p"])
+                if rams == "[]":
+                    rams = []
+                else:
+                    rams = [QQ(x) for x in rams[1:-1].split(", ")]
             else:
-                slopes = []
+                raise NotImplementedError
+            #base, slopes = label.split("-")
+            #if slopes:
+            #    den, nums = slopes.split(".")
+            #    den = ZZ(den)
+            #    nums = [ZZ(n) for n in nums.split("_")]
+            #    slopes = [n/den for n in nums]
+            #else:
+            #    slopes = []
             self.label = label
-        if base.endswith(".1.0.1"):
-            base = base.split(".")[0]
-        self.short_base = base
-        if "." in base:
-            p = ZZ(base.split(".")[0])
         else:
-            p = ZZ(base)
-            base = f"{p}.1.0.1"
+            raise NotImplementedError
+        #if base.endswith(".1.0.1"):
+        #    base = base.split(".")[0]
+        self.short_base = base
+        #if "." in base:
+        #    p = ZZ(base.split(".")[0])
+        #else:
+        #    p = ZZ(base)
+        #    base = f"{p}.1.0.1"
         self.base = base
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
@@ -56,24 +70,23 @@ class pAdicSlopeFamily:
         if w and not slopes:
             slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
         self.slopes = slopes
-        data_cols = ["base_aut", "f", "e0", "n0", "e", "n", "c", "field_count", "packet_count", "poly_count", "mass", "mass_stored"]
-        data = db.lf_families.lookup(self.label, data_cols)
-        if data:
-            for col in data_cols:
-                setattr(self, col, data[col])
-        else:
-            self.field_count = self.packet_count = self.poly_count = 0
-            if "." in self.short_base:
-                data = db.lf_fields.lookup(self.base, ["aut", "f", "e", "n"])
-                self.base_aut = data["aut"]
-                self.f = data["f"]
-                self.e0 = data["e"]
-                self.e = self.pw * self.e0
-                self.n0 = data["n"]
-                self.n = self.f * self.e
-            else:
-                self.base_aut = self.f = self.e0 = self.n0 = 1
-                self.n = self.e = self.pw
+        #data = db.lf_families.lookup(self.label, data_cols)
+        #if data:
+        #    for col in data_cols:
+        #        setattr(self, col, data[col])
+        #else:
+        #    self.field_count = self.packet_count = self.poly_count = 0
+        #    if "." in self.short_base:
+        #        data = db.lf_fields.lookup(self.base, ["aut", "f", "e", "n"])
+        #        self.base_aut = data["aut"]
+        #        self.f = data["f"]
+        #        self.e0 = data["e"]
+        #        self.e = self.pw * self.e0
+        #        self.n0 = data["n"]
+        #        self.n = self.f * self.e
+        #    else:
+        #        self.base_aut = self.f = self.e0 = self.n0 = 1
+        #        self.n = self.e = self.pw
         self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
         self.heights = heights
         self.rams = rams
