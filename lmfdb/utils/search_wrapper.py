@@ -434,6 +434,7 @@ class EmbedWrapper(Wrapper):
                 if self.postprocess is not None:
                     res = self.postprocess(res, info, query)
             except ValueError as err:
+                raise
                 flash_error(str(err))
                 info["err"] = str(err)
                 return render_template(template, info=info, title=err_title, **template_kwds)

@@ -32,7 +32,8 @@ from lmfdb.number_fields.web_number_field import (
 
 from collections import Counter
 import re
-LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
+OLD_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
+NEW_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -75,9 +76,25 @@ def local_algebra_data(labels):
     ans += '</div>'
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
-    fall = [db.lf_fields.lookup(label) for label in labs]
-    for f in fall:
-        l = str(f['label'])
+    if all(OLD_LF_RE.fullmatch(lab) for lab in labs):
+        fall = {rec["label"]: rec for rec in db.lf_fields.search({"label":{"$in": labs}})}
+    elif all(NEW_LF_RE.fullmatch(lab) for lab in labs):
+        fall = {rec["new_label"]: rec for rec in db.lf_fields.search({"new_label":{"$in": labs}})}
+    else:
+        fall = {}
+        for lab in labs:
+            if OLD_LF_RE.fullmatch(lab):
+                fall[lab] = db.lf_fields.lucky({"label":lab})
+            elif NEW_LF_RE.fullmatch(lab):
+                fall[lab] = db.lf_fields.lucky({"new_label":lab})
+            else:
+                fall[lab] = None
+    for lab in labs:
+        f = fall[lab]
+        if f is None:
+            ans += '<tr><td>Invalid label %s</td></tr>' % lab
+            continue
+        l = str(f['new_label'])
         ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
@@ -89,7 +106,12 @@ def local_algebra_data(labels):
     return ans
 
 def local_field_data(label):
-    f = db.lf_fields.lookup(label)
+    if OLD_LF_RE.fullmatch(label):
+        f = db.lf_fields.lookup(label)
+    elif NEW_LF_RE.fullmatch(label):
+        f = db.lf_fields.lucky({"new_label": label})
+    else:
+        return "Invalid label %s" % label
     nicename = ''
     if f['n'] < 3:
         nicename = ' = '+ prettyname(f)
@@ -206,7 +228,10 @@ def ctx_local_fields():
 
 # Utilities for subfield display
 def format_lfield(label, p):
-    data = db.lf_fields.lookup(label)
+    if OLD_LF_RE.fullmatch(label):
+        data = db.lf_fields.lookup(label, ["n", "p", "rf", "new_label"])
+    else:
+        data = db.lf_fields.lucky({"new_label": label}, ["n", "p", "rf", "new_label"])
     return lf_display_knowl(label, name=prettyname(data))
 
 
@@ -313,7 +338,8 @@ class LF_download(Downloader):
         ),
     }
 
-label_col = LinkCol("label", "lf.field.label", "Label", url_for_label)
+label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
+
 def packet_col(default):
     return MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=default)
 def degree_col(default):
@@ -357,8 +383,9 @@ lf_columns = SearchColumns([
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia")),
+    ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
     MathCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"))],
-    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen"])
+    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen", "family", "residual_polynomials"])
 
 family_columns = SearchColumns([
     label_col,
@@ -441,13 +468,15 @@ def render_field_webpage(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        data = db.lf_fields.lookup(label)
+        data = db.lf_fields.lucky({"new_label":label})
         if data is None:
-            if LF_RE.fullmatch(label):
-                flash_error("Field %s was not found in the database.", label)
-            else:
-                flash_error("%s is not a valid label for a $p$-adic field.", label)
-            return redirect(url_for(".index"))
+            data = db.lf_fields.lucky({"label":label})
+            if data is None:
+                if NEW_LF_RE.fullmatch(label) or OLD_LF_RE.fullmatch(label):
+                    flash_error("Field %s was not found in the database.", label)
+                else:
+                    flash_error("%s is not a valid label for a $p$-adic field.", label)
+                return redirect(url_for(".index"))
         title = '$p$-adic field ' + prettyname(data)
         titletag = 'p-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
@@ -479,7 +508,7 @@ def render_field_webpage(args):
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = url_for_label(unramdata['label'])
+            unramfriend = url_for_label(unramdata['new_label'])
 
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
@@ -497,7 +526,7 @@ def render_field_webpage(args):
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra=r'$\ \in'+Qp+'(t)[x]$')
 
-        rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
+        rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection="new_label")
         if rflabel is None:
             logger.fatal("Cannot find discriminant root field!")
             rffriend = ''
@@ -569,13 +598,13 @@ def render_field_webpage(args):
             friends=friends,
             downloads=downloads,
             learnmore=learnmore_list(),
-            KNOWL_ID="lf.%s" % label,
+            KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 
 def prettyname(ent):
     if ent['n'] <= 2:
         return printquad(ent['rf'], ent['p'])
-    return ent['label']
+    return ent['new_label']
 
 @cached_function
 def getu(p):
@@ -598,11 +627,12 @@ def printquad(code, p):
 
 @local_fields_page.route("/data/<label>")
 def lf_data(label):
-    if not LF_RE.fullmatch(label):
+    if not NEW_LF_RE.fullmatch(label):
         return abort(404, f"Invalid label {label}")
     title = f"Local field data - {label}"
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
-    return datapage(label, "lf_fields", title=title, bread=bread)
+    sorts = [["p", "n", "e", "c", "ctr_family", "ctr_subfamily", "ctr"]]
+    return datapage(label, "lf_fields", title=title, bread=bread, label_cols=["new_label"], sorts=sorts)
 
 @local_fields_page.route("/random")
 @redirect_no_cache
@@ -936,15 +966,16 @@ class FamiliesSearchArray(SearchArray):
 
 class LFSearchArray(SearchArray):
     noun = "field"
-    sorts = [("", "prime", ['p', 'n', 'c', 'label']),
-             ("n", "degree", ['n', 'p', 'c', 'label']),
-             ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
-             ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
-             ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
-             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
-             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
-             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
-             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'label'])]
+
+    sorts = [("", "prime", ['p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("n", "degree", ['n', 'e', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("e", "ramification index", ['n', 'e', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("u", "Galois unramified degree", ['u', 'f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("t", "Galois tame degree", ['t', 'e', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("s", "top slope", ['top_slope', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
