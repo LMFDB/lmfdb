@@ -237,6 +237,8 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def can_chartable(self):
+        if self.num_conjclasses() > 160:
+            return False
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
