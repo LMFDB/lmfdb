@@ -190,6 +190,8 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
+        if self.num_conjclasses()>160:
+            return None
         g = self.gapgroupnt()
         n = self.n()
         wag = self.wag
@@ -222,6 +224,8 @@ class WebGaloisGroup:
     @lazy_attribute
     def malle_a(self):
         ccs = self.conjclasses
+        if not ccs:
+            return None
         inds = [z[5] for z in ccs]
         if len(inds) == 1:
             return 0
@@ -477,6 +481,12 @@ def group_cclasses_knowl_guts(n, t):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
+    rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
+    wgg = WebGaloisGroup(label)
+    if wgg.malle_a:
+        rest += '$%s$'%str(wgg.malle_a)
+    else:
+        rest += 'not computed'
     return rest
 
 
@@ -566,7 +576,7 @@ def resolve_display(resolves):
         if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
+                ans += '$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = deg
@@ -606,6 +616,8 @@ def cclasses(n, t):
             <tbody>
          """
     cc = group.conjclasses
+    if not cc:
+        return None
     for c in cc:
         html += f'<tr><td>${c[3]}$</td>'
         html += f'<td>${c[2]}$</td>'
