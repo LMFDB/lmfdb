@@ -12,6 +12,8 @@ from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomi
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
+CC_LIMIT = 160
+
 def knowl_cache(galois_labels=None, results=None):
     """
     Returns a dictionary for use in abstract_group_display_knowl, group_display and
@@ -190,7 +192,7 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
-        if self.num_conjclasses()>160:
+        if self.num_conjclasses()>CC_LIMIT:
             return None
         g = self.gapgroupnt()
         n = self.n()
@@ -237,7 +239,7 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def can_chartable(self):
-        if self.num_conjclasses() > 160:
+        if self.num_conjclasses() > CC_LIMIT:
             return False
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
@@ -578,7 +580,7 @@ def resolve_display(resolves):
         if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
+                ans += r'$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = deg
