@@ -2,7 +2,7 @@
 
 {% block embedding_content %}
 
-<h2> Defining polynomial </h2>
+<h2> {{ KNOWL('lf.family_polynomial', 'Defining polynomial') }} </h2>
 
 <table>
   <tr><td> ${{ family.polynomial._latex_() }}$ </td></tr>
@@ -10,31 +10,29 @@
 
 <h2> Invariants </h2>
 <table>
-  <tr><td>Base field:</td><td> {{family.base_link | safe}} </td></tr>
-  <tr><td>Ramification exponent $e$:</td><td> ${{family.e}}$ </td></tr>
-  <tr><td>Residue field degree $f$:</td><td> ${{family.f}}$ </td></tr>
-  <tr><td>Discriminant exponent $c$:</td><td> ${{family.c}}$ </td></tr>
-  <tr><td>Visible slopes:</td><td> ${{family.artin_slopes}}$ </td></tr>
-  <tr><td>Heights:</td><td> ${{family.heights}}$ </td></tr>
-  <tr><td>Rams:</td><td> ${{family.rams}}$ </td></tr>
-  <tr><td>Field count:</td><td> ${{family.field_count}}$ </td></tr>
-  <tr><td>Poly count:</td><td> ${{family.poly_count}}$ </td></tr>
-  <tr><td>Mass:</td><td> ${{family.mass}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_base', 'Base field') }}:</td><td> {{family.base_link | safe}} </td></tr>
+  <tr><td>{{ KNOWL('lf.family_ramification', 'Ramification index') }} $e$:</td><td> ${{family.e}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_residue_field_degree', 'Residue field degree') }} $f$:</td><td> ${{family.f}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_discriminant_exponent', 'Discriminant exponent') }} $c$:</td><td> ${{family.c}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.visible_slopes', 'Visible slopes') }}:</td><td> ${{family.artin_slopes}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.heights', 'Heights') }}::</td><td> ${{family.heights}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.scaled_heights', 'Scaled heights') }}::</td><td> ${{family.scaled_heights}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> ${{family.rams}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.scaled_rams', 'Scaled rams') }}:</td><td> ${{family.scaled_rams}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_poly_count', 'Poly count') }}:</td><td> ${{family.poly_count}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass}}$ {% if family.mass != family.mass_stored %}(${{family.mass_stored}}$ among fields in the LMFDB){% endif %}</td></tr>
 </table>
 
 <h2> Varying </h2>
 <table>
-  <tr><td>Galois group:</td><td> {{ family.galois_groups | safe }} </td></tr>
-  <tr><td>Hidden slopes:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
-  <tr><td>Indices of inseparability:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
-  <tr><td>Associated inertia:</td><td> {{ family.associated_inertia | safe }} </td></tr>
+  <tr><td>{{ KNOWL('nf.galois_group', 'Galois group') }}:</td><td> {{ family.galois_groups | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.hidden_slopes', 'Hidden slopes') }}:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability') }}:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.associated_inertia', 'Associated inertia') }}:</td><td> {{ family.associated_inertia | safe }} </td></tr>
 </table>
 
-<p>
-  See also: <a href="{{ url_for('.dynamic_statistics', p=family.p, n=family.n, count=None, visible_quantifier='exactly', visible=(family.artin_slopes|string), col1='slopes', totals1='yes', col2='galois_label', totals2='yes', proportions='none') }}">table of Galois group vs slopes</a> for this family.
-</p>
-
-<h2> Picture </h2>
+<h2> {{ KNOWL('lf.family_picture', 'Family photo') }} </h2>
 
 <img src="{{ family.picture }}" width="1000">
 
