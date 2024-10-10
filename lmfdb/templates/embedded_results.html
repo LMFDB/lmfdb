@@ -5,6 +5,7 @@
 
 {% endblock %}
 
+{% if info.number > 0 %}
 {{ info.columns.above_results | safe }}
 {% if info.columns.languages %}
 {% set languages = info.columns.languages %}
@@ -45,6 +46,9 @@
   {% include 'download_search_results.html' %}
 {% endif %}
 {{ info.columns.below_download | safe }}
+
+{% endif %} {# info.number > 0 #}
+
 {% include 'debug_info.html' %}
 
 {% block post_results_content %}

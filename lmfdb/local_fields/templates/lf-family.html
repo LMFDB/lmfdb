@@ -15,22 +15,29 @@
   <tr><td>{{ KNOWL('lf.family_residue_field_degree', 'Residue field degree') }} $f$:</td><td> ${{family.f}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_discriminant_exponent', 'Discriminant exponent') }} $c$:</td><td> ${{family.c}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.visible_slopes', 'Visible slopes') }}:</td><td> ${{family.artin_slopes}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.heights', 'Heights') }}::</td><td> ${{family.heights}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.scaled_heights', 'Scaled heights') }}::</td><td> ${{family.scaled_heights}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.heights', 'Heights') }}:</td><td> ${{family.heights}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.scaled_heights', 'Scaled heights') }}:</td><td> ${{family.scaled_heights}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> ${{family.rams}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.scaled_rams', 'Scaled rams') }}:</td><td> ${{family.scaled_rams}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.mass != family.mass_stored %} (incomplete) {% endif %}</td></tr>
   <tr><td>{{ KNOWL('lf.family_poly_count', 'Poly count') }}:</td><td> ${{family.poly_count}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass}}$ {% if family.mass != family.mass_stored %}(${{family.mass_stored}}$ among fields in the LMFDB){% endif %}</td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass}}$ {% if family.mass != family.mass_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
 </table>
 
+{% if family.field_count > 0 %}
+
 <h2> Varying </h2>
+{% if family.mass != family.mass_stored %}
+<p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
+{% endif %}
 <table>
   <tr><td>{{ KNOWL('nf.galois_group', 'Galois group') }}:</td><td> {{ family.galois_groups | safe }} </td></tr>
   <tr><td>{{ KNOWL('lf.hidden_slopes', 'Hidden slopes') }}:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
   <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability') }}:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
   <tr><td>{{ KNOWL('lf.associated_inertia', 'Associated inertia') }}:</td><td> {{ family.associated_inertia | safe }} </td></tr>
 </table>
+
+{% endif %}
 
 <h2> {{ KNOWL('lf.family_picture', 'Family photo') }} </h2>
 
@@ -44,9 +51,15 @@
   {% include 'stat_2d.html' %}
 {% endfor %}
 
-{% endif %}
-
 <h2> Fields </h2>
+
+{% else %} {# family.field_cout = 0 #}
+
+<p>
+  The LMFDB does not contain any fields from this family.
+</p>
+
+{% endif %}
 
 {% endblock %}
 

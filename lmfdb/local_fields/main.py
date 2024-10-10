@@ -140,7 +140,7 @@ def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
 
 
-def plot_polygon(verts, polys, inds, p):
+def plot_ramification_polygon(verts, p, polys=None, inds=None):
     verts = [tuple(pt) for pt in verts]
     if not verts:
         # Unramified, so we won't be displaying the plot
@@ -174,26 +174,28 @@ def plot_polygon(verts, polys, inds, p):
             f"${P[1]}$", (-txshift, P[1]),
             horizontal_alignment="right",
             color="black")
-    R = ZZ["t"]["z"]
-    polys = [R(poly) for poly in polys]
 
-    def restag(c, a, b):
-        return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
-                    horizontal_alignment="left",
-                    color="black")
-    L += restag(polys[0][0], 1, ymax)
+    if polys is not None:
+        R = ZZ["t"]["z"]
+        polys = [R(poly) for poly in polys]
+
+        def restag(c, a, b):
+            return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
+                        horizontal_alignment="left",
+                        color="black")
+        L += restag(polys[0][0], 1, ymax)
     for i in range(len(verts) - 1):
         P = verts[i]
         Q = verts[i+1]
         slope = ZZ(P[1] - Q[1]) / ZZ(Q[0] - P[0]) # actually the negative of the slope
         d = slope.denominator()
-        poly = polys[i]
         if slope != 0:
-            while nextq <= Q[0]:
-                i = (nextq - P[0]) / d
-                if i in ZZ and poly[i]:
-                    L += restag(poly[i], nextq, P[1] - (nextq - P[0]) * slope)
-                nextq *= p
+            if polys is not None:
+                while nextq <= Q[0]:
+                    j = (nextq - P[0]) / d
+                    if j in ZZ and polys[i][j]:
+                        L += restag(polys[i][j], nextq, P[1] - (nextq - P[0]) * slope)
+                    nextq *= p
             L += text(
                 f"${slope}$", (P[0] - txshift, (P[1] + Q[1]) / 2),
                 horizontal_alignment="right",
@@ -208,13 +210,14 @@ def plot_polygon(verts, polys, inds, p):
                     [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
                     color="grey",
                 )
-        else:
+        elif polys:
             # For tame inertia, the coefficients can occur at locations other than powers of p
-            for i, c in enumerate(poly):
-                if i and c:
-                    L += restag(c, P[0] + i, P[1])
+            for j, c in enumerate(polys[i]):
+                if j and c:
+                    L += restag(c, P[0] + j, P[1])
     L += line(verts, thickness=2)
-    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+    if inds is not None:
+        L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
     return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
@@ -484,6 +487,7 @@ def render_field_webpage(args):
         Qp = r'\Q_{%d}' % p
         e = data['e']
         f = data['f']
+        n = data['n']
         cc = data['c']
         gt = int(data['galois_label'].split('T')[1])
         gn = data['n']
@@ -547,7 +551,7 @@ def render_field_webpage(args):
 
         info.update({
                     'polynomial': raw_typeset(polynomial),
-                    'n': data['n'],
+                    'n': n,
                     'p': p,
                     'c': data['c'],
                     'e': data['e'],
@@ -573,11 +577,12 @@ def render_field_webpage(args):
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
-                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p),
+                    'ram_polygon_plot': plot_ramification_polygon(data['ram_poly_vert'], p, data['residual_polynomials'], data['ind_of_insep']),
                     'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
                     'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
-        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+        friends = [('Family', url_for(".family_page", label=data["family"])),
+                   ('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
         if unramfriend != '':
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
@@ -587,7 +592,13 @@ def render_field_webpage(args):
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
-        bread = get_bread([(label, ' ')])
+        _, _, _, fam, i = data['new_label'].split(".")
+        _, fama, subfam = re.split(r"(\D+)", fam)
+        bread = get_bread([(str(p), url_for('.index', p=p)),
+                           (str(data['n']), url_for('.index', p=p, n=n)),
+                           (str(cc), url_for('.index', p=p, n=n, c=cc)),
+                           (fama, url_for('.family_page', label=data['family'])),
+                           (f'{subfam}.{i}', ' ')])
         return render_template(
             "lf-show-field.html",
             title=title,
