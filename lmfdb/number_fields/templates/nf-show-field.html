@@ -322,6 +322,9 @@ table.ntdata a {
         which appear with multiplicity greater than one are indicated
         by exponents on the *.
     </div>
-    {% endif %}
-
+	{% endif %}
+<h2> {{ KNOWL('nf.frobenius_cycle_types', title='Spectrum of ring of integers') }}</h2>
+	<div>
+	  {{ nf.draw_spectrum() | safe}}
+	  </div>
 {% endblock %}

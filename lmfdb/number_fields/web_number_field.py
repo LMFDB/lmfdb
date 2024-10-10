@@ -15,6 +15,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly,
 from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.number_fields.draw_spectrum import draw_spec
 
 wnflog = make_logger("WNF")
 
@@ -996,6 +997,16 @@ class WebNumberField:
         loc_alg_dict = self.get_local_algebras()
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
+    def draw_spectrum(self):
+  #       return """<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  # <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+  #       </svg>"""
+        return draw_spec(
+            self.K(),
+            nprimes=15,
+            curve=True,
+            color_classes=False).as_str()
+    
     def make_code_snippets(self):
         # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
