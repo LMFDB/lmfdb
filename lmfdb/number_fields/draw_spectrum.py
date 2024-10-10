@@ -1,12 +1,5 @@
-# requires svg.pip
-# run `sage -pip install svg.py` or something equivalent to install
-# TODO: tweak to make prettier
-# TODO: edit knowl
-# DONE: fix alignment of text
-# TODO: consider making it toggle-able?
-
 import svg
-import random
+# import random
 from sage.all import (
     NumberField,
     primes_first_n,
@@ -16,16 +9,13 @@ from sage.all import (
 )
 def draw_spec(F,
               nprimes,
-              # fat_factor=1,
               curve=False,
               color_classes=False) -> svg.SVG:
-    prime_list = primes_first_n(nprimes)
 
-    d = F.degree()
+    prime_list = primes_first_n(nprimes)
+    deg = F.degree()
     
     elements = []
-    # fraction of height of centre line around which the primes in spec are centred
-    centre_ratio = 3/8
     # NB: svg y-coords start from top! eg (0,1) is 1 unit down from top left corner
 
     # distance between different primes 
@@ -34,18 +24,26 @@ def draw_spec(F,
     # = total distance from top to bottom
     y_spread = 30
     
-    # should make dims absolute!
     height = 200
-    width = (nprimes+2)*x_spread
+    width = (nprimes+3)*x_spread
 
 
     # y-coordinate of Spec Z
     bottom_line = round((6/8)*height)
+
+    # fraction of height of centre line around which the primes in spec are centred
+    centre_ratio = 3/8
+    # y-coordinate of Spec O_K
+    centre_line = round(centre_ratio*height)
+
+    # fatness of ramified primes
+    ramify_factor = 4/deg
+    
     line_thickness = 1
     dot_radius = 2.5
 
     prime_ideals = [F.ideal(p).factor() for p in prime_list]
-
+    
     if color_classes:
         G = F.class_group()
         colors = []
@@ -54,11 +52,10 @@ def draw_spec(F,
         color_dict = dict(zip(list(G), map(rgb_nums_to_hex, colors)))
         color_dict[G.identity()] = rgb_nums_to_hex([.3, .3, .3])
         
-    # print(color_dict)
     coord_list = [
         fp_coords(fplist,
                   (n+1)*x_spread,
-                  round(centre_ratio*height),
+                  centre_line,
                   y_spread) for n, fplist in enumerate(prime_ideals)
     ]
 
@@ -68,10 +65,32 @@ def draw_spec(F,
             stroke_width = line_thickness,
             x1 = coord_list[0][0][0],
             y1 = bottom_line,
-            x2 = coord_list[-1][0][0],
+            x2 = width - 2*x_spread,
             y2 = bottom_line
         )
     )
+    for y in (bottom_line, centre_line):
+        elements.append(
+            svg.Line(
+                stroke = "black",
+                stroke_width = line_thickness,
+                stroke_dasharray = "5",
+                x1 = width - 2*x_spread,
+                y1 = y,
+                x2 = width - x_spread,
+                y2 = y
+            )
+        )
+        elements.append(svg.Text(
+                    x = width - x_spread,
+                    y = y,
+                    dx = 16,
+                    dy = 4,
+                    text = '(0)',
+                    text_anchor = "middle")
+        )
+
+
     for n, fplist in enumerate(prime_ideals):
         pts = coord_list[n]
         elements.append(
@@ -81,14 +100,12 @@ def draw_spec(F,
                 r = dot_radius,
                 fill="black")
         )
-        # TODO: get font etc, make size variable?
         elements.append(
             svg.Text(
                 x = pts[0][0],
                 y = bottom_line,
-                dy = 12,
+                dy = 20,
                 text = f'({prime_list[n]})',
-                font_size = '8',
                 text_anchor = "middle",
             )
         )
@@ -98,14 +115,15 @@ def draw_spec(F,
                 svg.Circle(
                     cx = pts[i][0],
                     cy = pts[i][1],
-                    r = dot_radius,
+                    r = dot_radius + ramify_factor*(mult-1),
                     fill = color_dict[G(fp)] if color_classes else "black",
                     stroke="black")
             )
     if curve:
-        for n in range(nprimes-1):
+        for n in range(nprimes):
             for coord_this in coord_list[n]:
-                for coord_next in (coord_list + [[(nprimes, round(1/3*height))]])[n + 1]:
+                for coord_next in (coord_list +
+                                   [[(width-2*x_spread, centre_line)]])[n + 1]:
                     dx = round((coord_next[0] - coord_this[0])/2)
                     elements.append(
                         svg.Path(
@@ -125,6 +143,7 @@ def draw_spec(F,
                             ]
                             )
                         )
+    
     return svg.SVG(
         width=width,
         height=height,
@@ -164,18 +183,20 @@ def generate_new_color(existing_colors, pastel_factor=0.5):
             best_color = color
     return best_color
 
-def save_svg(filename, svg):
-    with open(filename, mode='w') as f:		
-        f.write(svg.as_str())
-
 def rgb_nums_to_hex(L):
     Lhex = [round(hex((l*256)))[2:] for l in L]
     return "#" + "".join(Lhex)
 
+def save_svg(filename, svg):
+    with open(filename, mode='w') as f:		
+        f.write(svg.as_str())
+
 def test_draw():
     R = PolynomialRing(Integers(), names="x"); x = R.gens()[0]
-    F = NumberField(x**7 +41, names="a")
-    # F = NumberField(P, names="a")
+    P = x**7 + 41
+    P = x**2 + 33
+    # F = NumberField(x**7 +41, names="a")
+    F = NumberField(P, names="a")
     # F.<a> = CyclotomicField(29)
     # F = QuadraticField(-1)
     draw_spec(F,nprimes = 15, curve = True)
