@@ -53,6 +53,8 @@ class pAdicSlopeFamily:
         self.p = p
         self.w = w = max(len(L) for L in [slopes, heights, rams])
         self.pw = p**w
+        self.e = ZZ(self.e)
+        _, self.etame = self.e.val_unit(p)
         # We support tamely ramified fields by specifying a tame base and empty slopes/rams/heights
         # slopes/rams -> heights -> rams/slopes
         if rams:
