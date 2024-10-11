@@ -14,7 +14,7 @@ FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+[a-z]+)?')
 
 class pAdicSlopeFamily:
     def __init__(self, label=None, base=None, slopes=[], heights=[], rams=[], field_cache=None):
-        data_cols = ["base", "rams", "base_aut", "p", "f", "e0", "n0", "e", "n", "c", "field_count", "packet_count", "poly_count", "mass", "mass_stored"]
+        data_cols = ["base", "rams", "base_aut", "p", "f", "f0", "f_absolute", "e", "e0", "e_absolute", "n", "n0", "n_absolute", "c", "c0", "c_absolute", "field_count", "packet_count", "ambiguity", "mass_display", "mass_stored", "mass_missing", "all_stored"]
         if label is not None:
             assert not base and not slopes and not heights and not rams
             data = db.lf_families.lookup(label, data_cols)
@@ -202,6 +202,10 @@ class pAdicSlopeFamily:
         #P._set_extra_kwds(dict(xmin=0, xmax=self.pw, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight")
+
+    #@lazy_attribute
+    #def ramification_polygon_plot(self):
+    #    
 
     @lazy_attribute
     def polynomial(self):

@@ -19,15 +19,15 @@
   <tr><td>{{ KNOWL('lf.scaled_heights', 'Scaled heights') }}:</td><td> ${{family.scaled_heights}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> ${{family.rams}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.scaled_rams', 'Scaled rams') }}:</td><td> ${{family.scaled_rams}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.mass != family.mass_stored %} (incomplete) {% endif %}</td></tr>
-  <tr><td>{{ KNOWL('lf.family_poly_count', 'Poly count') }}:</td><td> ${{family.poly_count}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass}}$ {% if family.mass != family.mass_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
+  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if not family.all_stored %} (incomplete) {% endif %}</td></tr>
+  <tr><td>{{ KNOWL('lf.family_ambiguity', 'Ambiguity') }}:</td><td> ${{family.ambiguity}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
 </table>
 
 {% if family.field_count > 0 %}
 
 <h2> Varying </h2>
-{% if family.mass != family.mass_stored %}
+{% if not family.all_stored %}
 <p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
 {% endif %}
 <table>

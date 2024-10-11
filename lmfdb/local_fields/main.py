@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
-    parse_inertia, parse_newton_polygon, parse_bracketed_posints,
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
@@ -410,16 +410,27 @@ families_columns = SearchColumns([
     LinkCol("label", "lf.family_label", "Label", url_for_family),
     p_col,
     degree_col(True),
-    LinkCol("base", "lf.tame_degree", "Base", url_for_label),
+    MathCol("n0", "lf.degree", "$n_0$", short_title="base degree", default=False),
+    MathCol("n_absolute", "lf.degree", r"$n_{\mathrm{abs}}$", short_title="absolute degree", default=False),
+    MathCol("f", "lf.family_residue_field_degree", "$f$", short_title="base res. field degree"),
+    MathCol("f0", "lf.family_residue_field_degree", "$f_0$", short_title="base res. field degree", default=False),
+    MathCol("f_absolute", "lf.family_residue_field_degree", r"$f_{\mathrm{abs}}$", short_title="absolute residue field degree", default=False),
+    MathCol("e", "lf.family_ramification", "$e$", short_title="base ram. index"),
+    MathCol("e0", "lf.family_ramification", "$e_0$", short_title="base ram. index", default=False),
+    MathCol("e_absolute", "lf.family_ramification", r"$e_{\mathrm{abs}}$", short_title="absolute ram. index", default=False),
     c_col,
-    visible_col(True),
+    LinkCol("base", "lf.tame_degree", "Base", url_for_label),
+    visible_col(False),
+    MathCol("slopes", "lf.slopes", "Swan slopes"),
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
-    MathCol("poly", "lf.family_poly", "Generic poly", default=False),
-    MathCol("poly_count", "lf.family_poly_count", "Num. Poly"),
+    MathCol("poly", "lf.family_poly", "Generic poly", default=False), # FIXME: convert to latex
+    MathCol("ambiguity", "lf.family_ambiguity", "Num. Poly"),
     MathCol("field_count", "lf.family_field_count", "Num. Fields"),
     MathCol("mass", "lf.mass", "Mass"),
-    MathCol("mass_stored", "lf.mass", "Mass stored"),
+    MathCol("mass_stored", "lf.mass", "Mass stored", default=False),
+    MathCol("mass_missing", "lf.mass", "Ratio mass missing"),
+    MathCol("wild_segments", "lf.slope_multiplicities", "Num. wild segments", default=False),
     MathCol("packet_count", "lf.packet", "Num. Packets"),
 ])
 
@@ -553,9 +564,9 @@ def render_field_webpage(args):
                     'polynomial': raw_typeset(polynomial),
                     'n': n,
                     'p': p,
-                    'c': data['c'],
-                    'e': data['e'],
-                    'f': data['f'],
+                    'c': cc,
+                    'e': e,
+                    'f': f,
                     't': data['t'],
                     'u': data['u'],
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
@@ -595,8 +606,8 @@ def render_field_webpage(args):
         _, _, _, fam, i = data['new_label'].split(".")
         _, fama, subfam = re.split(r"(\D+)", fam)
         bread = get_bread([(str(p), url_for('.index', p=p)),
-                           (str(data['n']), url_for('.index', p=p, n=n)),
-                           (str(cc), url_for('.index', p=p, n=n, c=cc)),
+                           (f"{f}.{e}", url_for('.index', p=p, e=e, f=f)),
+                           (str(cc), url_for('.index', p=p, e=e, f=f, c=cc)),
                            (fama, url_for('.family_page', label=data['family'])),
                            (f'{subfam}.{i}', ' ')])
         return render_template(
@@ -784,12 +795,24 @@ def families_page():
 def families_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'n0',name='Base degree')
+    parse_ints(info,query,'n_absolute',name='Absolute degree')
     parse_ints(info,query,'e',name='Ramification index')
     parse_ints(info,query,'e0',name='Base ramification index')
+    parse_ints(info,query,'e_absolute',name='Absolute ramification index')
     parse_ints(info,query,'f',name='Residue field degree')
+    parse_ints(info,query,'f0',name='Base residue field degree')
+    parse_ints(info,query,'f_absolute',name='Absolute residue field degree')
     parse_ints(info,query,'c',name='Discriminant exponent c')
-    parse_ints(info,query,'w',name='Wild ramification log')
+    parse_ints(info,query,'c0',name='Base discriminant exponent c')
+    parse_ints(info,query,'c_absolute',name='Absolute discriminant exponent c')
+    parse_ints(info,query,'w',name='Wild ramification exponent')
     parse_noop(info,query,'base',name='Base')
+    parse_floats(info,query,'mass',name='Mass')
+    parse_floats(info,query,'mass_missing',name='Missing mass')
+    parse_ints(info,query,'ambiguity',name='Ambiguity')
+    parse_ints(info,query,'field_count',name='Field count')
+    parse_ints(info,query,'wild_segments',name='Wild segments')
     #parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
 
 def common_boxes():
@@ -951,15 +974,57 @@ class FamiliesSearchArray(SearchArray):
         ("", "base", ['p', 'n', 'e0', 'e', 'c', 'visible']),
         ("c", "discriminant exponent", ['p', 'n', 'c', 'e0', 'e', 'visible']),
         ("slopes", "slopes", ['p', 'n', 'visible']),
-        ("poly_count", "num poly", ['p', 'n', 'poly_count', 'visible']),
+        ("ambiguity", "ambiguity", ['p', 'n', 'ambiguity', 'visible']),
         ("field_count", "num fields", ['p', 'n', 'field_count', 'visible']),
     ]
     def __init__(self):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
+        n0 = TextBox(
+            name='n0',
+            label='Base degree',
+            knowl='lf.degree',
+            example='6',
+            example_span='6, or a range like 3..5')
+        c0 = TextBox(
+            name='c0',
+            label='Base Disc. exponent',
+            knowl='lf.discriminant_exponent',
+            example='8',
+            example_span='8, or a range like 2..6')
         e0 = TextBox(
             name='e0',
-            label='Base ramification index',
-            knowl='lf.ramification_index',
+            label='Base ram. index',
+            knowl='lf.family_ramification',
+            example='3',
+            example_span='3, or a range like 2..6')
+        f0 = TextBox(
+            name='f0',
+            label='Base res. field degree',
+            knowl='lf.family_residue_field_degree',
+            example='3',
+            example_span='3, or a range like 2..6')
+        n_absolute = TextBox(
+            name='n_absolute',
+            label='Absolute degree',
+            knowl='lf.degree',
+            example='6',
+            example_span='6, or a range like 3..5')
+        c_absolute = TextBox(
+            name='c_absolute',
+            label='Absolute disc. exponent',
+            knowl='lf.discriminant_exponent',
+            example='8',
+            example_span='8, or a range like 2..6')
+        e_absolute = TextBox(
+            name='e_absolute',
+            label='Absolute ram. index',
+            knowl='lf.family_ramification',
+            example='3',
+            example_span='3, or a range like 2..6')
+        f_absolute = TextBox(
+            name='f_absolute',
+            label='Absolute res. field degree',
+            knowl='lf.family_residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
         w = TextBox(
@@ -971,9 +1036,43 @@ class FamiliesSearchArray(SearchArray):
         base = TextBox(
             name='base',
             label='Base',
-            knowl='lf.tame_degree',
-            example='2.2.0.1')
-        self.refine_array = [[qp, degree, e, f, c], [base, e0, w]] #, visible]]
+            knowl='lf.family_base',
+            example='2.2.1.0a1.1')
+        mass = TextBox(
+            name='mass',
+            label='Mass',
+            knowl='lf.family_mass',
+            example='255/8',
+            example_span='9/2, or a range like 1-10')
+        mass_missing = TextBox(
+            name='mass_missing',
+            label='Missing mass',
+            knowl='lf.family_missing_mass',
+            example='0.5-',
+            example_span='0, or a range like 0.1-0.4')
+        ambiguity = TextBox(
+            name='ambiguity',
+            label='Ambiguity',
+            knowl='lf.ambiguity',
+            example='1',
+            example_span='1, or a range like 2-8')
+        field_count = TextBox(
+            name='field_count',
+            label='Field count',
+            knowl='lf.family_field_count',
+            example='1',
+            example_span='2, or a range like 2-8')
+        wild_segments = TextBox(
+            name='wild_segments',
+            label='Wild segments',
+            knowl='lf.wild_segments',
+            example='1',
+            example_span='2, or a range like 2-4')
+        self.refine_array = [[qp, degree, e, f, c],
+                             [base, n0, e0, f0, c0],
+                             [w, n_absolute, e_absolute, f_absolute, c_absolute],
+                             #[visible, slopes, rams, heights, slope_multiplicities],
+                             [mass, mass_missing, ambiguity, field_count, wild_segments]]
 
 class LFSearchArray(SearchArray):
     noun = "field"
