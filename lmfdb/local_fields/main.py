@@ -427,7 +427,7 @@ families_columns = SearchColumns([
     MathCol("poly", "lf.family_poly", "Generic poly", default=False), # FIXME: convert to latex
     MathCol("ambiguity", "lf.family_ambiguity", "Num. Poly"),
     MathCol("field_count", "lf.family_field_count", "Num. Fields"),
-    MathCol("mass", "lf.mass", "Mass"),
+    MathCol("mass", "lf.mass", "Mass", orig=["mass_display"]),
     MathCol("mass_stored", "lf.mass", "Mass stored", default=False),
     MathCol("mass_missing", "lf.mass", "Ratio mass missing"),
     MathCol("wild_segments", "lf.slope_multiplicities", "Num. wild segments", default=False),
