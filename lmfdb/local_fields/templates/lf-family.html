@@ -10,16 +10,18 @@
 
 <h2> Invariants </h2>
 <table>
+  <tr><td>{{ KNOWL('lf.residue_field', 'Residue field characteristic') }}:</td><td> ${{family.p}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_base', 'Base field') }}:</td><td> {{family.base_link | safe}} </td></tr>
   <tr><td>{{ KNOWL('lf.family_ramification', 'Ramification index') }} $e$:</td><td> ${{family.e}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_residue_field_degree', 'Residue field degree') }} $f$:</td><td> ${{family.f}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_discriminant_exponent', 'Discriminant exponent') }} $c$:</td><td> ${{family.c}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.visible_slopes', 'Visible slopes') }}:</td><td> ${{family.artin_slopes}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.visible_slopes', 'Visible absolute Artin slopes') }}:</td><td> ${{family.artin_slopes}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.swan_slopes', 'Swan slopes') }}:</td><td> ${{family.slopes}}$</td></tr>
   <tr><td>{{ KNOWL('lf.heights', 'Heights') }}:</td><td> ${{family.heights}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.scaled_heights', 'Scaled heights') }}:</td><td> ${{family.scaled_heights}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> ${{family.rams}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.scaled_rams', 'Scaled rams') }}:</td><td> ${{family.scaled_rams}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if not family.all_stored %} (incomplete) {% endif %}</td></tr>
+  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.all_stored %} (complete) {% else %} (incomplete) {% endif %}</td></tr>
   <tr><td>{{ KNOWL('lf.family_ambiguity', 'Ambiguity') }}:</td><td> ${{family.ambiguity}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
 </table>
@@ -38,6 +40,10 @@
 </table>
 
 {% endif %}
+
+<h2> Ramification polygon </h2>
+
+<img src="{{ family.ramification_polygon_plot }}" width="1000">
 
 <h2> {{ KNOWL('lf.family_picture', 'Family photo') }} </h2>
 

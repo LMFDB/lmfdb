@@ -12,15 +12,21 @@ import itertools
 import re
 FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+[a-z]+)?')
 
+def str_to_QQtup(s):
+    if s == "[]":
+        return ()
+    return tuple(QQ(x) for x in s[1:-1].split(", "))
+
 class pAdicSlopeFamily:
     def __init__(self, label=None, base=None, slopes=[], heights=[], rams=[], field_cache=None):
         data_cols = ["base", "rams", "base_aut", "p", "f", "f0", "f_absolute", "e", "e0", "e_absolute", "n", "n0", "n_absolute", "c", "c0", "c_absolute", "field_count", "packet_count", "ambiguity", "mass_display", "mass_stored", "mass_missing", "all_stored"]
         if label is not None:
             assert not base and not slopes and not heights and not rams
-            data = db.lf_families.lookup(label, data_cols)
+            data = db.lf_families.lookup(label)
             if data:
-                for col in data_cols:
-                    setattr(self, col, data[col])
+                self.__dict__.update(data)
+                for col in ["visible", "slopes", "rams", "heights", "scaled_rams", "scaled_heights"]:
+                    setattr(self, col, str_to_QQtup(getattr(self, col)))
                 base, rams, p = data["base"], data["rams"], ZZ(data["p"])
                 if rams == "[]":
                     rams = []
@@ -28,25 +34,13 @@ class pAdicSlopeFamily:
                     rams = [QQ(x) for x in rams[1:-1].split(", ")]
             else:
                 raise NotImplementedError
-            #base, slopes = label.split("-")
-            #if slopes:
-            #    den, nums = slopes.split(".")
-            #    den = ZZ(den)
-            #    nums = [ZZ(n) for n in nums.split("_")]
-            #    slopes = [n/den for n in nums]
-            #else:
-            #    slopes = []
             self.label = label
         else:
             raise NotImplementedError
-        #if base.endswith(".1.0.1"):
-        #    base = base.split(".")[0]
-        self.short_base = base
-        #if "." in base:
-        #    p = ZZ(base.split(".")[0])
-        #else:
-        #    p = ZZ(base)
-        #    base = f"{p}.1.0.1"
+        if self.n0 == 1:
+            self.rf0 = [1, 0]
+        else:
+            self.rf0 = db.lf_fields.lucky({"new_label": base}, "rf0")
         self.base = base
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
@@ -95,29 +89,32 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def scaled_heights(self):
-        p = self.p
-        return [h / p**i for (i, h) in enumerate(self.heights, 1)]
+        return [h / (self.etame * self.p**i) for (i, h) in enumerate(self.heights, 1)]
+
+    @lazy_attribute
+    def scaled_rams(self):
+        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.rams, 1)]
 
     @lazy_attribute
     def bands(self):
-        return [((0, 1+h), (self.pw, h), (0, 1+s), (self.pw, s)) for (h, s) in zip(self.scaled_heights, self.slopes)]
+        return [((0, 1+h), (self.e, h), (0, 1+s), (self.e, s)) for (h, s) in zip(self.scaled_heights, self.slopes)]
 
     @lazy_attribute
     def black(self):
-        return [(0, 1), (self.pw, 0)]
+        return [(0, 1), (self.e, 0)]
 
     @lazy_attribute
     def virtual_green(self):
-        p, n, w = self.p, self.pw, self.w
+        p, e, w = self.p, self.e, self.w
         last_slope = {}
         for i, s in enumerate(self.slopes, 1):
             last_slope[s] = i
         ans = []
         for i, (h, s) in enumerate(zip(self.scaled_heights, self.slopes), 1):
-            u = n*frac(h)
+            u = e*frac(h)
             v = 1 + floor(h)
             if last_slope[s] == i:
-                if (n*frac(h)).valuation(p) == w - i:
+                if (e*frac(h)).valuation(p) == w - i:
                     code = 1
                 else:
                     code = 0
@@ -137,18 +134,18 @@ class pAdicSlopeFamily:
     def _set_redblue(self):
         self.blue = []
         self.red = []
-        p, n, w = self.p, self.pw, self.w
+        p, e, w = self.p, self.e, self.w
         for i, (s, (u, v, code)) in enumerate(zip(self.slopes, self.virtual_green), 1):
             if u.denominator() == 1 and code == -1:
                 self.blue.append((u, v, True))
             u = floor(u + 1)
-            #print("Starting", i, s, u, v, code, n, w)
-            while v <= 1 + s - u/n:
-                #print("While", u, v, 1 + s - u/n, u.valuation(p), w-i)
-                if u == n:
+            #print("Starting", i, s, u, v, code, e, w)
+            while v <= 1 + s - u/e:
+                #print("While", u, v, 1 + s - u/e, u.valuation(p), w-i)
+                if u == e:
                     u = ZZ(0)
                     v += 1
-                if v == 1 + s - u/n:
+                if v == 1 + s - u/e:
                     self.red.append((u, v, False))
                 elif u.valuation(p) == (w - i):
                     self.blue.append((u, v, True))
@@ -165,14 +162,6 @@ class pAdicSlopeFamily:
     def red(self):
         self._set_redblue()
         return self.red
-
-    @lazy_attribute
-    def label(self):
-        if not self.slopes:
-            return f"{self.short_base}-"
-        den = lcm(s.denominator() for s in self.slopes)
-        nums = "_".join(str(den*n) for n in self.slopes)
-        return f"{self.short_base}-{den}.{nums}"
 
     @lazy_attribute
     def link(self):
@@ -197,17 +186,34 @@ class pAdicSlopeFamily:
                 else:
                     P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
         if len(self.visible) > 0:
-            aspect = 0.75 * self.pw / (1 + self.slopes[-1])
+            aspect = 0.75 * self.e / (1 + self.slopes[-1])
         else:
             aspect = 1
         P.set_aspect_ratio(aspect)
-        #P._set_extra_kwds(dict(xmin=0, xmax=self.pw, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
+        #P._set_extra_kwds(dict(xmin=0, xmax=self.e, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight")
 
-    #@lazy_attribute
-    #def ramification_polygon_plot(self):
-    #    
+    @lazy_attribute
+    def ramification_polygon_plot(self):
+        from .main import plot_ramification_polygon
+        p = self.p
+        L = [(self.n, 0)]
+        if self.f != 1:
+            L.append((self.e, 0))
+        #L = [(self.e, 0)]
+        tame_shift = self.e - self.pw
+        if tame_shift:
+            L.append((self.pw, tame_shift))
+        cur = (self.pw, tame_shift)
+        for r, nextr in zip(self.rams, self.rams[1:] + [None]):
+            x = cur[0] // p
+            y = cur[1] + x * (r + 1)
+            cur = (x, y)
+            if r != nextr:
+                L.append(cur)
+        L.reverse()
+        return plot_ramification_polygon(L, p)
 
     @lazy_attribute
     def polynomial(self):
@@ -215,7 +221,7 @@ class pAdicSlopeFamily:
         pts = ([("a", u, v) for (u, v) in self.solid_green] +
                [("b", u, v) for (u, v, solid) in self.blue] +
                [("c", u, v) for (u, v, solid) in self.red])
-        names = [f"{c}{self.pw*(v-1)+u}" for (c, u, v) in pts]
+        names = [f"{c}{self.e*(v-1)+u}" for (c, u, v) in pts]
         if gcd(p**f - 1, self.etame) > 1:
             names.append("d")
         if self.e0 > 1:
@@ -243,23 +249,20 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def gamma(self):
-        if self.f == 1:
+        if self.f_absolute == 1:
             return len(self.red)
-        n = self.pw
+        e = self.e
         gamma = 0
         for (u, v, _) in self.red:
-            s = v + u/n - 1
+            s = v + u/e - 1
             cnt = self.slopes.count(s)
-            gamma += gcd(cnt, self.f)
+            gamma += gcd(cnt, self.f_absolute)
         return gamma
 
     @lazy_attribute
     def base_link(self):
-        if "." in self.short_base:
-            url = url_for(".by_label", label=self.base)
-            return f'<a href="{url}">{self.base}</a>'
-        url = url_for(".by_label", label=f"{self.p}.1.0.1")
-        return fr'<a href="{url}">$\Q_{{{self.p}}}$</a>'
+        from .main import pretty_link
+        return pretty_link(self.base, self.p, self.n0, self.rf0)
 
     def __iter__(self):
         # TODO: This needs to be fixed when base != Qp

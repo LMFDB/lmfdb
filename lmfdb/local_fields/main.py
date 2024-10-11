@@ -141,6 +141,9 @@ def local_algebra_display_knowl(labels):
 
 
 def plot_ramification_polygon(verts, p, polys=None, inds=None):
+    print("VERTS", verts)
+    # FAMILY: VERTS [(6, 0), (2, 4), (1, 7)]
+    # FIELD: VERTS [[1, 3], [2, 0], [6, 0]]
     verts = [tuple(pt) for pt in verts]
     if not verts:
         # Unramified, so we won't be displaying the plot
@@ -149,7 +152,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
     ymax = verts[0][1]
     xmax = verts[-1][0]
     # How far we need to shift text depends on the scale
-    txshift = xmax / 60
+    txshift = xmax / 80
     tyshift = xmax / 48
     tick = xmax / 160
     nextq = p
@@ -161,18 +164,18 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
         L += points([(0,1)], color="white")
         asp_ratio = (xmax + 2*txshift) / (8 + 16*tyshift)
     L += line([(0,0), (0, ymax)], color="grey")
-    L += line([(0,0), (xmax, 0)], color="grey")
+    L += line([(0,0), (-xmax, 0)], color="grey")
     for i in range(1, ymax + 1):
-        L += line([(0, i), (tick, i)], color="grey")
+        L += line([(0, i), (-tick, i)], color="grey")
     for i in range(0, xmax + 1):
-        L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
+        L += line([(-i, 0), (-i, tick/asp_ratio)], color="grey")
     for P in verts:
         L += text(
-            f"${P[0]}$", (P[0], -tyshift/asp_ratio),
+            f"${-P[0]}$", (-P[0], -tyshift/asp_ratio),
             color="black")
         L += text(
-            f"${P[1]}$", (-txshift, P[1]),
-            horizontal_alignment="right",
+            f"${P[1]}$", (txshift, P[1]),
+            horizontal_alignment="left",
             color="black")
 
     if polys is not None:
@@ -180,7 +183,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
         polys = [R(poly) for poly in polys]
 
         def restag(c, a, b):
-            return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
+            return text(f"${latex(c)}$", (-a - txshift, b + tyshift/asp_ratio),
                         horizontal_alignment="left",
                         color="black")
         L += restag(polys[0][0], 1, ymax)
@@ -197,17 +200,17 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
                         L += restag(polys[i][j], nextq, P[1] - (nextq - P[0]) * slope)
                     nextq *= p
             L += text(
-                f"${slope}$", (P[0] - txshift, (P[1] + Q[1]) / 2),
-                horizontal_alignment="right",
+                f"${slope}$", (-P[0] + txshift, (P[1] + Q[1]) / 2),
+                horizontal_alignment="left",
                 color="blue")
             for x in range(P[0], Q[0] + 1):
                 L += line(
-                    [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
+                    [(-x, Q[1]), (-x, P[1] - (x - P[0]) * slope)],
                     color="grey",
                 )
             for y in range(Q[1], P[1]):
                 L += line(
-                    [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
+                    [(-P[0] + (y - P[1]) / slope, y), (-P[0], y)],
                     color="grey",
                 )
         elif polys:
@@ -215,9 +218,9 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
             for j, c in enumerate(polys[i]):
                 if j and c:
                     L += restag(c, P[0] + j, P[1])
-    L += line(verts, thickness=2)
+    L += line([(-x,y) for (x,y) in verts], thickness=2)
     if inds is not None:
-        L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+        L += points([(-p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
     return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
@@ -406,6 +409,19 @@ family_columns = SearchColumns([
     MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia"),
     MathCol("jump_set", "lf.jump_set", "Jump Set")])
 
+class PercentCol(MathCol):
+    def display(self, rec):
+        x = self.get(rec)
+        if x == 0:
+            return r"$0\%$"
+        elif x == 1:
+            return r"$100\%$"
+        return fr"${100*x:.2f}\%$"
+
+def pretty_link(label, p, n, rf):
+    name = prettyname({"p": p, "n": n, "rf": rf, "new_label": label})
+    return f'<a href="{url_for_label(label)}">{name}</a>'
+
 families_columns = SearchColumns([
     LinkCol("label", "lf.family_label", "Label", url_for_family),
     p_col,
@@ -419,17 +435,19 @@ families_columns = SearchColumns([
     MathCol("e0", "lf.family_ramification", "$e_0$", short_title="base ram. index", default=False),
     MathCol("e_absolute", "lf.family_ramification", r"$e_{\mathrm{abs}}$", short_title="absolute ram. index", default=False),
     c_col,
-    LinkCol("base", "lf.tame_degree", "Base", url_for_label),
+    MultiProcessedCol("base_field", "lf.tame_degree", "Base",
+                      ["base", "p", "n0", "rf0"],
+                      pretty_link),
     visible_col(False),
-    MathCol("slopes", "lf.slopes", "Swan slopes"),
+    MathCol("slopes", "lf.swan_slopes", "Swan slopes"),
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
     MathCol("poly", "lf.family_poly", "Generic poly", default=False), # FIXME: convert to latex
-    MathCol("ambiguity", "lf.family_ambiguity", "Num. Poly"),
+    MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Num. Fields"),
     MathCol("mass", "lf.mass", "Mass", orig=["mass_display"]),
     MathCol("mass_stored", "lf.mass", "Mass stored", default=False),
-    MathCol("mass_missing", "lf.mass", "Ratio mass missing"),
+    PercentCol("mass_missing", "lf.mass", "Mass missing"),
     MathCol("wild_segments", "lf.slope_multiplicities", "Num. wild segments", default=False),
     MathCol("packet_count", "lf.packet", "Num. Packets"),
 ])
@@ -440,6 +458,19 @@ def lf_postprocess(res, info, query):
         rec["cache"] = cache
         gglabel = f"{rec['n']}T{rec['gal']}"
         rec["galsize"] = cache[gglabel]["order"]
+    return res
+
+def families_postprocess(res, info, query):
+    quads = list(set(rec["base"] for rec in res if rec["n0"] == 2))
+    if quads:
+        rflook = {rec["new_label"]: rec["rf"] for rec in db.lf_fields.search({"new_label":{"$in":quads}}, ["new_label", "rf"])}
+    for rec in res:
+        if rec["n0"] == 1:
+            rec["rf0"] = [1, 0]
+        elif rec["n0"] == 2:
+            rec["rf0"] = rflook[rec["base"]]
+        else:
+            rec["rf0"] = None
     return res
 
 def common_parse(info, query):
@@ -790,6 +821,7 @@ def families_page():
     err_title='p-adic families search input error',
     learnmore=learnmore_list,
     bread=lambda:get_bread([("Families", "")]),
+    postprocess=families_postprocess,
     url_for_label=url_for_family,
 )
 def families_search(info,query):
@@ -978,7 +1010,38 @@ class FamiliesSearchArray(SearchArray):
         ("field_count", "num fields", ['p', 'n', 'field_count', 'visible']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
+        #degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
+        degree = TextBox(
+            name='n',
+            label='Relative degree',
+            knowl='lf.degree',
+            example='6',
+            example_span='6, or a range like 3..5')
+        qp = TextBox(
+            name='p',
+            label=r'Residue field characteristic',
+            short_label='Residue characteristic',
+            knowl='lf.residue_field',
+            example='3',
+            example_span='3, or a range like 3..7')
+        c = TextBox(
+            name='c',
+            label='Rel. disc. exponent',
+            knowl='lf.discriminant_exponent',
+            example='8',
+            example_span='8, or a range like 2..6')
+        e = TextBox(
+            name='e',
+            label='Rel. ramification index',
+            knowl='lf.ramification_index',
+            example='3',
+            example_span='3, or a range like 2..6')
+        f = TextBox(
+            name='f',
+            label='Rel. residue field degree',
+            knowl='lf.residue_field_degree',
+            example='3',
+            example_span='3, or a range like 2..6')
         n0 = TextBox(
             name='n0',
             label='Base degree',
@@ -1029,7 +1092,7 @@ class FamiliesSearchArray(SearchArray):
             example_span='3, or a range like 2..6')
         w = TextBox(
             name='w',
-            label='Wild ramification log',
+            label='Wild ramification exponent',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
