@@ -209,15 +209,32 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def polynomial(self):
+        p, f = self.p, self.f
         pts = ([("a", u, v) for (u, v) in self.solid_green] +
                [("b", u, v) for (u, v, solid) in self.blue] +
                [("c", u, v) for (u, v, solid) in self.red])
-        names = [f"{c}{self.pw*(v-1)+u}" for (c, u, v) in pts] + ["pi"]
+        names = [f"{c}{self.pw*(v-1)+u}" for (c, u, v) in pts]
+        if gcd(p**f - 1, self.etame) > 1:
+            names.append("d")
+        if self.e0 > 1:
+            names.append("pi")
         R = PolynomialRing(ZZ, names)
-        S = PolynomialRing(R, "x")
+        if self.f == 1:
+            S = PolynomialRing(R, "x")
+        else:
+            S = PolynomialRing(R, "nu")
+        if self.e == 1:
+            return S.gen()
+        if "d" in names:
+            d = R.gen(names.index("d"))
+        else:
+            d = 1
         x = S.gen()
-        pi = R.gens()[-1]
-        poly = x**(self.pw) + pi
+        if self.e0 > 1:
+            pi = R.gens()[-1]
+        else:
+            pi = p
+        poly = x**self.e + d*pi
         for i, (c, u, v) in enumerate(pts):
             poly += R.gen(i) * pi**v * x**u
         return poly
