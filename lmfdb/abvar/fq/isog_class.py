@@ -18,7 +18,7 @@ from lmfdb import db
 from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR, ZZ
-from sage.plot.all import line, points, circle, Graphics
+from sage.plot.all import line, points, circle, polygon, Graphics
 from sage.misc import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
@@ -165,25 +165,18 @@ class AbvarFq_isoclass():
             y += c * s
             pts.append((x, y))
         L = Graphics()
-        L += line([(0, 0), (0, y + 0.2)], color="grey")
-        for i in range(1, y + 1):
-            L += line([(0, i), (0.06, i)], color="grey")
-        for i in range(1, C[0]):
-            L += line([(i, 0), (i, 0.06)], color="grey")
-        for i in range(len(pts) - 1):
-            P = pts[i]
-            Q = pts[i + 1]
-            for x in range(P[0], Q[0] + 1):
-                L += line(
-                    [(x, P[1]), (x, P[1] + (x - P[0]) * (Q[1] - P[1]) / (Q[0] - P[0]))],
-                    color="grey",
-                )
-            for y in range(P[1], Q[1]):
-                L += line(
-                    [(P[0] + (y - P[1]) * (Q[0] - P[0]) / (Q[1] - P[1]), y), (Q[0], y)],
-                    color="grey",
-                )
-        L += line(pts, thickness=2)
+        xmax = len(S)
+        ymax = ZZ(len(S)/2)
+        pts.append((xmax,0))
+        L += polygon(pts,alpha=0.1)
+        pts.remove((xmax,0))
+        for i in range(xmax+1):
+            L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
+        for j in range(ymax+1):
+            L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
+        L+=line(pts,thickness=2)
+        for v in pts:
+            L += circle(v, 0.06, fill=True)
         L.axes(False)
         L.set_aspect_ratio(1)
         return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
