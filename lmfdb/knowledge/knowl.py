@@ -119,7 +119,7 @@ def normalize_define(term):
     m = define_fixer.search(term)
     if m:
         n = 6 if (m.group(5) is None) else 5
-        term = define_fixer.sub(r'\%s'%n, term)
+        term = define_fixer.sub(r'\%s' % n, term)
     return ' '.join(term.lower().replace('"', '').replace("'", "").split())
 
 
@@ -572,9 +572,9 @@ class KnowlBackend(PostgresBase):
         for kid in kids:
             try:
                 if sys.version_info[0] == 3:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
                 else:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).split('\n--\n'))
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))]).split('\n--\n'))
             except subprocess.CalledProcessError: # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
@@ -590,9 +590,9 @@ class KnowlBackend(PostgresBase):
         """
         try:
             if sys.version_info[0] == 3:
-                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
             else:
-                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))]).split('\n')
         except subprocess.CalledProcessError: # no matches
             return 0
 
@@ -613,7 +613,7 @@ class KnowlBackend(PostgresBase):
         if knowl.source is not None or knowl.source_name is not None:
             raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead.")
         if self.knowl_exists(new_name):
-            raise ValueError("A knowl with id %s already exists."%new_name)
+            raise ValueError("A knowl with id %s already exists." % new_name)
         updater = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
         old_name = knowl.id
         with DelayCommit(self):
@@ -816,7 +816,7 @@ class Knowl():
             if self.exists(allow_deleted=allow_deleted):
                 if editing:
                     # as we want to make edits on the most recent version
-                    timestamp=None
+                    timestamp = None
                 data = knowldb.get_knowl(ID,
                         allow_deleted=allow_deleted, timestamp=timestamp)
             else:

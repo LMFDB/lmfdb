@@ -131,7 +131,7 @@ def modlgal_jump(info):
     return redirect(url_for_modlgal_label(info.get("jump")))
 
 def blankzeros(n):
-    return "$%o$"%n if n else ""
+    return "$%o$" % n if n else ""
 
 modlgal_columns = SearchColumns(
     [
@@ -460,7 +460,7 @@ def labels_page():
 def download_modlgal_text(label):
     data = db.modlgal_reps.lookup(label, label_col='label')
     if data is None:
-        return r"There is no mod-$\ell$ Galois representation %s in the database"%(label)
+        return r"There is no mod-$\ell$ Galois representation %s in the database" % (label)
     data_list = [data]
     response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'

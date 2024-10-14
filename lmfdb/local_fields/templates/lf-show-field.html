@@ -50,15 +50,20 @@
 
 <h2>{{ KNOWL('lf.ramification_polygon_display', title='Ramification polygon') }}</h2>
 
+
 {% if info.e > 1 %}
 
-<img src="{{info.ram_polygon_plot}}" width="800" height="{{100 if (info.e % info.p) else 400}}">
+  {% if info.ram_poly_polt %}
+    <img src="{{info.ram_polygon_plot}}" width="800" height="{{100 if (info.e % info.p) else 400}}">
 
-<table>
-  <tr><td>{{ KNOWL('lf.residual_polynomials', title='Residual polynomials') }}:</td><td>{{info.residual_polynomials}}</td></tr>
-  <tr><td>{{ KNOWL('lf.associated_inertia', title='Associated inertia') }}:</td><td>{{info.associated_inertia}}</td></tr>
-  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
-</table>
+    <table>
+      <tr><td>{{ KNOWL('lf.residual_polynomials', title='Residual polynomials') }}:</td><td>{{info.residual_polynomials}}</td></tr>
+      <tr><td>{{ KNOWL('lf.associated_inertia', title='Associated inertia') }}:</td><td>{{info.associated_inertia}}</td></tr>
+      <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
+    </table>
+  {% else %}
+     Data not computed
+  {% endif %}
 
 
 {% else %}
@@ -69,13 +74,55 @@
 
 <h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
 <table>
-  <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>{{info.gal|safe}}</td></tr>
-  <tr><td>{{ KNOWL('lf.inertia_group', title='Inertia group')}}:</td><td>{{info.inertia|safe}}</td></tr>
-  <tr><td>{{ KNOWL('lf.wild_inertia_group', title='Wild inertia group')}}:</td><td>{{info.wild_inertia|safe}}</td></tr>
-  <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>${{info.u}}$</td></tr>
-  <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>${{info.t}}$</td></tr>
-  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>{{info.slopes}}</td></tr>
-  <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>${{info.gms}}$</td></tr>
+  <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>
+  {% if info.gal %}
+  {{info.gal|safe}}
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('lf.inertia_group', title='Inertia group')}}:</td><td>
+  {% if info.inertia %}
+    {{info.inertia|safe}}
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('lf.wild_inertia_group', title='Wild inertia group')}}:</td><td>
+  {% if info.wild_inertia %}
+  {{info.wild_inertia|safe}}
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>
+  {% if info.u %}
+  ${{info.u}}$
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>
+  {% if info.t %}
+  ${{info.t}}$
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>
+  {% if info.slopes %}
+  {{info.slopes}}
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>
+  {% if info.gms %}
+  ${{info.gms}}$
+  {% else %}
+    Not computed
+  {% endif %}
+  </td></tr>
   <tr><td>{{KNOWL('lf.galois_splitting_model', title='Galois splitting model')}}:</td><td>{{info.gsm|safe}}</td></tr>
 </table>
 

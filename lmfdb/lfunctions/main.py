@@ -436,17 +436,17 @@ def euler_search(info, query):
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
     for p in prime_range(100):
-        parse_euler(info, query, 'euler_constraints', qfield='euler%s'%p, p=p, d=d)
+        parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 
 class LFunctionSearchArray(SearchArray):
     sorts = [('', 'root analytic conductor', ['root_analytic_conductor', 'label']),
              ('analytic_conductor', 'analytic conductor', ['analytic_conductor', 'label']),
              ('z1', 'first zero', ['z1']),
              ('conductor', 'conductor', ['conductor', 'root_analytic_conductor', 'label'])]
-    jump_example="1-1-1.1-r0-0-0"
-    jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
-    jump_knowl="lfunction.search_input"
-    jump_prompt="Label"
+    jump_example = "1-1-1.1-r0-0-0"
+    jump_egspan = "e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
+    jump_knowl = "lfunction.search_input"
+    jump_prompt = "Label"
     null_column_explanations = { # No need to display warnings for these
         'dirichlet_coefficients': False,
         'euler_factors': False,
@@ -1205,7 +1205,7 @@ def render_lfunction_exception(err):
     try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except Exception:
-        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
+        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>" % err
     bread = [('L-functions', url_for('.index')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
@@ -1468,13 +1468,13 @@ def set_navi(L):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            prev_data = ("previous",Lpattern%(pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
+            prev_data = ("previous",Lpattern % (pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
                      url_for('.l_function_dirichlet_page',
                              modulus=pmod,number=pnum))
         else:
             prev_data = ('','','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        next_data = ("next",Lpattern%(nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
+        next_data = ("next",Lpattern % (nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
                  url_for('.l_function_dirichlet_page',
                          modulus=nmod,number=nnum))
 
@@ -1978,7 +1978,7 @@ def source(prepath):
         assert L
     except Exception:
         return abort(404)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     knowl = ''
     if L.fromDB:
@@ -2007,7 +2007,7 @@ def completeness(prepath):
         assert L
     except Exception:
         return abort(404)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     knowl = ''
     if L.fromDB:
@@ -2034,7 +2034,7 @@ def reliability(prepath):
         assert L
     except Exception:
         return abort(404)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     knowl = ''
     if L.fromDB:

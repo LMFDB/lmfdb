@@ -543,7 +543,7 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                             group_order = g-b
                         else: #ag-b
                             group_order = int(a)*g-b
-                    elif a== '':
+                    elif a == '':
                         group_order = g
                     else: #ag
                         group_order = int(a)*g
@@ -712,8 +712,8 @@ def render_family(args):
             spname = False
         else:
             spname = True
-        title = 'Family of genus ' + str(g) + ' curves with automorphism group $' + pretty_group +'$'
-        smallgroup="[" + str(gn) + "," +str(gt) + "]"
+        title = 'Family of genus ' + str(g) + ' curves with automorphism group $' + pretty_group + '$'
+        smallgroup = "[" + str(gn) + "," + str(gt) + "]"
 
         prop2 = [
             ('Label', label),
@@ -735,9 +735,9 @@ def render_family(args):
         if spname:
             info.update({'specialname': True})
 
-        Lcc=[]
-        Lall=[]
-        Ltopo_rep=[] #List of topological representatives
+        Lcc = []
+        Lall = []
+        Ltopo_rep = [] #List of topological representatives
         for dat in dataz:
             if ast.literal_eval(dat['con']) not in Lcc:
                 urlstrng = dat['passport_label']
@@ -824,21 +824,21 @@ def render_passport(args):
             bread = get_bread([("Search Error", url_for('.index'))])
             flash_error("No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        data=dataz[0]
+        data = dataz[0]
         g = data['genus']
-        g0=data['g0']
+        g0 = data['g0']
         GG = ast.literal_eval(data['group'])
         gn = GG[0]
         gt = GG[1]
 
-        gp_string=str(gn) + '.' + str(gt)
-        pretty_group=sg_pretty(gp_string)
+        gp_string = str(gn) + '.' + str(gt)
+        pretty_group = sg_pretty(gp_string)
         info['cyclic'] = db.gps_small.lookup(gp_string,projection="cyclic")
 
         if gp_string == pretty_group:
-            spname=False
+            spname = False
         else:
-            spname=True
+            spname = True
 
         numb = len(dataz)
 
@@ -849,11 +849,11 @@ def render_passport(args):
             numgenvecs = 20
             numbraidreps = 20
 
-        info['numgenvecs']=numgenvecs
-        info['numbraidreps']=numbraidreps
+        info['numgenvecs'] = numgenvecs
+        info['numbraidreps'] = numbraidreps
 
-        title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group +'$'
-        smallgroup="[" + str(gn) + "," +str(gt) +"]"
+        title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group + '$'
+        smallgroup = "[" + str(gn) + "," + str(gt) + "]"
 
         prop2 = [
             ('Label', label),
@@ -1148,9 +1148,9 @@ def hgcwa_code_download(**args):
     label = args['label']
 
     #Choose language
-    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or args['download_type']=='rep_magma':
+    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or args['download_type'] == 'rep_magma':
         lang = 'magma'
-    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' or args['download_type']=='rep_gap':
+    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' or args['download_type'] == 'rep_gap':
         lang = 'gap'
     else:
         lang = args['download_type']
@@ -1159,13 +1159,13 @@ def hgcwa_code_download(**args):
 
     #Choose filename
     if lang == args['download_type']:
-        filename= 'HigherGenusData_' + str(label) + FileSuffix[lang]
-    elif args['download_type']=='topo_magma' or args['download_type']=='topo_gap':
-        filename= 'HigherGenusDataTopolRep_' + str(label) + FileSuffix[lang]
-    elif args['download_type']=='braid_magma' or args['download_type']=='braid_gap':
-        filename= 'HigherGenusDataBraidRep_' + str(label) + FileSuffix[lang]
-    elif args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
-        filename= 'HigherGenusDataTopolClass_' + str(label) + FileSuffix[lang]
+        filename = 'HigherGenusData_' + str(label) + FileSuffix[lang]
+    elif args['download_type'] == 'topo_magma' or args['download_type'] == 'topo_gap':
+        filename = 'HigherGenusDataTopolRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type'] == 'braid_magma' or args['download_type'] == 'braid_gap':
+        filename = 'HigherGenusDataBraidRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
+        filename = 'HigherGenusDataTopolClass_' + str(label) + FileSuffix[lang]
 
     code = s + " " + Fullname[lang] + " code for the lmfdb family of higher genus curves " + str(label) + '\n'
     code += s + " The results are stored in a list of records called 'data'\n\n"

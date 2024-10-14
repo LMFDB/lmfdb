@@ -317,7 +317,7 @@ def needs_review():
     return ModularCurveUploader().needs_review()
 
 def blankzeros(n):
-    return "$%o$"%n if n else ""
+    return "$%o$" % n if n else ""
 
 modcurve_columns = SearchColumns(
     [
@@ -332,7 +332,7 @@ modcurve_columns = SearchColumns(
         MathCol("index", "modcurve.index", "Index"),
         MathCol("genus", "modcurve.genus", "Genus"),
         ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
+        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$' % (b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$' % (b[0],b[1]), align="center", short_title="Q-gonality"),
         MathCol("cusps", "modcurve.cusps", "Cusps"),
         MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps"),
         CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center"),
@@ -616,7 +616,7 @@ class ModCurve_download(Downloader):
             return self._wrap(Json.dumps(data),
                               label,
                               lang=lang,
-                              title='Data for modular curve with label %s,'%label)
+                              title='Data for modular curve with label %s,' % label)
 
 @modcurve_page.route("/download_to_magma/<label>")
 def modcurve_magma_download(label):
@@ -873,7 +873,7 @@ class ModCurveSearchArray(SearchArray):
         )
         cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+                   + [('-%d' % d, 'CM discriminant -%d' % d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm_discriminants = SelectBox(
             name="cm_discriminants",
             options=cm_opts,
@@ -1107,7 +1107,7 @@ class RatPointSearchArray(SearchArray):
         )
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+                   + [('-%d' % d, 'CM discriminant -%d' % d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",

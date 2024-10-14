@@ -306,7 +306,7 @@ class MaassSearchArray(SearchArray):
 def parse_character(inp, query, qfield):
     if not CHARACTER_LABEL_RE.match(inp):
         raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")
-    level_field, conrey_index_field ='level', 'conrey_index'
+    level_field, conrey_index_field = 'level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
     if conrey_index > level:
