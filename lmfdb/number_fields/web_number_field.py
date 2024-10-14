@@ -998,14 +998,7 @@ class WebNumberField:
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
     def draw_spectrum(self):
-  #       return """<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-  # <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
-  #       </svg>"""
-        return draw_spec(
-            self.K(),
-            nprimes=15,
-            curve=True,
-            color_classes=False).as_str()
+        return draw_spec(self.K(), nprimes=15).as_str()
     
     def make_code_snippets(self):
         # read in code.yaml from numberfields directory:

@@ -1,16 +1,16 @@
 import svg
-# import random
 from sage.all import (
     NumberField,
     primes_first_n,
     round,
     Integers,
-    PolynomialRing
+    PolynomialRing,
+    QuadraticField,
+    CyclotomicField
 )
+
 def draw_spec(F,
-              nprimes,
-              curve=False,
-              color_classes=False) -> svg.SVG:
+              nprimes) -> svg.SVG:
 
     prime_list = primes_first_n(nprimes)
     deg = F.degree()
@@ -44,13 +44,6 @@ def draw_spec(F,
 
     prime_ideals = [F.ideal(p).factor() for p in prime_list]
     
-    if color_classes:
-        G = F.class_group()
-        colors = []
-        for i in range(G.order()):
-            colors.append(generate_new_color(colors, pastel_factor=0.3))
-        color_dict = dict(zip(list(G), map(rgb_nums_to_hex, colors)))
-        color_dict[G.identity()] = rgb_nums_to_hex([.3, .3, .3])
         
     coord_list = [
         fp_coords(fplist,
@@ -82,13 +75,13 @@ def draw_spec(F,
             )
         )
         elements.append(svg.Text(
-                    x = width - x_spread,
-                    y = y,
-                    dx = 16,
-                    dy = 4,
-                    text = '(0)',
-                    text_anchor = "middle")
-        )
+            x = width - x_spread,
+            y = y,
+            dx = 16,
+            dy = 4,
+            text = '(0)',
+            text_anchor = "middle")
+                        )
 
 
     for n, fplist in enumerate(prime_ideals):
@@ -116,10 +109,9 @@ def draw_spec(F,
                     cx = pts[i][0],
                     cy = pts[i][1],
                     r = dot_radius + ramify_factor*(mult-1),
-                    fill = color_dict[G(fp)] if color_classes else "black",
+                    fill = "black",
                     stroke="black")
             )
-    if curve:
         for n in range(nprimes):
             for coord_this in coord_list[n]:
                 for coord_next in (coord_list +
@@ -141,14 +133,14 @@ def draw_spec(F,
                                     y = coord_next[1]
                                 )
                             ]
-                            )
                         )
-    
+                    )
+                    
     return svg.SVG(
         width=width,
         height=height,
         elements=elements)
-    
+
 def fp_coords(fplist, x_coord, y_centre, spread):
     N = len(fplist)
     if N == 1:
@@ -157,54 +149,29 @@ def fp_coords(fplist, x_coord, y_centre, spread):
         return [(x_coord, y_centre -round(spread*(2* i /(N-1) -1))) for i in range(N)]
 
 
-# from https://gist.github.com/adewes/5884820:
 
-
-def get_random_color(pastel_factor=0.5):
-    return [(x + pastel_factor) / (1.0 + pastel_factor)
-            for x in [random.uniform(0, 1.0) for i in [1, 2, 3]]]
-
-
-def color_distance(c1, c2):
-    return sum([abs(x[0] - x[1]) for x in zip(c1, c2)])
-
-
-def generate_new_color(existing_colors, pastel_factor=0.5):
-    max_distance = None
-    best_color = None
-    for i in range(0, 100):
-        color = get_random_color(pastel_factor=pastel_factor)
-        if not existing_colors:
-            return color
-        best_distance = min(
-            [color_distance(color, c) for c in existing_colors])
-        if not max_distance or best_distance > max_distance:
-            max_distance = best_distance
-            best_color = color
-    return best_color
-
-def rgb_nums_to_hex(L):
-    Lhex = [round(hex((l*256)))[2:] for l in L]
-    return "#" + "".join(Lhex)
-
-def save_svg(filename, svg):
-    with open(filename, mode='w') as f:		
-        f.write(svg.as_str())
-
-def test_draw():
+def test_drawspec(eg_no: int):
     R = PolynomialRing(Integers(), names="x"); x = R.gens()[0]
-    P = x**7 + 41
-    P = x**2 + 33
-    # F = NumberField(x**7 +41, names="a")
-    F = NumberField(P, names="a")
-    # F.<a> = CyclotomicField(29)
-    # F = QuadraticField(-1)
-    draw_spec(F,nprimes = 15, curve = True)
-    # dunno if this works!
+    match eg_no:
+        case 1:
+            P = x**7 + 41
+            F = NumberField(P, names="a")
+        case 2:
+            P = x**2 + 33
+            F = NumberField(P, names="a")
+        case 3: 
+            F = CyclotomicField(29, names="a")
+        case 4:
+            F = QuadraticField(-1)
+        case _:
+            return f"eg_no = {eg_no} should be an integer between 1 and 4"
+        
     canvas = draw_spec(
-            F,
-            nprimes=15,
-            curve=True,
-            color_classes=False)
-    save_svg("test.svg", canvas)
-    return 1
+        F,
+        nprimes=20)
+    filename = "/tmp/test.svg"
+    with open(filename, mode='w') as f:		
+        f.write(canvas.as_str())
+
+    print("Saved spectrum to /tmp/test.svg")
+    return 0
