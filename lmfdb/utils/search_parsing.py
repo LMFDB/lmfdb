@@ -1049,7 +1049,7 @@ def parse_group_label_or_order(inp, query, qfield, regex):
         raise SearchParsingError("Group label(s) do not match the required form")
     if inporders:
         if inplabels:
-            query[qfield] = {"$or": inporders +[labelquery]}
+            query[qfield] = {"$or": inporders + [labelquery]}
         else:
             query[qfield] = {"$or": inporders}
     else:

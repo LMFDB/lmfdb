@@ -570,7 +570,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)' % avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
@@ -737,7 +737,7 @@ class StatsDisplay(UniqueRepresentation):
                 raise
         info["d"] = self.prep(attr)
         info["stats"] = self
-        info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
-        info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
-        info["get_total"] = (lambda i: info.get("totals%s"%i, False))
+        info["get_bucket"] = (lambda i: info.get("buckets%s" % i, ""))
+        info["get_col"] = (lambda i: info.get("col%s" % i, "none"))
+        info["get_total"] = (lambda i: info.get("totals%s" % i, False))
         info["search_type"] = "DynStats"

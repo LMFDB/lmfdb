@@ -62,11 +62,11 @@ def get_congruent_number_data(n):
         XplusY = 2*(x+n).sqrt()
         XminusY = 2*(x-n).sqrt()
         X = (XplusY+XminusY)/2
-        Y = XplusY -X
-        assert X*X+Y*Y==Z*Z
+        Y = XplusY - X
+        assert X*X+Y*Y == Z*Z
         assert X*Y == 2*n
-        assert X>0 and Y>0 and Z>0
-        if X>Y:
+        assert X > 0 and Y > 0 and Z > 0
+        if X > Y:
             X,Y = Y,X
         info['triangle'] = {'X':X, 'Y':Y, 'Z':Z}
 

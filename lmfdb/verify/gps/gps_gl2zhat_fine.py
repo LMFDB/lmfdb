@@ -11,7 +11,7 @@ def bkm_const(p,d):
         return 8 + 2 * valuation(d,p)
     elif p == 3:
         return 5 + 2 * valuation(d,p)
-    elif (p >= 5) and ((2*d)%(p-1) == 0):
+    elif (p >= 5) and ((2*d) % (p-1) == 0):
         return 4 + 2 * valuation(d,p)
     else:
         return 2

@@ -451,7 +451,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         "nonsolvable": display_knowl("group.solvable", "nonsolvable"),
     }
     if getattr(sgp,'normal'):  #if gp isn't normal we don't store direct/semidirect
-        norm_attr ={"direct": f"a {display_knowl('group.direct_product', 'direct factor')}","semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}"}
+        norm_attr = {"direct": f"a {display_knowl('group.direct_product', 'direct factor')}","semidirect": f"a {display_knowl('group.semidirect_product', 'semidirect factor')}"}
         overall_display.update(norm_attr)
 
     if type == "normal":
@@ -622,7 +622,7 @@ def index():
             info["search_array"] = ComplexCharSearchArray()
             return complex_char_search(info)
         elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
-            info["search_array"]=ConjugacyClassSearchArray()
+            info["search_array"] = ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
     info["stats"] = GroupStats()
     info["count"] = 50
@@ -738,7 +738,7 @@ def by_abelian_label(label):
     primary = canonify_abelian_label(label)
     # Avoid database error on a hopeless search
     dblabel = None
-    if not [z for z in primary if z>2**31-1]:
+    if not [z for z in primary if z > 2**31-1]:
         dblabel = db.gps_groups.lucky(
             {"abelian": True, "primary_abelian_invariants": primary}, "label"
         )
@@ -1003,7 +1003,7 @@ def get_cc_url(gp_order, gp_counter, label, highlight):
     if highlight_col is None:
         return label
     else:
-        return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i=highlight_col) +">" + label + "</a>"
+        return "<a href=" + url_for(".char_table", label=gplabel, cc_highlight=label, cc_highlight_i=highlight_col) + ">" + label + "</a>"
 
 def field_knowl(fld):
     from lmfdb.number_fields.web_number_field import WebNumberField
@@ -1491,7 +1491,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     if not aut and not gp.outer_equivalence:
         ilayer += 2
         iorder += 2
-    if gp.outer_equivalence and ilayer>3:
+    if gp.outer_equivalence and ilayer > 3:
         ilayer -= 2
     ll = [
         [
@@ -1532,7 +1532,7 @@ def diagram_js_string(gp, only=None):
     for i, pair in enumerate([("subgroup", ""), ("subgroup", "aut"), ("normal", ""), ("normal", "aut")]):
         sub_all, sub_aut = pair
         if (only is None or only == pair) and gp.diagram_count(sub_all, sub_aut, limit=limit):
-            glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all=="normal"))
+            glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all == "normal"))
 
     if any(glist):
         return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {display_opts["layers"]});', display_opts
@@ -2344,14 +2344,14 @@ class GroupsSearchArray(SearchArray):
                       ("321", "other")]),
         )
         # Numbers of things boxes
-        number_subgroups= TextBox(
+        number_subgroups = TextBox(
             name="number_subgroups",
             label="Number of subgroups",
             knowl="group.subgroup",
             example="3",
             example_span="4, or a range like 3..5",
         )
-        number_normal_subgroups= TextBox(
+        number_normal_subgroups = TextBox(
             name="number_normal_subgroups",
             label="Number of normal subgroups",
             knowl="group.subgroup.normal",
@@ -2728,7 +2728,7 @@ def cc_data(gp, label, typ="complex", representative=None):
         ans += "<br>Size of class: {}".format(wacc.size)
     ans += "<br>Order of elements: {}".format(wacc.order)
     if wacc.centralizer is None:
-        ans +="<br>Centralizer: not computed"
+        ans += "<br>Centralizer: not computed"
     else:
         group = cc_data_to_gp_label(wacc.group_order,wacc.group_counter)
         centralizer = f"{group}.{wacc.centralizer}"

@@ -12,6 +12,8 @@ from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomi
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
+CC_LIMIT = 160
+
 def knowl_cache(galois_labels=None, results=None):
     """
     Returns a dictionary for use in abstract_group_display_knowl, group_display and
@@ -70,7 +72,7 @@ def cyclestrings(perm):
     return ''.join(a)
 
 def compress_cycle_type(ct):
-    bits = [(str(z), f'^{{{c}}}' if c>1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
 ############  Galois group object
 
@@ -134,7 +136,7 @@ class WebGaloisGroup:
     def otherrep_list(self, givebound=True, cache=None):
         sibs = self._data['siblings']
         pharse = r"with degree $\leq %d$" % self.sibling_bound()
-        if len(sibs)==0 and givebound:
+        if len(sibs) == 0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False, cache=cache)
         if givebound:
@@ -190,6 +192,8 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
+        if self.num_conjclasses()>CC_LIMIT:
+            return None
         g = self.gapgroupnt()
         n = self.n()
         wag = self.wag
@@ -222,17 +226,21 @@ class WebGaloisGroup:
     @lazy_attribute
     def malle_a(self):
         ccs = self.conjclasses
-        inds = [z[5] for z in ccs]
-        if len(inds)==1:
-            return 0
-        if len(inds)==0:
+        if not ccs:
             return None
-        inds = [z for z in inds if z>0]
+        inds = [z[5] for z in ccs]
+        if len(inds) == 1:
+            return 0
+        if len(inds) == 0:
+            return None
+        inds = [z for z in inds if z > 0]
 
         return QQ(f"1/{min(inds)}")
 
     @lazy_attribute
     def can_chartable(self):
+        if self.num_conjclasses() > CC_LIMIT:
+            return False
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
@@ -348,15 +356,15 @@ def galois_module_knowl(n, t, index):
     name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
         return 'Error'
-    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>' % (name, n, t, index, name)
 
 
 @cached_function
 def cclasses_display_knowl(n, t, name=None):
     ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'The %d conjugacy class representatives for '% ncc
-        if n==1 and t==1:
+        name = 'The %d conjugacy class representatives for ' % ncc
+        if n == 1 and t == 1:
             name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
     if ncc > 5000:
@@ -437,8 +445,8 @@ def galois_group_data(n, t):
         inf += ", imprimitive"
     if n < 16:
         inf += '<div>'
-        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
-        inf += '%s</div>'%(group['name'])
+        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: ' % ('CHM label',str(n),str(t),'CHM label')
+        inf += '%s</div>' % (group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += WebGaloisGroup.from_nt(n,t).generator_string()
@@ -459,7 +467,7 @@ def galois_group_data(n, t):
     rest += '</div>'
 
     if group.get('pretty', None) is not None:
-        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + rest
     return inf + rest
 
 
@@ -477,6 +485,12 @@ def group_cclasses_knowl_guts(n, t):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
+    rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
+    wgg = WebGaloisGroup(label)
+    if wgg.malle_a:
+        rest += '$%s$'%str(wgg.malle_a)
+    else:
+        rest += 'not computed'
     return rest
 
 
@@ -500,7 +514,7 @@ def galois_module_knowl_guts(n, t, index):
     out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
-        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+        out += "%s &\\mapsto %s \\\\" % (str(g[0]), matg)
     out = out[:-2]
     out += r"\end{aligned}$$"
     out += "</blockquote>"
@@ -566,7 +580,7 @@ def resolve_display(resolves):
         if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
+                ans += r'$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = deg
@@ -606,6 +620,8 @@ def cclasses(n, t):
             <tbody>
          """
     cc = group.conjclasses
+    if not cc:
+        return None
     for c in cc:
         html += f'<tr><td>${c[3]}$</td>'
         html += f'<td>${c[2]}$</td>'
@@ -914,7 +930,7 @@ def get_aliases():
     }
     for ky in aliases:
         nt = aliases[ky][0]
-        label = "%sT%s"% nt
+        label = "%sT%s" % nt
         aliases[ky] = siblings[label][:]
         if nt not in aliases[ky]:
             aliases[ky].append(nt)

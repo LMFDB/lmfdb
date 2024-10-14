@@ -84,18 +84,20 @@ table.reptable td, table.reptable th {
         {% endfor %}
       </tbody>
       </table>
+   <p>
+   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp; 
+   {% if info.malle_a is not none %}
+   ${{info.malle_a}}$ 
+   {% else %}
+   not computed
+   {% endif %}
+      {% elif cclasses not in info %}
+        Conjugacy classes not computed
       {% else %}
         {{ info.cclass_knowl | safe }}
       {% endif %}
    </p>
    <p>{{ place_code('ccs') }}</p>
-   <p>
-   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp; 
-   {% if info.malle_a is not none %}
-   ${{info.malle_a}}$
-   {% else %}
-   not computed
-   {% endif %}
 
 
 
