@@ -1634,11 +1634,20 @@ def getLfunctionPlot(request, *args):
         else:
             return render_lfunction_exception(err)
 
+    # Figure out plotrange
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
         F = p2sage(pythonL.plotpoints)
         #  F[0][0] is the lowest t-coordinated that we have a value for L
         #  F[-1][0] is the highest t-coordinated that we have a value for L
+
+        # fix Z-plot sign so that Z(t) > 0 for t -> 0^+
+        for t, x in F:
+            if t > 0:
+                if x < 0:
+                    F = [(t, -x) for t, x in F]
+                break
+
         plotrange = min(plotrange, -F[0][0], F[-1][0])
         # aim to display at most 25 axis crossings
         # if the L-function is nonprimitive
@@ -1653,8 +1662,17 @@ def getLfunctionPlot(request, *args):
                 zero_range = zeros[-1]*25/len(zeros)
             zero_range *= 1.2
             plotrange = min(plotrange, zero_range)
+
+            for t, x in F:
+                if t > 0:
+                    if t < zeros[0]:
+                        assert x > 0
+                    else:
+                        break
+
     else:
         # obsolete, because lfunc_data comes from DB?
+        assert False # double checking my claim
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None
@@ -1662,6 +1680,8 @@ def getLfunctionPlot(request, *args):
         if pythonL._Ltype not in ["riemann", "maass"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
+
+
 
     interpolation = spline(F)
     F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
