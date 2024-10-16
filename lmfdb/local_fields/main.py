@@ -395,7 +395,7 @@ def render_field_webpage(args):
             abelian = ' and abelian' if the_gal.is_abelian() else ''
             galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
             if the_gal.order() == gn:
-                autstring = r'\Gal' 
+                autstring = r'\Gal'
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
