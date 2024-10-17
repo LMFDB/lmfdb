@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 """
 Any character object is obtained as a double inheritance of
@@ -60,15 +59,19 @@ from lmfdb.characters.utils import url_character, complex2str
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
+
 def parity_string(n):
     return ("even" if n else "odd") if isinstance(n, bool) else ("odd" if n == -1 else "even")
+
 
 def bool_string(b):
     return "yes" if b else "no"
 
+
 def compute_values(chi, groupelts):
-        "Helper function to compute values of several elements on the fly"
-        return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+    "Helper function to compute values of several elements on the fly"
+    return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+
 
 def valuefield_from_order(order):
     order2 = order if order % 4 != 2 else order / 2
@@ -103,12 +106,12 @@ class WebCharObject():
 
     def to_dict(self):
         d = {}
-        logger.info('[DC] start collecting data for %s'%self.__class__.__name__)
+        logger.info('[DC] start collecting data for %s' % self.__class__.__name__)
         for k in self._keys:
             d[k] = getattr(self,k,None)
             if d[k] is None:
-                logger.debug('[DC warning] ### key[%s] is None'%k)
-        logger.info('[DC] collected for %s'%self.__class__.__name__)
+                logger.debug('[DC warning] ### key[%s] is None' % k)
+        logger.info('[DC] collected for %s' % self.__class__.__name__)
         return d
 
     @staticmethod
@@ -192,7 +195,7 @@ class WebDirichlet(WebCharObject):
     """ for Dirichlet over Z, everything is described using integers """
     @staticmethod
     def char2tex(modulus, number, val=r'\cdot', tag=True):
-        c = r'\chi_{%s}(%s,%s)'%(modulus,number,val)
+        c = r'\chi_{%s}(%s,%s)' % (modulus,number,val)
         if tag:
             return r'\(%s\)' % c
         else:
@@ -319,7 +322,7 @@ class WebDirichlet(WebCharObject):
         Gtex = r'\Z/%s\Z' % mod
         chitex = self.char2tex(mod, num, tag=False)
         chitexr = self.char2tex(mod, num, 'r', tag=False)
-        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
+        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)' % (Gtex,chitexr,n,d)
         return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
 
     @lazy_attribute
@@ -338,9 +341,9 @@ class WebDirichlet(WebCharObject):
         except ValueError:
             raise Warning ("n must be a positive integer coprime to the modulus {} and no greater than it".format(mod))
         if gcd(mod, val) > 1:
-            raise Warning ("n must be coprime to the modulus : %s"%mod)
+            raise Warning ("n must be coprime to the modulus : %s" % mod)
         if val > mod:
-            raise Warning ("n must be less than the modulus : %s"%mod)
+            raise Warning ("n must be less than the modulus : %s" % mod)
         if val < 0:
             raise Warning ("n must be positive")
 
@@ -359,7 +362,7 @@ class WebDirichlet(WebCharObject):
         Gtex = r'\Z/%s\Z' % mod
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
-        deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
+        deftex = r'\sum_{r\in %s} %s %s' % (Gtex,chitexr,psitex1r)
         return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
     @lazy_attribute
@@ -541,7 +544,7 @@ class WebChar(WebCharObject):
         if self.type == 'Dirichlet':
             f.append( ("Character group", url_character(type=self.type,modulus=self.modlabel)) )
             f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}')))
-        if len(self.vflabel)>0:
+        if len(self.vflabel) > 0:
             f.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         return f
 
@@ -818,9 +821,9 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def codeinit(self):
         return {
                 'sage': [
-                    'H = DirichletGroup(%i)'%(self.modulus)
+                    'H = DirichletGroup(%i)' % (self.modulus)
                     ],
-                'pari': 'g = idealstar(,%i,2)'%(self.modulus)
+                'pari': 'g = idealstar(,%i,2)' % (self.modulus)
                 }
 
     @lazy_attribute
@@ -998,10 +1001,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 assoclabel = '2.0.%d.1' % -self.symbol_numerator()
             friendlist.append(("Associated quadratic field", url_for("number_fields.by_label", label=assoclabel)))
 
-        label = "%s.%s"%(self.modulus, self.number)
+        label = "%s.%s" % (self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
         if myrep is not None:
-            j=myrep['Dets'].index(label)
+            j = myrep['Dets'].index(label)
             artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
             friendlist.append(('Artin representation '+artlabel,
                 url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
@@ -1063,7 +1066,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m,
+            return { 'sage': 'kronecker_character(%i)' % m,
                      'pari': 'znchartokronecker(g,chi)'
                      }
         return None
@@ -1252,7 +1255,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m,
+            return { 'sage': 'kronecker_character(%i)' % m,
                      'pari': 'znchartokronecker(g,chi)'
                      }
         return None
@@ -1368,9 +1371,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codeinit(self):
         return {
           'sage': [
-                 'H = DirichletGroup(%i)'%(self.modulus),
-                 'chi = H[%i]'%(self.number) ],
-          'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
+                 'H = DirichletGroup(%i)' % (self.modulus),
+                 'chi = H[%i]' % (self.number) ],
+          'pari': '[g,chi] = znchar(Mod(%i,%i))' % (self.number,self.modulus),
           }
 
     @lazy_attribute
@@ -1414,7 +1417,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m,
+            return { 'sage': 'kronecker_character(%i)' % m,
                      'pari': 'znchartokronecker(g,chi)'
                      }
         return None

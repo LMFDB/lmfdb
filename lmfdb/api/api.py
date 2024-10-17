@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from urllib.parse import unquote
 import re
 import yaml
@@ -71,7 +70,7 @@ def full_index():
 def stats():
     def mb(x):
         return int(round(x/2**20.))
-    info={}
+    info = {}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
     if info['minsize'] not in info['minsizes']:
@@ -271,7 +270,7 @@ def api_query(table, id=None):
 
         # executing the query "q" and replacing the _id in the result list
         # So as not to preserve backwards compatibility (see test_api_usage() test)
-        if table=='ec_curvedata':
+        if table == 'ec_curvedata':
             for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
                 if oldkey in q:
                     q[newkey] = q[oldkey]
@@ -358,7 +357,7 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     """
     INPUT:
 
-    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table)
+    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table).  Entries can also be a list of values (corresponding to multiple ``label_cols``) in cases where multiple columns are needed to uniquely specify a row.
     - ``tables`` -- a search table or list of search tables (as strings)
     - ``title`` -- title for the page
     - ``bread`` -- bread for the page
@@ -389,7 +388,10 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     search_schema = {}
     extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
-        q = {col: label}
+        if isinstance(col, list):  # Needed for gps_conj_classes, which effectively has a pair of columns for a label
+            q = dict(zip(col, label))
+        else:
+            q = {col: label}
         coll = db[table]
         try:
             data.append(list(coll.search(q, projection=3, sort=sort)))

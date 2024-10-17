@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 from flask import render_template, url_for, request, redirect, abort
@@ -684,6 +683,7 @@ def query_convert_abc_list(query):
         query.pop("abc_list")
     return query
 
+
 def common_parse(info, query):
     parse_bracketed_posints(info, query, "abc_list", "a, b, c", maxlength=3)
     query_convert_abc_list(query)
@@ -701,8 +701,9 @@ def common_parse(info, query):
     parse_nf_string(info, query, 'field', name="base number field", qfield='base_field_label')
     parse_bool(info, query, "is_primitive", name="is_primitive")
     for fld in ["geomtype", "group"]:
-            if info.get(fld):
-                query[fld] = info[fld]
+        if info.get(fld):
+            query[fld] = info[fld]
+
 
 def primitivization_search(info, query, search_type):
     if search_type == "galmap":

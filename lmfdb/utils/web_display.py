@@ -133,7 +133,7 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     short, shortened = compress_int(n, cutoff=cutoff, sides=sides)
     if shortened:
         lng = r"<div style='word-break: break-all'>%s</div>" % n
-        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>' % (lng, short)
     else:
         return r'\(%s\)' % n
 
@@ -190,7 +190,7 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
             else:
                 short += r" - \cdots"
 #        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
-        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>'%(lng,short)
+        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>' % (lng,short)
     else:
         return lng
 
@@ -231,7 +231,7 @@ def pos_int_and_factor(n, factor_base=None):
     n = ZZ(n)
     if factor_base:
         factors = [(p, ZZ(n).valuation(p)) for p in factor_base]
-        factors = [(z[0],z[1]) for z in factors if z[1]>0]
+        factors = [(z[0],z[1]) for z in factors if z[1] > 0]
 
         def power_prime(p, exponent):
             if exponent == 1:
@@ -241,7 +241,7 @@ def pos_int_and_factor(n, factor_base=None):
         latexfactors = r" \cdot ".join(power_prime(p, val) for (p, val) in factors)
     else:
         factors = n.factor()
-        latexfactors=latex(factors)
+        latexfactors = latex(factors)
     if len(factors) == 1 and factors[0][1] == 1:
         return bigint_knowl(n, sides=3)
     else:
@@ -258,14 +258,14 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
             quo += r" + \cdots"
         else:
             quo += r" - \cdots"
-    short = r'\mathbb{Q}[x]/(%s)'%(quo)
+    short = r'\mathbb{Q}[x]/(%s)' % (quo)
     long = r'Defining polynomial: %s' % escape(raw_typeset_poly(f))
     if disc is not None:
         if isinstance(disc, list):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
         else:
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
-    return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
+    return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>' % (long, short)
 
 
 def web_latex_factored_integer(x, enclose=True, equals=False):
@@ -683,9 +683,9 @@ def compress_poly_Q(rawpoly,
     d = len(coefflist)
 
     def frac_string(frac):
-        if frac.denominator()==1:
+        if frac.denominator() == 1:
             return compress_int(frac.numerator())[0]
-        return r'\frac{%s}{%s}'%(compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+        return r'\frac{%s}{%s}' % (compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
 
     tset = ''
     for j in range(1, d + 1):

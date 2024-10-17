@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 
 ## parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 import re
@@ -1065,7 +1064,7 @@ def parse_group_label_or_order(inp, query, qfield, regex):
         raise SearchParsingError("Group label(s) do not match the required form")
     if inporders:
         if inplabels:
-            query[qfield] = {"$or": inporders +[labelquery]}
+            query[qfield] = {"$or": inporders + [labelquery]}
         else:
             query[qfield] = {"$or": inporders}
     else:
@@ -1398,6 +1397,12 @@ def parse_subfield(inp, query, qfield):
 @search_parser  # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     query[qfield] = nf_string_to_label(inp)
+
+@search_parser
+def parse_kerpol_string(inp, query, qfield):
+    label = nf_string_to_label(inp)
+    from lmfdb import db
+    query[qfield] = db.nf_fields.lookup(label, projection='coeffs')
 
 def pol_string_to_list(pol, deg=None, var=None):
     if var is None:

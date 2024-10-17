@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
 from lmfdb.lmfdb_database import LMFDBDatabase
@@ -55,7 +54,7 @@ class CMFTest(LmfdbTest):
                 errors.append(r[1])
 
         if errors:
-            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
+            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" % (n, level, weight, len(errors)))
             for url in errors:
                 print(url)
 
@@ -72,7 +71,7 @@ class CMFTest(LmfdbTest):
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
         newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
-        dim = gp("mfdim([%s,%s,-1],0)"%(level,weight))
+        dim = gp("mfdim([%s,%s,-1],0)" % (level,weight))
         if dim is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
@@ -151,7 +150,7 @@ class CMFTest(LmfdbTest):
                 res.append((None, url))
 
         if errors:
-            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
+            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" % (n, level, weight, len(errors)))
             for url in errors:
                 print(url)
 
@@ -218,7 +217,7 @@ class CMFTest(LmfdbTest):
                     bins[i] += 1
                 for i, b in enumerate(bins):
                     d = 100*float(b)/total
-                    print('%.2f\t|' %((i + 0.5)*h + just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
+                    print('%.2f\t|' % ((i + 0.5)*h + just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
         else:
             print("These pages didn't pass the tests:")
             for u in broken_urls:

@@ -475,7 +475,7 @@ class StatsDisplay(UniqueRepresentation):
         - ``table`` -- a ``PostgresStatsTable``
         - ``cols`` -- a list of column names
         - ``constraint`` -- a dictionary giving constraints on other columns.
-            Only rows satsifying those constraints are included in the counts.
+            Only rows satisfying those constraints are included in the counts.
         - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of strings such as '5' or '2-7'.
@@ -570,7 +570,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)' % avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
@@ -737,7 +737,7 @@ class StatsDisplay(UniqueRepresentation):
                 raise
         info["d"] = self.prep(attr)
         info["stats"] = self
-        info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
-        info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
-        info["get_total"] = (lambda i: info.get("totals%s"%i, False))
+        info["get_bucket"] = (lambda i: info.get("buckets%s" % i, ""))
+        info["get_col"] = (lambda i: info.get("col%s" % i, "none"))
+        info["get_total"] = (lambda i: info.get("totals%s" % i, False))
         info["search_type"] = "DynStats"

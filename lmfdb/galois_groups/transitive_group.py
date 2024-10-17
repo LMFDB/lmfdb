@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function, lazy_attribute, Permutations
+from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
 from flask import render_template
@@ -11,6 +11,8 @@ from flask import render_template
 from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+
+CC_LIMIT = 160
 
 def knowl_cache(galois_labels=None, results=None):
     """
@@ -70,7 +72,7 @@ def cyclestrings(perm):
     return ''.join(a)
 
 def compress_cycle_type(ct):
-    bits = [(str(z), f'^{{{c}}}' if c>1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
 ############  Galois group object
 
@@ -134,7 +136,7 @@ class WebGaloisGroup:
     def otherrep_list(self, givebound=True, cache=None):
         sibs = self._data['siblings']
         pharse = r"with degree $\leq %d$" % self.sibling_bound()
-        if len(sibs)==0 and givebound:
+        if len(sibs) == 0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False, cache=cache)
         if givebound:
@@ -154,9 +156,10 @@ class WebGaloisGroup:
 
     def gapgroupnt(self):
         if int(self.n()) == 1:
-            G = gap.SmallGroup(1, 1)
+            G = libgap.SmallGroup(1, 1)
         else:
-            G = gap('Group(['+self.generator_string()+'])')
+            gens = [SymmetricGroup(self.n())([tuple(cyc) for cyc in g]) for g in self.gens()]
+            G = libgap.Group([g._libgap_() for g in gens])
         return G
 
     def num_conjclasses(self):
@@ -167,8 +170,8 @@ class WebGaloisGroup:
         return WebAbstractGroup(self.abstract_label())
 
     def have_isomorphism(self):
-        if self.wag.element_repr_type == "Lie":
-            return False
+        #if self.wag.element_repr_type == "Lie":
+        #    return False
         return 'isomorphism' in self._data
 
     @lazy_attribute
@@ -176,7 +179,7 @@ class WebGaloisGroup:
         # assumes isomorphism is in _data
         wag = self.wag
         imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
-        imgs = [gap("PermList(%s)"%str(z)) for z in imgs]
+        imgs = [libgap.PermList(z) for z in imgs]
         return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
 
     @lazy_attribute
@@ -189,14 +192,16 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
+        if self.num_conjclasses()>CC_LIMIT:
+            return None
         g = self.gapgroupnt()
         n = self.n()
         wag = self.wag
         self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
             self.conjugacy_classes[0].force_repr('()')
-            return [['()', 1, 1, '1', '1A']]
-        elif self.have_isomorphism() and wag.element_repr_type != "Lie":
+            return [['()', 1, 1, '1', '1A',0]]
+        elif self.have_isomorphism():
             isom = self.getisom
             cc = [z.representative for z in self.conjugacy_classes]
             cc1 = [wag.decode(z) for z in cc]
@@ -204,22 +209,38 @@ class WebGaloisGroup:
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(str(cc[j]))
             ccn = [z.size for z in self.conjugacy_classes]
-            cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             cclabels = [z.label for z in self.conjugacy_classes]
         else:
             cc = g.ConjugacyClasses()
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            cc2 = [gap(f"CycleLengths({x}, [1..{n}])") for x in cc]
             for j in range(len(self.conjugacy_classes)):
                 self.conjugacy_classes[j].force_repr(' ')
+        cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
+        inds = [n-len(z) for z in cc2]
         cc2 = [compress_cycle_type(z) for z in cc2]
-        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j]] for j in range(len(cc))]
+        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j],inds[j]] for j in range(len(cc))]
         return ans
 
     @lazy_attribute
+    def malle_a(self):
+        ccs = self.conjclasses
+        if not ccs:
+            return None
+        inds = [z[5] for z in ccs]
+        if len(inds) == 1:
+            return 0
+        if len(inds) == 0:
+            return None
+        inds = [z for z in inds if z > 0]
+
+        return QQ(f"1/{min(inds)}")
+
+    @lazy_attribute
     def can_chartable(self):
+        if self.num_conjclasses() > CC_LIMIT:
+            return False
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
@@ -335,15 +356,15 @@ def galois_module_knowl(n, t, index):
     name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
         return 'Error'
-    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>' % (name, n, t, index, name)
 
 
 @cached_function
 def cclasses_display_knowl(n, t, name=None):
     ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'The %d conjugacy class representatives for '% ncc
-        if n==1 and t==1:
+        name = 'The %d conjugacy class representatives for ' % ncc
+        if n == 1 and t == 1:
             name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
     if ncc > 5000:
@@ -424,8 +445,8 @@ def galois_group_data(n, t):
         inf += ", imprimitive"
     if n < 16:
         inf += '<div>'
-        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
-        inf += '%s</div>'%(group['name'])
+        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: ' % ('CHM label',str(n),str(t),'CHM label')
+        inf += '%s</div>' % (group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += WebGaloisGroup.from_nt(n,t).generator_string()
@@ -446,7 +467,7 @@ def galois_group_data(n, t):
     rest += '</div>'
 
     if group.get('pretty', None) is not None:
-        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + rest
     return inf + rest
 
 
@@ -464,6 +485,12 @@ def group_cclasses_knowl_guts(n, t):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
+    rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
+    wgg = WebGaloisGroup(label)
+    if wgg.malle_a:
+        rest += '$%s$'%str(wgg.malle_a)
+    else:
+        rest += 'not computed'
     return rest
 
 
@@ -487,7 +514,7 @@ def galois_module_knowl_guts(n, t, index):
     out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
-        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+        out += "%s &\\mapsto %s \\\\" % (str(g[0]), matg)
     out = out[:-2]
     out += r"\end{aligned}$$"
     out += "</blockquote>"
@@ -553,7 +580,7 @@ def resolve_display(resolves):
         if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
+                ans += r'$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = deg
@@ -587,15 +614,20 @@ def cclasses(n, t):
     #    return 'not computed'
     html = """<div>
             <table class="ntdata">
-            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td>
+            <td><a title = "' + index + ' [gg.index]" knowl="gg.index">Index</a></td>
+            <td>Representative</td></tr></thead>
             <tbody>
          """
     cc = group.conjclasses
+    if not cc:
+        return None
     for c in cc:
-        html += '<tr><td>' + str(c[3]) + '</td>'
-        html += '<td>' + str(c[2]) + '</td>'
-        html += '<td>' + str(c[1]) + '</td>'
-        html += '<td>' + str(c[0]) + '</td>'
+        html += f'<tr><td>${c[3]}$</td>'
+        html += f'<td>${c[2]}$</td>'
+        html += f'<td>${c[1]}$</td>'
+        html += f'<td>${c[5]}$</td>'
+        html += f'<td>${c[0]}$</td>'
     html += """</tr></tbody>
              </table>
           """
@@ -644,7 +676,7 @@ def complete_group_code(code):
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
-    # covert GAP code to abstract group label
+    # convert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
         code = "%s.%s" % (rematch.group(1), rematch.group(2))
@@ -898,7 +930,7 @@ def get_aliases():
     }
     for ky in aliases:
         nt = aliases[ky][0]
-        label = "%sT%s"% nt
+        label = "%sT%s" % nt
         aliases[ky] = siblings[label][:]
         if nt not in aliases[ky]:
             aliases[ky].append(nt)

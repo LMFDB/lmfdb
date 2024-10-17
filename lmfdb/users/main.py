@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 # this holds all the flask-login specific logic (+ url mapping an rendering templates)
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
@@ -98,8 +97,8 @@ def list():
     users = userdb.get_user_list()
     # attempt to sort by last name
     users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
-    if len(users)%COLS:
-        users += [{} for i in range(COLS-len(users)%COLS)]
+    if len(users) % COLS:
+        users += [{} for i in range(COLS-len(users) % COLS)]
     n = len(users)//COLS
     user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()

@@ -254,7 +254,7 @@ class WebHyperGeometricFamily():
         x_labels = zz[2]
         y_max = max(y_values)
         y_min = min(y_values)
-        x_values = list(range(0,len(y_values)))
+        x_values = list(range(len(y_values)))
         x_max = len(y_values)
         pts = [(i, y_values[i]) for i in x_values]
         L = Graphics()

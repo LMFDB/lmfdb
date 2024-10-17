@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
@@ -152,7 +151,7 @@ class WebBMF():
         # 'hecke_poly_obj' is the non-LaTeX version of hecke_poly
         self.hecke_poly_obj = self.hecke_poly
 
-        if self.dimension>1:
+        if self.dimension > 1:
             Qx = PolynomialRing(QQ,'x')
             self.hecke_poly = Qx(str(self.hecke_poly))
             F = NumberField(self.hecke_poly,'z')
@@ -177,7 +176,7 @@ class WebBMF():
                              ideal_label(p),
                              web_latex(p.gens_reduced()),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if p not in badp]
-        self.have_AL = self.AL_eigs[0]!='?'
+        self.have_AL = self.AL_eigs[0] != '?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),
                              ideal_label(p),
@@ -200,7 +199,7 @@ class WebBMF():
             self.anrank = "not determined"
         else:
             self.Lratio = QQ(self.Lratio)
-            self.anrank = r"\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else r"\(\ge2\), even"
+            self.anrank = r"\(0\)" if self.Lratio != 0 else "odd" if self.sfe == -1 else r"\(\ge2\), even"
 
         self.properties = [('Label', self.label),
                             ('Base field', pretty_field),
@@ -216,7 +215,7 @@ class WebBMF():
             elif self.CM == 0:
                 self.CM = 'no'
             else:
-                if int(self.CM)%4 in [2,3]:
+                if int(self.CM) % 4 in [2,3]:
                     self.CM = 4*int(self.CM)
                 self.CM = "$%s$" % self.CM
         except AttributeError:
@@ -225,7 +224,7 @@ class WebBMF():
 
         self.bc_extra = ''
         self.bcd = 0
-        self.bct = self.bc!='?' and self.bc!=0
+        self.bct = self.bc != '?' and self.bc != 0
         if self.bc == '?':
             self.bc = 'not determined'
         elif self.bc == 0:
@@ -233,7 +232,7 @@ class WebBMF():
         elif self.bc == 1:
             self.bcd = self.bc
             self.bc = 'yes'
-        elif self.bc >1:
+        elif self.bc > 1:
             self.bcd = self.bc
             self.bc = 'yes'
             self.bc_extra = r', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{' + str(self.bcd) + r'})\)'

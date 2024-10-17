@@ -1,5 +1,6 @@
 from lmfdb.tests import LmfdbTest
 
+
 class HomePageTest(LmfdbTest):
     # All tests should pass
     #

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 
@@ -117,7 +116,7 @@ glnC_columns = SearchColumns([
     db_cols=["label", "group", "order", "dim"])
 
 
-glnC_columns.dummy_download=True
+glnC_columns.dummy_download = True
 
 
 def glnC_postprocess(res, info, query):
@@ -177,7 +176,7 @@ def render_glnC_group(args):
 
 
 def make_knowl(title, knowlid):
-    return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
+    return '<a title="%s" knowl="%s">%s</a>' % (title, knowlid, title)
 
 
 @glnC_page.route("/Completeness")

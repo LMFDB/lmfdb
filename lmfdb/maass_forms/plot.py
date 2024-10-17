@@ -1,6 +1,3 @@
-
-# -*- coding: utf-8 -*-
-
 from lmfdb import db
 from lmfdb.utils import signtocolour
 from flask import url_for
@@ -37,23 +34,26 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
                         xfactor, yfactor, ticlength, xshift)
 
     # Fetch Maass forms from database
-    forms = db.maass_newforms.search({'spectral_parameter':{'$gte':xMin,'$lte':xMax}, 'level':{'$gte':yMin,'$lte':yMax}},
-                                     ["maass_id", "spectral_parameter", "level", "symmetry"], sort=[("level",1),("symmetry",-1),("spectral_parameter",1),("maass_id",1)])
+    forms = db.maass_rigor.search({'spectral_parameter':{'$gte':xMin,'$lte':xMax}, 'level':{'$gte':yMin,'$lte':yMax}},
+                                  ["maass_label", "spectral_parameter", "level", "symmetry"],
+                                  sort=[("level", 1), ("symmetry", -1), ("spectral_parameter", 1), ("maass_label", 1)])
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = L + url_for("maass.by_label",label=f['maass_id'])
+        linkurl = L + url_for("maass_forms.by_label", label=f['maass_label'])
         x = (f['spectral_parameter'] - xMin) * xfactor + xshift
         y = (f['level'] - yMin + 1) * yfactor
-        s = f.get('symmetry',0)
-        y -= s    # Shifting even slightly up and odd slightly down
-        color = signtocolour(s)
-
+        s = f.get('symmetry', 0)
+        if s == 0:
+            shift = 1
+        else:
+            shift = -1
+        y -= shift    # Shifting even slightly up and odd slightly down
+        color = signtocolour(shift)
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
         ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
         ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
         ans += "<title>{0}</title></circle></a>\n".format(f['spectral_parameter'])
-
     ans += "</svg>"
     return ans
 
@@ -74,7 +74,7 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax, xfactor, yfactor, ticlen
     ans += "<line x1='{0}' y1='{1}' ".format(str(xshift),str(height))
     ans += "x2='{0}' y2='0' style='stroke:rgb(0,0,0);'/>\n".format(str(xshift))
     # ----------- Tickmarks x axis
-    for i in range(1, xMax -xMin + 1):
+    for i in range(1, xMax - xMin + 1):
         ans += "<line x1='{0}' y1='{1}' ".format(str(i * xfactor + xshift),str(ticlength))
         ans += "x2='{0}' y2='0' ".format(str(i * xfactor + xshift))
         ans += "style='stroke:rgb(0,0,0);'/>\n"

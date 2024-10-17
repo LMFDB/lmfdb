@@ -199,7 +199,7 @@ function get_all_embeddings(num_embeddings) {
     {% for p, ev in newform.atkin_lehner_eigenvals %}
     <tr>
       <td class="center"> \({{ p }}\) </td>
-      <td class="center"> \({{ ev }}\)</td>
+      <td class="center"> \({% if ev==1 %} +1 {%else%} {{ev}} {% endif %}\)</td>
     </tr>
     {% endfor %}
   </tbody>

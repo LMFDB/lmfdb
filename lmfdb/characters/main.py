@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 from lmfdb.app import app
@@ -405,7 +404,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         modulus, number = modulus.split('.')
         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
     if number is not None and number > modulus:
-        return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number%modulus), 301)
+        return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number % modulus), 301)
     if modulus == 1 and number == 0:
         return redirect(url_for(".render_Dirichletwebpage", modulus=1, number=1), 301)
 
@@ -468,7 +467,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             return redirect(url_for(".render_DirichletNavigation"))
     else:
         if gcd(modulus,number) != 1:
-            flash_error("%s is not a valid Conrey label (number must be coprime to modulus).", "%s.%s"%(args['modulus'],args['number']))
+            flash_error("%s is not a valid Conrey label (number must be coprime to modulus).", "%s.%s" % (args['modulus'],args['number']))
             return redirect(url_for(".render_DirichletNavigation"))
 
     try:

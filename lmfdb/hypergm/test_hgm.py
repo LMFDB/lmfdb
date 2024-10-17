@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
+
 
 class HGMTest(LmfdbTest):
     # TODO: create stats page
-    #def test_stats(self):
-        #self.check_args("Hypergeometric/Q/stats", "Monodromy")
+    # def test_stats(self):
+    #     self.check_args("Hypergeometric/Q/stats", "Monodromy")
 
-    ### test pages
+    # test pages
 
-    ### family pages
+    # family pages
 
     def test_random_family(self):
         self.check_args("/Motive/Hypergeometric/Q/random_family", ["Hypergeometric motive family", "Defining parameters"])

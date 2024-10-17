@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 from collections import Counter
@@ -173,48 +172,42 @@ def formatted_newforms(newforms, mults):
     return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
 
 def formatted_model_html(self, m):
-#this is only for curves with models
-#but not curves with self.has_more_models
-#and also not for genus 0 cuves with points
-#we need to somehow give this info
+    # this is only for curves with models
+    # but not curves with self.has_more_models
+    # and also not for genus 0 curves with points
+    # we need to somehow give this info
     eqn_threshold = 3 #this displays threshold - 1 lines to start
     eqns, lines, nb_var, typ, smooth = formatted_model_data(m)
+
     def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
-            title =  display_knowl('ag.canonical_model', 'Canonical model') +\
-             r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
+            title = display_knowl('ag.canonical_model', 'Canonical model') + r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
             if len(lines) > eqn_threshold:
                 title += " defined by %d equations" % (len(lines) - 1,)
             return title
         elif typ == 2:
             #smooth is true, false, or none
-            if smooth == True:
-                return display_knowl('modcurve.plane_model', 'Smooth plane model')+\
-                " Smooth plane model"
-            elif smooth == False:
-                return display_knowl('modcurve.plane_model', 'Singular plane model') +\
-                " Singular plane model"
+            if smooth is True:
+                return display_knowl('modcurve.plane_model', 'Smooth plane model')
+            elif smooth is False:
+                return display_knowl('modcurve.plane_model', 'Singular plane model')
             else:
-                return display_knowl('modcurve.plane_model', 'Plane model')+\
-                    " Plane model"
+                return display_knowl('modcurve.plane_model', 'Plane model')
         elif typ == 5:
             if self.genus == 1:
-                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model') +\
-                " Weierstrass model"
+                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
             else:
-                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model') +\
-                " Weierstrass model"
+                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
         elif typ == 7:
-            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')+\
-            " Geometric Weierstrass model"
+            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
         elif typ == 8:
-            return display_knowl('modcurve.embedded_model', 'Embedded model') +\
-             r" Embedded model in $\mathbb{P}^{%d}$" % (nb_var-1,)
+            return display_knowl('modcurve.embedded_model', 'Embedded model') + r" in $\mathbb{P}^{%d}$" % (nb_var-1,)
+
     def equation_of_model(lines, typ):
-        table = '<table valign="center">'+\
-        '<tr>'+\
+        table = '<table valign="center">' +\
+        '<tr>' +\
         f'<td> $ {lines[0]} $ </td>' +\
-        '<td style="padding: 5px 0px;">$=$</td>'+\
+        '<td style="padding: 5px 0px;">$=$</td>' +\
         f'<td> $ {lines[1]} $</td>' +\
         '</tr>'
         if typ == 2 or typ == 5: #plane or weierstrass, 1 eqn
@@ -371,7 +364,8 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
             else:
                 equations.append("{}({})".format(lead[j], eqs[j]))
     f["equations"] = equations
-    return(f)
+    return f
+
 
 def difference(Ad, Bd, Am, Bm):
     # Ad and Bd are lists of dimensions, Am, Bm of multiplicities
@@ -391,7 +385,7 @@ def difference(Ad, Bd, Am, Bm):
     return tuple(zip(*(sorted(C.items()))))
 
 def modcurve_link(label):
-    return '<a href="%s">%s</a>'%(url_for("modcurve.by_label",label=label),label)
+    return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",label=label),label)
 
 def combined_data(label):
     data = db.gps_gl2zhat_fine.lookup(label)
@@ -449,7 +443,7 @@ class WebModCurve(WebObj):
             if self.curve_label:
                 assert self.genus in [1,2]
                 route = "ec.by_ec_label" if self.genus == 1 else "g2c.by_label"
-                name = ("Elliptic" if self.genus ==1 else "Genus 2") + " curve " + self.curve_label
+                name = ("Elliptic" if self.genus == 1 else "Genus 2") + " curve " + self.curve_label
                 friends.append((name, url_for(route, label=self.curve_label)))
             else: # the best we can do is to point to the isogeny class
                 if self.genus == 1:
@@ -525,14 +519,14 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.coarse_label))
+            return r"no $\quad$ (see %s for the level structure with $-I$)" % (modcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s"%(', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
+                return r"%s" % (', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
             else:
                 return r"none in database"
         else:
@@ -670,13 +664,13 @@ class WebModCurve(WebObj):
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
         f["nb_coords"] = nb_coords
         f["coord_names"] = ["j"] + [""]*(nb_coords-1)
-        return(f)
+        return f
 
     def formatted_E4E6(self, domain_model_type):
         E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
-        return(f)
+        return f
 
     @lazy_attribute
     def formatted_modelisos(self):
