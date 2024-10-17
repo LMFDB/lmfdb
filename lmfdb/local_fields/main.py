@@ -469,9 +469,6 @@ def render_field_webpage(args):
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
-                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p),
-                    'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
-                    'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
         friends=[]
         if 'slopes' in data:
@@ -480,6 +477,12 @@ def render_field_webpage(args):
             info.update({'inertia': group_display_inertia(data['inertia'])})
         if 'gms' in data:
             info.update({'gms': data['gms']})
+        if 'ram_poly_vert' in data:
+            info.update({'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p)})
+        if 'residual_polynomials' in data:
+            info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
+        if 'associated_inertia' in data: 
+            info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
         if 'galois_label' in data:
             info.update({'gal': group_pretty_and_nTj(gn, gt, True),
                          'galphrase': galphrase,
