@@ -1681,8 +1681,6 @@ def getLfunctionPlot(request, *args):
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
 
-
-
     interpolation = spline(F)
     F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
     p = line(F_interp)
