@@ -497,7 +497,7 @@ class WebEC():
                     data['manin_known'] = False
                     data['optimal_label'] = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
                 else:
-                    # find curve #1 in this class and its optimailty code:
+                    # find curve #1 in this class and its optimality code:
                     opt_curve = db.ec_curvedata.lucky({'Ciso': self.Ciso, 'Cnumber': 1},
                                                    projection=['Clabel','lmfdb_label','optimality'])
                     data['manin_known'] = (opt_curve['optimality'] == 1)
@@ -511,7 +511,7 @@ class WebEC():
 
         # p-adic data:
 
-        data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
+        data['p_adic_primes'] = [p for i, p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) % p != 0]
 
         data['p_adic_data_exists'] = False

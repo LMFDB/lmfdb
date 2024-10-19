@@ -19,7 +19,7 @@
  * @desc Create a simple tablesorter interface.
  *
  * @example $('table').tablesorter({ sortList:[[0,0],[1,0]] });
- * @desc Create a tablesorter interface and sort on the first and secound column column headers.
+ * @desc Create a tablesorter interface and sort on the first and second column column headers.
  *
  * @example $('table').tablesorter({ headers: { 0: { sorter: false}, 1: {sorter: false} } });
  *
@@ -49,7 +49,7 @@
  *         to sortable tr elements in the thead on a descending sort. Default
  *         value: "headerSortDown"
  *
- * @option String sortInitialOrder (optional) A string of the inital sorting
+ * @option String sortInitialOrder (optional) A string of the initial sorting
  *         order can be asc or desc. Default value: "asc"
  *
  * @option String sortMultisortKey (optional) A string of the multi-column sort
