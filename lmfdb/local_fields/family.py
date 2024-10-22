@@ -381,6 +381,6 @@ class pAdicSlopeFamily:
                 cur_cols = set()
                 curN = set()
             elif N == Ns[-1]:
-                add_grid(curN.union(N), len(cur_rows), len(cur_cols))
+                add_grid(curN.union(set([N])), len(cur_rows), len(cur_cols))
             curN.add(N)
         return dyns
