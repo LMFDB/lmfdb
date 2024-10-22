@@ -525,13 +525,14 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lucky({"new_label":label})
         if data is None:
-            data = db.lf_fields.lucky({"label":label})
-            if data is None:
+            new_label = db.lf_fields.lookup(label, "new_label")
+            if new_label is None:
                 if NEW_LF_RE.fullmatch(label) or OLD_LF_RE.fullmatch(label):
                     flash_error("Field %s was not found in the database.", label)
                 else:
                     flash_error("%s is not a valid label for a $p$-adic field.", label)
                 return redirect(url_for(".index"))
+            return redirect(url_for_label(label=new_label), 301)
         title = '$p$-adic field ' + prettyname(data)
         titletag = 'p-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
@@ -627,6 +628,7 @@ def render_field_webpage(args):
                     'ram_polygon_plot': plot_ramification_polygon(data['ram_poly_vert'], p, data['residual_polynomials'], data['ind_of_insep']),
                     'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
                     'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
+                    'ppow_roots_of_unity': data['ppow_roots_of_unity'],
                     })
         friends = [('Family', url_for(".family_page", label=data["family"]))]
         if 'slopes' in data:
@@ -640,6 +642,8 @@ def render_field_webpage(args):
                          'galphrase': galphrase,
                          'gt': gt})
             friends.append(('Galois group', "/GaloisGroup/%dT%d" % (gn, gt)))
+        if 'jump_set' in data:
+            info['jump_set'] = data['jump_set']
         if unramfriend != '':
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
@@ -1164,8 +1168,8 @@ class LFSearchArray(SearchArray):
              ("u", "Galois unramified degree", ['u', 'f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("t", "Galois tame degree", ['t', 'e', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("s", "top slope", ['top_slope', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr'])]
-    jump_example = "2.4.6.7"
-    jump_egspan = "e.g. 2.4.6.7"
+    jump_example = "2.1.4.6a2.1"
+    jump_egspan = "e.g. 2.1.4.6a2.1"
     jump_knowl = "lf.search_input"
     jump_prompt = "Label"
 
