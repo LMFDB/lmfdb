@@ -143,9 +143,7 @@ def local_algebra_display_knowl(labels):
 
 
 def plot_ramification_polygon(verts, p, polys=None, inds=None):
-    print("VERTS", verts)
-    # FAMILY: VERTS [(6, 0), (2, 4), (1, 7)]
-    # FIELD: VERTS [[1, 3], [2, 0], [6, 0]]
+    # print("VERTS", verts)
     verts = [tuple(pt) for pt in verts]
     if not verts:
         # Unramified, so we won't be displaying the plot
@@ -183,6 +181,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
     if polys is not None:
         R = ZZ["t"]["z"]
         polys = [R(poly) for poly in polys]
+        # print("POLYS", polys)
 
         def restag(c, a, b):
             return text(f"${latex(c)}$", (-a - txshift, b + tyshift/asp_ratio),
@@ -196,6 +195,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
         d = slope.denominator()
         if slope != 0:
             if polys is not None:
+                # Need to check that this is compatible with the residual polynomial normalization
                 while nextq <= Q[0]:
                     j = (nextq - P[0]) / d
                     if j in ZZ and polys[i][j]:
@@ -222,6 +222,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
                     L += restag(c, P[0] + j, P[1])
     L += line([(-x,y) for (x,y) in verts], thickness=2)
     if inds is not None:
+        # print("INDS", inds)
         L += points([(-p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)

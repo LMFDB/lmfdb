@@ -40,7 +40,7 @@ class pAdicSlopeFamily:
         if self.n0 == 1:
             self.rf0 = [1, 0]
         else:
-            self.rf0 = db.lf_fields.lucky({"new_label": base}, "rf0")
+            self.rf0 = db.lf_fields.lucky({"new_label": base}, "rf")
         self.base = base
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
@@ -369,7 +369,8 @@ class pAdicSlopeFamily:
         max_rows = 8
         max_cols = 8
         curN = set()
-        for N in sorted(gps):
+        Ns = sorted(gps)
+        for N in Ns:
             rowcount = len(cur_rows)
             colcount = len(cur_cols)
             cur_rows = cur_rows.union(slopes[N])
@@ -379,8 +380,7 @@ class pAdicSlopeFamily:
                 cur_rows = set()
                 cur_cols = set()
                 curN = set()
+            elif N == Ns[-1]:
+                add_grid(curN.union(N), len(cur_rows), len(cur_cols))
             curN.add(N)
-        rowcount = len(cur_rows.union(slopes[N]))
-        colcount = len(cur_cols.union(gps[N]))
-        add_grid(curN, rowcount, colcount)
         return dyns
