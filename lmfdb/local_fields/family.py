@@ -208,7 +208,7 @@ class pAdicSlopeFamily:
         cur = (self.pw, tame_shift)
         for r, nextr in zip(self.rams, self.rams[1:] + [None]):
             x = cur[0] // p
-            y = cur[1] + x * (r + 1)
+            y = cur[1] + x * (p - 1) * (r + 1)
             cur = (x, y)
             if r != nextr:
                 L.append(cur)
