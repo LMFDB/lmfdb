@@ -168,6 +168,7 @@ class XspN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = r'(source) showed that there is only 1 hyperelliptic curve, namely $X_{\mathrm{sp}}(11)$. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=11&family=Xsp">following table</a>] for the full list.'
     biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N) = \prod_{p\mid N, \text{ prime}} p$.</li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
@@ -244,6 +245,7 @@ class XnsN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N) = \prod_{p\mid N, \text{ prime}} p$.</li> </ul>" 
 
     @lazy_attribute
     def cusps_display(self):
@@ -274,7 +276,7 @@ class XnsplusN(ModCurveFamily_base):
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)/2"
     genus = "g"
-    nu2 = r"$\nu_2 = \begin{cases}\omega(N) & \forall p\mid N, p\equiv 3\bmod 4, \\ 0 & \text{otherwise.} \end{cases} + \frac{N}{2}\prod_{p\mid N}\left( 1 + \frac{1}{p}\right) - \#S$, <br> where <br> $\omega(N) = \prod_{p\mid N, \text{prime}} p$, <br> $S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$"
+    nu2 = r"$\nu_2 = \begin{cases}\omega(N) & \forall p\mid N, p\equiv 3\bmod 4, \\ 0 & \text{otherwise.} \end{cases} + \frac{N}{2}\prod_{p\mid N}\left( 1 + \frac{1}{p}\right) - \#S$."
     nu3 = r"$\nu_3 = \begin{cases} 2^{\omega(N)-1} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
     cusps = r"$\nu_\infty = \varphi(N)/2$"
     rational_cusps = r"$\nu_\infty = 0$"
@@ -282,6 +284,7 @@ class XnsplusN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N) = \prod_{p\mid N, \text{ prime}} p$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
