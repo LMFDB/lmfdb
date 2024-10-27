@@ -1184,7 +1184,7 @@ space_columns = SearchColumns([
                       short_title="character"),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order"),
     MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension"),
-    MathCol("num_forms", "cmf.galois_oribit", "Orbits", short_title="Galois orbits"),
+    MathCol("num_forms", "cmf.galois_orbit", "Orbits", short_title="Galois orbits"),
     MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomposition", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-decomposition.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="AL-decomposition", align="center", td_class=" nowrap")])
 

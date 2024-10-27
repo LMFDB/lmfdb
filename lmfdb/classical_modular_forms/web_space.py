@@ -294,8 +294,9 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
     sub_level_list = [sub_level for sub_level in divisors(level) if (sub_level % char_conductor == 0) and sub_level != level]
-    sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index}))
-    sub_chars = {char['modulus'] : char for char in sub_chars}
+    sub_chars = {char['modulus'] : char for char in db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index})}
+    if weight == 1:
+        newspace_dims = {rec['level']: rec['dim'] for rec in db.mf_newspaces.search({'weight': weight, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', 'dim'])}
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -303,10 +304,13 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit']
         entry['sub_conrey_index'] = sub_chars[sub_level]['first']
         entry['sub_mult'] = number_of_divisors(level/sub_level)
-        if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
-            # only include subspaces with cusp forms
-            # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
-            oldspaces.append(entry)
+        # only include subspaces with positive dimension (computed on the fly unless with weight is 1)
+        if weight == 1:
+            if newspace_dims[sub_level] > 0:
+                oldspaces.append(entry)
+        else:
+            if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
+                oldspaces.append(entry)
     return oldspaces
 
 class WebNewformSpace():
