@@ -168,7 +168,7 @@ class XspN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = r'(source) showed that there is only 1 hyperelliptic curve, namely $X_{\mathrm{sp}}(11)$. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=11&family=Xsp">following table</a>] for the full list.'
     biell_description = "Unknown."
-    notation = r"<ul> <li>$\omega(N) = \prod_{p\mid N, \text{ prime}} p$.</li> </ul>"
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
@@ -245,7 +245,7 @@ class XnsN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
-    notation = r"<ul> <li>$\omega(N) = \prod_{p\mid N, \text{ prime}} p$.</li> </ul>" 
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>" 
 
     @lazy_attribute
     def cusps_display(self):
@@ -284,7 +284,7 @@ class XnsplusN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
-    notation = r"<ul> <li>$\omega(N) = \prod_{p\mid N, \text{ prime}} p$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
