@@ -373,7 +373,7 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"tables.{table}", 2, 0])
         if L:
-            return Knowl(rec[0], data=dict(zip(fields, L[0])))
+            return Knowl(L[0][0], data=dict(zip(fields, L[0])))
 
     def set_table_description(self, table, description):
         uid = db.login()
