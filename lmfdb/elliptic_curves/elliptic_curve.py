@@ -515,13 +515,15 @@ def elliptic_curve_search(info, query):
             query['num_bad_primes'] = 1
         elif info['conductor_type'] == 'squarefree':
             query['semistable'] = True
-        elif info['conductor_type'] == 'divides':
+        elif info['conductor_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('conductor'), int):
                 err = "You must specify a single conductor"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
+            else:
+                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
     parse_ints(info,query,'adelic_level')
@@ -1170,6 +1172,7 @@ class ECSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             min_width=85)
         cond = TextBoxWithSelect(
