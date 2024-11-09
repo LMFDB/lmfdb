@@ -740,11 +740,13 @@ def common_parse(info, query, na_check=False):
         elif parity == 'odd':
             query['char_parity'] = -1
     if info.get('level_type'):
-        if info['level_type'] == 'divides':
+        if info['level_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('level'), int):
                 raise ValueError("You must specify a single level")
-            else:
+            elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
+            else:
+                query['level'] = {'$mod': [0, ZZ(query['level'])]}
         else:
             query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
@@ -1184,7 +1186,7 @@ space_columns = SearchColumns([
                       short_title="character"),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order"),
     MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension"),
-    MathCol("num_forms", "cmf.galois_oribit", "Orbits", short_title="Galois orbits"),
+    MathCol("num_forms", "cmf.galois_orbit", "Orbits", short_title="Galois orbits"),
     MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomposition", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-decomposition.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="AL-decomposition", align="center", td_class=" nowrap")])
 
@@ -1476,6 +1478,7 @@ class CMFSearchArray(SearchArray):
                      ('squarefree', 'squarefree'),
                      ('powerful', 'powerful'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             min_width=110)
         level = TextBoxWithSelect(

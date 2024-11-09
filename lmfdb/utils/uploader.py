@@ -280,7 +280,8 @@ class UploadSection():
             ["id", "status", "processed", "updated", "comment"]
 
         The later arguments are not used by default (they are present since GonalityBounds needs to update
-        these dictionaries)
+        these dictionaries):
+
         - ``by_table`` -- a dictionary, with keys (table, newrow) and values a list of lines,
             as output by the process method.
         - ``cols`` -- a dictionary with keys (table, newrow) and values the set of columns for that pair

@@ -184,13 +184,15 @@ def modlgal_search(info, query):
             query['conductor_num_primes'] = 1
         elif info['conductor_type'] == 'squarefree':
             query['conductor_is_squarefree'] = True
-        elif info['conductor_type'] == 'divides':
+        elif info['conductor_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('conductor'), int):
                 err = "You must specify a single level"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
+            else:
+                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
     parse_primes(info, query, 'conductor_primes', name='ramified primes', mode=info.get('conductor_primes_quantifier'))
     parse_rats(info, query,'top_slope', qfield='top_slope_real',name='Top slope')
     if 'top_slope_real' in query and '/' in info['top_slope']:
@@ -228,6 +230,7 @@ class ModLGalRepSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             )
         conductor = TextBoxWithSelect(
