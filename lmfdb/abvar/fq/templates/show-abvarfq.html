@@ -55,7 +55,7 @@
   {{ KNOWL('av.fq.ordinary',title='not ordinary') }},
   {% endif %}
 
-  {% if cl.is_supersingular() %}
+  {% if cl.is_supersingular %}
   and {{ KNOWL('av.fq.supersingular',title='supersingular') }}.
   {% else %}
   and {{ KNOWL('av.fq.supersingular',title='not supersingular')}}.
@@ -81,7 +81,7 @@
 {% if cl.is_ordinary() %}
 This isogeny class is {{KNOWL('av.fq.ordinary',title='ordinary')}}.
 {% endif %}
-{% if cl.is_supersingular() %}
+{% if cl.is_supersingular %}
 This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% endif %}
 </p>
