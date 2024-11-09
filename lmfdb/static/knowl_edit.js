@@ -76,6 +76,8 @@ function refresh_link_suggestions() {
   var we_define = {};
   // bad_intervals is a list of intervals that should be excluded from suggestions: KNOWLS and mathmode
   var bad_intervals = [];
+  var kid = $("input[name='id']").val();
+  var curcat = kid.split(".", 1)[0];
   var content = $kcontent.val();
   do {
     var m = wedef.exec(content);
@@ -207,6 +209,10 @@ function refresh_link_suggestions() {
             var label = match[0];
             var klink = knowl_link(definer_id, label);
             var kcat = definer_id.split(".", 1)[0]
+            // We want the current category to come first, so if it matches we change it to a very early ascii character
+            if (kcat == curcat) {
+              kcat = "!";
+            }
             // Add five words of context on each side, stopping at newlines
             var pre_mark = match.index;
             for (var j = 0; j < 5; j++) {
