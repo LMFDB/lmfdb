@@ -679,13 +679,15 @@ def modcurve_search(info, query):
             query['num_bad_primes'] = 1
         elif info['level_type'] == 'squarefree':
             query['level_is_squarefree'] = True
-        elif info['level_type'] == 'divides':
+        elif info['level_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('level'), int):
                 err = "You must specify a single level"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
+            else:
+                query['level'] = {'$mod': [0, ZZ(query['level'])]}
     parse_family(info, query, "family", qfield="name")
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
@@ -757,6 +759,7 @@ class ModCurveSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides', 'divides'),
+                     ('multiple', 'multiple of'),
                      ],
             min_width=85)
         level = TextBoxWithSelect(
