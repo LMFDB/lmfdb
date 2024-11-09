@@ -277,6 +277,10 @@ class AbvarFq_isoclass():
     def is_ordinary(self):
         return self.p_rank == self.g
 
+    @property
+    def is_supersingular(self):
+        return all(slope == "1/2" for slope in self.polygon_slopes)
+
     def display_slopes(self):
         return "[" + ", ".join(self.polygon_slopes) + "]"
 
