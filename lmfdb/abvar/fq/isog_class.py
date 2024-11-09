@@ -220,7 +220,7 @@ class AbvarFq_isoclass():
             ("$p$-rank", "$%s$" % (self.p_rank)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
             ("Ordinary", "yes" if self.is_ordinary() else "no"),
-            ("Supersingular", "yes" if self.is_supersingular() else "no"),
+            ("Supersingular", "yes" if self.is_supersingular else "no"),
             ("Simple", "yes" if self.is_simple else "no"),
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
@@ -276,9 +276,6 @@ class AbvarFq_isoclass():
 
     def is_ordinary(self):
         return self.p_rank == self.g
-
-    def is_supersingular(self):
-        return all(slope == "1/2" for slope in self.polygon_slopes)
 
     def display_slopes(self):
         return "[" + ", ".join(self.polygon_slopes) + "]"
