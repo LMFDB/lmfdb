@@ -167,7 +167,8 @@ class XspN(ModCurveFamily_base):
     moduli_description = fr"$X_{{\text{{sp}}}}(N)$ is the {display_knowl('modcurve','modular curve')} for the subgroup $H\le \GL_2(\widehat\Z)$ given by the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} $\begin{{pmatrix}} * & 0\\ 0& * \end{{pmatrix}}$ that is split at every prime dividing $N$. As a moduli space it parameterizes triples $(E,C,D)$ where $E$ is an elliptic curve over $k$, and $C$ and $D$ are $\Gal_k$-stable cyclic subgroups such that $E[N](\overline{{k}})\simeq C \oplus D$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = r'(source) showed that there is only 1 hyperelliptic curve, namely $X_{\mathrm{sp}}(11)$. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=11&family=Xsp">following table</a>] for the full list.'
-    biell_description = " "
+    biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
@@ -204,6 +205,8 @@ class XspplusN(ModCurveFamily_base):
     rational_cusps = "1"
     moduli_description = fr"$X_{{\text{{sp}}}}^+(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of an {display_knowl('gl2.cartan', 'extended Cartan subgroup')} $\begin{{pmatrix}} * & 0 \\ 0 & * \end{{pmatrix}} \cup \begin{{pmatrix}} 0 & * \\ * & 0 \end{{pmatrix}}\subseteq \GL_2(\Z/N\Z)$ that is split at every prime dividing $N$. As a moduli space it parameterizes pairs $(E,\{{C,D\}})$ where $E$ is an elliptic curve over $k$, and $\{{C,D\}}$ is a $\Gal_k$-stable pair of cyclic subgroups such that $E[N](\overline{{k}})\simeq C \oplus D$. (Neither $C$ nor $D$ need be $\Gal_k$-stable.)"
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
+    hypell_description = "Unknown."
+    biell_description = "Unknown."
 
     @lazy_attribute
     def cusps_display(self):
@@ -240,6 +243,9 @@ class XnsN(ModCurveFamily_base):
     rational_cusps = "1"    
     moduli_description = fr"$X_{{\text{{ns}}}}(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} of $\GL_2(\Z/N\Z)$ that is nonsplit at every prime dividing $N$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
+    hypell_description = "Unknown."
+    biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>" 
 
     @lazy_attribute
     def cusps_display(self):
@@ -270,12 +276,15 @@ class XnsplusN(ModCurveFamily_base):
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)/2"
     genus = "g"
-    nu2 = r"$\nu_2 = \begin{cases}\omega(N) & \forall p\mid N, p\equiv 3\bmod 4, \\ 0 & \text{otherwise.} \end{cases} + \frac{N}{2}\prod_{p\mid N}\left( 1 + \frac{1}{p}\right) - \#S$, <br> where $\omega(N) = \prod_{p\mid N, \text{prime}} p$ and $S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$"
+    nu2 = r"$\nu_2 = \begin{cases}\omega(N) & \forall p\mid N, p\equiv 3\bmod 4, \\ 0 & \text{otherwise.} \end{cases} + \frac{N}{2}\prod_{p\mid N}\left( 1 + \frac{1}{p}\right) - \#S$."
     nu3 = r"$\nu_3 = \begin{cases} 2^{\omega(N)-1} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
     cusps = r"$\nu_\infty = \varphi(N)/2$"
     rational_cusps = r"$\nu_\infty = 0$"
     moduli_description = fr"$X_{{\text{{ns}}}}^+(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of an {display_knowl('gl2.cartan', 'extended Cartan subgroup')} of $\GL_2(\Z/N\Z)$ that is nonsplit at every prime dividing $N$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
+    hypell_description = "Unknown."
+    biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
@@ -312,7 +321,8 @@ class XS4p(ModCurveFamily_base):
     rational_cusps = "1"
     moduli_description = fr"For $\ell$ an odd prime, $X_{{S_4}}(p)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of the subgroup of $\PGL_2(\Z/p\Z)$ isomorphic to $S_4$ (which is unique up to conjugacy). It parameterizes elliptic curves whose {display_knowl('ec.galois_rep_modell_image','mod-$p$ Galois representation')} has projective image $S_4$, one of the three exceptional groups $A_4$, $A_5$, $S_4$ of $\PGL_2(p)$ that can arise as projective mod-$p$ images, and the only one that can arise for elliptic curves over $\Q$. The subgroup $H$ contains $-I$ and has surjective determinant when $p \equiv \pm 3\bmod 8$, but not otherwise."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
-
+    hypell_description = "Unknown."
+    biell_description = "Unknown."
 
     @lazy_attribute
     def cusps_display(self):
