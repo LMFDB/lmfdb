@@ -168,7 +168,7 @@ class AbvarSearchArray(SearchArray):
              ("q", "field", ['q', 'g', 'poly']),
              ("p", "characteristic", ['p', 'q', 'g', 'poly']),
              ("p_rank", "p-rank", ['p_rank', 'g', 'q', 'poly']),
-             ("p_rank_deficit", "p-rank deficit", ['p_rank_deficit', 'g', 'q', 'poly']),
+             ("p_corank", "p-corank", ['p_rank_deficit', 'g', 'q', 'poly']),
              ("curve_count", "curve points", ['curve_count', 'g', 'q', 'poly']),
              ("abvar_count", "abvar points", ['abvar_count', 'g', 'q', 'poly'])]
     jump_example = "2.16.am_cn"
@@ -206,9 +206,9 @@ class AbvarSearchArray(SearchArray):
             knowl="av.fq.p_rank",
             example="2"
         )
-        p_rank_deficit = TextBox(
-            "p_rank_deficit",
-            label="$p$-rank deficit",
+        p_corank = TextBox(
+            "p_corank",
+            label="$p$-corank",
             knowl="av.fq.p_rank",
             example="2",
             advanced=True,
@@ -216,6 +216,14 @@ class AbvarSearchArray(SearchArray):
         angle_rank = TextBox(
             "angle_rank",
             label="Angle rank",
+            knowl="av.fq.angle_rank",
+            example="3",
+            example_col=False,
+            advanced=True,
+        )
+        angle_corank = TextBox(
+            "angle_corank",
+            label="Angle corank",
             knowl="av.fq.angle_rank",
             example="3",
             example_col=False,
@@ -482,7 +490,7 @@ class AbvarSearchArray(SearchArray):
             [simple, geom_simple, primitive, polarizable, jacobian],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
             [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
-            [geom_deg, p_rank_deficit, geom_squarefree],
+            [angle_corank, geom_deg, p_corank, geom_squarefree],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
@@ -493,10 +501,11 @@ class AbvarSearchArray(SearchArray):
             [g, geom_simple],
             [initial_coefficients, polarizable],
             [p_rank, jacobian],
-            [p_rank_deficit, geom_squarefree],
+            [p_corank, geom_squarefree],
             [jac_cnt, hyp_cnt],
-            [geom_deg, angle_rank],
+            [angle_rank, angle_corank],
             [twist_count, max_twist_degree],
+            [geom_deg],
             [newton_polygon],
             [abvar_point_count],
             [curve_point_count],
@@ -529,8 +538,9 @@ def common_parse(info, query):
     parse_bool_unknown(info, query, "jacobian", qfield="has_jacobian")
     parse_bool_unknown(info, query, "polarizable", qfield="has_principal_polarization")
     parse_ints(info, query, "p_rank")
-    parse_ints(info, query, "p_rank_deficit")
+    parse_ints(info, query, "p_corank", qfield="p_rank_deficit")
     parse_ints(info, query, "angle_rank")
+    parse_ints(info, query, "angle_corank")
     parse_ints(info, query, "jac_cnt", qfield="jacobian_count", name="Number of Jacobians")
     parse_ints(info, query, "hyp_cnt", qfield="hyp_count", name="Number of Hyperelliptic Jacobians")
     parse_ints(info, query, "twist_count")
@@ -626,7 +636,7 @@ abvar_columns = SearchColumns([
     MathCol("p", "ag.base_field", "Base char.", short_title="base characteristic", default=False),
     MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", short_title="L-polynomial", download_col="polynomial"),
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank"),
-    MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-rank deficit", default=False),
+    MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-corank", default=False),
     MathCol("curve_count", "av.fq.curve_point_counts", "points on curve", default=False),
     MathCol("abvar_count", "ag.fq.point_counts", "points on variety", default=False),
     MathCol("jacobian_count", "av.jacobian_count", "jacobians", default=False),
