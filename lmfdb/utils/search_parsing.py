@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 
 ## parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 import re
@@ -10,7 +9,7 @@ from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
-from lmfdb.backend.utils import SearchParsingError
+from psycodict.utils import SearchParsingError
 from .utilities import coeff_to_poly, integer_squarefree_part
 from math import log2
 import ast
@@ -1050,7 +1049,7 @@ def parse_group_label_or_order(inp, query, qfield, regex):
         raise SearchParsingError("Group label(s) do not match the required form")
     if inporders:
         if inplabels:
-            query[qfield] = {"$or": inporders +[labelquery]}
+            query[qfield] = {"$or": inporders + [labelquery]}
         else:
             query[qfield] = {"$or": inporders}
     else:
@@ -1383,6 +1382,12 @@ def parse_subfield(inp, query, qfield):
 @search_parser  # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     query[qfield] = nf_string_to_label(inp)
+
+@search_parser
+def parse_kerpol_string(inp, query, qfield):
+    label = nf_string_to_label(inp)
+    from lmfdb import db
+    query[qfield] = db.nf_fields.lookup(label, projection='coeffs')
 
 def pol_string_to_list(pol, deg=None, var=None):
     if var is None:
@@ -1766,6 +1771,10 @@ def parse_interval(inp, query, qfield, quantifier_type, bounds_field=None, split
         query[bounds_field + ".2"] = {"$lte": parse_singleton(inp)}
     elif quantifier_type == "atleast":
         query[bounds_field + ".1"] = {"$gte": parse_singleton(inp)}
+    elif quantifier_type == "inexactly":
+        x = parse_singleton(inp)
+        collapse_ors(["$or", [{bounds_field + ".1": {"$lte":x}, bounds_field + ".2": {"$gt":x}},
+                              {bounds_field + ".1": {"$lt":x}, bounds_field + ".2": {"$gte":x}}]], query)
     else:
         X = str_to_intervals(inp, split_minus, parse_singleton)
         if quantifier_type == "exactly":

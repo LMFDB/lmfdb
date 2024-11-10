@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .utils.config import get_secret_key
 import os
 from socket import gethostname
@@ -307,30 +306,6 @@ def netloc_redirect():
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
-
-
-@cached_function
-def bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
-            "The Knowledge AI",
-            "Wolfram",
-            "petalbot",
-            "Bytespider",
-            "Sogou",
-            "MJ12bot",
-            "Amazonbot",
-        ]
-    ]
-
-
-@app.before_request
-def badbot():
-    ua = request.user_agent.string.lower()
-    for elt in bad_bots_list():
-        if elt in ua:
-            return render_template("404.html", title='Too many requests'), 429
 
 
 def timestamp():

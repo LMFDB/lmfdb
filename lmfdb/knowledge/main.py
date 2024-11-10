@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about adding a Knowledge Base to the LMFDB website.
 # referencing content, dynamically inserting information into the website, …
 #
@@ -350,14 +349,10 @@ def edit(ID):
     elif knowl.type == 0:
         title = "Edit Knowl '%s'" % ID
     elif knowl.type == 2:
-        pieces = ID.split(".")
-        title = f"Edit column information for '{pieces[2]}' in '{pieces[1]}'"
-        knowl.title = f"Column {pieces[2]} of table {pieces[1]}"
-        from lmfdb import db
-        if pieces[1] in db.tablenames:
-            knowl.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+        if knowl.source:
+            title = f"Edit column information for '{knowl.source_name}' in '{knowl.source}'"
         else:
-            knowl.coltype = "DEFUNCT"
+            title = f"Edit description for '{knowl.source_name}'"
     else:
         ann_type = 'Top' if knowl.type == 1 else 'Bottom'
         title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
@@ -685,6 +680,9 @@ def save_form():
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
+    if not new_title.strip():
+        flash_error("Title required.")
+        return redirect(url_for(".show", ID=ID))
     new_content = request.form['content']
     who = current_user.get_id()
     if new_title != k.title or new_content != k.content:

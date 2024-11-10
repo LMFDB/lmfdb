@@ -1,4 +1,3 @@
-#-*- coding: utf-8 -*-
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
@@ -68,37 +67,40 @@ def local_algebra_data(labels):
     f1 = labs[0].split('.')
     labs = sorted(labs, key=lambda u: (int(j) for j in u.split('.')), reverse=True)
     ans = '<div align="center">'
-    ans += '$%s$-adic algebra'%str(f1[0])
+    ans += '$%s$-adic algebra' % str(f1[0])
     ans += '</div>'
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
     fall = [db.lf_fields.lookup(label) for label in labs]
     for f in fall:
         l = str(f['label'])
-        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
+        ans += '<tr><td><a href="%s">%s</a><td>' % (url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
-        ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
+        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'],f['f'],f['c'])
         ans += transitive_group_display_knowl(f['galois_label'])
-        ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
+        ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
-        ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
+        ans += '<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
     return ans
 
 def local_field_data(label):
     f = db.lf_fields.lookup(label)
     nicename = ''
     if f['n'] < 3:
-        nicename = ' = '+ prettyname(f)
-    ans = '$p$-adic field %s%s<br><br>'% (label, nicename)
-    ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
-    gt = int(f['galois_label'].split('T')[1])
+        nicename = ' = ' + prettyname(f)
+    ans = '$p$-adic field %s%s<br><br>' % (label, nicename)
+    ans += r'Extension of $\Q_{%s}$ defined by %s<br>' % (str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gn = f['n']
     ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    ans += 'Galois group $G$: %s<br>' % group_pretty_and_nTj(gn, gt, True)
+    if 'galois_label' in f:
+        gt = int(f['galois_label'].split('T')[1])
+        ans += 'Galois group $G$: %s<br>' % group_pretty_and_nTj(gn, gt, True)
+    else:
+        ans += 'Galois group $G$: not computed<br>'
     ans += '<div align="right">'
     ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
     ans += '</div>'
@@ -139,7 +141,7 @@ def plot_polygon(verts, polys, inds, p):
     L += line([(0,0), (xmax, 0)], color="grey")
     for i in range(1, ymax + 1):
         L += line([(0, i), (tick, i)], color="grey")
-    for i in range(0, xmax + 1):
+    for i in range(xmax + 1):
         L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
     for P in verts:
         L += text(
@@ -240,13 +242,15 @@ def show_slopes2(sl):
     return(sl)
 
 def show_slope_content(sl,t,u):
+    if sl is None or t is None or u is None:
+        return ' $not computed$ ' # actually killing math mode
     sc = str(sl)
     if sc == '[]':
         sc = r'[\ ]'
-    if t>1:
-        sc += '_{%d}'%t
-    if u>1:
-        sc += '^{%d}'%u
+    if t > 1:
+        sc += '_{%d}' % t
+    if u > 1:
+        sc += '^{%d}' % u
     return(sc)
 
 @local_fields_page.route("/")
@@ -295,6 +299,11 @@ class LF_download(Downloader):
         ),
     }
 
+def galcolresponse(n,t,cache):
+    if t is None:
+        return 'not computed'
+    return group_pretty_and_nTj(n, t, cache=cache)
+
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label),
     MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
@@ -305,7 +314,7 @@ lf_columns = SearchColumns([
     MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent"),
     MultiProcessedCol("gal", "nf.galois_group", "Galois group",
                       ["n", "gal", "cache"],
-                      lambda n, t, cache: group_pretty_and_nTj(n, t, cache=cache),
+                      galcolresponse,
                       apply_download=lambda n, t, cache: [n, t]),
     MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
     MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
@@ -323,7 +332,7 @@ lf_columns = SearchColumns([
     db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
 
 def lf_postprocess(res, info, query):
-    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res}))
+    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res if 'gal' in rec}))
     for rec in res:
         rec["cache"] = cache
     return res
@@ -377,13 +386,16 @@ def render_field_webpage(args):
         e = data['e']
         f = data['f']
         cc = data['c']
-        gt = int(data['galois_label'].split('T')[1])
         gn = data['n']
-        the_gal = WebGaloisGroup.from_nt(gn,gt)
-        isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
-        abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$'%p
-        autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
+        autstring = r'\Aut'
+        if 'galois_label' in data:
+            gt = int(data['galois_label'].split('T')[1])
+            the_gal = WebGaloisGroup.from_nt(gn,gt)
+            isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
+            abelian = ' and abelian' if the_gal.is_abelian() else ''
+            galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
+            if the_gal.order() == gn:
+                autstring = r'\Gal'
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
@@ -391,7 +403,7 @@ def render_field_webpage(args):
             ('e', r'\(%s\)' % e),
             ('f', r'\(%s\)' % f),
             ('c', r'\(%s\)' % cc),
-            ('Galois group', group_pretty_and_nTj(gn, gt)),
+            ('Galois group', group_pretty_and_nTj(gn, gt) if 'galois_label' in data else 'not computed'),
         ]
         # Look up the unram poly so we can link to it
         unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
@@ -446,28 +458,36 @@ def render_field_webpage(args):
                     't': data['t'],
                     'u': data['u'],
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
-                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
+                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
                     'hw': data['hw'],
                     'visible': show_slopes(data['visible']),
-                    'slopes': show_slopes(data['slopes']),
-                    'gal': group_pretty_and_nTj(gn, gt, True),
-                    'gt': gt,
-                    'inertia': group_display_inertia(data['inertia']),
                     'wild_inertia': wild_inertia,
                     'unram': unramp,
                     'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
-                    'gms': data['gms'],
                     'gsm': gsm,
-                    'galphrase': galphrase,
                     'autstring': autstring,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
-                    'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p),
-                    'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
-                    'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
                     })
-        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+        friends=[]
+        if 'slopes' in data:
+            info.update({'slopes': show_slopes(data['slopes'])})
+        if 'inertia' in data:
+            info.update({'inertia': group_display_inertia(data['inertia'])})
+        if 'gms' in data:
+            info.update({'gms': data['gms']})
+        if 'ram_poly_vert' in data:
+            info.update({'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p)})
+        if 'residual_polynomials' in data:
+            info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
+        if 'associated_inertia' in data:
+            info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
+        if 'galois_label' in data:
+            info.update({'gal': group_pretty_and_nTj(gn, gt, True),
+                         'galphrase': galphrase,
+                         'gt': gt})
+            friends.append(('Galois group', "/GaloisGroup/%dT%d" % (gn, gt)))
         if unramfriend != '':
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
@@ -587,15 +607,15 @@ def reliability():
 
 class LFSearchArray(SearchArray):
     noun = "field"
-    sorts = [("", "prime", ['p', 'n', 'c', 'label']),
-             ("n", "degree", ['n', 'p', 'c', 'label']),
-             ("c", "discriminant exponent", ['c', 'p', 'n', 'label']),
-             ("e", "ramification index", ['e', 'n', 'p', 'c', 'label']),
-             ("f", "residue degree", ['f', 'n', 'p', 'c', 'label']),
-             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'label']),
-             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'label']),
-             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'label']),
-             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'label'])]
+    sorts = [("", "prime", ['p', 'n', 'c', 'num']),
+             ("n", "degree", ['n', 'p', 'c', 'num']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'num']),
+             ("e", "ramification index", ['e', 'n', 'p', 'c', 'num']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'num']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'num']),
+             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'num']),
+             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'num']),
+             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'num'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
@@ -727,7 +747,7 @@ def ramdisp(p):
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('ramification index', 'lf.ramification_index'),
-                         ('for %s-adic fields'%p, None)],
+                         ('for %s-adic fields' % p, None)],
             'totaler': totaler(col_counts=False),
             'proportioner': proportioners.per_row_total}
 
@@ -737,7 +757,7 @@ def discdisp(p):
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('discriminant exponent', 'lf.discriminant_exponent'),
-                         ('for %s-adic fields'%p, None)],
+                         ('for %s-adic fields' % p, None)],
             'totaler': totaler(col_counts=False),
             'proportioner': proportioners.per_row_query(lambda n: {'n':int(n)})}
 
@@ -745,7 +765,7 @@ def galdisp(p, n):
     return {'cols': ['galois_label'],
             'constraint': {'p': p, 'n': n},
             'top_title':[('Galois groups', 'nf.galois_group'),
-                         ('for %s-adic fields of'%p, None),
+                         ('for %s-adic fields of' % p, None),
                          ('degree', 'lf.degree'),
                          (str(n), None)]}
 

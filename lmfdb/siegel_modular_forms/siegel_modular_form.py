@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 from io import BytesIO
@@ -82,15 +81,15 @@ def Sp4Z_j_space(k,j):
     bread = [("Modular forms", url_for('modular_forms')),
              ('Siegel', url_for('.index')),
              (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
-             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
-    if j%2:
+             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$' % (k,j), '')]
+    if j % 2:
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     info = { 'args':{'k':str(k),'j':str(j)} }
     try:
         if j in [0,2]:
             headers, table = dimensions._dimension_Sp4Z([k])
-            info['samples'] = find_samples('Sp4Z' if j==0 else 'Sp4Z_2', k)
+            info['samples'] = find_samples('Sp4Z' if j == 0 else 'Sp4Z_2', k)
         else:
             headers, table = dimensions._dimension_Gamma_2([k], j, group='Sp4(Z)')
         info['headers'] = headers
@@ -99,7 +98,7 @@ def Sp4Z_j_space(k,j):
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$' % (k, j),
                            bread=bread,
                            info=info)
 
@@ -127,7 +126,7 @@ def Sp4Z_j():
     bread = [("Modular forms", url_for('modular_forms')),
              ('Siegel', url_for('.index')),
              (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
-    info={'args': request.args}
+    info = {'args': request.args}
     try:
         dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
     except ValueError:
@@ -164,7 +163,7 @@ def build_dimension_table(info, fam, args):
         info['error'] = True
     if not info.get('error'):
         info['dim_args'] = dim_args
-        kwargs={}
+        kwargs = {}
         try:
             for arg in fam.dimension_desc()['args']:
                 if (arg == 'wt_range' or arg == 'k_range') and 'k_range' in dim_args:
@@ -254,7 +253,7 @@ def render_sample_page(family, sam, args, bread):
     info['space'] = '$'+family.latex_name.replace('k', '{' + str(sam.weight()) + '}')+'$'
     if 'space_url' in info:
         bread.append((info['space'], info['space_url']))
-    info['space_href'] = '<a href="%s">%s</d>'%(info['space_url'],info['space']) if 'space_url' in info else info['space']
+    info['space_href'] = '<a href="%s">%s</d>' % (info['space_url'],info['space']) if 'space_url' in info else info['space']
     if info['field_poly'].disc() < 10**10:
         label = poly_to_field_label(info['field_poly'])
         if label:

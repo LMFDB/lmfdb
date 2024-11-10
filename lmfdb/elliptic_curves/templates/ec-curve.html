@@ -213,6 +213,20 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ place_code('stable_faltings') }}</td>
         </tr>
 
+        <tr>
+        <td>{{ KNOWL('ec.q.abc_quality', title='$abc$ quality') }}:</td>
+        <td>${{ data.abc_quality }}\dots$</td>
+        <td></td><td></td>
+        <td>{{ place_code('abc_quality') }}</td>
+        </tr>
+
+        <tr>
+        <td>{{ KNOWL('ec.q.szpiro_ratio', title='Szpiro ratio') }}:</td>
+        <td>${{ data.szpiro_ratio }}\dots$</td>
+        <td></td><td></td>
+        <td>{{ place_code('szpiro_ratio') }}</td>
+        </tr>
+
        </table>
 
     <h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD invariants') }}</h2>
@@ -374,7 +388,7 @@ $\displaystyle {{ data.mwbsd.formula|safe }}$
     <h2> Local data </h2>
 
 <style type="text/css">
-#local_data th, #local_data td {
+#local_data th, #local_data td, #serre_data th, #serre_data td {
 padding : 4px;
 text-align: center;
 }
@@ -384,39 +398,31 @@ text-align: center;
   This elliptic curve is {{ '' if data.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.
   There
   {% if data.num_bad_primes==1 %}
-  is only one prime
+  is only one prime $p$
   {% else %}
-  are {{data.num_bad_primes }} primes
+  are {{data.num_bad_primes }} primes $p$
   {% endif %}
   of {{KNOWL('ec.q.reduction_type', title='bad reduction')}}:
 </p>
 
 <table id = "local_data" class="ntdata"><thead>
 <tr>
-<th>prime</th>
+<th>$p$</th>
 <th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 <th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
-<th>{{KNOWL('ec.conductor_valuation', title='ord($N$)')}}</th>
-<th>{{KNOWL('ec.discriminant_valuation', title='ord($\Delta$)')}}</th>
-<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord$(j)_{-}$')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='$v_p(N)$')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='$v_p(\Delta)$')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='$v_p(\mathrm{den}(j))$')}}</th>
 </tr>
 </thead><tbody>
 {% for pr in data.local_data %}
 <tr>
-<td> ${{pr.prime}}$</td>
+<td>${{pr.prime}}$</td>
 <td>${{pr.tamagawa_number}}$</td>
 <td>${{pr.kod}}$</td>
-<td>
-{% if pr.reduction_type==0 %}
- Additive
- {% elif pr.reduction_type==1 %}
-  Split multiplicative
-  {% elif pr.reduction_type==-1 %}
-   Non-split multiplicative
-{% endif %}
-</td>
+<td>{{ec_reduction_type(pr.reduction_type)}}</td>
 <td>{{pr.root_number}}</td>
 <td>{{pr.conductor_valuation}}</td>
 <td>{{pr.discriminant_valuation}}</td>
@@ -474,6 +480,26 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
 <p>The torsion field $K:=\Q(E[{{data.adelic_level}}])$ is a degree-${{data.data.adelic_image_size}}$ Galois extension of $\Q$ with $\Gal(K/\Q)$ isomorphic to the projection of $H$ to $\GL_2(\Z/{{data.adelic_level}}\Z)$.
 {% endif %}
 
+<p> The table below list all primes $\ell$ for which the {{KNOWL('ec.q.serre_invariants', title='Serre invariants')}} associated to the mod-$\ell$ Galois representation are exceptional. </p> 
+
+<table id = "serre_data" class="ntdata"><thead>
+<tr>
+<th>$\ell$</th>
+<th>{{KNOWL('ec.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.q.serre_invariants', title='Serre weight')}}</th>
+<th>{{KNOWL('ec.q.serre_invariants', title='Serre conductor')}}</th>
+</tr>
+</thead><tbody>
+{% for l,r,k,M in data.serre_data %}
+<tr>
+<td>${{l}}$</td>
+<td>{{ec_reduction_type(r)}}</td>
+<td>${{k}}$</td>
+<td>{{M}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
 
 <h2>{{ KNOWL('ec.isogeny', title='Isogenies') }} </h2>
 {% if data.data.isogeny_degrees != "unknown" %}
@@ -563,8 +589,9 @@ are as follows:
 <td align=center>{{tgd.f | safe}}</td>
 <td align=center>{{tgd.t}}</td>
 <td align=center>
-{% if tgd.bc_label == 'Not in database' %}Not in database
-{% else %}<a href={{tgd.bc_url}}>{{tgd.bc_label}}</a>
+{% if tgd.bc_url %}<a href={{tgd.bc_url}}>{{tgd.bc_label}}</a>
+{% else %}
+{{tgd.bc_label}}
 {% endif %}
 </td>
 </tr>

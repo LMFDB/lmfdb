@@ -82,6 +82,12 @@ table.ntdata a {
           {{ info.grh_label|safe }}
           {{ place_code('class_group') }}
         </p>
+          {% if nf.is_cm_field() %}
+        <p>
+          {{KNOWL('nf.relative_class_number','Relative class number')}}: {{ nf.relh() }}
+          {{ info.grh_label|safe }}
+        </p>
+          {% endif %}
 
 
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>

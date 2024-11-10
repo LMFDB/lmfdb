@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file defines two kinds of classes used in constructing download files for the LMFDB:
 
@@ -585,7 +584,7 @@ class Downloader():
         """
         This determines the sort order requested from the database.
 
-        OUPUT:
+        OUTPUT:
 
         - a list or other object appropriate for passing as the ``sort`` argument
           to the ``search`` method of the search table.
@@ -767,7 +766,7 @@ class Downloader():
                 num_res_disp = pluralize(num_results, self.short_name)
             else:
                 num_res_disp = pluralize(limit, self.short_name, denom=num_results, offset=offset)
-            yield lang.comment(' Query "%s" %s %s%s.\n\n' %(
+            yield lang.comment(' Query "%s" %s %s%s.\n\n' % (
                 str(info.get('query')),
                 "returned" if limit is None else "was limited to",
                 num_res_disp,
