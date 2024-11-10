@@ -131,7 +131,7 @@ def modlgal_jump(info):
     return redirect(url_for_modlgal_label(info.get("jump")))
 
 def blankzeros(n):
-    return "$%o$"%n if n else ""
+    return "$%o$" % n if n else ""
 
 modlgal_columns = SearchColumns(
     [
@@ -184,13 +184,15 @@ def modlgal_search(info, query):
             query['conductor_num_primes'] = 1
         elif info['conductor_type'] == 'squarefree':
             query['conductor_is_squarefree'] = True
-        elif info['conductor_type'] == 'divides':
+        elif info['conductor_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('conductor'), int):
                 err = "You must specify a single level"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
+            else:
+                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
     parse_primes(info, query, 'conductor_primes', name='ramified primes', mode=info.get('conductor_primes_quantifier'))
     parse_rats(info, query,'top_slope', qfield='top_slope_real',name='Top slope')
     if 'top_slope_real' in query and '/' in info['top_slope']:
@@ -228,6 +230,7 @@ class ModLGalRepSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             )
         conductor = TextBoxWithSelect(
@@ -460,7 +463,7 @@ def labels_page():
 def download_modlgal_text(label):
     data = db.modlgal_reps.lookup(label, label_col='label')
     if data is None:
-        return r"There is no mod-$\ell$ Galois representation %s in the database"%(label)
+        return r"There is no mod-$\ell$ Galois representation %s in the database" % (label)
     data_list = [data]
     response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'

@@ -66,5 +66,5 @@ def test_small_gps(sample_gp):
 
 for i in range(10):
     x = db.gps_groups_test.random({'order': {"$lte" :2000}})
-    sample_gp =db.gps_groups_test.lucky({'label': x})
+    sample_gp = db.gps_groups_test.lucky({'label': x})
     test_small_gps(sample_gp)

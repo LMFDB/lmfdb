@@ -139,6 +139,12 @@
     <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
   </tr>
   {% endif %}
+  {% if newform.weight == 1 and newform.dim == 1 %}
+  <tr>
+    <td>{{ KNOWL('cmf.stark_unit', title='Stark unit')}}:</td>
+    <td>Root of ${{ newform.stark_minpoly }}$</td>
+  </tr>
+  {% endif %}
   {% if newform.weight > 1 %}
   <tr>
     <td>{{ KNOWL('cmf.sato_tate', title='Sato-Tate group') }}: </td>

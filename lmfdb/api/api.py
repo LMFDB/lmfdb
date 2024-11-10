@@ -70,7 +70,7 @@ def full_index():
 def stats():
     def mb(x):
         return int(round(x/2**20.))
-    info={}
+    info = {}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
     if info['minsize'] not in info['minsizes']:
@@ -270,7 +270,7 @@ def api_query(table, id=None):
 
         # executing the query "q" and replacing the _id in the result list
         # So as not to preserve backwards compatibility (see test_api_usage() test)
-        if table=='ec_curvedata':
+        if table == 'ec_curvedata':
             for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
                 if oldkey in q:
                     q[newkey] = q[oldkey]

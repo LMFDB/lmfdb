@@ -47,9 +47,9 @@ def get_dim_bread():
     return get_bread(other='Dimension table')
 
 def newform_search_link(text, title=None, **kwd):
-    query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
-    link = "%s?%s"%(url_for('.index'), query)
-    return "<a href='%s'%s>%s</a>"%(link, "" if title is None else " title='%s'"%title, text)
+    query = '&'.join('%s=%s' % (key, val) for key, val in kwd.items())
+    link = "%s?%s" % (url_for('.index'), query)
+    return "<a href='%s'%s>%s</a>" % (link, "" if title is None else " title='%s'" % title, text)
 
 def cyc_display(m, d, real_sub):
     r"""
@@ -87,9 +87,9 @@ def ALdim_table(al_dims, level, weight):
     def url_sign_char(x): return "-" if x else "%2B"
     primes = ZZ(level).prime_divisors()
     num_primes = len(primes)
-    header = [r"<th class='center'>\(%s\)</th>"%p for p in primes]
+    header = [r"<th class='center'>\(%s\)</th>" % p for p in primes]
     if num_primes > 1:
-        header.append(r"<th class='center'>%s</th>"%(display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
+        header.append(r"<th class='center'>%s</th>" % (display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim</th>')
     rows = []
     fricke = [0,0]
@@ -98,13 +98,13 @@ def ALdim_table(al_dims, level, weight):
             continue
         b = list(reversed(ZZ(i).bits()))
         b = [0 for j in range(num_primes-len(b))] + b
-        row = [r"<td class='center'>\(%s\)</td>"%sign_char(x) for x in b]
+        row = [r"<td class='center'>\(%s\)</td>" % sign_char(x) for x in b]
         sign = sum(b) % 2
         if num_primes > 1:
-            row.append(r"<td class='center'>\(%s\)</td>"%sign_char(sign))
+            row.append(r"<td class='center'>\(%s\)</td>" % sign_char(sign))
         query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
-        link = newform_search_link(r'\(%s\)'%dim, **query)
-        row.append(r'<td>%s</td>'%(link))
+        link = newform_search_link(r'\(%s\)' % dim, **query)
+        row.append(r'<td>%s</td>' % (link))
         fricke[sign] += dim
         if i == len(al_dims) - 1 and num_primes > 1:
             tr = "<tr class='endsection'>"
@@ -113,11 +113,11 @@ def ALdim_table(al_dims, level, weight):
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
         plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
-        plus_link = newform_search_link(r'\(%s\)'%fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
+        plus_link = newform_search_link(r'\(%s\)' % fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
         minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
-        minus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
-        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
-        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
+        minus_link = newform_search_link(r'\(%s\)' % fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(+\)</td><td>%s</td></tr>" % (num_primes, plus_knowl, plus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(-\)</td><td>%s</td></tr>" % (num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 
@@ -135,7 +135,7 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
         #char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
         char = r", [\chi]"
     if typ:
-        typ = r"^{\mathrm{%s}}"%(typ)
+        typ = r"^{\mathrm{%s}}" % (typ)
     if char:
         ans = r"{S}_{{{k}}}{typ}({N}{char})"
     else:
@@ -230,7 +230,7 @@ def new_lambda(r,s,p):
         if s == 1:
             return p-3
         return (p-2)*(p-1)*p**(s-2)
-    if (r%2) != 0:
+    if (r % 2) != 0:
         return 0
     return p-2 if r == 2 else (p-1)**2 * p**(r/2 - 2)
 
@@ -239,7 +239,7 @@ def QDimensionNewEisensteinForms(chi, k):
     # The Q-dimension of the new subspace of E_k(N,chi), the space of Eisenstein series of weight k, level N, and character chi, where N is the modulus of chi.
     from sage.all import prod
     assert k > 0, "The weight k must be a positive integer"
-    if ((k%2) == 1) == chi['is_even']:
+    if ((k % 2) == 1) == chi['is_even']:
         return 0
     N = ZZ(chi['modulus'])
     M = ZZ(chi['conductor'])
@@ -250,7 +250,7 @@ def QDimensionNewEisensteinForms(chi, k):
         D += 1
     # As noted by Buzzard, to handle the weight 1 case, one simply divides by 2
     if k == 1:
-        assert (D%2) == 0
+        assert (D % 2) == 0
         D /= 2
     return D*chi['degree']
 
@@ -294,8 +294,9 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
     sub_level_list = [sub_level for sub_level in divisors(level) if (sub_level % char_conductor == 0) and sub_level != level]
-    sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index}))
-    sub_chars = {char['modulus'] : char for char in sub_chars}
+    sub_chars = {char['modulus'] : char for char in db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index})}
+    if weight == 1:
+        newspace_dims = {rec['level']: rec['dim'] for rec in db.mf_newspaces.search({'weight': weight, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', 'dim'])}
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -303,10 +304,13 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit']
         entry['sub_conrey_index'] = sub_chars[sub_level]['first']
         entry['sub_mult'] = number_of_divisors(level/sub_level)
-        if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
-            # only include subspaces with cusp forms
-            # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
-            oldspaces.append(entry)
+        # only include subspaces with positive dimension (computed on the fly unless with weight is 1)
+        if weight == 1:
+            if newspace_dims[sub_level] > 0:
+                oldspaces.append(entry)
+        else:
+            if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
+                oldspaces.append(entry)
     return oldspaces
 
 class WebNewformSpace():
@@ -329,12 +333,12 @@ class WebNewformSpace():
         self.properties = [('Label',self.label)]
         if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
-        self.properties +=[
+        self.properties += [
             ('Level', prop_int_pretty(self.level)),
             ('Weight', prop_int_pretty(self.weight)),
             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
             ('Rep. character', '$%s$' % self.char_conrey_str),
-            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Character field',r'$\Q%s$' % ('' if self.char_degree == 1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension', prop_int_pretty(self.dim)),
         ]
         if self.num_forms is not None:
@@ -360,15 +364,15 @@ class WebNewformSpace():
             self.trivial_character = True
             character_str = "trivial character"
             if self.dim == 0:
-                self.dim_str = r"\(%s\)"%(self.dim)
+                self.dim_str = r"\(%s\)" % (self.dim)
             else:
                 self.minus_dim = self.dim - self.plus_dim
-                self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
+                self.dim_str = r"\(%s + %s\)" % (self.plus_dim, self.minus_dim)
         else:
             self.trivial_character = False
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
-            self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of modular forms of level %s, weight %s, and %s"%(self.level, self.weight, character_str)
+            self.dim_str = r"\(%s\)" % (self.dim)
+        self.title = r"Space of modular forms of level %s, weight %s, and %s" % (self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
         self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
 
@@ -506,7 +510,7 @@ class WebGamma1Space():
                     space['level'] = level
                     space['conrey_index'] = char['first']
                     space['char_orbit_label'] = char['label'].split('.')[-1]
-                    space['label'] = "%s.%s.%s"%(level,weight,space['char_orbit_label'])
+                    space['label'] = "%s.%s.%s" % (level,weight,space['char_orbit_label'])
                     space['char_degree'] = char['degree']
                     space['dim'] = newspace_dims_by_label[char['label']]
                     space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a')
@@ -518,7 +522,7 @@ class WebGamma1Space():
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
-        self.properties +=[
+        self.properties += [
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Dimension',str(self.dim))
@@ -537,7 +541,7 @@ class WebGamma1Space():
             ('All stored data to text', url_for('cmf.download_full_space', label=self.label)),
             ('Underlying data', url_for('.mf_data', label=self.label)),
         ]
-        self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
+        self.title = r"Space of modular forms of level %s and weight %s" % (self.level, self.weight)
         self.friends = []
 
     @staticmethod
@@ -615,7 +619,7 @@ class WebGamma1Space():
         # returns a list of 6-tuples chi_rep, num_chi, space, firstform, firstdim, forms
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
-            rowtype = "oddrow" if i%2 else "evenrow"
+            rowtype = "oddrow" if i % 2 else "evenrow"
             chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_index'])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],

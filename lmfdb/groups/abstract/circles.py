@@ -500,13 +500,13 @@ def arrange_ring(radii, colors, R0, rmax):
     else:
         equal_centers = True
         for i in range(len(placed)):
-            if placed[i] + placed[(i+1)%len(placed)] > dist + eps:
+            if placed[i] + placed[(i+1) % len(placed)] > dist + eps:
                 equal_centers = False
                 break
     if not equal_centers:
         theta_diffs = []
         for i, r in enumerate(placed):
-            nextr = placed[(i+1)%len(placed)]
+            nextr = placed[(i+1) % len(placed)]
             theta_diffs.append((1 - (r + nextr)**2 / (2*Rc**2)).arccos())
         thetasum = sum(theta_diffs)
         if thetasum > 2*pi + eps:
