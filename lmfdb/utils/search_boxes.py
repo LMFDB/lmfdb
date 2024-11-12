@@ -238,7 +238,7 @@ class TextBox(SearchBox):
                 keys.append('style="width: %spx"' % self.short_width)
             if self.name in info:
                 keys.append('value="%s"' % info[self.name])
-        return '<input type="text" ' + " ".join(keys) + "/>"
+        return '<input ' + " ".join(keys) + "/>"
 
 class SelectBox(SearchBox):
     """
@@ -520,7 +520,7 @@ class ColumnController(SelectBox):
             '''oninput="control_columns(this);"''',
             '''id="column-selector"''',
         ]
-        style="position: absolute; z-index: 9999;"
+        style = "position: absolute; z-index: 9999;"
         if self.short_width is not None:
             style += f'width: {self.short_width}px;'
         keys.append(f'style="{style}"')
@@ -755,7 +755,7 @@ class SearchArray(UniqueRepresentation):
                     label="",
                     width=150,
                     options=info["stats"]._dynamic_cols,
-                    extra=['onchange="set_buckets(this, \'buckets%s\')"'%i])
+                    extra=['onchange="set_buckets(this, \'buckets%s\')"' % i])
                 buckets = TextBox(
                     name="buckets%s" % i,
                     id="buckets%s" % i,

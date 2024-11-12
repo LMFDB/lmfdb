@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import re
 import yaml
@@ -6,17 +5,17 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
-from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
-RZB_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+RZB_URL_PREFIX = "https://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
@@ -71,29 +70,40 @@ def cremona_label_to_lmfdb_label(clab):
 
 logger = make_logger("ec")
 
+# S_LABEL_RE assumes surjective determinant, but we need extended Slabels for EC/NF
+# This can be removed if/when we add modular curves with non-surjective determinant to the modular curves database
+S_EXT_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}\[(\d+)\]")
+
 def gl2_subgroup_data(label):
-    Slevel = 0
+    in_modcurve_db = True
     try:
-        data = db.gps_gl2zhat.lookup(label)
-        if data is None:
-            r = re.match(r"([1-9][0-9]*)([A-Z][a-z]*)",label)
-            if r is None:
-                raise ValueError
+        from lmfdb.modular_curves.main import LABEL_RE, RSZB_LABEL_RE, S_LABEL_RE
+        if LABEL_RE.fullmatch(label):
+            data = db.gps_gl2zhat_fine.lookup(label)
+        elif RSZB_LABEL_RE.fullmatch(label):
+            data = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label})
+        elif S_LABEL_RE.fullmatch(label):
+            r = S_LABEL_RE.fullmatch(label)
             Slevel = int(r[1])
-            if r[2] == "G":
-                data = db.gps_gl2zhat.lucky({'level':1})
-                print(data)
+            if r[2] != "G":
+                data = db.gps_gl2zhat_fine.lucky({'Slabel':label,'level':Slevel})
+            else:
+                # hack to handle surjective mod-ell images where the level of the image is 1 but we want to show data at level ell
+                data = db.gps_gl2zhat_fine.lucky({'level':1})
                 data['level'] = Slevel
                 data['generators'] = [[m.matrix()[0,0],m.matrix()[0,1],m.matrix()[1,0],m.matrix()[0,1]] for m in GL(2,Integers(Slevel)).generators()]
                 data['isogeny_orbits'] = [[Slevel,Slevel+1,1]]
                 data['orbits'] = [[Slevel,Slevel*Slevel-1,1]]
                 data['Slabel'] = label
-            else:
-                data = db.gps_gl2zhat.lucky({'Slabel':label,'level':Slevel})
-                if data is None:
-                    raise ValueError
+        elif S_EXT_LABEL_RE.fullmatch(label):
+            in_modcurve_db = False
+            data = db.gps_gl2zhat_nonsurjdet.lucky({'Slabel':label})
+        else:
+            return "Unrecognized subgroup label format %s" % label
+        if data is None:
+            raise ValueError
     except ValueError:
-        return "Unable to locate data for GL(2,Zhat) subgroup with label: %s" % label
+        return "Unable to locate data for subgroup with label: %s" % label
 
     def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     def matrix(m): return r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
@@ -120,7 +130,9 @@ def gl2_subgroup_data(label):
         return f" (of which {r} are rational)"
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == data['label'] else "no")
+    info += row_wrap('Contains $-1$', "yes" if data['contains_negative_one'] else "no")
+    if data.get('Glabel'):
+        info += row_wrap('Abstract group', abstract_group_display_knowl(data.get('Glabel')))
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
@@ -137,17 +149,14 @@ def gl2_subgroup_data(label):
         info += row_wrap("Cyclic %s-torsion field degree" % (ell), min([r[1] for r in data['orbits'] if r[0] == ell]))
         info += row_wrap("Full %s-torsion field degree" % (ell), ell*(ell-1)*(ell-1)*(ell+1) // data['index'])
     else:
-        info += row_wrap("Cyclic %s${}^n$-isogeny field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['isogeny_orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
-        info += row_wrap("Cyclic %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
+        info += row_wrap("Cyclic %s${}^n$-isogeny field degrees" % (ell), ", ".join(["%s" % (min([r[1] for r in data['isogeny_orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
+        info += row_wrap("Cyclic %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s" % (min([r[1] for r in data['orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
         degs = [int(s.split('.')[1]) for s in data["reductions"]] + [data['index']]
         degs = [ell*(ell-1)**2*(ell+1)*ell**(4*i) // degs[i] for i in range(e)]
-        info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s"%d for d in degs]))
-    if data['genus'] > 0:
-        info += row_wrap('Newforms', ''.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
-        info += row_wrap('Analytic rank', data['rank'])
-        if data['genus'] == 1 and data['model']:
-            info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('ec.by_ec_label',label=data['model']), data['model']))
+        info += row_wrap("Full %s${}^n$-torsion field degrees" % (ell), ", ".join(["%s" % d for d in degs]))
     info += "</table>\n"
+    if in_modcurve_db:
+        info += '<div align="right"><a href="%s">%s home page</a></div>' % (str(url_for("modcurve.by_label", label=data['label'])),data['label'])
     return info
 
 def weighted_proj_to_affine_point(P):
@@ -199,8 +208,8 @@ def latex_equation(ainvs):
                     '+xy' if a1 else '',
                     '+y' if a3 else '',
                     '=x^3',
-                    '+x^2' if a2==1 else '-x^2' if a2==-1 else '',
-                    '{:+}x'.format(a4) if abs(a4)>1 else '+x' if a4==1 else '-x' if a4==-1 else '',
+                    '+x^2' if a2 == 1 else '-x^2' if a2 == -1 else '',
+                    '{:+}x'.format(a4) if abs(a4) > 1 else '+x' if a4 == 1 else '-x' if a4 == -1 else '',
                     '{:+}'.format(a6) if a6 else '',
                     r'\)'])
 
@@ -210,9 +219,9 @@ def homogeneous_latex_equation(ainvs):
                     '+xyz' if a1 else '',
                     '+yz^2' if a3 else '',
                     '=x^3',
-                    '+x^2z' if a2==1 else '-x^2z' if a2==-1 else '',
-                    '{:+}xz^2'.format(a4) if abs(a4)>1 else '+xz^2' if a4==1 else '-xz^2' if a4==-1 else '',
-                    '{:+}z^3'.format(a6) if abs(a6)>1 else '+z^3' if a6==1 else '-z^3' if a6==-1 else '',
+                    '+x^2z' if a2 == 1 else '-x^2z' if a2 == -1 else '',
+                    '{:+}xz^2'.format(a4) if abs(a4) > 1 else '+xz^2' if a4 == 1 else '-xz^2' if a4 == -1 else '',
+                    '{:+}z^3'.format(a6) if abs(a6) > 1 else '+z^3' if a6 == 1 else '-z^3' if a6 == -1 else '',
                     r'\)'])
 
 def short_latex_equation(ainvs):
@@ -224,7 +233,7 @@ def short_latex_equation(ainvs):
             A = A.divide_knowing_divisible_by(p**4)
             B = B.divide_knowing_divisible_by(p**6)
     return ''.join([r'\(y^2=x^3',
-                    '{:+}x'.format(A) if abs(A)>1 else '+x' if A==1 else '-x' if A==-1 else '',
+                    '{:+}x'.format(A) if abs(A) > 1 else '+x' if A == 1 else '-x' if A == -1 else '',
                     '{:+}'.format(B) if B else '',
                     r'\)'])
 
@@ -242,7 +251,7 @@ def sextic_twist_discriminant(ainvs):
     # because the text says that 27.a4 is this curve's sextic twist by
     # D, not the other way round.
 
-    return D.sign() * prod(p ** ((-e)%6) for p,e in D.factor())
+    return D.sign() * prod(p ** ((-e) % 6) for p,e in D.factor())
 
 def quartic_twist_discriminant(ainvs):
     r"""
@@ -255,7 +264,7 @@ def quartic_twist_discriminant(ainvs):
     # because the text says that 32.a3 is this curve's quartic twist
     # by D, not the other way round.
 
-    return D.sign() * prod(p ** ((-e)%4) for p,e in D.factor())
+    return D.sign() * prod(p ** ((-e) % 4) for p,e in D.factor())
 
 class WebEC():
     """
@@ -327,9 +336,15 @@ class WebEC():
         Dfac = Factorization([(ZZ(ld['prime']),ld['discriminant_valuation']) for ld in local_data], unit=ZZ(self.signD))
         data['disc_factor'] = latex(Dfac)
         data['disc'] = D = Dfac.value()
-        data['cond_factor'] =latex(Nfac)
+        data['cond_factor'] = latex(Nfac)
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
+
+        def red(p):
+            ld = [ld['reduction_type'] for ld in local_data if ld['prime'] == p]
+            return ld[0] if len(ld) else 2
+
+        self.serre_data = [(l,red(l),k,web_latex_factored_integer(M,equals=True)) for l,k,M in self.serre_invariants]
 
         # retrieve data about MW rank, generators, heights and
         # torsion, leading term of L-function & other BSD data from
@@ -348,7 +363,7 @@ class WebEC():
         data['minq_D'] = minqD = self.min_quad_twist_disc
         data['minq_label'] = db.ec_curvedata.lucky({'ainvs': self.min_quad_twist_ainvs},
                                                    projection='lmfdb_label' if self.label_type == 'LMFDB' else 'Clabel')
-        data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
+        data['minq_info'] = '(itself)' if minqD == 1 else '(by {})'.format(minqD)
         data['minq_url'] = url_for(".by_ec_label", label=data["minq_label"])
 
         # higher minimal twists:
@@ -383,13 +398,12 @@ class WebEC():
         if adelic_data:
             assert len(adelic_data) == 1
             my_adelic_data = adelic_data[0]
-            data['adelic_data'] =  my_adelic_data
+            data['adelic_data'] = my_adelic_data
             data['adelic_gens_latex'] = ",".join([str(latex(dispZmat_from_list(z,2))) for z in my_adelic_data['adelic_gens']])
             M = ZZ(self.adelic_level)
             data['adelic_level_latex'] = web_latex_factored_integer(M,equals=True)
             P = M.prime_divisors()
             data['adelic_image_size'] = euler_phi(M)*M*(M // prod(P))**2*prod([p**2-1 for p in P]) // self.adelic_index
-            print(data['adelic_image_size'])
         else:
             data['adelic_data'] = {}
 
@@ -406,7 +420,7 @@ class WebEC():
         if self.cm:
             data['cm_ramp'] = [p for p in ZZ(self.cm).support() if p not in self.nonmax_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
-            if data['cm_nramp']==1:
+            if data['cm_nramp'] == 1:
                 data['cm_ramp'] = data['cm_ramp'][0]
             else:
                 data['cm_ramp'] = ", ".join(str(p) for p in data['cm_ramp'])
@@ -426,8 +440,8 @@ class WebEC():
         cond, iso, num = split_lmfdb_label(lmfdb_label)
         self.class_deg  = classdata['class_deg']
         self.one_deg = ZZ(self.class_deg).is_prime()
-        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
-        if len(isodegs)<3:
+        isodegs = [str(d) for d in self.isogeny_degrees if d > 1]
+        if len(isodegs) < 3:
             data['isogeny_degrees'] = " and ".join(isodegs)
         else:
             data['isogeny_degrees'] = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
@@ -455,38 +469,38 @@ class WebEC():
 
         data['optimality_bound'] = OPTIMALITY_BOUND
         self.cremona_bound = CREMONA_BOUND
-        if N<CREMONA_BOUND:
+        if N < CREMONA_BOUND:
             data['manin_constant'] = self.manin_constant # (conditional on data['optimality_known'])
         else:
             data['manin_constant'] = 0 # (meaning not available)
 
-        if N<OPTIMALITY_BOUND:
+        if N < OPTIMALITY_BOUND:
 
-            data['optimality_code'] = int(self.Cnumber == (3 if self.Ciso=='990h' else 1))
+            data['optimality_code'] = int(self.Cnumber == (3 if self.Ciso == '990h' else 1))
             data['optimality_known'] = True
             data['manin_known'] = True
-            if self.label_type=='Cremona':
-                data['optimal_label'] = '990h3' if self.Ciso=='990h' else self.Ciso+'1'
+            if self.label_type == 'Cremona':
+                data['optimal_label'] = '990h3' if self.Ciso == '990h' else self.Ciso+'1'
             else:
-                data['optimal_label'] = '990.i3' if self.lmfdb_iso=='990.i' else self.lmfdb_iso+'1'
+                data['optimal_label'] = '990.i3' if self.lmfdb_iso == '990.i' else self.lmfdb_iso+'1'
 
-        elif N<CREMONA_BOUND:
+        elif N < CREMONA_BOUND:
 
             data['optimality_code'] = self.optimality
             data['optimality_known'] = (self.optimality < 2)
 
-            if self.optimality==1:
+            if self.optimality == 1:
                 data['manin_known'] = True
                 data['optimal_label'] = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
             else:
-                if self.Cnumber==1:
+                if self.Cnumber == 1:
                     data['manin_known'] = False
                     data['optimal_label'] = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
                 else:
-                    # find curve #1 in this class and its optimailty code:
+                    # find curve #1 in this class and its optimality code:
                     opt_curve = db.ec_curvedata.lucky({'Ciso': self.Ciso, 'Cnumber': 1},
                                                    projection=['Clabel','lmfdb_label','optimality'])
-                    data['manin_known'] = (opt_curve['optimality']==1)
+                    data['manin_known'] = (opt_curve['optimality'] == 1)
                     data['optimal_label'] = opt_curve['Clabel' if self.label_type == 'Cremona' else 'lmfdb_label']
 
         else:
@@ -497,11 +511,11 @@ class WebEC():
 
         # p-adic data:
 
-        data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
-                                 if (N*data['ap'][i]) %p !=0]
+        data['p_adic_primes'] = [p for i, p in enumerate(prime_range(5, 100))
+                                 if (N*data['ap'][i]) % p != 0]
 
         data['p_adic_data_exists'] = False
-        if data['optimality_code']==1:
+        if data['optimality_code'] == 1:
             data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
 
         # Iwasawa data (where present)
@@ -528,7 +542,7 @@ class WebEC():
             self.class_url = url_for(".by_ec_label", label=self.lmfdb_iso)
             self.class_name = self.lmfdb_iso
         data['class_name'] = self.class_name
-        data['Cnumber'] = self.Cnumber if N<CREMONA_BOUND else None
+        data['Cnumber'] = self.Cnumber if N < CREMONA_BOUND else None
 
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
@@ -548,9 +562,9 @@ class WebEC():
             self.friends += [('L-function not available', "")]
 
         if not self.cm:
-            if N<=300:
+            if N <= 300:
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=N, isogeny=iso))]
-            if N<=50:
+            if N <= 50:
                 self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=N, isogeny=iso))]
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
@@ -582,7 +596,7 @@ class WebEC():
 
         if self.label_type == 'Cremona':
             self.title = "Elliptic curve with Cremona label {} (LMFDB label {})".format(self.Clabel, self.lmfdb_label)
-        elif N<CREMONA_BOUND:
+        elif N < CREMONA_BOUND:
             self.title = "Elliptic curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.Clabel)
         else:
             self.title = "Elliptic curve with LMFDB label {}".format(self.lmfdb_label)
@@ -604,7 +618,7 @@ class WebEC():
         mwbsd['tamagawa_product'] = prod(tamagawa_numbers)
         if mwbsd['tamagawa_product'] > 1:
             cp_fac = [ZZ(cp).factor() for cp in tamagawa_numbers]
-            cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+            cp_fac = [latex(cp) if len(cp) < 2 else '('+latex(cp)+')' for cp in cp_fac]
             mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         else:
             mwbsd['tamagawa_factors'] = None
@@ -614,6 +628,7 @@ class WebEC():
             mwbsd['reg']  = self.regulator
             mwbsd['sha']  = self.sha
             mwbsd['sha2'] = latex_sha(self.sha)
+            mwbsd['sha_is_exact'] = self.rank == 0 # see Issue #5872
             for num in ['reg', 'special_value', 'real_period', 'area']:
                 mwbsd[num]  = RR(mwbsd[num])
         except AttributeError:
@@ -622,7 +637,7 @@ class WebEC():
             mwbsd['sha']  = '?'
             mwbsd['sha2'] = '?'
             mwbsd['regsha'] = ( mwbsd['special_value'] * self.torsion**2 ) / ( mwbsd['tamagawa_product'] * mwbsd['real_period'] )
-            if r<=1:
+            if r <= 1:
                 mwbsd['rank'] = r
 
         # Integral points
@@ -703,9 +718,9 @@ class WebEC():
                 rtknowl = ['ec.nonsplit_multiplicative_reduction', 'ec.additive_reduction', 'ec.split_multiplicative_reduction'][1+red]
             p = str(p)
             pdata = iwdata[p]
-            if isinstance(pdata, type(u'?')):
+            if isinstance(pdata, str):
                 if not rtype:
-                    if pdata=="o?":
+                    if pdata == "o?":
                         rtype = "ord"
                         rtknowl = "ec.good_ordinary_reduction"
                     else:
@@ -718,7 +733,7 @@ class WebEC():
                     iw['data'] += [[p, rtype, "?", "?", rtknowl]]
                     iw['missing_flag'] = True
             else:
-                if len(pdata)==2:
+                if len(pdata) == 2:
                     if not rtype:
                         rtype = "ord"
                         rtknowl = "ec.good_ordinary_reduction"
@@ -752,7 +767,7 @@ class WebEC():
 
         for tgd in tgdata:
             tg1 = {}
-            tg1['bc_label'] = "Not in database"
+            tg1['bc_label'] = "not in database"
             tg1['d'] = tgd['degree']
             F = tgd['field']
             tg1['f'] = formatfield(F)
@@ -760,7 +775,7 @@ class WebEC():
                 tg['fields_missing'] = True
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol==F), None)
+            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol == F), None)
             if bcc:
                 from lmfdb.ecnf.main import split_full_label
                 F, NN, I, C = split_full_label(bcc)
@@ -774,8 +789,8 @@ class WebEC():
         lastd = 1
         for tg1 in tgextra:
             d = tg1['d']
-            if d!=lastd:
-                tg1['m'] = len([x for x in tgextra if x['d']==d])
+            if d != lastd:
+                tg1['m'] = len([x for x in tgextra if x['d'] == d])
                 lastd = d
 
         ## Hard-coded this for now.  Note that the *only* place where

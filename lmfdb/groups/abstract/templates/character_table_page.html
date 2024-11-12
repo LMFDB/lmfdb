@@ -1,7 +1,18 @@
-{% extends "base.html" %}
+{% extends "homepage.html" %}
 
-{% block body %}
+{% block content %}
 
 {% include 'character_table.html' %}
 
+{% endblock %}
+
+{# Hack to remove the sidebar and move main content over #}
+{% block sidebar %}
+<style>
+#main {
+  margin:  0px 0px 0px 0px;
+  padding: 0px 0px 0px 10px;
+  min-height:600px;
+}
+</style>
 {% endblock %}

@@ -1,14 +1,18 @@
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function
+from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
+from flask import render_template
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+
+CC_LIMIT = 160
 
 def knowl_cache(galois_labels=None, results=None):
     """
@@ -67,6 +71,9 @@ def cyclestrings(perm):
     a = ['('+','.join([str(u) for u in v])+')' for v in perm]
     return ''.join(a)
 
+def compress_cycle_type(ct):
+    bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    return ','.join(z + e for z,e in bits)
 ############  Galois group object
 
 
@@ -129,7 +136,7 @@ class WebGaloisGroup:
     def otherrep_list(self, givebound=True, cache=None):
         sibs = self._data['siblings']
         pharse = r"with degree $\leq %d$" % self.sibling_bound()
-        if len(sibs)==0 and givebound:
+        if len(sibs) == 0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False, cache=cache)
         if givebound:
@@ -149,35 +156,99 @@ class WebGaloisGroup:
 
     def gapgroupnt(self):
         if int(self.n()) == 1:
-            G = gap.SmallGroup(1, 1)
+            G = libgap.SmallGroup(1, 1)
         else:
-            G = gap('Group(['+self.generator_string()+'])')
+            gens = [SymmetricGroup(self.n())([tuple(cyc) for cyc in g]) for g in self.gens()]
+            G = libgap.Group([g._libgap_() for g in gens])
         return G
 
     def num_conjclasses(self):
         return self._data['num_conj_classes']
 
+    @lazy_attribute
+    def wag(self):
+        return WebAbstractGroup(self.abstract_label())
+
+    def have_isomorphism(self):
+        #if self.wag.element_repr_type == "Lie":
+        #    return False
+        return 'isomorphism' in self._data
+
+    @lazy_attribute
+    def getisom(self):
+        # assumes isomorphism is in _data
+        wag = self.wag
+        imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
+        imgs = [libgap.PermList(z) for z in imgs]
+        return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
+
+    @lazy_attribute
+    def factors_of_order(self):
+        return [z[0] for z in list(ZZ(self.order()).factor())]
+
+    @lazy_attribute
+    def characters(self):
+        return self.wag.characters
+
+    @lazy_attribute
     def conjclasses(self):
-        if 'conjclasses' in self._data:
-            return self._data['conjclasses']
+        if self.num_conjclasses()>CC_LIMIT:
+            return None
         g = self.gapgroupnt()
         n = self.n()
-        gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-        cc = g.ConjugacyClasses()
-        ccn = [x.Size() for x in cc]
-        ccc = [x.Representative() for x in cc]
+        wag = self.wag
+        self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
-            cc2 = [[1]]
-            cc = ['()']
+            self.conjugacy_classes[0].force_repr('()')
+            return [['()', 1, 1, '1', '1A',0]]
+        elif self.have_isomorphism():
+            isom = self.getisom
+            cc = [z.representative for z in self.conjugacy_classes]
+            cc1 = [wag.decode(z) for z in cc]
+            cc = [isom.Image(z) for z in cc1]
+            for j in range(len(self.conjugacy_classes)):
+                self.conjugacy_classes[j].force_repr(str(cc[j]))
+            ccn = [z.size for z in self.conjugacy_classes]
+            cclabels = [z.label for z in self.conjugacy_classes]
         else:
-            cc = ccc
-            cc2 = [x.cycletype(n) for x in cc]
-        cc2 = [str(x) for x in cc2]
-        cc2 = [re.sub(r"\[", '', x) for x in cc2]
-        cc2 = [re.sub(r"\]", '', x) for x in cc2]
-        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
-        self._data['conjclasses'] = ans
+            cc = g.ConjugacyClasses()
+            ccn = [x.Size() for x in cc]
+            cclabels = ['' for z in cc]
+            cc = [x.Representative() for x in cc]
+            for j in range(len(self.conjugacy_classes)):
+                self.conjugacy_classes[j].force_repr(' ')
+        cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
+        inds = [n-len(z) for z in cc2]
+        cc2 = [compress_cycle_type(z) for z in cc2]
+        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j],inds[j]] for j in range(len(cc))]
         return ans
+
+    @lazy_attribute
+    def malle_a(self):
+        ccs = self.conjclasses
+        if not ccs:
+            return None
+        inds = [z[5] for z in ccs]
+        if len(inds) == 1:
+            return 0
+        if len(inds) == 0:
+            return None
+        inds = [z for z in inds if z > 0]
+
+        return QQ(f"1/{min(inds)}")
+
+    @lazy_attribute
+    def can_chartable(self):
+        if self.num_conjclasses() > CC_LIMIT:
+            return False
+        if not db.gps_groups.lookup(self.abstract_label()):
+            return False
+        return self.wag.complex_characters_known
+
+    def chartable(self):
+        self.conjclasses # called to load info in self
+        return render_template("character-table.html", gp=self,
+            info={'dispv': sparse_cyclotomic_to_mathml})
 
     def sibling_bound(self):
         return self._data['bound_siblings']
@@ -285,20 +356,20 @@ def galois_module_knowl(n, t, index):
     name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
         return 'Error'
-    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>' % (name, n, t, index, name)
 
 
 @cached_function
 def cclasses_display_knowl(n, t, name=None):
     ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'The %d conjugacy class representatives for '% ncc
-        if n==1 and t==1:
+        name = 'The %d conjugacy class representatives for ' % ncc
+        if n == 1 and t == 1:
             name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
-    if ncc < 50:
-        return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
-    return name + ' are not computed'
+    if ncc > 5000:
+        return name + ' are not computed'
+    return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 
 @cached_function
@@ -306,9 +377,7 @@ def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
         name += group_display_short(n, t)
-    group = WebGaloisGroup.from_nt(n, t)
-    if ZZ(group.order()) < ZZ(10000000) and group.num_conjclasses() < 21:
-        return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
     return name + ' is not computed'
 
 
@@ -376,8 +445,8 @@ def galois_group_data(n, t):
         inf += ", imprimitive"
     if n < 16:
         inf += '<div>'
-        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
-        inf += '%s</div>'%(group['name'])
+        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: ' % ('CHM label',str(n),str(t),'CHM label')
+        inf += '%s</div>' % (group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += WebGaloisGroup.from_nt(n,t).generator_string()
@@ -398,7 +467,7 @@ def galois_group_data(n, t):
     rest += '</div>'
 
     if group.get('pretty', None) is not None:
-        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + rest
     return inf + rest
 
 
@@ -416,26 +485,19 @@ def group_cclasses_knowl_guts(n, t):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
+    rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
+    wgg = WebGaloisGroup(label)
+    if wgg.malle_a:
+        rest += '$%s$'%str(wgg.malle_a)
+    else:
+        rest += 'not computed'
     return rest
 
 
 @cached_function
 def group_character_table_knowl_guts(n, t):
-    label = base_label(n, t)
-    group = db.gps_transitive.lookup(label)
-    gname = group['name']
-    gname = gname.replace('=', ' = ')
-    if group.get('pretty', None) is not None:
-        gname = group['pretty']
-    inf = '<div>Character table for '
-    inf += gname
-    inf += '<blockquote>'
-    inf += '<pre>'
-    inf += chartable(n, t)
-    inf += '</pre>'
-    inf += '</blockquote></div>'
-    return(inf)
-
+    wgg = WebGaloisGroup.from_nt(n,t)
+    return wgg.chartable()
 
 @cached_function
 def galois_module_knowl_guts(n, t, index):
@@ -452,7 +514,7 @@ def galois_module_knowl_guts(n, t, index):
     out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
-        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+        out += "%s &\\mapsto %s \\\\" % (str(g[0]), matg)
     out = out[:-2]
     out += r"\end{aligned}$$"
     out += "</blockquote>"
@@ -518,7 +580,7 @@ def resolve_display(resolves):
         if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
+                ans += r'$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = deg
@@ -548,19 +610,24 @@ def group_display_inertia(code):
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
-    if group.num_conjclasses() >= 50:
-        return 'not computed'
+    #if group.num_conjclasses() >= 50:
+    #    return 'not computed'
     html = """<div>
             <table class="ntdata">
-            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td>
+            <td><a title = "' + index + ' [gg.index]" knowl="gg.index">Index</a></td>
+            <td>Representative</td></tr></thead>
             <tbody>
          """
-    cc = group.conjclasses()
+    cc = group.conjclasses
+    if not cc:
+        return None
     for c in cc:
-        html += '<tr><td>' + str(c[3]) + '</td>'
-        html += '<td>' + str(c[2]) + '</td>'
-        html += '<td>' + str(c[1]) + '</td>'
-        html += '<td>' + str(c[0]) + '</td>'
+        html += f'<tr><td>${c[3]}$</td>'
+        html += f'<td>${c[2]}$</td>'
+        html += f'<td>${c[1]}$</td>'
+        html += f'<td>${c[5]}$</td>'
+        html += f'<td>${c[0]}$</td>'
     html += """</tr></tbody>
              </table>
           """
@@ -568,15 +635,10 @@ def cclasses(n, t):
 
 
 def chartable(n, t):
-    group = WebGaloisGroup.from_nt(n,t)
-    G = group.gapgroupnt()
-    ctable = str(G.CharacterTable().Display())
-    ctable = re.sub("^.*\n", '', ctable)
-    ctable = re.sub("^.*\n", '', ctable)
-    return ctable
-
+    return WebGaloisGroup.from_nt(n,t).chartable()
 
 def group_alias_table():
+    aliases = get_aliases()
     akeys = list(aliases)
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
     ans = r'<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
@@ -604,6 +666,7 @@ def nt2abstract(n, t, output="pair"):
 
 def complete_group_code(code):
     # Order direct products
+    aliases = get_aliases()
     code1 = 'X'.join(sorted(code.split('X'), reverse=True))
     if code1 in aliases:
         return aliases[code1]
@@ -613,7 +676,7 @@ def complete_group_code(code):
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
-    # covert GAP code to abstract group label
+    # convert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
         code = "%s.%s" % (rematch.group(1), rematch.group(2))
@@ -645,229 +708,231 @@ def complete_group_codes(codes):
         ans.extend(complete_group_code(code))
     return list(set(ans))
 
+@cached_function
+def get_aliases():
+    aliases = {}
 
-aliases = {}
+    # Do all cyclic groups as once
+    for j in range(1,48):
+        if j != 32:
+            aliases['C'+str(j)] = [(j,1)]
+    aliases['C32'] = [(32,33)]
 
-# Do all cyclic groups as once
-for j in range(1,48):
-    if j != 32:
-        aliases['C'+str(j)] = [(j,1)]
-aliases['C32'] = [(32,33)]
+    # For direct products, factors must be reverse-sorted
+    # All nicknames here must be all upper-case
 
-# For direct products, factors must be reverse-sorted
-# All nicknames here must be all upper-case
+    aliases['S1'] = [(1, 1)]
+    aliases['A1'] = [(1, 1)]
+    aliases['A2'] = [(1, 1)]
+    aliases['S2'] = [(2, 1)]
+    aliases['D1'] = [(2, 1)]
+    aliases['A3'] = [(3, 1)]
+    aliases['S3'] = [(3, 2)]
+    aliases['D3'] = [(3, 2)]
+    aliases['V4'] = [(4, 2)]
+    aliases['D2'] = [(4, 2)]
+    aliases['D4'] = [(4, 3)]
+    aliases['C2XC2'] = [(4, 2)]
+    aliases['A4'] = [(4, 4)]
+    aliases['S4'] = [(4, 5)]
+    aliases['D5'] = [(5, 2)]
+    aliases['F5'] = [(5, 3)]
+    aliases['A5'] = [(5, 4)]
+    aliases['S5'] = [(5, 5)]
+    aliases['D6'] = [(6, 3)]
+    aliases['PSL(2,5)'] = aliases['A5']
+    aliases['PGL(2,5)'] = aliases['S5']
+    aliases['A6'] = [(6, 15)]
+    aliases['S6'] = [(6, 16)]
+    aliases['D7'] = [(7, 2)]
+    aliases['F7'] = [(7, 4)]
+    aliases['GL(3,2)'] = [(7, 5)]
+    aliases['A7'] = [(7, 6)]
+    aliases['S7'] = [(7, 7)]
+    aliases['C4XC2'] = [(8, 2)]
+    aliases['C2XC2XC2'] = [(8, 3)]
+    aliases['Q8'] = [(8, 5)]
+    aliases['D8'] = [(8, 6),(16,7)]
+    aliases['SL(2,3)'] = [(8, 12)]
+    aliases['GL(2,3)'] = [(8, 23)]
+    aliases['PSL(2,7)'] = aliases['GL(3,2)']
+    aliases['PGL(2,7)'] = [(8, 43)]
+    aliases['A8'] = [(8, 49)]
+    aliases['S8'] = [(8, 50)]
+    aliases['C3XC3'] = [(9, 2)]
+    aliases['D9'] = [(9, 3)]
+    aliases['S3XC3'] = [(6, 5)]
+    aliases['S3XS3'] = [(6, 9)]
+    aliases['M9'] = [(9, 14)]
+    aliases['PSL(2,8)'] = [(9, 27)]
+    aliases['A9'] = [(9, 33)]
+    aliases['S9'] = [(9, 34)]
+    aliases['D10'] = [(10, 3)]
+    aliases['PSL(2,9)'] = aliases['A6']
+    aliases['PGL(2,9)'] = [(10, 30)]
+    aliases['M10'] = [(10, 31)]
+    aliases['A10'] = [(10, 44)]
+    aliases['S10'] = [(10, 45)]
+    aliases['D11'] = [(11, 2)]
+    aliases['F11'] = [(11, 4)]
+    aliases['PSL(2,11)'] = [(11, 5)]
+    aliases['M11'] = [(11, 6)]
+    aliases['A11'] = [(11, 7)]
+    aliases['S11'] = [(11, 8)]
+    aliases['C6XC2'] = [(12, 2)]
+    aliases['C3:C4'] = [(12, 5)]
+    aliases['D12'] = [(12,12)]
+    aliases['A12'] = [(12, 300)]
+    aliases['S12'] = [(12, 301)]
+    aliases['F13'] = [(13, 6)]
+    aliases['A13'] = [(13, 8)]
+    aliases['S13'] = [(13, 9)]
+    aliases['PGL(2,13)'] = [(14, 39)]
+    aliases['A14'] = [(14, 62)]
+    aliases['S14'] = [(14, 63)]
+    aliases['A15'] = [(15, 103)]
+    aliases['S15'] = [(15, 104)]
+    aliases['Q8XC2'] = [(16, 7)]
+    aliases['C4:C4'] = [(16, 8)]
+    aliases['Q16'] = [(16, 14)]
+    aliases['A16'] = [(16, 1953)]
+    aliases['S16'] = [(16, 1954)]
+    aliases['F17'] = [(17, 5)]
+    aliases['PSL(2,17)'] = [(17, 6)]
+    aliases['A17'] = [(17, 9)]
+    aliases['S17'] = [(17, 10)]
+    aliases['PGL(2,17)'] = [(18, 468)]
+    aliases['A18'] = [(18, 982)]
+    aliases['S18'] = [(18, 983)]
+    aliases['A19'] = [(19, 7)]
+    aliases['S19'] = [(19, 8)]
+    aliases['C5:C4'] = [(20, 2)]
+    aliases['PGL(2,19)'] = [(20, 362)]
+    aliases['A20'] = [(20, 1116)]
+    aliases['S20'] = [(20, 1117)]
+    aliases['A21'] = [(21, 163)]
+    aliases['S21'] = [(21, 164)]
+    aliases['A22'] = [(22, 58)]
+    aliases['S22'] = [(22, 59)]
+    aliases['F23'] = [(23, 3)]
+    aliases['M23'] = [(23, 5)]
+    aliases['A23'] = [(23, 6)]
+    aliases['S23'] = [(23, 7)]
+    aliases['Q8XC3'] = [(24, 4)]
+    aliases['C3:Q8'] = [(24, 5)]
+    aliases['C3:C8'] = [(24, 8)]
+    aliases['A24'] = [(24,24999)]
+    aliases['S24'] = [(24,25000)]
+    aliases['A25'] = [(25,210)]
+    aliases['S25'] = [(25,211)]
+    aliases['A26'] = [(26,95)]
+    aliases['S26'] = [(26,96)]
+    aliases['A27'] = [(27,2391)]
+    aliases['S27'] = [(27,2392)]
+    aliases['C7:C4'] = [(28, 3)]
+    aliases['A28'] = [(28,1853)]
+    aliases['S28'] = [(28,1854)]
+    aliases['A29'] = [(29,7)]
+    aliases['S29'] = [(29,8)]
+    aliases['A30'] = [(30,5711)]
+    aliases['S30'] = [(30,5712)]
+    aliases['A31'] = [(31,11)]
+    aliases['S31'] = [(31,12)]
+    aliases['Q32'] = [(32, 51)]
+    aliases['A32'] = [(32,2801323)]
+    aliases['S32'] = [(32,2801324)]
+    aliases['A33'] = [(33,161)]
+    aliases['S33'] = [(33,162)]
+    aliases['A34'] = [(34,114)]
+    aliases['S34'] = [(34,115)]
+    aliases['A35'] = [(35,406)]
+    aliases['S35'] = [(35,407)]
+    aliases['A36'] = [(36,121278)]
+    aliases['S36'] = [(36,121279)]
+    aliases['A37'] = [(37,10)]
+    aliases['S37'] = [(37,11)]
+    aliases['A38'] = [(38,75)]
+    aliases['S38'] = [(38,76)]
+    aliases['A39'] = [(39,305)]
+    aliases['S39'] = [(39,306)]
+    aliases['C5:C8'] = [(40, 3)]
+    aliases['A40'] = [(40,315841)]
+    aliases['S40'] = [(40,315842)]
+    aliases['A41'] = [(41,9)]
+    aliases['S41'] = [(41,10)]
+    aliases['A42'] = [(42,9490)]
+    aliases['S42'] = [(42,9491)]
+    aliases['A43'] = [(43,9)]
+    aliases['S43'] = [(43,10)]
+    aliases['A44'] = [(44,2112)]
+    aliases['S44'] = [(44,2113)]
+    aliases['A45'] = [(45,10922)]
+    aliases['S45'] = [(45,10923)]
+    aliases['A46'] = [(46,55)]
+    aliases['S46'] = [(46,56)]
+    aliases['A47'] = [(47,5)]
+    aliases['S47'] = [(47,6)]
 
-aliases['S1'] = [(1, 1)]
-aliases['A1'] = [(1, 1)]
-aliases['A2'] = [(1, 1)]
-aliases['S2'] = [(2, 1)]
-aliases['D1'] = [(2, 1)]
-aliases['A3'] = [(3, 1)]
-aliases['S3'] = [(3, 2)]
-aliases['D3'] = [(3, 2)]
-aliases['V4'] = [(4, 2)]
-aliases['D2'] = [(4, 2)]
-aliases['D4'] = [(4, 3)]
-aliases['C2XC2'] = [(4, 2)]
-aliases['A4'] = [(4, 4)]
-aliases['S4'] = [(4, 5)]
-aliases['D5'] = [(5, 2)]
-aliases['F5'] = [(5, 3)]
-aliases['A5'] = [(5, 4)]
-aliases['S5'] = [(5, 5)]
-aliases['D6'] = [(6, 3)]
-aliases['PSL(2,5)'] = aliases['A5']
-aliases['PGL(2,5)'] = aliases['S5']
-aliases['A6'] = [(6, 15)]
-aliases['S6'] = [(6, 16)]
-aliases['D7'] = [(7, 2)]
-aliases['F7'] = [(7, 4)]
-aliases['GL(3,2)'] = [(7, 5)]
-aliases['A7'] = [(7, 6)]
-aliases['S7'] = [(7, 7)]
-aliases['C4XC2'] = [(8, 2)]
-aliases['C2XC2XC2'] = [(8, 3)]
-aliases['Q8'] = [(8, 5)]
-aliases['D8'] = [(8, 6),(16,7)]
-aliases['SL(2,3)'] = [(8, 12)]
-aliases['GL(2,3)'] = [(8, 23)]
-aliases['PSL(2,7)'] = aliases['GL(3,2)']
-aliases['PGL(2,7)'] = [(8, 43)]
-aliases['A8'] = [(8, 49)]
-aliases['S8'] = [(8, 50)]
-aliases['C3XC3'] = [(9, 2)]
-aliases['D9'] = [(9, 3)]
-aliases['S3XC3'] = [(6, 5)]
-aliases['S3XS3'] = [(6, 9)]
-aliases['M9'] = [(9, 14)]
-aliases['PSL(2,8)'] = [(9, 27)]
-aliases['A9'] = [(9, 33)]
-aliases['S9'] = [(9, 34)]
-aliases['D10'] = [(10, 3)]
-aliases['PSL(2,9)'] = aliases['A6']
-aliases['PGL(2,9)'] = [(10, 30)]
-aliases['M10'] = [(10, 31)]
-aliases['A10'] = [(10, 44)]
-aliases['S10'] = [(10, 45)]
-aliases['D11'] = [(11, 2)]
-aliases['F11'] = [(11, 4)]
-aliases['PSL(2,11)'] = [(11, 5)]
-aliases['M11'] = [(11, 6)]
-aliases['A11'] = [(11, 7)]
-aliases['S11'] = [(11, 8)]
-aliases['C6XC2'] = [(12, 2)]
-aliases['C3:C4'] = [(12, 5)]
-aliases['D12'] = [(12,12)]
-aliases['A12'] = [(12, 300)]
-aliases['S12'] = [(12, 301)]
-aliases['F13'] = [(13, 6)]
-aliases['A13'] = [(13, 8)]
-aliases['S13'] = [(13, 9)]
-aliases['PGL(2,13)'] = [(14, 39)]
-aliases['A14'] = [(14, 62)]
-aliases['S14'] = [(14, 63)]
-aliases['A15'] = [(15, 103)]
-aliases['S15'] = [(15, 104)]
-aliases['Q8XC2'] = [(16, 7)]
-aliases['C4:C4'] = [(16, 8)]
-aliases['Q16'] = [(16, 14)]
-aliases['A16'] = [(16, 1953)]
-aliases['S16'] = [(16, 1954)]
-aliases['F17'] = [(17, 5)]
-aliases['PSL(2,17)'] = [(17, 6)]
-aliases['A17'] = [(17, 9)]
-aliases['S17'] = [(17, 10)]
-aliases['PGL(2,17)'] = [(18, 468)]
-aliases['A18'] = [(18, 982)]
-aliases['S18'] = [(18, 983)]
-aliases['A19'] = [(19, 7)]
-aliases['S19'] = [(19, 8)]
-aliases['C5:C4'] = [(20, 2)]
-aliases['PGL(2,19)'] = [(20, 362)]
-aliases['A20'] = [(20, 1116)]
-aliases['S20'] = [(20, 1117)]
-aliases['A21'] = [(21, 163)]
-aliases['S21'] = [(21, 164)]
-aliases['A22'] = [(22, 58)]
-aliases['S22'] = [(22, 59)]
-aliases['F23'] = [(23, 3)]
-aliases['M23'] = [(23, 5)]
-aliases['A23'] = [(23, 6)]
-aliases['S23'] = [(23, 7)]
-aliases['Q8XC3'] = [(24, 4)]
-aliases['C3:Q8'] = [(24, 5)]
-aliases['C3:C8'] = [(24, 8)]
-aliases['A24'] = [(24,24999)]
-aliases['S24'] = [(24,25000)]
-aliases['A25'] = [(25,210)]
-aliases['S25'] = [(25,211)]
-aliases['A26'] = [(26,95)]
-aliases['S26'] = [(26,96)]
-aliases['A27'] = [(27,2391)]
-aliases['S27'] = [(27,2392)]
-aliases['C7:C4'] = [(28, 3)]
-aliases['A28'] = [(28,1853)]
-aliases['S28'] = [(28,1854)]
-aliases['A29'] = [(29,7)]
-aliases['S29'] = [(29,8)]
-aliases['A30'] = [(30,5711)]
-aliases['S30'] = [(30,5712)]
-aliases['A31'] = [(31,11)]
-aliases['S31'] = [(31,12)]
-aliases['Q32'] = [(32, 51)]
-aliases['A32'] = [(32,2801323)]
-aliases['S32'] = [(32,2801324)]
-aliases['A33'] = [(33,161)]
-aliases['S33'] = [(33,162)]
-aliases['A34'] = [(34,114)]
-aliases['S34'] = [(34,115)]
-aliases['A35'] = [(35,406)]
-aliases['S35'] = [(35,407)]
-aliases['A36'] = [(36,121278)]
-aliases['S36'] = [(36,121279)]
-aliases['A37'] = [(37,10)]
-aliases['S37'] = [(37,11)]
-aliases['A38'] = [(38,75)]
-aliases['S38'] = [(38,76)]
-aliases['A39'] = [(39,305)]
-aliases['S39'] = [(39,306)]
-aliases['C5:C8'] = [(40, 3)]
-aliases['A40'] = [(40,315841)]
-aliases['S40'] = [(40,315842)]
-aliases['A41'] = [(41,9)]
-aliases['S41'] = [(41,10)]
-aliases['A42'] = [(42,9490)]
-aliases['S42'] = [(42,9491)]
-aliases['A43'] = [(43,9)]
-aliases['S43'] = [(43,10)]
-aliases['A44'] = [(44,2112)]
-aliases['S44'] = [(44,2113)]
-aliases['A45'] = [(45,10922)]
-aliases['S45'] = [(45,10923)]
-aliases['A46'] = [(46,55)]
-aliases['S46'] = [(46,56)]
-aliases['A47'] = [(47,5)]
-aliases['S47'] = [(47,6)]
+    aliases['D13'] = [(13,2)]
+    aliases['D14'] = [(14,3)]
+    aliases['D15'] = [(15,2)]
+    aliases['D16'] = [(16,56)]
+    aliases['D17'] = [(17,2)]
+    aliases['D18'] = [(18,13)]
+    aliases['D19'] = [(19,2)]
+    aliases['D20'] = [(20,10)]
+    aliases['D21'] = [(21,5)]
+    aliases['D22'] = [(22,3)]
+    aliases['D23'] = [(23,2)]
+    aliases['D24'] = [(24,34)]
+    aliases['D25'] = [(25,4)]
+    aliases['D26'] = [(26,3)]
+    aliases['D27'] = [(27,8)]
+    aliases['D28'] = [(28,10)]
+    aliases['D29'] = [(29,2)]
+    aliases['D30'] = [(30,14)]
+    aliases['D31'] = [(31,2)]
+    aliases['D32'] = [(32,374)]
+    aliases['D33'] = [(33,3)]
+    aliases['D34'] = [(34,3)]
+    aliases['D35'] = [(35,4)]
+    aliases['D36'] = [(36,47)]
+    aliases['D37'] = [(37,2)]
+    aliases['D38'] = [(38,3)]
+    aliases['D39'] = [(39,4)]
+    aliases['D40'] = [(40,46)]
+    aliases['D41'] = [(41,2)]
+    aliases['D42'] = [(42,11)]
+    aliases['D43'] = [(43,2)]
+    aliases['D44'] = [(44,9)]
+    aliases['D45'] = [(45,4)]
+    aliases['D46'] = [(46,3)]
+    aliases['D47'] = [(47,2)]
 
-aliases['D13'] = [(13,2)]
-aliases['D14'] = [(14,3)]
-aliases['D15'] = [(15,2)]
-aliases['D16'] = [(16,56)]
-aliases['D17'] = [(17,2)]
-aliases['D18'] = [(18,13)]
-aliases['D19'] = [(19,2)]
-aliases['D20'] = [(20,10)]
-aliases['D21'] = [(21,5)]
-aliases['D22'] = [(22,3)]
-aliases['D23'] = [(23,2)]
-aliases['D24'] = [(24,34)]
-aliases['D25'] = [(25,4)]
-aliases['D26'] = [(26,3)]
-aliases['D27'] = [(27,8)]
-aliases['D28'] = [(28,10)]
-aliases['D29'] = [(29,2)]
-aliases['D30'] = [(30,14)]
-aliases['D31'] = [(31,2)]
-aliases['D32'] = [(32,374)]
-aliases['D33'] = [(33,3)]
-aliases['D34'] = [(34,3)]
-aliases['D35'] = [(35,4)]
-aliases['D36'] = [(36,47)]
-aliases['D37'] = [(37,2)]
-aliases['D38'] = [(38,3)]
-aliases['D39'] = [(39,4)]
-aliases['D40'] = [(40,46)]
-aliases['D41'] = [(41,2)]
-aliases['D42'] = [(42,11)]
-aliases['D43'] = [(43,2)]
-aliases['D44'] = [(44,9)]
-aliases['D45'] = [(45,4)]
-aliases['D46'] = [(46,3)]
-aliases['D47'] = [(47,2)]
+    aliases['M12'] = [(12,295)]
+    aliases['M22'] = [(22,38)]
+    aliases['M23'] = [(23,5)]
+    aliases['M24'] = [(24,24680)]
+    aliases['PSL(3,3)'] = [(13,7)]
+    aliases['PSL(2,13)'] = [(14,30)]
+    aliases['PSP(4,3)'] = [(27,993)]
+    aliases['PSU(3,3)'] = [(28,323)]
+    aliases['SL(2,5)'] = [(24,201)]
+    aliases['GL(2,5)'] = [(24,1353)]
 
-aliases['M12'] = [(12,295)]
-aliases['M22'] = [(22,38)]
-aliases['M23'] = [(23,5)]
-aliases['M24'] = [(24,24680)]
-aliases['PSL(3,3)'] = [(13,7)]
-aliases['PSL(2,13)'] = [(14,30)]
-aliases['PSP(4,3)'] = [(27,993)]
-aliases['PSU(3,3)'] = [(28,323)]
-aliases['SL(2,5)'] = [(24,201)]
-aliases['GL(2,5)'] = [(24,1353)]
-
-# Load all sibling representations from the database
-labels = ["%sT%s" % elt[0] for elt in aliases.values()]
-siblings = {
-    elt["label"]: [tuple(z[0]) for z in elt["siblings"]]
-    for elt in db.gps_transitive.search(
-        {"label": {"$in": labels}}, ["label", "siblings"]
-    )
-}
-for ky in aliases:
-    nt = aliases[ky][0]
-    label = "%sT%s"% nt
-    aliases[ky] = siblings[label][:]
-    if nt not in aliases[ky]:
-        aliases[ky].append(nt)
-    aliases[ky].sort()
+    # Load all sibling representations from the database
+    labels = ["%sT%s" % elt[0] for elt in aliases.values()]
+    siblings = {
+        elt["label"]: [tuple(z[0]) for z in elt["siblings"]]
+        for elt in db.gps_transitive.search(
+                {"label": {"$in": labels}}, ["label", "siblings"]
+        )
+    }
+    for ky in aliases:
+        nt = aliases[ky][0]
+        label = "%sT%s" % nt
+        aliases[ky] = siblings[label][:]
+        if nt not in aliases[ky]:
+            aliases[ky].append(nt)
+        aliases[ky].sort()
+    return aliases

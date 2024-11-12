@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 
 ## parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 import re
@@ -10,7 +9,7 @@ from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
-from lmfdb.backend.utils import SearchParsingError
+from psycodict.utils import SearchParsingError
 from .utilities import coeff_to_poly, integer_squarefree_part
 from math import log2
 import ast
@@ -129,7 +128,10 @@ class SearchParser():
             if self.error_is_safe:
                 flash_error(f"<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. {err}.", inp, name)
             else:
-                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
+                if hasattr(err, "trim_msg_error") and err.trim_msg_error:
+                    flash_error("%s", str(err))
+                else:
+                    flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info["err"] = ""
             raise
 
@@ -769,9 +771,9 @@ def _parse_subset(inp, query, qfield, mode, radical, product, cardinality):
         #        raise SearchParsingError("Cannot specify containment and equality simultaneously")
         #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
         # else:
-        if radical is not None and not(radical in query):
+        if radical is not None and radical not in query:
             query[radical] = {'$lte': product(inp)}
-        if cardinality is not None and not(cardinality in query):
+        if cardinality is not None and cardinality not in query:
             query[cardinality] = {'$lte': len(inp)}
         add_condition("$containedin")
     elif mode == "include" or not mode:  # include is the default
@@ -1031,6 +1033,29 @@ def parse_bracketed_rats(
             else:
                 query[qfield] = inp[1:-1]
 
+# see SearchParser.__call__ for actual arguments when calling
+@search_parser(clean_info=True, prep_plus=True)
+def parse_group_label_or_order(inp, query, qfield, regex):
+    inps = inp.split(",")
+    inporders = [z for z in inps if re.fullmatch(r'\d+',z)]
+    inporders = [{'$startswith': f'{z}.'} for z in inporders]
+    inplabels = [z for z in inps if not re.fullmatch(r'\d+',z)]
+    if all(regex.fullmatch(z) for z in inplabels):
+        if len(inplabels) == 1:
+            labelquery = inplabels[0]
+        else:
+            labelquery = {"$in": inplabels}
+    else:
+        raise SearchParsingError("Group label(s) do not match the required form")
+    if inporders:
+        if inplabels:
+            query[qfield] = {"$or": inporders + [labelquery]}
+        else:
+            query[qfield] = {"$or": inporders}
+    else:
+        query[qfield] = labelquery
+
+
 def parse_gap_id(info, query, field="group", name="Group", qfield="group"):
     parse_bracketed_posints(
         info,
@@ -1114,8 +1139,9 @@ def parse_inertia(inp, query, qfield, err_msg=None):
                 query[iner] = abstractid
         else:
             # Check for an alias, like D4
-            from lmfdb.galois_groups.transitive_group import aliases
+            import lmfdb.galois_groups.transitive_group
 
+            aliases = lmfdb.galois_groups.transitive_group.get_aliases()
             inp2 = inp.upper()
             if inp2 in aliases:
                 nt = aliases[inp2][0]
@@ -1180,7 +1206,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         F1 = poly_to_field_label(F1)
         if F1:
             return F1
-        raise SearchParsingError("%s does not define a number field in the database." % F)
+        raise SearchParsingError("%s does not define a number field in the database." % F, trim_msg_error=True)
 
     if F[0] == "q":
         if "(" in F and ")" in F:
@@ -1356,6 +1382,12 @@ def parse_subfield(inp, query, qfield):
 @search_parser  # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     query[qfield] = nf_string_to_label(inp)
+
+@search_parser
+def parse_kerpol_string(inp, query, qfield):
+    label = nf_string_to_label(inp)
+    from lmfdb import db
+    query[qfield] = db.nf_fields.lookup(label, projection='coeffs')
 
 def pol_string_to_list(pol, deg=None, var=None):
     if var is None:
@@ -1739,6 +1771,10 @@ def parse_interval(inp, query, qfield, quantifier_type, bounds_field=None, split
         query[bounds_field + ".2"] = {"$lte": parse_singleton(inp)}
     elif quantifier_type == "atleast":
         query[bounds_field + ".1"] = {"$gte": parse_singleton(inp)}
+    elif quantifier_type == "inexactly":
+        x = parse_singleton(inp)
+        collapse_ors(["$or", [{bounds_field + ".1": {"$lte":x}, bounds_field + ".2": {"$gt":x}},
+                              {bounds_field + ".1": {"$lt":x}, bounds_field + ".2": {"$gte":x}}]], query)
     else:
         X = str_to_intervals(inp, split_minus, parse_singleton)
         if quantifier_type == "exactly":

@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about adding a Knowledge Base to the LMFDB website.
 # referencing content, dynamically inserting information into the website, …
 #
 # This is more than just a web of entries in a wiki, because content is "transcluded".
 # Transclusion is an actual concept, you can read about it here:
-# http://en.wikipedia.org/wiki/Transclusion
+# https://en.wikipedia.org/wiki/Transclusion
 #
 # a "Knowl" (see knowl.py) is our base class for any bit of "knowledge". we might
 # subclass it into "theorem", "proof", "description", and much more if necessary
@@ -88,7 +87,7 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
-                       extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+                       extension_configs={'wikilinks': [('base_url', 'https://wiki.l-functions.org/')]})
 # priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)
@@ -254,7 +253,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     This function does the actual rendering, for render and the template_filter
     render_knowl_in_template (ultimately for KNOWL_INC)
     """
-    render_me = u"""\
+    render_me = """\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
@@ -295,8 +294,7 @@ def body_class():
 
 def get_bread(breads=[]):
     bc = [("Knowledge", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 
@@ -351,14 +349,10 @@ def edit(ID):
     elif knowl.type == 0:
         title = "Edit Knowl '%s'" % ID
     elif knowl.type == 2:
-        pieces = ID.split(".")
-        title = f"Edit column information for '{pieces[2]}' in '{pieces[1]}'"
-        knowl.title = f"Column {pieces[2]} of table {pieces[1]}"
-        from lmfdb import db
-        if pieces[1] in db.tablenames:
-            knowl.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+        if knowl.source:
+            title = f"Edit column information for '{knowl.source_name}' in '{knowl.source}'"
         else:
-            knowl.coltype = "DEFUNCT"
+            title = f"Edit description for '{knowl.source_name}'"
     else:
         ann_type = 'Top' if knowl.type == 1 else 'Bottom'
         title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
@@ -410,7 +404,7 @@ def show(ID):
         caturl = url_for('.index', category=k.category)
     b = get_bread([(k.category, caturl), ('%s' % title, url_for('.show', ID=ID))])
 
-    return render_template(u"knowl-show.html",
+    return render_template("knowl-show.html",
                            title=title,
                            k=k,
                            cur_username=current_user.get_id(),
@@ -792,7 +786,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
     # authors = ', '.join(authors)
 
-    render_me = u"""\
+    render_me = """\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
@@ -901,8 +895,8 @@ def index():
             knowls.append(k)
 
     def first_char(k):
-        t = k['title']
-        if len(t) == 0 or t[0] not in string.ascii_letters:
+        t = k['title'].replace("$", "").replace("\\", "")
+        if len(t) == 0 or t[0] not in string.ascii_letters + string.digits:
             return "?"
         return t[0].upper()
 
@@ -913,11 +907,13 @@ def index():
         '''sort knowls, special chars at the end'''
         if cur_cat == "columns":
             return knowl['id']
-        title = knowl['title']
+        title = knowl['title'].replace("$", "").replace("\\", "")
         if title and title[0] in string.ascii_letters:
             return (0, title.lower())
-        else:
+        elif title and title[0] in string.digits:
             return (1, title.lower())
+        else:
+            return (2, title.lower())
 
     knowls = sorted(knowls, key=knowl_sort_key)
     from itertools import groupby

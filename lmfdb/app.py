@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .utils.config import get_secret_key
 import os
 from socket import gethostname
@@ -221,7 +220,7 @@ git_rev, git_date, _ = git_infos()
 _url_source = 'https://github.com/LMFDB/lmfdb/tree/'
 _current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 
-# Creates link to the list of revisions on the master, where the most recent commit is on top.
+# Creates link to the list of revisions on the main, where the most recent commit is on top.
 _url_changeset = 'https://github.com/LMFDB/lmfdb/commits/%s' % branch
 _latest_changeset = '<a href="%s">%s</a>' % (_url_changeset, git_date)
 
@@ -307,39 +306,6 @@ def netloc_redirect():
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
-
-
-@cached_function
-def bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
-            "The Knowledge AI",
-            "Wolfram",
-            "petalbot",
-        ]
-    ]
-
-
-@cached_function
-def very_bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
-            "Amazonbot",
-        ]
-    ]
-
-
-@app.before_request
-def badbot():
-    ua = request.user_agent.string.lower()
-    for elt in very_bad_bots_list():
-        if elt in ua:
-            return render_template("404.html", title='Too many requests'), 429
-    for elt in bad_bots_list():
-        if elt in ua:
-            time.sleep(10)
 
 
 def timestamp():

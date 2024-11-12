@@ -32,7 +32,7 @@ def gen_name(d):
 gen_names = dict([(field,gen_name(d)) for field,d in zip(fields, abs_discs)])
 
 false_curves = {'2.0.4.1': ['34225.7-a', '34225.7-b', '34225.3-a', '34225.3-b'],
-                
+
                 '2.0.8.1': ['5625.1-b', '5625.3-b', '6561.5-a', '6561.5-d',
                             '21609.1-b', '21609.1-c', '21609.3-b', '21609.3-c'],
 
@@ -72,7 +72,7 @@ def field_from_label(lab):
 # database.  Here 'matching' means same label, conductor=label and ap
 # agree.  This must allow for the valid non-existence of curves for
 # some newforms.
-    
+
 def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, check_ap = False, verbose=False):
     r"""Go through all Bianchi Modular Forms with the given field label,
     assumed imaginary quadratic (i.e. '2.0.d.1' with d in
@@ -108,7 +108,7 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
     nok = 0
     missing_curves = []
     mismatches = []
-    
+
     primes = list(primes_iter(K,maxnorm=1000)) if check_ap else []
     curve_ap = {}  # curve_ap[conductor_label] will be a dict iso -> ap
     form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
@@ -205,4 +205,4 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
         print("{} form-curve pairs had inconsistent ap:".format(len(mismatches)))
         print(mismatches)
 
-    
+

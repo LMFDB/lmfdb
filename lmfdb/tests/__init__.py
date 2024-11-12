@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-import unittest2
+import unittest
+
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 import ssl
@@ -17,7 +17,7 @@ assert QQ
 assert NumberField
 
 
-class LmfdbTest(unittest2.TestCase):
+class LmfdbTest(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
         self.app = app

@@ -3,8 +3,9 @@ from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
+from sage.misc.cachefunc import cached_function
 
-from lmfdb.app import ctx_proc_userdata
+from lmfdb.app import ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
 from lmfdb.utils.utilities import flash_error, flash_info, to_dict
 
@@ -64,6 +65,8 @@ class Wrapper():
             errpage = self.f(info, query)
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
+            if is_debug_mode():
+                raise
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
             return render_template(self.template, info=info, title=err_title, **template_kwds)
@@ -164,6 +167,8 @@ class SearchWrapper(Wrapper):
                     # Errors raised in jump box, for example
                     # Using the search results is an okay default, though some
                     # jump boxes will use their own error processing
+                    if is_debug_mode():
+                        raise
                     if "%s" in str(err):
                         flash_error(str(err), info[key])
                     else:
@@ -317,7 +322,9 @@ class CountWrapper(Wrapper):
         )
         self.groupby = groupby
         if postprocess is None and overall is None:
-            overall = table.stats.column_counts(groupby)
+            @cached_function
+            def overall():
+                return table.stats.column_counts(groupby)
         self.overall = overall
 
     def __call__(self, info):
@@ -344,7 +351,7 @@ class CountWrapper(Wrapper):
                     for row in info["row_heads"]:
                         for col in info["col_heads"]:
                             if (row, col) not in res:
-                                if (row, col) in self.overall:
+                                if (row, col) in self.overall():
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
