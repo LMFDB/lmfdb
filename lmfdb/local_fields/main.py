@@ -455,7 +455,7 @@ families_columns = SearchColumns([
     MathCol("slopes", "lf.swan_slopes", "Swan slopes"),
     MathCol("heights", "lf.heights", "Heights"),
     MathCol("rams", "lf.rams", "Rams"),
-    MathCol("poly", "lf.family_poly", "Generic poly", default=False), # FIXME: convert to latex
+    ProcessedCol("poly", "lf.family_poly", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Field count"),
     MathCol("mass", "lf.family_mass", "Mass", orig=["mass_display"]),

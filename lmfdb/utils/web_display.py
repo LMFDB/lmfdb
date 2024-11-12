@@ -708,9 +708,15 @@ def compress_poly_Q(rawpoly,
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a polynomial (or other string containing polynomials)
     if not isinstance(pol_str, str):
         pol_str = str(pol_str)
+    if greek_vars:
+        greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
+        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
+    if subscript_vars:
+        subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
+        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')
     while ind_mid != -1:
