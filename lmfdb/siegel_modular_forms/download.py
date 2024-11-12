@@ -2,7 +2,7 @@
 from ast import literal_eval
 from flask import url_for, redirect, abort
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
 from lmfdb.siegel_modular_forms.web_newform import WebNewform
 from lmfdb.siegel_modular_forms.web_space import WebNewformSpace, WebGamma1Space
