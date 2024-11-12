@@ -12,10 +12,10 @@ import itertools
 import re
 FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+[a-z]+)?')
 
-def str_to_QQtup(s):
+def str_to_QQlist(s):
     if s == "[]":
-        return ()
-    return tuple(QQ(x) for x in s[1:-1].split(", "))
+        return []
+    return [QQ(x) for x in s[1:-1].split(", ")]
 
 class pAdicSlopeFamily:
     def __init__(self, label=None, base=None, slopes=[], heights=[], rams=[], field_cache=None):
@@ -26,7 +26,8 @@ class pAdicSlopeFamily:
             if data:
                 self.__dict__.update(data)
                 for col in ["visible", "slopes", "rams", "heights", "scaled_rams", "scaled_heights"]:
-                    setattr(self, col, str_to_QQtup(getattr(self, col)))
+                    setattr(self, col, str_to_QQlist(getattr(self, col)))
+                self.artin_slopes = self.visible
                 base, rams, p = data["base"], data["rams"], ZZ(data["p"])
                 if rams == "[]":
                     rams = []
@@ -65,7 +66,7 @@ class pAdicSlopeFamily:
             rams = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
         if w and not slopes:
             slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
-        self.slopes = slopes
+        #self.slopes = slopes
         #data = db.lf_families.lookup(self.label, data_cols)
         #if data:
         #    for col in data_cols:
@@ -83,9 +84,9 @@ class pAdicSlopeFamily:
         #    else:
         #        self.base_aut = self.f = self.e0 = self.n0 = 1
         #        self.n = self.e = self.pw
-        self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
-        self.heights = heights
-        self.rams = rams
+        #self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
+        #self.heights = heights
+        #self.rams = rams
 
     @lazy_attribute
     def scaled_heights(self):
