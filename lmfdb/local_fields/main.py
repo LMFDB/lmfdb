@@ -435,18 +435,20 @@ def pretty_link(label, p, n, rf):
 
 families_columns = SearchColumns([
     LinkCol("label", "lf.family_label", "Label", url_for_family),
-    p_col,
-    degree_col(True),
+    MathCol("p", "lf.residue_field", "$p$", short_title="prime"),
+    MathCol("n", "lf.degree", "$n$", short_title="degree"),
     MathCol("n0", "lf.degree", "$n_0$", short_title="base degree", default=False),
-    MathCol("n_absolute", "lf.degree", r"$n_{\mathrm{abs}}$", short_title="absolute degree", default=False),
-    MathCol("f", "lf.family_residue_field_degree", "$f$", short_title="base res. field degree"),
-    MathCol("f0", "lf.family_residue_field_degree", "$f_0$", short_title="base res. field degree", default=False),
-    MathCol("f_absolute", "lf.family_residue_field_degree", r"$f_{\mathrm{abs}}$", short_title="absolute residue field degree", default=False),
-    MathCol("e", "lf.family_ramification", "$e$", short_title="base ram. index"),
-    MathCol("e0", "lf.family_ramification", "$e_0$", short_title="base ram. index", default=False),
-    MathCol("e_absolute", "lf.family_ramification", r"$e_{\mathrm{abs}}$", short_title="absolute ram. index", default=False),
-    c_col,
-    MultiProcessedCol("base_field", "lf.tame_degree", "Base",
+    MathCol("n_absolute", "lf.degree", r"$n_{\mathrm{abs}}$", short_title="abs. degree", default=False),
+    MathCol("f", "lf.residue_field_degree", "$f$", short_title="res. field degree"),
+    MathCol("f0", "lf.residue_field_degree", "$f_0$", short_title="base res. field degree", default=False),
+    MathCol("f_absolute", "lf.residue_field_degree", r"$f_{\mathrm{abs}}$", short_title="abs. residue field degree", default=False),
+    MathCol("e", "lf.ramification_index", "$e$", short_title="ram. index"),
+    MathCol("e0", "lf.ramification_index", "$e_0$", short_title="base ram. index", default=False),
+    MathCol("e_absolute", "lf.ramification_index", r"$e_{\mathrm{abs}}$", short_title="abs. ram. index", default=False),
+    MathCol("c", "lf.discriminant_exponent", "$c$", short_title="disc. exponent"),
+    MathCol("c0", "lf.discriminant_exponent", "$c_0$", short_title="base disc. exponent"),
+    MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent"),
+    MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
                       pretty_link),
     visible_col(False),
@@ -455,11 +457,11 @@ families_columns = SearchColumns([
     MathCol("rams", "lf.rams", "Rams"),
     MathCol("poly", "lf.family_poly", "Generic poly", default=False), # FIXME: convert to latex
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
-    MathCol("field_count", "lf.family_field_count", "Num. Fields"),
-    MathCol("mass", "lf.mass", "Mass", orig=["mass_display"]),
-    MathCol("mass_stored", "lf.mass", "Mass stored", default=False),
-    PercentCol("mass_missing", "lf.mass", "Mass missing"),
-    MathCol("wild_segments", "lf.slope_multiplicities", "Num. wild segments", default=False),
+    MathCol("field_count", "lf.family_field_count", "Field count"),
+    MathCol("mass", "lf.family_mass", "Mass", orig=["mass_display"]),
+    MathCol("mass_stored", "lf.family_mass", "Mass stored", default=False),
+    PercentCol("mass_missing", "lf.family_missing_mass", "Mass missing"),
+    MathCol("wild_segments", "lf.wild_segments", "Wild segments", default=False),
     MathCol("packet_count", "lf.packet", "Num. Packets"),
 ])
 
@@ -1077,13 +1079,13 @@ class FamiliesSearchArray(SearchArray):
         e0 = TextBox(
             name='e0',
             label='Base ram. index',
-            knowl='lf.family_ramification',
+            knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
         f0 = TextBox(
             name='f0',
             label='Base res. field degree',
-            knowl='lf.family_residue_field_degree',
+            knowl='lf.residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
         n_absolute = TextBox(
@@ -1101,13 +1103,13 @@ class FamiliesSearchArray(SearchArray):
         e_absolute = TextBox(
             name='e_absolute',
             label='Absolute ram. index',
-            knowl='lf.family_ramification',
+            knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
         f_absolute = TextBox(
             name='f_absolute',
             label='Absolute res. field degree',
-            knowl='lf.family_residue_field_degree',
+            knowl='lf.residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
         w = TextBox(
@@ -1136,7 +1138,7 @@ class FamiliesSearchArray(SearchArray):
         ambiguity = TextBox(
             name='ambiguity',
             label='Ambiguity',
-            knowl='lf.ambiguity',
+            knowl='lf.family_ambiguity',
             example='1',
             example_span='1, or a range like 2-8')
         field_count = TextBox(
