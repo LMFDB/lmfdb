@@ -1,0 +1,107 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<script type="text/javascript">
+  function setReviews(val) {
+    $(".reviewselect").prop("checked", val);
+    return false; // don't submit the form
+  }
+
+  function setHidden() {
+    // We set hidden inputs in each form storing the values of the checkboxes
+    $(".displayselect").each(function() {
+      if ($(this).prop("checked")) {
+        $(".hidden"+$(this).attr("name")).each(function() {
+          $(this).val("on");
+        });
+      } else {
+        $(".hidden"+$(this).attr("name")).each(function() {
+          $(this).val("");
+        });
+      }
+    });
+    return true;
+  }
+</script>
+
+<form>
+  <table>
+    <tr>
+    {% for status, display, shown in statuses %}
+      <td><input type="checkbox" class="displayselect" id="displaystatus{{status}}" name="{{status}}"{% if shown %} checked{% endif %} /><label for="displaystatus{{status}}">{{display}}</label></td>
+    {% endfor %}
+    </tr>
+    {% if user_can_review_knowls %}
+    <tr>
+      <td>User:</td>
+      <td colspan="2"><input type="text" name="user_shown" value="{{user_shown}}" /></td>
+      <td colspan="2">(if blank, all users shown)</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td colspan="2"><button  name="submit" value="refresh">Refresh</button></td>
+    </tr>
+  </table>
+</form>
+
+{% if results %}
+  {% if user_can_review_knowls and user_shown != username %}
+    <p> Data uploads for review are shown below. </p>
+  {% else %}
+    <p>The status of your data uploads is displayed below.</p>
+  {% endif %}
+
+  {% for section in uploader.sections %}
+
+    {% if section.name in results %}
+
+      <h1>{{section.title}}</h1>
+
+      <div class="upload_section">
+        <form method="post">
+          <table>
+            <tr>
+              <th></th>
+              {% for box in section.review_cols(user_shown, statuses) %}
+                <th>{{KNOWL(box.knowl, box.label)}}</th>
+              {% endfor %}
+            </tr>
+            {% for row in results[section.name] %}
+              <tr>
+                <td><input type="checkbox" class="reviewselect" name="select_{{row['id']}}" /></td>
+                {% for box in section.review_cols(user_shown, statuses) %}
+                  <td>{{box.display(row[box.name])|safe}}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+          <table>
+            <tr>
+              <td>Comment:</td>
+              <td><textarea name="comment" cols="30" rows="2"></textarea></td>
+            </tr>
+          </table>
+          <table>
+            <tr>
+              <td><button onclick="return setReviews(true);">Select all</button></td>
+              <td><button onclick="return setReviews(false);">Deselect all</button></td>
+              {% if user_can_review_knowls and user_shown != userid %}
+                <td><button name="submit" value="approve" onclick="return setHidden();">Approve</button></td>
+                <td><button name="submit" value="reject" onclick="return setHidden();">Reject</button></td>
+              {% else %}
+                <td><button name="submit" value="withdraw" onclick="return setHidden();">Withdraw</button></td>
+              {% endif %}
+            </tr>
+          </table>
+          {% for status, display, shown in statuses %}
+            <input type="hidden" class="hidden{{status}}" name="{{status}}" />
+          {% endfor %}
+        </form>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% else %} {# no results #}
+  <p>There are no data uploads matching these search criteria</p>
+{% endif %}
+
+{% endblock %}

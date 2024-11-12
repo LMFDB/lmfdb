@@ -238,7 +238,7 @@ class TextBox(SearchBox):
                 keys.append('style="width: %spx"' % self.short_width)
             if self.name in info:
                 keys.append('value="%s"' % info[self.name])
-        return '<input type="text" ' + " ".join(keys) + "/>"
+        return '<input ' + " ".join(keys) + "/>"
 
 class SelectBox(SearchBox):
     """
@@ -520,7 +520,7 @@ class ColumnController(SelectBox):
             '''oninput="control_columns(this);"''',
             '''id="column-selector"''',
         ]
-        style="position: absolute; z-index: 9999;"
+        style = "position: absolute; z-index: 9999;"
         if self.short_width is not None:
             style += f'width: {self.short_width}px;'
         keys.append(f'style="{style}"')
@@ -531,6 +531,7 @@ class ColumnController(SelectBox):
                 # A ColGroup with columns that should be shown/hidden individually
                 use_rank = 1
                 break
+        allshown = True
         for col in C.columns_shown(info, use_rank):
             if col.short_title is None: # probably a spacer column:
                 continue
@@ -539,7 +540,9 @@ class ColumnController(SelectBox):
                 disp = "✓ " + title # The space is a unicode space the size of an emdash
             else:
                 disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
+                allshown = False
             options.append((col.name, "", disp))
+        options.append(("toggleall", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;" + ("hide all" if allshown else "show all")))
         # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
         options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
         return "        <select %s>\n%s\n        </select>" % (
@@ -673,9 +676,9 @@ class SearchArray(UniqueRepresentation):
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         if info is None:
-            return [("List", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
+            return [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
         else:
-            return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
+            return [("", "Search again"), ("Random", "Random %s" % self.noun)]
 
     def hidden(self, info):
         # Override this method to change the hidden inputs
@@ -733,7 +736,11 @@ class SearchArray(UniqueRepresentation):
 
     def _st(self, info):
         if info is not None:
-            return info.get("search_type", info.get("hst", "List"))
+            search_type = info.get("search_type", info.get("hst", ""))
+            if search_type == "List":
+                # Backward compatibility
+                search_type = ""
+            return search_type
 
     def dynstats_array(self, info):
         if self._st(info) == "DynStats":
@@ -748,7 +755,7 @@ class SearchArray(UniqueRepresentation):
                     label="",
                     width=150,
                     options=info["stats"]._dynamic_cols,
-                    extra=['onchange="set_buckets(this, \'buckets%s\')"'%i])
+                    extra=['onchange="set_buckets(this, \'buckets%s\')"' % i])
                 buckets = TextBox(
                     name="buckets%s" % i,
                     id="buckets%s" % i,

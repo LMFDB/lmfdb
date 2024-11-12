@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -9,8 +8,8 @@
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 from lmfdb import db
-from lmfdb.backend.base import PostgresBase
-from lmfdb.backend.encoding import Array
+from psycodict.base import PostgresBase
+from psycodict.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
@@ -96,7 +95,7 @@ class PostgresUserTable(PostgresBase):
             pwd = pwd_input
         password = self.bchash(pwd)
         #TODO: use identifiers
-        insertor = SQL(u"INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
+        insertor = SQL("INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
         self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
@@ -191,7 +190,7 @@ class PostgresUserTable(PostgresBase):
         #TODO: use identifiers
         selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
-        return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
+        return [dict(zip(["username","full_name"], rec)) for rec in cur]
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
@@ -247,7 +246,7 @@ class LmfdbUser(UserMixin):
         self._uid = uid
         self._authenticated = False
         self._dirty = False  # flag if we have to save
-        self._data = dict([(_, None) for _ in LmfdbUser.properties])
+        self._data = {_: None for _ in LmfdbUser.properties}
 
         self.exists = userdb.user_exists(uid)
         if self.exists:

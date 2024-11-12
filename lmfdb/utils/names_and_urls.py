@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.utils.utilities import key_for_numerically_sort
 from flask import url_for
 #######################################################################
@@ -125,10 +124,14 @@ def name_and_object_from_url(url, check_existence=False):
         else:
             name = 'Sato Tate group $%s$' % name
             obj_exists = True
+    elif url_split[:2] == ["Character", "Dirichlet"]:
+        modulus = int(url_split[2])
+        conrey = int(url_split[3])
+        name = r"Character $\chi_{%d}(%d, \cdot)$" % (modulus, conrey)
+        obj_exists = True
     else:
         # FIXME
-        #print("unknown url", url)
-        pass
+        assert False, url
 
     return name, obj_exists
 

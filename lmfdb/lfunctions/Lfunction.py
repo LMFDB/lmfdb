@@ -1,4 +1,3 @@
-#_ -*- coding: utf-8 -*-
 # The class Lfunction is defined in Lfunction_base and represents an L-function
 # We subclass it here:
 # RiemannZeta, Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_CMF,
@@ -46,7 +45,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.app import is_debug_mode
 
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     Downloader,
     display_complex,
@@ -129,6 +128,7 @@ def an_from_data(euler_factors,upperbound=30):
             k += 1
 
     return result
+
 
 # Convert the information extracted from the database to the format
 # expected by the L-functions homepage template.
@@ -750,6 +750,8 @@ class Lfunction_Maass(Lfunction):
             title_end = ""  #" on $%s$" % (self.group)
 
         else:   # Generate from Maass form
+            if not is_debug_mode():
+                raise ValueError(f'Error constructing L-function for Maass form {self.maass_id}, as it is not in the database')
 
             # Create the Maass form
             self.mf = WebMaassForm.by_maass_id(self.maass_id)
@@ -854,8 +856,13 @@ class Lfunction_HMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.origin_label = args['label']
+
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for Hilbert modular form {self.origin_label}, as it is not in the database')
+
         self.number = int(args['number'])
-        self.character= int(args['character'])
+        self.character = int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
@@ -863,7 +870,7 @@ class Lfunction_HMF(Lfunction):
         (f, F_hmf) = getHmfData(self.origin_label)
         if f is None:
             # NB raising an error is not a good way to handle this on website!
-            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.origin_label)
+            raise KeyError('No Hilbert modular form with label "%s" found in database.' % self.origin_label)
         try:
             self.weight = int(f['parallel_weight'])
         except KeyError:
@@ -872,7 +879,7 @@ class Lfunction_HMF(Lfunction):
         # Load the field (F)
         F = WebNumberField(f['field_label'])
         if not F or F.is_null():
-            raise KeyError('Error constructing number field %s'%f['field_label'])
+            raise KeyError('Error constructing number field %s' % f['field_label'])
         self.field_disc = F.disc()
         self.field_degree = int(F.degree())
 
@@ -1026,7 +1033,12 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             self.number = 0     # Default embedding of the coefficients
 
         # Load form (S) from database
-        label = '%d_%s'%(self.weight,self.orbit)
+        label = '%d_%s' % (self.weight,self.orbit)
+
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for Siegel modular form {label}, as it is not in the database')
+
         self.S = Sample('Sp4Z', label)
         if not self.S:
             raise KeyError("Siegel modular form Sp4Z.%s not found in database." % label)
@@ -1063,7 +1075,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.quasidegree = 1
         self.level_factored = self.level = 1
         self.mu_fe = []  # the shifts of the Gamma_R to print
-        self.automorphyexp = float(self.weight) - float(1.5)
+        self.automorphyexp = float(self.weight) - 1.5
         self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
         self.compute_kappa_lambda_Q_from_mu_nu()
         self.algebraic = True
@@ -1120,10 +1132,14 @@ class DedekindZeta(Lfunction):
         self.origin_label = self.label
         self.__dict__.pop('label')
 
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing Dedekind zeta function for {self.origin_label}, as it is not in the database')
+
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.origin_label)
         if not wnf or wnf.is_null():
-            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.origin_label)
+            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database' % self.origin_label)
         self.NF = wnf.K()
         self.h = wnf.class_number()
         self.R = wnf.regulator()
@@ -1163,7 +1179,7 @@ class DedekindZeta(Lfunction):
         # Determine the factorization
         self.grh = wnf.used_grh()
         if self.degree > 1:
-            if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
+            if wnf.is_abelian() and len(wnf.dirichlet_group()) > 0:
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
                 j = 0
@@ -1183,16 +1199,16 @@ class DedekindZeta(Lfunction):
                 nfgg = wnf.factor_perm_repn() # first call cached it
                 ar = wnf.artin_reps() # these are in the same order
                 self.factorization = (r'\(\zeta_K(s) =\) <a href="/L/Riemann/">'
-                                           +r'\(\zeta(s)\)</a>')
+                                           + r'\(\zeta(s)\)</a>')
                 for j in range(len(ar)):
-                    if nfgg[j]>0:
+                    if nfgg[j] > 0:
                         the_rep = ar[j]
-                        if (the_rep.dimension()>1
-                                  or str(the_rep.conductor())!=str(1)):
+                        if (the_rep.dimension() > 1
+                                  or str(the_rep.conductor()) != str(1)):
                             ar_url = url_for("l_functions.l_function_artin_page",
                                              label=the_rep.label())
                             right = (r'\({}^{%d}\)' % (nfgg[j])
-                                     if nfgg[j]>1 else r'')
+                                     if nfgg[j] > 1 else r'')
                             self.factorization += r'\(\;\cdot\)'
                             tex_label = the_rep.label()
                             tex_label = tex_label.replace('_',r'\_')
@@ -1239,11 +1255,15 @@ class ArtinLfunction(Lfunction):
         # Put the arguments into the object dictionary
         self.origin_label = args["label"]
 
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as it is not in the database')
+
         # Create the Artin representation
         try:
             self.artin = ArtinRepresentation(self.origin_label)
         except Exception as err:
-            raise KeyError('Error constructing Artin representation %s.'%self.origin_label, *err.args)
+            raise KeyError('Error constructing Artin representation %s.' % self.origin_label, *err.args)
 
         # Mandatory properties
         self.fromDB = False
@@ -1257,11 +1277,6 @@ class ArtinLfunction(Lfunction):
         self.degree = self.artin.dimension()
         self.level = self.artin.conductor()
 
-        # disable expensive L-functions, these should not be linked anywhere regardless
-        # this threshold comes from lmfdb/artin_representations/main.py
-        if not is_debug_mode() and self.level**self.degree > 729000000000000:
-            raise ValueError(f'Error constructing L-function for the Artin representation {self.origin_label}, as the conductor/degree is too large.')
-
         self.level_factored = factor(self.level)
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
@@ -1271,7 +1286,7 @@ class ArtinLfunction(Lfunction):
         self.motivic_weight = 0
         cc = self.artin.central_character()
         if not cc:
-            raise ValueError('Error constructing Artin representation %s, unable to compute central character, possibly because the modulus is too large.'%self.origin_label)
+            raise ValueError('Error constructing Artin representation %s, unable to compute central character, possibly because the modulus is too large.' % self.origin_label)
         self.charactermodulus, self.characternumber = cc.modulus, cc.number
 
         # Compute Dirichlet coefficients and period ########################
@@ -1311,6 +1326,7 @@ class ArtinLfunction(Lfunction):
     def original_object(self):
         return self.artin
 
+
 #############################################################################
 
 class HypergeometricMotiveLfunction(Lfunction):
@@ -1334,10 +1350,14 @@ class HypergeometricMotiveLfunction(Lfunction):
         # Put the arguments into the object dictionary
         self.origin_label = args["label"]
 
+        # disable L-functions on the fly in production
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for the hypergeometric motive {self.origin_label}, as it is not in the database')
+
         # Get the motive from the database
         self.motive = getHgmData(self.origin_label)
         if not self.motive:
-            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.origin_label)
+            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.' % self.origin_label)
 
         # Mandatory properties
         self.fromDB = False
@@ -1421,6 +1441,12 @@ class SymmetricPowerLfunction(Lfunction):
         self.__dict__.update(args)
         self.m = int(self.power)
         self.origin_label = str(self.conductor) + '.' + self.isogeny
+
+        # disable L-functions on the fly in production
+        # FIXME: redirect for m = 1?
+        if not is_debug_mode():
+            raise ValueError(f'Error constructing L-function for symmetric power {self.m} of {self.origin_label}, as it is not in the database')
+
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented "
                             + "only for elliptic curves over Q.")
@@ -1571,7 +1597,7 @@ class TensorProductLfunction(Lfunction):
 
         self.texname = r"L(s,E,\chi)"
         self.texnamecompleteds = r"\Lambda(s,E,\chi)"
-        self.title = r"$L(s,E,\chi)$, where $E$ is the elliptic curve %s and $\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
+        self.title = r"$L(s,E,\chi)$, where $E$ is the elliptic curve %s and $\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s" % (self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
 
         self.credit = 'Workshop in Besancon, 2014'
 

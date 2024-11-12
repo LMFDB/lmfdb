@@ -17,7 +17,7 @@ Setup
 =====
 
 To set up your system for development see [Code development and sharing your
-work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+work](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#running).
 
 
 Adding material to the LMFDB
@@ -40,7 +40,7 @@ Structural Conventions
 Below, we describe several of the structural conventions used in the LMFDB. Note
 that we also have styling conventions for the content of individual pages. These
 styling conventions are described in
-[StyleSheet.md](https://github.com/LMFDB/lmfdb/blob/master/StyleSheet.md).
+[StyleSheet.md](https://github.com/LMFDB/lmfdb/blob/main/StyleSheet.md).
 
 Pages in the LMFDB
 ------------------
@@ -329,8 +329,8 @@ and knowledge/main.py. Also, templates and static files specific to the module
 should be in their respective "templates" and "static" folders, e.g.
 /knowledge/templates/.
 
-[1] http://docs.python.org/tutorial/modules.html
-[2] http://flask.pocoo.org/docs/blueprints/
+[1] https://docs.python.org/tutorial/modules.html
+[2] https://flask.pocoo.org/docs/blueprints/
 
 
 Code Attribution
@@ -343,7 +343,7 @@ who are mainly involved in coding this particular python file. In practice,
 Testing
 -------
 
-- Any contribution to the master LMFDB branch must *pass all the tests*. From the lmfdb folder:
+- Any contribution to the main LMFDB branch must *pass all the tests*. From the lmfdb folder:
   ```
   ./test.sh
   ```
@@ -465,7 +465,7 @@ This is in the `hooks/post-receive` in the bare Git repo:
 ```
 #!/bin/sh
 # update the lmfdb-git-beta or -prod server depending on the branch
-# this is based on http://stackoverflow.com/a/13057643/54236
+# this is based on https://stackoverflow.com/a/13057643/54236
 
 restart() {
     echo "updating $1"

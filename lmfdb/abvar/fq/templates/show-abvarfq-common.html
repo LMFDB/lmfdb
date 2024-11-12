@@ -51,7 +51,7 @@
   {{ KNOWL('av.fq.ordinary',title='not ordinary') }},
   {% endif %}
 
-  {% if cl.is_supersingular() %}
+  {% if cl.is_supersingular %}
   and {{ KNOWL('av.fq.supersingular',title='supersingular') }}.
   {% else %}
   and {{ KNOWL('av.fq.supersingular',title='not supersingular')}}.
@@ -77,7 +77,7 @@
 {% if cl.is_ordinary() %}
 This isogeny class is {{KNOWL('av.fq.ordinary',title='ordinary')}}.
 {% endif %}
-{% if cl.is_supersingular() %}
+{% if cl.is_supersingular %}
 This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% endif %}
 </p>
@@ -115,7 +115,7 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 </p>
 
 <p>
-{% if cl.has_jacobian == 1 or cl.is_jacobian %}
+{% if cl.has_jacobian == 1 %}
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the curve") }}
 {% else %}
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the (virtual) curve") }}

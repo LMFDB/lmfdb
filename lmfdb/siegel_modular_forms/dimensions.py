@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file provides functions for computing dimensions of
 # collections of Siegel modular forms. It is partly based on
 # code implemented together with David Yuen and Fabien Cléry.

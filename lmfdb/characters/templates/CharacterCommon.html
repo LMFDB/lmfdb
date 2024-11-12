@@ -53,7 +53,7 @@
 <p>
 {% for mod,num,label,prim in galoisorbit %}
 {% if loop.index > limit %} ... {% break %} {% endif %}
-<a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
+<a href="{{ url_character(type=type, modulus=mod, number=num)}}">
   {{label}}
 </a>
 {% endfor %}

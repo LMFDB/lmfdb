@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re #, StringIO, yaml, ast, os
 
@@ -29,7 +28,7 @@ def learnmore_list():
              ('Labeling convention', url_for(".labels_page")) ]
 
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def sub_label_is_valid(lab):
     return abstract_subgroup_label_regex.fullmatch(lab)
@@ -49,7 +48,7 @@ def index():
     bread = get_bread()
     if request.args:
         return group_search(info)
-    info['order_list']= ['1-10', '20-100', '101-200']
+    info['order_list'] = ['1-10', '20-100', '101-200']
 
     return render_template("glnQ-index.html", title=r"Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
@@ -102,12 +101,12 @@ def get_url(label):
     return url_for(".by_label", label=label)
 
 glnQ_columns = SearchColumns([
-    LinkCol("label", "group.label", "Label", get_url, default=True),
-    MathCol("tex_name", "group.name", "Name", default=True),
-    MathCol("order", "group.order", "Order", default=True),
-    MathCol("dim", "group.dimension", "Dimension", default=True)],
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    MathCol("order", "group.order", "Order"),
+    MathCol("dim", "group.dimension", "Dimension")],
     db_cols=["label", "group", "order", "dim"])
-glnQ_columns.dummy_download=True
+glnQ_columns.dummy_download = True
 
 def glnQ_postprocess(res, info, query):
     tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
@@ -162,7 +161,7 @@ def render_glnQ_group(args):
                                credit=credit_string)
 
 def make_knowl(title, knowlid):
-    return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
+    return '<a title="%s" knowl="%s">%s</a>' % (title, knowlid, title)
 
 @glnQ_page.route("/Completeness")
 def completeness_page():

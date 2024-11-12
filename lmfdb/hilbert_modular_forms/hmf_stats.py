@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma
@@ -68,7 +67,7 @@ class HMFstats(StatsDisplay):
 
         attrs = ["degree", "discriminant", "label"]
         fields = list(db.hmf_fields.search({}, attrs, sort=attrs))
-        degrees = sorted(set(F["degree"] for F in fields))
+        degrees = sorted({F["degree"] for F in fields})
         by_deg = {d: [F for F in fields if F["degree"] == d] for d in degrees}
         counts["degrees"] = degrees
         counts["nfields"] = len(fields)

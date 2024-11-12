@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 # cp_logger = make_logger(cp_page)

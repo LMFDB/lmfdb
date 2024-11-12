@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 TODO
@@ -22,7 +21,7 @@ from sage.all import Factorization, FreeAlgebra
 from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
-from sage.plot.all import line, points, circle, Graphics
+from sage.plot.all import line, points, circle, polygon, Graphics
 from sage.rings.all import Integer, QQ, RR, ZZ
 
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -143,10 +142,11 @@ class AbvarFq_isoclass():
             dbdata["zfv_plus_index"] = None
             dbdata["zfv_plus_index_factorization"] = None
             dbdata["zfv_plus_norm"] = None
+        if "hyp_count" not in dbdata:
+            dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
         self.__dict__.update(dbdata)
-        self.make_class()
 
     @classmethod
     def by_label(cls, label):
@@ -159,19 +159,32 @@ class AbvarFq_isoclass():
         except (AttributeError, TypeError):
             raise ValueError("Label not found in database")
 
-    def make_class(self):
-        self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
-        self.basechangeinfo = self.basechange_display()
-        self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+    @lazy_attribute
+    def decompositionraw(self):
+        return list(zip(self.simple_distinct, self.simple_multiplicities))
+
+    @lazy_attribute
+    def decompositioninfo(self):
+        return decomposition_display(self.decompositionraw)
+
+    @lazy_attribute
+    def basechangeinfo(self):
+        return self.basechange_display()
+
+    @lazy_attribute
+    def formatted_polynomial(self):
+        return list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+
+    @lazy_attribute
+    def expanded_polynomial(self):
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
-            self.expanded_polynomial = ''
+            return ""
         else:
             self.expanded_polynomial = latex(QQ[['x']](self.polynomial))
         if self.zfv_index_factorization is not None:
             self.zfv_index_factorization_latex = latex(Factorization(self.zfv_index_factorization))
         if self.zfv_plus_index_factorization is not None:
             self.zfv_plus_index_factorization_latex = latex(Factorization(self.zfv_plus_index_factorization))
-
 
     @property
     def p(self):
@@ -222,25 +235,18 @@ class AbvarFq_isoclass():
             y += c * s
             pts.append((x, y))
         L = Graphics()
-        L += line([(0, 0), (0, y + 0.2)], color="grey")
-        for i in range(1, y + 1):
-            L += line([(0, i), (0.06, i)], color="grey")
-        for i in range(1, C[0]):
-            L += line([(i, 0), (i, 0.06)], color="grey")
-        for i in range(len(pts) - 1):
-            P = pts[i]
-            Q = pts[i + 1]
-            for x in range(P[0], Q[0] + 1):
-                L += line(
-                    [(x, P[1]), (x, P[1] + (x - P[0]) * (Q[1] - P[1]) / (Q[0] - P[0]))],
-                    color="grey",
-                )
-            for y in range(P[1], Q[1]):
-                L += line(
-                    [(P[0] + (y - P[1]) * (Q[0] - P[0]) / (Q[1] - P[1]), y), (Q[0], y)],
-                    color="grey",
-                )
-        L += line(pts, thickness=2)
+        xmax = len(S)
+        ymax = ZZ(len(S)/2)
+        pts.append((xmax,0))
+        L += polygon(pts,alpha=0.1)
+        pts.remove((xmax,0))
+        for i in range(xmax+1):
+            L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
+        for j in range(ymax+1):
+            L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
+        L+=line(pts,thickness=2)
+        for v in pts:
+            L += circle(v, 0.06, fill=True)
         L.axes(False)
         L.set_aspect_ratio(1)
         return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
@@ -427,7 +433,7 @@ class AbvarFq_isoclass():
             ("$p$-rank", "$%s$" % (self.p_rank)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
             ("Ordinary", "yes" if self.is_ordinary() else "no"),
-            ("Supersingular", "yes" if self.is_supersingular() else "no"),
+            ("Supersingular", "yes" if self.is_supersingular else "no"),
             ("Simple", "yes" if self.is_simple else "no"),
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
@@ -484,6 +490,7 @@ class AbvarFq_isoclass():
     def is_ordinary(self):
         return self.p_rank == self.g
 
+    @property
     def is_supersingular(self):
         return all(slope == "1/2" for slope in self.polygon_slopes)
 

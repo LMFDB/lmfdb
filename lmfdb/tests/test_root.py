@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-import unittest2
+import unittest
+
 from flask import url_for
 from lmfdb.tests import LmfdbTest
 
@@ -38,7 +38,7 @@ class RootTest(LmfdbTest):
         assert '*[knowl]' in css
         assert 'border-bottom: 1px dotted' in css
 
-    @unittest2.skip("Tests all url_maps, but fails at the moment because of other errors")
+    @unittest.skip("Tests all url_maps, but fails at the moment because of other errors")
     def test_url_map(self):
         """
 
@@ -49,7 +49,7 @@ class RootTest(LmfdbTest):
                 res = tc.get(rule.rule)
                 assert "Database" in res.get_data(as_text=True), "rule %s failed " % rule
 
-    @unittest2.skip("Tests for latex errors, but fails at the moment because of other errors")
+    @unittest.skip("Tests for latex errors, but fails at the moment because of other errors")
     def test_some_latex_error(self):
         """
           Tests for latex errors, but fails at the moment because of other errors
@@ -59,7 +59,7 @@ class RootTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert not ("Undefined control sequence" in res.get_data(as_text=True)), "rule %s failed" % rule
+                    assert "Undefined control sequence" not in res.get_data(as_text=True), "rule %s failed" % rule
                 except KeyError:
                     pass
 

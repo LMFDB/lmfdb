@@ -39,7 +39,7 @@ def p2sage(s):
                     return f(str(z))
                 except (ValueError, TypeError, NameError, SyntaxError):
                     pass
-        if z!='??':
+        if z != '??':
             logger.error('Error converting "{}" in p2sage'.format(z))
         return z
 
@@ -57,11 +57,11 @@ def string2number(s):
                 return CDF(exp(2*pi*I*q))
         if 'I' in strs:
             return CDF(strs)
-        elif (isinstance(s, list) or isinstance(s, tuple)) and len(s) == 2:
+        elif (isinstance(s, (list, tuple))) and len(s) == 2:
             return CDF(tuple(s))
         elif '/' in strs:
             return Rational(strs)
-        elif strs=='0.5':  # Temporary fix because 0.5 in db for EC
+        elif strs == '0.5':  # Temporary fix because 0.5 in db for EC
             return Rational('1/2')
         elif '.' in strs:
             return float(strs)
@@ -118,12 +118,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
 
     # deal with the zero case
     if coeff_display == "0":
-        if seriescoefftype=="literal":
+        if seriescoefftype == "literal":
             return "0"
         else:
             return ""
 
-    if seriescoefftype=="literal":
+    if seriescoefftype == "literal":
         return coeff_display
 
     if seriescoefftype == "factor":
@@ -272,7 +272,7 @@ def lfuncEPtex(L, fmt):
         fmt could be any of the values: "abstract"
     """
     from .Lfunction import Lfunction_from_db
-    if ((L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db))) and fmt == "arithmetic":
+    if (L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db)) and fmt == "arithmetic":
         try:
             return lfuncEPhtml(L, fmt)
         except Exception:
@@ -394,7 +394,7 @@ def lfuncEPhtml(L, fmt):
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
-                if gal_groups[0]==[0,0]:
+                if gal_groups[0] == [0,0]:
                     pass   # do nothing, because the local factor is 1
                 else:
                     out += r"$\times$".join( [transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups] )
@@ -435,7 +435,7 @@ def lfuncEPhtml(L, fmt):
 
     last_entry = ""
     if display_galois:
-        last_entry +="<td></td>"
+        last_entry += "<td></td>"
     last_entry += "<td></td>"
     eptable += last_entry
     eptable += "</tr>"

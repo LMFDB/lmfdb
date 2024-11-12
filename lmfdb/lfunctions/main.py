@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
@@ -51,14 +50,14 @@ from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
     search_wrap, list_to_factored_poly_otherorder, flash_error,
-    parse_primes, coeff_to_poly,
+    parse_primes, coeff_to_poly, Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
-from lmfdb.backend.utils import SearchParsingError
+from psycodict.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
 
@@ -108,8 +107,8 @@ def contents():
 def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Random']:
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        if search_type in ['List', '', 'Random']:
             return l_function_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -124,8 +123,8 @@ def index():
 def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Random']:
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        if search_type in ['List', '', 'Random']:
             return l_function_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
@@ -317,48 +316,55 @@ lfunc_columns = SearchColumns([
     MultiProcessedCol("label", "lfunction.label", "Label",
                          ["label", "url"],
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
-                         default=True),
-    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", short_title="root analytic conductor", default=True),
-    MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", short_title="analytic conductor", default=True),
-    MathCol("degree", "lfunction.degree", "$d$", short_title="degree", default=True),
-    MathCol("factored_conductor", "lfunction.conductor", "$N$", short_title="conductor", default=True),
-    LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), short_title="central character", default=True, align="center"),
-    MathCol("mus", "lfunction.functional_equation", r"$\mu$", default=True),
-    MathCol("nus", "lfunction.functional_equation", r"$\nu$", default=True),
+                         download_col="label"),
+    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", short_title="root analytic conductor"),
+    MathCol("analytic_conductor", "lfunction.analytic_conductor", "$A$", short_title="analytic conductor"),
+    MathCol("degree", "lfunction.degree", "$d$", short_title="degree"),
+    MathCol("factored_conductor", "lfunction.conductor", "$N$", short_title="conductor", download_col="conductor"),
+    LinkCol("central_character", "lfunction.central_character", r"$\chi$", lambda N: url_for("characters.render_Dirichletwebpage", modulus=N), short_title="central character", align="center"),
+    MathCol("mus", "lfunction.functional_equation", r"$\mu$"),
+    MathCol("nus", "lfunction.functional_equation", r"$\nu$"),
     MultiProcessedCol("motivic_weight", "lfunction.motivic_weight", "$w$",
                       ["motivic_weight", "algebraic"],
                       lambda w, alg: w if alg else "",
-                      default=True, short_title="motivic weight", mathmode=True, align="center"),
-    CheckCol("primitive", "lfunction.primitive", "prim", short_title="primitive", default=True),
+                      short_title="motivic weight", mathmode=True, align="center"),
+    CheckCol("primitive", "lfunction.primitive", "prim", short_title="primitive"),
     MathCol("root_number", "lfunction.sign", r"$\epsilon$",
             contingent=lambda info: info["search_array"].force_rational,
-            short_title="root number", default=True),
+            short_title="root number"),
     CheckCol("algebraic", "lfunction.arithmetic", "arith",
              contingent=lambda info: not info["search_array"].force_rational,
-             short_title="algebraic", default=True),
+             short_title="algebraic"),
     CheckCol("rational", "lfunction.rational", r"$\mathbb{Q}$", short_title="rational",
-             contingent=lambda info: not info["search_array"].force_rational,
-             default=True),
+             contingent=lambda info: not info["search_array"].force_rational),
     CheckCol("self_dual", "lfunction.self-dual", "self-dual",
-             contingent=lambda info: not info["search_array"].force_rational,
-             default=True),
+             contingent=lambda info: not info["search_array"].force_rational),
     MathCol("root_angle", "lfunction.root_angle", r"$\operatorname{Arg}(\epsilon)$",
             contingent=lambda info: not info["search_array"].force_rational,
-            short_title="root angle", default=True),
-    MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", short_title="order of vanishing", default=True),
-    MathCol("z1", "lfunction.zeros", "First zero", short_title="first zero", default=True),
+            short_title="root angle"),
+    MathCol("order_of_vanishing", "lfunction.analytic_rank", "$r$", short_title="order of vanishing"),
+    MathCol("z1", "lfunction.zeros", "First zero", short_title="first zero"),
     ProcessedCol("origins", "lfunction.underlying_object", "Origin",
                  lambda origins: " ".join(f'<a href="{url_for("index")}{url.lstrip("/")}">{name}</a>' for name, url in origins),
-                 default=True)],
+                 download_col="instance_urls")],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
-lfunc_columns.dummy_download = True
+
+class LfuncDownload(Downloader):
+    table = db.lfunc_search
+    def postprocess(self, rec, info, query):
+        rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
+        rec['nus'] = [(0.5*r,i) for (r,i) in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        if info['search_array'].force_rational:
+            # root_angle is either 0 or 0.5
+            rec['root_number'] = 1 - int(4*rec['root_angle'])
+        return rec
 
 @search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
              columns=lfunc_columns,
-             shortcuts={'jump':jump_box},
+             shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
@@ -430,17 +436,17 @@ def euler_search(info, query):
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
     for p in prime_range(100):
-        parse_euler(info, query, 'euler_constraints', qfield='euler%s'%p, p=p, d=d)
+        parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 
 class LFunctionSearchArray(SearchArray):
     sorts = [('', 'root analytic conductor', ['root_analytic_conductor', 'label']),
              ('analytic_conductor', 'analytic conductor', ['analytic_conductor', 'label']),
              ('z1', 'first zero', ['z1']),
              ('conductor', 'conductor', ['conductor', 'root_analytic_conductor', 'label'])]
-    jump_example="1-1-1.1-r0-0-0"
-    jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
-    jump_knowl="lfunction.search_input"
-    jump_prompt="Label"
+    jump_example = "1-1-1.1-r0-0-0"
+    jump_egspan = "e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
+    jump_knowl = "lfunction.search_input"
+    jump_prompt = "Label"
     null_column_explanations = { # No need to display warnings for these
         'dirichlet_coefficients': False,
         'euler_factors': False,
@@ -650,12 +656,12 @@ class LFunctionSearchArray(SearchArray):
 
     def search_types(self, info):
         if self.force_rational:
-            L = [('List', 'List of L-functions'),
+            L = [('', 'List of L-functions'),
                  ('Traces', 'Traces table'),
                  ('Euler', 'Euler factors'),
                  ('Random', 'Random L-function')]
         else:
-            L = [('List', 'List of L-functions'),
+            L = [('', 'List of L-functions'),
                  ('Random', 'Random L-function')]
         return self._search_again(info, L)
 
@@ -984,6 +990,9 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
+    if GCD(level, character) != 1:
+        flash_error("%s", 'Level and character must be coprime')
+        return redirect(url_for(".index"))
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
     char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
@@ -1196,7 +1205,7 @@ def render_lfunction_exception(err):
     try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except Exception:
-        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
+        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>" % err
     bread = [('L-functions', url_for('.index')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
@@ -1459,13 +1468,13 @@ def set_navi(L):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            prev_data = ("previous",Lpattern%(pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
+            prev_data = ("previous",Lpattern % (pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
                      url_for('.l_function_dirichlet_page',
                              modulus=pmod,number=pnum))
         else:
             prev_data = ('','','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        next_data = ("next",Lpattern%(nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
+        next_data = ("next",Lpattern % (nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
                  url_for('.l_function_dirichlet_page',
                          modulus=nmod,number=nnum))
 
@@ -1625,11 +1634,20 @@ def getLfunctionPlot(request, *args):
         else:
             return render_lfunction_exception(err)
 
+    # Figure out plotrange
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
         F = p2sage(pythonL.plotpoints)
         #  F[0][0] is the lowest t-coordinated that we have a value for L
         #  F[-1][0] is the highest t-coordinated that we have a value for L
+
+        # fix Z-plot sign so that Z(t) > 0 for t -> 0^+
+        for t, x in F:
+            if t > 0:
+                if x < 0:
+                    F = [(t, -x) for t, x in F]
+                break
+
         plotrange = min(plotrange, -F[0][0], F[-1][0])
         # aim to display at most 25 axis crossings
         # if the L-function is nonprimitive
@@ -1644,8 +1662,17 @@ def getLfunctionPlot(request, *args):
                 zero_range = zeros[-1]*25/len(zeros)
             zero_range *= 1.2
             plotrange = min(plotrange, zero_range)
+
+            for t, x in F:
+                if t > 0:
+                    if t < zeros[0]:
+                        assert x > 0
+                    else:
+                        break
+
     else:
         # obsolete, because lfunc_data comes from DB?
+        assert False # double checking my claim
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None
@@ -1969,7 +1996,7 @@ def source(prepath):
         assert L
     except Exception:
         return abort(404)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     knowl = ''
     if L.fromDB:
@@ -1998,7 +2025,7 @@ def completeness(prepath):
         assert L
     except Exception:
         return abort(404)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     knowl = ''
     if L.fromDB:
@@ -2025,7 +2052,7 @@ def reliability(prepath):
         assert L
     except Exception:
         return abort(404)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     knowl = ''
     if L.fromDB:

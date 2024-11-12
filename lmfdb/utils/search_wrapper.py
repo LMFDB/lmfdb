@@ -3,8 +3,9 @@ from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
+from sage.misc.cachefunc import cached_function
 
-from lmfdb.app import ctx_proc_userdata
+from lmfdb.app import ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
 from lmfdb.utils.utilities import flash_error, flash_info, to_dict
 
@@ -48,10 +49,10 @@ class Wrapper():
         SA = info.get("search_array")
         if sort is None and SA is not None and SA.sorts is not None:
             sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            sord = info.get('sort_order', '')
+            sop = info.get('sort_dir', '')
             for name, display, S in sorts:
-                sord = info.get('sort_order', '')
                 if name == sord:
-                    sop = info.get('sort_dir', '')
                     if sop == 'op':
                         return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
                     return S
@@ -64,6 +65,8 @@ class Wrapper():
             errpage = self.f(info, query)
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
+            if is_debug_mode():
+                raise
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
             return render_template(self.template, info=info, title=err_title, **template_kwds)
@@ -148,7 +151,11 @@ class SearchWrapper(Wrapper):
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
-        info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        search_type = info.get("search_type", info.get("hst", ""))
+        if search_type == "List":
+            # Backward compatibility
+            search_type = ""
+        info["search_type"] = search_type
         info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -160,6 +167,8 @@ class SearchWrapper(Wrapper):
                     # Errors raised in jump box, for example
                     # Using the search results is an okay default, though some
                     # jump boxes will use their own error processing
+                    if is_debug_mode():
+                        raise
                     if "%s" in str(err):
                         flash_error(str(err), info[key])
                     else:
@@ -313,7 +322,9 @@ class CountWrapper(Wrapper):
         )
         self.groupby = groupby
         if postprocess is None and overall is None:
-            overall = table.stats.column_counts(groupby)
+            @cached_function
+            def overall():
+                return table.stats.column_counts(groupby)
         self.overall = overall
 
     def __call__(self, info):
@@ -340,7 +351,7 @@ class CountWrapper(Wrapper):
                     for row in info["row_heads"]:
                         for col in info["col_heads"]:
                             if (row, col) not in res:
-                                if (row, col) in self.overall:
+                                if (row, col) in self.overall():
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None

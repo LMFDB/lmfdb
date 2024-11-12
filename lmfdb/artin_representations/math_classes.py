@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
-from lmfdb.utils import (url_for, pol_to_html,
+from lmfdb.utils import (url_for,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,
     raw_typeset_poly, pos_int_and_factor)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
@@ -159,7 +158,7 @@ class ArtinRepresentation():
                 wc = thischar.split(r'.')
                 self._data['central_character'] = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
                 return self._data['central_character']
-            return(thischar)
+            return thischar
         # Not in the database
         if self.dimension() == 1:
             return self.central_character()
@@ -211,6 +210,9 @@ class ArtinRepresentation():
 
     def GaloisConjugates(self):
         return self._data["GaloisConjugates"]
+
+    def ProjBoth(self):
+        return self._data['Proj_GAP'], self._data['Proj_nTj']
 
     def projective_group(self):
         groupid = self._data['Proj_GAP']
@@ -418,6 +420,9 @@ class ArtinRepresentation():
         nfgg = self.number_field_galois_group()
         return formatfield(nfgg.polynomial())
 
+    def GaloisLabel(self):
+        return self._data['GaloisLabel']
+
     def group(self):
         n, t = [int(z) for z in self._data['GaloisLabel'].split("T")]
         return group_display_short(n, t)
@@ -566,9 +571,10 @@ class ArtinRepresentation():
             field = ComplexField()
             root_of_unity = exp((field.gen()) * 2 * field.pi() / int(self.character_field()))
             local_factor_processed_pols = [0]   # dummy to account for the shift in indices
-            for pol in local_factors:
-                local_factor_processed_pols.append(
-                    process_polynomial_over_algebraic_integer(pol, field, root_of_unity))
+            local_factor_processed_pols.extend(
+                process_polynomial_over_algebraic_integer(pol, field,
+                                                          root_of_unity)
+                for pol in local_factors)
 
             def tmp(conjugacy_class_index_start_1):
                 return local_factor_processed_pols[conjugacy_class_index_start_1]
@@ -742,9 +748,6 @@ class NumberFieldGaloisGroup():
 
     def polredabslatex(self):
         return self.polredabs()._latex_()
-
-    def polredabshtml(self):
-        return pol_to_html(self.polredabs())
 
     def label(self):
         if "label" in self._data:

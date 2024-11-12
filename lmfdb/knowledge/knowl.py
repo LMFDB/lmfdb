@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # the basic knowledge object, with database awareness, …
 
 from datetime import datetime, timedelta
@@ -7,8 +6,8 @@ import time
 import subprocess
 import sys
 
-from lmfdb.backend.base import PostgresBase
-from lmfdb.backend import DelayCommit
+from psycodict.base import PostgresBase
+from psycodict import DelayCommit
 from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
@@ -23,6 +22,7 @@ text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
 coldesc_knowl_re = re.compile(r"columns.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)")
+tabledesc_knowl_re = re.compile(r"tables.([A-Za-z0-9_]+)")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
     (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
@@ -50,8 +50,7 @@ defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
-common_words = set(
-    ['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'])
+common_words = {'and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'}
 
 # categories, level 0, never change this id
 #CAT_ID = 'categories'
@@ -87,6 +86,9 @@ def extract_typ(kid):
     m = coldesc_knowl_re.match(kid)
     if m:
         return 2, m.group(1), m.group(2)
+    m = tabledesc_knowl_re.match(kid)
+    if m:
+        return 2, None, m.group(1)
     m = top_knowl_re.match(kid)
     if m:
         prelabel = m.group(1)
@@ -110,21 +112,21 @@ def extract_typ(kid):
 
 
 def extract_links(content):
-    return sorted(set(x[2] for x in link_finder_re.findall(content) if x[2]))
+    return sorted({x[2] for x in link_finder_re.findall(content) if x[2]})
 
 
 def normalize_define(term):
     m = define_fixer.search(term)
     if m:
         n = 6 if (m.group(5) is None) else 5
-        term = define_fixer.sub(r'\%s'%n, term)
+        term = define_fixer.sub(r'\%s' % n, term)
     return ' '.join(term.lower().replace('"', '').replace("'", "").split())
 
 
 def extract_defines(content):
-    return sorted(set(x.strip() for x in defines_finder_re.findall(content)))
+    return sorted({x.strip() for x in defines_finder_re.findall(content)})
 
-# We don't use the PostgresTable from lmfdb.backend.database
+# We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
 
 
@@ -145,7 +147,7 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            self.cached_titles = dict([(elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'])])
+            self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
         return self.cached_titles
 
     @property
@@ -180,7 +182,7 @@ class KnowlBackend(PostgresBase):
         if not beta:
             cur = self._execute(selecter, [ID, 1])
             if cur.rowcount > 0:
-                return {k:v for k,v in zip(fields, cur.fetchone())}
+                return dict(zip(fields, cur.fetchone()))
         cur = self._execute(selecter, [ID, -2 if allow_deleted else 0])
         if cur.rowcount > 0:
             return dict(zip(fields, cur.fetchone()))
@@ -290,8 +292,8 @@ class KnowlBackend(PostgresBase):
         else:
             typ, source, name = extract_typ(knowl.id)
         links = extract_links(knowl.content)
-        if typ == 2: # column description
-            defines = [knowl.id.split(".")[-1]]
+        if typ == 2: # column or table description
+            defines = [name]
         else:
             defines = extract_defines(knowl.content)
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
@@ -352,6 +354,31 @@ class KnowlBackend(PostgresBase):
 
     def drop_column(self, table, col):
         kid = f"columns.{table}.{col}"
+        kwl = Knowl(kid, data=self.get_knowl(kid, beta=True))
+        self.delete(kwl)
+
+    def get_table_description(self, table):
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        rec = self._execute(selecter, [f"tables.{table}", 2, 0]).fetchone()
+        if rec:
+            return Knowl(rec[0], data=dict(zip(fields, rec)))
+
+    def set_table_description(self, table, description):
+        uid = db.login()
+        kid = f"tables.{table}"
+        data = {
+            'content': description,
+            'defines': table,
+        }
+        kwl = Knowl(kid, data=data)
+        old = self.get_knowl(kid, beta=True)
+        if old is None:
+            old = {'authors': []}
+        self.save(kwl, uid, most_recent=old)
+
+    def drop_table(self, table):
+        kid = f"tables.{table}"
         kwl = Knowl(kid, data=self.get_knowl(kid, beta=True))
         self.delete(kwl)
 
@@ -462,7 +489,7 @@ class KnowlBackend(PostgresBase):
         """
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
         """
-        kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."]))
+        kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
 
         def filter_from_matches(pattern):
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
@@ -545,9 +572,9 @@ class KnowlBackend(PostgresBase):
         for kid in kids:
             try:
                 if sys.version_info[0] == 3:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf-8').split(u'\n--\n'))
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
                 else:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).split(u'\n--\n'))
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))]).split('\n--\n'))
             except subprocess.CalledProcessError: # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
@@ -563,9 +590,9 @@ class KnowlBackend(PostgresBase):
         """
         try:
             if sys.version_info[0] == 3:
-                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
             else:
-                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))]).split('\n')
         except subprocess.CalledProcessError: # no matches
             return 0
 
@@ -586,7 +613,7 @@ class KnowlBackend(PostgresBase):
         if knowl.source is not None or knowl.source_name is not None:
             raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead.")
         if self.knowl_exists(new_name):
-            raise ValueError("A knowl with id %s already exists."%new_name)
+            raise ValueError("A knowl with id %s already exists." % new_name)
         updater = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
         old_name = knowl.id
         with DelayCommit(self):
@@ -666,7 +693,7 @@ class KnowlBackend(PostgresBase):
         as in ``code_references``, and ``links`` is a list of purported knowl
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
-        all_kids = set(k['id'] for k in self.get_all_knowls(['id']))
+        all_kids = {k['id'] for k in self.get_all_knowls(['id'])}
         if sys.version_info[0] == 3:
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
         else:
@@ -789,7 +816,7 @@ class Knowl():
             if self.exists(allow_deleted=allow_deleted):
                 if editing:
                     # as we want to make edits on the most recent version
-                    timestamp=None
+                    timestamp = None
                 data = knowldb.get_knowl(ID,
                         allow_deleted=allow_deleted, timestamp=timestamp)
             else:
@@ -816,11 +843,19 @@ class Knowl():
         if self.type == 2:
             pieces = ID.split(".")
             # Ignore the title passed in
-            self.title = f"Column {pieces[2]} of table {pieces[1]}"
-            if pieces[1] in db.tablenames:
-                self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
-            else:
-                self.coltype = "DEFUNCT"
+            if len(pieces) == 3:
+                # Column
+                self.title = f"Column {pieces[2]} of table {pieces[1]}"
+                if pieces[1] in db.tablenames:
+                    self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+                else:
+                    self.coltype = "DEFUNCT"
+            elif len(pieces) == 2:
+                # Table
+                self.title = f"Table {pieces[1]}"
+                self.coltype = None
+                if pieces[1] not in db.tablenames:
+                    self.title += " (DEFUNCT)"
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
         #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
@@ -854,9 +889,9 @@ class Knowl():
             #                          "status":0}]
             uids = [ elt['last_author'] for elt in self.edit_history]
             if uids:
-                full_names = dict([ (elt['username'], elt['full_name']) for elt in userdb.full_names(uids)])
+                full_names = {elt['username']: elt['full_name'] for elt in userdb.full_names(uids)}
             else:
-                full_names = dict({})
+                full_names = {}
             self.previous_review_spot = None
             for i, elt in enumerate(self.edit_history):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])

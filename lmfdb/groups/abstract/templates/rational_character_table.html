@@ -1,4 +1,11 @@
 
+
+{% if info.char_highlight %}
+<p>The row representing the character {{info.char_highlight}} is highlighted below.</p>
+{% endif %}
+
+{% set conv = info.conv %}
+
 <table class="nowrap">
   <tr>
     <td></td><td></td>
@@ -22,12 +29,23 @@
     </tr>
   {% endfor %}
 
+
+
+  {% if gp.has_nontrivial_schur_character %}
+    <tr><td></td><td>{{KNOWL('group.representation.schur_index', 'Schur')}}</td></tr>
+  {% endif %}
+
   {% for chtr in gp.rational_characters %}
-    <tr>
-      <td> {{ chtr.display_knowl() | safe }}</td><td></td>
-      {% for c in gp.conjugacy_class_divisions %}
-        <td class="right">${{ chtr.qvalues[c.classes.0.counter - 1] }}$</td>
-      {% endfor %}
+    {% if chtr.label == info.char_highlight %}
+      <tr class="highlighted">
+    {% else %}
+      <tr>
+    {% endif %}
+    <td> {{ chtr.display_knowl() | safe }}</td><td class="center"> {% if chtr.schur_index != 1 %} {{chtr.schur_index}} {% endif %} </td>
+    {% for c in gp.conjugacy_class_divisions %}
+      <td class="right">{{ conv(chtr.qvalues[c.classes.0.counter - 1]) | safe }}</td>
+    {% endfor %}
     </tr>
   {% endfor %}
+
 </table>

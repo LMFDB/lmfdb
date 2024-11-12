@@ -1,5 +1,6 @@
 from lmfdb.tests import LmfdbTest
 
+
 class HomePageTest(LmfdbTest):
     # All tests should pass
     #
@@ -93,7 +94,7 @@ class HomePageTest(LmfdbTest):
                         '[0, 0, 1, -75, 256]')
         self.check_args("EllipticCurve/Q/?conductor=990&optimal=on",
                         '990h1')
-        L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13&search_type=List")
+        L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13")
         assert '[0, 0, 1, -849658625, 9532675710156]' in L.get_data(as_text=True)
         assert '[0, -1, 1, -10, -20]' not in L.get_data(as_text=True)
 

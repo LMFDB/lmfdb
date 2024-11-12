@@ -2,7 +2,7 @@ Installation
 ============
 
  * To develop and contribute new code, see below on
-   [Sharing Your Work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#code-development-and-sharing-your-work).
+   [Sharing Your Work](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#code-development-and-sharing-your-work).
    If you **only** want to run a copy of the site, move into a new directory and
    type
 
@@ -14,14 +14,14 @@ Installation
 
  * Make sure you have a recent version of Sage installed (at least running on Python 3)
    and that `sage` is available from the commandline.  In particular see
-   [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
+   [Sage installation](https://doc.sagemath.org/html/en/installation/source.html).
    Also check that your version of Sage has ssl available by checking that
    `import ssl` works on its command line. If not, then the `pip install`
    commands below will fail. To remedy this, either install SSL globally on
    your system or have Sage build its own local version, as mentioned
-   [here](http://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
+   [here](https://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
    and
-   [here](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
+   [here](https://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
    respectively.
 
  * Install dependencies.  This requires you to have write access to the
@@ -210,17 +210,17 @@ Code development and sharing your work
     git remote add upstream git@github.com:LMFDB/lmfdb.git
     ```
  * To run LMFDB, go through the rest of the instructions in
-   [Installation](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#installation) and
-   [Running](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+   [Installation](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#installation) and
+   [Running](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#running).
 
  * You should make a new branch if you want to work on a new feature.
    The following command creates a new branch named `new_feature` and
-   switches to that branch, after first switching to the master branch
+   switches to that branch, after first switching to the main branch
    and making sure that it is up-to-date:
 
    ```
-   git checkout master
-   git pull upstream master
+   git checkout main
+   git pull upstream main
    git checkout -b new_feature
    ```
 
@@ -237,7 +237,7 @@ Code development and sharing your work
 
  * You should make sure from time to time that you pull the latest
    changes from the official LMFDB repository.  There are three
-   branches upstream to be aware of: `web`, `dev` and `master`:
+   branches upstream to be aware of: `web`, `dev` and `main`:
 
    - `web` is changed rarely and contains the code currently running at
      [www.lmfdb.org](www.lmfdb.org)
@@ -245,34 +245,34 @@ Code development and sharing your work
    - `dev` is changed more often and contains the code currently running at
      [beta.lmfdb.org](beta.lmfdb.org)
 
-   - `master` is the development branch.
+   - `main` is the development branch.
 
-   Normal developers only need to be aware of the master
+   Normal developers only need to be aware of the main
    (=development) branch.
 
- * To pull in the most recent changes there to your own master
+ * To pull in the most recent changes there to your own main
    branch locally and update your github repository too:
 
     ```
-    git checkout master
-    git pull upstream master
-    git push origin master
+    git checkout main
+    git pull upstream main
+    git push origin main
     ```
 
- * To rebase your current working branch on the latest master:
+ * To rebase your current working branch on the latest main:
 
    ```
-   git pull --rebase upstream master
+   git pull --rebase upstream main
    ```
 
  * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb)
    that you have some new code!
    You should also issue a pull request at github
    (from your feature branch `new_feature`) at the same time.  Make
-   sure that your pull request is to the lmfdb `master` branch,
+   sure that your pull request is to the lmfdb `main` branch,
    whatever your own development or feature branch is called.
    Others will review your code, and release managers will
-   (eventually, if all is well) merge it into the master branch.
+   (eventually, if all is well) merge it into the main branch.
 
 
 LMFDB On Windows
@@ -281,13 +281,13 @@ LMFDB On Windows
 We do not recommend attempting to run LMFDB from within the Sage virtual image.
 For anyone who would like to attempt it, the following steps should theoretically work.
 
- * Download `VirtualBox` and the Sage appliance, following the instructions [here](http://wiki.sagemath.org/SageAppliance).
+ * Download `VirtualBox` and the Sage appliance, following the instructions [here](https://wiki.sagemath.org/SageAppliance).
 
  * The default Sage appliance does not have enough space to install LMFDB's prerequisites.  Moreover, the default
    file type (vmdk) installed by `VirtualBox` does not support resizing.  You will need to
    increase the available space by cloning into a vdi file, increasing the space and cloning back, following the
-   instructions [here](http://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file) and
-   [here](http://www.howtogeek.com/124622/how-to-enlarge-a-virtual-machines-disk-in-virtualbox-or-vmware/).  We had
+   instructions [here](https://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file) and
+   [here](https://www.howtogeek.com/124622/how-to-enlarge-a-virtual-machines-disk-in-virtualbox-or-vmware/).  We had
    trouble at this stage: make sure to keep the .ova file in case you screw up your virtual image.
 
  * The resulting disk image needs to be repartitioned to make the space available.  Unfortunately, the Sage appliance
@@ -299,7 +299,7 @@ For anyone who would like to attempt it, the following steps should theoreticall
    See Section 6.3.1 [here](https://www.virtualbox.org/manual/ch06.html).
 
  * Clone the LMFDB git repository into your host OS, and set up shared folders so that you can access
-   the LMFDB code from within the Sage appliance.  See the [Sage instructions](http://wiki.sagemath.org/SageAppliance) for how to share folders.
+   the LMFDB code from within the Sage appliance.  See the [Sage instructions](https://wiki.sagemath.org/SageAppliance) for how to share folders.
 
  * Now you need to run ssh-keygen within the Sage appliance and e-mail the result to Harald Schilly, Jonathan Bober or John Cremona (see above).
    Since copy-and-paste can be tricky from inside the virtual image, we suggest writing to a file shared by the host OS.
