@@ -98,16 +98,18 @@
         {% endfor %}$
     {% else %}
         $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$
-    {% endif %}</td><td>Character value</td></tr></thead>
+    {% endif %}</td><td>Character value</td><td>Complex conjugation</td></tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
-            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="bluehighlight"{%endif%}>
-                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{cycle_string(gen.representative())}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td></tr>
+            <tr>
+                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{cycle_string(gen.representative())}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td>
+            <td align="center">
+            {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}&#x2713;{%endif%}</td>
+            </tr>
         {% endfor %}
       </tbody>
       </table>
-       <p>The blue line marks the conjugacy class containing complex conjugation.</p>
  {# For testing in progress
  <div>
  <br>
