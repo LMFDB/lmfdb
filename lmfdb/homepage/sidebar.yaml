@@ -1,4 +1,4 @@
-1intro:
+0intro:
   type: simple
   heading:
      title: Introduction
@@ -13,7 +13,7 @@
     - title: Knowledge
       url_for: "knowledge.index"
 
-2L-functions:
+1L-functions:
   type: simple
   heading:
     title: L-functions
@@ -24,7 +24,7 @@
     - title: "All"
       url_for: "l_functions.index"
 
-3ModForm:
+2ModForm:
   type: simple
   heading:
     title: Modular forms
@@ -58,7 +58,7 @@
     - title: U(2,1)
       status: future
 
-4Var:
+3Var:
   type: simple
   heading:
     title: Varieties
@@ -122,7 +122,7 @@
       url_for: "belyi.index"
       colspan: onecolumn
 
-5Fields:
+4Fields:
   type: simple
   heading:
     title: Fields
@@ -141,7 +141,7 @@
       status: future
       colspan: onecolumn
 
-6Repn:
+5Repn:
   type: simple
   heading:
     title: Representations
@@ -167,7 +167,7 @@
       status: future
       colspan: onecolumn
 
-7Mot:
+6Mot:
   type: simple
   status: beta
   heading:
@@ -188,7 +188,7 @@
       status: future
       colspan: onecolumn
 
-8Groups:
+7Groups:
   type: simple
   heading:
     title: Groups
@@ -223,11 +223,17 @@
     status: future
     colspan: onecolumn
 
-9API:
+8API:
   type: single
   heading:
     title: Database
     url_for: "API.index"
     type: knowl
+
+9Data:
+  type: single
+  heading:
+    title: Datasets
+    url_for: "datasets"
 
 ...

@@ -550,6 +550,10 @@ def groups():
 
 # @app.route("/Group/history")
 
+@app.route('/datasets')
+@app.route('/datasets/')
+def datasets():
+    return render_template('datasets.html', title='Auxiliary datasets')
 
 def groups_history():
     t = 'Groups'
