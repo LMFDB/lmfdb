@@ -949,7 +949,7 @@ def render_bhkssw():
     info = to_dict(request.args)
     learnmore = learnmore_list_remove('BHKSSW dataset')
     t = 'Balakrishnan-Ho-Kaplan-Spicer-Stein-Watkins elliptic curve database'
-    bread = [("Datasets", url_for("datasets")), ("BHKSSW dataset")]
+    bread = [("Datasets", url_for("datasets")), ("BHKSSW dataset", " ")]
     if 'filename' in info:
         filepath = os.path.join(os.path.expanduser('~/data/bhkssw_ecdb/' + info['filename']))
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
