@@ -37,7 +37,7 @@ def zetazeros():
         return list_zeros(N=N, t=t, limit=limit)
     else:
         title = r"Zeros of $\zeta(s)$"
-        bread = [("L-functions", url_for("l_functions.index")), (r'Zeros of $\zeta(s)$', ' ')]
+        bread = [("Datasets", url_for("datasets")), (r'Zeros of $\zeta(s)$', ' ')]
         return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore_list(), friends=friends_list(), downloads=downloads())
 
 

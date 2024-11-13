@@ -553,7 +553,7 @@ def groups():
 @app.route('/datasets')
 @app.route('/datasets/')
 def datasets():
-    return render_template('datasets.html', title='Auxiliary datasets')
+    return render_template('datasets.html', title='Auxiliary datasets', bread=[("Datasets", " ")])
 
 def groups_history():
     t = 'Groups'
