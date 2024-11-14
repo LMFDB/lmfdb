@@ -962,7 +962,7 @@ def render_sw_ecdb():
         else:
             errors.append("Invalid conductor type")
         if 'k' in info and not errors:
-            k = k.strip()
+            k = info["k"].strip()
             if k.isdigit():
                 k = int(k)
                 if k <= kmax:
