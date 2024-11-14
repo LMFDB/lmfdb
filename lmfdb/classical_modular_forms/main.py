@@ -740,11 +740,13 @@ def common_parse(info, query, na_check=False):
         elif parity == 'odd':
             query['char_parity'] = -1
     if info.get('level_type'):
-        if info['level_type'] == 'divides':
+        if info['level_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('level'), int):
                 raise ValueError("You must specify a single level")
-            else:
+            elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
+            else:
+                query['level'] = {'$mod': [0, ZZ(query['level'])]}
         else:
             query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
@@ -1476,6 +1478,7 @@ class CMFSearchArray(SearchArray):
                      ('squarefree', 'squarefree'),
                      ('powerful', 'powerful'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             min_width=110)
         level = TextBoxWithSelect(
