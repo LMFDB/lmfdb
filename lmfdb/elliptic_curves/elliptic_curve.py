@@ -68,6 +68,7 @@ def learnmore_list():
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
             ('Congruent number curves', url_for(".render_congruent_number_data")),
+            ('Stein-Watkins dataset', url_for(".render_sw_ecdb")),
             ('BHKSSW dataset', url_for(".render_bhkssw"))]
 
 
@@ -943,6 +944,42 @@ def render_single_congruent_number(n):
     t = "Is {} a congruent number?".format(n)
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
+
+@ec_page.route("/stein-watkins")
+def render_sw_ecdb():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('Stein-Watkins dataset')
+    t = 'Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("Stein-Watkins dataset", " ")]
+    if 'Fetch' in info:
+        errors = []
+        if info.get("ctype") == "all":
+            fname = "a.{:03d}"
+            kmax = 999
+        elif info.get("ctype") == "prime":
+            fname = "p.{:02d}"
+            kmax = 99
+        else:
+            errors.append("Invalid conductor type")
+        if 'k' in info and not errors:
+            k = k.strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a nonnegative integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/stein_watkins_ecdb/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("sw_ecdb.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
 
 @ec_page.route("/BHKSSW")
 def render_bhkssw():
