@@ -18,7 +18,7 @@ links:
 ---
 title: Learn more
 image: smalluniverse
-content: <p>Information is available regarding the <a href="/knowledge/show/rcs">source, reliability, and completeness</a> of the database.</p>
+content: <p>Information is available regarding the <a href="/rcs">source, reliability, and completeness</a> of the database.</p>
   <p><a href="/knowledge/show/doc.knowl">Knowls</a> provide explanations when you need them.</p><p><a href="/intro">Overview</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/knowledge/">Knowledge</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/api/">Data</a></p>
 control: 0
 links:
