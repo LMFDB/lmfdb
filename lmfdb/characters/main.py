@@ -4,6 +4,7 @@ from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import euler_phi, PolynomialRing, QQ, gcd, ZZ
+from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
@@ -106,6 +107,12 @@ class DirichSearchArray(SearchArray):
             example="2",
             example_span="2 or 3-5"
         )
+        inducing = TextBox(
+            "inducing",
+            label="Induced by",
+            knowl="character.dirichlet.primitive",
+            example="3.b"
+        )
         parity = ParityBox(
             "parity",
             knowl="character.dirichlet.parity",
@@ -133,12 +140,13 @@ class DirichSearchArray(SearchArray):
         count = CountBox()
 
         self.refine_array = [
-            [modulus, conductor, order, is_real], [parity, is_primitive, is_minimal, count],
+            [modulus, conductor, order, inducing], [parity, is_primitive, is_minimal, is_real], [count],
         ]
         self.browse_array = [
             [modulus],
             [conductor],
             [order],
+            [inducing],
             [parity],
             [is_primitive],
             [is_real],
@@ -156,6 +164,24 @@ def common_parse(info, query):
     parse_ints(info, query, "modulus", name="modulus")
     parse_ints(info, query, "conductor", name="conductor")
     parse_ints(info, query, "order", name="order")
+    if 'inducing' in info:
+        try:
+            validate_label(info['inducing'])
+            parts_of_label = info['inducing'].split(".")
+            if len(parts_of_label) != 2 or not str.isalpha(parts_of_label[1]):
+                raise ValueError("Invalid character orbit label format, expected N.a")
+            primitive_modulus = int(parts_of_label[0])
+            primitive_orbit = class_to_int(parts_of_label[1])+1
+            if db.char_dirichlet.count({'modulus':primitive_modulus,'is_primitive':True,'orbit':primitive_orbit}) == 0:
+                print("hi")
+                raise ValueError("Primitive character orbit not found")
+            if 'conductor' in query:
+                flash_error("Conductor constraint %s ignored due to specification of primitive inducing character", info['conductor'])
+            query["conductor"] = primitive_modulus
+            query["primitive_orbit"] = primitive_orbit
+        except ValueError as err:
+            flash_error("%s is not the label of a primitive character orbit in the database, ignoring constraint", info['inducing'])
+            return redirect(url_for(".render_DirichletNavigation"))
     if 'parity' in info:
         parity = info['parity']
         if parity == 'even':
