@@ -11,20 +11,19 @@
 <h3>Downloads from search result pages</h3>
 
 <div style="max-width:700px;">
-  <p>Every search results page in the LMFDB has a download button between the search inputs and the results.  This is the simplest option, offers several download formats and the columns included in the download match those displayed on the search results page.  There are two main downsides.  First, it is limited to roughly 100 MB per download and to a 30 seconds limit.  Second, it is limited to queries expressible on search pages and the columns that are included in the search results, so if you are interested in quantities that are visible on object homepages but not shown on search result pages this method will not work.</p>
+  {{KNOWL_INC('intro.download_search')}}
 </div>
 
 <h3>The API</h3>
 
 <div style="max-width:700px;">
-  <p> The LMFDB offers an <a href="{{url_for('API.index')}}">API</a>.  This provides a http-based mechanism to query the data tables that underlie the LMFDB's webpages, providing access to all of the data used to create object homepages.  You can construct queries programatically and send them to the LMFDB's webserver, so this method is available both interactively and from any programming language that can request webpages.  There is still a rate limit: each request can fetch at most 100 results, and the overall limit is at most 10,000 results from a query.  So if you want to access large numbers of results the API will be cumbersome.  Finally, the possible queries are somewhat limited.</p>
-  <p>The API also serves as a way to understand the structure of the data tables underlying the LMFDB: it contains descriptions of the tables and their columns, as well as an overview of the <a href="{{url_for('API.stats')}}">sizes</a> of the tables constituting the LMFDB.</p>
+  {{KNOWL_INC('intro.api')}}
 </div>
 
 <h3>Direct SQL connection</h3>
 
 <div style="max-width:700px;">
-  <p> You can open a direct connection to a read-only mirror of the LMFDB's SQL database, using the access information below.  You can connect via standard tools for working with Postgres databases, by using the <a href="https://github.com/roed314/lmfdb-lite">lmfdb-lite</a> python module, or by <a href="https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md">installing the LMFDB locally</a>.  The first requires writing your own SQL queries, while the later two require learning the LMFDB's custom query language.  However, this option provides the most flexibility: there are no timeouts or rate limits, and you can run arbitrary queries.</p>
+  {{KNOWL_INC('intro.direct_sql')}}
 </div>
 
 <h3>SQL Mirror Access</h3>
