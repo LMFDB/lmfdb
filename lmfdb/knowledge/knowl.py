@@ -738,7 +738,7 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
-        L = self._execute(selecter, (knowlid, time))
+        L = list(self._execute(selecter, (knowlid, time)))
         if L:
             return dict(zip(["username", "timestamp"], L[0]))
 
