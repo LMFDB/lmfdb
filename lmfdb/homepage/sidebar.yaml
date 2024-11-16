@@ -227,7 +227,7 @@
   type: single
   heading:
     title: Database
-    url_for: "API.index"
+    url_for: "API.options"
     type: knowl
 
 ...
