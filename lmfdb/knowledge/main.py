@@ -692,7 +692,7 @@ def save_form():
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
-        k.timestamp = datetime.now()
+        k.timestamp = datetime.utcnow()
         k.status = 0
         k.save(who=who)
     if NEWID:
