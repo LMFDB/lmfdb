@@ -10,11 +10,11 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, comma, format_percentage,
     flash_error, display_knowl, CountBox, Downloader, prop_int_pretty,
-    SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox,
+    SearchArray, TextBox, YesNoBox, YesNoMaybeBox, SubsetNoExcludeBox, SelectBox,
     SubsetBox, TextBoxWithSelect, parse_bool_unknown, parse_posints,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, parse_padicfields,
+    parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
     raw_typeset_int, compress_poly_Q, compress_polynomial)
 from lmfdb.utils.web_display import compress_int
@@ -25,7 +25,8 @@ from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data, transitive_group_display_knowl,
     group_cclasses_knowl_guts, group_pretty_and_nTj, knowl_cache,
-    group_character_table_knowl_guts, group_alias_table)
+    group_character_table_knowl_guts, group_alias_table,
+    dihedral_gal, dihedral_ngal)
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
@@ -898,7 +899,39 @@ def number_field_search(info, query):
     parse_posints(info,query,'relative_class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
-    parse_bool(info,query,'is_galois')
+    fi = info.get("field_is")
+    if fi == "cyc":
+        query["gal_is_cyclic"] = True
+    elif fi == "ab":
+        query["gal_is_abelian"] = True
+    elif fi in ["dih_ngal", "dih_gal"]:
+        opts = dihedral_gal if fi == "dih_gal" else dihedral_ngal
+        if "degree" in info:
+            opts = {n: opts[n] for n in integer_options(info["degree"], contained_in=list(opts))}
+        if "galois_label" in query:
+            # Added by parse_galgrp, so we intersect with opts
+            if isinstance(query["galois_label"], dict):
+                ggopt = set(query["galois_label"]["$in"])
+            else:
+                ggopt = {query["galois_label"]}
+            opts = {n: gg for (n, gg) in opts.items() if gg in ggopt}
+        if len(opts) == 0:
+            # Incompatible with specified degree or galois labels, so we add an impossible condition
+            query["degree"] = -1
+        elif len(opts) == 1:
+            n, gg = list(opts.items())[0]
+            query["degree"] = n
+            query["galois_label"] = gg
+        else:
+            query["degree"] = {"$in": list(opts)}
+            query["galois_label"] = list(opts.values())
+    elif fi == "gal":
+        query["is_galois"] = True
+    elif fi == "solv":
+        query["gal_is_solvable"] = True
+    elif fi == "nsolv":
+        query["gal_is_solvable"] = False
+
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
@@ -1176,10 +1209,20 @@ class NFSearchArray(SearchArray):
             knowl="nf.galois_search",
             example="C5",
             example_span="[8,3], 8.3, C5 or 7T2")
-        is_galois = YesNoBox(
-            name="is_galois",
-            label="Galois",
-            knowl="nf.galois_group")
+        field_is_opts = [
+            ("", ""),
+            ("cyc", "cyclic"),
+            ("ab", "abelian"),
+            ("dih_ngal", "dihedral non-Galois"),
+            ("dih_gal", "dihedral Galois"),
+            ("gal", "Galois"),
+            ("solv", "solvable"),
+            ("nsolv", "nonsolvable"),]
+        field_is = SelectBox(
+            name="field_is",
+            label="Field is",
+            knowl="nf.field_is",
+            options=field_is_opts)
         regulator = TextBox(
             name="regulator",
             label="Regulator",
@@ -1259,7 +1302,7 @@ class NFSearchArray(SearchArray):
         self.browse_array = [
             [degree, signature],
             [discriminant, rd],
-            [gal, is_galois],
+            [gal, field_is],
             [num_ram, grd],
             [class_number, class_group],
             [ram_primes, ur_primes],
@@ -1271,13 +1314,13 @@ class NFSearchArray(SearchArray):
 
         self.refine_array = [
             [degree, signature, num_ram, ram_primes, ur_primes ],
-            [gal, is_galois, subfield, class_group, class_number],
+            [gal, field_is, subfield, class_group, class_number],
             [discriminant, rd, grd, cm_field, relative_class_number],
             [regulator, completion, monogenic, index, inessentialprimes],
             [is_minimal_sibling]]
 
             #[degree, signature, class_number, class_group, cm_field],
-            #[num_ram, ram_primes, ur_primes, gal, is_galois],
+            #[num_ram, ram_primes, ur_primes, gal, field_is],
             #[discriminant, rd, grd, regulator, subfield],
             #[completion, is_minimal_sibling, monogenic, index, inessentialprimes],
             #[relative_class_number]]
