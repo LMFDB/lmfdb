@@ -26,7 +26,7 @@ from lmfdb.galois_groups.transitive_group import (
     group_phrase, galois_group_data, transitive_group_display_knowl,
     group_cclasses_knowl_guts, group_pretty_and_nTj, knowl_cache,
     group_character_table_knowl_guts, group_alias_table,
-    dihedral_gal, dihedral_ngal)
+    dihedral_gal, dihedral_ngal, multiquad)
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
@@ -904,10 +904,15 @@ def number_field_search(info, query):
         query["gal_is_cyclic"] = True
     elif fi == "ab":
         query["gal_is_abelian"] = True
-    elif fi in ["dih_ngal", "dih_gal"]:
-        opts = dihedral_gal if fi == "dih_gal" else dihedral_ngal
+    elif fi in ["dih_ngal", "dih_gal", "multi_quad"]:
+        if fi == "dih_ngal":
+            opts = dihedral_ngal
+        elif fi == "dih_gal":
+            opts = dihedral_gal
+        else:
+            opts = multiquad
         if "degree" in info:
-            opts = {n: opts[n] for n in integer_options(info["degree"], contained_in=list(opts))}
+            opts = {n: opts[n] for n in integer_options(info["degree"], contained_in=list(opts), lower_bound=1, upper_bound=47) if n in opts}
         if "galois_label" in query:
             # Added by parse_galgrp, so we intersect with opts
             if isinstance(query["galois_label"], dict):
@@ -1213,6 +1218,7 @@ class NFSearchArray(SearchArray):
             ("", ""),
             ("cyc", "cyclic"),
             ("ab", "abelian"),
+            ("multi_quad", "multi-quadratic"),
             ("dih_ngal", "dihedral non-Galois"),
             ("dih_gal", "dihedral Galois"),
             ("gal", "Galois"),
