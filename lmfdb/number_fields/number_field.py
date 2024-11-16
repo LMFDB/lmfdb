@@ -924,7 +924,7 @@ def number_field_search(info, query):
             query["galois_label"] = gg
         else:
             query["degree"] = {"$in": list(opts)}
-            query["galois_label"] = list(opts.values())
+            query["galois_label"] = {"$in": list(opts.values())}
     elif fi == "gal":
         query["is_galois"] = True
     elif fi == "solv":
