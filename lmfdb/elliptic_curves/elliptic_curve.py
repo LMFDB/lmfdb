@@ -400,21 +400,6 @@ modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
 modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
 modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
-class EC_download(Downloader):
-    table = db.ec_curvedata
-    title = "Elliptic curves"
-    inclusions = {
-        "curve": (
-            ["ainvs"],
-            {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
-                "magma": 'curve := EllipticCurve(out`ainvs);',
-                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
-            }
-        )
-    }
-
 def ec_postprocess(res, info, query):
     labels = [rec["lmfdb_label"] for rec in res]
     mwgens = {rec["lmfdb_label"]: rec["gens"] for rec in db.ec_mwbsd.search({"lmfdb_label":{"$in":labels}}, ["lmfdb_label", "gens"])}
@@ -494,6 +479,28 @@ class ECDownloader(Downloader):
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
+
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
+                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+            }
+        )
+    }
+
+    def postprocess(self, row, info, query):
+        # Unfortunately, I don't see a good way to batch these database calls
+        # given how the download iterator works
+        if "mwgens" in info.get("showcol", "").split("."):
+            gens = db.ec_mwbsd.lucky({"lmfdb_label": row["lmfdb_label"]}, "gens")
+            if gens is not None:
+                gens = [(ZZ(a)/c, ZZ(b)/c) for (a,b,c) in gens]
+            row["mwgens"] = gens
+        return row
 
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',

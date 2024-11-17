@@ -68,7 +68,7 @@
         </table>
     </div>
 
-    <h2>Generators of the action on the roots
+    <h2>Generators of the {{KNOWL('gg.galois_group', 'action')}} on the roots
     {% if object.number_field_galois_group().degree() < 4  %}
         ${% for i in range(1, object.number_field_galois_group().degree()+1) %}
              r_{ {{i}} }{% if not loop.last %},  {% endif %}
@@ -89,25 +89,27 @@
       </tbody>
       </table>
 
-    <h2> Character values on conjugacy classes</h2>
+    <h2> {{KNOWL('group.representation.character', 'Character values')}} on {{KNOWL('gg.conjugacy_classes', 'conjugacy classes')}}</h2>
     <table class="ntdata">
-      <thead><tr><td>Size</td><td>Order</td><td>Action on
+      <thead><tr><td>{{KNOWL('group.size_conjugacy_class', 'Size')}}</td><td>{{KNOWL('group.order_conjugacy_class', 'Order')}}</td><td>{{KNOWL('gg.galois_group', 'Action')}} on
     {% if object.number_field_galois_group().degree() < 4  %}
         ${% for i in range(1, object.number_field_galois_group().degree()+1) %}
              r_{ {{i}} }{% if not loop.last %},  {% endif %}
         {% endfor %}$
     {% else %}
         $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$
-    {% endif %}</td><td>Character value</td></tr></thead>
+    {% endif %}</td><td>{{KNOWL('group.representation.character', 'Character value')}}</td><td>{{KNOWL('artin.trace_of_complex_conj', 'Complex conjugation')}}</td></tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
-            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="bluehighlight"{%endif%}>
-                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{cycle_string(gen.representative())}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td></tr>
+            <tr>
+                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{cycle_string(gen.representative())}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td>
+            <td align="center">
+            {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}&#x2713;{%endif%}</td>
+            </tr>
         {% endfor %}
       </tbody>
       </table>
-       <p>The blue line marks the conjugacy class containing complex conjugation.</p>
  {# For testing in progress
  <div>
  <br>

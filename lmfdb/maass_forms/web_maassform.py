@@ -336,6 +336,7 @@ class WebMaassForm():
 
 
 class MaassFormDownloader(Downloader):
+    table = db.maass_rigor
     title = 'Maass forms'
 
     def download(self, label, lang='text'):
