@@ -179,7 +179,7 @@ def common_parse(info, query):
                 flash_error("Conductor constraint %s ignored due to specification of primitive inducing character", info['conductor'])
             query["conductor"] = primitive_modulus
             query["primitive_orbit"] = primitive_orbit
-        except ValueError as err:
+        except ValueError:
             flash_error("%s is not the label of a primitive character orbit in the database, ignoring constraint", info['inducing'])
             return redirect(url_for(".render_DirichletNavigation"))
     if 'parity' in info:
