@@ -1,5 +1,3 @@
-
-
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
@@ -173,7 +171,6 @@ def common_parse(info, query):
             primitive_modulus = int(parts_of_label[0])
             primitive_orbit = class_to_int(parts_of_label[1])+1
             if db.char_dirichlet.count({'modulus':primitive_modulus,'is_primitive':True,'orbit':primitive_orbit}) == 0:
-                print("hi")
                 raise ValueError("Primitive character orbit not found")
             if 'conductor' in query:
                 query["primitive_orbit"] = 0
