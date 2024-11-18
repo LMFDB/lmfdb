@@ -9,7 +9,7 @@
 <h3>File and data format</h3>
 
 <p>
-  The data is stored in 29 different text files. Each file contains all of the elliptic curves whose minimal short Weierstrass form $y^2 = x^3 + A x + B$ is a certain naive height range.
+  The data is stored in text files, indexed from $k=0$ to $k=2699$.  The file $k$.txt contains all of the elliptic curves whose minimal short Weierstrass form $y^2 = x^3 + A x + B$ has naive height $H$ in the range: the $k$th file contains data for $k \cdot 10^7 < H \le (k+1) \cdot 10^7$.
 </p>
 
 <p>
@@ -63,6 +63,26 @@
     <td>$-1$</td>
   </tr>
   <tr>
+    <td>$r_{\mathrm{an},0}$</td>
+    <td>Running analytic_rank_upper_bound in Sage with parameter $\delta$ (see below) returns $r_{\mathrm{an},0}$, which is an upper bound for the rank</td>
+    <td>$0$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{mwrank}_{\mathrm{ub}}, \operatorname{mwrank}_{\mathrm{lb}}, \operatorname{mwrank}_{\mathrm{time}}$</td>
+    <td>Upper and lower bounds returned by mwrank in Sage, as well as the the time used</td>
+    <td>$2, 2, 0.052$</td>
+  </tr>
+  <tr>
+    <td>$\delta$</td>
+    <td>Running analytic_rank_upper_bound in Sage with parameter $\delta$ returns $r_{\mathrm{an},0}$ (see above), which is an upper bound for the rank.</td>
+    <td>$2.0$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{magma}$</td>
+    <td>Rank computed by the Magma function MordellWeilShaInformation (almost always null)</td>
+    <td>$2$</td>
+  </tr>
+  <tr>
     <td>$r$</td>
     <td>{{KNOWL('ec.rank', 'rank')}}</td>
     <td>$4$</td>
@@ -72,36 +92,28 @@
     <td>1 if $E$ has {{KNOWL('ec.complex_multiplication', 'CM')}}, 0 otherwise</td>
     <td>$0$</td>
   </tr>
-  <tr>
-    <td>$\operatorname{mwrank}_{\mathrm{lb}}$</td>
-    <td>Lower bound returned by mwrank in Sage</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td>$\operatorname{mwrank}_{\mathrm{lb}}, \operatorname{mwrank}_{\mathrm{ub}}$</td>
-    <td>Lower and upper bounds returned by mwrank in Sage</td>
-    <td>$2, 4$</td>
-  </tr>
-  <tr>
-    <td>$\operatorname{magma}, \operatorname{magma}_{\mathrm{lb}}, \operatorname{magma}_{\mathrm{ub}}$</td>
-    <td>Exact, lower and upper bounds on rank computed by Magma's MordellWeilShaInformation (almost always null)</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td>$r_{\mathrm{an},0}, \delta$</td>
-    <td>Running analytic_rank_upper_bound in Sage with parameter $\delta$ returns $r_{\mathrm{an},0}$, which is an upper bound for the rank</td>
-    <td></td>
-  </tr>
 </table>
-
-Other columns that were used to compute rank (but probably not useful for the average user):
-mwrank_lb, mwrank_ub = lower and upper bounds returned by mwrank in Sage
-mwrank_time = amount of time mwrank needed
-magma, magma_lb, magma_ub = lower and upper bounds, or actual rank, returned by Magma's MordellWeilShaInformation or other functions (almost always null, because Magma was not used unless needed)
-r_an_0, Delta: running analytic_rank_upper_bound in Sage with parameter Delta returns r_an_0, which is an upper bound for the rank (sometimes null)
 
 <h3>Download</h3>
 
+<form>
+  <table>
+    <tr>
+      <td align="right">$k = $</td>
+      <td align="left">
+        <input type="text" name="k" size="7" placeholder="123">
+        <span class="formexample">integer from 0 to 2699</span>
+      </td>
+    </tr>
+    <tr>
+      <td align="left">
+        <button type="submit" name="Fetch" value="fetch">Fetch file</button>
+      </td>
+    </tr>
+  </table>
+</form>
+
+{# This format was nice since it gave statistics and provided direct download links, but the files are too big to download given the current 30-second timeout limitation.
 <table class="ntdata">
   <tr>
     <th>File</th>
@@ -120,5 +132,6 @@ r_an_0, Delta: running analytic_rank_upper_bound in Sage with parameter Delta re
   </tr>
   {% endfor %}
 </table>
+#}
 
 {% endblock %}

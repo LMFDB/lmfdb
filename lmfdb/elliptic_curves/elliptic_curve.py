@@ -1003,37 +1003,59 @@ def render_bhkssw():
         else:
             flash_error('File {} not found'.format(info['filename']))
             return redirect(url_for(".render_bhkssw"))
-    info['files'] = [ # number of curves, size in MB, lower bound, upper bound, filename
-        (2249362, 151, "0", r"1 \cdot 10^8", "1e8db.txt"),
-        (1758056, 123, r"1 \cdot 10^8", r"2 \cdot 10^8", "2e8db.txt"),
-        (11300506, 798, r"2 \cdot 10^8", r"1 \cdot 10^9", "1e9db.txt"),
-        (11982016, 866, r"1 \cdot 10^9", r"2 \cdot 10^9", "2e9db.txt"),
-        (10976368, 800, r"2 \cdot 10^9", r"3 \cdot 10^9", "3e9db.txt"),
-        (10395560, 768, r"3 \cdot 10^9", r"4 \cdot 10^9", "4e9db.txt"),
-        (9932368, 744, r"4 \cdot 10^9", r"5 \cdot 10^9", "5e9db.txt"),
-        (9584588, 720, r"5 \cdot 10^9", r"6 \cdot 10^9", "6e9db.txt"),
-        (9385318, 707, r"6 \cdot 10^9", r"7 \cdot 10^9", "7e9db.txt"),
-        (9071666, 685, r"7 \cdot 10^9", r"8 \cdot 10^9", "8e9db.txt"),
-        (8975214, 679, r"8 \cdot 10^9", r"9 \cdot 10^9", "9e9db.txt"),
-        (8788686, 666, r"9 \cdot 10^9", r"1.0 \cdot 10^{10}", "10e9db.txt"),
-        (8642210, 664, r"1.0 \cdot 10^{10}", r"1.1 \cdot 10^{10}", "11e9db.txt"),
-        (8477024, 652, r"1.1 \cdot 10^{10}", r"1.2 \cdot 10^{10}", "12e9db.txt"),
-        (8383290, 645, r"1.2 \cdot 10^{10}", r"1.3 \cdot 10^{10}", "13e9db.txt"),
-        (8275108, 638, r"1.3 \cdot 10^{10}", r"1.4 \cdot 10^{10}", "14e9db.txt"),
-        (8143456, 628, r"1.4 \cdot 10^{10}", r"1.5 \cdot 10^{10}", "15e9db.txt"),
-        (8106334, 626, r"1.5 \cdot 10^{10}", r"1.6 \cdot 10^{10}", "16e9db.txt"),
-        (7959996, 615, r"1.6 \cdot 10^{10}", r"1.7 \cdot 10^{10}", "17e9db.txt"),
-        (7903210, 611, r"1.7 \cdot 10^{10}", r"1.8 \cdot 10^{10}", "18e9db.txt"),
-        (7849564, 607, r"1.8 \cdot 10^{10}", r"1.9 \cdot 10^{10}", "19e9db.txt"),
-        (7781996, 602, r"1.9 \cdot 10^{10}", r"2.0 \cdot 10^{10}", "20e9db.txt"),
-        (7822372, 605, r"2.0 \cdot 10^{10}", r"2.1 \cdot 10^{10}", "21e9db.txt"),
-        (7636198, 591, r"2.1 \cdot 10^{10}", r"2.2 \cdot 10^{10}", "22e9db.txt"),
-        (7562706, 586, r"2.2 \cdot 10^{10}", r"2.3 \cdot 10^{10}", "23e9db.txt"),
-        (7593218, 588, r"2.3 \cdot 10^{10}", r"2.4 \cdot 10^{10}", "24e9db.txt"),
-        (7505566, 582, r"2.4 \cdot 10^{10}", r"2.5 \cdot 10^{10}", "25e9db.txt"),
-        (7409408, 575, r"2.5 \cdot 10^{10}", r"2.6 \cdot 10^{10}", "26e9db.txt"),
-        (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
-    ]
+    # This format was nice, but not possible with the 30-second timeout limitation
+    #info['files'] = [ # number of curves, size in MB, lower bound, upper bound, filename
+    #    (2249362, 151, "0", r"1 \cdot 10^8", "1e8db.txt"),
+    #    (1758056, 123, r"1 \cdot 10^8", r"2 \cdot 10^8", "2e8db.txt"),
+    #    (11300506, 798, r"2 \cdot 10^8", r"1 \cdot 10^9", "1e9db.txt"),
+    #    (11982016, 866, r"1 \cdot 10^9", r"2 \cdot 10^9", "2e9db.txt"),
+    #    (10976368, 800, r"2 \cdot 10^9", r"3 \cdot 10^9", "3e9db.txt"),
+    #    (10395560, 768, r"3 \cdot 10^9", r"4 \cdot 10^9", "4e9db.txt"),
+    #    (9932368, 744, r"4 \cdot 10^9", r"5 \cdot 10^9", "5e9db.txt"),
+    #    (9584588, 720, r"5 \cdot 10^9", r"6 \cdot 10^9", "6e9db.txt"),
+    #    (9385318, 707, r"6 \cdot 10^9", r"7 \cdot 10^9", "7e9db.txt"),
+    #    (9071666, 685, r"7 \cdot 10^9", r"8 \cdot 10^9", "8e9db.txt"),
+    #    (8975214, 679, r"8 \cdot 10^9", r"9 \cdot 10^9", "9e9db.txt"),
+    #    (8788686, 666, r"9 \cdot 10^9", r"1.0 \cdot 10^{10}", "10e9db.txt"),
+    #    (8642210, 664, r"1.0 \cdot 10^{10}", r"1.1 \cdot 10^{10}", "11e9db.txt"),
+    #    (8477024, 652, r"1.1 \cdot 10^{10}", r"1.2 \cdot 10^{10}", "12e9db.txt"),
+    #    (8383290, 645, r"1.2 \cdot 10^{10}", r"1.3 \cdot 10^{10}", "13e9db.txt"),
+    #    (8275108, 638, r"1.3 \cdot 10^{10}", r"1.4 \cdot 10^{10}", "14e9db.txt"),
+    #    (8143456, 628, r"1.4 \cdot 10^{10}", r"1.5 \cdot 10^{10}", "15e9db.txt"),
+    #    (8106334, 626, r"1.5 \cdot 10^{10}", r"1.6 \cdot 10^{10}", "16e9db.txt"),
+    #    (7959996, 615, r"1.6 \cdot 10^{10}", r"1.7 \cdot 10^{10}", "17e9db.txt"),
+    #    (7903210, 611, r"1.7 \cdot 10^{10}", r"1.8 \cdot 10^{10}", "18e9db.txt"),
+    #    (7849564, 607, r"1.8 \cdot 10^{10}", r"1.9 \cdot 10^{10}", "19e9db.txt"),
+    #    (7781996, 602, r"1.9 \cdot 10^{10}", r"2.0 \cdot 10^{10}", "20e9db.txt"),
+    #    (7822372, 605, r"2.0 \cdot 10^{10}", r"2.1 \cdot 10^{10}", "21e9db.txt"),
+    #    (7636198, 591, r"2.1 \cdot 10^{10}", r"2.2 \cdot 10^{10}", "22e9db.txt"),
+    #    (7562706, 586, r"2.2 \cdot 10^{10}", r"2.3 \cdot 10^{10}", "23e9db.txt"),
+    #    (7593218, 588, r"2.3 \cdot 10^{10}", r"2.4 \cdot 10^{10}", "24e9db.txt"),
+    #    (7505566, 582, r"2.4 \cdot 10^{10}", r"2.5 \cdot 10^{10}", "25e9db.txt"),
+    #    (7409408, 575, r"2.5 \cdot 10^{10}", r"2.6 \cdot 10^{10}", "26e9db.txt"),
+    #    (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
+    #]
+    if 'Fetch' in info:
+        fname = "{}.txt"
+        kmax = 2699
+        errors = []
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a positive integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/bhkssw_split/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
 
     return render_template("bhkssw.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
 
