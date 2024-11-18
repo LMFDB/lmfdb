@@ -380,20 +380,28 @@ def parse_range2rat(arg, key, process):
 
 # We parse into a list of singletons and pairs, like [[-5,-2], 10, 11, [16,100]]
 # If split0, we split ranges [-a,b] that cross 0 into [-a, -1], [1, b]
-def parse_range3(arg, split0=False):
+def parse_range3(arg, split0=False, lower_bound=None, upper_bound=None):
     if isinstance(arg, str):
         arg = arg.replace(" ", "")
     if "," in arg:
-        return sum([parse_range3(a, split0) for a in arg.split(",")], [])
+        return sum([parse_range3(a, split0, lower_bound, upper_bound) for a in arg.split(",")], [])
     elif "-" in arg[1:]:
         ix = arg.index("-", 1)
         start, end = arg[:ix], arg[ix + 1:]
         if start:
             low = ZZ(str(start))
+            if lower_bound is not None:
+                low = max(low, lower_bound)
+        elif lower_bound is not None:
+            low = lower_bound
         else:
             raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if end:
             high = ZZ(str(end))
+            if upper_bound is not None:
+                high = min(high, upper_bound)
+        elif upper_bound is not None:
+            high = upper_bound
         else:
             raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if low == high:
@@ -413,7 +421,7 @@ def parse_range3(arg, split0=False):
     else:
         return [ZZ(str(arg))]
 
-def integer_options(arg, max_opts=None, contained_in=None):
+def integer_options(arg, max_opts=None, contained_in=None, lower_bound=None, upper_bound=None):
     if not LIST_RE.match(arg) and MULT_PARSE.fullmatch(arg):
         # Make input work using some arithmetic expressions
         try:
@@ -421,7 +429,7 @@ def integer_options(arg, max_opts=None, contained_in=None):
             arg = str(int(PowMulNodeVisitor().visit(ast_expression).body))
         except (TypeError, ValueError, SyntaxError):
             raise SearchParsingError("Unable to evaluate expression.")
-    intervals = parse_range3(arg)
+    intervals = parse_range3(arg, lower_bound=lower_bound, upper_bound=upper_bound)
     check = max_opts is not None and contained_in is None
     if check and len(intervals) > max_opts:
         raise ValueError("Too many options.")
@@ -698,12 +706,12 @@ def parse_not_element_of(inp, query, qfield, parse_singleton=int):
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, prep_ranges=True)
-def parse_signed_ints(inp, query, qfield, parse_one=None):
+def parse_signed_ints(inp, query, qfield, parse_one=None, lower_bound=None, upper_bound=None):
     if parse_one is None:
         def parse_one(x): return (int(x.sign()), int(x.abs())) if x != 0 else (1, 0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
-        parsed = parse_range3(inp, split0=True)
+        parsed = parse_range3(inp, split0=True, lower_bound=lower_bound, upper_bound=upper_bound)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
             parsed = parsed[0]
