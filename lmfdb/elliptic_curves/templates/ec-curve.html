@@ -154,37 +154,37 @@ white-space: pre in order to keep line breaks! #}
 
         <tr>
         <td>{{ KNOWL('ec.q.conductor', title='Conductor') }}:</td>
-        <td>{{ data.data.cond_latex }}</td>
+        <td>$N$</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>${{ data.data.cond_factor }}$</td>
+        <td>{{ data.data.cond_latex }}</td><td>&nbsp;=&nbsp;</td><td>${{ data.data.cond_factor }}$</td>
         <td>{{ place_code('cond') }} </td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.discriminant', title='Discriminant') }}:</td>
-        <td>${{ data.data.disc }} $</td>
+        <td>$\Delta$</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>${{ data.data.disc_factor }} $</td>
+        <td>${{ data.data.disc }}$</td><td>&nbsp;=&nbsp;</td><td>${{ data.data.disc_factor }} $</td>
         <td>{{ place_code('disc') }}</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.j_invariant', title='j-invariant') }}:</td>
-        <td>{{ data.data.j_inv_latex }}</td>
+        <td>$j$</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>${{ data.data.j_inv_factor }}$</td>
+        <td>{{ data.data.j_inv_latex }}</td><td>&nbsp;=&nbsp;</td><td>${{ data.data.j_inv_factor }}$</td>
         <td>{{ place_code('jinv') }}
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
-        <td>$\mathrm{End}(E)$</td><td>&nbsp;=&nbsp;</td><td>$\Z$</td>
+        <td>$\mathrm{End}(E)$</td><td>&nbsp;=&nbsp;</td><td colspan=3>$\Z$</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
         <td>$\mathrm{End}(E_{\overline{\Q}})$</td><td>&nbsp;=&nbsp;</td>
-	<td>{{ data.data.EndE }}
+	<td colspan=3>{{ data.data.EndE }}
         {%if not data.data.CMD %}
         &nbsp;&nbsp;(no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
         {% else %}
@@ -196,32 +196,30 @@ white-space: pre in order to keep line breaks! #}
 
         <tr>
         <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
-        <td>$\mathrm{ST}(E)$</td><td>&nbsp;=&nbsp;</td><td>{{ data.data.ST|safe }}</td>
+        <td>$\mathrm{ST}(E)$</td><td>&nbsp;=&nbsp;</td><td colspan=3>{{ data.data.ST|safe }}</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.q.faltings_height', title='Faltings height') }}:</td>
-        <td>$h_{\mathrm{Faltings}}$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.faltings_height }}$</td>
+        <td>$h_{\mathrm{Faltings}}$</td><td>&nbsp;&approx;&nbsp;</td><td colspan=3>${{ data.faltings_height }}$</td>
         <td>{{ place_code('faltings') }}</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.q.faltings_height', title='Stable Faltings height') }}:</td>
-        <td>$h_{\mathrm{stable}}$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.stable_faltings_height }}$</td>
+        <td>$h_{\mathrm{stable}}$</td><td>&nbsp;&approx;&nbsp;</td><td colspan=3>${{ data.stable_faltings_height }}$</td>
         <td>{{ place_code('stable_faltings') }}</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.q.abc_quality', title='$abc$ quality') }}:</td>
-        <td>$Q$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.abc_quality }}$</td>
-        <td></td>
+        <td>$Q$</td><td>&nbsp;&approx;&nbsp;</td><td colspan=3>${{ data.abc_quality }}$</td>
         <td>{{ place_code('abc_quality') }}</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.q.szpiro_ratio', title='Szpiro ratio') }}:</td>
-        <td>$\sigma_{m}$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.szpiro_ratio }}$</td>
-        <td></td>
+        <td>$\sigma_{m}$</td><td>&nbsp;&approx;&nbsp;</td><td colspan=3>${{ data.szpiro_ratio }}$</td>
         <td>{{ place_code('szpiro_ratio') }}</td>
         </tr>
 
