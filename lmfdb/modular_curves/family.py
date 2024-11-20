@@ -79,7 +79,7 @@ class X1N(ModCurveFamily_base):
     name = "X_1(N)"
     sl2level = "N"
     index = "N+1"
-    psl2index = r"i = \begin{cases} 1, & \text{ if } N = 1, \\ 3, & \text{ if } N = 3, \\ \frac{N^2}{2}\prod_{p|N, \text{ prime}} \left( 1 - \frac{1}{p^2} \right), & \text{ otherwise.}\end{cases}"
+    psl2index = r"i = \begin{cases} 1, & \text{ if } N = 1, \\ 3, & \text{ if } N = 2, \\ 4, & \text{if } N=3, \\ 6, & \text{if } N=4,  \\ \frac{N^2}{2}\prod_{p|N, \text{ prime}} \left( 1 - \frac{1}{p^2} \right), & \text{ otherwise.}\end{cases}"
     genus = "g"
     nu2 = r"$\nu_2 = \begin{cases} 1, & \text{ if } N =1,2, \\ 0, & \text{ otherwise.}\end{cases}$"
     nu3 = r"$\nu_3 = \begin{cases} 1, & \text{ if } N =1,3, \\ 0, & \text{ otherwise.}\end{cases}$"
