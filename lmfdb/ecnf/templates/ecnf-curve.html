@@ -76,6 +76,8 @@ cellpadding="5";
       <table id="invariants" style="overflow:auto;">
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor')}}:</td>
+	<td>$\frak{n}$</td>
+	<td>=</td>
         <td>{{ ec.cond }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
@@ -84,6 +86,8 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor norm')}}:</td>
+	<td>$N(\frak{n})$</td>
+	<td>=</td>
         <td>{{ ec.cond_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond_norm }}</td>
@@ -92,6 +96,8 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant')}}:</td>
+	<td>$(\Delta)$</td>
+	<td>=</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
         <td>=</td>
@@ -102,6 +108,8 @@ cellpadding="5";
         <tr><td colspan=4 style="padding:0;">{{ place_code('disc') }}</td></tr>
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}:</td>
+	<td>$N(\Delta)$</td>
+	<td>=</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
@@ -111,6 +119,8 @@ cellpadding="5";
 {% if not ec.is_minimal %}
         <tr>
         <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant')}}:</td>
+	<td>$\frak{D}_{\mathrm{min}}$</td>
+	<td>=</td>
         <td>{{ ec.mindisc }}</td>
         {% if ec.fact_mindisc %}
         <td>=</td>
@@ -120,6 +130,8 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant norm')}}:</td>
+	<td>$N(\frak{D}_{\mathrm{min}})$</td>
+	<td>=</td>
         <td>{{ ec.mindisc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_mindisc_norm }}</td>
@@ -128,6 +140,8 @@ cellpadding="5";
 
         <tr>
         <td>{{ KNOWL('ec.j_invariant','j-invariant')}}:</td>
+	<td>$j$</td>
+	<td>=</td>
         {% if ec.fact_j %}
         <td>{{ ec.j }}</td>
         <td>=</td>
@@ -140,12 +154,16 @@ cellpadding="5";
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
+	<td>$\mathrm{End}(E)$</td>
+	<td>=</td>
         <td>{% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}</td>
         <td colspan="2">{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
         </tr>
         
         <tr>
         <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
+	<td>$\mathrm{End}(E_{\overline{\Q}})$</td>
+	<td>=</td>
         <td>{{ ec.End }}</td>
         <td colspan="2">
         {%if not ec.cm %}
@@ -159,6 +177,8 @@ cellpadding="5";
         <tr><td colspan=4 style="padding:0;">{{ place_code('cm') }}</td></tr>
         <tr>
         <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
+	<td>$\mathrm{ST}(E)$</td>
+	<td>=</td>
         <td>{{ ec.ST|safe }}</td>
         </td>
         </tr>
@@ -175,9 +195,13 @@ cellpadding="5";
 {% if ec.rank_bounds != "not available" %}
   <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
 {% else %}
+  <td>$r$</td>
+  <td>&nbsp;</td>
   <td>not available</td>
 {% endif %}
 {% else %}
+  <td>$r$</td>
+  <td>=</td>
   <td>\({{ ec.rank }}\)</td>
 {% endif %}
 </tr>
@@ -194,6 +218,7 @@ cellpadding="5";
   {% if ec.gens == 'not available' %}
   <td>not available</td>
   {% else %}
+  <td>$P$</td><td>=</td>
   {% for gen in ec.gens %}
   <td>{{ gen }}</td>
   {% endfor %}
@@ -210,6 +235,7 @@ cellpadding="5";
     {{ KNOWL('ec.canonical_height', title="Heights") }}
     {% endif %}
   </td>
+  <td>$\hat{h}(P)$</td><td>&approx;</td>
   {% for h in ec.heights %}
   <td>\({{ h }}\)</td>
   {% endfor %}
@@ -218,13 +244,17 @@ cellpadding="5";
 
 <tr>
 <td align='left'>{{KNOWL('ec.torsion_subgroup','Torsion structure')}}:</td>
+  <td>$E(K)_{\mathrm{tors}}$</td>
+  <td>$\cong$</td>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
 <tr><td colspan=2> {{ place_code('tors') }}</td></tr>
 <!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
     {% if ec.tr %}
 <tr>
-<td align='left'>{% if ec.tr==1 %}{{KNOWL('ec.mw_generators','Torsion generator')}}{% else %}{{KNOWL('ec.mw_generators','Torsion generators')}}{% endif %}:</td>
+  <td align='left'>{% if ec.tr==1 %}{{KNOWL('ec.mw_generators','Torsion generator')}}{% else %}{{KNOWL('ec.mw_generators','Torsion generators')}}{% endif %}:</td>
+  <td>{% if ec.tr==1 %} $T$ {% else %} $T_1,T_2$ {% endif %}</td>
+  <td>=</td>
 {% for gen in ec.torsion_gens %}
 <td>{{ gen }}</td>
 {% endfor %}
@@ -242,6 +272,7 @@ cellpadding="5";
 
         <tr>
         <td align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</td>
+	<td>$r_{\mathrm{an}}$</td><td>=</td>
         <td>
 	  {{ ec.ar }}
         </td>
@@ -256,12 +287,16 @@ cellpadding="5";
 	<tr>
 	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}:</td>
 	  {% if ec.rk == "not available" %}
+	  <td>$r$?</td>
+	  <td>&nbsp;</td>
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
 	  {% else %}
 	  <td>not available</td>
 	  {% endif %}
 	  {% else %}
+	  <td>$r$</td>
+	  <td>=</td>
 	  <td>\({{ ec.rank }}\)</td>
 	  {% endif %}
 	</tr>
@@ -273,6 +308,8 @@ cellpadding="5";
 	    {{ KNOWL('ec.regulator', title='Regulator') }}:
 	    {% endif %}
 	  </td>
+	  <td>$\mathrm{Reg}(E/K)$</td>
+	  <td>{% if ec.rk == 0 %}={% else %}&approx;{% endif %}</td>
           <td>
 	  {% if ec.reg=='not available' %}
 	  not available
@@ -284,11 +321,13 @@ cellpadding="5";
 
         <tr>
         <td align='left'>{{ KNOWL('ec.period', title='Period') }}:</td>
+	<td>$\Omega(E/K)$</td><td>&approx;</td>
         <td> {{ ec.omega }}</td>
         </tr>
 
         <tr>
         <td align='left'>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
+	<td>$\prod_{\frak{p}}c_{\frak{p}}$</td><td>=</td>
         <td> {{ ec.tamagawa_product }}
           {% if ec.tamagawa_factors %}
           &nbsp;=&nbsp; \({{ ec.tamagawa_factors }}\)
@@ -298,18 +337,18 @@ cellpadding="5";
 
         <tr>
         <td align='left'>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
+	<td>$E(K)_{\mathrm{tors}}$</td><td>=</td>
         <td>\({{ ec.torsion_order }}\)</td>
         </tr>
 
         <tr>
         <td align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
-        <td>
-	  {% if ec.Lvalue=='not available' %}
-	  not available
-	  {% else %}
-	  {{ ec.Lvalue }}
-	  {% endif %}
-	</td>
+	<td>$L^{(r)}(E/K,1)/r!$</td>
+	{% if ec.Lvalue=='not available' %}
+	<td></td><td>not available</td>
+	{% else %}
+	<td>&approx;</td><td>{{ ec.Lvalue }}</td>
+	{% endif %}
         </tr>
 
         <tr>
@@ -320,7 +359,8 @@ cellpadding="5";
 	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:
 	    {% endif %}
 	  </td>
-        <td> {{ ec.sha }} </td>
+	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
+          <td> {{ ec.sha }} </td>
         </tr>
         </table>
     </p>
