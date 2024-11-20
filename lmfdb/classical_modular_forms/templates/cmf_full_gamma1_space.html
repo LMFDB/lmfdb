@@ -103,16 +103,6 @@
 
 {% if space.dim > 0 %}
 {% if space.has_trace_form %}
-<script>
-function show_qexp(qstyle) {
-    $('.smalloutput').hide();
-    $('.mediumoutput').hide();
-    $('.'+qstyle).show();
-    var elementBottom = $('#qexp-anchor').offset().top + $('#qexp-anchor').outerHeight();
-    var viewportTop = $(window).scrollTop();
-    return elementBottom < viewportTop;
-  }
-</script>
 <h2 id="qexp-anchor"> {{ KNOWL('cmf.space_trace_form', title='Trace form') }} </h2>
 <div id="qexp">
   <form>
