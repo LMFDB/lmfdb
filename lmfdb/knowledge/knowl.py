@@ -430,7 +430,7 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND (type = 1 OR type = -1) ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type >= -1 AND type <= 1 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [time, 0])
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L]
 
@@ -738,7 +738,7 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
-        L = self._execute(selecter, (knowlid, time))
+        L = self._safe_execute(selecter, (knowlid, time))
         if L:
             return dict(zip(["username", "timestamp"], L[0]))
 

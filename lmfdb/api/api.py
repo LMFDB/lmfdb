@@ -56,10 +56,22 @@ def get_database_info(show_hidden=False):
         info[database].append((table, table[i+1:], coll.count()))
     return info
 
+@api_page.route("/options")
+def options():
+    return render_template(
+        "database_options.html",
+        title="Access options for the LMFDB database",
+        learnmore=[("API", url_for(".index")),
+                   ("Table statistics", url_for(".stats")),
+                   ("lmfdb-lite", "https://www.github.com/roed314/lmfdb-lite"),
+                   ("Install the LMFDB locally", "https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md")],
+        bread=[("Access options", " ")],
+    )
+
 @api_page.route("/")
 def index(show_hidden=False):
     databases = get_database_info(show_hidden)
-    title = "Database"
+    title = "API"
     return render_template("api.html", **locals())
 
 @api_page.route("/all")
