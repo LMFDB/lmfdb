@@ -8,7 +8,7 @@ from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
-    display_knowl, web_latex, coeff_to_power_series, raw_typeset_qexp,
+    display_knowl, raw_typeset_qexp,
     web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
