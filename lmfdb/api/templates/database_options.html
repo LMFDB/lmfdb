@@ -1,0 +1,54 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<div style="max-width:700px;">
+<p>
+  The LMFDB contains two types of underlying data: the main PostgreSQL database and a collection of <a href="{{url_for('datasets')}}">auxiliary datasets</a>.  There are three options available for accessing large parts of the main database.
+</p>
+</div>
+
+<h3>Downloads from search result pages</h3>
+
+<div style="max-width:700px;">
+  {{KNOWL_INC('intro.download_search')}}
+</div>
+
+<h3>The API</h3>
+
+<div style="max-width:700px;">
+  {{KNOWL_INC('intro.api')}}
+</div>
+
+<h3>Direct SQL connection</h3>
+
+<div style="max-width:700px;">
+  {{KNOWL_INC('intro.direct_sql')}}
+</div>
+
+<h3>SQL Mirror Access</h3>
+
+<table class="ntdata">
+  <tr>
+    <th>host</th>
+    <td>devmirror.lmfdb.xyz</td>
+  </tr>
+  <tr>
+    <th>port</th>
+    <td>5432</td>
+  </tr>
+  <tr>
+    <th>dbname</th>
+    <td>lmfdb</td>
+  </tr>
+  <tr>
+    <th>user</th>
+    <td>lmfdb</td>
+  </tr>
+  <tr>
+    <th>password</th>
+    <td>lmfdb</td>
+  </tr>
+</table>
+
+{% endblock %}
