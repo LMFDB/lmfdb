@@ -177,6 +177,7 @@ def common_parse(info, query):
             primitive_orbit = class_to_int(parts_of_label[1])+1
             if db.char_dirichlet.count({'modulus':primitive_modulus,'is_primitive':True,'orbit':primitive_orbit}) == 0:
                 raise ValueError("Primitive character orbit not found")
+
             def incompatible(query):
                 cond = query.get('conductor')
                 if cond is None:
@@ -185,8 +186,8 @@ def common_parse(info, query):
                     return cond != primitive_modulus
                 opts = parse_range3(info['conductor'], lower_bound=1, upper_bound=ORBIT_MAX_MOD)
                 for opt in opts:
-                    if (isinstance(opt, int) and opt == primitive_modulus or
-                        not isinstance(opt, int) and opt[0] <= primitive_modulus <= opt[1]):
+                    if (isinstance(opt, int) and opt == primitive_modulus
+                        or not isinstance(opt, int) and opt[0] <= primitive_modulus <= opt[1]):
                         return False
                 return True
             if incompatible(query):
