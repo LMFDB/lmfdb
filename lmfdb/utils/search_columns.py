@@ -578,8 +578,31 @@ def eval_rational_list(s):
 
 class ListCol(ProcessedCol):
     """
+    Used for lists that may be empty.
+
+    The list may be stored in a postgres array or a postgres string
+    """
+    def display(self, rec):
+        s = str(self.func(self.get(rec)))
+        if s == "[]":
+            s = "[&nbsp;]"
+        if s and self.mathmode:
+            s = f"${s}$"
+        return s
+
+class RationalListCol(ListCol):
+    """
+    For lists of rational numbers.
+
     Uses the ``eval_rational_list`` function to process the column for downloading.
     """
+    def __init__(self, name, knowl, title, func=None, apply_download=False, mathmode=True, **kwds):
+        super().__init__(name, knowl, title, func=func, apply_download=apply_download, mathmode=mathmode, **kwds)
+
+    def display(self, rec):
+        s = super().display(rec)
+        return s.replace("'", "").replace('"', '')
+
     def download(self, rec):
         s = super().download(rec)
         return eval_rational_list(s)

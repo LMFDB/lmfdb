@@ -17,7 +17,7 @@ from lmfdb.utils import (
     EmbeddedSearchArray, embed_wrap,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, PolynomialCol, eval_rational_list
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE
@@ -373,8 +373,8 @@ gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
 def aut_col(default):
     return MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=default)
 def visible_col(default):
-    return ListCol("visible", "lf.visible_slopes", "Visible slopes",
-                   show_slopes2, default=default, mathmode=True)
+    return RationalListCol("visible", "lf.visible_slopes", "Visible slopes",
+                   show_slopes2, default=default)
 def slopes_col(default):
     return MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
                              ["slopes", "t", "u"],
@@ -399,9 +399,9 @@ lf_columns = SearchColumns([
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
     MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
-    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia")),
+    ListCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"), mathmode=True),
     ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
-    MathCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"))],
+    ListCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"), mathmode=True)],
     db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen", "family", "residual_polynomials"])
 
 family_columns = SearchColumns([
@@ -452,9 +452,9 @@ families_columns = SearchColumns([
                       ["base", "p", "n0", "rf0"],
                       pretty_link),
     visible_col(False),
-    MathCol("slopes", "lf.swan_slopes", "Swan slopes"),
-    MathCol("heights", "lf.heights", "Heights"),
-    MathCol("rams", "lf.rams", "Rams"),
+    RationalListCol("slopes", "lf.swan_slopes", "Swan slopes"),
+    RationalListCol("heights", "lf.heights", "Heights"),
+    RationalListCol("rams", "lf.rams", "Rams"),
     ProcessedCol("poly", "lf.family_polynomial", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Field count"),
