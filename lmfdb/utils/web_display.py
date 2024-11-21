@@ -43,7 +43,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     # clean white space
     raw = re.sub(r'\s+', ' ', str(raw).strip())
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
-
+    
     # the doublesclick behavior is set on load in javascript
     out = f"""
 <span class="raw-tset-container tset {"compressed" if compressed else ""}">
@@ -655,7 +655,8 @@ def raw_typeset_qexp(coeffs_list,
         raw += r
         if add_to_tset:
             tset += t
-        if add_to_tset and "cdots" in tset:
+        if add_to_tset and (("cdots" in tset) or
+                            (len(tset) > compress_threshold)):
             add_to_tset = False
             lastt = None
     else:
