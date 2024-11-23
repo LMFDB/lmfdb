@@ -43,7 +43,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     # clean white space
     raw = re.sub(r'\s+', ' ', str(raw).strip())
     raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
-    
+
     # the doublesclick behavior is set on load in javascript
     out = f"""
 <span class="raw-tset-container tset {"compressed" if compressed else ""}">
