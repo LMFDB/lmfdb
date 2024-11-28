@@ -1030,6 +1030,8 @@ class FamiliesSearchArray(SearchArray):
         ("slopes", "slopes", ['p', 'n', 'visible']),
         ("ambiguity", "ambiguity", ['p', 'n', 'ambiguity', 'visible']),
         ("field_count", "num fields", ['p', 'n', 'field_count', 'visible']),
+        ("mass", "mass", ['mass', 'p', 'n', 'e0', 'e', 'c', 'visible']),
+        ("mass_missing", "mass missing", ['mass_missing', 'mass', 'p', 'n', 'e0', 'e', 'c', 'visible']),
     ]
     def __init__(self):
         #degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
