@@ -156,21 +156,25 @@ cellpadding="5";
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
 	<td>$\mathrm{End}(E)$</td>
 	<td>=</td>
-        <td>{% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}</td>
-        <td colspan="2">{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
+        <td colspan="3">
+	  {% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}
+	  &nbsp;&nbsp;
+          {% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}
+	</td>
         </tr>
         
         <tr>
         <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
 	<td>$\mathrm{End}(E_{\overline{\Q}})$</td>
 	<td>=</td>
-        <td>{{ ec.End }}</td>
-        <td colspan="2">
-        {%if not ec.cm %}
+        <td colspan="3">
+	  {{ ec.End }}
+	  &nbsp;&nbsp;
+          {%if not ec.cm %}
           (no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
-        {% elif not ec.rational_cm %}
+          {% elif not ec.rational_cm %}
           ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
-        {% endif %}
+          {% endif %}
         </td>
         </tr>
 
@@ -210,9 +214,9 @@ cellpadding="5";
 <tr>
   <td align = 'left'>
     {% if ec.ngens==1 %}
-    {{KNOWL('ec.mw_generators','Generator')}}
+    {{KNOWL('ec.mw_generators','Non-torsion generator')}}:
     {% else %}
-    {{KNOWL('ec.mw_generators','Generators')}}
+    {{KNOWL('ec.mw_generators','Non-torsion generators')}}:
     {% endif %}
   </td>
   {% if ec.gens == 'not available' %}
@@ -230,9 +234,9 @@ cellpadding="5";
 <tr>
   <td align = 'left'>
     {% if ec.ngens==1 %}
-    {{ KNOWL('ec.canonical_height', title="Height") }}
+    {{ KNOWL('ec.canonical_height', title="Height") }}:
     {% else %}
-    {{ KNOWL('ec.canonical_height', title="Heights") }}
+    {{ KNOWL('ec.canonical_height', title="Heights") }}:
     {% endif %}
   </td>
   <td>$\hat{h}(P)$</td><td>&approx;</td>
@@ -244,7 +248,7 @@ cellpadding="5";
 
 <tr>
 <td align='left'>{{KNOWL('ec.torsion_subgroup','Torsion structure')}}:</td>
-  <td>$E(K)_{\mathrm{tors}}$</td>
+  <td>$E(K)_{\mathrm{tor}}$</td>
   <td>$\cong$</td>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
@@ -253,7 +257,7 @@ cellpadding="5";
     {% if ec.tr %}
 <tr>
   <td align='left'>{% if ec.tr==1 %}{{KNOWL('ec.mw_generators','Torsion generator')}}{% else %}{{KNOWL('ec.mw_generators','Torsion generators')}}{% endif %}:</td>
-  <td>{% if ec.tr==1 %} $T$ {% else %} $T_1,T_2$ {% endif %}</td>
+  <td>$T$</td>
   <td>=</td>
 {% for gen in ec.torsion_gens %}
 <td>{{ gen }}</td>
