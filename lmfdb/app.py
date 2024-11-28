@@ -272,6 +272,8 @@ def urlencode(kwargs):
 #     app.logger.info(f"done with     = {request.url}")
 #     return T
 
+valid_netloc = set(["lmfdb.org", "lmfdb.xyz", "localhost", "127.0.0.1"])
+
 @app.before_request
 def netloc_redirect():
     """
@@ -306,6 +308,9 @@ def netloc_redirect():
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
+    domain = ".".join(urlparts.netloc.split(":")[0].rsplit(".", 2)[-2:])
+    if domain not in valid_netloc or urlparts.netloc == "www.lmfdb.xyz":
+        return abort(403, f"{urlparts.netloc} is not an authorized domain to serve the LMFDB")
 
 
 def timestamp():
