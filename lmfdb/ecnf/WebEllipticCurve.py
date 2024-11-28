@@ -483,6 +483,13 @@ class ECNF():
         except AttributeError:
             self.qc = "not determined"
 
+        # Mordell-Weil group
+        try:
+            invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
+            self.mw_struct = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+        except AttributeError: # if self.rank not set
+            self.mw_struct = "unknown"
+
         # Torsion
         self.ntors = web_latex(self.torsion_order)
         self.tr = len(self.torsion_structure)
@@ -494,6 +501,7 @@ class ECNF():
             self.tor_struct_pretty = r"\(\Z/%s\Z\oplus\Z/%s\Z\)" % tuple(self.torsion_structure)
 
         self.torsion_gens = [web_point(parse_point(K,P)) for P in self.torsion_gens]
+        self.tor_gens_and_orders = list(zip(self.torsion_gens, self.torsion_structure))
 
         # BSD data
         #
@@ -568,8 +576,10 @@ class ECNF():
         # Generators
         try:
             self.gens = [web_point(parse_point(K, P)) for P in self.gens]
+            self.gens_and_heights = list(zip(self.gens,self.heights))
         except AttributeError:
             self.gens = []
+            self.gens_and_orders = []
 
         # Global period
         try:
