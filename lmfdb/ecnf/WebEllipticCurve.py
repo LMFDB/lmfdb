@@ -487,7 +487,7 @@ class ECNF():
         self.ntors = web_latex(self.torsion_order)
         self.tr = len(self.torsion_structure)
         if self.tr == 0:
-            self.tor_struct_pretty = "trivial"
+            self.tor_struct_pretty = "$0$"
         if self.tr == 1:
             self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:

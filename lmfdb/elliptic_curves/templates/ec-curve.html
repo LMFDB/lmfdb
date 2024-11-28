@@ -104,9 +104,9 @@ white-space: pre in order to keep line breaks! #}
 
     {% if data.mwbsd.rank!=0 %}
     {% if data.mwbsd.rank==1 %}
-    <h3> Infinite order Mordell-Weil generator and {{KNOWL('ec.q.canonical_height','height')}}</h3>
+    <h3> {{ KNOWL('ec.mw_generators', title='Non-torsion Mordell-Weil generator') }} and {{KNOWL('ec.canonical_height','height')}}</h3>
     {% else %}
-    <h3> Infinite order Mordell-Weil generators and {{KNOWL('ec.q.canonical_height','heights')}}</h3>
+    <h3> {{ KNOWL('ec.mw_generators', title='Non-torsion Mordell-Weil generators') }} and {{KNOWL('ec.canonical_height','heights')}}</h3>
     {% endif %}
       {% if data.mwbsd.ngens==0 %}
     No {% if data.mwbsd.rank==1 %} generator {% else %} generators  {% endif %} computed
@@ -130,7 +130,7 @@ white-space: pre in order to keep line breaks! #}
     {%endif%}
 
     {% if data.mwbsd.torsion!=1 %}
-    <h2> {{ KNOWL('ec.torsion_subgroup', title='Torsion generators') }}</h2>
+    <h2> {{ KNOWL('ec.mw_generators', title='Torsion generators') }}</h2>
     <p> {{ data.mwbsd.tor_gens |safe }} </p>
       {{ place_code('tors') }}
     {%endif %}
@@ -183,13 +183,15 @@ white-space: pre in order to keep line breaks! #}
 
         <tr>
         <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
-        <td>$\mathrm{End}(E_{\overline{\Q}})$</td><td>&nbsp;=&nbsp;</td>
+        <td>$\mathrm{End}(E_{\overline{\Q}})$</td>
+	<td>&nbsp;=&nbsp;</td>
 	<td colspan=3>{{ data.data.EndE }}
-        {%if not data.data.CMD %}
-        &nbsp;&nbsp;(no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
-        {% else %}
-        &nbsp;&nbsp;({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
-        {% endif %}
+	  &nbsp;&nbsp;
+          {%if not data.data.CMD %}
+          (no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+          {% else %}
+          ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+          {% endif %}
         </td>
         <td>{{ place_code('cm') }}</td>
         </tr>
