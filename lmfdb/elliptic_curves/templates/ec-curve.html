@@ -258,7 +258,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td>{{ KNOWL('ec.rank', title='Rank') }}:</td>
+        <td>{{ KNOWL('ec.rank', title='Mordell-Weil rank') }}:</td>
         <td>$r$</td><td>&nbsp;=&nbsp;</td><td>$ {{ data.rank }}$
         </td>
         <td>{{ place_code('rank') }}</td>
@@ -301,7 +301,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
+        <td>{{KNOWL('ec.special_value', title='Special value', special_value = data.special_value)}}:</td>
         <td>$ {{ data.mwbsd.lder_name }}$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.mwbsd.special_value }} $</td>
         <td>{{ place_code('L1') }}</td>
         </tr>
@@ -329,7 +329,7 @@ white-space: pre in order to keep line breaks! #}
         </tbody>
         </table>
 
-<h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD formula') }}</h2>
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
 <p style="margin:10px 280px;">
 $\displaystyle {{ data.mwbsd.formula|safe }}$
 </p>
