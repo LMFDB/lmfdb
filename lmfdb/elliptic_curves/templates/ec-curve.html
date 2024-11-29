@@ -102,7 +102,7 @@ white-space: pre in order to keep line breaks! #}
 
     <p>{{ place_code('mwgroup') }}</p>
 
-    {% if data.mwbsd.rank or data.mwbsd.torsion_order %}
+    {% if data.mwbsd.rank > 0 or data.mwbsd.torsion > 1 %}
     <h2> {{ KNOWL('ec.mw_generators', title="Mordell-Weil generators") }} </h2>
     <div>
       <p>
@@ -154,7 +154,7 @@ white-space: pre in order to keep line breaks! #}
     {%endif %}
 #}
 
-    {% if data.mwbsd.rank > 0 or data.mwbsd.torsion_order > 1 %}
+    {% if data.mwbsd.rank > 0 or data.mwbsd.torsion > 1 %}
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
     <div class="ip">
       <p>
