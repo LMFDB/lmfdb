@@ -510,8 +510,7 @@ class GaloisRepresentation( Lfunction):
         self.ld._gp_eval("MaxImaginaryPart = %s" % self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
         # to be on the safe side, we make sure to have a min of terms
-        if self.numcoeff < 50:
-            self.numcoeff = 50
+        self.numcoeff = max(self.numcoeff, 50)
 
 ## produce coefficients
 

@@ -79,10 +79,8 @@ def list_zeros(N=None,
     if limit < 0:
         limit = 100
     if N is not None:  # None is < 0!! WHAT THE WHAT!
-        if N < 0:
-            N = 0
-    if t < 0:
-        t = 0
+        N = max(N, 0)
+    t = max(t, 0)
 
     if limit > 100000:
         # limit = 100000
