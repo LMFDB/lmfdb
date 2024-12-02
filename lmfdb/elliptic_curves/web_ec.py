@@ -661,7 +661,7 @@ class WebEC():
         mwbsd['generators'] = [weighted_proj_to_affine_point(P) for P in mwbsd['gens']] if mwbsd['ngens'] else []
         mwbsd['heights'] = [RR(h) for h in mwbsd['heights']]
         mwbsd['gens_and_heights'] = list(zip(mwbsd['generators'], mwbsd['heights']))
-        
+
         # Mordell-Weil group
         invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
         mwbsd['mw_struct'] = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
