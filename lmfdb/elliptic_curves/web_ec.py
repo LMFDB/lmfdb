@@ -657,9 +657,11 @@ class WebEC():
             mwbsd['int_points'] = "None"
 
         # Generators (mod torsion) and heights:
-        mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
+        #mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else []
+        mwbsd['generators'] = [weighted_proj_to_affine_point(P) for P in mwbsd['gens']] if mwbsd['ngens'] else []
         mwbsd['heights'] = [RR(h) for h in mwbsd['heights']]
-
+        mwbsd['gens_and_heights'] = list(zip(mwbsd['generators'], mwbsd['heights']))
+        
         # Mordell-Weil group
         invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
         mwbsd['mw_struct'] = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
@@ -668,11 +670,13 @@ class WebEC():
         if mwbsd['torsion'] == 1:
             mwbsd['tor_struct'] = ''
             mwbsd['tor_gens'] = ''
+            mwbsd['tor_gens_and_orders'] = []
         else:
             mwbsd['tor_struct'] = r' \oplus '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
             tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
             mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp),
                 ', '.join(web_latex(P) for P in tor_gens_tmp))
+            mwbsd['tor_gens_and_orders'] = list(zip(tor_gens_tmp, self.torsion_structure))
 
         # BSD invariants
         if r >= 2:
