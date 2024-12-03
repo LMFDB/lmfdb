@@ -577,9 +577,10 @@ class ECNF():
         try:
             self.gens = [web_point(parse_point(K, P)) for P in self.gens]
             self.gens_and_heights = list(zip(self.gens,self.heights))
+            self.gens_and_heights.sort(key = lambda Ph: Ph[1])
         except AttributeError:
             self.gens = []
-            self.gens_and_orders = []
+            self.gens_and_heights = []
 
         # Global period
         try:
