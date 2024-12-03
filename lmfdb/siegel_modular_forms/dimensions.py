@@ -54,91 +54,76 @@ def parse_dim_args(dim_args, default_dim_args):
 
 def dimension_Gamma_2(wt_range, j):
     r"""
-    <ul>
-      <li>First entry of the respective triple: The full space.</li>
-      <li>Second entry: The codimension of the subspace of cusp forms.</li>
-      <li>Third entry: The subspace of cusp forms.</li>
-    </ul>
-    <p> More precisely, The triple $[a,b,c]$ in
-    <ul>
-      <li>
-        row <span class="emph">All</span>
-        and in the $k$th column shows the dimension of
-        the full space $M_{k,j}(\Gamma(2))$,
-        of the non cusp forms, and of the cusp forms.</li>
-      <li>
-        in row <span class="emph">$p$</span>, where $p$ is a partition of $6$,
-        and in the $k$th column shows the multiplicity of the
-        $\mathrm{Sp}(4,\Z)$-representation
-        associated to $p$ in the full $\mathrm{Sp}(4,\Z)$-module
-        $M_{k,j}(\Gamma(2))$,
-        in the submodule of non cusp forms and of cusp forms.
-        (See below for details.)
-      </li>
-    </ul>
+    First entry of the respective triple: The full space.
+    Second entry: The codimension of the subspace of cusp forms.
+    Third entry: The subspace of cusp forms.
 
+    More precisely, The triple $[a,b,c]$ in
+
+    row All
+    and in the $k$th column shows the dimension of
+    the full space $M_{k,j}(\Gamma(2))$,
+    of the non cusp forms, and of the cusp forms.
+
+    in row $p$, where $p$ is a partition of $6$,
+    and in the $k$th column shows the multiplicity of the
+    $\mathrm{Sp}(4,\Z)$-representation
+    associated to $p$ in the full $\mathrm{Sp}(4,\Z)$-module
+    $M_{k,j}(\Gamma(2))$,
+    in the submodule of non cusp forms and of cusp forms.
+    (See below for details.)
     """
     return _dimension_Gamma_2(wt_range, j, group='Gamma(2)')
 
 
 def dimension_Gamma1_2(wt_range, j):
     r"""
-    <ul>
-      <li>First entry of the respective triple: The full space.</li>
-      <li>Second entry: The codimension of the subspace of cusp forms.</li>
-      <li>Third entry: The subspace of cusp forms.</li>
-    </ul>
-    <p> More precisely, The triple $[a,b,c]$ in
-    <ul>
-      <li>
-        row <span class="emph">All</span>
-        and in the $k$th column shows the dimension of
-        the full space $M_{k,j}(\Gamma(2))$,
-        of the non cusp forms, and of the cusp forms.</li>
-      <li>
-        in row <span class="emph">$p$</span>, where $p$ is a partition of $3$,
-        and in the $k$th column shows the multiplicity of the
-        $\Gamma_1(2)$-representation
-        associated to $p$ in the full $\Gamma_1(2)$-module $M_{k,j}(\Gamma(2))$,
-        in the submodule of non cusp forms and of cusp forms.
-        (See below for details.)
-      </li>
-    </ul>
+    First entry of the respective triple: The full space.
+    Second entry: The codimension of the subspace of cusp forms.
+    Third entry: The subspace of cusp forms.
+
+    More precisely, The triple $[a,b,c]$ in
+
+    row All
+    and in the $k$th column shows the dimension of
+    the full space $M_{k,j}(\Gamma(2))$,
+    of the non cusp forms, and of the cusp forms.
+
+    in row $p$, where $p$ is a partition of $3$,
+    and in the $k$th column shows the multiplicity of the
+    $\Gamma_1(2)$-representation
+    associated to $p$ in the full $\Gamma_1(2)$-module $M_{k,j}(\Gamma(2))$,
+    in the submodule of non cusp forms and of cusp forms.
+    (See below for details.)
     """
     return _dimension_Gamma_2(wt_range, j, group='Gamma1(2)')
 
 
 def dimension_Gamma0_2(wt_range, j):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-      <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
+    <span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.
+    <span class="emph">Cusp</span>: The subspace of cusp forms.
     """
     return _dimension_Gamma_2(wt_range, j, group='Gamma0(2)')
 
 
 def dimension_Sp4Z(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-      <li><span class="emph">Eisenstein</span>: The subspace of Siegel Eisenstein series.</li>
-      <li><span class="emph">Klingen</span>: The subspace of Klingen Eisenstein series.</li>
-      <li><span class="emph">Maass</span>: The subspace of Maass liftings.</li>
-      <li><span class="emph">Interesting</span>: The subspace spanned by cuspidal eigenforms that are not Maass liftings.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
+    <span class="emph">Eisenstein</span>: The subspace of Siegel Eisenstein series.
+    <span class="emph">Klingen</span>: The subspace of Klingen Eisenstein series.
+    <span class="emph">Maass</span>: The subspace of Maass liftings.
+    <span class="emph">Interesting</span>: The subspace spanned by cuspidal eigenforms that are not Maass liftings.
     """
     return _dimension_Sp4Z(wt_range)
 
 
 def dimension_Sp4Z_2(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-      <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
+    <span class="emph">Non cusp</span>: The subspace of non cusp forms.
+    <span class="emph">Cusp</span>: The subspace of cusp forms.
     """
     return _dimension_Gamma_2(wt_range, 2, group='Sp4(Z)')
 
@@ -160,11 +145,9 @@ def dimension_table_Sp4Z_j(wt_range, j_range):
 
 def dimension_Sp4Z_j(wt_range, j):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-      <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
+    <span class="emph">Non cusp</span>: The subspace of non cusp forms.
+    <span class="emph">Cusp</span>: The subspace of cusp forms.
     """
     return _dimension_Gamma_2(wt_range, j, group='Sp4(Z)')
 
@@ -307,12 +290,10 @@ def _dimension_Gamma_2(wt_range, j, group='Gamma(2)'):
 
 def dimension_Sp6Z(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-      <li><span class="emph">Miyawaki lifts I</span>: The subspace of Miyawaki lifts of type I.</li>
-      <li><span class="emph">Miyawaki lifts II</span>: The subspace of (conjectured) Miyawaki lifts of type II.</li>
-      <li><span class="emph">Other</span>: The subspace of cusp forms which are not Miyawaki lifts of type I or II.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
+    <span class="emph">Miyawaki lifts I</span>: The subspace of Miyawaki lifts of type I.
+    <span class="emph">Miyawaki lifts II</span>: The subspace of (conjectured) Miyawaki lifts of type II.
+    <span class="emph">Other</span>: The subspace of cusp forms which are not Miyawaki lifts of type I or II.
     """
     return _dimension_Sp6Z(wt_range)
 
@@ -365,12 +346,10 @@ def __dimension_Sp6Z(wt):
 
 def dimension_Sp8Z(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
-      <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
-      <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
-      <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
-    </ul>
+    <span class="emph">Total</span>: The subspace of cusp forms.
+    <span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.
+    <span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.
+    <span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.
     """
     headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
     dct = {}
@@ -429,11 +408,9 @@ def _dimension_Sp8Z(wt):
 
 def dimension_Gamma0_4_half(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-      <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
+    <span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.
+    <span class="emph">Cusp</span>: The subspace of cusp forms.
     """
     headers = ['Total', 'Non cusp', 'Cusp']
     dct = {}
@@ -449,14 +426,17 @@ def _dimension_Gamma0_4_half(k):
     of half integral weight  k - 1/2.
 
     INPUT
-        The realweight is k-1/2
+
+    The realweight is k-1/2
 
     OUTPUT
-        ('Total', 'Non cusp', 'Cusp')
+
+    ('Total', 'Non cusp', 'Cusp')
 
     REMARK
-        Note that formula from Hayashida's and Ibukiyama's paper has formula
-        that coefficient of x^w is for weight (w+1/2). So here w=k-1.
+
+    Note that formula from Hayashida's and Ibukiyama's paper has formula
+    that coefficient of x^w is for weight (w+1/2). So here w=k-1.
     """
     if k < 1:
         raise ValueError("$k$ must be a positive integer")
@@ -475,9 +455,7 @@ def _dimension_Gamma0_4_half(k):
 
 def dimension_Gamma0_3_psi_3(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
     """
     headers = ['Total']
     dct = {}
@@ -493,10 +471,12 @@ def _dimension_Gamma0_3_psi_3(wt):
     on $Gamma_0(3)$ with character $\psi_3$.
 
     OUTPUT
-        ("Total")
+
+    ("Total")
 
     REMARK
-        Not completely implemented
+
+    Not completely implemented
     """
     R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
     (x,) = R._first_ngens(1)
@@ -515,10 +495,9 @@ def _dimension_Gamma0_3_psi_3(wt):
 
 def dimension_Gamma0_4_psi_4(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-    </ul>
-    <p> Odd weights are not yet implemented.</p>
+    <span class="emph">Total</span>: The full space.
+
+    Odd weights are not yet implemented.
     """
     headers = ['Total']
     dct = {}
@@ -537,10 +516,12 @@ def _dimension_Gamma0_4_psi_4(wt):
     with character $\psi_4$.
 
     OUTPUT
-        ("Total")
+
+    ("Total")
 
     REMARK
-        The formula for odd weights is unknown or not obvious from the paper.
+
+    The formula for odd weights is unknown or not obvious from the paper.
     """
     R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
     (x,) = R._first_ngens(1)
@@ -556,9 +537,7 @@ def _dimension_Gamma0_4_psi_4(wt):
 
 def dimension_Gamma0_4(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
     """
     headers = ['Total']
     dct = {}
@@ -573,10 +552,12 @@ def _dimension_Gamma0_4(wt):
     Return the dimensions of subspaces of Siegel modular forms on $Gamma0(4)$.
 
     OUTPUT
-        ("Total",)
+
+    ("Total",)
 
     REMARK
-        Not completely implemented
+
+    Not completely implemented
     """
     R = PowerSeriesRing(ZZ, 'x')
     x = R.gen().O(wt + 1)
@@ -590,9 +571,7 @@ def _dimension_Gamma0_4(wt):
 
 def dimension_Gamma0_3(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The full space.</li>
-    </ul>
+    <span class="emph">Total</span>: The full space.
     """
     headers = ['Total']
     dct = {}
@@ -607,10 +586,12 @@ def _dimension_Gamma0_3(wt):
     Return the dimensions of subspaces of Siegel modular forms on $Gamma0(3)$.
 
     OUTPUT
-        ("Total")
+
+    ("Total")
 
     REMARK
-        Only total dimension implemented.
+
+    Only total dimension implemented.
     """
     R = PowerSeriesRing(ZZ, 'x')
     x = R.gen().O(wt + 1)
@@ -624,11 +605,9 @@ def _dimension_Gamma0_3(wt):
 
 def dimension_Dummy_0(wt_range):
     """
-    <ul>
-      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
-      <li><span class="emph">Yoda lifts</span>: The subspace of Master Yoda lifts.</li>
-      <li><span class="emph">Hinkelstein series</span>: The subspace of Hinkelstein series.</li>
-    </ul>
+    <span class="emph">Total</span>: The subspace of cusp forms.
+    <span class="emph">Yoda lifts</span>: The subspace of Master Yoda lifts.
+    <span class="emph">Hinkelstein series</span>: The subspace of Hinkelstein series.
     """
     headers = ['Total', 'Yoda lifts', 'Hinkelstein series']
     dct = {}

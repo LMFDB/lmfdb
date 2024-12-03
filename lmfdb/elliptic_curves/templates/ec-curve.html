@@ -102,6 +102,24 @@ white-space: pre in order to keep line breaks! #}
 
     <p>{{ place_code('mwgroup') }}</p>
 
+    {% if data.mwbsd.rank > 0 or data.mwbsd.torsion > 1 %}
+    <h2> {{ KNOWL('ec.mw_generators', title="Mordell-Weil generators") }} </h2>
+    <div>
+      <p>
+	<table>
+	  <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\hat{h}(P)$")}}</th><th>Order</th></tr>
+	  {% for P,h in data.mwbsd.gens_and_heights %}
+	  <tr><td>${{P}}$</td><td>${{h}}$</td><td>$\infty$</td></tr>
+	  {% endfor %}
+	  {% for T,n in data.mwbsd.tor_gens_and_orders %}
+	  <tr><td>${{T}}$</td><td>$0$</td><td>${{n}}$</td></tr>
+	  {% endfor %}
+	</table>
+      </p>
+    </div>
+    {%endif%}
+
+{#
     {% if data.mwbsd.rank!=0 %}
     {% if data.mwbsd.rank==1 %}
     <h3> {{ KNOWL('ec.mw_generators', title='Non-torsion Mordell-Weil generator') }} and {{KNOWL('ec.canonical_height','height')}}</h3>
@@ -134,8 +152,9 @@ white-space: pre in order to keep line breaks! #}
     <p> {{ data.mwbsd.tor_gens |safe }} </p>
       {{ place_code('tors') }}
     {%endif %}
+#}
 
-
+    {% if data.mwbsd.rank > 0 or data.mwbsd.torsion > 1 %}
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
     <div class="ip">
       <p>
@@ -147,6 +166,7 @@ white-space: pre in order to keep line breaks! #}
      <p>
      N.B. Only integral points which are combinations of known generators are shown.
      </p>
+    {%endif %}
     {%endif %}
 
     <h2> Invariants </h2>
@@ -238,6 +258,13 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
+        <td>{{ KNOWL('ec.rank', title='Mordell-Weil rank') }}:</td>
+        <td>$r$</td><td>&nbsp;=&nbsp;</td><td>$ {{ data.rank }}$
+        </td>
+        <td>{{ place_code('rank') }}</td>
+        </tr>
+
+        <tr>
         <td>{{ KNOWL('ec.regulator', title='Regulator') }}:</td>
       	{% if data.mwbsd.reg == '?' %}
         	<td>Not computed</td>
@@ -269,8 +296,14 @@ white-space: pre in order to keep line breaks! #}
 
         <tr>
         <td>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
-        <td>$E(\Q)_{\mathrm{tors}}$</td><td>&nbsp;=&nbsp;</td><td>${{ data.mwbsd.torsion }}$</td>
+        <td>$\#E(\Q)_{\mathrm{tor}}$</td><td>&nbsp;=&nbsp;</td><td>${{ data.mwbsd.torsion }}$</td>
         <td>{{ place_code('ntors') }}</td>
+        </tr>
+
+        <tr>
+        <td>{{KNOWL('ec.special_value', title='Special value', special_value = data.special_value)}}:</td>
+        <td>$ {{ data.mwbsd.lder_name }}$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.mwbsd.special_value }} $</td>
+        <td>{{ place_code('L1') }}</td>
         </tr>
 
         <tr>
@@ -293,15 +326,10 @@ white-space: pre in order to keep line breaks! #}
           <td> ${{ data.mwbsd.regsha }}$</td>
           </tr>
         {% endif %}
-        <tr>
-        <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
-        <td>$ {{ data.mwbsd.lder_name }}$</td><td>&nbsp;&approx;&nbsp;</td><td>${{ data.mwbsd.special_value }} $</td>
-        <td>{{ place_code('L1') }}</td>
-        </tr>
         </tbody>
         </table>
 
-<h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD formula') }}</h2>
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
 <p style="margin:10px 280px;">
 $\displaystyle {{ data.mwbsd.formula|safe }}$
 </p>

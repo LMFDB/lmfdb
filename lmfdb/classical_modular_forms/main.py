@@ -798,12 +798,13 @@ def newform_parse(info, query):
         parse_noop(info, query, 'projective_image', func=str.upper)
     parse_ints(info, query, 'artin_degree', name="Artin degree")
 
+
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
         if key in info:
             msg = "%s not valid when searching for spaces"
             flash_error(msg, display)
-            raise ValueError(msg  % display)
+            raise ValueError(msg % display)
     if 'dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'

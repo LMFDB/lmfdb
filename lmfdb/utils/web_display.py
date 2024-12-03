@@ -790,15 +790,16 @@ def sparse_cyclotomic_to_latex(n, dat):
         # Now the coefficient
 
         if p[0] == 1:
-            ans += '+'  + zpart
+            ans += '+' + zpart
         elif p[0] == -1:
-            ans += '-'  + zpart
+            ans += '-' + zpart
         else:
-            ans += '{:+d}'.format(p[0])  + zpart
+            ans += '{:+d}'.format(p[0]) + zpart
     ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
+
 
 def sparse_cyclotomic_to_mathml(n, dat):
     r"""
