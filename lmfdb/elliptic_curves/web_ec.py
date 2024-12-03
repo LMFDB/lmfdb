@@ -19,7 +19,7 @@ RZB_URL_PREFIX = "https://users.wfu.edu/rouseja/2adic/" # Needs to be changed wh
 CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
-CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
+CREMONA_BOUND = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -438,7 +438,7 @@ class WebEC():
         # Isogeny degrees:
 
         cond, iso, num = split_lmfdb_label(lmfdb_label)
-        self.class_deg  = classdata['class_deg']
+        self.class_deg = classdata['class_deg']
         self.one_deg = ZZ(self.class_deg).is_prime()
         isodegs = [str(d) for d in self.isogeny_degrees if d > 1]
         if len(isodegs) < 3:
@@ -625,16 +625,16 @@ class WebEC():
 
         try:
             mwbsd['rank'] = self.rank
-            mwbsd['reg']  = self.regulator
-            mwbsd['sha']  = self.sha
+            mwbsd['reg'] = self.regulator
+            mwbsd['sha'] = self.sha
             mwbsd['sha2'] = latex_sha(self.sha)
             mwbsd['sha_is_exact'] = self.rank == 0 # see Issue #5872
             for num in ['reg', 'special_value', 'real_period', 'area']:
-                mwbsd[num]  = RR(mwbsd[num])
+                mwbsd[num] = RR(mwbsd[num])
         except AttributeError:
             mwbsd['rank'] = '?'
-            mwbsd['reg']  = '?'
-            mwbsd['sha']  = '?'
+            mwbsd['reg'] = '?'
+            mwbsd['sha'] = '?'
             mwbsd['sha2'] = '?'
             mwbsd['regsha'] = ( mwbsd['special_value'] * self.torsion**2 ) / ( mwbsd['tamagawa_product'] * mwbsd['real_period'] )
             if r <= 1:

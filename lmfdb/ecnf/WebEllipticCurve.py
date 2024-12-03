@@ -399,7 +399,7 @@ class ECNF():
             self.fact_disc = self.disc
             self.fact_disc_norm = str(Dnorm)
         else:
-            self.fact_disc      = latex_factorization(badprimes, disc_ords)
+            self.fact_disc = latex_factorization(badprimes, disc_ords)
             self.fact_disc_norm = latex_factorization(badnorms, disc_ords, sign=signDnorm)
 
         if self.is_minimal:
@@ -411,10 +411,10 @@ class ECNF():
 
         self.mindisc_norm = web_latex(Dmin_norm)
         if Dmin_norm in [1,-1]:  # since the factorization of (1) displays as "1"
-            self.fact_mindisc      = self.mindisc
+            self.fact_mindisc = self.mindisc
             self.fact_mindisc_norm = self.mindisc_norm
         else:
-            self.fact_mindisc      = latex_factorization(badprimes, mindisc_ords)
+            self.fact_mindisc = latex_factorization(badprimes, mindisc_ords)
             self.fact_mindisc_norm = latex_factorization(badnorms, mindisc_ords, sign=signDnorm)
 
         j = self.field.parse_NFelt(self.jinv)
