@@ -276,7 +276,7 @@ cellpadding="5";
         </tr>
 
         <tr>
-        <td align='left'>{{ KNOWL('ec.period', title='Period') }}:</td>
+        <td align='left'>{{ KNOWL('ec.period', title='Global period') }}:</td>
 	<td>$\Omega(E/K)$</td><td>&approx;</td>
         <td> {{ ec.omega }}</td>
         </tr>
@@ -341,25 +341,41 @@ cellpadding="5";
 <div>
  {{ place_code('localdata') }}
 
+<p>
+  This elliptic curve is {{ '' if ec.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.
+  There
+  {% if ec.n_bad_primes==0 %}
+  are no primes
+  {% else %}
+  {% if ec.n_bad_primes==1 %}
+  is only one prime $\frak{p}$
+  {% else %}
+  are {{ec.n_bad_primes }} primes $\frak{p}$
+  {% endif %}
+  {% endif %}
+  of {{KNOWL('ec.q.reduction_type', title='bad reduction')}}.
+
   {% if not ec.is_minimal %}
     Primes of good reduction for the curve but which divide the
     discriminant of the model above (if any) are included.
   {% endif %}
+</p>
+
 
 {% if ec.local_data %}
 <table class="ntdata"><thead>
 <tr>
-<th>prime</th>
-<th>Norm</th>
+<th>$\mathfrak{p}$</th>
+<th>$N(\mathfrak{p})$</th>
 <th>{{KNOWL('ec.tamagawa_number', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.reduction_type', title='Reduction type')}}</th>
 {% if ec.local_data.0.rootno %}
 <th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
 {% endif %}
-<th>{{KNOWL('ec.conductor_valuation', title='ord(\(\mathfrak{N}\))')}}</th>
-<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
-<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathfrak{N}\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathfrak{D}_{\mathrm{min}}\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathrm{den}(j))\)')}}</th>
 </tr>
 </thead><tbody>
 {% for pr in ec.local_data %}
@@ -397,8 +413,6 @@ cellpadding="5";
 {% endfor %}
 </tbody>
 </table>
-{% else %}
-No primes of bad reduction.
 {% endif %}
 </div>
 

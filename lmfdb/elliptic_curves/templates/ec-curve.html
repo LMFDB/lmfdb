@@ -406,7 +406,7 @@ $\displaystyle {{ data.mwbsd.formula|safe }}$
 	{% endif %}
 	</p>
 
-    <h2> Local data </h2>
+<h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
 
 <style type="text/css">
 #local_data th, #local_data td, #serre_data th, #serre_data td {
@@ -433,9 +433,9 @@ text-align: center;
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 <th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
-<th>{{KNOWL('ec.conductor_valuation', title='$v_p(N)$')}}</th>
-<th>{{KNOWL('ec.discriminant_valuation', title='$v_p(\Delta)$')}}</th>
-<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='$v_p(\mathrm{den}(j))$')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='$\mathrm{ord}_p(N)$')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='$\mathrm{ord}_p(\Delta)$')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='$\mathrm{ord}_p(\mathrm{den}(j))$')}}</th>
 </tr>
 </thead><tbody>
 {% for pr in data.local_data %}
