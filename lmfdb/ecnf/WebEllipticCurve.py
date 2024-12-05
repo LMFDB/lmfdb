@@ -566,15 +566,24 @@ class ECNF():
         if self.bsd_status in ["conditional", "unconditional"]:
             if self.ar == 0:
                 self.reg = web_latex(1)  # otherwise we only get 1.00000...
+                self.NTreg = web_latex(1)  # otherwise we only get 1.00000...
             else:
                 try:
-                    self.reg = web_latex(self.reg)
+                    R = self.reg
+                    self.reg = web_latex(R)
+                    self.NTreg = web_latex(R * K.degree()**self.rank)
                 except AttributeError:
                     self.reg = "not available"
+                    self.NTreg = "not available"
         elif self.rk != "not available":
-            self.reg = web_latex(self.reg) if self.rank else web_latex(1)
+            R = self.reg
+            self.reg = web_latex(R) if self.rank else web_latex(1)
+            self.NTreg = web_latex(R * K.degree()**self.rank) if self.rank else web_latex(1)
         else:
             self.reg = "not available"
+            self.NTreg = "not available"
+        print(f"reg = {self.reg}")
+        print(f"NTreg = {self.NTreg}")
 
         # Generators
         try:

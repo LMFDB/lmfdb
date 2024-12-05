@@ -296,12 +296,30 @@ cellpadding="5";
 	    {% endif %}
 	  </td>
 	  <td>$\mathrm{Reg}(E/K)$</td>
-	  <td>{% if ec.rk == 0 %}={% else %}&approx;{% endif %}</td>
+	  <td>{% if ec.rank == 0 %}={% else %}&approx;{% endif %}</td>
           <td>
 	  {% if ec.reg=='not available' %}
 	  not available
 	  {% else %}
 	  {{ ec.reg }}
+	  {% endif %}
+	</td>
+        </tr>
+        <tr>
+	  <td align='left'>
+	    {% if ec.bsd_status == "conditional" %}
+            {{ KNOWL('ec.regulator', title='N&eacute;ron-Tate Regulator*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.regulator', title='N&eacute;ron-Tate Regulator') }}:
+	    {% endif %}
+	  </td>
+	  <td>$\mathrm{Reg}_{\mathrm{NT}}(E/K)$</td>
+	  <td>{% if ec.rank == 0 %}={% else %}&approx;{% endif %}</td>
+          <td>
+	  {% if ec.NTreg=='not available' %}
+	  not available
+	  {% else %}
+	  {{ ec.NTreg }}
 	  {% endif %}
 	</td>
         </tr>
