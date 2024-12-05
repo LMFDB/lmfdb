@@ -367,8 +367,19 @@ cellpadding="5";
 	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
           <td> {{ ec.sha }} </td>
         </tr>
+{#
+	<tr>
+	  <td align='left'>
+	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064; (from formula)') }}:
+	  </td>
+	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
+          <td> {{ ec.BSDsha }} </td>
+        </tr>
+#}
         </table>
-    </p>
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
+</p>
+
 {% if ec.bsd_status == "conditional" %}
 <p>
   * Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
@@ -382,8 +393,16 @@ cellpadding="5";
 </p>
 {% endif %}
 {% endif %}
+</div>
 
-{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
+<div>
+<p style="margin:10px 280px;">
+$\displaystyle {{ ec.bsd_formula|safe }}$
+</p>
+<center>
+{{ place_code('bsd_formula') }}
+</center>
 </div>
 
 <h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
