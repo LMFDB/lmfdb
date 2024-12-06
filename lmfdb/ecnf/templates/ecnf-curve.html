@@ -107,7 +107,7 @@ cellpadding="5";
       <table id="invariants" style="overflow:auto;">
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor')}}:</td>
-	<td>$\frak{n}$</td>
+	<td>$\frak{N}$</td>
 	<td>=</td>
         <td>{{ ec.cond }}</td>
         <td>=</td>
@@ -117,7 +117,7 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor norm')}}:</td>
-	<td>$N(\frak{n})$</td>
+	<td>$N(\frak{N})$</td>
 	<td>=</td>
         <td>{{ ec.cond_norm }}</td>
         <td>=</td>
@@ -127,7 +127,26 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant')}}:</td>
-	<td>$(\Delta)$</td>
+	<td>$\Delta$</td>
+	<td>=</td>
+        <td>${{ ec.model_disc }}$</td>
+        </tr>
+
+        <tr>
+          <td>
+	    {% if ec.is_minimal %}
+	    {{KNOWL('ec.minimal_discriminant', title='Discriminant ideal')}}:
+	    {% else %}
+	    {{KNOWL('ec.discriminant', title='Discriminant ideal')}}:
+	    {% endif %}
+	  </td>
+	<td>
+	  {% if ec.is_minimal %}
+	  $\frak{D}_{\mathrm{min}} = (\Delta)$
+	  {% else %}
+	  $(\Delta)$
+	  {% endif %}
+	</td>
 	<td>=</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
@@ -138,8 +157,20 @@ cellpadding="5";
 
         <tr><td colspan=4 style="padding:0;">{{ place_code('disc') }}</td></tr>
         <tr>
-        <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}:</td>
-	<td>$N(\Delta)$</td>
+          <td>
+	    {% if ec.is_minimal %}
+	    {{KNOWL('ec.minimal_discriminant', title='Discriminant norm')}}:
+	    {% else %}
+	    {{KNOWL('ec.discriminant', title='Discriminant norm')}}:
+            {% endif %}
+	  </td>
+	<td>
+	  {% if ec.is_minimal %}
+	  $N(\frak{D}_{\mathrm{min}}) = N(\Delta)$
+	  {% else %}
+	  $N(\Delta)$
+	  {% endif %}
+	</td>
 	<td>=</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
@@ -363,7 +394,7 @@ cellpadding="5";
 
 
 {% if ec.local_data %}
-<table class="ntdata"><thead>
+<table class="ntdata centered"><thead>
 <tr>
 <th>$\mathfrak{p}$</th>
 <th>$N(\mathfrak{p})$</th>

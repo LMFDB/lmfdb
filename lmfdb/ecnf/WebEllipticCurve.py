@@ -359,6 +359,9 @@ class ECNF():
         self.cond_norm = web_latex(self.conductor_norm)
 
         Dnorm = self.normdisc
+        self.model_disc = self.disc.replace('w', Kgen).replace("*","").replace("(","").replace(")","")
+        if Kgen == 'phi':
+            self.model_disc = self.model_disc.replace(Kgen, r"\phi")
         self.disc = pretty_ideal(Kgen, self.disc)
 
         local_data = self.local_data
