@@ -639,38 +639,43 @@ class ECNF():
         # Check analytic Sha value compatible with formula in the knowl (see issue #5409)
 
         BSDrootdisc = RR(K.discriminant().abs()).sqrt()
-        if BSDLvalue and BSDsha and BSDReg and BSDsha:
+        if BSDLvalue and BSDsha and BSDReg and (self.rank is not None):
             BSDsha_numerator = BSDrootdisc * BSDntors**2
             BSDsha_denominator = BSDReg * BSDomega * BSDprodcp
             BSDsha_from_formula = BSDLvalue * BSDsha_numerator / BSDsha_denominator
             BSDLvalue_from_formula = BSDsha * BSDsha_denominator / BSDsha_numerator
             self.BSDsha = web_latex(BSDsha_from_formula)
             self.BSDLvalue = web_latex(BSDLvalue_from_formula)
+
+            # The BSD formula for display
+
+            dot = '\\cdot'
+            approx = '\\approx'
+            frac = '\\frac'
+            Sha = '\\# &#1064;(E/K)'
+            Om = '\\Omega(E/K)'
+            Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
+            prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
+            tors2 = '\\#E(K)_{\\mathrm{tor}}^2'
+            rootD = '\\left|d_K\\right|^{1/2}'
+
+            lder_name  = rf"L^{{({r})}}(E/K,1)/{r}!" if r>=2 else "L'(E/K,1)" if r else "L(E/K,1)"
+            lhs_num    = rf'{Sha} {dot} {Om} {dot} {Reg} {dot} {prodcp}'
+            lhs_den    = rf'{tors2} {dot} {rootD}'
+            lhs        = rf'{frac}{{ {lhs_num} }} {{ {lhs_den} }}'
+            rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg} {dot} {BSDprodcp}'
+            if r:
+                rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
+            rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
+            rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
+            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} = {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+
         else:
             self.BSDsha = "not available"
             self.BSDLvalue = "not available"
+            self.bsd_formula = None
 
-        # The BSD formula for display
-
-        dot = '\\cdot'
-        approx = '\\approx'
-        frac = '\\frac'
-        Sha = '\\# &#1064;(E/K)'
-        Om = '\\Omega(E/K)'
-        Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
-        prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
-        tors2 = '\\#E(K)_{\\mathrm{tor}}^2'
-        rootD = '\\left|D_K\\right|'
-
-        lder_name  = rf"L^{({r})}(E,1)/{r}!" if r>=2 else "L'(E,1)" if r else "L(E,1)"
-        lhs_num    = rf'{Sha} {dot} {Om} {dot} {Reg} {dot} {prodcp}'
-        lhs_den    = rf'{tors2} {dot} {rootD}'
-        lhs        = rf'{frac}{{ {lhs_num} }} {{ {lhs_den} }}'
-        rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
-        rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
-        rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
-        self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} = {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
-
+        print(f"BSD: {self.bsd_formula}")
         # Local data
 
         # The Kodaira symbol is stored as an int in pari encoding. The

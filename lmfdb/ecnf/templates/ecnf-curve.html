@@ -274,7 +274,7 @@ cellpadding="5";
 	<tr>
 	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}:</td>
 	  {% if ec.rk == "not available" %}
-	  <td>$r$?</td>
+	  <td>$r?$</td>
 	  <td>&nbsp;</td>
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -395,6 +395,8 @@ cellpadding="5";
 {% endif %}
 </div>
 
+{% if ec.bsd_formula %}
+
 <h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
 <div>
 <p style="margin:10px 280px;">
@@ -404,6 +406,8 @@ $\displaystyle {{ ec.bsd_formula|safe }}$
 {{ place_code('bsd_formula') }}
 </center>
 </div>
+
+{% endif %}
 
 <h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
 <div>
