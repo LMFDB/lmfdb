@@ -596,7 +596,14 @@ class ECNF():
             self.gens = []
             self.gens_and_heights = []
 
-        # Global period -- see issue #5409 for why we multiply by 2**nc
+        # Global period -- see issue #5409 for why we multiply by
+        # 2**nc in most cases.  However, data computed after
+        # 2024-07-09 (including all data for imaginary quadratic
+        # fields of absolute discriminant > 600 as well as some larger
+        # conductors for other IQFs) already has the extra factor of
+        # 2.  As a fail-safe until we fix the data in all cases, we
+        # will test (using the BSD formula) whether to remove the
+        # factor of 2 added here.
         BSDomega = None
         try:
             BSDomega = self.omega
@@ -639,10 +646,23 @@ class ECNF():
         # Check analytic Sha value compatible with formula in the knowl (see issue #5409)
 
         BSDrootdisc = RR(K.discriminant().abs()).sqrt()
+        BSDok = True
         if BSDLvalue and BSDsha and BSDReg and (self.rank is not None):
             BSDsha_numerator = BSDrootdisc * BSDntors**2
             BSDsha_denominator = BSDReg * BSDomega * BSDprodcp
             BSDsha_from_formula = BSDLvalue * BSDsha_numerator / BSDsha_denominator
+            BSDok = BSDsha_from_formula.round() == BSDsha
+            if not BSDok:
+                # this means that we doubled BSDomega when we should
+                # not have, so BSDsha_denominator is doubled and
+                # BSDsha_from formula is halved
+                print(f"BSD normalization: adjusting Omega for {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula} which rounds to {BSDsha_from_formula.round()}")
+                BSDok = ((BSDsha/BSDsha_from_formula)-2).abs() < 0.01
+                if not BSDok:
+                    print(f"BSD normalization issue with {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
+                BSDomega /= 2
+                BSDsha_denominator /= 2
+                BSDsha_from_formula *= 2
             BSDLvalue_from_formula = BSDsha * BSDsha_denominator / BSDsha_numerator
             self.BSDsha = web_latex(BSDsha_from_formula)
             self.BSDLvalue = web_latex(BSDLvalue_from_formula)
@@ -675,7 +695,9 @@ class ECNF():
             self.BSDLvalue = "not available"
             self.bsd_formula = None
 
-        print(f"BSD: {self.bsd_formula}")
+        if not BSDok: # don't display the formula if it is not correct
+            self.bsd_formula = None
+
         # Local data
 
         # The Kodaira symbol is stored as an int in pari encoding. The
