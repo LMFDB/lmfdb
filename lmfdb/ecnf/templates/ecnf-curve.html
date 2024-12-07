@@ -274,7 +274,7 @@ cellpadding="5";
 	<tr>
 	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}:</td>
 	  {% if ec.rk == "not available" %}
-	  <td>$r$?</td>
+	  <td>$r?$</td>
 	  <td>&nbsp;</td>
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -296,12 +296,30 @@ cellpadding="5";
 	    {% endif %}
 	  </td>
 	  <td>$\mathrm{Reg}(E/K)$</td>
-	  <td>{% if ec.rk == 0 %}={% else %}&approx;{% endif %}</td>
+	  <td>{% if ec.rank == 0 %}={% else %}&approx;{% endif %}</td>
           <td>
 	  {% if ec.reg=='not available' %}
 	  not available
 	  {% else %}
 	  {{ ec.reg }}
+	  {% endif %}
+	</td>
+        </tr>
+        <tr>
+	  <td align='left'>
+	    {% if ec.bsd_status == "conditional" %}
+            {{ KNOWL('ec.regulator', title='N&eacute;ron-Tate Regulator*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.regulator', title='N&eacute;ron-Tate Regulator') }}:
+	    {% endif %}
+	  </td>
+	  <td>$\mathrm{Reg}_{\mathrm{NT}}(E/K)$</td>
+	  <td>{% if ec.rank == 0 %}={% else %}&approx;{% endif %}</td>
+          <td>
+	  {% if ec.NTreg=='not available' %}
+	  not available
+	  {% else %}
+	  {{ ec.NTreg }}
 	  {% endif %}
 	</td>
         </tr>
@@ -349,8 +367,19 @@ cellpadding="5";
 	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
           <td> {{ ec.sha }} </td>
         </tr>
+{#
+	<tr>
+	  <td align='left'>
+	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064; (from formula)') }}:
+	  </td>
+	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
+          <td> {{ ec.BSDsha }} </td>
+        </tr>
+#}
         </table>
-    </p>
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
+</p>
+
 {% if ec.bsd_status == "conditional" %}
 <p>
   * Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
@@ -364,9 +393,21 @@ cellpadding="5";
 </p>
 {% endif %}
 {% endif %}
-
-{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 </div>
+
+{% if ec.bsd_formula %}
+
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
+<div>
+<p style="margin:10px 280px;">
+$\displaystyle {{ ec.bsd_formula|safe }}$
+</p>
+<center>
+{{ place_code('bsd_formula') }}
+</center>
+</div>
+
+{% endif %}
 
 <h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
 <div>
