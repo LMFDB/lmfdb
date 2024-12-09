@@ -671,6 +671,7 @@ class ECNF():
 
             dot = '\\cdot'
             approx = '\\approx'
+            eq_query = '\\overset{?}{=}'
             frac = '\\frac'
             Sha = '\\# &#1064;(E/K)'
             Om = '\\Omega(E/K)'
@@ -688,7 +689,7 @@ class ECNF():
                 rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
             rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
             rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
-            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} = {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} {eq_query} {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
 
         else:
             self.BSDsha = "not available"
