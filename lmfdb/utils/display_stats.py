@@ -5,7 +5,7 @@ from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
 from .utilities import format_percentage
 from .web_display import display_knowl
-from lmfdb.backend.utils import KeyedDefaultDict, range_formatter
+from psycodict.utils import KeyedDefaultDict, range_formatter
 
 class formatters():
     @classmethod
@@ -475,14 +475,14 @@ class StatsDisplay(UniqueRepresentation):
         - ``table`` -- a ``PostgresStatsTable``
         - ``cols`` -- a list of column names
         - ``constraint`` -- a dictionary giving constraints on other columns.
-            Only rows satsifying those constraints are included in the counts.
+            Only rows satisfying those constraints are included in the counts.
         - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of strings such as '5' or '2-7'.
         - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
                       -- (2d-case) a function taking inputs the grid, row headers, col headers
                          and this object, which adds some totals to the grid
-        - ``proprotioner`` -- a function for adding proportions
+        - ``proportioner`` -- a function for adding proportions
             See examples at the top of display_stats.py.
         - ``baseurl_func`` -- a base url, to which url_for is applied and then col=value tags are appended.
             Defaults to the url for ``self.baseurl_func``.
@@ -570,7 +570,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)' % avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
@@ -737,7 +737,7 @@ class StatsDisplay(UniqueRepresentation):
                 raise
         info["d"] = self.prep(attr)
         info["stats"] = self
-        info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
-        info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
-        info["get_total"] = (lambda i: info.get("totals%s"%i, False))
+        info["get_bucket"] = (lambda i: info.get("buckets%s" % i, ""))
+        info["get_col"] = (lambda i: info.get("col%s" % i, "none"))
+        info["get_total"] = (lambda i: info.get("totals%s" % i, False))
         info["search_type"] = "DynStats"

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones
 
@@ -20,7 +19,7 @@ def index():
     #if len(request.args) != 0:
     #    return hgm_search(**request.args)
     info = {}
-    friends=[('Hypergeometric', url_for(".index2"))]
+    friends = [('Hypergeometric', url_for(".index2"))]
     return render_template("motive-index.html", title="Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
 
 @motive_page.route("/Hypergeometric")

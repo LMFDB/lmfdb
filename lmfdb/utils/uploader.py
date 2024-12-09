@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file provides an interface for logged in users to upload data for approval by LMFDB editors.
 
@@ -7,7 +6,7 @@ Validation occurs in several stages, with the progression indicated by status co
 * An additional validation step is run on a server (anything that might take a nontrivial amount of computation).  Entries passing this step are graduated to status 1; failures are marked with status -1.
 * Entries passing this step are checked by a human editor; acceptance earns status 2 and failure is marked with status -2.
 * Approved entries are then added to the appropriate table by another script run on a server (since this step may also involve nontrivial computation, like with gonality bounds).  Entries passing this step are marked with status 3; failures with -3.  A successful run of this step produces file(s) for use with copy_from on appropriate tables.
-* Finally, a script executes copy_from.  Failure here is unexpected and marked with -4 (due to failue in Postgres loading the file); success is marked with 4.
+* Finally, a script executes copy_from.  Failure here is unexpected and marked with -4 (due to failure in Postgres loading the file); success is marked with 4.
 * While in stage 0, 1 or 2, uploads can be withdrawn by the submitter.  If so, they will be marked with status -5.
 """
 
@@ -23,7 +22,7 @@ from flask_login import current_user
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.rings.integer_ring import ZZ
 from lmfdb.utils import flash_error, flash_info, pluralize
-from lmfdb.backend.encoding import copy_dumps
+from psycodict.encoding import copy_dumps
 from lmfdb import db
 
 class UploadBox():
@@ -47,7 +46,7 @@ class UploadBox():
                 a, b = value.split("-")
                 if a and a.isdigit() and b and b.isdigit():
                     return value
-            raise ValueError(r"{self.name} must be a positive integer or range like 2-4; '{value}' is invalid")
+            raise ValueError(rf"{self.name} must be a positive integer or range like 2-4; '{value}' is invalid")
         table = getattr(self, "label_for", None)
         if table:
             if db[table].label_exists(value):
@@ -117,7 +116,7 @@ class USelectBox(UploadBox):
         super().__init__(name, label, knowl, **kwds)
 
     def html(self):
-        keys = ['name="{self.name}"']
+        keys = [f'name="{self.name}"']
         if hasattr(self, "width"):
             keys.append(f'style="width: {self.width}px"')
         opts = []
@@ -210,6 +209,7 @@ class UploadSection():
     inputs = []
     offer_csv = True
     csv_template_url = None
+
     def __init__(self, **kwds):
         for key, val in kwds.items():
             setattr(self, key, val)
@@ -219,7 +219,7 @@ class UploadSection():
         This function is called at input time when a user uploads data,
         performating basic validation but nothing that takes a long time.
 
-        Failure is immediately reported to the user who attemped to upload data.
+        Failure is immediately reported to the user who attempted to upload data.
         """
         for box in self.inputs:
             rec[box.name] = box.validate(rec[box.name])
@@ -280,7 +280,8 @@ class UploadSection():
             ["id", "status", "processed", "updated", "comment"]
 
         The later arguments are not used by default (they are present since GonalityBounds needs to update
-        these dictionaries)
+        these dictionaries):
+
         - ``by_table`` -- a dictionary, with keys (table, newrow) and values a list of lines,
             as output by the process method.
         - ``cols`` -- a dictionary with keys (table, newrow) and values the set of columns for that pair
@@ -297,7 +298,7 @@ class UploadSection():
 
     @lazy_attribute
     def header_dict(self):
-        return {name: box for (name, box) in zip(self.header, self.inputs)}
+        return dict(zip(self.header, self.inputs))
 
     def parse_csv(self, stream):
         reader = csv.reader(stream)

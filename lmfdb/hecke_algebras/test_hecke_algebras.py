@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
+
 
 class HomePageTest(LmfdbTest):
     # Hecke algebra browse page

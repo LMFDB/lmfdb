@@ -27,11 +27,11 @@ def test_small_gps(sample_gp):
         #Confirm number of non-conjugate subgroups (if known in database)
         if sample_gp['number_subgroup_classes']:
             SubLat = libgap.LatticeSubgroups(G)
-            Cons =  libgap.ConjugacyClassesSubgroups(SubLat)
-            print ("Number of subgroup classes match: "  + str(libgap.Size(Cons) == sample_gp['number_subgroup_classes']))
+            Cons = libgap.ConjugacyClassesSubgroups(SubLat)
+            print("Number of subgroup classes match: " + str(libgap.Size(Cons) == sample_gp['number_subgroup_classes']))
         if sample_gp['number_normal_subgroups']:
             NormLat = libgap.NormalSubgroups(G)
-            print ("Number of normal subgroups match: " + str(libgap.Size(NormLat) == sample_gp['number_normal_subgroups']))
+            print("Number of normal subgroups match: " + str(libgap.Size(NormLat) == sample_gp['number_normal_subgroups']))
 
         # check if minimal permutation  degrees match
         if sample_gp['permutation_degree']:
@@ -39,7 +39,7 @@ def test_small_gps(sample_gp):
             print("Minimal permutation degrees match: " + str(minpermdeg_gap == sample_gp['permutation_degree']))
 
         # check order stats
-        stupid_str = 'Set(ConjugacyClasses(SmallGroup(' +  id_nums[0]+ ',' + id_nums[1] + ")), z->Order(Representative(z))) "
+        stupid_str = 'Set(ConjugacyClasses(SmallGroup(' + id_nums[0] + ',' + id_nums[1] + ")), z->Order(Representative(z))) "
         ords = libgap.eval(stupid_str)
 
         ordsLMFDB = []
@@ -47,24 +47,24 @@ def test_small_gps(sample_gp):
         for i in range(len(ords_list)):
             ordsLMFDB.append(ords_list[i][0])
         print("Order set matches: " + str(ords == ordsLMFDB))
-        #print(ords,ordsLMFDB)
+        # print(ords,ordsLMFDB)
 
-        #check degrees
-        irr_stats =  sample_gp['irrep_stats']
+        # check degrees
+        irr_stats = sample_gp['irrep_stats']
         degLMFDB = []
         for i in range(len(irr_stats)):
             for j in range(irr_stats[i][1]):
                 degLMFDB.append(irr_stats[i][0])
-        stupid_str_2 = 'List(Irr(SmallGroup(' + id_nums[0] + ',' + id_nums[1]+    ')), z -> z[1])'
+        stupid_str_2 = 'List(Irr(SmallGroup(' + id_nums[0] + ',' + id_nums[1] + ')), z -> z[1])'
         degs = libgap.eval(stupid_str_2)
 
         print("Degrees of characters match: " + str(degs == degLMFDB))
-        #print(degs,degLMFDB)
+        # print(degs,degLMFDB)
 
 
-#pick random group of order <= 2000 from DB
+# pick random group of order <= 2000 from DB
 
 for i in range(10):
-    x  = db.gps_groups_test.random({'order': {"$lte" :2000}})
-    sample_gp =db.gps_groups_test.lucky({'label': x})
+    x = db.gps_groups_test.random({'order': {"$lte" :2000}})
+    sample_gp = db.gps_groups_test.lucky({'label': x})
     test_small_gps(sample_gp)

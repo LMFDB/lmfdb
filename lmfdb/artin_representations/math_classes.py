@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,
@@ -159,7 +158,7 @@ class ArtinRepresentation():
                 wc = thischar.split(r'.')
                 self._data['central_character'] = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
                 return self._data['central_character']
-            return(thischar)
+            return thischar
         # Not in the database
         if self.dimension() == 1:
             return self.central_character()

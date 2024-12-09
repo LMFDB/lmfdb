@@ -76,6 +76,8 @@ function refresh_link_suggestions() {
   var we_define = {};
   // bad_intervals is a list of intervals that should be excluded from suggestions: KNOWLS and mathmode
   var bad_intervals = [];
+  var kid = $("input[name='id']").val();
+  var curcat = kid.split(".", 1)[0];
   var content = $kcontent.val();
   do {
     var m = wedef.exec(content);
@@ -116,18 +118,17 @@ function refresh_link_suggestions() {
     } while (m);
   }
   // Sort bad_intervals and deal with overlaps (true overlaps shouldn't occur, but nesting might)
-  function sort_pairs(a, b) {
-    if (a[0] != b[0]) {
-      return a[0]-b[0];
-    } else if (a[1] < b[1]) {
-      return -1;
-    } else if (a[1] > b[1]) {
-      return 1;
-    } else {
-      return 0;
+  function sorter(a, b) {
+    for (let i = 0; i < Math.min(a.length, b.length); i++) {
+      if (a[i] < b[i]) {
+        return -1;
+      } else if (a[i] > b[i]) {
+        return 1;
+      }
     }
+    return a.length - b.length;
   }
-  bad_intervals.sort(sort_pairs);
+  bad_intervals.sort(sorter);
   i = 0;
   while (i < bad_intervals.length-1) {
     var cur = bad_intervals[i];
@@ -188,7 +189,14 @@ function refresh_link_suggestions() {
     if (found) {
       continue;
     }
-    var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'ig');
+    // Crude effort to handle pluralization
+    var kdef_sing;
+    if (kdef.endsWith("s")) {
+      kdef_sing = kdef.slice(0,-1);
+    } else {
+      kdef_sing = kdef;
+    }
+    var kdef_finder = new RegExp('\\b'+kdef_sing+'s?\\b', 'ig');
     do {
       var match = kdef_finder.exec(content);
       if (match !== null && !is_bad(match.index)) {
@@ -200,6 +208,11 @@ function refresh_link_suggestions() {
             var match_end = match.index + match[0].length;
             var label = match[0];
             var klink = knowl_link(definer_id, label);
+            var kcat = definer_id.split(".", 1)[0]
+            // We want the current category to come first, so if it matches we change it to a very early ascii character
+            if (kcat == curcat) {
+              kcat = "!";
+            }
             // Add five words of context on each side, stopping at newlines
             var pre_mark = match.index;
             for (var j = 0; j < 5; j++) {
@@ -210,7 +223,9 @@ function refresh_link_suggestions() {
               }
             }
             var nl_mark = content.lastIndexOf("\n", match.index);
-            pre_mark = Math.max(pre_mark, nl_mark);
+            if (nl_mark != -1) {
+              pre_mark = Math.max(pre_mark, nl_mark);
+            }
             pre_mark = is_bad(pre_mark, -1); // Don't stop in the middle of mathmode/KNOWL
             var post_mark = match_end;
             for (var j = 0; j < 5; j++) {
@@ -221,20 +236,23 @@ function refresh_link_suggestions() {
               }
             }
             var nl_mark = content.indexOf("\n", match_end);
-            post_mark = Math.min(post_mark, nl_mark);
+            if (nl_mark != -1) {
+              post_mark = Math.min(post_mark, nl_mark);
+            }
             post_mark = is_bad(post_mark, 1); // Don't stop in the middle of mathmode/KNOWL
             var select_link = `<a href="#" class="select_klink" start=`+match.index+` end=`+match_end+`>Select</a>`;
             var inserter = `<a href="#" class="insert_klink" definer_id="`+definer_id+`" start=`+match.index+` end=`+match_end+` match="`+match[0]+`">insert `+definer_id+`</a>`;
-            to_insert.push([match.index, "<li>" + inserter + " &bull; " + content.substring(pre_mark, match.index) + klink + content.substring(match_end, post_mark) + " &bull; " + select_link + "</li>"]);
+            to_insert.push([kcat, match.index, "<li>" + inserter + " &bull; " + content.substring(pre_mark, match.index) + klink + content.substring(match_end, post_mark) + " &bull; " + select_link + "</li>"]);
           }
         }
         break;
       }
     } while (match !== null);
   }
-  to_insert.sort(sort_pairs);
+  to_insert.sort(sorter);
+  console.log(to_insert);
   for (var i = 0; i < to_insert.length; i++) {
-    var $new_item = $(to_insert[i][1]);
+    var $new_item = $(to_insert[i][2]);
     $linkul.append($new_item);
   }
   if (!some_link) {
@@ -404,6 +422,11 @@ function check_knowl_category() {
 }
 
 function set_saved() {
-  unsaved = false;
-  return true;
+  var curtitle = $("input[name='title']").val();
+  if (curtitle.trim().length > 0) {
+    unsaved = false;
+    return true;
+  }
+  alert("You must enter a title.");
+  return false;
 }

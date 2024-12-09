@@ -522,7 +522,7 @@ class ColumnController(SelectBox):
             '''oninput="control_columns(this);"''',
             '''id="column-selector"''',
         ]
-        style="position: absolute; z-index: 9999;"
+        style = "position: absolute; z-index: 9999;"
         if self.short_width is not None:
             style += f'width: {self.short_width}px;'
         keys.append(f'style="{style}"')
@@ -612,11 +612,16 @@ class SearchButton(SearchBox):
             onclick = ""
         else:
             onclick = " onclick='resetStart()'"
-        btext = "<button type='submit' name='search_type' value='{val}' style='width: {width}px;'{onclick}>{desc}</button>"
+        if self.description in ["Search again", "Generate statistics"]:
+            cls = " class='search_stale'"
+        else:
+            cls = " class='search_fresh'"
+        btext = "<button type='submit' name='search_type' value='{val}'{cls} style='width: {width}px;'{onclick}>{desc}</button>"
         return btext.format(
             width=self.width,
             val=self.value,
             desc=self.description,
+            cls=cls,
             onclick=onclick)
 
 class SearchButtonWithSelect(SearchButton):
@@ -757,7 +762,7 @@ class SearchArray(UniqueRepresentation):
                     label="",
                     width=150,
                     options=info["stats"]._dynamic_cols,
-                    extra=['onchange="set_buckets(this, \'buckets%s\')"'%i])
+                    extra=['onchange="set_buckets(this, \'buckets%s\')"' % i])
                 buckets = TextBox(
                     name="buckets%s" % i,
                     id="buckets%s" % i,

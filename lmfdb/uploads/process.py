@@ -15,7 +15,7 @@ upone, _ = os.path.split(here)
 uptwo, _ = os.path.split(upone)
 sys.path.append(uptwo)
 from lmfdb import db
-from lmfdb.backend.encoding import copy_dumps
+from psycodict.encoding import copy_dumps
 from lmfdb.users.main import Reviewer
 
 
@@ -54,7 +54,7 @@ def process_all():
             timestamp = datetime.utcnow().isoformat()
             status_update[rec["section"]][rec["id"]] = (status, timestamp, comment)
 
-        # There are some sections (like gonality propogation) that want to do more
+        # There are some sections (like gonality propagation) that want to do more
         # processing after all inputs are known.  By default, we use this function
         # just to write status_update to F
         for section_name, ids in status_update.items():

@@ -126,13 +126,13 @@ class mf_hecke_nf(MfChecker):
             if verbose:
                 for n, a in enumerate(an, 1):
                     if not check_val(a):
-                        print("Check an failure (m=%s, d=%s)"%(m, d), n, a)
+                        print("Check an failure (m=%s, d=%s)" % (m, d), n, a)
             return False
         if not all(check_val(a) for a in ap):
             if verbose:
                 for p, a in zip(prime_range(maxp), ap):
                     if not check_val(a):
-                        print("Check ap failure (m=%s, d=%s)"%(m, d), p, a)
+                        print("Check ap failure (m=%s, d=%s)" % (m, d), p, a)
             return False
         for p, a in zip(prime_range(100), ap):
             if a != an[p-1]:
@@ -150,7 +150,7 @@ class mf_hecke_nf(MfChecker):
                 total_order *= mod(g, N).multiplicative_order()
                 if not check_val(val):
                     if verbose:
-                        print("Bad character val (m=%s, d=%s)"%(m, d), g, val)
+                        print("Bad character val (m=%s, d=%s)" % (m, d), g, val)
                     return False
             success = (total_order == euler_phi(N))
             if not success and verbose:
