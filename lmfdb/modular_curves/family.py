@@ -10,6 +10,12 @@ def ModCurveFamily(name):
         return X1N()
     elif name == "X":
         return XN()
+    elif name == "Xpm1":
+        return Xpm1N()
+    elif name == "Xarith1":
+        return Xarith1MMN()
+    elif name == "Xarithpm1":
+        return Xarithpm1MMN()
     elif name == "Xsp":
         return XspN()
     elif name == "Xspplus":
@@ -113,8 +119,6 @@ class X1N(ModCurveFamily_base):
                 ("Index", str(self.index)),
                 ("Genus", str(self.genus))]
 
-
-
 class XN(ModCurveFamily_base):
     famname = "X"
     name = "X(N)"
@@ -130,6 +134,118 @@ class XN(ModCurveFamily_base):
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
     hypell_description = "None."
     biell_description = "None."
+
+    @lazy_attribute
+    def cusps_display(self):
+        return self.cusps
+
+    @lazy_attribute
+    def cusps_width_display(self):
+        return "unknown"
+
+    @lazy_attribute
+    def cusps_orbits_display(self):
+        return "one is rational"
+
+    elliptic_points = "There are no elliptic points, unless N=1, in which case there are 2"
+
+    @lazy_attribute
+    def properties(self):
+        return [("Level", "$N$"),
+                (r"$SL_2$-level", str(self.sl2level)),
+                ("Index", str(self.index)),
+                ("Genus", str(self.genus))]
+
+
+class Xpm1N(ModCurveFamily_base):
+    famename = "Xpm1"
+    name = r"X_{\pm 1}(N)"
+    sl2level = "N"
+    index = "N"
+    psl2index = r"i = "
+    genus = "g"
+    nu2 = r"$\nu_2 = $"
+    nu3 = r"$\nu_3 = $"
+    cusps = r"$\nu_\infty = $"
+    moduli_description = fr"$X_{{\pm 1}}(N)$ is the "
+    hypell_description = "need to do"
+    biell_description = "need to do"
+
+
+    @lazy_attribute
+    def cusps_display(self):
+        return self.cusps
+
+    @lazy_attribute
+    def cusps_width_display(self):
+        return "unknown"
+
+    @lazy_attribute
+    def cusps_orbits_display(self):
+        return "one is rational"
+
+    elliptic_points = "There are no elliptic points, unless N=1, in which case there are 2"
+
+    @lazy_attribute
+    def properties(self):
+        return [("Level", "$N$"),
+                (r"$SL_2$-level", str(self.sl2level)),
+                ("Index", str(self.index)),
+                ("Genus", str(self.genus))]
+
+
+
+class Xarith1MMN(ModCurveFamily_base):
+    famename = "Xarith1"
+    name = r"X_{\mathrm{arith},1}(M,MN)"
+    sl2level = "N"
+    index = "N"
+    psl2index = r"i = "
+    genus = "g"
+    nu2 = r"$\nu_2 = $"
+    nu3 = r"$\nu_3 = $"
+    cusps = r"$\nu_\infty = $"
+    moduli_description = fr"BLANK is the "
+    hypell_description = "need to do"
+    biell_description = "need to do"
+
+
+    @lazy_attribute
+    def cusps_display(self):
+        return self.cusps
+
+    @lazy_attribute
+    def cusps_width_display(self):
+        return "unknown"
+
+    @lazy_attribute
+    def cusps_orbits_display(self):
+        return "one is rational"
+
+    elliptic_points = "There are no elliptic points, unless N=1, in which case there are 2"
+
+    @lazy_attribute
+    def properties(self):
+        return [("Level", "$N$"),
+                (r"$SL_2$-level", str(self.sl2level)),
+                ("Index", str(self.index)),
+                ("Genus", str(self.genus))]
+
+
+class Xarithpm1MMN(ModCurveFamily_base):
+    famename = "Xarithpm1"
+    name = r"X_{\mathrm{arith},\pm 1}(M,MN)"
+    sl2level = "N"
+    index = "N"
+    psl2index = r"i = "
+    genus = "g"
+    nu2 = r"$\nu_2 = $"
+    nu3 = r"$\nu_3 = $"
+    cusps = r"$\nu_\infty = $"
+    moduli_description = fr"BLANK is the "
+    hypell_description = "need to do"
+    biell_description = "need to do"
+
 
     @lazy_attribute
     def cusps_display(self):
