@@ -388,7 +388,7 @@ def apply_coeff_info(L, coeff_info):
                     res = -I, -I
             else:
                 # an = e^(2 pi i an_power_int / this_base_power_int)
-                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + r"}\right)$"
+                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int) + r"}\right)$"
                 #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
@@ -497,7 +497,7 @@ class Lfunction_from_db(Lfunction):
         _, conductor, character, cr, imag, index = self.label.split('-')
         spectral_label = cr + '-' + imag
         degree = self.degree
-        conductor  = conductor.replace('e', '^')
+        conductor = conductor.replace('e', '^')
         bread = [('L-functions', url_for('.index'))]
         if self.rational:
             bread.append(('Rational', url_for('.rational')))
@@ -596,10 +596,11 @@ class Lfunction_from_db(Lfunction):
 
     def download_euler_factors(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
-        data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
+        data['first_lfactors'] = [[ps[i], l]
+                                  for i, l in enumerate(self.localfactors)]
         return Downloader()._wrap(Json.dumps(data),
                                   filename + '.euler_factors',
                                   lang='text',

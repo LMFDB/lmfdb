@@ -587,7 +587,7 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
 
 
 def raw_typeset_qexp(coeffs_list,
-                     compress_threshold=100,
+                     compress_threshold=200,
                      coeff_compress_threshold=30,
                      var=r"\beta",
                      final_rawvar='b',
@@ -655,7 +655,7 @@ def raw_typeset_qexp(coeffs_list,
         raw += r
         if add_to_tset:
             tset += t
-        if add_to_tset and "cdots" in tset:
+        if add_to_tset and (len(tset) > compress_threshold):
             add_to_tset = False
             lastt = None
     else:
@@ -790,15 +790,16 @@ def sparse_cyclotomic_to_latex(n, dat):
         # Now the coefficient
 
         if p[0] == 1:
-            ans += '+'  + zpart
+            ans += '+' + zpart
         elif p[0] == -1:
-            ans += '-'  + zpart
+            ans += '-' + zpart
         else:
-            ans += '{:+d}'.format(p[0])  + zpart
+            ans += '{:+d}'.format(p[0]) + zpart
     ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
+
 
 def sparse_cyclotomic_to_mathml(n, dat):
     r"""

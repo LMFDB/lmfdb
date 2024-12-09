@@ -77,7 +77,7 @@ class ECisog_class():
         # changing one line in this file (defining OPTIMALITY_BOUND)
         # without changing the data.
 
-        self.cremona_bound    = CREMONA_BOUND
+        self.cremona_bound = CREMONA_BOUND
         self.optimality_bound = OPTIMALITY_BOUND
         self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or ((self.conductor < CREMONA_BOUND) and ((self.optimality == 1) or (self.Ciso == '990h')))
         self.optimal_label = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label

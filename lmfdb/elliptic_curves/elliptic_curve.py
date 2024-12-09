@@ -745,10 +745,8 @@ def modular_form_display(label, number):
         number = int(number)
     except ValueError:
         number = 10
-    if number < 10:
-        number = 10
-    if number > 1000:
-        number = 1000
+    number = max(number, 10)
+    number = min(number, 1000)
     ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
