@@ -353,7 +353,7 @@ modcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "Xarith", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "Xarith1", "Xarithpm1", "Xsym", "Xarith", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -364,9 +364,9 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)"]}]}
     elif inp == "Xsp": #add X(1),X(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
-    elif inp == "X2": # X_1(2,2n); add X(2)
+    elif inp == "Xarith1": # X_{arith,1}(m,mn); add X(2)
         query[qfield] = {"$or":[{"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
-    elif inp == "Xpm2": # X_{\pm1}(2,2n); add X(2)
+    elif inp == "Xarithpm1": # X_{\pm1}(2,2n); add X(2)
         query[qfield] = {"$or":[{"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
     elif inp == "Xpm1": # Add X(1) and X0(N) for N=2,3,4,6
         query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
@@ -933,8 +933,8 @@ class ModCurveSearchArray(SearchArray):
                      ("X1", "X1(N)"),
                      ("Xpm1", "X±1(N)"),
                      ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "X±1(2,2N)"),
+                     ("Xarith1", "Xarith1(M,MN)"),
+                     ("Xarithpm1", "Xarith±1(M,MN)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),
@@ -1168,8 +1168,8 @@ class RatPointSearchArray(SearchArray):
                      ("X1", "X1(N)"),
                      ("Xpm1", "Xpm1(N)"),
                      ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "Xpm1(2,2N)"),
+                     ("Xarith1", "Xarith1(M,MN)"),
+                     ("Xarithpm1", "Xarith±1(M,MN)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),

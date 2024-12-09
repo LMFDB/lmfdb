@@ -155,7 +155,7 @@ class XN(ModCurveFamily_base):
 
 class XspN(ModCurveFamily_base):
     famname = "Xsp"
-    name = "X_{\mathrm{sp}}(N)"
+    name = r"X_{\mathrm{sp}}(N)"
     sl2level = "N"
     index = "N+1"
     psl2index = r"i = N^2\cdot \prod_{p|N, \text{ prime}} \left(1 + \frac{1}{p}\right)"
@@ -194,7 +194,7 @@ class XspN(ModCurveFamily_base):
 
 class XspplusN(ModCurveFamily_base):
     famname = "Xspplus"
-    name = "X_{\mathrm{sp}}^+(N)"
+    name = r"X_{\mathrm{sp}}^+(N)"
     sl2level = "N"
     index = "N+1"
     psl2index = "N^2+1"
@@ -232,7 +232,7 @@ class XspplusN(ModCurveFamily_base):
 
 class XnsN(ModCurveFamily_base):
     famname = "Xns"
-    name = "X_{\mathrm{ns}}(N)"
+    name = r"X_{\mathrm{ns}}(N)"
     sl2level = "N"
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)"
@@ -271,7 +271,7 @@ class XnsN(ModCurveFamily_base):
 
 class XnsplusN(ModCurveFamily_base):
     famname = "Xnsplus"
-    name = "X_{\mathrm{ns}}^+(N)"
+    name = r"X_{\mathrm{ns}}^+(N)"
     sl2level = "N"
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)/2"
@@ -348,7 +348,7 @@ class XS4p(ModCurveFamily_base):
 
 class XarithN(ModCurveFamily_base):
     famname = "Xarith"
-    name = "X_{\mathrm{arith}}(N)"
+    name = r"X_{\mathrm{arith}}(N)"
     sl2level = "N"
     index = "N+1"
     psl2index = r"i = \begin{cases}6, & \text{if } N=1, \\ \frac{N^3}{2}\prod_{p\mid N, \text{prime}}\left(1-\frac{1}{p^2}\right), & \text{if } N>2. \end{cases}"
