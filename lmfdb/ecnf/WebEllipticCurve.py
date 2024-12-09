@@ -651,18 +651,24 @@ class ECNF():
             BSDsha_numerator = BSDrootdisc * BSDntors**2
             BSDsha_denominator = BSDReg * BSDomega * BSDprodcp
             BSDsha_from_formula = BSDLvalue * BSDsha_numerator / BSDsha_denominator
-            BSDok = BSDsha_from_formula.round() == BSDsha
+            BSDsha_from_formula_rounded = BSDsha_from_formula.round()
+            BSDok = (BSDsha_from_formula_rounded == BSDsha) and ((BSDsha_from_formula_rounded -BSDsha_from_formula).abs() < 0.001)
+            #print(f"{BSDsha_from_formula=}")
+            #print(f"{BSDsha_from_formula_rounded=}")
+            #print(f"{BSDsha=}")
+            #print(f"{BSDok=}")
             if not BSDok:
                 # this means that we doubled BSDomega when we should
                 # not have, so BSDsha_denominator is doubled and
                 # BSDsha_from formula is halved
-                print(f"BSD normalization: adjusting Omega for {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula} which rounds to {BSDsha_from_formula.round()}")
+                print(f"BSD normalization: adjusting Omega for {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
                 BSDok = ((BSDsha/BSDsha_from_formula)-2).abs() < 0.01
                 if not BSDok:
                     print(f"BSD normalization issue with {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
                 BSDomega /= 2
                 BSDsha_denominator /= 2
                 BSDsha_from_formula *= 2
+                BSDsha_from_formula_rounded = BSDsha_from_formula.round()
             BSDLvalue_from_formula = BSDsha * BSDsha_denominator / BSDsha_numerator
             self.BSDsha = web_latex(BSDsha_from_formula)
             self.BSDLvalue = web_latex(BSDLvalue_from_formula)
