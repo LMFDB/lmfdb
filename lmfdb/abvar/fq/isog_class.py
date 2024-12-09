@@ -178,7 +178,7 @@ class AbvarFq_isoclass():
             L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
         for j in range(ymax+1):
             L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
-        L+=line(pts,thickness=2)
+        L += line(pts, thickness=2)
         for v in pts:
             L += circle(v, 0.06, fill=True)
         L.axes(False)

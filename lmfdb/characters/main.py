@@ -1,14 +1,14 @@
-
-
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import euler_phi, PolynomialRing, QQ, gcd, ZZ
+from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
     StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_parsing import parse_range3
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -106,6 +106,12 @@ class DirichSearchArray(SearchArray):
             example="2",
             example_span="2 or 3-5"
         )
+        inducing = TextBox(
+            "inducing",
+            label="Induced by",
+            knowl="character.dirichlet.primitive",
+            example="3.b"
+        )
         parity = ParityBox(
             "parity",
             knowl="character.dirichlet.parity",
@@ -133,12 +139,13 @@ class DirichSearchArray(SearchArray):
         count = CountBox()
 
         self.refine_array = [
-            [modulus, conductor, order, is_real], [parity, is_primitive, is_minimal, count],
+            [modulus, conductor, order, inducing], [parity, is_primitive, is_minimal, is_real], [count],
         ]
         self.browse_array = [
             [modulus],
             [conductor],
             [order],
+            [inducing],
             [parity],
             [is_primitive],
             [is_real],
@@ -156,6 +163,41 @@ def common_parse(info, query):
     parse_ints(info, query, "modulus", name="modulus")
     parse_ints(info, query, "conductor", name="conductor")
     parse_ints(info, query, "order", name="order")
+    if 'inducing' in info:
+        try:
+            validate_label(info['inducing'])
+            parts_of_label = info['inducing'].split(".")
+            if len(parts_of_label) != 2:
+                raise ValueError("Invalid character orbit label format, expected N.a")
+            if not str.isalpha(parts_of_label[1]):
+                chi = ConreyCharacter(int(parts_of_label[0]), int(parts_of_label[1]))
+                label = db.char_dirichlet.lucky({'modulus': chi.modulus, 'first': chi.min_conrey_conj}, projection='label')
+                parts_of_label = label.split(".")
+            primitive_modulus = int(parts_of_label[0])
+            primitive_orbit = class_to_int(parts_of_label[1])+1
+            if db.char_dirichlet.count({'modulus':primitive_modulus,'is_primitive':True,'orbit':primitive_orbit}) == 0:
+                raise ValueError("Primitive character orbit not found")
+
+            def incompatible(query):
+                cond = query.get('conductor')
+                if cond is None:
+                    return False
+                if isinstance(cond, int):
+                    return cond != primitive_modulus
+                opts = parse_range3(info['conductor'], lower_bound=1, upper_bound=ORBIT_MAX_MOD)
+                for opt in opts:
+                    if (isinstance(opt, int) and opt == primitive_modulus
+                        or not isinstance(opt, int) and opt[0] <= primitive_modulus <= opt[1]):
+                        return False
+                return True
+            if incompatible(query):
+                query["primitive_orbit"] = 0
+            else:
+                query["conductor"] = primitive_modulus
+                query["primitive_orbit"] = primitive_orbit
+        except ValueError:
+            flash_error("%s is not the label of a primitive character in the database", info['inducing'])
+            raise ValueError
     if 'parity' in info:
         parity = info['parity']
         if parity == 'even':

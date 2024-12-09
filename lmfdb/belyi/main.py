@@ -713,7 +713,7 @@ def primitivization_search(info, query, search_type):
         re_str = PASSPORT_RE
         err_name = "passport"
     else:
-        ValueError("Invalid search type")
+        raise ValueError("invalid search type")
     if info.get("primitivization"):
         primitivization = info["primitivization"]
         if re.match(re_str, primitivization):

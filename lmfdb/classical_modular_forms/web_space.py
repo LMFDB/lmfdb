@@ -8,7 +8,7 @@ from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
-    display_knowl, web_latex, coeff_to_power_series,
+    display_knowl, raw_typeset_qexp,
     web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
@@ -156,7 +156,8 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
 
 def trace_expansion_generic(space, prec_max=10):
     prec = min(len(space.traces)+1, prec_max)
-    return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
+    return raw_typeset_qexp([0] + space.traces[:prec-1])
+    # return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
 
 class DimGrid():

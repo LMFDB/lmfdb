@@ -410,7 +410,7 @@ def download_bmf_magma(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -452,7 +452,7 @@ def download_bmf_magma(**args):
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += '\nALEigenvalues := AssociativeArray();\n'
         for s in AL_eigs:
             outstr += 'ALEigenvalues[ideal<ZF | {}>] := {};\n'.format(set(s[0]), s[1])
@@ -540,7 +540,7 @@ def download_bmf_sage(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -580,10 +580,10 @@ def download_bmf_sage(**args):
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += 'AL_eigenvalues = {}\n'
         for s in AL_eigs:
-            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0], s[1])
     else:
         outstr += 'AL_eigenvalues ="not known"\n'
 

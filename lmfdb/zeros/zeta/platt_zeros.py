@@ -157,8 +157,7 @@ def list_zeros(filename,
 
 
 def zeros_starting_at_t(t, number_of_zeros=1000):
-    if t < 14:
-        t = 14
+    t = max(t, 14)
     query = 'select * from zero_index where t <= ? order by t desc limit 1'
     c = sqlite3.connect(db_location).cursor()
     c.execute(query, (float(t),))
@@ -168,8 +167,7 @@ def zeros_starting_at_t(t, number_of_zeros=1000):
 
 def zeros_starting_at_N(N, number_of_zeros=1000):
     N = int(N)
-    if N < 0:
-        N = 0
+    N = max(N, 0)
 
     query = 'select * from zero_index where N <= ? order by N desc limit 1'
     c = sqlite3.connect(db_location).cursor()
