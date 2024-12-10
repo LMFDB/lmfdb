@@ -3,13 +3,13 @@
 {% block content %}
 
 <p>
-  This dataset contains 136,924,520 {{KNOWL('ec.q', 'elliptic curves')}} over $\Q$ with {{ KNOWL('ec.q.conductor', 'conductor') }} up to $10^8$, divided into 115,821,258 {{KNOWL('ec.isogeny_class', 'isogeny classes')}}.  It also contains 11,378,911 elliptic curves with prime conductor up to $10^{10}$, divided into 11,372,286 isogeny classes.  Note that not every curve satisfying these conductor bounds is present in this dataset, only those that satisfy additional bounds on the discriminant and coefficients are included; see <a href="https://doi.org/10.1007/3-540-45455-1_22">Stein-Watkins</a> for more details.
+  This dataset contains 136,924,520 {{KNOWL('ec.q', 'elliptic curves')}} over $\Q$ with {{ KNOWL('ec.q.conductor', 'conductor') }} up to $10^8$, divided into 115,821,258 {{KNOWL('ec.isogeny_class', 'isogeny classes')}}.  It also contains 11,378,911 elliptic curves with prime conductor up to $10^{10}$, divided into 11,372,286 isogeny classes.  Not every curve satisfying these conductor bounds is present in this dataset, only those that satisfy additional bounds on the discriminant and coefficients are included; see <a href="https://doi.org/10.1007/3-540-45455-1_22">Stein-Watkins</a> for details.
 </p>
 
 <h3>File and data format</h3>
 
 <p>
-  The data for conductors $N$ up to $10^8$ is stored in 1000 text files, indexed from $k=0$ to $k=999$.  The $k$th file contains data for $k \cdot 10^5 < N \le (k+1) \cdot 10^5$.  Similarly, the data for prime conductors $p$ up to $10^{10}$ is stored in 100 text files, indexed from $k=0$ to $k=99$.  The $k$th file contains data for $k \cdot 10^8 < p \le (k+1) \cdot 10^8$.
+  The data for conductors $N\le 10^8$ is stored in 1000 text files, indexed from $k=0$ to $k=999$, where the $k$th file contains data for $k \cdot 10^5 < N \le (k+1) \cdot 10^5$.  Similarly, the data for prime conductors $p\le 10^{10}$ is stored in 100 text files, indexed from $k=0$ to $k=99$, where the $k$th file contains data for $k \cdot 10^8 < p \le (k+1) \cdot 10^8$.
 </p>
 
 <p>
