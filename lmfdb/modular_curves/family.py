@@ -207,7 +207,7 @@ class Xarith1MMN(ModCurveFamily_base):
     nu2 = r"$\nu_2 = $"
     nu3 = r"$\nu_3 = $"
     cusps = r"$\nu_\infty = $"
-    moduli_description = fr"BLANK is the "
+    moduli_description = fr"$X_{{\mathrm{arith},1}}(M,MN)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\begin{{pmatrix}} 1 & M* \\ 0 & 1+M* \end{{pmatrix}} \subset \GL_2(\Z/MN\Z)$. As a moduli space it parameterizes triples $(E,P,Q)$, where $E$ is an elliptic curve over $k$, $P \in E[MN](k)$ is a point of order $MN$, and $Q\in E[M](k)$ is a point of order $M$ such that $E[M]=\langle NP,Q\rangle$. <p> The {display_knowl('modcurve.canonical_field', 'canonical field of definition')} of $X_{{\mathrm{arith},1}}(M,MN)$ is $\Q(\zeta_M)$, which means that the database of modular curves $X_H/\Q$ only includes $X_{{\mathrm{arith},1}}(M,MN)$ for $M\le 2$.</p>"
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
     hypell_description = "need to do"
     biell_description = "need to do"
