@@ -2115,7 +2115,7 @@ class WebAbstractGroup(WebObj):
                 if j == u:
                     if e == 1:
                         if first_pass:
-                            s = var_name(i)  + s
+                            s = var_name(i) + s
                             first_pass = False
                         else:
                             s = var_name(i) + '*' + s

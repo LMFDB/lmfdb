@@ -372,8 +372,9 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  += sign * CBF(b) * CBF.gens()[0]
+            res += sign * CBF(b) * CBF.gens()[0]
         return res
+
 
 # Conversion from numbers to letters and back
 def letters2num(s):
@@ -385,6 +386,7 @@ def letters2num(s):
     for j in range(len(letters)):
         ssum = ssum*26+letters[j]
     return ssum
+
 
 def num2letters(n):
     r"""

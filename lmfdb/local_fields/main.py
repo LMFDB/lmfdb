@@ -470,7 +470,7 @@ def render_field_webpage(args):
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     })
-        friends=[]
+        friends = []
         if 'slopes' in data:
             info.update({'slopes': show_slopes(data['slopes'])})
         if 'inertia' in data:

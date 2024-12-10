@@ -213,9 +213,9 @@ def download_hmf_magma(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    hecke_pol  = f['hecke_polynomial']
+    hecke_pol = f['hecke_polynomial']
     hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    AL_eigs    = f['AL_eigenvalues']
+    AL_eigs = f['AL_eigenvalues']
 
     outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
     outstr += '  It will load the data associated to the HMF, including\n'
@@ -326,9 +326,9 @@ def download_hmf_sage(**args):
     if f is None:
         return "No such form"
 
-    hecke_pol  = f['hecke_polynomial']
+    hecke_pol = f['hecke_polynomial']
     hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    AL_eigs    = f['AL_eigenvalues']
+    AL_eigs = f['AL_eigenvalues']
 
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
@@ -446,10 +446,10 @@ def render_hmf_webpage(**args):
         numeigs = 20
     info['numeigs'] = numeigs
 
-    hecke_pol  = data['hecke_polynomial']
-    eigs       = [str(eig) for eig in data['hecke_eigenvalues']]
+    hecke_pol = data['hecke_polynomial']
+    eigs = [str(eig) for eig in data['hecke_eigenvalues']]
     eigs = eigs[:min(len(eigs), numeigs)]
-    AL_eigs    = data['AL_eigenvalues']
+    AL_eigs = data['AL_eigenvalues']
 
     primes = hmf_field['primes']
     n = min(len(eigs), len(primes))

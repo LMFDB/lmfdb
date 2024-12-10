@@ -25,6 +25,7 @@ def modlmf_summary():
 def ctx_modlmf_summary():
     return {'modlmf_summary': modlmf_summary}
 
+
 class modlmf_stats():
     """
     Class for creating and displaying statistics for integral modlmfs
@@ -34,8 +35,8 @@ class modlmf_stats():
         logger.debug("Computing modlmf counts...")
         counts = {}
         nmodlmf = db.modlmf_forms.count()
-        counts['nmodlmf']  = nmodlmf
-        counts['nmodlmf_c']  = comma(nmodlmf)
+        counts['nmodlmf'] = nmodlmf
+        counts['nmodlmf_c'] = comma(nmodlmf)
         max_level = db.modlmf_forms.max('level')
         counts['max_level'] = max_level
         counts['max_level_c'] = comma(max_level)

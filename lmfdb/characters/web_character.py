@@ -108,7 +108,7 @@ class WebCharObject():
         d = {}
         logger.info('[DC] start collecting data for %s' % self.__class__.__name__)
         for k in self._keys:
-            d[k] = getattr(self,k,None)
+            d[k] = getattr(self, k, None)
             if d[k] is None:
                 logger.debug('[DC warning] ### key[%s] is None' % k)
         logger.info('[DC] collected for %s' % self.__class__.__name__)
@@ -121,7 +121,7 @@ class WebCharObject():
         if not isinstance(x, Rational):
             return '1'
         d = int(x.denom())
-        n = int(x.numer())  % d
+        n = int(x.numer()) % d
         if d == 1:
             s = '1'
         elif n == 1 and d == 2:

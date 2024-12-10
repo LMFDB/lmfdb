@@ -61,10 +61,12 @@ def options():
     return render_template(
         "database_options.html",
         title="Access options for the LMFDB database",
-        learnmore=[("API", url_for(".index")),
-                   ("Table statistics", url_for(".stats")),
-                   ("lmfdb-lite", "https://www.github.com/roed314/lmfdb-lite"),
-                   ("Install the LMFDB locally", "https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md")],
+        learnmore=[
+            ("Auxiliary datasets", url_for("datasets")),
+            ("API", url_for(".index")),
+            ("Table statistics", url_for(".stats")),
+            ("lmfdb-lite", "https://www.github.com/roed314/lmfdb-lite"),
+            ("Install the LMFDB locally", "https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md")],
         bread=[("Access options", " ")],
     )
 

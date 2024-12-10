@@ -107,7 +107,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
     <pre>000137    [[-3136/25,77112/125],[-38025/289,2151240/4913]]</pre>
     </td>
     <td>
-      For eight rank 2 curves, the second generator is not known and given as [?,?]
+      For three rank 2 curves, the second generator is not known and given as [?,?]
     </td>
   </tr>
 
@@ -119,7 +119,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
       </form>
     </td>
     <td>
-      {{ KNOWL('ec.q.canonical_height', 'Heights') }}
+      {{ KNOWL('ec.canonical_height', 'Heights') }}
     </td>
     <td>
     <pre>000137    [8.4621365965410101565417149184287484305,10.575571190572966907642306531966335545]</pre>
@@ -259,9 +259,13 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
 
 <p>
 The data files were created by Randall L. Rathbun on February 14, 2013
-with updates on May 18, 2014.  Some data was provided by Allan J
-MacLeod, Ralph Buchholz and Brett Wittby, the rest computed by Rathbun using <tt>PARI/GP</tt>
-and <tt>eclib</tt> (in particular <tt>mwrank</tt>).
+with updates on May 18, 2014.  For the curves of rank one, the generators were computed by him using an implementation
+in PARI/GP originally by Robatino of an algorithm in Robatino's 1996 thesis <i>Computation of mock Heegner points
+on modular elliptic curves</i>, following work of Monsky.
+
+Some data was provided by Allan J. MacLeod, and by Ralph Buchholz and
+Brett Wittby, using <tt>Magma</tt>; the rest computed by Rathbun using
+ <tt>PARI/GP</tt> and <tt>eclib</tt> (in particular <tt>mwrank</tt>).
 </p>
 
 <div id='infomessage'>

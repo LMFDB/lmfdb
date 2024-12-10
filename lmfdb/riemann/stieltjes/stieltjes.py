@@ -34,10 +34,8 @@ def list_constants(start=None,
 
     if limit < 0:
         limit = 100
-    if limit > 1000:
-        limit = 1000
-    if start < 0:
-        start = 0
+    limit = min(limit, 1000)
+    start = max(start, 0)
     s_constants = stieltjes_list(start, limit)
 
     if fmt == 'plain':

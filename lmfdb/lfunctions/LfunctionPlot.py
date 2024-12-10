@@ -234,10 +234,8 @@ def getWidthAndHeight(gls):
     for origin in db.lfunc_lfunctions.search({'group': gls[0], 'conductor': gls[1]}, 'origin'):
         splitId = origin.split('/')[6].split('_')
 
-        if float(splitId[0]) > xMax:
-            xMax = float(splitId[0])
-        if float(splitId[1]) > yMax:
-            yMax = float(splitId[1])
+        xMax = max(float(splitId[0]), xMax)
+        yMax = max(float(splitId[1]), yMax)
 
     xMax = math.ceil(xMax)
     yMax = math.ceil(yMax)
@@ -277,10 +275,8 @@ def paintSvgFileAll(glslist):  # list of group and level
             splitId = R.split('_')
             paralist.append((splitId[0], splitId[1], l['origin'], group, level,
                              char, R, ap_id, l['root_number']))
-            if float(splitId[0]) > xMax:
-                xMax = float(splitId[0])
-            if float(splitId[1]) > yMax:
-                yMax = float(splitId[1])
+            xMax = max(float(splitId[0]), xMax)
+            yMax = max(float(splitId[1]), yMax)
 
     xMax = int(math.ceil(xMax))
     yMax = int(math.ceil(yMax))
@@ -492,8 +488,7 @@ def paintSvgHoloNew(condmax):
                                     projection=['analytic_conductor', 'label', 'level', 'weight', 'conrey_index', 'dim', 'char_degree'],
                                     sort=[('analytic_conductor', 1)]):
         _, k, _, hecke_letter = nf['label'].split('.')
-        if int(k) > max_k:
-            max_k = int(k)
+        max_k = max(int(k), max_k)
         if nf['weight'] not in values:
             values[nf['weight']] = []
         if nf['dim'] == 1:
@@ -522,10 +517,8 @@ def paintSvgHoloNew(condmax):
             k = label[1]
             x = x_scale*float(Nk2)
             y = y_scale*z1
-            if y > y_max:
-                y_max = y
-            if x > x_max:
-                x_max = x
+            y_max = max(y, y_max)
+            x_max = max(x, x_max)
             points.append((x, y, lfun_url, ".".join(map(str, label)), k))
 
     # Begin drawing
@@ -796,7 +789,6 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             dimensioninfo['dotradius'] = radius
             dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
             dimensioninfo['firstdotoffset'] = [0.0, 0.0]
-#
             appearanceinfo = {}
             # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
             appearanceinfo['edgewidth'] = [0, 0]  # remove the sector edges
@@ -804,12 +796,10 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
             appearanceinfo['fontsize'] = 'font-size:11px'
             appearanceinfo['fontweight'] = ""
-#
             urlinfo = {'base': '/L/ModularForm/GL2/Q/holomorphic?'}
             urlinfo['space'] = {'weight': y}
             urlinfo['space']['level'] = x
             urlinfo['space']['character'] = 0
-#
             # scale = 1 # not used
             # Symmetry types: +1 or -1
             symmetrytype = [1, -1]
@@ -879,7 +869,6 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     xmlText = xmlText + ("<line x1='0' y1='" + str(
         height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
     xmlText += "<text x='50.0' y='491.0' font-style='italic'>level</text>"
-#
     # xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7],
     # "", 'font-size:11px', "", 'rgb(0,0,0)')
     xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
