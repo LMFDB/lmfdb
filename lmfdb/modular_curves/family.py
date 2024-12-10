@@ -245,7 +245,7 @@ class Xarithpm1MMN(ModCurveFamily_base):
     nu2 = r"$\nu_2 = $"
     nu3 = r"$\nu_3 = $"
     cusps = r"$\nu_\infty = $"
-    moduli_description = fr"$X_{{\mathrm{{arith}},\pm1}}(M,MN)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\pm\begin{{pmatrix}} 1 & M* \\ 0 & 1+M* \end{{pmatrix}} \subset \GL_2(\Z/MN\Z)$. The modular curve {display_knowl('modcurve.x1mn','$X_{1}(M,MN)$')} is one of its {display_knowl('modcurve.quadratic_refinements','quadratic refinements')}. <p> The {display_knowl('modcurve.canonical_field', 'canonical field of definition')} of $X_{{\mathrm{{arith}},\pm 1}}(M,MN)$ is $\Q(\zeta_M)$, which means that the database of modular curves $X_H/\Q$ only includes $X_{{\mathrm{{arith}}, \pm 1}}(M,MN)$ for $M\le 2$. </p>"
+    moduli_description = fr"$X_{{\mathrm{{arith}},\pm1}}(M,MN)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of $\pm\begin{{pmatrix}} 1 & M* \\ 0 & 1+M* \end{{pmatrix}} \subset \GL_2(\Z/MN\Z)$. The modular curve {display_knowl('modcurve.x1mn','$X_{{\mathrm{{arith}},1}}(M,MN)$')} is one of its {display_knowl('modcurve.quadratic_refinements','quadratic refinements')}. <p> The {display_knowl('modcurve.canonical_field', 'canonical field of definition')} of $X_{{\mathrm{{arith}},\pm 1}}(M,MN)$ is $\Q(\zeta_M)$, which means that the database of modular curves $X_H/\Q$ only includes $X_{{\mathrm{{arith}}, \pm 1}}(M,MN)$ for $M\le 2$. </p>"
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
     hypell_description = "need to do"
     biell_description = "need to do"
