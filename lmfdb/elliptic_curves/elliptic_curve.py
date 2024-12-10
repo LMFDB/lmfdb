@@ -994,13 +994,13 @@ def render_bhkssw():
     learnmore = learnmore_list_remove('BHKSSW dataset')
     t = 'Balakrishnan-Ho-Kaplan-Spicer-Stein-Watkins elliptic curve database'
     bread = [("Datasets", url_for("datasets")), ("BHKSSW dataset", " ")]
-    if 'filename' in info:
-        filepath = os.path.join(os.path.expanduser('~/data/bhkssw_ecdb/' + info['filename']))
-        if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-            return send_file(filepath, as_attachment=True)
-        else:
-            flash_error('File {} not found'.format(info['filename']))
-            return redirect(url_for(".render_bhkssw"))
+    #if 'filename' in info:
+    #    filepath = os.path.join(os.path.expanduser('~/data/bhkssw_ecdb/' + info['filename']))
+    #    if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+    #        return send_file(filepath, as_attachment=True)
+    #    else:
+    #        flash_error('File {} not found'.format(info['filename']))
+    #        return redirect(url_for(".render_bhkssw"))
     # This format was nice, but not possible with the 30-second timeout limitation
     #info['files'] = [ # number of curves, size in MB, lower bound, upper bound, filename
     #    (2249362, 151, "0", r"1 \cdot 10^8", "1e8db.txt"),
