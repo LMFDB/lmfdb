@@ -85,7 +85,7 @@ class X1N(ModCurveFamily_base):
     name = "X_1(N)"
     sl2level = "N"
     index = "N+1"
-    psl2index = r"i = \begin{cases} 1, & \text{ if } N = 1, \\ 3, & \text{ if } N = 2, \\ 4, & \text{if } N=3, \\ 6, & \text{if } N=4,  \\ \frac{N^2}{2}\prod_{p|N, \text{ prime}} \left( 1 - \frac{1}{p^2} \right), & \text{ otherwise.}\end{cases}"
+    psl2index = r"i = \begin{cases} 1, & \text{ if } N = 1, \\ 3, & \text{ if } N = 2, \\ \frac{N^2}{2}\prod_{p|N, \text{ prime}} \left( 1 - \frac{1}{p^2} \right), & \text{ otherwise.}\end{cases}"
     genus = "g"
     nu2 = r"$\nu_2 = \begin{cases} 1, & \text{ if } N =1,2, \\ 0, & \text{ otherwise.}\end{cases}$"
     nu3 = r"$\nu_3 = \begin{cases} 1, & \text{ if } N =1,3, \\ 0, & \text{ otherwise.}\end{cases}$"
@@ -161,16 +161,19 @@ class Xpm1N(ModCurveFamily_base):
     famename = "Xpm1"
     name = r"X_{\pm 1}(N)"
     sl2level = "N"
-    index = "N"
-    psl2index = r"i = "
+    index = "N+1"
+    psl2index = r"i = \begin{cases} 1, & \text{ if } N = 1, \\ 3, & \text{ if } N = 2, \\ \frac{N^2}{2}\prod_{p|N, \text{ prime}} \left( 1 - \frac{1}{p^2} \right), & \text{ otherwise.}\end{cases}"
     genus = "g"
-    nu2 = r"$\nu_2 = $"
-    nu3 = r"$\nu_3 = $"
-    cusps = r"$\nu_\infty = $"
+    nu2 = r"$\nu_2 = \begin{cases} 1, & \text{ if } N =1,2, \\ 0, & \text{ otherwise.}\end{cases}$"
+    nu3 = r"$\nu_3 = \begin{cases} 1, & \text{ if } N =1,3, \\ 0, & \text{ otherwise.}\end{cases}$"
+    cusps = r"$\nu_\infty = \begin{cases} 1, & \text{ if } N =1, \\ 2, & \text{ if } N = 2, \\ 3, & \text{ if } N = 4, \\ \frac{1}{2} \sum_{d|N,d>0} \varphi(d)\varphi(N/d), & \text{ otherwise.} \end{cases}$"
+    rational_cusps = "1"
     moduli_description = fr"$X_{{\pm 1}}(N)$ is the "
-    hypell_description = "need to do"
-    biell_description = "need to do"
-
+    genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
+    hypell_level = "?level=13%2C16%2C18&family=X1"
+    biell_level = "?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1"
+    hypell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=1138196">MR:1138196</a>] showed that there are only 3 hyperelliptic curves. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=13%2C16%2C18&family=X1">following table</a>] for the full list.'
+    biell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=2040593">MR:2040593</a>] showed that there are only 8 bielliptic curves. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1">following table</a>] for the full list.'
 
     @lazy_attribute
     def cusps_display(self):
