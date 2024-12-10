@@ -168,7 +168,7 @@ class Xpm1N(ModCurveFamily_base):
     nu3 = r"$\nu_3 = \begin{cases} 1, & \text{ if } N =1,3, \\ 0, & \text{ otherwise.}\end{cases}$"
     cusps = r"$\nu_\infty = \begin{cases} 1, & \text{ if } N =1, \\ 2, & \text{ if } N = 2, \\ 3, & \text{ if } N = 4, \\ \frac{1}{2} \sum_{d|N,d>0} \varphi(d)\varphi(N/d), & \text{ otherwise.} \end{cases}$"
     rational_cusps = "1"
-    moduli_description = fr"$X_{{\pm 1}}(N)$ is the {{ KNOWL('modcurve','modular curve') }} $X_H$ for $H\le GL_2(\widehat\Z)$ the inverse image of $\begin{{pmatrix}} \pm 1 & * \\ 0 & * \end{{pmatrix}} \subset \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,\pm P)$, where $E$ is an elliptic curve over $k$, and $P \in E[N]$ is a point of order $N$ with $\pm P$ defined over $k$ (this condition translates to the $x$-coordinate lying in $k$ when $E$ is in short Weierstrass form). \n The modular curve {{KNOWL('modcurve.x1','$X_1(N)$')}} is a {{KNOWL('modcurve.quadratic_refinements', 'quadratic refinement')}} of $X_{{\pm1}}(N)$."
+    moduli_description = fr"$X_{{\pm 1}}(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le GL_2(\widehat\Z)$ the inverse image of $\begin{{pmatrix}} \pm 1 & * \\ 0 & * \end{{pmatrix}} \subset \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,\pm P)$, where $E$ is an elliptic curve over $k$, and $P \in E[N]$ is a point of order $N$ with $\pm P$ defined over $k$ (this condition translates to the $x$-coordinate lying in $k$ when $E$ is in short Weierstrass form). \n The modular curve {display_knowl('modcurve.x1','$X_1(N)$')} is a {display_knowl('modcurve.quadratic_refinements', 'quadratic refinement')} of $X_{{\pm1}}(N)$."
     hypell_description = "need to do"
     biell_description = "need to do"
 
