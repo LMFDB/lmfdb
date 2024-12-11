@@ -803,7 +803,18 @@ def family_page(label):
                        (label, "")])
     info['title'] = f"$p$-adic family {label}"
     info['show_count'] = True
-    # Properties?
+    info['properties'] = [
+        ('Label', label),
+        ('Base', f'<a href="{url_for(".by_label", label=family.base)}">{family.base}</a>'), # it would be nice to pretty print the base
+        ('Degree', rf'\({n}\)'),
+        ('e', rf'\({family.e}\)'),
+        ('f', rf'\({family.f}\)'),
+        ('c', rf'\({family.c}\)'),
+    ]
+    if family.n0 == 1:
+        info['friends'] = [('Relative constituents', url_for(".families_page", label_absolute=family.label))]
+    else:
+        info['friends'] = [('Absolute family', url_for(".family_page", label=family.label_absolute))]
     return render_family(info)
 
 @embed_wrap(
@@ -818,6 +829,7 @@ def family_page(label):
     bread=lambda:None,
     properties=lambda:None,
     family=lambda:None,
+    friends=lambda:None,
 )
 def render_family(info, query):
     family = info["family"]
