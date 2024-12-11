@@ -1043,13 +1043,13 @@ class FamilySearchArray(EmbeddedSearchArray):
 
 class FamiliesSearchArray(SearchArray):
     sorts = [
-        ("", "base", ['p', 'n', 'e0', 'e', 'c', 'visible']),
-        ("c", "discriminant exponent", ['p', 'n', 'c', 'e0', 'e', 'visible']),
-        ("slopes", "slopes", ['p', 'n', 'visible']),
-        ("ambiguity", "ambiguity", ['p', 'n', 'ambiguity', 'visible']),
-        ("field_count", "num fields", ['p', 'n', 'field_count', 'visible']),
-        ("mass", "mass", ['mass', 'p', 'n', 'e0', 'e', 'c', 'visible']),
-        ("mass_missing", "mass missing", ['mass_missing', 'mass', 'p', 'n', 'e0', 'e', 'c', 'visible']),
+        ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+        ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),
+        ("slopes", "slopes", ['p', 'n', 'visible', 'e', 'c', 'ctr']),
+        ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
+        ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
+        ("mass", "mass", ['mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+        ("mass_missing", "mass missing", ['mass_missing', 'mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
     ]
     def __init__(self):
         #degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
