@@ -608,31 +608,30 @@ def render_field_webpage(args):
             wild_inertia = 'data not computed'
 
         info.update({
-                    'polynomial': raw_typeset(polynomial),
-                    'n': n,
-                    'p': p,
-                    'c': cc,
-                    'e': e,
-                    'f': f,
-                    't': data['t'],
-                    'u': data['u'],
-                    'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
-                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
-                    'hw': data['hw'],
-                    'visible': show_slopes(data['visible']),
-                    'wild_inertia': wild_inertia,
-                    'unram': unramp,
-                    'ind_insep': show_slopes(str(data['ind_of_insep'])),
-                    'eisen': eisenp,
-                    'gsm': gsm,
-                    'autstring': autstring,
-                    'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
-                    'aut': data['aut'],
-                    'ram_polygon_plot': plot_ramification_polygon(data['ram_poly_vert'], p, data['residual_polynomials'], data['ind_of_insep']),
-                    'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
-                    'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
-                    'ppow_roots_of_unity': data['ppow_roots_of_unity'],
-                    })
+            'polynomial': raw_typeset(polynomial),
+            'n': n,
+            'p': p,
+            'c': cc,
+            'e': e,
+            'f': f,
+            't': data['t'],
+            'u': data['u'],
+            'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
+            'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
+            'hw': data['hw'],
+            'visible': show_slopes(data['visible']),
+            'wild_inertia': wild_inertia,
+            'unram': unramp,
+            'ind_insep': show_slopes(str(data['ind_of_insep'])),
+            'eisen': eisenp,
+            'gsm': gsm,
+            'autstring': autstring,
+            'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
+            'aut': data['aut'],
+            'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
+            'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
+            'ppow_roots_of_unity': data['ppow_roots_of_unity'],
+        })
         friends = [('Family', url_for(".family_page", label=data["family"]))]
         if 'slopes' in data:
             info['slopes'] = show_slopes(data['slopes'])
@@ -641,7 +640,7 @@ def render_field_webpage(args):
         if 'gms' in data:
             info.update({'gms': data['gms']})
         if 'ram_poly_vert' in data:
-            info.update({'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p)})
+            info['ram_polygon_plot'] = plot_ramification_polygon(data['ram_poly_vert'], p, data['residual_polynomials'], data['ind_of_insep'])
         if 'residual_polynomials' in data:
             info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
         if 'associated_inertia' in data:
@@ -868,6 +867,7 @@ def families_search(info,query):
     parse_ints(info,query,'c_absolute',name='Absolute discriminant exponent c')
     parse_ints(info,query,'w',name='Wild ramification exponent')
     parse_noop(info,query,'base',name='Base')
+    parse_noop(info,query,'label_absolute',name='Absolute label')
     parse_floats(info,query,'mass',name='Mass')
     parse_floats(info,query,'mass_missing',name='Missing mass')
     parse_ints(info,query,'ambiguity',name='Ambiguity')
@@ -1161,9 +1161,14 @@ class FamiliesSearchArray(SearchArray):
             knowl='lf.wild_segments',
             example='1',
             example_span='2, or a range like 2-4')
+        label_absolute = TextBox(
+            name='label_absolute',
+            label='Absolute label',
+            knowl='lf.family_label',
+            example='2.1.4.6a')
         self.refine_array = [[qp, degree, e, f, c],
                              [base, n0, e0, f0, c0],
-                             [w, n_absolute, e_absolute, f_absolute, c_absolute],
+                             [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
                              #[visible, slopes, rams, heights, slope_multiplicities],
                              [mass, mass_missing, ambiguity, field_count, wild_segments]]
 

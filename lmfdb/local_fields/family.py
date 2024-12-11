@@ -27,45 +27,35 @@ class pAdicSlopeFamily:
                 self.__dict__.update(data)
                 for col in ["visible", "slopes", "rams", "heights", "scaled_rams", "scaled_heights"]:
                     setattr(self, col, str_to_QQlist(getattr(self, col)))
+                self.p, self.e = ZZ(self.p), ZZ(self.e)
                 self.artin_slopes = self.visible
-                base, rams, p = data["base"], data["rams"], ZZ(data["p"])
-                if rams == "[]":
-                    rams = []
-                else:
-                    rams = [QQ(x) for x in rams[1:-1].split(", ")]
+                base, rams, p, w = self.base, self.rams, self.p, self.w
             else:
                 raise NotImplementedError
             self.label = label
         else:
             raise NotImplementedError
-        if self.n0 == 1:
-            self.rf0 = [1, 0]
-        else:
-            self.rf0 = db.lf_fields.lucky({"new_label": base}, "rf")
         self.base = base
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
-        self.p = p
-        self.w = w = max(len(L) for L in [slopes, heights, rams])
         self.pw = p**w
-        self.e = ZZ(self.e)
         _, self.etame = self.e.val_unit(p)
         # We support tamely ramified fields by specifying a tame base and empty slopes/rams/heights
         # slopes/rams -> heights -> rams/slopes
-        if rams:
-            heights = [sum(p**(k-j) * rams[j] for j in range(k+1)) for k in range(w)]
-        if slopes:
-            heights = [] # have to reset since lists created in arguments persist across function calls
-            h = 0
-            phipk = p - 1
-            for s in slopes:
-                h += phipk * s
-                heights.append(h)
-                phipk *= p
-        if w and not rams:
-            rams = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
-        if w and not slopes:
-            slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
+        #if rams:
+        #    heights = [sum(p**(k-j) * rams[j] for j in range(k+1)) for k in range(w)]
+        #if slopes:
+        #    heights = [] # have to reset since lists created in arguments persist across function calls
+        #    h = 0
+        #    phipk = p - 1
+        #    for s in slopes:
+        #        h += phipk * s
+        #        heights.append(h)
+        #        phipk *= p
+        #if w and not rams:
+        #    rams = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
+        #if w and not slopes:
+        #    slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
         #self.slopes = slopes
         #data = db.lf_families.lookup(self.label, data_cols)
         #if data:
