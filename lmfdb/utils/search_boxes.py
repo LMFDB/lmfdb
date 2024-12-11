@@ -612,11 +612,16 @@ class SearchButton(SearchBox):
             onclick = ""
         else:
             onclick = " onclick='resetStart()'"
-        btext = "<button type='submit' name='search_type' value='{val}' style='width: {width}px;'{onclick}>{desc}</button>"
+        if self.description in ["Search again", "Generate statistics"]:
+            cls = " class='search_stale'"
+        else:
+            cls = " class='search_fresh'"
+        btext = "<button type='submit' name='search_type' value='{val}'{cls} style='width: {width}px;'{onclick}>{desc}</button>"
         return btext.format(
             width=self.width,
             val=self.value,
             desc=self.description,
+            cls=cls,
             onclick=onclick)
 
 class SearchButtonWithSelect(SearchButton):

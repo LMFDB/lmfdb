@@ -192,7 +192,7 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
-        if self.num_conjclasses()>CC_LIMIT:
+        if self.num_conjclasses() > CC_LIMIT:
             return None
         g = self.gapgroupnt()
         n = self.n()
@@ -488,7 +488,7 @@ def group_cclasses_knowl_guts(n, t):
     rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
     wgg = WebGaloisGroup(label)
     if wgg.malle_a:
-        rest += '$%s$'%str(wgg.malle_a)
+        rest += '$%s$' % str(wgg.malle_a)
     else:
         rest += 'not computed'
     return rest
@@ -936,3 +936,86 @@ def get_aliases():
             aliases[ky].append(nt)
         aliases[ky].sort()
     return aliases
+
+# These dictionaries are used by number field parsing code when user requests a dihedral galois group
+dihedral_gal = {
+    2: "2T1",
+    4: "4T2",
+    6: "6T2",
+    8: "8T4",
+    10: "10T2",
+    12: "12T3",
+    14: "14T2",
+    16: "16T13",
+    18: "18T5",
+    20: "20T4",
+    22: "22T2",
+    24: "24T13",
+    26: "26T2",
+    28: "28T4",
+    30: "30T3",
+    32: "32T31",
+    34: "34T2",
+    36: "36T10",
+    38: "38T2",
+    40: "40T12",
+    42: "42T5",
+    44: "44T4",
+    46: "46T2",
+}
+
+dihedral_ngal = {
+    3: "3T2",
+    4: "4T3",
+    5: "5T2",
+    6: "6T3",
+    7: "7T2",
+    8: "8T6",
+    9: "9T3",
+    10: "10T3",
+    11: "11T2",
+    12: "12T12",
+    13: "13T2",
+    14: "14T3",
+    15: "15T2",
+    16: "16T56",
+    17: "17T2",
+    18: "18T13",
+    19: "19T2",
+    20: "20T10",
+    21: "21T5",
+    22: "22T3",
+    23: "23T2",
+    24: "24T34",
+    25: "25T4",
+    26: "26T3",
+    27: "27T8",
+    28: "28T10",
+    29: "29T2",
+    30: "30T14",
+    31: "31T2",
+    32: "32T374",
+    33: "33T3",
+    34: "34T3",
+    35: "35T4",
+    36: "36T47",
+    37: "37T2",
+    38: "38T3",
+    39: "39T4",
+    40: "40T46",
+    41: "41T2",
+    42: "42T11",
+    43: "43T2",
+    44: "44T9",
+    45: "45T4",
+    46: "46T3",
+    47: "47T2",
+}
+
+multiquad = {
+    2: "2T1",
+    4: "4T2",
+    8: "8T3",
+    16: "16T4",
+    32: "32T39",
+}

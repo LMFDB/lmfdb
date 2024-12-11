@@ -1830,7 +1830,9 @@ class WebAbstractGroup(WebObj):
     def pcgs_expos_to_str(self, vec):
         w = []
         e = 0
-        for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
+        # We need to shift the relative orders by 1, since we're multiplying on the previous pass of the for loop
+        relords = [1] + self.pcgs_relative_orders[:-1]
+        for i, (c, m) in reversed(list(enumerate(zip(vec, relords)))):
             e += c
             if i + 1 in self.gens_used:
                 w.append(e)
@@ -2113,7 +2115,7 @@ class WebAbstractGroup(WebObj):
                 if j == u:
                     if e == 1:
                         if first_pass:
-                            s = var_name(i)  + s
+                            s = var_name(i) + s
                             first_pass = False
                         else:
                             s = var_name(i) + '*' + s

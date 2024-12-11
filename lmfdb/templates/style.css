@@ -2262,3 +2262,10 @@ div.upload_section {
 .grecaptcha-badge {
     visibility: hidden;
 }
+
+button.search_stale, button.search_stale:hover {
+  background: {{color.select_background}};
+}
+button.search_fresh {
+  background: {{color.button_background}};
+}

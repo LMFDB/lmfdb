@@ -615,6 +615,15 @@ class WebNewform():
     def artin_image_knowl(self):
         return abstract_group_display_knowl(self.artin_image)
 
+    @property
+    def stark_minpoly(self):
+        # For now, the only data is for m = b = 1, so we just use lucky.
+        f = db.mf_stark.lucky({"mf_label": self.label}, "stark_minpoly")
+        if f is not None:
+            R = PolynomialRing(ZZ, 'x')
+            f = R(f)
+            return latex(f)
+
     def rm_and_cm_field_knowl(self, sign=1):
         if self.self_twist_discs:
             disc = [ d for d in self.self_twist_discs if sign*d > 0 ]

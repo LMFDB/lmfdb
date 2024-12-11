@@ -482,7 +482,7 @@ class StatsDisplay(UniqueRepresentation):
         - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
                       -- (2d-case) a function taking inputs the grid, row headers, col headers
                          and this object, which adds some totals to the grid
-        - ``proprotioner`` -- a function for adding proportions
+        - ``proportioner`` -- a function for adding proportions
             See examples at the top of display_stats.py.
         - ``baseurl_func`` -- a base url, to which url_for is applied and then col=value tags are appended.
             Defaults to the url for ``self.baseurl_func``.

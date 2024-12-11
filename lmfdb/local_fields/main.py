@@ -639,7 +639,13 @@ def render_field_webpage(args):
         if 'inertia' in data:
             info['inertia'] = group_display_inertia(data['inertia'])
         if 'gms' in data:
-            info['gms'] = data['gms']
+            info.update({'gms': data['gms']})
+        if 'ram_poly_vert' in data:
+            info.update({'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p)})
+        if 'residual_polynomials' in data:
+            info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
+        if 'associated_inertia' in data:
+            info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
         if 'galois_label' in data:
             info.update({'gal': group_pretty_and_nTj(gn, gt, True),
                          'galphrase': galphrase,

@@ -19,7 +19,7 @@ from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR, ZZ
 from sage.plot.all import line, points, circle, polygon, Graphics
-from sage.misc import latex
+from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
 
@@ -114,7 +114,7 @@ class AbvarFq_isoclass():
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
             return ""
         else:
-            return latex.latex(QQ[['x']](self.polynomial))
+            return latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):
@@ -132,6 +132,10 @@ class AbvarFq_isoclass():
     def polygon_slopes(self):
         # Remove the multiset indicators
         return [s[:-1] for s in self.slopes]
+
+    @property
+    def pretty_slopes(self):
+        return "[" + ",".join(latex(QQ(s)) for s in self.polygon_slopes) + "]"
 
     @property
     def polynomial(self):
@@ -174,7 +178,7 @@ class AbvarFq_isoclass():
             L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
         for j in range(ymax+1):
             L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
-        L+=line(pts,thickness=2)
+        L += line(pts, thickness=2)
         for v in pts:
             L += circle(v, 0.06, fill=True)
         L.axes(False)
@@ -220,7 +224,7 @@ class AbvarFq_isoclass():
             ("$p$-rank", "$%s$" % (self.p_rank)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
             ("Ordinary", "yes" if self.is_ordinary() else "no"),
-            ("Supersingular", "yes" if self.is_supersingular() else "no"),
+            ("Supersingular", "yes" if self.is_supersingular else "no"),
             ("Simple", "yes" if self.is_simple else "no"),
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
@@ -277,8 +281,12 @@ class AbvarFq_isoclass():
     def is_ordinary(self):
         return self.p_rank == self.g
 
+    @property
     def is_supersingular(self):
         return all(slope == "1/2" for slope in self.polygon_slopes)
+
+    def is_almost_ordinary(self):
+        return self.newton_elevation == 1
 
     def display_slopes(self):
         return "[" + ", ".join(self.polygon_slopes) + "]"
@@ -304,6 +312,10 @@ class AbvarFq_isoclass():
             return "The Galois group of this isogeny class is not in the database."
         else:
             return transitive_group_display_knowl(self.galois_groups[0])
+
+    def galois_groups_pretty(self):
+        # Used in search result pages
+        return ", ".join(transitive_group_display_knowl(gal, cache=self.gal_cache) for gal in self.galois_groups)
 
     def decomposition_display_search(self):
         if self.is_simple:
@@ -502,7 +514,7 @@ def describe_end_algebra(p, extension_label):
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += "</tr></table>\n"
         center_poly = db.nf_fields.lookup(center, 'coeffs')
-        center_poly = latex.latex(ZZ["x"](center_poly))
+        center_poly = latex(ZZ["x"](center_poly))
         ans[1] += r"where $\pi$ is a root of ${0}$.".format(center_poly)
         ans[1] += "\n"
     return ans
