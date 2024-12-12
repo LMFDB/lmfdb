@@ -10,7 +10,7 @@ from flask import url_for
 from collections import defaultdict, Counter
 import itertools
 import re
-FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+[a-z]+)?')
+FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+\.\d+[a-z]+)?')
 
 def str_to_QQlist(s):
     if s == "[]":

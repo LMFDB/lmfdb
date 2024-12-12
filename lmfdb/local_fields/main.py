@@ -33,7 +33,6 @@ from collections import Counter
 import re
 OLD_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 NEW_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+\d+\.\d+$')
-FAMILY_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
