@@ -33,6 +33,7 @@ from collections import Counter
 import re
 OLD_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 NEW_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+\d+\.\d+$')
+FAMILY_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -322,7 +323,10 @@ def url_for_packet(packet):
     return url_for(".index", packet=packet)
 
 def local_field_jump(info):
-    return redirect(url_for_label(info['jump']), 301)
+    if FAMILY_RE.fullmatch(info['jump']):
+        return redirect(url_for_family(info['jump']), 301)
+    else:
+        return redirect(url_for_label(info['jump']), 301)
 
 def unpack_slopes(slopes, t, u):
     return eval_rational_list(slopes), t, u
@@ -451,7 +455,8 @@ families_columns = SearchColumns([
     MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
                       pretty_link),
-    visible_col(False),
+    RationalListCol("visible", "lf.visible_slopes", "Abs. Artin slopes",
+                    show_slopes2, default=default),
     RationalListCol("slopes", "lf.swan_slopes", "Swan slopes"),
     RationalListCol("heights", "lf.heights", "Heights"),
     RationalListCol("rams", "lf.rams", "Rams"),
