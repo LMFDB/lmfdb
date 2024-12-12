@@ -456,7 +456,7 @@ families_columns = SearchColumns([
                       ["base", "p", "n0", "rf0"],
                       pretty_link),
     RationalListCol("visible", "lf.visible_slopes", "Abs. Artin slopes",
-                    show_slopes2, default=default),
+                    show_slopes2, default=False),
     RationalListCol("slopes", "lf.swan_slopes", "Swan slopes"),
     RationalListCol("heights", "lf.heights", "Heights"),
     RationalListCol("rams", "lf.rams", "Rams"),
