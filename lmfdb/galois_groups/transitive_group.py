@@ -192,7 +192,7 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
-        if self.num_conjclasses()>CC_LIMIT:
+        if self.num_conjclasses() > CC_LIMIT:
             return None
         g = self.gapgroupnt()
         n = self.n()
@@ -488,7 +488,7 @@ def group_cclasses_knowl_guts(n, t):
     rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
     wgg = WebGaloisGroup(label)
     if wgg.malle_a:
-        rest += '$%s$'%str(wgg.malle_a)
+        rest += '$%s$' % str(wgg.malle_a)
     else:
         rest += 'not computed'
     return rest

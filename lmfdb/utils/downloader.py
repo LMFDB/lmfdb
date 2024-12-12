@@ -708,8 +708,7 @@ class Downloader():
             if match:
                 offset = int(match.group(1)) - 1
                 limit = int(match.group(2)) - offset
-                if limit < 0:
-                    limit = 0
+                limit = max(limit, 0)
             else:
                 match = re.match(r"\s*(\d+)\s*", limit)
                 if match:

@@ -147,7 +147,7 @@ def url_for_label(label):
         validate_label(label)
     except ValueError as err:
         flash_error("%s is not a valid label: %s.", label, str(err))
-        return redirect(url_for(".abelian_varieties"))
+        return url_for(".abelian_varieties")
     g, q, iso = split_label(label)
     return url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)
 

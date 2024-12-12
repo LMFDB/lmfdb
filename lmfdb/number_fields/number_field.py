@@ -203,7 +203,7 @@ def render_class_group_data():
     #nf_logger.info('******************* ')
     learnmore = learnmore_list_remove('Quadratic imaginary')
     t = 'Class groups of quadratic imaginary fields'
-    bread = bread_prefix() + [(t, ' ')]
+    bread = [("Datasets", url_for("datasets")), (t, ' ')]
     info['message'] = ''
     info['filename'] = 'none'
     if 'Fetch' in info:
