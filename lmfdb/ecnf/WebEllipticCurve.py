@@ -566,7 +566,7 @@ class ECNF():
         # Regulator only in conditional/unconditional cases, or when we know the rank:
         BSDReg = None
         if self.bsd_status in ["conditional", "unconditional"]:
-            if self.ar == 0:
+            if self.analytic_rank == 0:
                 BSDReg = 1
                 self.reg = self.NTreg = web_latex(BSDReg)  # otherwise we only get 1.00000...
             else:
@@ -575,7 +575,7 @@ class ECNF():
                     BSDReg = R * K.degree()**self.rank
                     self.reg = web_latex(R)
                     self.NTreg = web_latex(BSDReg)
-                except AttributeError:
+                except Exception:
                     self.reg = "not available"
                     self.NTreg = "not available"
         elif self.rk != "not available":
