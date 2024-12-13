@@ -837,7 +837,9 @@ def family_page(label):
 )
 def render_family(info, query):
     family = info["family"]
-    query["family"] = family.label
+    query["family"] = family.label_absolute
+    if family.n0 > 1:
+        query["subfield"] = {"$contains": family.oldbase}
     #query["p"] = family.p
     #query["visible"] = str(family.artin_slopes)
     #query["f"] = 1 # TODO: Update to allow for tame extensions
@@ -1030,10 +1032,10 @@ def common_boxes():
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
-        ("", "Label", ['label']),
-        ("gal", "Galois group", ['galT', 'label']),
-        ("s", "top slope", ['top_slope', 'label']),
-        ("ind_of_insep", "Index of insep", ['ind_of_insep', 'label']),
+        ("", "Label", ['ctr']),
+        ("gal", "Galois group", ['galT', 'ctr']),
+        ("s", "top slope", ['top_slope', 'ctr']),
+        ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr']),
     ]
     def __init__(self):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
@@ -1049,7 +1051,7 @@ class FamiliesSearchArray(SearchArray):
     sorts = [
         ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
         ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),
-        ("slopes", "slopes", ['p', 'n', 'visible', 'e', 'c', 'ctr']),
+        ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
         ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
         ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
         ("mass", "mass", ['mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),

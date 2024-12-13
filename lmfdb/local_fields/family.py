@@ -35,7 +35,7 @@ class pAdicSlopeFamily:
             self.label = label
         else:
             raise NotImplementedError
-        self.base = base
+        #self.base = base
         # For now, these slopes are Serre-Swan slopes, not Artin-Fontaine slopes
         assert p.is_prime()
         self.pw = p**w
@@ -269,10 +269,17 @@ class pAdicSlopeFamily:
             yield Zx(generic.subs(**dict(zip(names, vec))))
 
     @lazy_attribute
+    def oldbase(self):
+        # Temporary until we update subfield to use new labels
+        return db.lf_fields.lucky({"new_label":self.base}, "label")
+
+    @lazy_attribute
     def fields(self):
         fields = list(db.lf_fields.search(
-            {"family": self.label},
-            ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden"]))
+            {"family": self.label_absolute},
+            ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield"]))
+        if self.n0 > 1:
+            fields = [rec for rec in fields if self.oldbase in rec["subfield"]]
         cache = knowl_cache([rec["galois_label"] for rec in fields])
         return fields, cache
 

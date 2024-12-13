@@ -18,9 +18,7 @@
   <tr><td>{{ KNOWL('lf.visible_slopes', 'Visible absolute Artin slopes') }}:</td><td> ${{family.artin_slopes}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.swan_slopes', 'Swan slopes') }}:</td><td> ${{family.slopes}}$</td></tr>
   <tr><td>{{ KNOWL('lf.heights', 'Heights') }}:</td><td> ${{family.heights}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.scaled_heights', 'Scaled heights') }}:</td><td> ${{family.scaled_heights}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> ${{family.rams}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.scaled_rams', 'Scaled rams') }}:</td><td> ${{family.scaled_rams}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.all_stored %} (complete) {% else %} (incomplete) {% endif %}</td></tr>
   <tr><td>{{ KNOWL('lf.family_ambiguity', 'Ambiguity') }}:</td><td> ${{family.ambiguity}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
@@ -31,6 +29,9 @@
 <h2> Varying </h2>
 {% if not family.all_stored %}
 <p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
+{% endif %}
+{% if family.n0 > 1 %}
+<p>These invariants are all associated to absolute extensions of $\Q_{ {{family.p}} }$ within this relative family, not the relative extension.</p>
 {% endif %}
 <table>
   <tr><td>{{ KNOWL('nf.galois_group', 'Galois group') }}:</td><td> {{ family.galois_groups | safe }} </td></tr>
@@ -51,11 +52,14 @@
 
 {% if family.field_count > 0 %}
 
+{% if family.n0 == 1 %}
 <h2> Galois groups and Hidden slopes </h2>
 
 {% for d in family.gal_slope_tables %}
   {% include 'stat_2d.html' %}
 {% endfor %}
+
+{% endif %} {# family.n0 == 1 #}
 
 <h2> Fields </h2>
 
