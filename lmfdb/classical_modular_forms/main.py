@@ -582,7 +582,7 @@ def url_for_label(label):
         return abort(404, "Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
-    for i in range (len(slabel)):
+    for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")
     kwds = {keys[i]: val for i, val in enumerate(slabel)}

@@ -84,7 +84,7 @@ def get_nf_info(lab):
     r""" extract number field label from string and pretty"""
     try:
         label = nf_string_to_label(lab)
-        pretty = field_pretty (label)
+        pretty = field_pretty(label)
     except ValueError as err:
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % (escape(lab),err)))
     return label, pretty
@@ -652,7 +652,7 @@ class ECNF():
             BSDsha_denominator = BSDReg * BSDomega * BSDprodcp
             BSDsha_from_formula = BSDLvalue * BSDsha_numerator / BSDsha_denominator
             BSDsha_from_formula_rounded = BSDsha_from_formula.round()
-            BSDok = (BSDsha_from_formula_rounded == BSDsha) and ((BSDsha_from_formula_rounded -BSDsha_from_formula).abs() < 0.001)
+            BSDok = (BSDsha_from_formula_rounded == BSDsha) and ((BSDsha_from_formula_rounded - BSDsha_from_formula).abs() < 0.001)
             #print(f"{BSDsha_from_formula=}")
             #print(f"{BSDsha_from_formula_rounded=}")
             #print(f"{BSDsha=}")
@@ -686,7 +686,7 @@ class ECNF():
             tors2 = '\\#E(K)_{\\mathrm{tor}}^2'
             rootD = '\\left|d_K\\right|^{1/2}'
 
-            lder_name  = rf"L^{{({r})}}(E/K,1)/{r}!" if r>=2 else "L'(E/K,1)" if r else "L(E/K,1)"
+            lder_name  = rf"L^{{({r})}}(E/K,1)/{r}!" if r >= 2 else "L'(E/K,1)" if r else "L(E/K,1)"
             lhs_num    = rf'{Sha} {dot} {Om} {dot} {Reg} {dot} {prodcp}'
             lhs_den    = rf'{tors2} {dot} {rootD}'
             lhs        = rf'{frac}{{ {lhs_num} }} {{ {lhs_den} }}'
