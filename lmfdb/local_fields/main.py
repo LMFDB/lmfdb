@@ -311,6 +311,11 @@ def formatbracketcol(blist):
         return 'not computed'
     return f'${blist}$'
 
+def intcol(j):
+    if not j:
+        return 'not computed'
+    return f'${j}$'
+
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label),
     MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
@@ -323,8 +328,8 @@ lf_columns = SearchColumns([
                       ["n", "gal", "cache"],
                       galcolresponse,
                       apply_download=lambda n, t, cache: [n, t]),
-    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
-    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
+    ProcessedCol("u", "lf.unramified_degree", "$u$", intcol, short_title="unramified degree", default=False),
+    ProcessedCol("t", "lf.tame_degree", "$t$", intcol, short_title="tame degree", default=False),
     ListCol("visible", "lf.visible_slopes", "Visible slopes",
                     show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
     MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
