@@ -455,8 +455,6 @@ def render_field_webpage(args):
                     'c': data['c'],
                     'e': data['e'],
                     'f': data['f'],
-                    't': data['t'],
-                    'u': data['u'],
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
                     'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
                     'hw': data['hw'],
@@ -483,6 +481,10 @@ def render_field_webpage(args):
             info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
         if 'associated_inertia' in data:
             info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
+        if 't' in data:
+            info.update({'t': data['t']})
+        if 'u' in data:
+            info.update({'u': data['u']})
         if 'galois_label' in data:
             info.update({'gal': group_pretty_and_nTj(gn, gt, True),
                          'galphrase': galphrase,
