@@ -13,8 +13,8 @@ from lmfdb.utils import (
     parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
-    EmbeddedSearchArray, embed_wrap,
+    search_wrap, count_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
+    EmbeddedSearchArray, embed_wrap, integer_options,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, RationalListCol, PolynomialCol, eval_rational_list
@@ -299,7 +299,13 @@ def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
-        return local_field_search(info)
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        if search_type in ['Counts', 'FamilyCounts']:
+            return local_field_count(info)
+        elif search_type in ['List', '', 'Random']:
+            return local_field_search(info)
+        else:
+            flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, info=info, learnmore=learnmore_list())
 
 
@@ -510,6 +516,75 @@ def common_parse(info, query):
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     parse_noop(info,query,'packet')
     parse_noop(info,query,'family')
+
+@count_wrap(
+    template="lf-count-results.html",
+    table=db.lf_fields,
+    groupby=["p", "n"],
+    title="Local field count results",
+    err_title="Local field search input error",
+    postprocess=lambda res,info,query: res,
+    bread=lambda: get_bread(("Count results", " ")),
+)
+def local_field_count(info, query):
+    lf_stats = LFStats()
+    if info["search_type"] == "Counts":
+        table = db.lf_fields
+        common_parse(info, query)
+    else:
+        common_family_parse(info, query)
+        table = query["__table__"] = db.lf_families
+        if "base" in query:
+            p = query["base"].split(".")[0]
+            if not p.isdigit():
+                raise ValueError(f"Invalid base {query['base']}")
+            p = int(p)
+            if "p" in query:
+                tmp = integer_options(info["p"], contained_in=table.distinct("p"))
+                if p not in tmp:
+                    raise ValueError("Base prime not compatible with constraints on p")
+            info["p"] = str(p)
+            query["p"] = p
+    groupby = []
+    heads = []
+    partial_query = {}
+    for col in ["p", "n", "e", "c", "top_slope"]:
+        if col in info and col != "top_slope":
+            tmp = integer_options(info[col], contained_in=table.distinct(col, partial_query))
+            if len(tmp) > 1:
+                groupby.append(col)
+                heads.append(tmp)
+            partial_query[col] = query[col]
+        else:
+            groupby.append(col)
+            heads.append(table.distinct(col, partial_query))
+        if len(groupby) == 2:
+            groupby.reverse()
+            heads.reverse()
+            break
+    else:
+        raise ValueError("To generate count table, you must not specify all of p, n, e, and c")
+    print("GROUPBY", groupby)
+    print("HEADS", heads)
+    query["__groupby__"] = groupby
+
+    urlgen_info = dict(info)
+    urlgen_info.pop("hst", None)
+    urlgen_info.pop("stats", None)
+    url_func = ".families_page" if info["search_type"] == "FamilyCounts" else ".index"
+    def url_generator(a, b):
+        info_copy = dict(urlgen_info)
+        info_copy.pop("search_array", None)
+        info_copy.pop("search_type", None)
+        info_copy[groupby[0]] = a
+        info_copy[groupby[1]] = b
+        return url_for(url_func, **info_copy)
+
+    info["col_heads"], info["row_heads"] = heads
+    names = {"p": "Prime", "n": "Degree", "e": "Ramification index", "c": "Discriminant exponent", "top_slope": "Top slope"}
+    info["col_label"], info["row_label"] = [names[col] for col in groupby]
+    info["url_func"] = url_generator
+    # LFStats()._counts (overall), family version
 
 @search_wrap(table=db.lf_fields,
              title='$p$-adic field search results',
@@ -858,18 +933,7 @@ def families_page():
     info = to_dict(request.args, search_array=FamiliesSearchArray())
     return families_search(info)
 
-@search_wrap(
-    table=db.lf_families,
-    columns=families_columns,
-    title='$p$-adic families search results',
-    titletag=lambda:'p-adic families search results',
-    err_title='p-adic families search input error',
-    learnmore=learnmore_list,
-    bread=lambda:get_bread([("Families", "")]),
-    postprocess=families_postprocess,
-    url_for_label=url_for_family,
-)
-def families_search(info,query):
+def common_family_parse(info, query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
     parse_ints(info,query,'n0',name='Base degree')
@@ -892,6 +956,20 @@ def families_search(info,query):
     parse_ints(info,query,'field_count',name='Field count')
     parse_ints(info,query,'wild_segments',name='Wild segments')
     #parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
+
+@search_wrap(
+    table=db.lf_families,
+    columns=families_columns,
+    title='$p$-adic families search results',
+    titletag=lambda:'p-adic families search results',
+    err_title='p-adic families search input error',
+    learnmore=learnmore_list,
+    bread=lambda:get_bread([("Families", "")]),
+    postprocess=families_postprocess,
+    url_for_label=url_for_family,
+)
+def families_search(info, query):
+    common_family_parse(info, query)
 
 def common_boxes():
     degree = TextBox(
@@ -1190,6 +1268,12 @@ class FamiliesSearchArray(SearchArray):
                              #[visible, slopes, rams, heights, slope_multiplicities],
                              [mass, mass_missing, ambiguity, field_count, wild_segments]]
 
+    def search_types(self, info):
+        return self._search_again(info, [
+            ('', 'List of families'),
+            ('Counts', 'Counts table'),
+            ('Random', 'Random family')])
+
 class LFSearchArray(SearchArray):
     noun = "field"
 
@@ -1219,6 +1303,12 @@ class LFSearchArray(SearchArray):
                              [aut, inertia, ind_insep, associated_inertia, jump_set],
                              [topslope, slopes, visible, wild],
                              [family, packet]]
+
+    def search_types(self, info):
+        return self._search_again(info, [
+            ('', 'List of fields'),
+            ('Counts', 'Counts table'),
+            ('Random', 'Random field')])
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
@@ -1312,3 +1402,4 @@ class LFStats(StatsDisplay):
             display_knowl("lf.padic_field", r"$p$-adic fields"),
             display_knowl("lf.degree", "degree")
         )
+
