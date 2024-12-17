@@ -155,7 +155,7 @@ def decjac_format(decjac_list):
             entry = entry + "^{" + str(ints[1]) + "}"
         entries.append(entry)
     latex = "\\times ".join(entries)
-    ccClasses = cc_display ([ints[2] for ints in decjac_list])
+    ccClasses = cc_display([ints[2] for ints in decjac_list])
     return latex, ccClasses
 
 # Turn 'i.j' in the total label in to cc displayed in mongo

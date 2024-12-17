@@ -63,7 +63,7 @@ def by_label(label):
     bread = [("Modular forms", url_for('modular_forms')),
              ('Siegel', url_for('.index'))]
     slabel = label.split('.')
-    family = get_smf_family (slabel[0])
+    family = get_smf_family(slabel[0])
     if family:
         if len(slabel) == 1:
             return render_family_page(family, request.args, bread)
@@ -197,7 +197,7 @@ def render_family_page(family, args, bread):
     forms = [ (k, [(f.name(), f.degree_of_field()) for f in sams if k == f.weight()]) for k in Set(f.weight() for f in sams)]
     info = { 'family': family, 'forms': forms, 'args': to_dict(args) }
     if family.computes_dimensions():
-        build_dimension_table (info, family, args)
+        build_dimension_table(info, family, args)
     bread.append(('$'+family.latex_name+'$', ''))
     return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms for $'+family.latex_name+'$', bread=bread, info=info)
 
@@ -209,9 +209,9 @@ def render_search_results_page(args, bread):
     info = { 'args': to_dict(args) }
     query = {}
     try:
-        parse_ints (info['args'], query, 'deg', 'degree', qfield="degree")
-        parse_ints (info['args'], query, 'wt', '$k$', qfield="weight")
-        parse_ints (info['args'], query, 'fdeg', 'field degree')
+        parse_ints(info['args'], query, 'deg', 'degree', qfield="degree")
+        parse_ints(info['args'], query, 'wt', '$k$', qfield="weight")
+        parse_ints(info['args'], query, 'fdeg', 'field degree')
     except ValueError:
         info['error'] = True
     if not info.get('error'):
@@ -237,7 +237,7 @@ def render_dimension_table_page(args, bread):
         if 'j' not in family.latex_name and 'j' in info['args'] and info['args']['j'] != '0':
             flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
         else:
-            build_dimension_table (info, family, info['args'])
+            build_dimension_table(info, family, info['args'])
     bread.append(('Dimensions', 'dimensions'))
     return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel modular forms dimension tables', bread=bread, info=info)
 
