@@ -305,14 +305,14 @@ def galcolresponse(n,t,cache):
     return group_pretty_and_nTj(n, t, cache=cache)
 
 def formatbracketcol(blist):
+    if blist is None:
+        return 'not computed'
     if blist == []:
         return r'$[\ ]$'
-    if not blist:
-        return 'not computed'
     return f'${blist}$'
 
 def intcol(j):
-    if not j:
+    if j is None:
         return 'not computed'
     return f'${j}$'
 
