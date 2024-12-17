@@ -333,12 +333,13 @@ class CountWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data  # error page
         query, sort, table, title, err_title, template, one_per = data
+        groupby = query.pop("__groupby__", self.groupby)
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:
-                res = table.count(query, groupby=self.groupby)
+                res = table.count(query, groupby=groupby)
             else:
-                res = table.stats.column_counts(self.groupby)
+                res = table.stats.column_counts(groupby)
         except QueryCanceledError as err:
             return self.query_cancelled_error(
                 info, query, err, err_title, template, template_kwds
