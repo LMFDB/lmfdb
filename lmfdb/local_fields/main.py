@@ -300,8 +300,12 @@ def index():
     info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
         info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        if search_type in ['Family', 'FamilyCounts']:
+            info['search_array'] = FamiliesSearchArray()
         if search_type in ['Counts', 'FamilyCounts']:
             return local_field_count(info)
+        elif search_type == 'Family':
+            return families_search(info)
         elif search_type in ['List', '', 'Random']:
             return local_field_search(info)
         else:
@@ -364,7 +368,8 @@ def galcolresponse(n,t,cache):
     return group_pretty_and_nTj(n, t, cache=cache)
 
 
-label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
+#label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
+label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(label)}">{label}</a>'))
 
 def packet_col(default):
     return MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=default)
@@ -479,8 +484,11 @@ def lf_postprocess(res, info, query):
     cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res if 'gal' in rec}))
     for rec in res:
         rec["cache"] = cache
-        gglabel = f"{rec['n']}T{rec['gal']}"
-        rec["galsize"] = cache[gglabel]["order"]
+        if 'gal' in rec:
+            gglabel = f"{rec['n']}T{rec['gal']}"
+            rec["galsize"] = cache[gglabel]["order"]
+        else:
+            rec["galsize"] = "Not computed"
     return res
 
 def families_postprocess(res, info, query):
@@ -517,14 +525,27 @@ def common_parse(info, query):
     parse_noop(info,query,'packet')
     parse_noop(info,query,'family')
 
+def fix_top_slope(s):
+    if isinstance(s, float):
+        return QQ(s)
+    elif isinstance(s, str):
+        return QQ(s[12:])
+    return s
+
+def count_postprocess(res, info, query):
+    # We account for two possible ways of encoding top_slope
+    for key, val in list(res.items()):
+        res[key[0],fix_top_slope(key[1])] = res.pop(key)
+    return res
+
 @count_wrap(
     template="lf-count-results.html",
     table=db.lf_fields,
     groupby=["p", "n"],
     title="Local field count results",
     err_title="Local field search input error",
-    postprocess=lambda res,info,query: res,
-    bread=lambda: get_bread(("Count results", " ")),
+    postprocess=count_postprocess,
+    bread=lambda: get_bread([("Count results", " ")]),
 )
 def local_field_count(info, query):
     lf_stats = LFStats()
@@ -533,7 +554,7 @@ def local_field_count(info, query):
         common_parse(info, query)
     else:
         common_family_parse(info, query)
-        table = query["__table__"] = db.lf_families
+        table = db.lf_families
         if "base" in query:
             p = query["base"].split(".")[0]
             if not p.isdigit():
@@ -545,28 +566,28 @@ def local_field_count(info, query):
                     raise ValueError("Base prime not compatible with constraints on p")
             info["p"] = str(p)
             query["p"] = p
+    if "gal" in info and "n" not in info:
+        # parse_galgrp adds restrictions on n
+        if type(query["n"]) == int:
+            info["n"] = str(query["n"])
+        else:
+            info["n"] = ",".join(query["n"]["$in"])
     groupby = []
     heads = []
-    partial_query = {}
     for col in ["p", "n", "e", "c", "top_slope"]:
-        if col in info and col != "top_slope":
-            tmp = integer_options(info[col], contained_in=table.distinct(col, partial_query))
-            if len(tmp) > 1:
-                groupby.append(col)
-                heads.append(tmp)
-            partial_query[col] = query[col]
-        else:
+        tmp = table.distinct(col, query)
+        if len(tmp) > 1:
+            if col == "top_slope":
+                tmp = sorted(fix_top_slope(s) for s in tmp)
             groupby.append(col)
-            heads.append(table.distinct(col, partial_query))
+            heads.append(tmp)
         if len(groupby) == 2:
-            groupby.reverse()
-            heads.reverse()
             break
     else:
         raise ValueError("To generate count table, you must not specify all of p, n, e, and c")
-    print("GROUPBY", groupby)
-    print("HEADS", heads)
     query["__groupby__"] = groupby
+    if info["search_type"] == "FamilyCounts":
+        query["__table__"] = table
 
     urlgen_info = dict(info)
     urlgen_info.pop("hst", None)
@@ -580,11 +601,10 @@ def local_field_count(info, query):
         info_copy[groupby[1]] = b
         return url_for(url_func, **info_copy)
 
-    info["col_heads"], info["row_heads"] = heads
+    info["row_heads"], info["col_heads"] = heads
     names = {"p": "Prime", "n": "Degree", "e": "Ramification index", "c": "Discriminant exponent", "top_slope": "Top slope"}
-    info["col_label"], info["row_label"] = [names[col] for col in groupby]
+    info["row_label"], info["col_label"] = [names[col] for col in groupby]
     info["url_func"] = url_generator
-    # LFStats()._counts (overall), family version
 
 @search_wrap(table=db.lf_fields,
              title='$p$-adic field search results',
@@ -607,14 +627,16 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lucky({"new_label":label})
         if data is None:
-            new_label = db.lf_fields.lookup(label, "new_label")
-            if new_label is None:
+            data = db.lf_fields.lookup(label)
+            if data is None:
                 if NEW_LF_RE.fullmatch(label) or OLD_LF_RE.fullmatch(label):
                     flash_error("Field %s was not found in the database.", label)
                 else:
                     flash_error("%s is not a valid label for a $p$-adic field.", label)
                 return redirect(url_for(".index"))
-            return redirect(url_for_label(label=new_label), 301)
+            new_label = data.get("new_label")
+            if new_label is not None:
+                return redirect(url_for_label(label=new_label), 301)
         title = '$p$-adic field ' + prettyname(data)
         titletag = 'p-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
@@ -740,13 +762,19 @@ def render_field_webpage(args):
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
-        _, _, _, fam, i = data['new_label'].split(".")
-        _, fama, subfam = re.split(r"(\D+)", fam)
-        bread = get_bread([(str(p), url_for('.index', p=p)),
-                           (f"{f}.{e}", url_for('.index', p=p, e=e, f=f)),
-                           (str(cc), url_for('.index', p=p, e=e, f=f, c=cc)),
-                           (fama, url_for('.family_page', label=data['family'])),
-                           (f'{subfam}.{i}', ' ')])
+        if data['new_label']:
+            _, _, _, fam, i = data['new_label'].split(".")
+            _, fama, subfam = re.split(r"(\D+)", fam)
+            bread = get_bread([(str(p), url_for('.index', p=p)),
+                               (f"{f}.{e}", url_for('.index', p=p, e=e, f=f)),
+                               (str(cc), url_for('.index', p=p, e=e, f=f, c=cc)),
+                               (fama, url_for('.family_page', label=data['family'])),
+                               (f'{subfam}.{i}', ' ')])
+        else:
+            bread = get_bread([(str(p), url_for('.index', p=p)),
+                               (str(n), url_for('.index', p=p, n=n)),
+                               (str(cc), url_for('.index', p=p, n=n, c=cc)),
+                               (data['label'], ' ')])
         return render_template(
             "lf-show-field.html",
             title=title,
@@ -763,7 +791,7 @@ def render_field_webpage(args):
 def prettyname(ent):
     if ent['n'] <= 2:
         return printquad(ent['rf'], ent['p'])
-    return ent['new_label']
+    return ent.get('new_label', ent['label'])
 
 @cached_function
 def getu(p):
@@ -1270,9 +1298,14 @@ class FamiliesSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('', 'List of families'),
-            ('Counts', 'Counts table'),
+            ('Families', 'List of families'),
+            ('FamilyCounts', 'Counts table'),
             ('Random', 'Random family')])
+
+    def _buttons(self, info):
+        if self._st(info) == "FamilyCounts":
+            return []
+        return super()._buttons(info)
 
 class LFSearchArray(SearchArray):
     noun = "field"
@@ -1306,9 +1339,14 @@ class LFSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('', 'List of fields'),
+            ('List', 'List of fields'),
             ('Counts', 'Counts table'),
             ('Random', 'Random field')])
+
+    def _buttons(self, info):
+        if self._st(info) == "Counts":
+            return []
+        return super()._buttons(info)
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],

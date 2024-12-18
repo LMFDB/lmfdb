@@ -677,8 +677,11 @@ class SearchArray(UniqueRepresentation):
     def _search_again(self, info, search_types):
         if info is None:
             return search_types
-        st = self._st(info)
-        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != st]
+        mst = st = self._st(info)
+        # Sometimes need to treat empty string as equal to "List"
+        if not st and any(v == "List" for (v,d) in search_types):
+            mst = "List"
+        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != mst]
 
     def search_types(self, info):
         # Override this method to change the displayed search buttons
@@ -745,7 +748,7 @@ class SearchArray(UniqueRepresentation):
         if info is not None:
             search_type = info.get("search_type", info.get("hst", ""))
             if search_type == "List":
-                # Backward compatibility
+                # Want to avoid including search_type in URL when possible
                 search_type = ""
             return search_type
 

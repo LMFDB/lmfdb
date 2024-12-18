@@ -339,7 +339,12 @@ class CountWrapper(Wrapper):
             if query:
                 res = table.count(query, groupby=groupby)
             else:
+                # We want to use column_counts since it caches results, but it also sorts the input columns and doesn't adjust the results
                 res = table.stats.column_counts(groupby)
+                sgroupby = sorted(groupby)
+                if sgroupby != groupby:
+                    perm = [sgroupby.index(col) for col in groupby]
+                    res = {tuple(key[i] for i in perm): val for (key, val) in res.items()}
         except QueryCanceledError as err:
             return self.query_cancelled_error(
                 info, query, err, err_title, template, template_kwds
@@ -356,7 +361,7 @@ class CountWrapper(Wrapper):
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
-                    info['count'] = 50 # put count back in so that it doesn't show up as none in url
+                info['count'] = 50 # put count back in so that it doesn't show up as none in url
 
             except ValueError as err:
                 # Errors raised in postprocessing
