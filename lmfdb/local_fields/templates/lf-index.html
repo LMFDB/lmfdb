@@ -84,7 +84,16 @@ of $\Q_p$ up to isomorphism.
 </p>
 
 <p>
-  By family: <a href="{{url_for('.families_page', p=2, n=4, n0=1)}}">(2, 4)</a>&nbsp; <a href="{{url_for('.families_page', p=2, n=8, n0=1)}}">(2, 8)</a>&nbsp; <a href="{{url_for('.families_page', p=2, n=16, n0=1)}}">(2, 16)</a>&nbsp; <a href="{{url_for('.families_page', p=3, n=9, n0=1)}}">(3, 9)</a>&nbsp; <a href="{{url_for('.families_page', p=3, n=27, n0=1)}}">(3, 27)</a>
+  More tables: <a href="?search_type=Counts">$p$ vs $n$</a> (all fields)&nbsp;<a href="?search_type=Counts&p=2">$n$ vs $e$</a> ($p=2$)&nbsp;<a href="?search_type=Counts&p=2&n=16">$e$ vs $c$</a> ($(p,n)=(2,16)$)&nbsp;<a href="?search_type=Counts&p=2&n=16&e=16">$c$ vs $s_w$</a> ($(p,n,e)=(2,16,16)$)
+</p>
+
+<p>
+  Family tables: <a href="?search_type=FamilyCounts&n0=1">$p$ vs $n$</a> (absolute families)&nbsp;<a href="?search_type=FamilyCounts&n0=1&p=2">$n$ vs $e$</a> ($p=2$)&nbsp;<a href="?search_type=FamilyCounts&n0=1&p=2&n=16">$e$ vs $c$</a> ($(p,n)=(2,16)$)&nbsp;<a href="?search_type=FamilyCounts&n0=1&p=2&n=16&e=16">$c$ vs $s_w$</a> ($(p,n,e)=(2,16,16)$)
+</p>
+
+<p>
+  Family lists: <a href="?search_type=Families&n0=1">absolute families</a> and <a href="?search_type=Families&n0=2-">relative families</a>
+</p>
 
 <p>
 Some <a href="{{url_for('.interesting')}}">interesting $p$-adic fields</a> or a <a href={{url_for('.random_field')}}>random $p$-adic field</a>

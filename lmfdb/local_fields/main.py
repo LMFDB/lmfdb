@@ -300,11 +300,11 @@ def index():
     info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
         info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
-        if search_type in ['Family', 'FamilyCounts']:
+        if search_type in ['Families', 'FamilyCounts']:
             info['search_array'] = FamiliesSearchArray()
         if search_type in ['Counts', 'FamilyCounts']:
             return local_field_count(info)
-        elif search_type == 'Family':
+        elif search_type == 'Families':
             return families_search(info)
         elif search_type in ['List', '', 'Random']:
             return local_field_search(info)
@@ -659,7 +659,7 @@ def render_field_webpage(args):
         n = data['n']
         cc = data['c']
         gn = data['n']
-        autstring = r'\Aut'
+        autstring = fr'$\#\Aut(K/\Q_{{{p}}})$'
         if 'galois_label' in data:
             gt = int(data['galois_label'].split('T')[1])
             the_gal = WebGaloisGroup.from_nt(gn,gt)
@@ -667,7 +667,7 @@ def render_field_webpage(args):
             abelian = ' and abelian' if the_gal.is_abelian() else ''
             galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
             if the_gal.order() == gn:
-                autstring = r'\Gal'
+                autstring = fr'$\#\Gal(K/\Q_{{{p}}})$'
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
@@ -739,9 +739,13 @@ def render_field_webpage(args):
             'autstring': autstring,
             'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
             'aut': data['aut'],
-            'ppow_roots_of_unity': data['ppow_roots_of_unity'],
+            'ppow_roots_of_unity': data.get('ppow_roots_of_unity'),
         })
-        friends = [('Family', url_for(".family_page", label=data["family"]))]
+        friends = []
+        if "family" in data:
+            friends.append(('Family', url_for(".family_page", label=data["family"])))
+        if n < 16:
+            friends.append(('Families of extensions', url_for(".families_page", base=label)))
         if 'slopes' in data:
             info['slopes'] = show_slopes(data['slopes'])
         if 'inertia' in data:
@@ -771,7 +775,7 @@ def render_field_webpage(args):
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
-        if data['new_label']:
+        if data.get('new_label'):
             _, _, _, fam, i = data['new_label'].split(".")
             _, fama, subfam = re.split(r"(\D+)", fam)
             bread = get_bread([(str(p), url_for('.index', p=p)),
@@ -800,7 +804,7 @@ def render_field_webpage(args):
 def prettyname(ent):
     if ent['n'] <= 2:
         return printquad(ent['rf'], ent['p'])
-    return ent.get('new_label', ent['label'])
+    return ent.get('new_label', ent.get('label'))
 
 @cached_function
 def getu(p):
@@ -1429,6 +1433,8 @@ class LFStats(StatsDisplay):
 
     def __init__(self):
         self.numfields = db.lf_fields.count()
+        self.num_abs_families = db.lf_families.count({"n0":1})
+        self.num_rel_families = db.lf_families.count({"n0":{"$gt": 1}})
 
     @staticmethod
     def dynamic_parse(info, query):
@@ -1444,9 +1450,11 @@ class LFStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.' % (
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.  It also contains all %s absolute families with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
             comma(self.numfields),
             display_knowl("lf.padic_field", r"$p$-adic fields"),
-            display_knowl("lf.degree", "degree")
+            display_knowl("lf.degree", "degree"),
+            comma(self.num_abs_families),
+            comma(self.num_rel_families),
         )
 
