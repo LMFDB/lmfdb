@@ -616,7 +616,7 @@ def jump(info):
             if deg % 2 == 1:
                 raise ValueError
         except Exception:
-            flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
+            flash_error("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
             return redirect(url_for(".abelian_varieties"))
         g = deg//2
         lead = cdict[deg]
@@ -624,7 +624,7 @@ def jump(info):
             lead = cdict[0]
             cdict = {deg-exp: coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
-            flash_error ("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
+            flash_error("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
             return redirect(url_for(".abelian_varieties"))
         try:
             q = lead.nth_root(g)
@@ -634,7 +634,7 @@ def jump(info):
                 if cdict.get(2*g-i, 0) != q**(g-i) * cdict.get(i, 0):
                     raise ValueError
         except ValueError:
-            flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
+            flash_error("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
             return redirect(url_for(".abelian_varieties"))
 
         def extended_code(c):

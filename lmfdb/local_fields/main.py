@@ -367,6 +367,17 @@ def galcolresponse(n,t,cache):
         return 'not computed'
     return group_pretty_and_nTj(n, t, cache=cache)
 
+def formatbracketcol(blist):
+    if blist == []:
+        return r'$[\ ]$'
+    if blist == '':
+        return 'not computed'
+    return f'${blist}$'
+
+def intcol(j):
+    if j == '':
+        return 'not computed'
+    return f'${j}$'
 
 #label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
 label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(label)}">{label}</a>'))
@@ -404,16 +415,16 @@ lf_columns = SearchColumns([
     f_col,
     c_col,
     gal_col,
-    MathCol("u", "lf.unramified_degree", "$u$", short_title="unramified degree", default=False),
-    MathCol("t", "lf.tame_degree", "$t$", short_title="tame degree", default=False),
+    ProcessedCol("u", "lf.unramified_degree", "$u$", intcol, short_title="unramified degree", default=False),
+    ProcessedCol("t", "lf.tame_degree", "$t$", intcol, short_title="tame degree", default=False),
     visible_col(lambda info: info.get("visible")),
     slopes_col(True),
     aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
-    MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", default=lambda info: info.get("ind_of_insep")),
-    ListCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", default=lambda info: info.get("associated_inertia"), mathmode=True),
+    ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", formatbracketcol, default=lambda info: info.get("ind_of_insep"), mathmode=True),
+    ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=lambda info: info.get("associated_inertia"), mathmode=True),
     ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
     ListCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"), mathmode=True)],
     db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen", "family", "residual_polynomials"])
@@ -479,6 +490,7 @@ families_columns = SearchColumns([
     MathCol("wild_segments", "lf.wild_segments", "Wild segments", default=False),
     MathCol("packet_count", "lf.packet", "Num. Packets"),
 ])
+
 
 def lf_postprocess(res, info, query):
     cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res if 'gal' in rec}))
@@ -706,7 +718,7 @@ def render_field_webpage(args):
         if 'wild_gap' in data and data['wild_gap'] != [0,0]:
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
-            wild_inertia = 'data not computed'
+            wild_inertia = 'Not computed'
 
         info.update({
             'polynomial': raw_typeset(polynomial),
@@ -715,8 +727,6 @@ def render_field_webpage(args):
             'c': cc,
             'e': e,
             'f': f,
-            't': data['t'],
-            'u': data['u'],
             'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
             'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
             'hw': data['hw'],
@@ -729,8 +739,6 @@ def render_field_webpage(args):
             'autstring': autstring,
             'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
             'aut': data['aut'],
-            'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials']),
-            'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia']),
             'ppow_roots_of_unity': data['ppow_roots_of_unity'],
         })
         friends = [('Family', url_for(".family_page", label=data["family"]))]
@@ -738,14 +746,15 @@ def render_field_webpage(args):
             info['slopes'] = show_slopes(data['slopes'])
         if 'inertia' in data:
             info['inertia'] = group_display_inertia(data['inertia'])
-        if 'gms' in data:
-            info.update({'gms': data['gms']})
+        for k in ['gms', 't', 'u']:
+            if k in data:
+                info[k] = data[k]
         if 'ram_poly_vert' in data:
             info['ram_polygon_plot'] = plot_ramification_polygon(data['ram_poly_vert'], p, data['residual_polynomials'], data['ind_of_insep'])
         if 'residual_polynomials' in data:
-            info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
+            info['residual_polynomials'] = ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])
         if 'associated_inertia' in data:
-            info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
+            info['associated_inertia'] = ",".join(f"${ai}$" for ai in data['associated_inertia'])
         if 'galois_label' in data:
             info.update({'gal': group_pretty_and_nTj(gn, gt, True),
                          'galphrase': galphrase,
