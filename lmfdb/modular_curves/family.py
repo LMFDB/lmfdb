@@ -170,8 +170,8 @@ class Xpm1N(ModCurveFamily_base):
     rational_cusps = "1"
     moduli_description = fr"$X_{{\pm 1}}(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le GL_2(\widehat\Z)$ the inverse image of $\begin{{pmatrix}} \pm 1 & * \\ 0 & * \end{{pmatrix}} \subset \GL_2(\Z/N\Z)$. As a moduli space it parameterizes pairs $(E,\pm P)$, where $E$ is an elliptic curve over $k$, and $P \in E[N]$ is a point of order $N$ with $\pm P$ defined over $k$ (this condition translates to the $x$-coordinate lying in $k$ when $E$ is in short Weierstrass form). <p> The modular curve {display_knowl('modcurve.x1','$X_1(N)$')} is a {display_knowl('modcurve.quadratic_refinements', 'quadratic refinement')} of $X_{{\pm1}}(N)$. </p>"
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
-    hypell_description = "need to do"
-    biell_description = "need to do"
+    hypell_description = "Unknown."
+    biell_description = "Unknown."
 
 
     @lazy_attribute
@@ -319,7 +319,7 @@ class XspplusN(ModCurveFamily_base):
     index = "N+1"
     psl2index = r"i = \frac{N^2}{2}\cdot \prod_{p|N, \text{ prime}} \left(1 + \frac{1}{p}\right)"
     genus = "g"
-    nu2 = "0"
+    nu2 = r"$\nu_2 = \begin{cases}2^{\omega(N)-1} &p \equiv 1 \pmod{4} \text{ for all } \ p | N, \\ 0 & \text{otherwise,} \end{cases} + 2^{-\delta-1} N\cdot \prod_{p\mid N, \ p \equiv 1 \bmod 4}\left( 1 - \frac{1}{p}\right) \cdot \prod_{p\mid N, \ p \equiv 3 \bmod 4}\left(1 + \frac{1}{p}\right)$"
     nu3 = r"$\nu_3 = \begin{cases}2^{\omega(N)-1} & \text{if } p \equiv 1 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise.}\end{cases}$"
     cusps = r"$\nu_\infty = \frac{N}{2}\cdot \prod_{p|N, \text{ prime}} \left(1 + \frac{1}{p}\right)$"
     rational_cusps = "1"
@@ -327,6 +327,7 @@ class XspplusN(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
+    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$,</li> <li>$\delta = \begin{cases}1& \text{if } 2\mid N, \\ 0& \text{otherwise.}\end{cases}$ </li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
