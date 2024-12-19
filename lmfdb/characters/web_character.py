@@ -339,13 +339,13 @@ class WebDirichlet(WebCharObject):
         try:
             val = int(val)
         except ValueError:
-            raise Warning ("n must be a positive integer coprime to the modulus {} and no greater than it".format(mod))
+            raise Warning("n must be a positive integer coprime to the modulus {} and no greater than it".format(mod))
         if gcd(mod, val) > 1:
-            raise Warning ("n must be coprime to the modulus : %s" % mod)
+            raise Warning("n must be coprime to the modulus : %s" % mod)
         if val > mod:
-            raise Warning ("n must be less than the modulus : %s" % mod)
+            raise Warning("n must be less than the modulus : %s" % mod)
         if val < 0:
-            raise Warning ("n must be positive")
+            raise Warning("n must be positive")
 
         chi_valuepairs = [[k, chi.conreyangle(k) * chi.order] for k in self.gens]
         chi_genvalues = [int(v) for g, v in chi_valuepairs]
