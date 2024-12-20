@@ -277,7 +277,7 @@ class pAdicSlopeFamily:
     def fields(self):
         fields = list(db.lf_fields.search(
             {"family": self.label_absolute},
-            ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield"]))
+            ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield", "jump_set"]))
         if self.n0 > 1:
             fields = [rec for rec in fields if self.oldbase in rec["subfield"]]
         cache = knowl_cache([rec["galois_label"] for rec in fields])
@@ -334,6 +334,18 @@ class pAdicSlopeFamily:
             url = url_for(".family_page", label=self.label, associated_inertia=disp)
             return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
         return ", ".join(show_ai(list(x), cnt) for (x,cnt) in ai)
+
+    @lazy_attribute
+    def jump_set(self):
+        fields, cache = self.fields
+        js = sorted(Counter(tuple(rec["jump_set"]) for rec in fields).items())
+        def show_js(x, cnt):
+            disp = str(x).replace(" ","")
+            if len(js) == 1:
+                return f"${disp}$"
+            url = url_for(".family_page", label=self.label, jump_set=disp)
+            return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
+        return ", ".join(show_js(list(x), cnt) for (x,cnt) in js)
 
     @lazy_attribute
     def gal_slope_tables(self):

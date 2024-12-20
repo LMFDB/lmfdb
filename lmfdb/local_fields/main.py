@@ -1164,7 +1164,7 @@ class FamilySearchArray(EmbeddedSearchArray):
             knowl="lf.packet",
             options=[("", "all"),
                      ("packet", "one")])
-        self.refine_array = [[gal, slopes, ind_insep, associated_inertia, one_per]]
+        self.refine_array = [[gal, slopes, ind_insep], [associated_inertia, jump_set, one_per]]
 
 class FamiliesSearchArray(SearchArray):
     sorts = [
@@ -1331,7 +1331,8 @@ class LFSearchArray(SearchArray):
              ("gal", "Galois group", ['n', 'galT', 'p', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("u", "Galois unramified degree", ['u', 'f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("t", "Galois tame degree", ['t', 'e', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
-             ("s", "top slope", ['top_slope', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr'])]
+             ("s", "top slope", ['top_slope', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("jump", "jump set", ['jump_set', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr'])]
     jump_example = "2.1.4.6a2.1"
     jump_egspan = "e.g. 2.1.4.6a2.1"
     jump_knowl = "lf.search_input"
