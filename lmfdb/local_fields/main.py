@@ -304,7 +304,7 @@ def index():
             info['search_array'] = FamiliesSearchArray()
         if search_type in ['Counts', 'FamilyCounts']:
             return local_field_count(info)
-        elif search_type == 'Families':
+        elif search_type in ['Families', 'RandomFamily']:
             return families_search(info)
         elif search_type in ['List', '', 'Random']:
             return local_field_search(info)
@@ -1313,7 +1313,7 @@ class FamiliesSearchArray(SearchArray):
         return self._search_again(info, [
             ('Families', 'List of families'),
             ('FamilyCounts', 'Counts table'),
-            ('Random', 'Random family')])
+            ('RandomFamily', 'Random family')])
 
     def _buttons(self, info):
         if self._st(info) == "FamilyCounts":
