@@ -280,28 +280,48 @@ class pAdicSlopeFamily:
             ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield", "jump_set"]))
         if self.n0 > 1:
             fields = [rec for rec in fields if self.oldbase in rec["subfield"]]
-        cache = knowl_cache([rec["galois_label"] for rec in fields])
+        glabels = [rec["galois_label"] for rec in fields if rec.get("galois_label")]
+        if glabels:
+            cache = knowl_cache(glabels)
+        else:
+            cache = {}
         return fields, cache
+
+    @lazy_attribute
+    def all_hidden_data_available(self):
+        if self.mass_missing > 0:
+            return False
+        for rec in self.fields:
+            if not all(rec.get(col) for col in ["galT", "galois_label"]):
+                return False
+        return True
 
     @lazy_attribute
     def galois_groups(self):
         fields, cache = self.fields
-        opts = sorted(Counter((rec["galT"], rec["galois_label"]) for rec in fields).items())
+        opts = sorted(Counter((rec["galT"], rec["galois_label"]) for rec in fields if "galT" in rec and "galois_label" in rec).items())
+        if not opts:
+            return "No Galois groups in this family have been computed"
         def show_gal(label, cnt):
             kwl = transitive_group_display_knowl(label, cache=cache)
             if len(opts) == 1:
                 return kwl
             url = url_for(".family_page", label=self.label, gal=label)
             return f'{kwl} (<a href="{url}">show {cnt}</a>)'
-        return ", ".join(show_gal(label, cnt) for ((t, label), cnt) in opts)
+        s = ", ".join(show_gal(label, cnt) for ((t, label), cnt) in opts)
+        if not self.all_hidden_data_available:
+            s += " (incomplete)"
+        return s
 
     @lazy_attribute
     def hidden_slopes(self):
         # TODO: Update this to use hidden column from lf_fields
         fields, cache = self.fields
-        full_slopes = [Counter(QQ(s) for s in rec["slopes"][1:-1].split(",")) if rec["slopes"] != "[]" else Counter() for rec in fields]
+        full_slopes = [Counter(QQ(s) for s in rec["slopes"][1:-1].split(",")) if rec["slopes"] != "[]" else Counter() for rec in fields if "slopes" in rec]
         visible = Counter(self.artin_slopes)
         hidden = sorted(Counter(tuple(sorted((full - visible).elements())) for full in full_slopes).items())
+        if not hidden:
+            return "No hidden slopes in this family have been computed"
         def show_hidden(x, cnt):
             disp = str(x).replace(" ","")
             full = str(sorted((Counter(x) + visible).elements())).replace(" ","")
@@ -309,7 +329,10 @@ class pAdicSlopeFamily:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, slopes=full, slopes_quantifier="exactly")
             return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
-        return ", ".join(show_hidden(list(x), cnt) for (x,cnt) in hidden)
+        s = ", ".join(show_hidden(list(x), cnt) for (x,cnt) in hidden)
+        if not self.all_hidden_data_available:
+            s += " (incomplete)"
+        return s
 
     @lazy_attribute
     def indices_of_insep(self):
@@ -355,8 +378,9 @@ class pAdicSlopeFamily:
         gps = defaultdict(set)
         slopes = defaultdict(set)
         for rec in fields:
-            gps[rec["galois_degree"]].add(rec["galois_label"])
-            slopes[rec["galois_degree"]].add(rec["slopes"])
+            if "galois_degree" in rec and "galois_label" in rec and "slopes" in rec:
+                gps[rec["galois_degree"]].add(rec["galois_label"])
+                slopes[rec["galois_degree"]].add(rec["slopes"])
         dyns = []
         def add_grid(Ns, rowcount, colcount):
             if len(Ns) == 1:

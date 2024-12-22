@@ -289,6 +289,8 @@ def show_slope_content(sl,t,u):
     return(sc)
 
 def show_hidden_slopes(sl, vis):
+    if sl is None:
+        return " $not computed$ " # actually killing math mode
     hidden = sorted((Counter(eval_rational_list(sl)) - Counter(eval_rational_list(vis))).elements())
     if not hidden:
         return r'[\ ]'
@@ -423,8 +425,8 @@ lf_columns = SearchColumns([
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
-    ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", formatbracketcol, default=lambda info: info.get("ind_of_insep"), mathmode=True),
-    ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=lambda info: info.get("associated_inertia"), mathmode=True),
+    ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", formatbracketcol, default=lambda info: info.get("ind_of_insep")),
+    ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=lambda info: info.get("associated_inertia")),
     ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
     ListCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"), mathmode=True)],
     db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen", "family", "residual_polynomials"])
@@ -500,7 +502,7 @@ def lf_postprocess(res, info, query):
             gglabel = f"{rec['n']}T{rec['gal']}"
             rec["galsize"] = cache[gglabel]["order"]
         else:
-            rec["galsize"] = "Not computed"
+            rec["galsize"] = " $not computed$ " # undo mathmode
     return res
 
 def families_postprocess(res, info, query):
@@ -709,7 +711,7 @@ def render_field_webpage(args):
             rffriend = url_for_label(rflabel)
         gsm = data['gsm']
         if gsm == [0]:
-            gsm = 'Not computed'
+            gsm = 'not computed'
         elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
@@ -718,7 +720,7 @@ def render_field_webpage(args):
         if 'wild_gap' in data and data['wild_gap'] != [0,0]:
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
-            wild_inertia = 'Not computed'
+            wild_inertia = 'not computed'
 
         info.update({
             'polynomial': raw_typeset(polynomial),
