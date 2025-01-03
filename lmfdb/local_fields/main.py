@@ -744,6 +744,26 @@ def render_field_webpage(args):
             'ppow_roots_of_unity': data.get('ppow_roots_of_unity'),
         })
         friends = []
+        if "ppow_roots_of_unity" in data:
+            prou = data["ppow_roots_of_unity"]
+            rou = (p**f - 1) * p**prou
+            if f > 1:
+                rou_expr = [f"({p}^{{ {f} }} - 1)"]
+            elif p > 2:
+                rou_expr = [f"({p} - 1)"]
+            else:
+                rou_expr = []
+            if prou == 1:
+                rou_expr.append(f"{p}")
+            elif prou > 1:
+                rou_expr.append(f"{p}^{{ {prou} }}")
+            rou_expr = r" \cdot ".join(rou_expr)
+            if rou_expr == "2": # only case where we don't want an = sign
+                info["roots_of_unity"] = "$2$"
+            else:
+                info["roots_of_unity"] = f"${rou} = {rou_expr}$"
+        else:
+            info["roots_of_unity"] = "Not computed"
         if "family" in data:
             friends.append(('Family', url_for(".family_page", label=data["family"])))
         if n < 16:
@@ -768,6 +788,8 @@ def render_field_webpage(args):
             friends.append(('Galois group', "/GaloisGroup/%dT%d" % (gn, gt)))
         if 'jump_set' in data:
             info['jump_set'] = data['jump_set']
+            if info['jump_set'] == []:
+                info['jump_set'] = r"[\ ]"
         if unramfriend != '':
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':

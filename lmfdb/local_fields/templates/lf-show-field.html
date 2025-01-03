@@ -21,11 +21,7 @@
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
       <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
       <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>${{info.jump_set}}$</td></tr>
-      {% if info.ppow_roots_of_unity is none %}
-      <tr><td>Roots of unity</td><td>Not computed</td></tr>
-      {% else %}
-      <tr><td>Roots of unity</td><td>${{(info.p**info.f - 1) * info.p**info.ppow_roots_of_unity}}{% if info.p> 2 or info.f > 1 or info.ppow_roots_of_unity > 1 %} = {% if info.p > 2 or info.f > 1 %}({{info.p}}{% if info.f > 1 %}^{ {{info.f}} }{% endif %} - 1) \cdot {% endif %}{{info.p}}{% if info.ppow_roots_of_unity > 1 %}^{ {{info.ppow_roots_of_unity}} }{% endif %} {% endif %}$</td></tr>
-      {% endif %}
+      <tr><td>{{ KNOWL('lf.roots_of_unity', title='Roots of unity') }}:</td><td>{{info.roots_of_unity}}</td></tr>
 </table>
 
 <h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>
