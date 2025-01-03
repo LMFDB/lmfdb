@@ -1,4 +1,4 @@
-# This script was created using the 2012 paper of Johnson-Leung and Roberts. 
+# This script was created using the 2012 paper of Johnson-Leung and Roberts.
 
 # INPUTS:
 # F is a real quadratic number field
@@ -27,7 +27,7 @@ def Yoshida_Lift(F, hhecke_evals, hlevel, hweight=[2, 2], primeprec=100):
                 lam[p] = 0
                 mu[p] = p**(2*(weight -3))*(-p**2 - p*hhecke_evals[F.prime_above(p)] - 1)
             else:
-                lam[p] = p**((weight  - 3))*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
+                lam[p] = p**(weight  - 3)*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
                 mu[p] = p**(2*(weight - 3))*(p**2 + p*hhecke_evals[F.primes_above(p)[0]]*hhecke_evals[F.primes_above(p)[1]] - 1)
         if v == 1:
             if hlevel.valuation(F.primes_above(p)[0]) == 1:
@@ -36,11 +36,11 @@ def Yoshida_Lift(F, hhecke_evals, hlevel, hweight=[2, 2], primeprec=100):
             else:
                 pt = F.primes_above(p)[0]
                 po = F.primes_above(p)[1]
-            lam[p] =  p**((weight  - 3))*(p*hhecke_evals[po] + (p + 1)*hhecke_evals[pt])
+            lam[p] =  p**(weight  - 3)*(p*hhecke_evals[po] + (p + 1)*hhecke_evals[pt])
             mu[p] = p**(2*(weight  - 3))*(p*hhecke_evals[F.primes_above(p)[0]]*hhecke_evals[F.primes_above(p)[1]])
         else:
             if len(F.primes_above(p)) == 2:
-                lam[p] = p**((weight  - 3))*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
+                lam[p] = p**(weight  - 3)*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
                 if hlevel.valuation(F.primes_above(p)[0])*hlevel.valuation(F.primes_above(p)[1]) == 0:
                     mu[p] = 0
                 else:

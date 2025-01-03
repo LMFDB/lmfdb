@@ -1,19 +1,18 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-import unittest2
+import unittest
 
 from . import cmf_logger
 cmf_logger.setLevel(100)
 
 
 class CmfTest(LmfdbTest):
-    def runTest():
+    def runTest(self):
         pass
 
     def test_expression_divides(self):
         # checks search of conductors dividing 1000
-        self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000&search_type=List', '40.2.k.a')
+        self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000', '40.2.k.a')
 
     def test_browse_page(self):
         r"""
@@ -57,7 +56,7 @@ class CmfTest(LmfdbTest):
         assert "Source of classical modular form data" in data
 
     def test_badp(self):
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=100&search_type=List").get_data(as_text=True)
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=100").get_data(as_text=True)
         assert '273.1.o.a' in data
         assert '56.1.h.a' in data
         assert '14.2.a.a' in data
@@ -77,7 +76,7 @@ class CmfTest(LmfdbTest):
         assert '10.10.b.a' in page.get_data(as_text=True)
         assert '2580' in page.get_data(as_text=True)
 
-    @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
+    @unittest.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
         from sage.all import ZZ
         for Nk2 in range(1, 2001):
@@ -87,7 +86,7 @@ class CmfTest(LmfdbTest):
                     print("testing (N, k) = (%s, %s)" % (N, k))
                     url = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(N, k)
                     rv = self.tc.get(url,follow_redirects=True)
-                    self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                    self.assertTrue(rv.status_code == 200,"Request failed for {0}".format(url))
                     assert str(N) in rv.get_data(as_text=True)
                     assert str(k) in rv.get_data(as_text=True)
                     assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
@@ -161,10 +160,9 @@ class CmfTest(LmfdbTest):
         assert "Level and weight too large" in page.get_data(as_text=True)
         assert " for trivial character." in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/100/2/z/a/', follow_redirects=True)
-        assert "Newform 100.2.z.a not found" in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-&search_type=List', follow_redirects=True)
+        assert "The newform 100.2.z.a is not in the database" in page.get_data(as_text=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-', follow_redirects=True)
         assert "No matches" in page.get_data(as_text=True)
-        assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
         assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)
 
@@ -274,6 +272,28 @@ class CmfTest(LmfdbTest):
             for e in range(1, 13):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
                 assert "Newform orbit 38.9.d.a" in page.get_data(as_text=True)
+
+    def test_maximal(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2")
+        assert '15 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=maximal")
+        assert 'unique match' in page.get_data(as_text=True)
+        assert '1234.2.a.h' not in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' not in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=largest")
+        assert '5 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' in page.get_data(as_text=True)
+        assert '1234.2.a.i' in page.get_data(as_text=True)
+        assert '1234.2.b.c' not in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1234&weight=2&is_maximal_largest=notlargest")
+        assert '10 matches' in page.get_data(as_text=True)
+        assert '1234.2.a.h' not in page.get_data(as_text=True)
+        assert '1234.2.a.i' not in page.get_data(as_text=True)
+        assert '1234.2.b.c' in page.get_data(as_text=True)
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
@@ -551,14 +571,11 @@ class CmfTest(LmfdbTest):
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
         assert ('mf_gamma1' in data and 'newspace_dims' in data
-                and 'mf_gamma1_subspaces' in data and 'sub_mult' in data
                 and 'mf_gamma1_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)
         assert ('mf_newspaces' in data and 'num_forms' in data
-                and 'mf_subspaces' in data and 'sub_mult' in data
-                and 'mf_newspace_portraits' in data and "data:image/png;base64" in data
-                and 'mf_hecke_newspace_traces' in data and 'trace_an' in data)
+                and 'mf_newspace_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a').get_data(as_text=True)
         assert ('mf_newforms' in data and 'field_disc_factorization' in data and

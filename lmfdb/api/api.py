@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from urllib.parse import unquote
 import re
 import yaml
@@ -6,7 +5,7 @@ import json
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import (render_template, request, url_for, current_app,
@@ -29,7 +28,7 @@ def quote_string(value):
 
 def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
-    attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
+    attrs = sorted([(key, quote_string(rec[key])) for key in rec if (id or key != 'id')])
     return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
 
 
@@ -57,10 +56,24 @@ def get_database_info(show_hidden=False):
         info[database].append((table, table[i+1:], coll.count()))
     return info
 
+@api_page.route("/options")
+def options():
+    return render_template(
+        "database_options.html",
+        title="Access options for the LMFDB database",
+        learnmore=[
+            ("Auxiliary datasets", url_for("datasets")),
+            ("API", url_for(".index")),
+            ("Table statistics", url_for(".stats")),
+            ("lmfdb-lite", "https://www.github.com/roed314/lmfdb-lite"),
+            ("Install the LMFDB locally", "https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md")],
+        bread=[("Access options", " ")],
+    )
+
 @api_page.route("/")
 def index(show_hidden=False):
     databases = get_database_info(show_hidden)
-    title = "Database"
+    title = "API"
     return render_template("api.html", **locals())
 
 @api_page.route("/all")
@@ -71,14 +84,14 @@ def full_index():
 def stats():
     def mb(x):
         return int(round(x/2**20.))
-    info={}
+    info = {}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
-    if not info['minsize'] in info['minsizes']:
+    if info['minsize'] not in info['minsizes']:
         info['minsizes'] = '1'
     info['groupby'] = 'db' if request.args.get('groupby','').strip().lower() == 'db' else ''
     info['sortby'] = request.args.get('sortby','size').strip().lower()
-    if not info['sortby'] in ['size', 'objects', 'name']:
+    if info['sortby'] not in ['size', 'objects', 'name']:
         info['sortby'] = 'size'
     nobjects = size = dataSize = indexSize = 0
     dbSize = defaultdict(int)
@@ -96,6 +109,7 @@ def stats():
         dname, _ = split_db(tablename)
         dbSize[dname] += sizes['total_bytes']
         dbObjects[dname] += sizes['nrows']
+    tablespaces = db.tablespaces()
     for tablename, sizes in table_sizes.items():
         tsize = sizes['total_bytes']
         size += tsize
@@ -111,15 +125,17 @@ def stats():
             if not sizes['toast_bytes']:
                 sizes['toast_bytes'] = 0
             if sizes['nrows']:
-                avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
+                avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extras_bytes']) / sizes['nrows']))
             else:
                 avg_size = 0
             stats[tablename] = {
                 'db':dname, 'table':link, 'dbSize':dbSize[dname], 'dbObjects':dbObjects[dname],
                 'size': csize, 'avgObjSize':avg_size,
-                'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']),
+                'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extras_bytes']),
                 'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
-                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts']}
+                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts'],
+                'tablespace': tablespaces.get(tablename, ""),
+            }
     dataSize = size - indexSize
     info['ntables'] = len(table_sizes)
     info['nobjects'] = nobjects
@@ -127,15 +143,15 @@ def stats():
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
     if info['sortby'] == 'name':
-        sortedkeys = sorted(list(stats))
+        sortedkeys = sorted(stats)
     elif info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
     elif info['sortby'] == 'objects':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
     else:
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(stats, key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 
@@ -268,7 +284,7 @@ def api_query(table, id=None):
 
         # executing the query "q" and replacing the _id in the result list
         # So as not to preserve backwards compatibility (see test_api_usage() test)
-        if table=='ec_curvedata':
+        if table == 'ec_curvedata':
             for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
                 if oldkey in q:
                     q[newkey] = q[oldkey]
@@ -280,7 +296,7 @@ def api_query(table, id=None):
         except KeyError as err:
             return apierror("No key %s in table %s", [err, table])
         except Exception as err:
-            return apierror(str(err))
+            return apierror(str(err).replace("%", "%%"))
 
     if single_object and not data:
         return apierror("no document with id %s found in table %s.", [id, table])
@@ -355,7 +371,7 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     """
     INPUT:
 
-    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table)
+    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table).  Entries can also be a list of values (corresponding to multiple ``label_cols``) in cases where multiple columns are needed to uniquely specify a row.
     - ``tables`` -- a search table or list of search tables (as strings)
     - ``title`` -- title for the page
     - ``bread`` -- bread for the page
@@ -386,7 +402,10 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     search_schema = {}
     extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
-        q = {col: label}
+        if isinstance(col, list):  # Needed for gps_conj_classes, which effectively has a pair of columns for a label
+            q = dict(zip(col, label))
+        else:
+            q = {col: label}
         coll = db[table]
         try:
             data.append(list(coll.search(q, projection=3, sort=sort)))

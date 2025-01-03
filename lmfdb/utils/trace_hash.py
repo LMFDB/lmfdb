@@ -118,7 +118,7 @@ def TraceHash(E):
         return TraceHash_from_ap([E_pari.ellap(p) for p in TH_P])
 
     if K not in TH_P_cache:
-        TH_P_cache[K] = dict([(p,[P for P in K.primes_above(p) if P.norm()==p]) for p in TH_P])
+        TH_P_cache[K] = {p: [P for P in K.primes_above(p) if P.norm() == p] for p in TH_P}
 
     def ap(p):
         return sum([E.reduction(P).trace_of_frobenius() for P in TH_P_cache[K][p]], 0)

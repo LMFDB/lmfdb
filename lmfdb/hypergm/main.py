@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones, Edgar Costa
 
@@ -13,11 +12,11 @@ from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
-    parse_restricted, integer_options, search_wrap,
-    SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
+    parse_restricted, integer_options, search_wrap, Downloader,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton, RowSpacer,
     to_dict, web_latex, integer_divisors)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.hypergm import hypergm_page
@@ -61,7 +60,7 @@ def dogapthing(m1):
     else:
         # Fix multiple backslashes
         m1[2] = re.sub(r'\\+', r'\\', m1[2])
-        m1[2] = '$%s$'% m1[2]
+        m1[2] = '$%s$' % m1[2]
     return m1
 
 
@@ -92,8 +91,8 @@ def normalize_family(label):
     aas = '.'.join(str(u) for u in a)
     bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0] > a[0]:
-        return 'A%s_B%s' % (aas, bs)
-    return 'A%s_B%s' % (bs, aas)
+        return f'A{aas}_B{bs}'
+    return f'A{bs}_B{aas}'
 
 
 def normalize_motive(label):
@@ -103,10 +102,8 @@ def normalize_motive(label):
     aas = '.'.join(str(u) for u in a)
     bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0] > a[0]:
-        return 'A%s_B%s_t%s%s.%s' % (aas, bs,
-                                     m.group(5), m.group(6), m.group(7))
-    return 'A%s_B%s_t%s%s.%s' % (bs, aas,
-                                 m.group(5), m.group(7), m.group(6))
+        return f'A{aas}_B{bs}_t{m.group(5)}{m.group(6)}.{m.group(7)}'
+    return f'A{bs}_B{aas}_t{m.group(5)}{m.group(7)}.{m.group(6)}'
 
 # Convert cyclotomic indices to gamma data
 
@@ -121,7 +118,7 @@ def incdict(d, v):
 
 
 def subdict(d, v):
-    if d[v]>1:
+    if d[v] > 1:
         d[v] -= 1
     else:
         del d[v]
@@ -145,26 +142,23 @@ def ab2gammas(A, B):
             if d in ab[wh]:
                 subdict(ab[wh], d)
             else:
-                incdict(ab[1-wh], d)
-    gamma[1] = [-1*z for z in gamma[1]]
-    gamma = sorted(gamma[1]+gamma[0])
-    return gamma
-
-# Convert cyclotomic indices to rational numbers
+                incdict(ab[1 - wh], d)
+    gamma[1] = [-1 * z for z in gamma[1]]
+    return sorted(gamma[1] + gamma[0])
 
 
-def cyc_to_QZ(A):
-    alpha = []
-    for Ai in A:
-        alpha.extend([QQ(k)/Ai for k in range(1, Ai+1) if gcd(k, Ai) == 1])
-    alpha.sort()
-    return alpha
+def cyc_to_QZ(A) -> list:
+    """
+    Convert cyclotomic indices to rational numbers.
+    """
+    return sorted(QQ(k) / Ai for Ai in A for k in range(1, Ai + 1)
+                  if gcd(k, Ai) == 1)
 
 # A and B are lists, tn and td are num/den for t
 
 
 def ab_label(A, B):
-    return "A%s_B%s" % ('.'.join(str(c) for c in A),
+    return "A{}_B{}".format('.'.join(str(c) for c in A),
                         '.'.join(str(c) for c in B))
 
 
@@ -173,19 +167,13 @@ def list2Cnstring(li):
     if not l2:
         return 'C_1'
     fa = [ZZ(a).factor() for a in l2]
-    eds = []
-    for b in fa:
-        for pp in b:
-            eds.append([pp[0], pp[1]])
-    eds.sort()
-    l2 = ['C_{%d}'% (a[0]**a[1]) for a in eds]
+    eds = sorted([[pp[0], pp[1]] for b in fa for pp in b])
+    l2 = ['C_{%d}' % (a[0]**a[1]) for a in eds]
     return (r'\times ').join(l2)
 
 
 def showlist(li):
-    if not li:
-        return r'[\ ]'
-    return li
+    return li if li else r'[\ ]'
 
 
 def splitint(a, p):
@@ -194,30 +182,29 @@ def splitint(a, p):
     j = valuation(a, p)
     if j == 0:
         return str(a)
-    a = a/p**j
+    a = a / p**j
     if a == 1:
         return latex(ZZ(p**j).factor())
-    return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
+    return str(a) + r'\cdot' + latex(ZZ(p**j).factor())
 
 
 def make_abt_label(A, B, t):
     AB_str = ab_label(A, B)
     t = QQ(t)
-    t_str = "_t%s.%s" % (t.numerator(), t.denominator())
+    t_str = f"_t{t.numerator()}.{t.denominator()}"
     return AB_str + t_str
 
 
 def make_t_label(t):
     tsage = QQ(t)
-    return "t%s.%s" % (tsage.numerator(), tsage.denominator())
+    return f"t{tsage.numerator()}.{tsage.denominator()}"
 
 
 def get_bread(breads=[]):
     bc = [("Motives", url_for("motives")),
           ("Hypergeometric", url_for(".index")),
           (r"$\Q$", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 
@@ -266,28 +253,28 @@ def factor_out_p(val, p):
 def poly_with_factored_coeffs(c, p):
     c = [factor_out_p(b, p) for b in c]
     out = ''
-    for j in range(len(c)):
-        xpow = 'x^{'+ str(j) +'}'
+    for j, cj in enumerate(c):
+        xpow = 'x^{' + str(j) + '}'
         if j == 0:
             xpow = ''
-        elif j==1:
+        elif j == 1:
             xpow = 'x'
-        if c[j] != '0':
-            if c[j] == '+1':
+        if cj != '0':
+            if cj == '+1':
                 if j == 0:
                     out += '+1'
                 else:
                     out += '+' + xpow
-            elif c[j] == '-1':
+            elif cj == '-1':
                 if j == 0:
                     out += '-1'
                 else:
                     out += '-' + xpow
             else:
                 if j == 0:
-                    out += c[j]
+                    out += cj
                 else:
-                    out += c[j] + xpow
+                    out += cj + xpow
     if out[0] == '+':
         out = out[1:]
     return out
@@ -395,37 +382,47 @@ def url_for_label(label):
 hgm_columns = SearchColumns([
     MultiProcessedCol("label", None, "Label",
                       ["A", "B", "t"],
-                      lambda A, B, t: '<a href="%s">%s</a>' % (
+                      lambda A, B, t: '<a href="{}">{}</a>'.format(
                           url_for('.by_family_label', label=ab_label(A, B)) if t is None else
                           url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
                           ab_label(A, B) if t is None else
                           make_abt_label(A, B, t)),
-                      default=True),
-    MathCol("A", None, "$A$", default=True, short_title="A"),
-    MathCol("B", None, "$B$", default=True, short_title="B"),
-    ProcessedCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
-    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", default=True, mathmode=True, align="center"),
-    MathCol("degree", None, "Degree", default=True),
-    MathCol("weight", None, "Weight", default=True),
-    MathCol("famhodge", None, "Hodge", default=True)])
+                      download_col="label"),
+    MathCol("A", None, "$A$", short_title="A"),
+    MathCol("B", None, "$B$", short_title="B"),
+    RationalCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    MathCol("degree", None, "Degree"),
+    MathCol("weight", None, "Weight"),
+    MathCol("famhodge", None, "Hodge")])
 
-hgm_columns.dummy_download = True
 hgm_columns.db_cols = 1  # all cols, since the table varies
 
 
+class HGMDownload(Downloader):
+    table = db.hgm_motives  # overridden if family search
+
+    def get_table(self, info):
+        search_type = info.get("search_type", info.get("hst", "Motive"))
+        if search_type in ["Family", "RandomFamily"]:
+            return db.hgm_families
+        else:
+            return db.hgm_motives
+
+
 @search_wrap(table=db.hgm_motives,  # overridden if family search
-             title=r'Hypergeometric motive over $\Q$ search resultS',
+             title=r'Hypergeometric motive over $\Q$ search results',
              err_title=r'Hypergeometric motive over $\Q$ search input error',
              columns=hgm_columns,
              per_page=50,
-             shortcuts={'jump': hgm_jump},
+             shortcuts={'jump': hgm_jump, 'download': HGMDownload()},
              url_for_label=url_for_label,
              bread=lambda: get_bread([("Search results", '')]),
              learnmore=learnmore_list)
 def hgm_search(info, query):
     info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
     if search_type in ["Family", "RandomFamily"]:
-        query['__title__'] = r'Hypergeometric family over $\Q$ search result'
+        query['__title__'] = r'Hypergeometric family over $\Q$ search results'
         query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
         query['__table__'] = db.hgm_families
 
@@ -435,32 +432,32 @@ def hgm_search(info, query):
         parse_bracketed_posints(info, queryab, param, split=True,
                                 keepbrackets=True,
                                 listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Ap', qfield='A' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Bp', qfield='B' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p, split=True,
+    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu' + p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
     # Combine the parts of the query if there are A,B parts
     if queryab:
         queryabrev = {}
-        for k in queryab.keys():
-            queryabrev[k+'rev'] = queryab[k]
+        for k in queryab:
+            queryabrev[k + 'rev'] = queryab[k]
         query['$or'] = [queryab, queryabrev]
 
     # generic, irreducible not in DB yet
     parse_ints(info, query, 'degree')
     parse_ints(info, query, 'weight')
     parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector', split=True)
-    parse_restricted(info, query, 'sign', allowed=['+1', 1, -1], process=int)
     # Make a version to search reversed way
     if search_type not in ["Family", "RandomFamily"]:
+        parse_restricted(info, query, 'sign', allowed=['+1', 1, -1], process=int)
         parse_ints(info, query, 'conductor', 'Conductor', 'cond')
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
@@ -498,11 +495,8 @@ def render_hgm_webpage(label):
         d1 = re.sub(r'\s', '', d1)
         d1 = re.sub(r'(.)\(', r'\1*(', d1)
         R = PolynomialRing(ZZ, 't')
-        if det[1]=='':
-            d2 = R(1)
-        else:
-            d2 = R(d1)
-        det = d2(QQ(data['t']))*det[0]
+        d2 = R(1) if not det[1] else R(d1)
+        det = d2(QQ(data['t'])) * det[0]
     t = latex(QQ(data['t']))
     typee = 'Orthogonal'
     if data['weight'] % 2 and not data['degree'] % 2:
@@ -512,7 +506,7 @@ def render_hgm_webpage(label):
     for j in range(len(locinfo)):
         locinfo[j] = [primes[j]] + locinfo[j]
         # locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
-        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
+        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='T')
     hodge = data['hodge']
     famhodge = data['famhodge']
     prop2 = [
@@ -527,7 +521,7 @@ def render_hgm_webpage(label):
     # Now add factorization of conductor
     Cond = ZZ(data['cond'])
     if not (Cond.abs().is_prime() or Cond == 1):
-        data['cond'] = "%s=%s" % (str(Cond), factorint(data['cond']))
+        data['cond'] = "{}={}".format(str(Cond), factorint(data['cond']))
 
     info.update({
                 'A': A,
@@ -550,16 +544,16 @@ def render_hgm_webpage(label):
                 'locinfo': locinfo
                 })
     AB_data, t_data = data["label"].split("_t")
-    friends = [("Motive family "+AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
-    friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t'+t_data)))
+    friends = [("Motive family " + AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
+    friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t' + t_data)))
 #    if rffriend != '':
 #        friends.append(('Discriminant root field', rffriend))
     downloads = [("Underlying data", url_for(".hgm_data", label=data["label"]))]
 
-    AB = 'A = '+str(A)+', B = '+str(B)
+    AB = 'A = ' + str(A) + ', B = ' + str(B)
     t_data = str(QQ(data['t']))
 
-    bread = get_bread([('family '+str(AB), url_for(".by_family_label", label=AB_data)), ('t = '+t_data, ' ')])
+    bread = get_bread([('family ' + str(AB), url_for(".by_family_label", label=AB_data)), ('t = ' + t_data, ' ')])
     return render_template(
         "hgm-show-motive.html",
         title=title,
@@ -603,7 +597,7 @@ def parse_pandt(info, family):
 
         try:
             if info.get('t'):
-                info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
+                info['ts'] = sorted(set(map(QQ, info.get('t').split(","))))
                 info['t'] = ",".join(map(str, info['ts']))
             else:
                 info['ts'] = None
@@ -636,9 +630,7 @@ def render_hgm_family_webpage(label):
 
 
 def show_slopes(sl):
-    if str(sl) == "[]":
-        return "None"
-    return(sl)
+    return None if str(sl) == "[]" else sl
 
 
 @hypergm_page.route("/random_family")
@@ -651,7 +643,7 @@ def random_family():
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
-    return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
+    return redirect(url_for(".by_label", label=s[0], t='t' + s[1]))
 
 
 @hypergm_page.route("/interesting_families")
@@ -748,7 +740,7 @@ class HGMSearchArray(SearchArray):
         famhodge = TextBox(
             name="famhodge",
             label="Family Hodge vector",
-            knowl="hgm.familyhodgevector",
+            knowl="hgm.hodge_vector",
             example="[1,1,1,1]",
             extra=['class="family"'])
         A = TextBox(
@@ -802,24 +794,28 @@ class HGMSearchArray(SearchArray):
             label="Conductor",
             knowl="hgm.conductor",
             example="64",
-            example_span="a value, like 32, a list, like 32,64, or a range like 1..10000")
+            example_span="a value, like 32, a list, like 32,64, or a range like 1..10000",
+            extra=['class="motive"'])
         hodge = TextBox(
             name="hodge",
             label="Hodge vector",
-            knowl="mot.hodgevector",
-            example="[1,1,1,1]")
+            knowl="hgm.hodge_vector",
+            example="[1,1,1,1]",
+            extra=['class="motive"'])
         t = TextBox(
             name="t",
             label="Specialization point $t$",
             knowl="hgm.specpoint",
             example="3/2",
-            example_span="3/2 (1 has an associated degree drop and is always in the database)")
+            example_span="3/2 (1 has an associated degree drop and is always in the database)",
+            extra=['class="motive"'])
         sign = TextBoxNoEg(
             name="sign",
             label=r"Root number $\epsilon$",
             knowl="lfunction.sign",
             example="-1",
-            example_span="1 or -1, with -1 occurring only in the symplectic case")
+            example_span="1 or -1, with -1 occurring only in the symplectic case",
+            extra=['class="motive"'])
         # The following two boxes are not yet enabled
         # generic = YesNoBox(
         #    name="generic",
@@ -856,15 +852,7 @@ class HGMSearchArray(SearchArray):
     def search_types(self, info):
         st = self._st(info)
         if st is None:
-            # We need a custom button for the family search so that it can be clicked by javascript
-            class FamilySearchButton(SearchButton):
-                def _input(self, info):
-                    btext = "<button type='submit' id='family' name='search_type' value='Family' style='width: {width}px;'>{desc}</button>"
-                    return btext.format(width=self.width, desc=self.description)
-            return [("Motive", "List of motives"),
-                    FamilySearchButton("Family", "List of families"),
-                    ("Random", "Random motive"),
-                    ("RandomFamily", "Random family")]
+            raise RuntimeError("Should never get here")
         elif st == "Family":
             return [("Family", "Search again"),
                     ("RandomFamily", "Random family")]
@@ -879,10 +867,23 @@ class HGMSearchArray(SearchArray):
         else:
             return self.refine_motive_array
 
+    def _html_section(self, array, buttons):
+        table = self._print_table(array, None, "horizontal")
+        buttons = self._print_table([RowSpacer(8), [BasicSpacer("Display:")] + buttons], None, "vertical")
+        return "\n".join([table, buttons])
+
     def family_html(self):
-        return self._print_table(self.family_array, None, "horizontal")
+        # We need a custom button for the family search so that it can be clicked by javascript
+        class FamilySearchButton(SearchButton):
+            def _input(self, info):
+                btext = "<button type='submit' id='family' name='search_type' value='Family' style='width: {width}px;'>{desc}</button>"
+                return btext.format(width=self.width, desc=self.description)
+        return self._html_section(self.family_array, [FamilySearchButton("Family", "List of families"), SearchButton("RandomFamily", "Random family")])
 
     def motive_html(self):
-        table = self._print_table(self.motive_array, None, "horizontal")
-        buttons = self.buttons()
-        return "\n".join([table, buttons])
+        # We need a custom button for the motive search so that it can be clicked by javascript
+        class MotiveSearchButton(SearchButton):
+            def _input(self, info):
+                btext = "<button type='submit' id='motive' name='search_type' value='Motive' style='width: {width}px;'>{desc}</button>"
+                return btext.format(width=self.width, desc=self.description)
+        return self._html_section(self.motive_array, [MotiveSearchButton("Motive", "List of motives"), SearchButton("RandomMotive", "Random motive")])

@@ -5,9 +5,9 @@ prompt:
   oscar:  'oscar'
 
 logo:
-  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 not-implemented:
@@ -24,7 +24,7 @@ field:
   sage: x = polygen(QQ);  K.<a> = NumberField(%s)
   pari: K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
-  oscar: Qx, x = PolynomialRing(QQ); K, a = NumberField(%s)
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
 
 poly:
   sage:  K.defining_polynomial()

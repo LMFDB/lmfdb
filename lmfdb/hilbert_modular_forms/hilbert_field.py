@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r""" Class for interface with the 'field' component of the Hilbert modular forms database.
 
 Initial version (University of Warwick 2015) Aurel Page and John Cremona
@@ -101,8 +100,8 @@ class HilbertNumberField(WebNumberField):
         self.ideal_dict = {}
         self.label_dict = {}
         for I in self.ideals_iter():
-            self.ideal_dict[I['label']]=I['ideal']
-            self.label_dict[I['ideal']]=I['label']
+            self.ideal_dict[I['label']] = I['ideal']
+            self.label_dict[I['ideal']] = I['label']
 
     def _iter_ideals(self, primes=False, number=None):
         """
@@ -125,7 +124,7 @@ class HilbertNumberField(WebNumberField):
             yield {'label':label, 'ideal':idl}
             ilabel += 1
             count += 1
-            if count==number:
+            if count == number:
                 raise StopIteration
 
     def primes_iter(self, number=None):

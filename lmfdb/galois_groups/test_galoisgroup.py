@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
 
@@ -29,8 +28,8 @@ class GalGpTest(LmfdbTest):
         assert '9T5' in L.get_data(as_text=True)
         assert '9 matches' in L.get_data(as_text=True)
 
-    def test_search_gapid(self):
-        L = self.tc.get('GaloisGroup/?gapid=[60,5]')
+    def test_search_groupid(self):
+        L = self.tc.get('GaloisGroup/?gal=[60,5]')
         assert '20T15' in L.get_data(as_text=True)
         assert '15T5' in L.get_data(as_text=True)
 

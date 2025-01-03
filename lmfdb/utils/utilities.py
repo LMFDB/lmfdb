@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import cmath
 import math
 import datetime
@@ -61,7 +60,7 @@ def integer_prime_divisors(n):
 
 def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
+    return sign(n)*prod([p**(e % 2) for p, e in ZZ(n).factor()])
 
 
 def integer_is_squarefree(n):
@@ -119,8 +118,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
             this_poly = ZZT(list(reversed(g)))
             this_degree = this_poly.degree()
             this_number_field = NumberField(this_poly, "a")
-            this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group().__pari__()[2].sage()
+            this_t_number = this_number_field.galois_group().group().transitive_number()
             gal_list.append([this_degree, this_t_number])
 
         # casting from ZZT -> ZZpT
@@ -291,7 +289,7 @@ def display_multiset(mset, formatter=str, *args):
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+    return ', '.join([formatter(pair[0], *args)+(' x%d' % pair[1] if pair[1] > 1 else '') for pair in mset])
 
 
 def pair2complex(pair):
@@ -374,8 +372,9 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  += sign * CBF(b)* CBF.gens()[0]
+            res += sign * CBF(b) * CBF.gens()[0]
         return res
+
 
 # Conversion from numbers to letters and back
 def letters2num(s):
@@ -388,6 +387,7 @@ def letters2num(s):
         ssum = ssum*26+letters[j]
     return ssum
 
+
 def num2letters(n):
     r"""
     Convert a number into a string of letters
@@ -395,7 +395,7 @@ def num2letters(n):
     if n <= 26:
         return chr(96+n)
     else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
+        return num2letters(int((n-1)/26))+chr(97+(n-1) % 26)
 
 
 def to_dict(args, exclude=[], **kwds):
@@ -567,12 +567,7 @@ def splitcoeff(coeff):
     >>> splitcoeff("1 1 \n -1 2")
     [[1.0, 1.0], [-1.0, 2.0]]
     """
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-    return answer
+    return [pair2complex(s) for s in coeff.split("\n") if s]
 
 
 ################################################################################
@@ -601,7 +596,7 @@ def latex_comma(x):
 def format_percentage(num, denom):
     if denom == 0:
         return 'NaN'
-    return "%10.2f"%((100.0*num)/denom)
+    return "%10.2f" % ((100.0*num)/denom)
 
 
 def signtocolour(sign):
@@ -626,21 +621,6 @@ def rgbtohex(rgb):
     b = int(b)
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
-def pol_to_html(p):
-    r"""
-    Convert polynomial p with variable x to html.
-
-    Example:
-    >>> pol_to_html("x^2 + 2*x + 1")
-    '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
-    """
-    s = str(p)
-    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
-    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
-    s = re.sub(r"\*", r"", s)
-    s = re.sub(r"x", r"<i>x</i>", s)
-    return s
-
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
 
@@ -660,7 +640,7 @@ def code_snippet_knowl(D, full=True):
     lines = D.get('lines')
     code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
     if is_debug_mode():
-        branch = "master"
+        branch = "main"
     elif is_beta():
         branch = "dev"
     else:
@@ -678,9 +658,9 @@ def code_snippet_knowl(D, full=True):
         url += "#L%s" % lines[0]
     else:
         label = filename
-    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
+    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+    return '<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
 
 
 ################################################################################
@@ -756,7 +736,6 @@ class Pagination():
     has_previous = property(lambda x: x.page > 1)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
-    end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
 
     @property
     def end(self):
@@ -969,7 +948,7 @@ def datetime_to_timestamp_in_ms(dt):
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 
-class WebObj(object):
+class WebObj:
     def __init__(self, label, data=None):
         self.label = label
         if data is None:
@@ -991,9 +970,15 @@ class WebObj(object):
         return self._data is None
 
 def plural_form(noun):
-    return noun + "s"
+    if noun and noun[-1] != "s":
+        noun += "s"
+    return noun
 
-def pluralize(n, noun, omit_n=False):
+def pluralize(n, noun, omit_n=False, denom=None, offset=0):
+    if denom is not None:
+        if offset != 0:
+            return f"{n}/{denom} {plural_form(noun)} (starting at row {offset+1})"
+        return f"{n}/{denom} {plural_form(noun)}"
     if n == 1:
         if omit_n:
             return noun

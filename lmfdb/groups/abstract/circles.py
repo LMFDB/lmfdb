@@ -500,13 +500,13 @@ def arrange_ring(radii, colors, R0, rmax):
     else:
         equal_centers = True
         for i in range(len(placed)):
-            if placed[i] + placed[(i+1)%len(placed)] > dist + eps:
+            if placed[i] + placed[(i+1) % len(placed)] > dist + eps:
                 equal_centers = False
                 break
     if not equal_centers:
         theta_diffs = []
         for i, r in enumerate(placed):
-            nextr = placed[(i+1)%len(placed)]
+            nextr = placed[(i+1) % len(placed)]
             theta_diffs.append((1 - (r + nextr)**2 / (2*Rc**2)).arccos())
         thetasum = sum(theta_diffs)
         if thetasum > 2*pi + eps:
@@ -641,4 +641,9 @@ def find_packing(ccdata):
         r0 = r1
         new_circles, R = arrange(annulus, R, r0)
         circles.extend(new_circles)
+    # SVG can't handle x and y coordinates that are large
+    if R > 10000000:
+        scale = RR(10000000) / R
+        R = RR(10000000)
+        circles = [(x*scale, y*scale, rad*scale, (r, g, b)) for (x, y, rad, (r, g, b)) in circles]
     return circles, R

@@ -44,7 +44,7 @@ def create_search_dict(table='', query=None, view_start=0, request=None):
         'max_count':100, 'correct_count':False, 'count_only':False}
 
     if request:
-        search['view_start']=int(request.args.get('_view_start', search['view_start']))
+        search['view_start'] = int(request.args.get('_view_start', search['view_start']))
         search['max_count'] = min(int(request.args.get('_max_count', search['max_count'])), 100)
         search['correct_count'] = bool(request.args.get('_correct_count', search['correct_count']))
         search['count_only'] = bool(request.args.get('_count_only', search['count_only']))
@@ -444,7 +444,7 @@ def simple_search_postgres(search_dict, projection=None):
     metadata['record_count'] = info['number']
     metadata['correct_count'] = info['exact_count']
     if data:
-        data_out = list(list(data))
+        data_out = list(data)
     else:
         data_out = []
     metadata['view_count'] = len(data_out)

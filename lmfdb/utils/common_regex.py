@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 
 """
 Common regular expressions used in various places

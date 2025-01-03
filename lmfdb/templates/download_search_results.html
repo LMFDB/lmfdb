@@ -1,36 +1,27 @@
-{% set lang_text = {'gp': 'Pari/GP', 'gap' : 'GAP', 'sage': 'SageMath', 'magma': 'Magma', 'oscar': 'Oscar'} %}
+{% set lang_text = {'text': 'Text', 'gp': 'Pari/GP', 'gap' : 'GAP', 'sage': 'SageMath', 'magma': 'Magma', 'oscar': 'Oscar', 'csv': 'CSV'} %}
 {% if not languages %}
-  {% set languages = ['gp', 'sage', 'magma', 'oscar'] %}
+{% set languages = ['text', 'gp', 'sage', 'magma', 'oscar', 'csv'] %}
 {% endif %}
-{% if 'download_limit' in info %}
-  {% set download_limit = info.download_limit %}
-{% else %}
-  {% set download_limit = 1000000 %}
+{% if not downid %}
+{% set downid = 1 %} {# set externally so that we can distinguish in js between the download spans at the top and bottom of the results #}
 {% endif %}
 
 &nbsp;
-{% if info.number > download_limit %}
-  <span id="download-msg">
-    There are too many results 
-      (<span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>)
-    to download.
-  </span>
+{% if info.exact_count %}
+  <span class="download-form">
 {% else %}
-  {% if info.exact_count %}
-    <span id="download-form">
-  {% else %}
-    <span id="download-msg">
-      To download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">determine the number of results</a>.
-    </span>
-    <span id="download-form" style="display:none;">
-  {% endif %}
-  Download to &nbsp;
-    {% for lang in languages %}
-    {% if info.search_type %}
-    <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string))}}">{{lang_text[lang]}}</a>&nbsp;
-    {% else %}
-    <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string)+'&search_type='+info.search_type)}}">{{lang_text[lang]}}</a>&nbsp;
-    {% endif %}
-  {% endfor %}
+  <span class="download-msg">
+    To download results, <a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">determine the number of results</a>.
   </span>
+  <span class="download-form" style="display:none;">
 {% endif %}
+<a class="like-button" href="{{modify_url(query_add='download=1&query='+(info.query|string))}}" onclick="return update_download_url(this, {{downid}});">Download</a>
+{{KNOWL('doc.search_columns', 'displayed columns')}} for
+<input class="download_row_count_input" name="download_row_count{{downid}}" type="text" value="{% if info.start == 0%}all{% else %}{{info.start+1}}-{{upper_count}}{% endif %}" /> results
+<label for="downlang-select{{downid}}">to</label>
+<select name="downlang{{downid}}" id="downlang-select{{downid}}">
+  {% for lang in languages %}
+    <option value="{{lang}}"{% if lang=='text' %} selected{% endif %}>{{lang_text[lang]}}</option>
+  {% endfor %}
+</select>
+</span>

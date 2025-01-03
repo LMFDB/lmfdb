@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (
     Gamma0, cached_function, dimension_new_cusp_forms,
@@ -6,7 +5,7 @@ from sage.all import (
 
 from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker, check_analytic_conductor
-from .verification import overall, overall_long, fast, slow, accumulate_failures
+from ..verification import overall, fast, slow, accumulate_failures
 
 
 @cached_function
@@ -233,33 +232,6 @@ class mf_newspaces(MfChecker):
         """
         # TIME about 2s
         return self.check_sorted('hecke_orbit_dims')
-
-    ### mf_hecke_newspace_traces ###
-    @overall_long
-    def check_traces_count(self):
-        """
-        there should be exactly 1000 records in mf_hecke_traces for each record in mf_newspaces with traces set
-        """
-        # TIME about 800s
-        return self.check_crosstable_count('mf_hecke_newspace_traces', 1000, 'hecke_orbit_code', constraint={'traces':{'$exists':True}})
-
-    @overall_long
-    def check_traces_match(self):
-        """
-        check that traces[n] matches trace_an in mf_hecke_newspace_traces
-        """
-        # TIME about 1000s
-        return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort=['n'], truncate=1000, constraint={'traces':{'$exists':True}})
-
-    ### mf_subspaces ###
-    @overall
-    def check_oldspace_decomposition_totaldim(self):
-        """
-        check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
-        """
-        # TIME about 20s
-        # from mf_subspaces
-        return self.check_crosstable_dotprod('mf_subspaces', 'cusp_dim', 'label', ['sub_mult', 'sub_dim'])
 
     ### mf_newspace_portraits ###
     @overall

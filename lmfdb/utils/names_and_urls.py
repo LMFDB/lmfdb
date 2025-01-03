@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.utils.utilities import key_for_numerically_sort
 from flask import url_for
 #######################################################################
@@ -71,7 +70,7 @@ def name_and_object_from_url(url, check_existence=False):
 
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
-            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
+            if url_split[2] == 'Q' and url_split[3] == 'holomorphic':
                 if len(url_split) == 10:
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a/11/2
                     newform_label = ".".join(url_split[-6:-2])
@@ -125,10 +124,14 @@ def name_and_object_from_url(url, check_existence=False):
         else:
             name = 'Sato Tate group $%s$' % name
             obj_exists = True
+    elif url_split[:2] == ["Character", "Dirichlet"]:
+        modulus = int(url_split[2])
+        conrey = int(url_split[3])
+        name = r"Character $\chi_{%d}(%d, \cdot)$" % (modulus, conrey)
+        obj_exists = True
     else:
         # FIXME
-        #print("unknown url", url)
-        pass
+        assert False, url
 
     return name, obj_exists
 

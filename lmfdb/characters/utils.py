@@ -12,7 +12,7 @@ def evalpolelt(label,gen,genlabel='a'):
         ( '*' and '**' are removed )
     """
     res = 0
-    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel
+    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?' % genlabel
     for m in re.finditer(regexp,label):
         s, c, e = m.groups()
         if c == '' and e is None:

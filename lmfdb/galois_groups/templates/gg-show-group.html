@@ -21,13 +21,18 @@ table.reptable td, table.reptable th {
       <tr><td>{{KNOWL('gg.simple_name', title='Group')}}:<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
       {% endif %}
       {% if info.n < 16 %}
-      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
+      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>
+      {% if info.n == 1 %}
+        {{info.name}}
+      {% else %}
+        ${{info.name}}$
+      {% endif %}
+      </tr>
       {% endif %}
       <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}
       <td>{{ place_code('even') }}</td></tr>
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</td>
       <td>{{ place_code('primitive') }}</td></tr>
-      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</td>
       <td>{{ place_code('nilpotent') }}</td></tr>
       <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td>
       <td>{{ place_code('auts') }}</td></tr>
@@ -65,24 +70,34 @@ table.reptable td, table.reptable th {
 
       {% if info.cclasses is defined %}
    <table class="ntdata">
-      <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+      <thead><tr><td>Label</td><td>Cycle Type</td><td>Size</td><td>Order</td><td>{{KNOWL('gg.index', 'Index')}}</td><td>Representative</td></tr></thead>
       <tbody>
         {% for c in info.cclasses %}
-           <tr><td> ${{c[3]}}$</td>
+           <tr>
+              <td> {{c[4]}}</td>
+              <td> ${{c[3]}}$</td>
               <td> ${{c[2]}}$</td>
               <td> ${{c[1]}}$</td>
+              <td> ${{c[5]}}$</td>
               <td> ${{c[0]}}$</td>
            </tr>
         {% endfor %}
       </tbody>
       </table>
+   <p>
+   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp; 
+   {% if info.malle_a is not none %}
+   ${{info.malle_a}}$ 
+   {% else %}
+   not computed
+   {% endif %}
+      {% elif cclasses not in info %}
+        Conjugacy classes not computed
       {% else %}
-        There are {{ info.num_cc }} conjugacy classes of elements.
-        Data not shown.
+        {{ info.cclass_knowl | safe }}
       {% endif %}
    </p>
    <p>{{ place_code('ccs') }}</p>
-
 
 
 
@@ -97,21 +112,26 @@ table.reptable td, table.reptable th {
       <td>{{place_code('abelian')}}</td></tr>
       <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</td>
       <td>{{place_code('solvable')}}</td></tr>
-      <tr><td>{{KNOWL('group.small_group_label','Label')}}:<td>&nbsp;&nbsp;<td>{{info.gapid | safe}}
+      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</td>
+      <tr><td>{{KNOWL('group.small_group_label','Label')}}:<td>&nbsp;&nbsp;<td>{{info.groupid | safe}}
       <td>{{place_code('id')}}</td></tr>
-    </table>
-
-    <table>
       <tr><td>{{KNOWL('group.complex_character_table', 'Character table')}}:
-      {% if info.chartable is defined %}
-      <td>&nbsp;&nbsp;<td>
-      <pre>
-{{info.chartable}}
-</pre>
+      {% if not info.wgg.can_chartable %}
+        <td>&nbsp;&nbsp;
+        <td> not computed
+        </table> </div> </p>
+      {% elif info.chartable %}
+        </table>
+        </div>
+        </p>
+        <p>
+         {% include 'character-table.html' %}
       {% else %}
-      not available.
-      {% endif %}
+      <td>&nbsp;&nbsp;
+      <td>
+         {{ info.chartable_knowl | safe }}
     </table> </div> </p>
+      {% endif %}
 
   <p>{{place_code('char_table')}}</p>
 

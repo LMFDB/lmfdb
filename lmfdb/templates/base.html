@@ -26,6 +26,11 @@
           integrity="sha384-Nlo8b0yiGl7Dn+BgLn4mxhIIBU6We7aeeiulNCjHdUv/eKHx59s3anfSUjExbDxn"
           crossorigin="anonymous">
 
+    {% if not BETA %}
+      <!--reCAPTCHA-->
+      <script src="https://www.google.com/recaptcha/enterprise.js?render=6LchHWwpAAAAACFe52hZNEkUP5Bn5_0FfLiEuF3i&waf=session" async defer></script>
+    {% endif %}
+
 
 
 
@@ -34,10 +39,6 @@
     <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script>
-
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='raw_typeset.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='notify.min.js') }}"></script>
 
@@ -62,6 +63,7 @@ katexOpts = {
   {left: "$", right: "$", display: false},
   {left: "\\(", right: "\\)", display: false}
 ],
+  maxExpand: Infinity,
   macros: {
   "\\C": '{\\mathbb{C}}',
   "\\R": '{\\mathbb{R}}',
@@ -77,6 +79,7 @@ katexOpts = {
   "\\PGL": '{\\textrm{PGL}}',
   "\\ASL": '{\\textrm{ASL}}',
   "\\AGL": '{\\textrm{AGL}}',
+  "\\ASp": '{\\textrm{ASp}}',
   "\\Sp": '{\\textrm{Sp}}',
   "\\GSp": '{\\textrm{GSp}}',
   "\\PSp": '{\\textrm{PSp}}',
@@ -85,9 +88,48 @@ katexOpts = {
   "\\PGO": '{\\textrm{PGO}}',
   "\\SU": '{\\textrm{SU}}',
   "\\PSU": '{\\textrm{PSU}}',
+  "\\SOPlus": '{\\textrm{SO}^+}',
+  "\\SOMinus": '{\\textrm{SO}^-}',
+  "\\GO": '{\\textrm{O}}',
+  "\\GOPlus": '{\\textrm{O}^+}',
+  "\\GOMinus": '{\\textrm{O}^-}',
+  "\\GU": '{\\textrm{U}}',
+  "\\CSp": '{\\textrm{GSp}}',
+  "\\CSO": '{\\textrm{CSO}}',
+  "\\CSOPlus": '{\\textrm{CSO}^+}',
+  "\\CSOMinus": '{\\textrm{CSO}^-}',
+  "\\CSU": '{\\textrm{CSU}}',
+  "\\CO": '{\\textrm{CO}}',
+  "\\COPlus": '{\\textrm{CO}^+}',
+  "\\COMinus": '{\\textrm{CO}^-}',
+  "\\CU": '{\\textrm{CU}}',
+  "\\OmegaPlus": '{\\Omega^+}',
+  "\\OmegaMinus": '{\\Omega^-}',
+  "\\Spin": '{\\textrm{Spin}}',
+  "\\SpinPlus": '{\\textrm{Spin}^+}',
+  "\\SpinMinus": '{\\textrm{Spin}^-}',
+  "\\PSOPlus": '{\\textrm{PSO}^+}',
+  "\\PGOPlus": '{\\textrm{PGO}^+}',
+  "\\PGU": '{\\textrm{PGU}}',
+  "\\PSOMinus": '{\\textrm{PSO}^-}',
+  "\\PGOMinus": '{\\textrm{PGO}^-}',
+  "\\POmega": '{\\textrm{P}\\Omega}',
+  "\\POmegaPlus": '{\\textrm{P}\\Omega^+}',
+  "\\POmegaMinus": '{\\textrm{P}\\Omega^-}',
+  "\\PGammaL": '{\\textrm{P}\\Gamma\\textrm{L}}',
+  "\\PSigmaL": '{\\textrm{P}\\Sigma\\textrm{L}}',
+  "\\PSigmaSp": '{\\textrm{P}\\Sigma\\textrm{Sp}}',
+  "\\PGammaU": '{\\textrm{P}\\Gamma\\textrm{U}}',
+  "\\AGammaL": '{\\textrm{A}\\Gamma\\textrm{L}}',
+  "\\ASigmaL": '{\\textrm{A}\\Sigma\\textrm{L}}',
+  "\\ASigmaSp": '{\\textrm{A}\\Sigma\\textrm{Sp}}',
   "\\SD": '{\\textrm{SD}}',
   "\\OD": '{\\textrm{OD}}',
   "\\He": '{\\textrm{He}}',
+  "\\HS": '{\\textrm{HS}}',
+  "\\McL": '{\\textrm{McL}}',
+  "\\Ru": '{\\textrm{Ru}}',
+  "\\Co": '{\\textrm{Co}}',
   "\\Aut": '\\operatorname{Aut}',
   "\\End": '\\operatorname{End}',
   "\\Gal": '\\operatorname{Gal}',
@@ -139,10 +181,10 @@ katexOpts = {
 
   {%- if BETA -%}
   <body class="beta {{ body_class }}">
-    {%- else -%}
-    <body class="{{ body_class }}">
-      {%- endif -%}
+  {%- else -%}
+  <body class="{{ body_class }}">
+  {%- endif -%}
 
-      {% block body -%}{%- endblock body %}
-      </body>
+  {% block body -%}{%- endblock body %}
+  </body>
 </html>

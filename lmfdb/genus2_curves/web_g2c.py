@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from ast import literal_eval
 import os
@@ -16,7 +15,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor
+from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor, convert_label
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
@@ -264,10 +263,7 @@ def real_geom_end_alg_name(name):
         "M_2(R)":r"\mathrm{M}_2(\R)",
         "M_2(C)":r"\mathrm{M}_2(\C)"
         }
-    if name in name_dict.keys():
-        return name_dict[name]
-    else:
-        return name
+    return name_dict.get(name, name)
 
 
 def geom_end_alg_name(name):
@@ -282,10 +278,7 @@ def geom_end_alg_name(name):
         "M_2(Q)":r"\mathrm{M}_2(\Q)",
         "M_2(CM)":r"\mathrm{M}_2(\mathsf{CM})"
         }
-    if name in name_dict.keys():
-        return name_dict[name]
-    else:
-        return name
+    return name_dict.get(name, name)
 
 
 def end_alg_name(name):
@@ -474,7 +467,7 @@ def end_lattice_statement(lattice):
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1])))
         statement += ":\n"
         statement += end_statement(ED[1], ED[2], field='F', ring=ED[3])
-        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_display_knowl(ED[4])
+        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_display_knowl(convert_label(ED[4]))
         statement += "<br>&nbsp;&nbsp;"
         statement += gl2_simple_statement(ED[1], ED[2])
         statement += "</p>\n"
@@ -508,7 +501,7 @@ def split_statement(coeffs, labels, condnorms):
         # Otherwise give defining equation:
         else:
             statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
-            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple(map (lambda x: strlist_to_nfelt(x, 'b'),coeffs[n]))
+            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple(strlist_to_nfelt(x, 'b') for x in coeffs[n])
             statement += "<br>&nbsp;&nbsp; Conductor norm: %s" % condnorms[n]
     return statement
 
@@ -581,10 +574,16 @@ def add_friend(friends, friend):
 
 
 def th_wrap(kwl, title, colspan=1):
-    if colspan > 1:
-        return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+    if kwl:
+        if colspan > 1:
+            return ' <th colspan=%s>%s</th>' % (colspan, display_knowl(kwl, title=title))
+        else:
+            return ' <th>%s</th>' % display_knowl(kwl, title=title)
     else:
-        return ' <th>%s</th>' % display_knowl(kwl, title=title)
+        if colspan > 1:
+            return ' <th colspan=%s>%s</th>' % (colspan, title)
+        else:
+            return ' <th>%s</th>' % title
 
 
 def td_wrapl(val):
@@ -684,7 +683,7 @@ def local_table(N, D, tama, bad_lpolys, cluster_pics):
 def galrep_table(galrep, torsion_order):
     galtab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('', r'Prime \(\ell\)'),
-              th_wrap('g2c.galois_rep_image', r'mod-\(\ell\) image'),
+              th_wrap('g2c.galois_rep_modell_image', r'mod-\(\ell\) image'),
               th_wrap('g2c.torsion_order', r'Is torsion prime?'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(galrep)):
@@ -899,11 +898,11 @@ class WebG2C():
             else:
                 data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
             if lower >= upper:
-                data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
-                data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
+                data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
+                data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
 
             if curve['two_torsion_field'][0]:
-                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
+                data['two_torsion_field_knowl'] = nf_display_knowl(curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),transitive_group_display_knowl(f"{t[2][0]}T{t[2][1]}"))
@@ -978,7 +977,7 @@ class WebG2C():
             data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
 
         # Nonsurjective primes data
-        if not nonsurj:
+        if nonsurj is None:
             data['exists_nonsurj_data'] = False
         else:
             data['exists_nonsurj_data'] = True

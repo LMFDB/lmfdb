@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
-from lmfdb.backend.utils import range_formatter
+from psycodict.utils import range_formatter
 from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
+from sage.misc.cachefunc import cached_method
 
 logger = make_logger("abvarfq")
 def yn(t):
@@ -172,17 +172,17 @@ class AbvarFqStats(StatsDisplay):
     dynamic_parent_page = "abvarfq-refine-search.html"
     dynamic_cols = ["q", "g", "p_rank", "angle_rank", "size", "geometric_extension_degree", "jacobian_count", "hyp_count", "twist_count", "max_twist_degree", "is_simple", "is_geometrically_simple", "is_primitive", "has_jacobian", "has_principal_polarization", "jacobian_count", "hyp_count"]
 
-    @lazy_attribute
+    @cached_method
     def _counts(self):
         return db.av_fq_isog.stats.column_counts(["g", "q"])
 
     @lazy_attribute
     def qs(self):
-        return sorted(set(q for g, q in self._counts))
+        return sorted({q for g, q in self._counts()})
 
     @lazy_attribute
     def gs(self):
-        return sorted(set(g for g, q in self._counts))
+        return sorted({g for g, q in self._counts()})
 
     @lazy_attribute
     def isogeny_knowl(self):
@@ -216,22 +216,22 @@ class AbvarFqStats(StatsDisplay):
     @lazy_attribute
     def counts(self):
         counts = {}
-        counts["nclasses"] = ncurves = sum(self._counts.values())
+        counts["nclasses"] = ncurves = sum(self._counts().values())
         counts["nclasses_c"] = comma(ncurves)
         counts["gs"] = self.gs
         counts["qs"] = self.qs
         counts["qg_count"] = defaultdict(lambda: defaultdict(int))
-        for (g, q), cnt in self._counts.items():
+        for (g, q), cnt in self._counts().items():
             counts["qg_count"][q][g] = cnt
         return counts
 
     @lazy_attribute
     def maxq(self):
-        return {g: max(q for gg, q in self._counts if g == gg) for g in self.gs}
+        return {g: max(q for gg, q in self._counts() if g == gg) for g in self.gs}
 
     @lazy_attribute
     def maxg(self):
-        maxg = {q: max(g for g, qq in self._counts if q == qq) for q in self.qs}
+        maxg = {q: max(g for g, qq in self._counts() if q == qq) for q in self.qs}
         # maxg[None] used in decomposition search
         maxg[None] = max(self.gs)
         return maxg

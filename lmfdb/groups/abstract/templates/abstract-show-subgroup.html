@@ -6,13 +6,46 @@
 <h2> Subgroup ($H$) information</h2>
 <p>
   <table>
+    {% if seq.sub.sub_missing %}
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td> ${{seq.subgroup_tex}}$</td></tr>
+    {% elif seq.subgroup is not none %}
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.subgroup_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.sub.exponent)}} </td></tr>
-{# Bug in generator Magma code, so hiding for now
-    <tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td> ${{seq.amb.show_subgroup_generators(seq)}}$</td></tr>
-#}
+    {% else %}
+    <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>not computed</td></tr>
+    {% endif %}
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.subgroup_order) | safe}} </td></tr>
+    <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.pos_int_and_factor(seq.quotient_order) | safe}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td>
+    {% if seq.sub.exponent  %}
+        {{info.pos_int_and_factor(seq.sub.exponent) | safe}}
+    {% else %}
+        not computed
+    {% endif %}
+    </td></tr>
+    {% if seq.amb.show_subgroup_flag() %}
+	<tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td>
+		{{seq.amb.show_subgroup_generators(seq)|safe}}</td></tr>
+	{% endif %}
+	{% if seq.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
+    class:')}}</td>
+	  <td>
+	  {% if seq.sub.G %}
+	  ${{seq.sub.nilpotency_class}}$
+	  {% else %}
+	  not computed
+	  {% endif %}
+</td></tr>
+	{% endif %}
+    <tr><td>{{KNOWL('group.derived_series', title='Derived
+		length:')}}</td><td>
+		 {% if seq.sub.G %}
+		 ${{seq.sub.derived_length}}$
+		 {% else %}
+	  not computed
+	  {% endif %}
+	</td></tr>
+
   </table>
 </p>
 
@@ -35,14 +68,19 @@
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td>
     <td><a href="{{url_for('.by_label', label=seq.ambient)}}">${{seq.ambient_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.ambient_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.amb.exponent)}} </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.ambient_order) | safe}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(seq.amb.exponent) | safe}} </td></tr>
 {# Bug in generator Magma code, so hiding for now
     <tr>
       <td>{% if seq.amb.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
       <td>{% if seq.amb.abelian and not seq.amb.cyclic %}Abelian group {% endif %}${{seq.amb.presentation()}}$</td>
     </tr>
-#}
+	#}
+	{% if seq.amb.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
+    class:')}}</td><td>${{seq.amb.nilpotency_class}}$  </td></tr>
+	{% endif %}
+    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{seq.amb.derived_length}}$  </td></tr>
   </table>
 </p>
 
@@ -55,12 +93,49 @@
 
 <p>
   <table>
-    <tr><td>{{KNOWL('group.name', title='Description:')}}</td>
-      <td><a href="{{url_for('.by_label', label=seq.quotient)}}">${{seq.quotient_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.quo.exponent)}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>{{seq.quo.show_aut_group()|safe}}</td></tr>
-    <tr><td>Outer Automorphisms:</td><td>{{seq.quo.show_outer_group()|safe}}</td></tr>
+  {% if seq.quotient is not none %}    <tr><td>{{KNOWL('group.name', title='Description:')}}</td>
+      <td><a href="{{url_for('.by_label', label=seq.quotient)}}">${{seq.quotient_tex}}$</a></td></tr> {% endif %}
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(seq.quotient_order) | safe}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td>
+    {% if seq.quo|attr('exponent')  %}
+      {{info.pos_int_and_factor(seq.quo.exponent) | safe}}
+    {% else %}
+      not computed
+    {% endif %}
+    </td></tr>
+    <tr><td>Automorphism Group:</td><td>
+    {% if seq.quo|attr('show_aut_group')%}
+      {{seq.quo.show_aut_group()|safe}}
+    {% else %}
+      not computed
+    {% endif %}
+    </td></tr>
+    <tr><td>Outer Automorphisms:</td><td>
+    {% if seq.quo|attr('show_outer_group')%}
+      {{seq.quo.show_outer_group()|safe}}
+    {% else %}
+      not computed
+    {% endif %}
+    </td></tr>
+		{% if seq.nilpotent %}
+    <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
+    class:')}}</td>
+	  <td>
+	  {% if seq.quo.G %}
+	  ${{seq.quo.nilpotency_class}}$  
+	  {% else %}
+	  not computed
+	  {% endif %}
+</td></tr>
+	{% endif %}
+    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>
+		 {% if seq.quo.G %}
+		 ${{seq.quo.derived_length}}$
+		 {% else %}
+	  not computed
+	  {% endif %}
+	</td></tr>
+
   </table>
 </p>
 
@@ -78,27 +153,35 @@
 
 <p>
   {% if seq.characteristic %}
-  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the Weyl group $W = G / Z_G(H)$: the quotient by the centralizer of $H$.
+  Since the subgroup $H$ is {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : \operatorname{Aut}(G) \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphism group')}} $\operatorname{Inn}(G)$ is the {{KNOWL('group.weyl_group','Weyl group')}} $W = G / Z_G(H)$.
   {% set S = "\operatorname{Aut}(G)" %}
   {% else %}
-  While the subgroup $H$ is not {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the stabilizer $S$ of $H$ in the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : S \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphisms')}} $\operatorname{Inn}(G) \cap S$ is the Weyl group $W = N_G(H) / Z_G(H)$: the quotient of the {{KNOWL('group.subgroup.normalizer', 'normalizer')}} of $H$ by its {{KNOWL('group.centralizer', 'centralizer')}}.
+  While the subgroup $H$ is not {{KNOWL('group.characteristic_subgroup', 'characteristic')}}, the stabilizer $S$ of $H$ in the {{KNOWL('group.automorphism', 'automorphism group')}} $\operatorname{Aut}(G)$ of the ambient group acts on $H$, yielding a homomorphism $\operatorname{res} : S \to \operatorname{Aut}(H)$.  The image of $\operatorname{res}$ on the {{KNOWL('group.automorphism', 'inner automorphisms')}} $\operatorname{Inn}(G) \cap S$ is the {{KNOWL('group.weyl_group','Weyl group')}} $W = N_G(H) / Z_G(H)$.
   {% set S = "S" %}
   {% endif %}
   <table>
     <tr><td>$\operatorname{Aut}(G)$</td><td>{{seq.amb.show_aut_group()|safe}}</td></tr>
-    <tr><td>$\operatorname{Aut}(H)$</td><td>{{seq.sub.show_aut_group()|safe}}</td></tr>
+    <tr><td>$\operatorname{Aut}(H)$</td><td>
+    {% if seq.sub|attr('show_aut_group') %}
+      {{seq.sub.show_aut_group()|safe}}
+    {% else %}
+      not computed
+    {% endif %}
+      </td></tr>
     {% if seq.aut_weyl_group is not none %}
-      <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order ${{seq.aut_weyl.order_factor()}}$</td></tr>
+      <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.aut_weyl.order) | safe}}</td></tr>
     {% elif seq.aut_weyl_index is not none %}
-    <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{seq.sub.aut_order / seq.aut_weyl_index}}</td></tr>
+      <tr><td>$\card{\operatorname{res}({{S}})}$</td><td>{{info.pos_int_and_factor(seq.amb.aut_order/seq.aut_weyl_index) | safe}}</td></tr>
     {% endif %}
     {% if seq.aut_centralizer_order is not none %}
-    <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>${{seq.aut_centralizer_order}}$</td></tr>
+    <tr><td>$\card{\operatorname{ker}(\operatorname{res})}$</td><td>{{info.pos_int_and_factor(seq.aut_centralizer_order) | safe}}</td></tr>
     {% endif %}
     {% if seq.weyl_group is not none %}
-      <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order ${{seq.weyl.order_factor()}}$</td></tr>
+      <tr><td>$W$</td><td><a href="{{url_for('.by_label', label=seq.weyl_group)}}">${{seq.weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.weyl.order) | safe}}</td></tr>
+    {% elif seq.normalizer is not none and seq.centralizer is not none %}
+    <tr><td>$\card{W}$</td><td>{{info.pos_int_and_factor(seq.normalizer_.subgroup_order / seq.centralizer_.subgroup_order) | safe}}</td></tr>
     {% else %}
-    <tr><td>$\card{W}$</td><td>{{seq.normalizer_.order / seq.centralizer_.order}}</td></tr>
+    <tr><td>$\card{W}$</td><td> not computed</td></tr>
     {% endif %}
   </table>
 </p>
@@ -107,11 +190,27 @@
 
 <p>
   <table>
+    {% if seq.centralizer is not none %}
     <tr><td>{{KNOWL('group.centralizer', 'Centralizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.centralizer_.label)}}">${{seq.centralizer_.subgroup_tex}}$</a></td></tr>
+    {% else %}
+     <tr><td>{{KNOWL('group.centralizer', 'Centralizer:')}}</td><td> not computed </td></tr>
+     {% endif %}
+     {% if seq.normalizer is not none %}
     <tr><td>{{KNOWL('group.subgroup.normalizer', 'Normalizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normalizer_.label)}}">${{seq.normalizer_.subgroup_tex}}$</a></td></tr>
-    {% if not seq.normal %}
+    {% else %}
+   <tr><td>{{KNOWL('group.subgroup.normalizer', 'Normalizer:')}}</td><td> not computed </td></tr>
+    {% endif %}
+   {% if not seq.normal %}
+   {% if seq.normal_closure is not none %}
     <tr><td>{{KNOWL('group.subgroup.normal_closure', 'Normal closure:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normal_closure_.label)}}">${{seq.normal_closure_.subgroup_tex}}$</a></td></tr>
+    {% else %}
+ <tr><td>{{KNOWL('group.subgroup.normal_closure', 'Normal closure:')}}</td><td> not computed </td></tr>
+ {% endif %}
+    {% if seq.core is not none %}
     <tr><td>{{KNOWL('group.core', 'Core:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.core_.label)}}">${{seq.core_.subgroup_tex}}$</a></td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.core', 'Core:')}}</td><td> not computed </td></tr>
+    {% endif %}
     {% endif %}
     {% if seq.split and seq.complements %}
     <tr><td>{{KNOWL('group.subgroup.complement', 'Complements:')}}</td><td>{% for comp in seq.complements_ %}<a href="{{url_for('.by_subgroup_label', label=comp.label)}}">${{comp.subgroup_tex}}$</a> {% endfor %}</td></tr>
@@ -123,9 +222,11 @@
     <tr><td>{{KNOWL('group.under_subgroup', 'Maximal under-subgroups:')}}</td>{% for H in seq.contains_ %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a></td>{% endfor %}</tr>
     {% endif %}
     {% if not seq.outer_equivalence %}
-      {% set others = seq.autjugate_subgroups() %}
-      {% if others %}
-        <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}</td>{% for H in others %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">{{H.label}}</a></td>{% endfor %}</tr>
+    {% set others = seq.autjugate_subgroups() %}
+    {% if others == None %}
+     <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td> <td>Subgroups are not computed up to automorphism.</td></tr>
+      {% elif others %}
+    <tr><td>{{KNOWL('group.autjugate_subgroup', 'Autjugate subgroups')}}:</td>{% for H in others %}<td><a href="{{url_for('.by_subgroup_label', label=H.label)}}">{{H.label}}</a></td>{% endfor %}</tr>
       {% endif %}
     {% endif %}
   </table>
@@ -140,10 +241,16 @@
     {% endif %}
     {% if seq.outer_equivalence %}
       <tr><td>Number of conjugacy classes in this autjugacy class</td><td>${{seq.conjugacy_class_count}}$</td></tr>
-    {% endif %}
+      {% endif %}
+      {% if seq.mobius_sub is not none %}
     <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td>${{seq.mobius_sub}}$</td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.mobius_function', 'Möbius function')}}</td><td> not computed </td></tr>
+    {% endif %}
     {% if seq.projective_image is not none %}
     <tr><td>{{KNOWL('group.subgroup.projective_image', 'Projective image')}}</td><td><a href="{{url_for('.by_label', label=seq.projective_image)}}">${{seq.proj_img.tex_name}}$</a></td></tr>
+    {% else %}
+    <tr><td>{{KNOWL('group.subgroup.projective_image', 'Projective image')}}</td><td> not computed</td></tr>
     {% endif %}
   </table>
 </p>
