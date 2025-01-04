@@ -155,5 +155,5 @@ class AVTest(LmfdbTest):
         page = self.tc.get('Variety/Abelian/Fq/5/3/ac_e_ai_v_abl', follow_redirects=True)
         assert 'Curves to text' not in page.get_data(as_text=True)
 
-        page = self.tc.get('Variety/Abelian/Fq/download_curves/3.17.d_b_act', follow_redirects=True)
-        assert 'No curves for abelian variety isogeny class 3.17.d_b_act' in page.get_data(as_text=True)
+        page = self.tc.get('Variety/Abelian/Fq/download_curves/5.3.ac_e_ai_v_abl', follow_redirects=True)
+        assert 'No curves for abelian variety isogeny class 5.3.ac_e_ai_v_abl' in page.get_data(as_text=True)
