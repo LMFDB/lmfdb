@@ -461,17 +461,7 @@ def search():
 def modular_forms():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
-    # lm = [('History of modular forms', '/ModularForm/history')]
-    return render_template('single.html', title=t, kid='mf.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/ModularForm/history")
-
-
-def modular_forms_history():
-    t = 'Modular forms'
-    b = [(t, url_for('modular_forms'))]
-    b.append(('History', url_for("modular_forms_history")))
-    return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
 @app.route('/Variety')
@@ -479,17 +469,7 @@ def modular_forms_history():
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
-    # lm = [('History of varieties', '/Variety/history')]
-    return render_template('single.html', title=t, kid='varieties.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/Variety/history")
-
-
-def varieties_history():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    b.append(('History', url_for("varieties_history")))
-    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='varieties.about', bread=b)
 
 
 @app.route('/Field')
@@ -497,17 +477,7 @@ def varieties_history():
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    # lm = [('History of fields', '/Field/history')]
-    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Field/history")
-
-
-def fields_history():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Representation')
@@ -515,17 +485,7 @@ def fields_history():
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
-    # lm = [('History of representations', '/Representation/history')]
-    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Representation/history")
-
-
-def representations_history():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Motive')
@@ -533,17 +493,7 @@ def representations_history():
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
-    # lm = [('History of motives', '/Motives/history')]
-    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Motives/history")
-
-
-def motives_history():
-    t = 'Motives'
-    b = [(t, url_for('motives'))]
-    b.append(('History', url_for("motives_history")))
-    return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Group')
@@ -551,21 +501,12 @@ def motives_history():
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    # lm = [('History of groups', '/Group/history')]
-    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Group/history")
+    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)
 
 @app.route('/datasets')
 @app.route('/datasets/')
 def datasets():
     return render_template('datasets.html', title='Auxiliary datasets', bread=[("Datasets", " ")])
-
-def groups_history():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A brief history of groups", kid='group.history', body_class=_bc, bread=b)
 
 
 @app.route("/editorial-board")
@@ -803,7 +744,6 @@ def WhiteListedRoutes():
         'L/contents',
         'L/degree',
         'L/download',
-        'L/history',
         'L/interesting',
         'L/lhash',
         'L/rational',
@@ -823,7 +763,6 @@ def WhiteListedRoutes():
         'acknowledgment',
         'alive',
         'api',
-        #'api2',
         'bigpicture',
         'callback_ajax',
         'citation',
