@@ -361,14 +361,17 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def jump_set(self):
         fields, cache = self.fields
-        js = sorted(Counter(tuple(rec["jump_set"]) for rec in fields).items())
+        js = sorted(Counter(tuple(rec["jump_set"]) for rec in fields if "jump_set" in rec).items())
         def show_js(x, cnt):
             disp = str(x).replace(" ","")
             if len(js) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, jump_set=disp)
             return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
-        return ", ".join(show_js(list(x), cnt) for (x,cnt) in js)
+        s = ", ".join(show_js(list(x), cnt) for (x,cnt) in js)
+        if any("jump_set" not in rec for rec in fields):
+            s += " (incomplete)"
+        return s
 
     @lazy_attribute
     def gal_slope_tables(self):
