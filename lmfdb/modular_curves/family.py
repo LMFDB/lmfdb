@@ -358,15 +358,15 @@ class XnsN(ModCurveFamily_base):
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)"
     genus = "g"
-    nu2 = r"$\nu_2 = \begin{cases}2^{\omega(N)} & \text{if } p \equiv 3 \bmod 4 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
-    nu3 = r"$\nu_3 = \begin{cases}2^{\omega(N)} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
+    nu2 = r"$\nu_2 = \prod_{p\mid N} \left( 1 - \left( \frac{-1}{p} \right) \right)$"
+    nu3 = r"$\nu_3 = \prod_{p|N} \left( 1 - \left( \frac{-3}{p} \right) \right)$"
     cusps = r"$\nu_\infty = \varphi(N)$"
     rational_cusps = "1"    
     moduli_description = fr"$X_{{\text{{ns}}}}(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of a {display_knowl('gl2.cartan', 'Cartan subgroup')} of $\GL_2(\Z/N\Z)$ that is nonsplit at every prime dividing $N$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
-    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>" 
+    #notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>" 
 
     @lazy_attribute
     def cusps_display(self):
@@ -397,15 +397,15 @@ class XnsplusN(ModCurveFamily_base):
     index = "N+1"
     psl2index = r"i = N \cdot \varphi(N)/2"
     genus = "g"
-    nu2 = r"$\nu_2 = \begin{cases}\omega(N) & \text{if } p\equiv 3\bmod 4 \text{ for every } p\mid N, \\ 0 & \text{otherwise.} \end{cases} + \frac{N}{2}\prod_{p\mid N}\left( 1 + \frac{1}{p}\right) - \#S$."
-    nu3 = r"$\nu_3 = \begin{cases} 2^{\omega(N)-1} & \text{if } p \equiv 2 \bmod 3 \text{ for every } p \mid N, \\ 0 & \text{otherwise}. \end{cases}$"
+    nu2 = r"$\nu_2 = \sum_{p\mid N} \frac{1- \left( \frac{-1}{p} \right)}{2} \ + \ \left(\frac{1}{2}N \cdot \prod_{p|N}\left(1 + \frac{1}{p}\right) -\#S\right)$"
+    nu3 = r"$\nu_3 = \frac{1}{2}\cdot \prod_{p|N} \left( 1 - \left( \frac{-3}{p} \right) \right)$"
     cusps = r"$\nu_\infty = \varphi(N)/2$"
     rational_cusps = r"$\nu_\infty = 0$"
     moduli_description = fr"$X_{{\text{{ns}}}}^+(N)$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image of an {display_knowl('gl2.cartan', 'extended Cartan subgroup')} of $\GL_2(\Z/N\Z)$ that is nonsplit at every prime dividing $N$."
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     hypell_description = "Unknown."
     biell_description = "Unknown."
-    notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
+    notation = r"<ul> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
 
     @lazy_attribute
     def cusps_display(self):
