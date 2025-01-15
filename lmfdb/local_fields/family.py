@@ -86,6 +86,19 @@ class pAdicSlopeFamily:
     def scaled_tilts(self):
         return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.tilts, 1)]
 
+    def _set_dots(self):
+        p, e, w = self.p, self.e, self.w
+        self.blue = []
+        self.red = []
+        self.green = []
+        sigma = i = j = 0
+        while True:
+            j, i = sigma.quo_rem(self.e)
+            if i == 0:
+                index = 0
+            else:
+                index = w - i
+
     @lazy_attribute
     def virtual_green(self):
         p, e, w = self.p, self.e, self.w
@@ -135,7 +148,7 @@ class pAdicSlopeFamily:
                 else:
                     index = w - i
                 if v == 1 + s - u/e:
-                    self.red.append((u, v, False))
+                    self.red.append((u, v, v == 1 + s - u/e))
                 elif u.valuation(p) == index:
                     self.blue.append((u, v, True))
                 u += 1
@@ -179,16 +192,16 @@ class pAdicSlopeFamily:
             ticklook = {a: a for a in ticks} # adjust values below when too close
             if mindiff < 0.1:
                 pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
-                if pairdiff >= 0.3:
+                if pairdiff >= 0.25:
                     # We can just spread out pairs of ticks from their center
                     for a,b in rkeys:
                         if b - a < 0.1:
-                            ticklook[a] = a - 1/20
-                            ticklook[b] = b + 1/20
+                            ticklook[a] = a - 1/30
+                            ticklook[b] = b + 1/30
                     # We decreased
                     mindiff += 1/10
                 else:
-                    pass
+                    pass # Should do something here
                     # We move if there's enough space
                     #for i, (a,b,c) in enumerate(zip(ticks[:-2], ticks[1:-1], ticks[2:])):
                     #    la, lb, lc = ticklook[a], ticklook[b], ticklook[c]
@@ -201,6 +214,7 @@ class pAdicSlopeFamily:
                     #        elif a - ticks[-1] >= 0.15:
                     #            # We can move it down, but we need to be careful not to move it down too much
                     #            ticklook[a] = (
+                mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rkeys)
                 aspect = max(0.75 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
             # We determine the colors of the bands, then print them
             for m, s in zip(self.means, self.slopes):
@@ -228,8 +242,8 @@ class pAdicSlopeFamily:
                     color = "green"
                 # Mean and slope labels
                 P += line([(0, y), (self.e, y)], color=color, zorder=-3, thickness=2)
-                P += text(f"${float(y):.3f}$", (-hscale, y), color=color)
-                P += text(f"${self.e*y}$", (-2*hscale, y), color=color)
+                P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
+                P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color)
             # The spiral
             for y in srange(maxslope):
                 y1 = min(y+1, maxslope)
