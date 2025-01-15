@@ -49,9 +49,12 @@
 
 <img src="{{ family.ramification_polygon_plot }}" width="1000">
 
+{% if family.e > 1 %}
 <h2> {{ KNOWL('lf.family_picture', 'Family photo') }} </h2>
 
 <img src="{{ family.picture }}" width="1000">
+
+{% endif %}
 
 {% if family.field_count > 0 %}
 

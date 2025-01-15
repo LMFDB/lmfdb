@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime, gcd
+from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime, gcd, text
 from lmfdb import db
 from lmfdb.utils import encode_plot, unparse_range, totaler, proportioners
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
@@ -87,20 +87,18 @@ class pAdicSlopeFamily:
         return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.tilts, 1)]
 
     @lazy_attribute
-    def black(self):
-        return [(0, 1), (self.e, 0)]
-
-    @lazy_attribute
     def virtual_green(self):
         p, e, w = self.p, self.e, self.w
         last_slope = {}
         for i, s in enumerate(self.slopes, 1):
             last_slope[s] = i
         ans = []
-        for i, (h, s) in enumerate(zip(self.means, self.slopes), 1):
+        for i, (h, s, t) in enumerate(zip(self.means, self.slopes, self.tilts), 1):
             u = e*frac(h)
             v = 1 + floor(h)
-            if last_slope[s] == i:
+            if t.numerator() % p == 0:
+                code = -1
+            elif last_slope[s] == i:
                 if (e*frac(h)).valuation(p) == w - i:
                     code = 1
                 else:
@@ -116,7 +114,7 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def solid_green(self):
-        return [(u, v) for (u, v, solid) in self.green if solid]
+        return [(u, v) for (u, v, solid) in self.green if solid == 1]
 
     def _set_redblue(self):
         self.blue = []
@@ -132,9 +130,13 @@ class pAdicSlopeFamily:
                 if u == e:
                     u = ZZ(0)
                     v += 1
+                if u == 0:
+                    index = 0
+                else:
+                    index = w - i
                 if v == 1 + s - u/e:
                     self.red.append((u, v, False))
-                elif u.valuation(p) == (w - i):
+                elif u.valuation(p) == index:
                     self.blue.append((u, v, True))
                 u += 1
         self.blue = sorted(set(self.blue))
@@ -157,19 +159,49 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def picture(self):
-        P = point(self.black, color="black", size=20)
+        P = point((0,0), color="olive", marker="D", size=20)
         # We want to draw a green horizontal line at each mean, a black at each slope (except when they overlap, in which case it should be dashed), and a grey rectangle between, with shading increased based on overlaps.
         if self.w > 0:
             maxslope = self.slopes[-1]
-            aspect = 0.75 * self.e / (1 + maxslope)
             # Draw boundaries
             P += line([(0, maxslope), (0,0), (self.e, 0), (self.e, maxslope)], rgbcolor=(0.2, 0.2, 0.2), zorder=-1, thickness=1)
 
             slopeset = set(self.slopes)
             meanset = set(self.means)
             ticks = sorted(slopeset.union(meanset))
-            rectangles = {(a,b): 0 for (a,b) in zip(ticks[:1], ticks[:-1])}
+            rectangles = {(a,b): 0 for (a,b) in zip(ticks[:-1], ticks[1:])}
             rkeys = sorted(rectangles)
+            hscale = self.e / 12
+            #for a,b in rkeys:
+                #
+            mindiff = min((b-a) for (a,b) in rkeys)
+            aspect = max(0.75 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
+            ticklook = {a: a for a in ticks} # adjust values below when too close
+            if mindiff < 0.1:
+                pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
+                if pairdiff >= 0.3:
+                    # We can just spread out pairs of ticks from their center
+                    for a,b in rkeys:
+                        if b - a < 0.1:
+                            ticklook[a] = a - 1/20
+                            ticklook[b] = b + 1/20
+                    # We decreased
+                    mindiff += 1/10
+                else:
+                    pass
+                    # We move if there's enough space
+                    #for i, (a,b,c) in enumerate(zip(ticks[:-2], ticks[1:-1], ticks[2:])):
+                    #    la, lb, lc = ticklook[a], ticklook[b], ticklook[c]
+                    #    if lb - la < 0.1:
+                    #        # Want to adjust a downward
+                    #        if la > a or (i > 0 and a - ticklook[ticks[i-1]] < 0.15:
+                    #            # We've already moved a up, or it's pretty close to the tick below
+                    #            # So we set la to the average of the term below and the term above.
+                    #            ticklook[a] = (ticklook[ticks[i-1]] + b) / 2
+                    #        elif a - ticks[-1] >= 0.15:
+                    #            # We can move it down, but we need to be careful not to move it down too much
+                    #            ticklook[a] = (
+                aspect = max(0.75 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
             # We determine the colors of the bands, then print them
             for m, s in zip(self.means, self.slopes):
                 # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice
@@ -180,26 +212,44 @@ class pAdicSlopeFamily:
                         break
             for (a,b), cnt in rectangles.items():
                 col = 1 - 0.1*cnt
-                P += polygon([(0, a), (self.e, a), (self.e, b), (0, b)], fill=True, rgbcolor=(col,col,col), zorder=-3)
+                P += polygon([(0, a), (self.e, a), (self.e, b), (0, b)], fill=True, rgbcolor=(col,col,col), zorder=-4)
             # Horizontal green and black lines
-            for y in self.ticks:
+            for y in ticks:
                 if y in slopeset and y in meanset:
                     # green and black dashed line
                     ndashes = 11
                     scale = self.e / ndashes
-                    for x in range(0, ndashes, 2):
-                        P += line([(x*scale, y), ((x+1)*scale, y)], color="black", zorder=-2, thickness=3)
                     for x in range(1, ndashes, 2):
-                        P += line([(x*scale, y), ((x+1)*scale, y)], color="green", zorder=-2, thickness=3)
+                        P += line([(x*scale, y), ((x+1)*scale, y)], color="green", zorder=-2, thickness=2)
+                    color = "black" # Behind the green dashes
                 elif y in slopeset:
-                    P += line([(0, y), (self.e, y)], color="black", zorder=-2, thickness=3)
+                    color = "black"
                 else:
-                    P += line([(0, y), (self.e, y)], color="green", zorder=-2, thickness=3)
+                    color = "green"
+                # Mean and slope labels
+                P += line([(0, y), (self.e, y)], color=color, zorder=-3, thickness=2)
+                P += text(f"${float(y):.3f}$", (-hscale, y), color=color)
+                P += text(f"${self.e*y}$", (-2*hscale, y), color=color)
             # The spiral
             for y in srange(maxslope):
                 y1 = min(y+1, maxslope)
                 x1 = (y1 - y) * self.e
                 P += line([(0, y), (x1, y1)], color="black", zorder=-1, thickness=1)
+            # x-axis Labels
+            vscale = maxslope / 100
+            for u in range(self.e+1):
+                P += text(f"${u}$", (u, -vscale), vertical_alignment="top", color="black", zorder=-2)
+                P += text(f"${u}$", (u, maxslope+vscale), vertical_alignment="bottom", color="black", zorder=-2)
+            # Right hand lines for arithmetic bands
+            for (m, s, t) in zip(self.means, self.slopes, self.types):
+                if t == self.e0:
+                    P += line([(self.e, m), (self.e, s)], color="black", zorder=-2, thickness=2)
+            # Tilt labels
+            seen = set()
+            for i, (s, t) in enumerate(zip(self.slopes, self.tilts)):
+                if s not in seen:
+                    P += text(f"${t}$", (self.e + hscale/2, s), color="blue")
+                seen.add(s)
         else:
             aspect = 1
         P.set_aspect_ratio(aspect)
@@ -208,13 +258,14 @@ class pAdicSlopeFamily:
             for (u, v, solid) in pts:
                 # (u,v) gives the term for pi^v x^u.  We transition to the coordinates for the picture
                 v = v - 1 + u / self.e
-                if solid:
+                if True: #solid:
                     P += point((u, v), markeredgecolor=color, color=color, size=20, marker=marker, zorder=1)
-                else:
-                    P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
+                #else:
+                #    P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
+        P.axes(False)
         #P._set_extra_kwds(dict(xmin=0, xmax=self.e, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
-        return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight")
+        return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight", dpi=300)
 
     @lazy_attribute
     def ramification_polygon_plot(self):
