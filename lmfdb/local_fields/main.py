@@ -481,14 +481,14 @@ families_columns = SearchColumns([
     RationalListCol("visible", "lf.visible_slopes", "Abs. Artin slopes",
                     show_slopes2, default=False),
     RationalListCol("slopes", "lf.swan_slopes", "Swan slopes"),
-    RationalListCol("heights", "lf.heights", "Heights"),
-    RationalListCol("rams", "lf.rams", "Rams"),
+    RationalListCol("means", "lf.means", "Means"),
+    RationalListCol("tilts", "lf.tilts", "Tilts"),
     ProcessedCol("poly", "lf.family_polynomial", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Field count"),
     MathCol("mass", "lf.family_mass", "Mass", orig=["mass_display"]),
     MathCol("mass_stored", "lf.family_mass", "Mass stored", default=False),
-    PercentCol("mass_missing", "lf.family_missing_mass", "Mass missing"),
+    PercentCol("mass_found", "lf.family_mass", "Mass found", default=False),
     MathCol("wild_segments", "lf.wild_segments", "Wild segments", default=False),
     MathCol("packet_count", "lf.packet", "Num. Packets"),
 ])
@@ -1016,7 +1016,7 @@ def common_family_parse(info, query):
     parse_noop(info,query,'base',name='Base')
     parse_noop(info,query,'label_absolute',name='Absolute label')
     parse_floats(info,query,'mass',name='Mass')
-    parse_floats(info,query,'mass_missing',name='Missing mass')
+    parse_floats(info,query,'mass_found',name='Mass found')
     parse_ints(info,query,'ambiguity',name='Ambiguity')
     parse_ints(info,query,'field_count',name='Field count')
     parse_ints(info,query,'wild_segments',name='Wild segments')
@@ -1198,7 +1198,7 @@ class FamiliesSearchArray(SearchArray):
         ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
         ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
         ("mass", "mass", ['mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-        ("mass_missing", "mass missing", ['mass_missing', 'mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+        ("mass_found", "mass found", ['mass_found', 'mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
     ]
     def __init__(self):
         #degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
@@ -1298,10 +1298,10 @@ class FamiliesSearchArray(SearchArray):
             knowl='lf.family_mass',
             example='255/8',
             example_span='9/2, or a range like 1-10')
-        mass_missing = TextBox(
-            name='mass_missing',
-            label='Missing mass',
-            knowl='lf.family_missing_mass',
+        mass_found = TextBox(
+            name='mass_found',
+            label='Mass found',
+            knowl='lf.family_mass',
             example='0.5-',
             example_span='0, or a range like 0.1-0.4')
         ambiguity = TextBox(
@@ -1330,8 +1330,8 @@ class FamiliesSearchArray(SearchArray):
         self.refine_array = [[qp, degree, e, f, c],
                              [base, n0, e0, f0, c0],
                              [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
-                             #[visible, slopes, rams, heights, slope_multiplicities],
-                             [mass, mass_missing, ambiguity, field_count, wild_segments]]
+                             #[visible, slopes, tilts, means, slope_multiplicities],
+                             [mass, mass_found, ambiguity, field_count, wild_segments]]
 
     def search_types(self, info):
         return self._search_again(info, [

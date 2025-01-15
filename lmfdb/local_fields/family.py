@@ -18,18 +18,18 @@ def str_to_QQlist(s):
     return [QQ(x) for x in s[1:-1].split(", ")]
 
 class pAdicSlopeFamily:
-    def __init__(self, label=None, base=None, slopes=[], heights=[], rams=[], field_cache=None):
-        data_cols = ["base", "rams", "base_aut", "p", "f", "f0", "f_absolute", "e", "e0", "e_absolute", "n", "n0", "n_absolute", "c", "c0", "c_absolute", "field_count", "packet_count", "ambiguity", "mass_display", "mass_stored", "mass_missing", "all_stored"]
+    def __init__(self, label=None, base=None, slopes=[], means=[], tilts=[], field_cache=None):
+        data_cols = ["base", "tilts", "scaled_tilts", "types", "base_aut", "p", "f", "f0", "f_absolute", "e", "e0", "e_absolute", "n", "n0", "n_absolute", "c", "c0", "c_absolute", "field_count", "packet_count", "ambiguity", "mass_display", "mass_stored", "mass_found", "all_stored"]
         if label is not None:
-            assert not base and not slopes and not heights and not rams
+            assert not base and not slopes and not means and not tilts
             data = db.lf_families.lookup(label)
             if data:
                 self.__dict__.update(data)
-                for col in ["visible", "slopes", "rams", "heights", "scaled_rams", "scaled_heights"]:
+                for col in ["visible", "slopes", "tilts", "means", "scaled_tilts", "types"]:
                     setattr(self, col, str_to_QQlist(getattr(self, col)))
                 self.p, self.e = ZZ(self.p), ZZ(self.e)
                 self.artin_slopes = self.visible
-                base, rams, p, w = self.base, self.rams, self.p, self.w
+                base, tilts, p, w = self.base, self.tilts, self.p, self.w
             else:
                 raise NotImplementedError
             self.label = label
@@ -40,10 +40,10 @@ class pAdicSlopeFamily:
         assert p.is_prime()
         self.pw = p**w
         _, self.etame = self.e.val_unit(p)
-        # We support tamely ramified fields by specifying a tame base and empty slopes/rams/heights
-        # slopes/rams -> heights -> rams/slopes
-        #if rams:
-        #    heights = [sum(p**(k-j) * rams[j] for j in range(k+1)) for k in range(w)]
+        # We support tamely ramified fields by specifying a tame base and empty slopes/tilts/heights
+        # slopes/tilts -> heights -> tilts/slopes
+        #if tilts:
+        #    heights = [sum(p**(k-j) * tilts[j] for j in range(k+1)) for k in range(w)]
         #if slopes:
         #    heights = [] # have to reset since lists created in arguments persist across function calls
         #    h = 0
@@ -52,8 +52,8 @@ class pAdicSlopeFamily:
         #        h += phipk * s
         #        heights.append(h)
         #        phipk *= p
-        #if w and not rams:
-        #    rams = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
+        #if w and not tilts:
+        #    tilts = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
         #if w and not slopes:
         #    slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
         #self.slopes = slopes
@@ -76,19 +76,15 @@ class pAdicSlopeFamily:
         #        self.n = self.e = self.pw
         #self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
         #self.heights = heights
-        #self.rams = rams
+        #self.tilts = tilts
+
+    #@lazy_attribute
+    #def scaled_heights(self):
+    #    return [h / (self.etame * self.p**i) for (i, h) in enumerate(self.heights, 1)]
 
     @lazy_attribute
-    def scaled_heights(self):
-        return [h / (self.etame * self.p**i) for (i, h) in enumerate(self.heights, 1)]
-
-    @lazy_attribute
-    def scaled_rams(self):
-        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.rams, 1)]
-
-    @lazy_attribute
-    def bands(self):
-        return [((0, 1+h), (self.e, h), (0, 1+s), (self.e, s)) for (h, s) in zip(self.scaled_heights, self.slopes)]
+    def scaled_tilts(self):
+        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.tilts, 1)]
 
     @lazy_attribute
     def black(self):
@@ -101,7 +97,7 @@ class pAdicSlopeFamily:
         for i, s in enumerate(self.slopes, 1):
             last_slope[s] = i
         ans = []
-        for i, (h, s) in enumerate(zip(self.scaled_heights, self.slopes), 1):
+        for i, (h, s) in enumerate(zip(self.means, self.slopes), 1):
             u = e*frac(h)
             v = 1 + floor(h)
             if last_slope[s] == i:
@@ -162,25 +158,60 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def picture(self):
         P = point(self.black, color="black", size=20)
-        for A, B, C, D in self.bands:
-            P += polygon([A,B,D,C], fill=True, rgbcolor=(0.9, 0.9, 0.9), zorder=-3)
-            P += line([A, B], color="black", zorder=-1)
-            P += line([C, D], color="black", zorder=-1)
-        for (A0, B0, C0, D0), (A1, B1, C1, D1) in zip(self.bands[:-1], self.bands[1:]):
-            if A1 < C0:
-                P += polygon([A1, B1, D0, C0], fill=True, rgbcolor=(0.8, 0.8, 0.8), zorder=-2)
+        # We want to draw a green horizontal line at each mean, a black at each slope (except when they overlap, in which case it should be dashed), and a grey rectangle between, with shading increased based on overlaps.
+        if self.w > 0:
+            maxslope = self.slopes[-1]
+            aspect = 0.75 * self.e / (1 + maxslope)
+            # Draw boundaries
+            P += line([(0, maxslope), (0,0), (self.e, 0), (self.e, maxslope)], rgbcolor=(0.2, 0.2, 0.2), zorder=-1, thickness=1)
+
+            slopeset = set(self.slopes)
+            meanset = set(self.means)
+            ticks = sorted(slopeset.union(meanset))
+            rectangles = {(a,b): 0 for (a,b) in zip(ticks[:1], ticks[:-1])}
+            rkeys = sorted(rectangles)
+            # We determine the colors of the bands, then print them
+            for m, s in zip(self.means, self.slopes):
+                # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice
+                for (a,b) in rkeys:
+                    if a >= m and b <= s:
+                        rectangles[a,b] += 1
+                    elif a >= s:
+                        break
+            for (a,b), cnt in rectangles.items():
+                col = 1 - 0.1*cnt
+                P += polygon([(0, a), (self.e, a), (self.e, b), (0, b)], fill=True, rgbcolor=(col,col,col), zorder=-3)
+            # Horizontal green and black lines
+            for y in self.ticks:
+                if y in slopeset and y in meanset:
+                    # green and black dashed line
+                    ndashes = 11
+                    scale = self.e / ndashes
+                    for x in range(0, ndashes, 2):
+                        P += line([(x*scale, y), ((x+1)*scale, y)], color="black", zorder=-2, thickness=3)
+                    for x in range(1, ndashes, 2):
+                        P += line([(x*scale, y), ((x+1)*scale, y)], color="green", zorder=-2, thickness=3)
+                elif y in slopeset:
+                    P += line([(0, y), (self.e, y)], color="black", zorder=-2, thickness=3)
+                else:
+                    P += line([(0, y), (self.e, y)], color="green", zorder=-2, thickness=3)
+            # The spiral
+            for y in srange(maxslope):
+                y1 = min(y+1, maxslope)
+                x1 = (y1 - y) * self.e
+                P += line([(0, y), (x1, y1)], color="black", zorder=-1, thickness=1)
+        else:
+            aspect = 1
+        P.set_aspect_ratio(aspect)
         for color, marker in [("green", "s"), ("red", "D"), ("blue", "o")]:
             pts = getattr(self, color)
             for (u, v, solid) in pts:
+                # (u,v) gives the term for pi^v x^u.  We transition to the coordinates for the picture
+                v = v - 1 + u / self.e
                 if solid:
                     P += point((u, v), markeredgecolor=color, color=color, size=20, marker=marker, zorder=1)
                 else:
                     P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
-        if len(self.visible) > 0:
-            aspect = 0.75 * self.e / (1 + self.slopes[-1])
-        else:
-            aspect = 1
-        P.set_aspect_ratio(aspect)
         #P._set_extra_kwds(dict(xmin=0, xmax=self.e, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
         #return P
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight")
@@ -197,7 +228,7 @@ class pAdicSlopeFamily:
         if tame_shift:
             L.append((self.pw, tame_shift))
         cur = (self.pw, tame_shift)
-        for r, nextr in zip(self.rams, self.rams[1:] + [None]):
+        for r, nextr in zip(self.tilts, self.tilts[1:] + [None]):
             x = cur[0] // p
             y = cur[1] + x * (p - 1) * (r + 1)
             cur = (x, y)
@@ -289,7 +320,7 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def all_hidden_data_available(self):
-        if self.mass_missing > 0:
+        if self.mass_found < 1:
             return False
         for rec in self.fields:
             if not all(rec.get(col) for col in ["galT", "galois_label"]):
