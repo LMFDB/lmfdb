@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime, gcd, text
+from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime, gcd, text, Graphics
 from lmfdb import db
 from lmfdb.utils import encode_plot, unparse_range, totaler, proportioners
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
@@ -86,18 +86,44 @@ class pAdicSlopeFamily:
     def scaled_tilts(self):
         return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.tilts, 1)]
 
-    def _set_dots(self):
+    @lazy_attribute
+    def dots(self):
         p, e, w = self.p, self.e, self.w
-        self.blue = []
-        self.red = []
-        self.green = []
-        sigma = i = j = 0
+        # We include a large dot at the origin exactly when there is a tame part
+        dots = [("d", 0, 0, self.etame > 1)]
+        sigma = ZZ(1)
+        # It's convenient to add 0 at the beginning; this transforms our indexing into 1-based and helps with cases below the first band
+        means = [0] + self.means
+        slopes = [0] + self.slopes
+        types = [0] + self.types
+        maxslope = slopes[-1]
+        slopes.append(maxslope+1) # convenient since the last band is the final one in its sequence
         while True:
             j, i = sigma.quo_rem(self.e)
+            height = j + i / e
+            if height > maxslope:
+                break
+            sigma += 1
             if i == 0:
                 index = 0
             else:
-                index = w - i
+                index = w - i.valuation(p)
+            if height < means[index]:
+                # invisible Z-point
+                continue
+            if height in means:
+                band = means.index(height)
+                if types[band] != self.e0 and slopes[band] < slopes[band+1]:
+                    # A-point: green square
+                    dots.append(("a", i, j, True))
+                    continue
+            if height >= slopes[index]:
+                # C-point: red diamond
+                dots.append(("c", i, j, height in self.slopes))
+            else:
+                # B-point: blue circle
+                dots.append(("b", i, j, True))
+        return dots
 
     @lazy_attribute
     def virtual_green(self):
@@ -172,7 +198,7 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def picture(self):
-        P = point((0,0), color="olive", marker="D", size=20)
+        P = Graphics()
         # We want to draw a green horizontal line at each mean, a black at each slope (except when they overlap, in which case it should be dashed), and a grey rectangle between, with shading increased based on overlaps.
         if self.w > 0:
             maxslope = self.slopes[-1]
@@ -188,7 +214,7 @@ class pAdicSlopeFamily:
             #for a,b in rkeys:
                 #
             mindiff = min((b-a) for (a,b) in rkeys)
-            aspect = max(0.75 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
+            aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
             ticklook = {a: a for a in ticks} # adjust values below when too close
             if mindiff < 0.1:
                 pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
@@ -215,7 +241,7 @@ class pAdicSlopeFamily:
                     #            # We can move it down, but we need to be careful not to move it down too much
                     #            ticklook[a] = (
                 mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rkeys)
-                aspect = max(0.75 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
+                aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
             # We determine the colors of the bands, then print them
             for m, s in zip(self.means, self.slopes):
                 # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice
@@ -267,18 +293,17 @@ class pAdicSlopeFamily:
         else:
             aspect = 1
         P.set_aspect_ratio(aspect)
-        for color, marker in [("green", "s"), ("red", "D"), ("blue", "o")]:
-            pts = getattr(self, color)
-            for (u, v, solid) in pts:
-                # (u,v) gives the term for pi^v x^u.  We transition to the coordinates for the picture
-                v = v - 1 + u / self.e
-                if True: #solid:
-                    P += point((u, v), markeredgecolor=color, color=color, size=20, marker=marker, zorder=1)
-                #else:
-                #    P += point((u, v), markeredgecolor=color, color="white", size=20, marker=marker, zorder=1)
+        colmark = {"a": ("green", "s"), "b": ("blue", "o"), "c": ("red", "D"), "d": ("olive", "p")}
+        for code, i, j, big in self.dots:
+            # (i,j) gives the term for pi^j * x^i.  We transition to the coordinates for the picture
+            v = j + i / self.e
+            size = 20 if big else 10
+            color, marker = colmark[code]
+            mcolor = color
+            if not big:
+                color = "white"
+            P += point((i, v), markeredgecolor=mcolor, color=color, size=size, marker=marker, zorder=1)
         P.axes(False)
-        #P._set_extra_kwds(dict(xmin=0, xmax=self.e, ymin=0, ymax=self.slopes[-1] + 1, ticks_integer=True))
-        #return P
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight", dpi=300)
 
     @lazy_attribute
@@ -288,7 +313,6 @@ class pAdicSlopeFamily:
         L = [(self.n, 0)]
         if self.f != 1:
             L.append((self.e, 0))
-        #L = [(self.e, 0)]
         tame_shift = self.e - self.pw
         if tame_shift:
             L.append((self.pw, tame_shift))
@@ -305,19 +329,14 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def polynomial(self):
         p, f = self.p, self.f
-        pts = ([("a", u, v) for (u, v) in self.solid_green] +
-               [("b", u, v) for (u, v, solid) in self.blue] +
-               [("c", u, v) for (u, v, solid) in self.red])
-        names = [f"{c}{self.e*(v-1)+u}" for (c, u, v) in pts]
+        pts = [(c, i, j) for (c, i, j, big) in self.dots if big]
+        names = [f"{c}{self.e*j+i}" for (c, i, j) in pts]
         if gcd(p**f - 1, self.etame) > 1:
             names.append("d")
         if self.e0 > 1:
             names.append("pi")
         R = PolynomialRing(ZZ, names)
-        if self.f == 1:
-            S = PolynomialRing(R, "x")
-        else:
-            S = PolynomialRing(R, "nu")
+        S = PolynomialRing(R, "x")
         if self.e == 1:
             return S.gen()
         if "d" in names:
@@ -331,7 +350,7 @@ class pAdicSlopeFamily:
             pi = p
         poly = x**self.e + d*pi
         for i, (c, u, v) in enumerate(pts):
-            poly += R.gen(i) * pi**v * x**u
+            poly += R.gen(i) * pi**(v+1) * x**u
         return poly
 
     @lazy_attribute
