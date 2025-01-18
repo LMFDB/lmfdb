@@ -818,7 +818,7 @@ class SearchArray(UniqueRepresentation):
         buttons = []
         sort = self.sort_order(info)
         if sort:
-            spacer = RowSpacer(6)
+            #spacer = RowSpacer(6)
             cur_sort = info.get('sort_order', '')
             cur_dir = info.get('sort_dir', '')
             options = []
