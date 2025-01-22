@@ -40,48 +40,6 @@ class pAdicSlopeFamily:
         assert p.is_prime()
         self.pw = p**w
         _, self.etame = self.e.val_unit(p)
-        # We support tamely ramified fields by specifying a tame base and empty slopes/tilts/heights
-        # slopes/tilts -> heights -> tilts/slopes
-        #if tilts:
-        #    heights = [sum(p**(k-j) * tilts[j] for j in range(k+1)) for k in range(w)]
-        #if slopes:
-        #    heights = [] # have to reset since lists created in arguments persist across function calls
-        #    h = 0
-        #    phipk = p - 1
-        #    for s in slopes:
-        #        h += phipk * s
-        #        heights.append(h)
-        #        phipk *= p
-        #if w and not tilts:
-        #    tilts = [heights[0]] + [heights[k] - p*heights[k-1] for k in range(1,w)]
-        #if w and not slopes:
-        #    slopes = [heights[0] / (p-1)] + [(heights[k] - heights[k-1]) / euler_phi(p**(k+1)) for k in range(1,w)]
-        #self.slopes = slopes
-        #data = db.lf_families.lookup(self.label, data_cols)
-        #if data:
-        #    for col in data_cols:
-        #        setattr(self, col, data[col])
-        #else:
-        #    self.field_count = self.packet_count = self.poly_count = 0
-        #    if "." in self.short_base:
-        #        data = db.lf_fields.lookup(self.base, ["aut", "f", "e", "n"])
-        #        self.base_aut = data["aut"]
-        #        self.f = data["f"]
-        #        self.e0 = data["e"]
-        #        self.e = self.pw * self.e0
-        #        self.n0 = data["n"]
-        #        self.n = self.f * self.e
-        #    else:
-        #        self.base_aut = self.f = self.e0 = self.n0 = 1
-        #        self.n = self.e = self.pw
-        #self.visible = self.artin_slopes = [(s + 1) / self.e0 for s in slopes]
-        #self.heights = heights
-        #self.tilts = tilts
-
-    #@lazy_attribute
-    #def scaled_heights(self):
-    #    return [h / (self.etame * self.p**i) for (i, h) in enumerate(self.heights, 1)]
-
     @lazy_attribute
     def scaled_tilts(self):
         return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.tilts, 1)]
@@ -104,7 +62,7 @@ class pAdicSlopeFamily:
             if height > maxslope:
                 break
             sigma += 1
-            if i == 0:
+            if i == 0 or i.valuation(p) > w:
                 index = 0
             else:
                 index = w - i.valuation(p)
@@ -124,72 +82,6 @@ class pAdicSlopeFamily:
                 # B-point: blue circle
                 dots.append(("b", i, j, True))
         return dots
-
-    @lazy_attribute
-    def virtual_green(self):
-        p, e, w = self.p, self.e, self.w
-        last_slope = {}
-        for i, s in enumerate(self.slopes, 1):
-            last_slope[s] = i
-        ans = []
-        for i, (h, s, t) in enumerate(zip(self.means, self.slopes, self.tilts), 1):
-            u = e*frac(h)
-            v = 1 + floor(h)
-            if t.numerator() % p == 0:
-                code = -1
-            elif last_slope[s] == i:
-                if (e*frac(h)).valuation(p) == w - i:
-                    code = 1
-                else:
-                    code = 0
-            else:
-                code = -1
-            ans.append((u, v, code))
-        return ans
-
-    @lazy_attribute
-    def green(self):
-        return [(u, v, bool(code)) for (u, v, code) in self.virtual_green if code >= 0]
-
-    @lazy_attribute
-    def solid_green(self):
-        return [(u, v) for (u, v, solid) in self.green if solid == 1]
-
-    def _set_redblue(self):
-        self.blue = []
-        self.red = []
-        p, e, w = self.p, self.e, self.w
-        for i, (s, (u, v, code)) in enumerate(zip(self.slopes, self.virtual_green), 1):
-            if u.denominator() == 1 and code == -1:
-                self.blue.append((u, v, True))
-            u = floor(u + 1)
-            #print("Starting", i, s, u, v, code, e, w)
-            while v <= 1 + s - u/e:
-                #print("While", u, v, 1 + s - u/e, u.valuation(p), w-i)
-                if u == e:
-                    u = ZZ(0)
-                    v += 1
-                if u == 0:
-                    index = 0
-                else:
-                    index = w - i
-                if v == 1 + s - u/e:
-                    self.red.append((u, v, v == 1 + s - u/e))
-                elif u.valuation(p) == index:
-                    self.blue.append((u, v, True))
-                u += 1
-        self.blue = sorted(set(self.blue))
-        self.red = sorted(set(self.red))
-
-    @lazy_attribute
-    def blue(self):
-        self._set_redblue()
-        return self.blue
-
-    @lazy_attribute
-    def red(self):
-        self._set_redblue()
-        return self.red
 
     @lazy_attribute
     def link(self):
