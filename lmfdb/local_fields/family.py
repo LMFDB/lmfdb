@@ -287,7 +287,7 @@ class pAdicSlopeFamily:
             ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield", "jump_set"]))
         if self.n0 > 1:
             fields = [rec for rec in fields if self.oldbase in rec["subfield"]]
-        glabels = [rec["galois_label"] for rec in fields if rec.get("galois_label")]
+        glabels = list(set(rec["galois_label"] for rec in fields if rec.get("galois_label")))
         if glabels:
             cache = knowl_cache(glabels)
         else:
