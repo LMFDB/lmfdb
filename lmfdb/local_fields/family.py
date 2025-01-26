@@ -46,9 +46,9 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def dots(self):
-        p, e, w = self.p, self.e, self.w
+        p, e, f, w = self.p, self.e, self.f, self.w
         # We include a large dot at the origin exactly when there is a tame part
-        dots = [("d", 0, 0, self.etame > 1)]
+        dots = [("d", 0, 0, gcd(p**f - 1, self.etame) > 1)]
         sigma = ZZ(1)
         # It's convenient to add 0 at the beginning; this transforms our indexing into 1-based and helps with cases below the first band
         means = [0] + self.means
@@ -223,24 +223,18 @@ class pAdicSlopeFamily:
         p, f = self.p, self.f
         pts = [(c, i, j) for (c, i, j, big) in self.dots if big]
         names = [f"{c}{self.e*j+i}" for (c, i, j) in pts]
-        if gcd(p**f - 1, self.etame) > 1:
-            names.append("d")
         if self.e0 > 1:
             names.append("pi")
         R = PolynomialRing(ZZ, names)
         S = PolynomialRing(R, "x")
         if self.e == 1:
             return S.gen()
-        if "d" in names:
-            d = R.gen(names.index("d"))
-        else:
-            d = 1
         x = S.gen()
         if self.e0 > 1:
             pi = R.gens()[-1]
         else:
             pi = p
-        poly = x**self.e + d*pi
+        poly = x**self.e
         for i, (c, u, v) in enumerate(pts):
             poly += R.gen(i) * pi**(v+1) * x**u
         return poly
