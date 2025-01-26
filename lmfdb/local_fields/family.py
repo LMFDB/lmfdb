@@ -108,7 +108,7 @@ class pAdicSlopeFamily:
             mindiff = min((b-a) for (a,b) in rkeys)
             aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
             ticklook = {a: a for a in ticks} # adjust values below when too close
-            if mindiff < 0.1:
+            if mindiff < 0.1 and len(ticks) >= 3:
                 pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
                 if pairdiff >= 0.25:
                     # We can just spread out pairs of ticks from their center
@@ -189,7 +189,7 @@ class pAdicSlopeFamily:
         for code, i, j, big in self.dots:
             # (i,j) gives the term for pi^j * x^i.  We transition to the coordinates for the picture
             v = j + i / self.e
-            size = 20 if big else 10
+            size = 20
             color, marker = colmark[code]
             mcolor = color
             if not big:
