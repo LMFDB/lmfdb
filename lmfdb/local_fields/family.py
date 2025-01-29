@@ -237,6 +237,9 @@ class pAdicSlopeFamily:
         poly = x**self.e
         for i, (c, u, v) in enumerate(pts):
             poly += R.gen(i) * pi**(v+1) * x**u
+        if not self.dots[0][3]:
+            # No pi*d_0 term, so need to add just pi
+            poly += pi
         return poly
 
     @lazy_attribute

@@ -303,7 +303,7 @@ def index():
     if len(request.args) != 0:
         info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
         if search_type in ['Families', 'FamilyCounts']:
-            info['search_array'] = FamiliesSearchArray()
+            info['search_array'] = FamiliesSearchArray(relative=("relative" in info))
         if search_type in ['Counts', 'FamilyCounts']:
             return local_field_count(info)
         elif search_type in ['Families', 'RandomFamily']:
@@ -312,6 +312,8 @@ def index():
             return local_field_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
+    info["field_count"] = db.lf_fields.stats.column_counts(["n", "p"])
+    info["family_count"] = db.lf_families.count({"n0":1}, groupby=["n", "p"])
     return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, info=info, learnmore=learnmore_list())
 
 
@@ -473,11 +475,11 @@ families_columns = SearchColumns([
     MathCol("e0", "lf.ramification_index", "$e_0$", short_title="base ram. index", default=False),
     MathCol("e_absolute", "lf.ramification_index", r"$e_{\mathrm{abs}}$", short_title="abs. ram. index", default=False),
     MathCol("c", "lf.discriminant_exponent", "$c$", short_title="disc. exponent"),
-    MathCol("c0", "lf.discriminant_exponent", "$c_0$", short_title="base disc. exponent"),
-    MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent"),
+    MathCol("c0", "lf.discriminant_exponent", "$c_0$", short_title="base disc. exponent", default=False),
+    MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent", default=False),
     MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
-                      pretty_link),
+                      pretty_link, default=lambda info: "relative" in info),
     RationalListCol("visible", "lf.visible_slopes", "Abs. Artin slopes",
                     show_slopes2, default=False),
     RationalListCol("slopes", "lf.swan_slopes", "Swan slopes"),
@@ -606,14 +608,15 @@ def local_field_count(info, query):
     urlgen_info = dict(info)
     urlgen_info.pop("hst", None)
     urlgen_info.pop("stats", None)
-    url_func = ".families_page" if info["search_type"] == "FamilyCounts" else ".index"
+    if info["search_type"] == "FamilyCounts":
+        urlgen_info["search_type"] = "Families"
     def url_generator(a, b):
         info_copy = dict(urlgen_info)
         info_copy.pop("search_array", None)
         info_copy.pop("search_type", None)
         info_copy[groupby[0]] = a
         info_copy[groupby[1]] = b
-        return url_for(url_func, **info_copy)
+        return url_for(".index", **info_copy)
 
     info["row_heads"], info["col_heads"] = heads
     names = {"p": "Prime", "n": "Degree", "e": "Ramification index", "c": "Discriminant exponent", "top_slope": "Top slope"}
@@ -767,7 +770,7 @@ def render_field_webpage(args):
         if "family" in data:
             friends.append(('Family', url_for(".family_page", label=data["family"])))
         if n < 16:
-            friends.append(('Families of extensions', url_for(".families_page", base=label)))
+            friends.append(('Families of extensions', url_for(".index", relative=1, search_type="Families", base=label)))
         if 'slopes' in data:
             info['slopes'] = show_slopes(data['slopes'])
         if 'inertia' in data:
@@ -942,8 +945,8 @@ def family_page(label):
     family = pAdicSlopeFamily(label)
     info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family, stats=LFStats())
     p, n = family.p, family.n
-    info['bread'] = get_bread([(str(p), url_for(".families_page", p=p)),
-                       (str(family.n), url_for(".families_page", p=p, n=n)),
+    info['bread'] = get_bread([(str(p), url_for(".index", search_type="Families", p=p)),
+                       (str(family.n), url_for(".index", search_type="Families", p=p, n=n)),
                        (label, "")])
     info['title'] = f"$p$-adic family {label}"
     info['show_count'] = True
@@ -956,7 +959,7 @@ def family_page(label):
         ('c', rf'\({family.c}\)'),
     ]
     if family.n0 == 1:
-        info['friends'] = [('Relative constituents', url_for(".families_page", label_absolute=family.label))]
+        info['friends'] = [('Relative constituents', url_for(".index", relative=1, search_type="Families", label_absolute=family.label))]
     else:
         info['friends'] = [('Absolute family', url_for(".family_page", label=family.label_absolute))]
     return render_family(info)
@@ -992,11 +995,6 @@ def render_family(info, query):
     parse_bracketed_posints(info,query,"associated_inertia")
     if 'one_per' in info and info['one_per'] == 'packet':
         query["__one_per__"] = "packet"
-
-@local_fields_page.route("/families/")
-def families_page():
-    info = to_dict(request.args, search_array=FamiliesSearchArray())
-    return families_search(info)
 
 def common_family_parse(info, query):
     parse_ints(info,query,'p',name='Prime p')
@@ -1034,6 +1032,8 @@ def common_family_parse(info, query):
     url_for_label=url_for_family,
 )
 def families_search(info, query):
+    if "relative" not in info:
+        query["n0"] = 1
     common_family_parse(info, query)
 
 def common_boxes():
@@ -1191,20 +1191,11 @@ class FamilySearchArray(EmbeddedSearchArray):
         self.refine_array = [[gal, slopes, ind_insep], [associated_inertia, jump_set, one_per]]
 
 class FamiliesSearchArray(SearchArray):
-    sorts = [
-        ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-        ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),
-        ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-        ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
-        ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
-        ("mass", "mass", ['mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-        ("mass_found", "mass found", ['mass_found', 'mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-    ]
-    def __init__(self):
+    def __init__(self, relative=False):
         #degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
         degree = TextBox(
             name='n',
-            label='Relative degree',
+            label='Relative degree' if relative else 'Degree',
             knowl='lf.degree',
             example='6',
             example_span='6, or a range like 3..5')
@@ -1217,19 +1208,19 @@ class FamiliesSearchArray(SearchArray):
             example_span='3, or a range like 3..7')
         c = TextBox(
             name='c',
-            label='Rel. disc. exponent',
+            label='Rel. disc. exponent' if relative else 'Disc. exponent',
             knowl='lf.discriminant_exponent',
             example='8',
             example_span='8, or a range like 2..6')
         e = TextBox(
             name='e',
-            label='Rel. ramification index',
+            label='Rel. ramification index' if relative else 'Ramification index',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
         f = TextBox(
             name='f',
-            label='Rel. residue field degree',
+            label='Rel. residue field degree' if relative else 'Residue field degree',
             knowl='lf.residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
@@ -1327,11 +1318,33 @@ class FamiliesSearchArray(SearchArray):
             label='Absolute label',
             knowl='lf.family_label',
             example='2.1.4.6a')
-        self.refine_array = [[qp, degree, e, f, c],
-                             [base, n0, e0, f0, c0],
-                             [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
-                             #[visible, slopes, tilts, means, slope_multiplicities],
-                             [mass, mass_found, ambiguity, field_count, wild_segments]]
+        if relative:
+            self.refine_array = [[qp, degree, e, f, c],
+                                 [base, n0, e0, f0, c0],
+                                 [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
+                                 #[visible, slopes, tilts, means, slope_multiplicities],
+                                 [mass, mass_found, ambiguity, field_count, wild_segments]]
+            self.sorts = [
+                ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+                ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),
+                ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+                ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
+                ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
+                ("mass", "mass", ['mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+                ("mass_found", "mass found", ['mass_found', 'mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+            ]
+        else:
+            self.refine_array = [[qp, degree, e, f, c],
+                                 [mass, mass_found, ambiguity, field_count, wild_segments]]
+            self.sorts = [
+                ("", "discriminant exponent", ['p', 'n', 'e', 'c', 'ctr']),
+                ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n', 'e', 'c', 'ctr']),
+                ("ambiguity", "ambiguity", ['p', 'n', 'ambiguity', 'e', 'c', 'ctr']),
+                ("field_count", "num fields", ['p', 'n', 'field_count', 'e', 'c', 'ctr']),
+                ("mass", "mass", ['mass', 'p', 'n', 'e', 'c', 'ctr']),
+                ("mass_found", "mass found", ['mass_found', 'mass', 'p', 'n', 'e', 'c', 'ctr']),
+            ]
+
 
     def search_types(self, info):
         return self._search_again(info, [
@@ -1475,11 +1488,12 @@ class LFStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.  It also contains all %s absolute families with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.  It also contains all %s absolute %s with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
             comma(self.numfields),
             display_knowl("lf.padic_field", r"$p$-adic fields"),
             display_knowl("lf.degree", "degree"),
             comma(self.num_abs_families),
+            display_knowl("lf.family_polynomial", "families"),
             comma(self.num_rel_families),
         )
 
