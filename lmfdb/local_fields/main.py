@@ -316,6 +316,16 @@ def index():
     info["family_count"] = db.lf_families.count({"n0":1}, groupby=["n", "p"])
     return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, info=info, learnmore=learnmore_list())
 
+@local_fields_page.route("/families/")
+def family_redirect():
+    info = to_dict(request.args)
+    info["search_type"] = "Families"
+    if "relative" not in info:
+        # Check for the presence of any relative-only arguments
+        if any(x in info for x in ["base", "n0", "e0", "f0", "c0", "label_absolute", "n_absolute", "e_absolute", "f_absolute", "c_absolute"]):
+            info["relative"] = 1
+    return redirect(url_for(".index", **info))
+
 
 @local_fields_page.route("/<label>")
 def by_label(label):
