@@ -394,7 +394,7 @@ def intcol(j):
     return f'${j}$'
 
 #label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
-label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(label)}">{label}</a>'))
+label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(label)}">{label}</a>'), apply_download=lambda label, new_label: new_label)
 
 def packet_col(default):
     return MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=default)
