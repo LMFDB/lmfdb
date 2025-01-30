@@ -44,16 +44,16 @@
 
 {% endif %}
 
-<h2> Ramification polygon </h2>
-
-<img src="{{ family.ramification_polygon_plot }}" width="1000">
-
 {% if family.e > 1 %}
 <h2> {{ KNOWL('lf.eisenstein_diagram', 'Eisenstein diagram') }} </h2>
 
 <img src="{{ family.picture }}" width="1000">
 
 {% endif %}
+
+<h2> Ramification polygon </h2>
+
+<img src="{{ family.ramification_polygon_plot }}" width="1000">
 
 {% if family.field_count > 0 %}
 

@@ -1,14 +1,12 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import euler_phi, lazy_attribute, point, line, polygon, frac, floor, lcm, cartesian_product, ZZ, QQ, PolynomialRing, OrderedPartitions, srange, prime_range, prime_pi, next_prime, previous_prime, gcd, text, Graphics
+from sage.all import lazy_attribute, point, line, polygon, cartesian_product, ZZ, QQ, PolynomialRing, srange, gcd, text, Graphics
 from lmfdb import db
-from lmfdb.utils import encode_plot, unparse_range, totaler, proportioners
+from lmfdb.utils import encode_plot, totaler
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
-from lmfdb.local_fields import local_fields_page
 from flask import url_for
 
 from collections import defaultdict, Counter
-import itertools
 import re
 FAMILY_RE = re.compile(r'\d+\.\d+\.\d+\.\d+[a-z]+(\d+\.\d+-\d+\.\d+\.\d+[a-z]+)?')
 
@@ -18,18 +16,17 @@ def str_to_QQlist(s):
     return [QQ(x) for x in s[1:-1].split(", ")]
 
 class pAdicSlopeFamily:
-    def __init__(self, label=None, base=None, slopes=[], means=[], tilts=[], field_cache=None):
-        data_cols = ["base", "tilts", "scaled_tilts", "types", "base_aut", "p", "f", "f0", "f_absolute", "e", "e0", "e_absolute", "n", "n0", "n_absolute", "c", "c0", "c_absolute", "field_count", "packet_count", "ambiguity", "mass_display", "mass_stored", "mass_found", "all_stored"]
+    def __init__(self, label=None, base=None, slopes=[], means=[], rams=[], field_cache=None):
         if label is not None:
-            assert not base and not slopes and not means and not tilts
+            assert not base and not slopes and not means and not rams
             data = db.lf_families.lookup(label)
             if data:
                 self.__dict__.update(data)
-                for col in ["visible", "slopes", "tilts", "means", "scaled_tilts", "types"]:
+                for col in ["visible", "slopes", "rams", "means", "scaled_rams", "types"]:
                     setattr(self, col, str_to_QQlist(getattr(self, col)))
                 self.p, self.e = ZZ(self.p), ZZ(self.e)
                 self.artin_slopes = self.visible
-                base, tilts, p, w = self.base, self.tilts, self.p, self.w
+                base, rams, p, w = self.base, self.rams, self.p, self.w
             else:
                 raise NotImplementedError
             self.label = label
@@ -41,8 +38,8 @@ class pAdicSlopeFamily:
         self.pw = p**w
         _, self.etame = self.e.val_unit(p)
     @lazy_attribute
-    def scaled_tilts(self):
-        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.tilts, 1)]
+    def scaled_rams(self):
+        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.rams, 1)]
 
     @lazy_attribute
     def dots(self):
@@ -176,9 +173,9 @@ class pAdicSlopeFamily:
             for (m, s, t) in zip(self.means, self.slopes, self.types):
                 if t == self.e0:
                     P += line([(self.e, m), (self.e, s)], color="black", zorder=-2, thickness=2)
-            # Tilt labels
+            # Ram labels
             seen = set()
-            for i, (s, t) in enumerate(zip(self.slopes, self.tilts)):
+            for i, (s, t) in enumerate(zip(self.slopes, self.rams)):
                 if s not in seen:
                     P += text(f"${t}$", (self.e + hscale/2, s), color="blue")
                 seen.add(s)
@@ -209,7 +206,7 @@ class pAdicSlopeFamily:
         if tame_shift:
             L.append((self.pw, tame_shift))
         cur = (self.pw, tame_shift)
-        for r, nextr in zip(self.tilts, self.tilts[1:] + [None]):
+        for r, nextr in zip(self.rams, self.rams[1:] + [None]):
             x = cur[0] // p
             y = cur[1] + x * (p - 1) * (r + 1)
             cur = (x, y)
@@ -220,7 +217,6 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def polynomial(self):
-        p, f = self.p, self.f
         pts = [(c, i, j) for (c, i, j, big) in self.dots if big]
         names = [f"{c}{self.e*j+i}" for (c, i, j) in pts]
         if self.e0 > 1:
@@ -233,7 +229,7 @@ class pAdicSlopeFamily:
         if self.e0 > 1:
             pi = R.gens()[-1]
         else:
-            pi = p
+            pi = self.p
         poly = x**self.e
         for i, (c, u, v) in enumerate(pts):
             poly += R.gen(i) * pi**(v+1) * x**u

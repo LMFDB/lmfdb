@@ -13,8 +13,8 @@ from lmfdb.utils import (
     parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, count_wrap, embed_wrap, yield_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
-    EmbeddedSearchArray, embed_wrap, integer_options,
+    search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
+    EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, RationalListCol, PolynomialCol, eval_rational_list
@@ -493,8 +493,8 @@ families_columns = SearchColumns([
     RationalListCol("visible", "lf.visible_slopes", "Abs. Artin slopes",
                     show_slopes2, default=False),
     RationalListCol("slopes", "lf.swan_slopes", "Swan slopes"),
-    RationalListCol("means", "lf.means", "Means"),
-    RationalListCol("tilts", "lf.tilts", "Tilts"),
+    RationalListCol("means", "lf.means", "Means", delim=[r"\langle", r"\rangle"]),
+    RationalListCol("rams", "lf.rams", "Rams", delim = "()"),
     ProcessedCol("poly", "lf.family_polynomial", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Field count"),
@@ -574,7 +574,6 @@ def count_postprocess(res, info, query):
     bread=lambda: get_bread([("Count results", " ")]),
 )
 def local_field_count(info, query):
-    lf_stats = LFStats()
     if info["search_type"] == "Counts":
         table = db.lf_fields
         common_parse(info, query)
@@ -1050,31 +1049,35 @@ def common_boxes():
     degree = TextBox(
         name='n',
         label='Degree',
+        short_label='Degree $n$',
         knowl='lf.degree',
         example='6',
         example_span='6, or a range like 3..5')
     qp = TextBox(
         name='p',
         label=r'Residue field characteristic',
-        short_label='Residue characteristic',
+        short_label='Residue characteristic $p$',
         knowl='lf.residue_field',
         example='3',
         example_span='3, or a range like 3..7')
     c = TextBox(
         name='c',
         label='Discriminant exponent',
+        short_label='Discriminant exponent $c$',
         knowl='lf.discriminant_exponent',
         example='8',
         example_span='8, or a range like 2..6')
     e = TextBox(
         name='e',
         label='Ramification index',
+        short_label='Ramification index $e$',
         knowl='lf.ramification_index',
         example='3',
         example_span='3, or a range like 2..6')
     f = TextBox(
         name='f',
         label='Residue field degree',
+        short_label='Residue field degree $f$',
         knowl='lf.residue_field_degree',
         example='3',
         example_span='3, or a range like 2..6')
@@ -1146,6 +1149,7 @@ def common_boxes():
     u = TextBox(
         name='u',
         label='Galois unramified degree',
+        short_label='Galois unram. degree $u$',
         knowl='lf.unramified_degree',
         example='3',
         example_span='3, or a range like 1..4'
@@ -1153,6 +1157,7 @@ def common_boxes():
     t = TextBox(
         name='t',
         label='Galois tame degree',
+        short_label='Galois tame degree $t$',
         knowl='lf.tame_degree',
         example='2',
         example_span='2, or a range like 2..3'
@@ -1205,89 +1210,88 @@ class FamiliesSearchArray(SearchArray):
         #degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
         degree = TextBox(
             name='n',
-            label='Relative degree' if relative else 'Degree',
+            label='Rel. degree $n$' if relative else 'Degree $n$',
             knowl='lf.degree',
             example='6',
             example_span='6, or a range like 3..5')
         qp = TextBox(
             name='p',
-            label=r'Residue field characteristic',
-            short_label='Residue characteristic',
+            label=r'Residue characteristic $p$',
             knowl='lf.residue_field',
             example='3',
             example_span='3, or a range like 3..7')
         c = TextBox(
             name='c',
-            label='Rel. disc. exponent' if relative else 'Disc. exponent',
+            label='Rel. disc. exponent $c$' if relative else 'Discriminant exponent $c$',
             knowl='lf.discriminant_exponent',
             example='8',
             example_span='8, or a range like 2..6')
         e = TextBox(
             name='e',
-            label='Rel. ramification index' if relative else 'Ramification index',
+            label='Rel. ram. index $e$' if relative else 'Ramification index $e$',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
         f = TextBox(
             name='f',
-            label='Rel. residue field degree' if relative else 'Residue field degree',
+            label='Rel. res. field degree $f$' if relative else 'Residue field degree $f$',
             knowl='lf.residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
         n0 = TextBox(
             name='n0',
-            label='Base degree',
+            label='Base degree $n_0$',
             knowl='lf.degree',
             example='6',
             example_span='6, or a range like 3..5')
         c0 = TextBox(
             name='c0',
-            label='Base Disc. exponent',
+            label='Base disc. exponent $c_0$',
             knowl='lf.discriminant_exponent',
             example='8',
             example_span='8, or a range like 2..6')
         e0 = TextBox(
             name='e0',
-            label='Base ram. index',
+            label='Base ram. index $e_0$',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
         f0 = TextBox(
             name='f0',
-            label='Base res. field degree',
+            label='Base res. field degree $f_0$',
             knowl='lf.residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
         n_absolute = TextBox(
             name='n_absolute',
-            label='Absolute degree',
+            label=r'Abs. degree $n_{\mathrm{abs}}$',
             knowl='lf.degree',
             example='6',
             example_span='6, or a range like 3..5')
         c_absolute = TextBox(
             name='c_absolute',
-            label='Absolute disc. exponent',
+            label=r'Abs. disc. exponent $c_{\mathrm{abs}}$',
             knowl='lf.discriminant_exponent',
             example='8',
             example_span='8, or a range like 2..6')
         e_absolute = TextBox(
             name='e_absolute',
-            label='Absolute ram. index',
+            label=r'Abs. ram. index $e_{\mathrm{abs}}$',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
         f_absolute = TextBox(
             name='f_absolute',
-            label='Absolute res. field degree',
+            label=r'Abs. res. field degree $f_{\mathrm{abs}}$',
             knowl='lf.residue_field_degree',
             example='3',
             example_span='3, or a range like 2..6')
-        w = TextBox(
-            name='w',
-            label='Wild ramification exponent',
-            knowl='lf.ramification_index',
-            example='3',
-            example_span='3, or a range like 2..6')
+        #w = TextBox(
+        #    name='w',
+        #    label='Wild ramification exponent $w$',
+        #    knowl='lf.ramification_index',
+        #    example='3',
+        #    example_span='3, or a range like 2..6')
         base = TextBox(
             name='base',
             label='Base',
@@ -1332,7 +1336,7 @@ class FamiliesSearchArray(SearchArray):
             self.refine_array = [[qp, degree, e, f, c],
                                  [base, n0, e0, f0, c0],
                                  [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
-                                 #[visible, slopes, tilts, means, slope_multiplicities],
+                                 #[visible, slopes, rams, means, slope_multiplicities],
                                  [mass, mass_found, ambiguity, field_count, wild_segments]]
             self.sorts = [
                 ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
@@ -1498,7 +1502,7 @@ class LFStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.  It also contains all %s absolute %s with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 18$.  It also contains all %s absolute %s with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
             comma(self.numfields),
             display_knowl("lf.padic_field", r"$p$-adic fields"),
             display_knowl("lf.degree", "degree"),

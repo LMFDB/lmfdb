@@ -18,6 +18,7 @@ The three main entry points to ``SearchCol`` are
   (in the case of column groups).
 """
 
+import re
 from .web_display import display_knowl
 from lmfdb.utils import coeff_to_poly
 from sage.all import Rational, latex
@@ -582,10 +583,20 @@ class ListCol(ProcessedCol):
 
     The list may be stored in a postgres array or a postgres string
     """
+    def __init__(self, *args, **kwds):
+        if "delim" in kwds:
+            self.delim = kwds.pop("delim")
+            assert len(self.delim) == 2
+        else:
+            self.delim = None
+        super().__init__(*args, **kwds)
+
     def display(self, rec):
         s = str(self.func(self.get(rec)))
         if s == "[]":
             s = "[&nbsp;]"
+        if self.delim:
+            s = s.replace("[", self.delim[0]).replace("]", self.delim[1])
         if s and self.mathmode:
             s = f"${s}$"
         return s
@@ -596,11 +607,14 @@ class RationalListCol(ListCol):
 
     Uses the ``eval_rational_list`` function to process the column for downloading.
     """
-    def __init__(self, name, knowl, title, func=None, apply_download=False, mathmode=True, **kwds):
+    def __init__(self, name, knowl, title, func=None, apply_download=False, mathmode=True, use_frac=True, **kwds):
+        self.use_frac = use_frac
         super().__init__(name, knowl, title, func=func, apply_download=apply_download, mathmode=mathmode, **kwds)
 
     def display(self, rec):
         s = super().display(rec)
+        if self.use_frac:
+            s = re.sub(r"(\d+)/(\d+)", r"\\frac{\1}{\2}", s)
         return s.replace("'", "").replace('"', '')
 
     def download(self, rec):
