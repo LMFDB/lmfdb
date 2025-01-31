@@ -8,7 +8,7 @@
   <tr><td> ${{ family.polynomial._latex_() }}$ </td></tr>
 </table>
 
-<h2> Invariants </h2>
+<h2> {{ KNOWL('lf.family_invariants', 'Invariants') }} </h2>
 <table>
   <tr><td>{{ KNOWL('lf.residue_field', 'Residue field characteristic') }}:</td><td> ${{family.p}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.degree', 'Degree') }}:</td><td> ${{family.n}}$ </td></tr>
@@ -28,7 +28,7 @@
 
 {% if family.field_count > 0 %}
 
-<h2> Varying </h2>
+<h2> {{ KNOWL('lf.family_varying', 'Varying') }} </h2>
 {% if not family.all_stored %}
 <p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
 {% endif %}
@@ -52,14 +52,14 @@
 
 {% endif %}
 
-<h2> Ramification polygon </h2>
+<h2> {{ KNOWL('lf.family_ramification_polygon', 'Ramification polygon') }} </h2>
 
 <img src="{{ family.ramification_polygon_plot }}" width="1000">
 
 {% if family.field_count > 0 %}
 
 {% if family.n0 == 1 %}
-<h2> Galois groups and Hidden slopes </h2>
+<h2> {{ KNOWL('lf.packet', 'Galois groups and Hidden slopes') }} </h2>
 
 {% for d in family.gal_slope_tables %}
   {% include 'stat_2d.html' %}
@@ -67,7 +67,7 @@
 
 {% endif %} {# family.n0 == 1 #}
 
-<h2> Fields </h2>
+<h2> {{ KNOWL('lf.fields_in_family', 'Fields') }} </h2>
 
 {% else %} {# family.field_cout = 0 #}
 
