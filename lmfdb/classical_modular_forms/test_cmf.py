@@ -264,6 +264,12 @@ class CmfTest(LmfdbTest):
             assert elt + '.a' in page.get_data(as_text=True)
         for elt in ['Decomposition', r"S_{9}^{\mathrm{old}}(\Gamma_1(38))", "lower level spaces"]:
             assert elt in page.get_data(as_text=True)
+        decomposition = r"""
+<div class="center">
+  \( S_{9}^{\mathrm{old}}(\Gamma_1(38)) \cong \) <a href=/ModularForm/GL2/Q/holomorphic/1/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(1))\)</a>\(^{\oplus 4}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/2/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(2))\)</a>\(^{\oplus 2}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/19/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(19))\)</a>\(^{\oplus 2}\)
+</div>
+"""
+        assert decomposition in page.get_data(as_text=True)
 
     def test_convert_conreylabels(self):
         for c in [27, 31]:
@@ -594,3 +600,58 @@ class CmfTest(LmfdbTest):
                 and 'mf_hecke_charpolys' in data and 'charpoly_factorization' in data
                 and 'mf_newform_portraits' in data and "data:image/png;base64" in data
                 and 'mf_hecke_traces' in data and 'trace_an' in data)
+
+    def test_character_values(self):
+        # A newform orbit of dimension 1
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/12/3/c/a/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(5\)</td>
+      <td class="dark border-bottom">\(7\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>
+      <td class="dark">\(1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert (character_values_table in data)
+
+        # A newform orbit of dimension 2
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/119/1/d/a/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(52\)</td>
+      <td class="dark border-bottom">\(71\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>
+      <td class="dark">\(-1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert (character_values_table in data)
+
+        # An embedded newform
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/119/1/d/a/118/1/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(52\)</td>
+      <td class="dark border-bottom">\(71\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>
+      <td class="dark">\(-1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert (character_values_table in data)
