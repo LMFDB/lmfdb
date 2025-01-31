@@ -19,7 +19,7 @@
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
       <tr><td> {{KNOWL('lf.automorphism_group', info.autstring)}} :</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
-      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
+      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible Artin slopes')}}:</td><td>{{info.visible}}</td></tr>
       <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>${{info.jump_set}}$</td></tr>
       <tr><td>{{ KNOWL('lf.roots_of_unity', title='Roots of unity') }}:</td><td>{{info.roots_of_unity}}</td></tr>
 </table>
@@ -111,7 +111,7 @@
     Not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild Artin slopes')}}:</td><td>
   {% if info.slopes %}
   {{info.slopes}}
   {% else %}

@@ -82,7 +82,6 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def link(self):
-        from flask import url_for
         return f'<a href="{url_for(".family_page", label=self.label)}">{self.label}</a>'
 
     @lazy_attribute
@@ -291,7 +290,8 @@ class pAdicSlopeFamily:
     def all_hidden_data_available(self):
         if self.mass_found < 1:
             return False
-        for rec in self.fields:
+        fields, cache = self.fields
+        for rec in fields:
             if not all(rec.get(col) for col in ["galT", "galois_label"]):
                 return False
         return True
@@ -312,6 +312,14 @@ class pAdicSlopeFamily:
         if not self.all_hidden_data_available:
             s += " (incomplete)"
         return s
+
+    @lazy_attribute
+    def means_display(self):
+        return str(self.means).replace("[", r"\langle").replace("]", r"\rangle")
+
+    @lazy_attribute
+    def rams_display(self):
+        return str(self.rams).replace("[", "(").replace("]", ")")
 
     @lazy_attribute
     def hidden_slopes(self):

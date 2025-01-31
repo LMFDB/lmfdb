@@ -74,7 +74,7 @@ def local_algebra_data(labels):
     ans += '$%s$-adic algebra' % str(f1[0])
     ans += '</div>'
     ans += '<p>'
-    ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
+    ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Artin slopes"
     if all(OLD_LF_RE.fullmatch(lab) for lab in labs):
         fall = {rec["label"]: rec for rec in db.lf_fields.search({"label":{"$in": labs}})}
     elif all(NEW_LF_RE.fullmatch(lab) for lab in labs):
@@ -412,10 +412,10 @@ gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
 def aut_col(default):
     return MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=default)
 def visible_col(default):
-    return RationalListCol("visible", "lf.visible_slopes", "Visible slopes",
+    return RationalListCol("visible", "lf.visible_slopes", "Visible Artin slopes",
                    show_slopes2, default=default)
 def slopes_col(default):
-    return MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
+    return MultiProcessedCol("slopes", "lf.slope_content", "Artin slope content",
                              ["slopes", "t", "u"],
                              show_slope_content,
                              mathmode=True, apply_download=unpack_slopes, default=default)
@@ -451,7 +451,7 @@ family_columns = SearchColumns([
     MathCol("galsize", "nf.galois_group", "Galois degree"),
     aut_col(True),
     slopes_col(False),
-    MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden slopes",
+    MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden Artin slopes",
                       ["slopes", "visible"],
                       show_hidden_slopes,
                       mathmode=True, apply_download=unpack_hidden),
@@ -541,7 +541,7 @@ def common_parse(info, query):
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_ints(info,query,'f',name='Residue field degree f')
-    parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_rats(info,query,'topslope',qfield='top_slope',name='Top Artin slope', process=ratproc)
     parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
     parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
     parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
@@ -629,7 +629,7 @@ def local_field_count(info, query):
         return url_for(".index", **info_copy)
 
     info["row_heads"], info["col_heads"] = heads
-    names = {"p": "Prime", "n": "Degree", "e": "Ramification index", "c": "Discriminant exponent", "top_slope": "Top slope"}
+    names = {"p": "Prime", "n": "Degree", "e": "Ramification index", "c": "Discriminant exponent", "top_slope": "Top Artin slope"}
     info["row_label"], info["col_label"] = [names[col] for col in groupby]
     info["url_func"] = url_generator
 
@@ -999,7 +999,7 @@ def render_family(info, query):
     #query["e"] = family.n
 
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
-    parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_rats(info,query,'topslope',qfield='top_slope',name='Top Artin slope', process=ratproc)
     parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
     parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
     parse_bracketed_posints(info,query,"associated_inertia")
@@ -1085,7 +1085,7 @@ def common_boxes():
         example_span='3, or a range like 2..6')
     topslope = TextBox(
         name='topslope',
-        label='Top slope',
+        label='Top Artin slope',
         knowl='lf.top_slope',
         example='4/3',
         example_span='4/3, or a range like 3..5')
@@ -1094,8 +1094,8 @@ def common_boxes():
     )
     slopes = TextBoxWithSelect(
         name='slopes',
-        label='Wild slopes',
-        short_label='Wild',
+        label='Wild Artin slopes',
+        short_label='Wild Artin',
         knowl='lf.wild_slopes',
         select_box=slopes_quantifier,
         example='[2,2,3]',
@@ -1105,7 +1105,7 @@ def common_boxes():
     )
     visible = TextBoxWithSelect(
         name='visible',
-        label='Visible slopes',
+        label='Visible Artin slopes',
         short_label='Visible',
         knowl='lf.visible_slopes',
         select_box=visible_quantifier,
